@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { AxiosError, AxiosHeaders, type InternalAxiosRequestConfig } from 'axios'
+import axios, { AxiosError, AxiosHeaders, type InternalAxiosRequestConfig } from 'axios'
 import { createRefreshRequestInterceptor, createRefreshSession } from '@/domains/auth/composables/refreshSession'
 import { AuthUnavailableError } from '@/shared/error/AuthUnavailableError'
 import { SessionExpiredError } from '@/shared/error/SessionExpiredError'
@@ -122,6 +122,34 @@ describe('createRefreshRequestInterceptor', () => {
       isInCauseChain(Object.assign(new Error('wrapped'), { cause: error }), (v) => v instanceof AuthUnavailableError)
     ).toBe(true)
     expect(unavailable.logout).not.toHaveBeenCalled()
+  })
+
+  it('cancels a request stopped while it waited, whatever the refresh answers', async () => {
+    let failRefresh!: (error: unknown) => void
+    const { interceptor } = createRefreshRequestInterceptor({
+      cookies: () => ({ refreshTokenExists: 'yes', jwtPayload: undefined }),
+      refreshSession: createRefreshSession({
+        refresh: () =>
+          new Promise((_resolve, reject) => {
+            failRefresh = reject
+          }),
+        jwtPayload: () => undefined,
+      }),
+      logout: vi.fn(),
+      skipUrlPrefix: '/auth',
+    })
+    const controller = new AbortController()
+    const waiting = interceptor({
+      url: '/adm/v1/x',
+      headers: new AxiosHeaders(),
+      signal: controller.signal,
+    } as InternalAxiosRequestConfig).catch((e: unknown) => e)
+    controller.abort()
+    failRefresh(failing(502))
+
+    const error = await waiting
+    expect(axios.isCancel(error)).toBe(true)
+    expect(error).not.toBeInstanceOf(AuthUnavailableError)
   })
 
   it('logs out once for requests that waited on the same refused refresh', async () => {

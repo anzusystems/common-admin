@@ -119,6 +119,9 @@ export function createRefreshRequestInterceptor(options: {
         }
         throw new SessionExpiredError()
       }
+      // Stopped while it waited (its page is gone): cancelled, as it would have been on its way out, and not a
+      // failure to show on the page the user went to. Axios checks the signal only once the interceptors are done.
+      if (requestConfig.signal?.aborted) throw new axios.CanceledError()
       if (result.type === 'auth-unavailable') throw new AuthUnavailableError(result.error)
     }
     return requestConfig

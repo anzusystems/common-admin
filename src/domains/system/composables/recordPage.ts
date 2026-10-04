@@ -8,6 +8,7 @@ import {
   useRouteHistory,
 } from '@/domains/system/composables/routeHistory'
 import { useDatatablePageStore } from '@/domains/system/store/datatablePageStore'
+import { isAppNavigationPending, usePageNavigation } from '@/domains/system/composables/pageNavigation'
 import { apiErrorStatus } from '@/domains/api/utils/apiErrors'
 import { isAnzuApiCancelledError } from '@/shared/error/AnzuApiCancelledError'
 import { isAnzuApiForbiddenError } from '@/shared/error/AnzuApiForbiddenError'
@@ -23,11 +24,13 @@ import { HTTP_STATUS_FORBIDDEN, HTTP_STATUS_NOT_FOUND } from '@/shared/statusCod
  * stopped (the page is gone) and a session found expired (the logout is already loading) show
  * nothing and do not leave. Everything else -- a 5xx, the network, a timeout, the sign-in server --
  * shows the message `showErrorsDefault` has for it and leaves too: the page would only show an
- * empty record with live buttons.
+ * empty record with live buttons. While the user is navigating to another page (`trackNavigation`)
+ * it shows nothing, the message would stay there; the page's `leave` then stays put as well.
  */
 export const handleRecordLoadError = (error: unknown, duration = -1): boolean => {
   if (isAnzuApiCancelledError(error)) return false
   if (isInCauseChain(error, (cause) => cause instanceof SessionExpiredError)) return false
+  if (isAppNavigationPending()) return true
 
   const { showErrorT, showErrorsDefault, showUnknownError } = useAlerts()
   const status = apiErrorStatus(error)
@@ -67,6 +70,8 @@ export interface UseRecordPageReturn {
   signal: AbortSignal
   /** Back to where the user came from, else to the fallback. Resolves whether it got there. */
   leave: () => Promise<boolean>
+  /** The user is still on this page and not navigating away: for a redirect after the load. */
+  onPage: () => boolean
 }
 
 const pathOf = (fullPath: string) => fullPath.split(/[?#]/, 1)[0] ?? fullPath
@@ -116,14 +121,16 @@ const settled = (navigation: Promise<NavigationFailure | void | undefined>) =>
  * `false` from the loader means "leave"; `undefined` is a load that was superseded or stopped on
  * purpose, after which the page stays.
  *
- * Not handled: a navigation the user started that is still pending (an async guard, a lazy chunk)
- * is cancelled by the leave; a guard that refuses the step back can leave the address bar out of
- * step with the router.
+ * While the user is navigating to another page (an async guard, a lazy chunk; `trackNavigation`),
+ * the page does not leave: the user's navigation decides, and should it fail, the page stays with
+ * its loading flag up. Not handled: a guard that refuses the step back can leave the address bar out
+ * of step with the router.
  */
 export function useRecordPage(options: UseRecordPageOptions = {}): UseRecordPageReturn {
   const router = useRouter()
   const { history } = useRouteHistory()
   const { preservePageForLanding } = useDatatablePageStore()
+  const { onPage } = usePageNavigation()
 
   // The path, not the name: /x/1 and /x/2 share a name, and a late failure of the one must not move
   // the user off the other.
@@ -217,12 +224,14 @@ export function useRecordPage(options: UseRecordPageOptions = {}): UseRecordPage
     // creating a new record, Delete with the address's id -- must not come back. The Close button,
     // which no page ties to loading, is the way out then.
     if (options.loading) options.loading.value = true
+    // The user is on the way to another page: that navigation decides, ours would cancel it.
+    if (!onPage()) return false
     markLeftAfterFailure(path)
     const target = findTarget()
     if (target !== undefined && (await go(target))) return true
-    if (!stillHere() || options.fallbackRouteName === undefined) return false
+    if (!stillHere() || !onPage() || options.fallbackRouteName === undefined) return false
     return go({ name: options.fallbackRouteName, params: options.fallbackRouteParams })
   }
 
-  return { signal: controller.signal, leave }
+  return { signal: controller.signal, leave, onPage }
 }

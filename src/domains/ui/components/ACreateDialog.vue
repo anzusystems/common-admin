@@ -2,9 +2,9 @@
 import type { ACreateDialogValidation } from '@/shared/types/Validation'
 import ADialogToolbar from '@/domains/ui/components/ADialogToolbar.vue'
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAlerts } from '@/domains/system/composables/alerts'
+import { usePageNavigation } from '@/domains/system/composables/pageNavigation'
 import { isUndefined } from '@/shared/utils/common'
 
 const props = withDefaults(
@@ -55,7 +55,7 @@ const onClose = () => {
   emit('close')
 }
 
-const router = useRouter()
+const { push } = usePageNavigation()
 const { showValidationError, showRecordWas, showErrorsDefault } = useAlerts()
 
 const onConfirm = async () => {
@@ -73,7 +73,8 @@ const onConfirm = async () => {
     showRecordWas('created')
     onClose()
     if (!isUndefined(res.id) && !props.disableRedirect && props.redirectRouteName) {
-      router.push({
+      // Not when the user is on the way elsewhere, or there already.
+      void push({
         name: props.redirectRouteName,
         params: { [props.redirectParamName]: res[props.redirectParamName] },
       })

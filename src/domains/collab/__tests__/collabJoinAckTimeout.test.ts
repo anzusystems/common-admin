@@ -35,7 +35,9 @@ beforeEach(() => {
 
 describe('the wait for a join', () => {
   it('is five seconds unless the caller says otherwise', () => {
-    void useCollabRoom(ROOM).joinCollabRoom({ joinStrategy: CollabRoomJoinStrategy.Moderated }).catch(() => undefined)
+    void useCollabRoom(ROOM)
+      .joinCollabRoom({ joinStrategy: CollabRoomJoinStrategy.Moderated })
+      .catch(() => undefined)
 
     expect(socket.timeout).toHaveBeenCalledWith(5000)
   })

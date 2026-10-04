@@ -185,6 +185,12 @@ import {
   type UseRecordPageOptions,
   type UseRecordPageReturn,
 } from '@/domains/system/composables/recordPage'
+import {
+  isNavigationPending,
+  trackNavigation,
+  usePageNavigation,
+  type UsePageNavigationReturn,
+} from '@/domains/system/composables/pageNavigation'
 import { SubjectScopeKey, SystemScopeKey } from '@/shared/injectionKeys'
 import { prettyBytes, prettyDuration } from '@/shared/utils/file'
 import {
@@ -831,6 +837,10 @@ export {
   useRecordPage,
   type UseRecordPageOptions,
   type UseRecordPageReturn,
+  trackNavigation,
+  isNavigationPending,
+  usePageNavigation,
+  type UsePageNavigationReturn,
   createNavigationErrorHandler,
   type NavigationErrorHandlerOptions,
   useRemainingTime,
