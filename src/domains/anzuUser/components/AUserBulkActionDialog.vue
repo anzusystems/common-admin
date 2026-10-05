@@ -9,7 +9,7 @@ import {
   useUserCrossSystemStore,
   type BulkActionType,
 } from '@/domains/anzuUser/store/userCrossSystemStore'
-import type { AnyUserSystemDescriptor } from '@/domains/anzuUser/composables/userSystemDescriptor'
+import { type AnyUserSystemDescriptor, descriptorMayWrite } from '@/domains/anzuUser/composables/userSystemDescriptor'
 import { isActionable, UserSystemAccess } from '@/domains/anzuUser/utils/userSystemState'
 import { isUndefined } from '@/shared/utils/common'
 
@@ -51,6 +51,9 @@ const rows = computed<Row[]>(() =>
     const result = store.results.get(descriptor.system)
     if (!descriptor.isEnabled()) {
       return { descriptor, selectable: false, reason: t('common.userSystem.state.configDisabled') }
+    }
+    if (!descriptorMayWrite(descriptor, 'update')) {
+      return { descriptor, selectable: false, reason: t('common.userSystem.state.noWriteRight') }
     }
     if (isUndefined(result) || !isActionable(result.axes)) {
       const access = result?.axes.access
@@ -107,9 +110,13 @@ const failed = computed(() =>
   currentLog.value.filter((entry) => entry.outcome !== BulkOutcome.Done && entry.outcome !== BulkOutcome.Pending)
 )
 
+// What can be acted on now: a right that arrived or went while the dialog was open counts.
+const actionable = computed(() => selected.value.filter((system) => selectableSystems.value.includes(system)))
+
 const run = () => {
+  if (actionable.value.length === 0) return
   showingLog.value = true
-  emit('run', [...selected.value])
+  emit('run', actionable.value)
 }
 
 /** Retries everything that failed, 403 included: the operator may have been granted the right meanwhile. */
@@ -222,11 +229,11 @@ const labelFor = (descriptor: AnyUserSystemDescriptor) => descriptor.label ?? de
         </ABtnTertiary>
         <ABtnPrimary
           v-if="!showingLog"
-          :disabled="selected.length === 0 || !!store.identityConflict"
+          :disabled="actionable.length === 0 || !!store.identityConflict"
           data-cy="user-bulk-confirm"
           @click.stop="run"
         >
-          {{ t(confirmKey, { count: selected.length }, selected.length) }}
+          {{ t(confirmKey, { count: actionable.length }, actionable.length) }}
         </ABtnPrimary>
       </VCardActions>
     </VCard>

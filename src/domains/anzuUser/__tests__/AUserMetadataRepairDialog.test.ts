@@ -71,10 +71,10 @@ const seed = (users: Record<string, AnzuUser>) => {
   return store
 }
 
-const mountDialog = async () => {
+const mountDialog = async (descriptors: AnyUserSystemDescriptor[] = DESCRIPTORS) => {
   mounted = mount(AUserMetadataRepairDialog, {
     global: { plugins: [pinia] },
-    props: { descriptors: DESCRIPTORS, open: true },
+    props: { descriptors, open: true },
     attachTo: document.body,
   })
   await flushPromises()
@@ -146,6 +146,28 @@ describe('AUserMetadataRepairDialog', () => {
 
     const payload = wrapper.emitted('confirm')?.[0]?.[0] as { systems: string[] }
     expect(payload.systems).toEqual(['weather'])
+  })
+
+  it('lists a differing system the operator may not write, and writes only the others', async () => {
+    seed({
+      cms: record({ email: 'a@sme.sk' }),
+      weather: record({ email: 'b@sme.sk' }),
+      blog: record({ email: 'c@sme.sk' }),
+    })
+    const wrapper = await mountDialog([
+      descriptor('cms', 'CMS'),
+      descriptor('weather', 'Počasie', { canWrite: () => false }),
+      descriptor('blog', 'Blog'),
+    ])
+
+    expect(document.querySelector('[data-cy="repair-system-weather"]')).toBeNull()
+    expect(document.querySelector('[data-cy="repair-system-no-right-weather"]')).not.toBeNull()
+
+    ;(document.querySelector('[data-cy="repair-confirm"]') as HTMLElement).click()
+    await flushPromises()
+
+    const payload = wrapper.emitted('confirm')?.[0]?.[0] as { systems: string[] }
+    expect(payload.systems).toEqual(['blog'])
   })
 
   it('names what a system will not take, so nobody leaves believing it did', async () => {

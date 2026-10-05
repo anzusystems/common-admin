@@ -3,6 +3,7 @@ import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAd
 import { isImageWidgetUploadConfigAllowed } from '@/domains/dam/config/utils/damFilterUserAllowedUploadConfigs'
 import { ImageWidgetUploadConfigKey } from '@/domains/dam/imageWidget/utils/imageWidgetInkectionKeys'
 import ImageWidgetMultipleInner from '@/domains/dam/imageWidget/components/ImageWidgetMultipleInner.vue'
+import AImageWidgetMultipleSimple from '@/domains/dam/imageWidget/components/AImageWidgetMultipleSimple.vue'
 import { useDamConfigState } from '@/domains/dam/config/composables/damConfigState'
 import { useDamConfigStore } from '@/domains/dam/config/store/damConfigStore'
 import type { IntegerId } from '@/shared/types/common'
@@ -44,7 +45,9 @@ const emit = defineEmits<{
   (e: 'update:modelValue', data: IntegerId[]): void
 }>()
 
-const status = ref<'loading' | 'ready' | 'error' | 'uploadNotAllowed'>('loading')
+const status = ref<'loading' | 'ready' | 'error'>('loading')
+// Not being allowed to upload is no reason to hide the image that is already there: it is shown read-only.
+const uploadAllowed = ref(true)
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { damClient } = useCommonAdminCoreDamOptions(props.configName)
@@ -67,11 +70,17 @@ onMounted(async () => {
     status.value = 'error'
     return
   }
+  cachedExtSystemId.value = uploadConfig.value.extSystem
   if (!isImageWidgetUploadConfigAllowed(uploadConfig.value)) {
-    status.value = 'uploadNotAllowed'
+    uploadAllowed.value = false
+    try {
+      if (!damConfigStore.initialized.damPrvConfig) await loadDamPrvConfig()
+      status.value = 'ready'
+    } catch (e) {
+      status.value = 'error'
+    }
     return
   }
-  cachedExtSystemId.value = uploadConfig.value.extSystem
   const promises: Promise<any>[] = []
   if (!damConfigStore.initialized.damPrvConfig) {
     promises.push(loadDamPrvConfig())
@@ -110,19 +119,21 @@ const { t } = useI18n()
     v-if="status === 'ready'"
     ref="innerComponent"
     v-bind="props"
+    :readonly="readonly || !uploadAllowed"
     @update:model-value="emit('update:modelValue', $event)"
   />
-  <div
-    v-else-if="status === 'error'"
-    class="text-error"
-  >
-    {{ t('common.damImage.error.loadingConfig') }}
-  </div>
-  <div
-    v-else-if="status === 'uploadNotAllowed'"
-    class="text-error"
-  >
-    {{ t('common.damImage.error.accessRights') }}
+  <!-- The config fails also for a user without access to the licence: the image already there is still shown. -->
+  <div v-else-if="status === 'error'">
+    <AImageWidgetMultipleSimple
+      v-if="modelValue.length"
+      :model-value="modelValue"
+      :config-name="configName"
+      :label="label"
+      :width="width"
+    />
+    <div class="text-error">
+      {{ t('common.damImage.error.loadingConfig') }}
+    </div>
   </div>
   <VProgressCircular
     v-else

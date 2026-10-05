@@ -3,7 +3,7 @@ import type { IntegerId, IntegerIdNullable } from '@/shared/types/common'
 import { onMounted, provide, ref, shallowRef } from 'vue'
 import { useDamConfigState } from '@/domains/dam/config/composables/damConfigState'
 import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
-import type { ImageAware } from '@/domains/dam/types/ImageAware'
+import type { ImageAware, ImageCreateUpdateAware } from '@/domains/dam/types/ImageAware'
 import type { UploadQueueKey } from '@/domains/dam/types/UploadQueue'
 import ImageWidgetInner from '@/domains/dam/imageWidget/components/ImageWidgetInner.vue'
 import { ImageWidgetUploadConfigKey } from '@/domains/dam/imageWidget/utils/imageWidgetInkectionKeys'
@@ -13,6 +13,8 @@ import { type CollabComponentConfig, CollabStatus, type CollabStatusType } from 
 import type { DamConfigLicenceExtSystemReturnType } from '@/domains/dam/types/DamConfig'
 import { useDamConfigStore } from '@/domains/dam/config/store/damConfigStore'
 import ImageMediaWidgetInner from '@/domains/dam/imageWidget/components/ImageMediaWidgetInner.vue'
+import AImageWidgetSimple from '@/domains/dam/imageWidget/components/AImageWidgetSimple.vue'
+import AMediaWidgetSimple from '@/domains/dam/imageWidget/components/AMediaWidgetSimple.vue'
 import type { MediaAware } from '@/domains/dam/types/MediaAware'
 import { useI18n } from 'vue-i18n'
 
@@ -68,8 +70,15 @@ const emit = defineEmits<{
 }>()
 
 const mediaModel = defineModel<MediaAware | null>('media', { required: true })
+// Declared: the read-only fallback renders the slots too, and inferred they would take its looser types.
+defineSlots<{
+  append?: (props: { imageMedia: ImageCreateUpdateAware | MediaAware | null }) => unknown
+  preview?: (props: { imageMedia: MediaAware }) => unknown
+}>()
 const imageModel = defineModel<IntegerIdNullable>('image', { required: true })
-const status = ref<'loading' | 'ready' | 'error' | 'uploadNotAllowed'>('loading')
+const status = ref<'loading' | 'ready' | 'error'>('loading')
+// Not being allowed to upload is no reason to hide the image that is already there: it is shown read-only.
+const uploadAllowed = ref(true)
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { damClient } = useCommonAdminCoreDamOptions(props.configName)
@@ -91,7 +100,13 @@ onMounted(async () => {
     return
   }
   if (!isImageWidgetUploadConfigAllowed(uploadConfig.value)) {
-    status.value = 'uploadNotAllowed'
+    uploadAllowed.value = false
+    try {
+      if (!damConfigStore.initialized.damPrvConfig) await loadDamPrvConfig()
+      status.value = 'ready'
+    } catch (e) {
+      status.value = 'error'
+    }
     return
   }
   const promises: Promise<any>[] = []
@@ -133,6 +148,7 @@ const { t } = useI18n()
     v-model:media="mediaModel"
     v-model:image="imageModel"
     v-bind="props"
+    :readonly="readonly || !uploadAllowed"
     @after-metadata-save-success="emit('afterMetadataSaveSuccess')"
   >
     <template #append="{ imageMedia: appendImage }">
@@ -148,17 +164,53 @@ const { t } = useI18n()
       />
     </template>
   </ImageMediaWidgetInner>
-  <div
-    v-else-if="status === 'error'"
-    class="text-error"
-  >
-    {{ t('common.damImage.error.loadingConfig') }}
-  </div>
-  <div
-    v-else-if="status === 'uploadNotAllowed'"
-    class="text-error"
-  >
-    {{ t('common.damImage.error.accessRights') }}
+  <!-- The config fails also for a user without access to the licence: the media or image already there is still shown. -->
+  <div v-else-if="status === 'error'">
+    <AMediaWidgetSimple
+      v-if="mediaModel"
+      :media="mediaModel"
+      :config-name="configName"
+      :label="label"
+      :width="width"
+      :height="height"
+      :dam-width="damWidth"
+      :dam-height="damHeight"
+    >
+      <template #append="{ media: appendMedia }">
+        <slot
+          name="append"
+          :image-media="appendMedia"
+        />
+      </template>
+      <template #preview="{ media: previewMedia }">
+        <slot
+          v-if="previewMedia"
+          name="preview"
+          :image-media="previewMedia"
+        />
+      </template>
+    </AMediaWidgetSimple>
+    <AImageWidgetSimple
+      v-else-if="imageModel || initialImage"
+      :model-value="imageModel"
+      :image="initialImage"
+      :config-name="configName"
+      :label="label"
+      :width="width"
+      :height="height"
+      :dam-width="damWidth"
+      :dam-height="damHeight"
+    >
+      <template #append="{ image: appendImage }">
+        <slot
+          name="append"
+          :image-media="appendImage"
+        />
+      </template>
+    </AImageWidgetSimple>
+    <div class="text-error">
+      {{ t('common.damImage.error.loadingConfig') }}
+    </div>
   </div>
   <VProgressCircular
     v-else

@@ -1,4 +1,5 @@
-import type { ImageFieldValidationConfig } from '@/AnzuSystemsCommonAdmin'
+import type { CommonAdminCoreDamConfig, ImageFieldValidationConfig } from '@/AnzuSystemsCommonAdmin'
+import type { AclValue } from '@/domains/auth/types/Permission'
 import { coreDamOptions as commonAdminCoreDamOptions } from '@/plugins/pluginOptions'
 import { isUndefined } from '@/shared/utils/common'
 import { commonT } from '@/plugins/i18n'
@@ -14,6 +15,23 @@ const defaultSourceValidation: ImageFieldValidationConfig = { required: true, mi
 
 export { initCommonAdminCoreDamOptions } from '@/plugins/pluginOptions'
 
+const DEFAULT_END_POINT_ROI = '/adm/v1/roi'
+const DEFAULT_END_POINT_IMAGE = '/adm/v1/image'
+
+const resolveRoiUpdateAcl = (config: CommonAdminCoreDamConfig): AclValue | null => {
+  if (!isUndefined(config.roiUpdateAcl)) return config.roiUpdateAcl
+  const endPointRoi = config.endPointRoi || DEFAULT_END_POINT_ROI
+
+  return endPointRoi === DEFAULT_END_POINT_ROI ? 'dam_regionOfInterest_update' : null
+}
+
+const resolveImageRotateAcl = (config: CommonAdminCoreDamConfig): AclValue | null => {
+  if (!isUndefined(config.imageRotateAcl)) return config.imageRotateAcl
+  const endPointImage = config.endPointImage || DEFAULT_END_POINT_IMAGE
+
+  return endPointImage === DEFAULT_END_POINT_IMAGE ? 'dam_image_update' : null
+}
+
 export function useCommonAdminCoreDamOptions(configName: string = 'default') {
   if (
     isUndefined(commonAdminCoreDamOptions.value) ||
@@ -25,9 +43,11 @@ export function useCommonAdminCoreDamOptions(configName: string = 'default') {
 
   return {
     damClient: commonAdminCoreDamOptions.value.configs[configName].damClient,
-    endPointImage: commonAdminCoreDamOptions.value.configs[configName].endPointImage || '/adm/v1/image',
+    endPointImage: commonAdminCoreDamOptions.value.configs[configName].endPointImage || DEFAULT_END_POINT_IMAGE,
+    imageRotateAcl: resolveImageRotateAcl(commonAdminCoreDamOptions.value.configs[configName]),
     endPointAsset: commonAdminCoreDamOptions.value.configs[configName].endPointAsset || '/adm/v1/asset',
-    endPointRoi: commonAdminCoreDamOptions.value.configs[configName].endPointRoi || '/adm/v1/roi',
+    endPointRoi: commonAdminCoreDamOptions.value.configs[configName].endPointRoi || DEFAULT_END_POINT_ROI,
+    roiUpdateAcl: resolveRoiUpdateAcl(commonAdminCoreDamOptions.value.configs[configName]),
     mainFileSingleUseEnabled: commonAdminCoreDamOptions.value.configs[configName].mainFileSingleUseEnabled ?? true,
     showSourceEnabled: commonAdminCoreDamOptions.value.configs[configName].showSourceEnabled ?? true,
     showFileInfoEnabled: commonAdminCoreDamOptions.value.configs[configName].showFileInfoEnabled ?? true,

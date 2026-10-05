@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import AImageWidget from '@/domains/dam/imageWidget/components/AImageWidget.vue'
+import AImageMediaWidget from '@/domains/dam/imageWidget/components/AImageMediaWidget.vue'
 import {
   filterAllowedImageWidgetSelectConfigs,
   isImageWidgetUploadConfigAllowed,
@@ -16,12 +17,9 @@ vi.mock('@/domains/dam/config/composables/damConfigState', () => ({
     loadDamPrvConfig: async () => undefined,
     loadDamConfigAssetCustomFormElements: async () => true,
     getDamConfigAssetCustomFormElements: () => ({ image: [], audio: [], video: [], document: [] }),
-    getOrLoadDamConfigExtSystemByLicence: async (licence: number) => ({
-      licence,
-      extSystem: 1,
-      licenceName: '',
-      extSystemConfig: {},
-    }),
+    // Licence 99 stands for one the backend refuses to the user: its config does not load.
+    getOrLoadDamConfigExtSystemByLicence: async (licence: number) =>
+      licence === 99 ? undefined : { licence, extSystem: 1, licenceName: '', extSystemConfig: {} },
     getOrLoadDamConfigExtSystemByLicences: async () => [],
   }),
 }))
@@ -46,7 +44,13 @@ describe('isImageWidgetUploadConfigAllowed', () => {
   })
 
   it('allows by ext system admin or by licence, refuses otherwise', () => {
-    const user = { id: 1, roles: [], adminToExtSystems: [], resolvedAssetLicences: [] as { id: number }[] }
+    const user = {
+      id: 1,
+      roles: [],
+      adminToExtSystems: [] as number[],
+      userToExtSystems: [] as number[],
+      resolvedAssetLicences: [] as { id: number }[],
+    }
     setDamUser(user)
     expect(isImageWidgetUploadConfigAllowed(config)).toBe(false)
     user.resolvedAssetLicences = [{ id: 10 }]
@@ -54,17 +58,50 @@ describe('isImageWidgetUploadConfigAllowed', () => {
     setDamUser({ ...user, adminToExtSystems: [1], resolvedAssetLicences: [] })
     expect(isImageWidgetUploadConfigAllowed(config)).toBe(true)
   })
+
+  it('allows a user of the ext system, as the backend licence voter does', () => {
+    setDamUser({ id: 1, roles: [], adminToExtSystems: [], userToExtSystems: [1], resolvedAssetLicences: [] })
+    expect(isImageWidgetUploadConfigAllowed(config)).toBe(true)
+    expect(filterAllowedImageWidgetSelectConfigs([config])).toHaveLength(1)
+  })
 })
 
 describe('AImageWidget without a DAM user', () => {
-  it('shows the access rights error instead of the widget', async () => {
+  it('shows the image read-only instead of offering an upload DAM rejects', async () => {
     const wrapper = mount(AImageWidget, {
       props: { modelValue: null, queueKey: 'q', uploadLicence: 10, selectLicences: [10] },
       global: { stubs: { ImageWidgetInner: true } },
     })
     await flushPromises()
+    const inner = wrapper.findComponent({ name: 'ImageWidgetInner' })
+    expect(inner.exists()).toBe(true)
+    expect(inner.props('readonly')).toBe(true)
+    wrapper.unmount()
+  })
+})
+
+describe('AImageWidget whose licence config does not load', () => {
+  it('still shows the image, read-only, with the error', async () => {
+    const wrapper = mount(AImageWidget, {
+      props: { modelValue: 5, queueKey: 'q', uploadLicence: 99, selectLicences: [99] },
+      global: { stubs: { ImageWidgetInner: true, AImageWidgetSimple: true } },
+    })
+    await flushPromises()
     expect(wrapper.findComponent({ name: 'ImageWidgetInner' }).exists()).toBe(false)
-    expect(wrapper.text()).toContain('Media Library access rights error')
+    expect(wrapper.findComponent({ name: 'AImageWidgetSimple' }).props('modelValue')).toBe(5)
+    expect(wrapper.find('.text-error').exists()).toBe(true)
+    wrapper.unmount()
+  })
+
+  it('still shows a stored audio or video, read-only, in the media widget', async () => {
+    const media = { id: 3, damMedia: { imageFileId: null, playable: true, assetType: 'video' } }
+    const wrapper = mount(AImageMediaWidget, {
+      props: { media, image: null, queueKey: 'q', uploadLicence: 99, selectLicences: [99] } as never,
+      global: { stubs: { ImageMediaWidgetInner: true, AMediaWidgetSimple: true, AImageWidgetSimple: true } },
+    })
+    await flushPromises()
+    expect(wrapper.findComponent({ name: 'AMediaWidgetSimple' }).props('media')).toEqual(media)
+    expect(wrapper.findComponent({ name: 'AImageWidgetSimple' }).exists()).toBe(false)
     wrapper.unmount()
   })
 })

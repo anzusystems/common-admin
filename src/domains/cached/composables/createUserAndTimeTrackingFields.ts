@@ -1,4 +1,5 @@
 import { type Component, defineComponent, h, type PropType } from 'vue'
+import { isFunction } from '@/shared/utils/common'
 import AUserAndTimeTrackingFields from '@/domains/ui/components/AUserAndTimeTrackingFields.vue'
 import type { AnzuUserMinimal } from '@/shared/types/AnzuUser'
 import type { CachedItem } from '@/domains/cached/composables/defineCached'
@@ -10,8 +11,11 @@ export interface CreateUserAndTimeTrackingFieldsOptions<U extends AnzuUserMinima
    * setup, once, so the cache resolves in component scope.
    */
   useCachedUsers: () => UserAndTimeTrackingUsers<U>
-  /** Named route of a user's detail (e.g. `'/(common)/users/[id]'`); without it the chip is no link. */
-  userRouteName?: string
+  /**
+   * Named route of a user's detail (e.g. `'/(common)/users/[id]'`); without it the chip is no link. A function is read
+   * on each render, so the link can follow the current user's permission for that route.
+   */
+  userRouteName?: string | (() => string | undefined)
   /** A user's detail in another admin, `:id` replaced; opens in a new tab. */
   userExternalUrlTemplate?: string
   /** The chip's label, for users that carry a better one than `person.fullName`. */
@@ -50,7 +54,7 @@ export function createUserAndTimeTrackingFields<U extends AnzuUserMinimal = Anzu
           {
             data: props.data,
             users,
-            userRouteName: options.userRouteName,
+            userRouteName: isFunction(options.userRouteName) ? options.userRouteName() : options.userRouteName,
             userExternalUrlTemplate: options.userExternalUrlTemplate,
             userTitleFn: options.userTitleFn,
             ...attrs,

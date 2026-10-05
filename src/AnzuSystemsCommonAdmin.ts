@@ -12,6 +12,7 @@ import {
   initCommonAdminImageOptions,
 } from '@/plugins/pluginOptions'
 import type { IntegerId } from '@/shared/types/common'
+import type { AclValue } from '@/domains/auth/types/Permission'
 import type { ImageAware, ImageCreateUpdateAware } from '@/domains/dam/types/ImageAware'
 import type {
   UploadMetadataToImageMapFn,
@@ -64,6 +65,14 @@ export interface CommonAdminCoreDamConfig {
   endPointAsset?: string
   endPointImage?: string
   endPointRoi?: string
+  /**
+   * The grant a region of interest's save needs, checked before the editor is offered. By default
+   * `dam_regionOfInterest_update` for the default `/adm/v1/roi`, and none for another endpoint (the UGC one checks no
+   * grant); `null` checks none.
+   */
+  roiUpdateAcl?: AclValue | null
+  /** The grant an image's rotation needs, as `roiUpdateAcl`: `dam_image_update` for the default `/adm/v1/image`. */
+  imageRotateAcl?: AclValue | null
   mainFileSingleUseEnabled?: boolean
   showSourceEnabled?: boolean
   showFileInfoEnabled?: boolean

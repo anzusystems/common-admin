@@ -10,8 +10,10 @@ import AssetImage from '@/domains/dam/assetDetail/components/AssetImage.vue'
 import AssetDetailDialogSidebar from '@/domains/dam/assetDetail/components/AssetDetailDialogSidebar.vue'
 import { assetFileIsImageFile } from '@/domains/dam/types/AssetFile'
 import DamAssetImageRoiSelectLazy from '@/domains/dam/cropper/components/DamAssetImageRoiSelectLazy.vue'
+import { useAuthHelpers } from '@/domains/auth/composables/defineAuth'
 import type { UploadQueueKey } from '@/domains/dam/types/UploadQueue'
 import type { IntegerId } from '@/shared/types/common'
+import { isNull } from '@/shared/utils/common'
 import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
 
 const props = withDefaults(
@@ -30,6 +32,7 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
+const { canSafeHelper } = useAuthHelpers()
 
 const { toolbarColor } = useTheme()
 
@@ -37,7 +40,9 @@ const assetDetailStore = useAssetDetailStore()
 const { asset, dialog, activeTab, loading } = storeToRefs(assetDetailStore)
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { simpleAssetSidebarEnabled } = useCommonAdminCoreDamOptions(props.configName)
+const { simpleAssetSidebarEnabled, roiUpdateAcl } = useCommonAdminCoreDamOptions(props.configName)
+// The endpoint refuses the region's save without it: the region tab then only shows the image.
+const roiEditable = computed(() => isNull(roiUpdateAcl) || canSafeHelper(roiUpdateAcl, undefined, 'roi'))
 
 const closeDialog = () => {
   assetDetailStore.setAsset(null)
@@ -190,6 +195,7 @@ const assetMainFile = computed(() => {
               <DamAssetImageRoiSelectLazy
                 :ext-system="extSystem"
                 :config-name="configName"
+                :readonly="!roiEditable"
               />
             </div>
             <div

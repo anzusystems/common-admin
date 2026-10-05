@@ -14,6 +14,7 @@ import AssetDetailDialogLoader from '@/domains/dam/assetDetail/components/AssetD
 import AssetImage from '@/domains/dam/assetDetail/components/AssetImage.vue'
 import { AssetFileFailReason, assetFileIsImageFile } from '@/domains/dam/types/AssetFile'
 import DamAssetImageRoiSelectLazy from '@/domains/dam/cropper/components/DamAssetImageRoiSelectLazy.vue'
+import { useAuthHelpers } from '@/domains/auth/composables/defineAuth'
 import type { ImageCreateUpdateAware } from '@/domains/dam/types/ImageAware'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
 import { useUploadQueueDialog } from '@/domains/dam/uploadQueue/composables/useUploadQueueDialog'
@@ -59,6 +60,7 @@ const { showErrorsDefault, showRecordWas } = useAlerts()
 const IMAGE_ASPECT_RATIO = 16 / 9
 
 const { t } = useI18n()
+const { canSafeHelper } = useAuthHelpers()
 
 const { toolbarColor } = useTheme()
 
@@ -206,8 +208,11 @@ const {
   endPointAsset,
   customUploadMetadataToImageMap,
   simpleAssetSidebarEnabled,
+  roiUpdateAcl,
   // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 } = useCommonAdminCoreDamOptions(props.configName)
+// The endpoint refuses the region's save without it: the region tab then only shows the image.
+const roiEditable = computed(() => isNull(roiUpdateAcl) || canSafeHelper(roiUpdateAcl, undefined, 'roi'))
 const simpleMode = computed(() => simpleAssetSidebarEnabled && isTypeImage.value && enableRoiTab.value)
 
 const onStopConfirm = async () => {
@@ -374,6 +379,7 @@ onMounted(() => {
               <DamAssetImageRoiSelectLazy
                 :ext-system="extSystem"
                 :config-name="configName"
+                :readonly="!roiEditable"
               />
             </div>
             <div

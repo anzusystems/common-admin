@@ -10,9 +10,11 @@ const props = withDefaults(
   defineProps<{
     imageId: DocId
     dataCy?: string
+    configName?: string
   }>(),
   {
     dataCy: undefined,
+    configName: 'default',
   }
 )
 const emit = defineEmits<{
@@ -23,7 +25,8 @@ const { showRecordWas, showErrorsDefault } = useAlerts()
 
 const loading = ref(false)
 
-const { damClient, endPointImage } = useCommonAdminCoreDamOptions()
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { damClient, endPointImage } = useCommonAdminCoreDamOptions(props.configName)
 
 const rotate = async (angle: 90 | 270) => {
   try {

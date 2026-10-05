@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import type { RegisteredAclValue } from '@/domains/auth/types/Permission'
+import { useAclAllowed } from '@/domains/auth/composables/aclAllowed'
 import { computed, ref } from 'vue'
 import { eventClickBlur } from '@/shared/utils/event'
 import { useI18n } from 'vue-i18n'
@@ -23,8 +25,13 @@ const props = withDefaults(
     // When set, deleting acknowledges the unsaved-changes leave guard first, so the delete's follow-up
     // navigation is not blocked by a now-meaningless "unsaved changes, really leave?" prompt. (BUG-08)
     guard?: { acknowledge: () => void }
+    // Shown only when the current user passes it; no ACL, no check. An array is evaluated with AND.
+    acl?: RegisteredAclValue | RegisteredAclValue[]
+    subject?: object
   }>(),
   {
+    acl: undefined,
+    subject: undefined,
     variant: 'icon',
     buttonT: 'common.button.delete',
     buttonClass: 'ml-2',
@@ -40,9 +47,15 @@ const props = withDefaults(
     guard: undefined,
   }
 )
+
 const emit = defineEmits<{
   (e: 'deleteRecord'): void
 }>()
+
+const aclAllowed = useAclAllowed(
+  () => props.acl,
+  () => props.subject
+)
 
 const dialog = ref(false)
 
@@ -84,75 +97,77 @@ const variantComputed = computed(() => {
 </script>
 
 <template>
-  <VBtn
-    v-if="variant === 'icon'"
-    :aria-label="t(buttonT)"
-    :class="buttonClass"
-    :data-cy="dataCy"
-    icon
-    size="small"
-    :variant="variantComputed"
-    :disabled="disabled"
-    :color="color"
-    :loading="loading"
-    :width="size"
-    :height="size"
-    @click.stop="onClick"
-  >
-    <VIcon icon="mdi-trash-can-outline" />
-    <VTooltip
-      activator="parent"
-      location="bottom"
+  <template v-if="aclAllowed">
+    <VBtn
+      v-if="variant === 'icon'"
+      :aria-label="t(buttonT)"
+      :class="buttonClass"
+      :data-cy="dataCy"
+      icon
+      size="small"
+      :variant="variantComputed"
+      :disabled="disabled"
+      :color="color"
+      :loading="loading"
+      :width="size"
+      :height="size"
+      @click.stop="onClick"
+    >
+      <VIcon icon="mdi-trash-can-outline" />
+      <VTooltip
+        activator="parent"
+        location="bottom"
+      >
+        {{ t(buttonT) }}
+      </VTooltip>
+    </VBtn>
+    <VBtn
+      v-else
+      :class="buttonClass"
+      :data-cy="dataCy"
+      :variant="variantComputed"
+      :color="color"
+      :disabled="disabled"
+      :loading="loading"
+      rounded="pill"
+      :height="size"
+      @click.stop="onClick"
     >
       {{ t(buttonT) }}
-    </VTooltip>
-  </VBtn>
-  <VBtn
-    v-else
-    :class="buttonClass"
-    :data-cy="dataCy"
-    :variant="variantComputed"
-    :color="color"
-    :disabled="disabled"
-    :loading="loading"
-    rounded="pill"
-    :height="size"
-    @click.stop="onClick"
-  >
-    {{ t(buttonT) }}
-  </VBtn>
-  <VDialog
-    v-model="dialog"
-    persistent
-    :width="500"
-    no-click-animation
-    @keydown.esc="onCancel"
-  >
-    <VCard
-      v-if="dialog"
-      data-cy="delete-panel"
+    </VBtn>
+    <VDialog
+      v-model="dialog"
+      persistent
+      :width="500"
+      no-click-animation
+      @keydown.esc="onCancel"
     >
-      <ADialogToolbar @cancel="onCancel">
-        {{ t(dialogMessageT) }}
-      </ADialogToolbar>
-      <VCardActions>
-        <VSpacer />
-        <ABtnTertiary
-          :disabled="loading"
-          data-cy="button-cancel"
-          @click.stop="onCancel"
-        >
-          {{ t(dialogCancelButtonT) }}
-        </ABtnTertiary>
-        <ABtnPrimary
-          :color="dialogConfirmColor"
-          :loading="loading"
-          data-cy="button-confirm-delete"
-          @click.stop="onConfirm"
-        >
-          {{ t(dialogConfirmButtonT) }}
-        </ABtnPrimary>
-      </VCardActions>
-    </VCard>
-  </VDialog>
+      <VCard
+        v-if="dialog"
+        data-cy="delete-panel"
+      >
+        <ADialogToolbar @cancel="onCancel">
+          {{ t(dialogMessageT) }}
+        </ADialogToolbar>
+        <VCardActions>
+          <VSpacer />
+          <ABtnTertiary
+            :disabled="loading"
+            data-cy="button-cancel"
+            @click.stop="onCancel"
+          >
+            {{ t(dialogCancelButtonT) }}
+          </ABtnTertiary>
+          <ABtnPrimary
+            :color="dialogConfirmColor"
+            :loading="loading"
+            data-cy="button-confirm-delete"
+            @click.stop="onConfirm"
+          >
+            {{ t(dialogConfirmButtonT) }}
+          </ABtnPrimary>
+        </VCardActions>
+      </VCard>
+    </VDialog>
+  </template>
 </template>

@@ -9,6 +9,7 @@ export function useImageMassOperations() {
   const imageStore = useImageStore()
 
   const replaceEmptyDescription = (value: string, forceReplace = false) => {
+    if (imageStore.readonly) return
     const items = imageStore.images
     for (let i = 0; i < items.length; i++) {
       const item = items[i]!
@@ -19,6 +20,7 @@ export function useImageMassOperations() {
   }
 
   const replaceEmptySource = (value: string, forceReplace = false) => {
+    if (imageStore.readonly) return
     const items = imageStore.images
     for (let i = 0; i < items.length; i++) {
       const item = items[i]!
@@ -32,9 +34,12 @@ export function useImageMassOperations() {
   const { cachedExtSystemId } = useExtSystemIdForCached()
 
   const replaceEmptyAuthors = async (value: DocId[], forceReplace = false) => {
+    if (imageStore.readonly) return
     const authorsMap = new Map<DocId, string>()
     const authorNames: string[] = []
     const authorsRes = await fetchAuthorListByIds(damClient, cachedExtSystemId.value, [...value])
+    // The widget may have turned read-only while the authors loaded.
+    if (imageStore.readonly) return
     authorsRes.forEach((author) => {
       authorsMap.set(author.id, author.name)
     })

@@ -2,6 +2,7 @@ import { useApiRequest } from '@/domains/api/composables/useApiRequest'
 import { HTTP_STATUS_BAD_REQUEST, HTTP_STATUS_UNPROCESSABLE_ENTITY } from '@/shared/statusCodes'
 import {
   type AnyUserSystemDescriptor,
+  descriptorMayWrite,
   resolveCreateEndpoint,
   resolveEnabledWrite,
   resolveMetadataWrite,
@@ -90,6 +91,8 @@ export const useUserCrossSystemWrites = () => {
         // Already there. A no-op PUT would still run `updateRelations()` in cms -- risk for nothing.
         return { outcome: BulkOutcome.Done, user: current }
       }
+      // The right may have gone while the record was read: reported as the server would refuse it.
+      if (!descriptorMayWrite(descriptor, 'update')) return { outcome: BulkOutcome.Forbidden }
       const body = cloneDeep(current)
       body.enabled = enabled
       const { execute: write } = request<AnzuUser, AnzuUser>(descriptor, 'PUT', url)
@@ -141,6 +144,8 @@ export const useUserCrossSystemWrites = () => {
               readMetadataField(current, field) !== readMetadataField(target, field)
           )
 
+      // The right may have gone while the record was read: reported as the server would refuse it.
+      if (!descriptorMayWrite(descriptor, 'update')) return { outcome: BulkOutcome.Forbidden, changed: false }
       const body = cloneDeep(current)
       fields.forEach((field) => writeMetadataField(body, field, readMetadataField(target, field)))
 

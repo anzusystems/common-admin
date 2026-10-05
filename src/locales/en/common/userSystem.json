@@ -6,7 +6,8 @@
     "absent": "No account here",
     "forbidden": "No access",
     "unavailable": "System did not answer",
-    "configDisabled": "Disabled in configuration"
+    "configDisabled": "Disabled in configuration",
+    "noWriteRight": "No right to write"
   },
   "button": {
     "create": "Create",

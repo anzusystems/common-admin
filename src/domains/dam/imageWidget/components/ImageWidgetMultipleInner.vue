@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import type { DocId, IntegerId } from '@/shared/types/common'
-import { computed, inject, onMounted, ref, type ShallowRef, toRaw } from 'vue'
+import { computed, inject, onMounted, ref, type ShallowRef, toRaw, watch } from 'vue'
 import { isNull, isString, isUndefined } from '@/shared/utils/common'
 import type { UploadQueueKey } from '@/domains/dam/types/UploadQueue'
 import type { DamConfigLicenceExtSystemReturnType } from '@/domains/dam/types/DamConfig'
@@ -116,11 +116,18 @@ const imagesLoadFailed = ref(false)
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const imagesReady = ref(props.modelValue.length === 0)
 
-const listEditor = ref<{ commit: (rows?: ImageStoreItem[]) => void } | null>(null)
+const listEditor = ref<{ commit: (rows?: ImageStoreItem[]) => void; cancelReorderMode: () => void } | null>(null)
 
 const imageStore = useImageStore()
 // One store for every widget: whatever the previous one left is not this entity's.
 imageStore.reset()
+watch(
+  () => props.readonly,
+  (value) => {
+    imageStore.readonly = value
+  },
+  { immediate: true }
+)
 const { images, maxPosition } = storeToRefs(imageStore)
 
 const fetchImagesOnLoad = async () => {
@@ -142,7 +149,13 @@ const fetchImagesOnLoad = async () => {
       }
     })
 
-    const assetsRes = await fetchAssetListByFileIdsMultipleLicences(damClient, endPointAsset, groupedIds)
+    let assetsRes: Awaited<ReturnType<typeof fetchAssetListByFileIdsMultipleLicences>> = []
+    try {
+      assetsRes = await fetchAssetListByFileIdsMultipleLicences(damClient, endPointAsset, groupedIds)
+    } catch (e) {
+      // Read-only shows the images without their DAM authors: a user refused the upload is often refused the assets.
+      if (!props.readonly) throw e
+    }
 
     imageStore.setImages(
       imagesRes.map((imageRes) => {
@@ -158,7 +171,10 @@ const fetchImagesOnLoad = async () => {
         }
       })
     )
-    emit('update:modelValue', images.value.map((image) => image.id).filter((id) => id !== undefined) as IntegerId[])
+    // Displaying a read-only widget must not rewrite the form's value with the stored order.
+    if (!props.readonly) {
+      emit('update:modelValue', images.value.map((image) => image.id).filter((id) => id !== undefined) as IntegerId[])
+    }
   } catch (e) {
     imagesLoadFailed.value = true
     showErrorsDefault(e)
@@ -179,6 +195,7 @@ const { cachedExtSystemId } = useExtSystemIdForCached()
 const { uploadQueueDialog } = useUploadQueueDialog()
 
 const onFileInput = (files: File[]) => {
+  if (props.readonly) return
   const config = imageWidgetUploadConfig.value
   if (isUndefined(config)) return
   cachedExtSystemId.value = config.extSystem
@@ -187,6 +204,7 @@ const onFileInput = (files: File[]) => {
 }
 
 const onDrop = (files: File[]) => {
+  if (props.readonly) return
   const config = imageWidgetUploadConfig.value
   if (isUndefined(config)) return
   cachedExtSystemId.value = config.extSystem
@@ -195,6 +213,7 @@ const onDrop = (files: File[]) => {
 }
 
 const onCopyToLicence = (data: DamImageCopyToLicenceResponse) => {
+  if (props.readonly) return
   if (data.length === 0) return
   const config = imageWidgetUploadConfig.value
   if (isUndefined(config)) return
@@ -329,6 +348,7 @@ const assetSelectConfirmMap = async (items: AssetSearchListItemDto[]): Promise<I
 }
 
 const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
+  if (props.readonly) return
   if (data.type !== 'asset' || data.value.length === 0) return
   if (!isUndefined(data.copyToLicence)) {
     try {
@@ -359,7 +379,8 @@ const {
   editAssetLabel,
   addFromDamLabel,
   customAssetSelectMetadataToImageMap,
-} = useCommonAdminCoreDamOptions()
+  // eslint-disable-next-line vue/no-setup-props-reactivity-loss
+} = useCommonAdminCoreDamOptions(props.configName)
 
 const onEditAsset = async (assetFileId: DocId) => {
   assetLoading.value = true
@@ -379,6 +400,7 @@ const onEditAsset = async (assetFileId: DocId) => {
 }
 
 const onAssetUploadConfirm = (items: ImageStoreItem[]) => {
+  if (props.readonly) return
   if (items.length === 0) return
   imageStore.addImages(
     items.map((item) => {
@@ -406,6 +428,8 @@ const authorEnabled = computed(() => {
 })
 
 const saveImages = async () => {
+  // Nothing of the user's to write; the images stay as they were loaded.
+  if (props.readonly) return true
   // Empty store here means the fetch is pending or failed, not a user deletion — the empty
   // path below would detach every image.
   if (imagesLoading.value || imagesLoadFailed.value) {
@@ -429,6 +453,8 @@ const saveImages = async () => {
         image.texts.source = authorsRes.map((author) => author.name).join(', ')
       }
     }
+    // Turned read-only while the authors loaded: nothing of the user's is written any more.
+    if (props.readonly) return true
     if (assetUpdateItems.length) {
       await bulkUpdateAssetsAuthors(damClient, endPointAsset, assetUpdateItems)
     }
@@ -499,6 +525,13 @@ const removeItem = async (index: number) => {
 const limitDialogComponent = ref<InstanceType<typeof ImageWidgetMultipleLimitDialog> | null>(null)
 
 const editorMode = ref<'view' | 'reorder'>('view')
+// A reorder under way would keep moving rows a read-only widget does not save.
+watch(
+  () => props.readonly,
+  (value) => {
+    if (value && editorMode.value === 'reorder') listEditor.value?.cancelReorderMode()
+  }
+)
 
 // Required by the editor, but never invoked here — adds happen through the
 // upload / asset-select flow, not the editor's add button (which is hidden).
@@ -543,7 +576,10 @@ onMounted(() => {
     >
       {{ label }}
     </h4>
-    <div class="pb-2">
+    <div
+      v-if="!readonly"
+      class="pb-2"
+    >
       <AFileInput
         :file-input-key="uploadQueue?.fileInputKey"
         :accept="uploadAccept"
@@ -613,7 +649,8 @@ onMounted(() => {
         :show-add-button="false"
         :show-delete-button="false"
         :show-edit-button="false"
-        :disable-drag="disableDraggable"
+        :disable-drag="disableDraggable || readonly"
+        :readonly="readonly"
         @reorder-applied="onReorderApplied"
       >
         <template #view-body>
@@ -626,6 +663,8 @@ onMounted(() => {
               :source-label="sourceLabel"
               :edit-asset-label="editAssetLabel"
               :author-enabled="authorEnabled"
+              :readonly="readonly"
+              :config-name="configName"
               @edit-asset="onEditAsset"
               @remove-item="removeItem"
             />
@@ -637,6 +676,7 @@ onMounted(() => {
               <AImageWidgetSimple
                 :model-value="raw.id"
                 :image="raw"
+                :config-name="configName"
               />
             </div>
             <div class="image-widget-multiple-reorder__meta">
@@ -654,7 +694,7 @@ onMounted(() => {
         </template>
       </ASortableListEditor>
       <AImageDropzone
-        v-if="editorMode === 'view'"
+        v-if="editorMode === 'view' && !readonly"
         variant="fill"
         :hover-only="modelValue.length > 0 || images.length > 0"
         :accept="uploadAccept"
@@ -678,6 +718,7 @@ onMounted(() => {
     <AssetDetailDialog
       v-if="assetDialog === queueKey"
       :queue-key="queueKey"
+      :config-name="configName"
       :ext-system="cachedExtSystemId"
     />
     <ImageWidgetMultipleLimitDialog

@@ -14,11 +14,12 @@ export function filterAllowedImageWidgetSelectConfigs(values: DamConfigLicenceEx
   const currentUser = damCurrentUser.value
   if (isUndefined(currentUser)) return []
 
-  const adminToExtSystems = currentUser.adminToExtSystems
+  // As the backend's licence voter: an admin or a user of the ext. system may use any of its licences.
+  const extSystems = [...currentUser.adminToExtSystems, ...currentUser.userToExtSystems]
   const assetLicences = currentUser.resolvedAssetLicences.map((assetLicenceValue) => assetLicenceValue.id)
   const allowed: DamConfigLicenceExtSystemReturnType[] = []
   values.forEach((value) => {
-    if (adminToExtSystems.includes(value.extSystem)) {
+    if (extSystems.includes(value.extSystem)) {
       allowed.push(value)
       return
     }
@@ -39,8 +40,11 @@ export function isImageWidgetUploadConfigAllowed(value: DamConfigLicenceExtSyste
   const currentUser = damCurrentUser.value
   if (isUndefined(currentUser)) return false
 
-  const adminToExtSystems = currentUser.adminToExtSystems
-  if (adminToExtSystems.includes(value.extSystem)) {
+  // As the backend's licence voter: an admin or a user of the ext. system may use any of its licences.
+  if (
+    currentUser.adminToExtSystems.includes(value.extSystem) ||
+    currentUser.userToExtSystems.includes(value.extSystem)
+  ) {
     return true
   }
 

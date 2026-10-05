@@ -22,7 +22,7 @@ import {
 import { isEmailTerm, useUserCrossSystemSearch } from '@/domains/anzuUser/composables/userCrossSystemSearch'
 import { useUserCrossSystemWrites } from '@/domains/anzuUser/composables/userCrossSystemWrites'
 import { findMetadataDifferences, type UserMetadataField } from '@/domains/anzuUser/utils/userMetadataDiff'
-import type { AnyUserSystemDescriptor } from '@/domains/anzuUser/composables/userSystemDescriptor'
+import { type AnyUserSystemDescriptor, descriptorMayWrite } from '@/domains/anzuUser/composables/userSystemDescriptor'
 import type { UserSystemRefreshHook } from '@/domains/anzuUser/composables/userSystemProbe'
 import { isActionable } from '@/domains/anzuUser/utils/userSystemState'
 import type { AnzuUser, BaseUser } from '@/shared/types/AnzuUser'
@@ -78,6 +78,11 @@ const records = computed(() => {
 const differences = computed(() => findMetadataDifferences(records.value))
 
 const foundAnywhere = computed(() => records.value.size > 0)
+
+/** The bulk actions only write where the person was found; offer them when at least one of those may be written. */
+const anyFoundWritable = computed(() =>
+  props.descriptors.some((item) => records.value.has(item.system) && descriptorMayWrite(item, 'update'))
+)
 const searchDone = computed(() => store.phase === CrossSystemPhase.Done)
 
 const searchedByEmail = computed(() => isEmailTerm(store.searchTerm))
@@ -96,7 +101,11 @@ const searchedByEmail = computed(() => isEmailTerm(store.searchTerm))
  * of the search people actually use, since the id is the thing they do not know yet.
  */
 const canOfferCreateAnywhere = computed(
-  () => searchDone.value && !foundAnywhere.value && (searchedByEmail.value || unresolvedSystems.value.length === 0)
+  () =>
+    searchDone.value &&
+    !foundAnywhere.value &&
+    (searchedByEmail.value || unresolvedSystems.value.length === 0) &&
+    props.descriptors.some((item) => item.isEnabled() && descriptorMayWrite(item, 'create'))
 )
 
 /** A conflict is not a state to act from: writes would land on somebody else's account. */
@@ -181,6 +190,8 @@ const createFromSource = async (descriptor: AnyUserSystemDescriptor, metadata: B
       showError(t('common.userSystem.create.sourceChanged'))
       return
     }
+    // The create right may have gone while the source was read; nothing is offered then, so nothing is said.
+    if (!descriptorMayWrite(descriptor, 'create')) return
     // Metadata from the dialog, which was validated against the target's profile: the source may
     // leave `person` empty -- blog fills it for nobody -- where the target requires it.
     const body = createAnzuUser(descriptor.system)
@@ -219,9 +230,18 @@ const openBulk = (action: BulkActionType) => {
   bulkOpen.value = true
 }
 
-const runBulk = async (systems: string[]) => {
+/** The one place every bulk write passes through, retries included: a system the descriptor refuses is not written. */
+const writableSystems = (systems: string[]) =>
+  systems.filter((system) => {
+    const descriptor = props.descriptors.find((item) => item.system === system)
+    return !isUndefined(descriptor) && descriptorMayWrite(descriptor, 'update')
+  })
+
+const runBulk = async (requested: string[]) => {
   const id = store.resolvedId
   if (isNull(id)) return
+  const systems = writableSystems(requested)
+  if (systems.length === 0) return
   const enabled = bulkAction.value === BulkAction.Enable
   store.startBulk(bulkAction.value, systems, id)
   await Promise.allSettled(
@@ -240,12 +260,14 @@ const runBulk = async (systems: string[]) => {
 const runRepair = async (payload: { target: BaseUser; systems: string[] }) => {
   const id = store.resolvedId
   if (isNull(id)) return
-  store.startBulk(BulkAction.Metadata, payload.systems, id)
+  const systems = writableSystems(payload.systems)
+  if (systems.length === 0) return
+  store.startBulk(BulkAction.Metadata, systems, id)
   // What the search showed is captured before anything is written, so the comparison is against the
   // values the operator was actually looking at rather than against a row a sibling write refreshed.
   const seenBefore = new Map(records.value)
   await Promise.allSettled(
-    payload.systems.map(async (system) => {
+    systems.map(async (system) => {
       const descriptor = props.descriptors.find((item) => item.system === system)
       if (isUndefined(descriptor)) return
       store.setBulkEntry(system, BulkOutcome.Running)
@@ -279,7 +301,8 @@ const openCreateAnywhere = () => {
   // The first system that is switched on, not the first one listed: a system disabled in the
   // configuration is not among the options, and preselecting it would POST through a client with
   // no base URL.
-  createAnywhereSystem.value = props.descriptors.find((item) => item.isEnabled())?.system ?? null
+  createAnywhereSystem.value =
+    props.descriptors.find((item) => item.isEnabled() && descriptorMayWrite(item, 'create'))?.system ?? null
   createAnywhereUser.value = createAnzuUser(createAnywhereSystem.value ?? '')
   createAnywhereConflict.value = []
   createAnywhereError.value = null
@@ -326,7 +349,7 @@ const confirmCreateAnywhere = async () => {
       return
     }
     const descriptor = props.descriptors.find((item) => item.system === system)
-    if (isUndefined(descriptor) || !descriptor.isEnabled()) return
+    if (isUndefined(descriptor) || !descriptor.isEnabled() || !descriptorMayWrite(descriptor, 'create')) return
     const body = createAnzuUser(system)
     body.id = id
     body.email = createAnywhereUser.value.email
@@ -365,7 +388,9 @@ const createAnywhereNote = computed(
 )
 
 const createSystemOptions = computed(() =>
-  props.descriptors.filter((item) => item.isEnabled()).map((item) => ({ value: item.system, title: labelFor(item) }))
+  props.descriptors
+    .filter((item) => item.isEnabled() && descriptorMayWrite(item, 'create'))
+    .map((item) => ({ value: item.system, title: labelFor(item) }))
 )
 
 // The store is there so a closed dialog does not take a running bulk action with it -- not to keep
@@ -490,6 +515,7 @@ defineExpose({
             v-if="store.results.get(descriptor.system) && isActionable(store.results.get(descriptor.system)!.axes)"
           >
             <VBtn
+              v-if="descriptorMayWrite(descriptor, 'update')"
               size="small"
               variant="text"
               :loading="rowBusy.has(descriptor.system)"
@@ -504,7 +530,7 @@ defineExpose({
               }}
             </VBtn>
             <AUserManageButton
-              v-if="manageTargetFor(descriptor)"
+              v-if="manageTargetFor(descriptor) && descriptorMayWrite(descriptor, 'update')"
               :target="manageTargetFor(descriptor)!"
               :system-label="labelFor(descriptor)"
             />
@@ -517,7 +543,8 @@ defineExpose({
             v-else-if="
               foundAnywhere &&
               store.results.get(descriptor.system) &&
-              store.results.get(descriptor.system)!.axes.presence === 'absent'
+              store.results.get(descriptor.system)!.axes.presence === 'absent' &&
+              descriptorMayWrite(descriptor, 'create')
             "
             :system-label="labelFor(descriptor)"
             :create-note="descriptor.createNote"
@@ -559,7 +586,7 @@ defineExpose({
     </VCard>
 
     <div
-      v-if="searchDone && foundAnywhere"
+      v-if="searchDone && foundAnywhere && anyFoundWritable"
       class="d-flex ga-2 mt-3"
     >
       <!-- All three open a dialog. None of them acts straight away. -->
@@ -607,7 +634,8 @@ defineExpose({
         >
           {{ t('common.userSystem.search.createAnywhere') }}
         </ABtnPrimary>
-        <template v-else>
+        <!-- Not offered for want of a create right: then nothing is left unconfirmed to retry. -->
+        <template v-else-if="!searchedByEmail && unresolvedSystems.length > 0">
           <div class="text-body-small mt-2">
             {{ t('common.userSystem.create.notAuthoritative', { systems: unresolvedSystems.join(', ') }) }}
           </div>

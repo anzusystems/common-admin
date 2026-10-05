@@ -16,9 +16,11 @@ const props = withDefaults(
   defineProps<{
     extSystem: IntegerId
     configName?: string
+    readonly?: boolean
   }>(),
   {
     configName: 'default',
+    readonly: false,
   }
 )
 
@@ -72,7 +74,7 @@ const loadImageFile = async (id: DocId) => {
 
 const saveRoi = async (committed: CropRect) => {
   const { roi, imageFile } = imageRoiStore
-  if (!roi || !imageFile) return
+  if (!roi || !imageFile || props.readonly) return
 
   const region = cropToRegion(committed, roi, imageFile.imageAttributes.width, imageFile.imageAttributes.height)
   try {
@@ -110,7 +112,7 @@ onUnmounted(() => {
     <VProgressCircular indeterminate />
   </div>
   <ACropper
-    v-if="showCropper && configExtSystem.image"
+    v-if="showCropper && configExtSystem.image && !readonly"
     :key="imageRoiStore.imageFile?.manipulatedAt || 0"
     v-model="crop"
     :aspect-ratio="configExtSystem.image.roiWidth / configExtSystem.image.roiHeight"
@@ -118,5 +120,11 @@ onUnmounted(() => {
     :shade-color="cropperShadeColor"
     :src="imageUrl"
     @commit="saveRoi"
+  />
+  <VImg
+    v-else-if="showCropper"
+    :src="imageUrl"
+    :max-height="cropperContainerStyle.maxHeight"
+    data-cy="roi-readonly-image"
   />
 </template>

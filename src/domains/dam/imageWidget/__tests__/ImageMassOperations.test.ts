@@ -85,6 +85,16 @@ const settle = async () => {
   await new Promise((resolve) => setTimeout(resolve, 20))
 }
 
+describe('ImageMassOperations of a read-only widget', () => {
+  it('offers nothing, since the widget saves nothing', async () => {
+    const wrapper = mountWithImages()
+    useImageStore().readonly = true
+    await flushPromises()
+    expect(wrapper.findAll('button')).toHaveLength(0)
+    wrapper.unmount()
+  })
+})
+
 describe('ImageMassOperations with DAM authors', () => {
   it.each([['Fill only empty'], ['Replace all']])('"%s" reports a failed author lookup', async (label) => {
     const lookupFailed = new Error('Network Error')
@@ -119,6 +129,25 @@ describe('ImageMassOperations with DAM authors', () => {
 
     expect(useImageStore().images[0]).toMatchObject({ damAuthors: ['author-1'], texts: { source: 'Jane Doe' } })
     expect(showErrorsDefault).not.toHaveBeenCalled()
+    wrapper.unmount()
+  })
+
+  it('writes nothing when the widget turned read-only while the authors loaded', async () => {
+    let answer: (value: unknown) => void = () => undefined
+    fetchAuthorListByIds.mockReturnValue(new Promise((resolve) => (answer = resolve)))
+    const wrapper = mountWithImages()
+    wrapper.findComponent(Authors).vm.$emit('update:modelValue', ['author-1'])
+    await flushPromises()
+
+    await wrapper
+      .findAll('button')
+      .find((button) => button.text() === 'Fill only empty')!
+      .trigger('click')
+    useImageStore().readonly = true
+    answer([{ id: 'author-1', name: 'Jane Doe' }])
+    await settle()
+
+    expect(useImageStore().images[0]).toMatchObject({ damAuthors: [], texts: { source: '' } })
     wrapper.unmount()
   })
 })

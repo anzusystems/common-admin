@@ -8,9 +8,11 @@ withDefaults(
   defineProps<{
     extSystem: IntegerId
     configName?: string
+    readonly?: boolean
   }>(),
   {
     configName: 'default',
+    readonly: false,
   }
 )
 
@@ -37,6 +39,7 @@ onMounted(load)
     v-if="roiSelect"
     :ext-system="extSystem"
     :config-name="configName"
+    :readonly="readonly"
   />
   <div
     v-else-if="loadFailed"

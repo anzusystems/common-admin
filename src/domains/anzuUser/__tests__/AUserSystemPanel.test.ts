@@ -119,6 +119,24 @@ describe('AUserSystemPanel', () => {
     expect(wrapper.find('[data-cy="user-system-create"]').exists()).toBe(false)
   })
 
+  it('takes Manage and Create away when the descriptor says the user may not write there', async () => {
+    const present = await mountPanel(
+      vi.fn().mockResolvedValue({ status: 200, data: record() }),
+      {},
+      { canWrite: () => false }
+    )
+    expect(present.find('[data-cy="user-system-manage"]').exists()).toBe(false)
+    present.unmount()
+
+    const absent = await mountPanel(vi.fn().mockRejectedValue(httpError(404)), {}, { canWrite: () => false })
+    expect(absent.find('[data-cy="user-system-create"]').exists()).toBe(false)
+    absent.unmount()
+
+    // Not knowing is not a no: the probe decides, as without the function.
+    const unknown = await mountPanel(vi.fn().mockRejectedValue(httpError(404)), {}, { canWrite: () => undefined })
+    expect(unknown.find('[data-cy="user-system-create"]').exists()).toBe(true)
+  })
+
   it('offers a retry exactly where one could help', async () => {
     const dead = await mountPanel(vi.fn().mockRejectedValue(httpError(503)))
     expect(dead.find('[data-cy="user-system-retry"]').exists()).toBe(true)

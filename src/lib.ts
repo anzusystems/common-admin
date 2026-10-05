@@ -484,6 +484,7 @@ import { fetchDamUser, fetchDamUserListByIds, updateDamUser, useFetchDamUserList
 import { useImageActions } from '@/domains/dam/imageWidget/composables/imageActions'
 import { useCommonAdminImageOptions } from '@/domains/dam/imageWidget/composables/commonAdminImageOptions'
 import { defineAuth, ROLE_SUPER_ADMIN } from '@/domains/auth/composables/defineAuth'
+import { useAclAllowed } from '@/domains/auth/composables/aclAllowed'
 import {
   type AuthCookieState,
   createRefreshRequestInterceptor,
@@ -715,6 +716,7 @@ import { useAnzuUserActions } from '@/domains/anzuUser/composables/anzuUserActio
 import { type AnzuUserActionsParams } from '@/domains/anzuUser/composables/anzuUserActions'
 import {
   defineUserSystemDescriptor,
+  descriptorMayWrite,
   resolveCreateEndpoint,
   resolveEnabledWrite,
   resolveMetadataWrite,
@@ -726,6 +728,7 @@ import {
   type UserSystemEndpoints,
   type UserSystemExtraState,
   type UserSystemManageTarget,
+  type UserSystemWriteAction,
 } from '@/domains/anzuUser/composables/userSystemDescriptor'
 
 import AUserTabsShell from '@/domains/anzuUser/components/AUserTabsShell.vue'
@@ -872,6 +875,7 @@ export {
   useImageActions,
   useCommonAdminImageOptions,
   defineAuth,
+  useAclAllowed,
   AuthUnavailableError,
   type AuthCookieState,
   createRefreshRequestInterceptor,
@@ -1440,6 +1444,8 @@ export {
   useAnzuUserActions,
   type AnzuUserActionsParams,
   defineUserSystemDescriptor,
+  descriptorMayWrite,
+  type UserSystemWriteAction,
   resolveProbeEndpoint,
   resolveMetadataWrite,
   resolveEnabledWrite,

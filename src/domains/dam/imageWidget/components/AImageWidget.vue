@@ -3,9 +3,10 @@ import type { IntegerId, IntegerIdNullable } from '@/shared/types/common'
 import { onMounted, provide, ref, shallowRef } from 'vue'
 import { useDamConfigState } from '@/domains/dam/config/composables/damConfigState'
 import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
-import type { ImageAware } from '@/domains/dam/types/ImageAware'
+import type { ImageAware, ImageCreateUpdateAware } from '@/domains/dam/types/ImageAware'
 import type { UploadQueueKey } from '@/domains/dam/types/UploadQueue'
 import ImageWidgetInner from '@/domains/dam/imageWidget/components/ImageWidgetInner.vue'
+import AImageWidgetSimple from '@/domains/dam/imageWidget/components/AImageWidgetSimple.vue'
 import { ImageWidgetUploadConfigKey } from '@/domains/dam/imageWidget/utils/imageWidgetInkectionKeys'
 import { isUndefined } from '@/shared/utils/common'
 import { isImageWidgetUploadConfigAllowed } from '@/domains/dam/config/utils/damFilterUserAllowedUploadConfigs'
@@ -65,8 +66,14 @@ const emit = defineEmits<{
   (e: 'update:modelValue', data: IntegerIdNullable): void
   (e: 'afterMetadataSaveSuccess'): void
 }>()
+// Declared: the read-only fallback renders the slot too, and inferred it would take its looser type.
+defineSlots<{
+  append?: (props: { image: ImageCreateUpdateAware | null }) => unknown
+}>()
 
-const status = ref<'loading' | 'ready' | 'error' | 'uploadNotAllowed'>('loading')
+const status = ref<'loading' | 'ready' | 'error'>('loading')
+// Not being allowed to upload is no reason to hide the image that is already there: it is shown read-only.
+const uploadAllowed = ref(true)
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { damClient } = useCommonAdminCoreDamOptions(props.configName)
@@ -88,7 +95,13 @@ onMounted(async () => {
     return
   }
   if (!isImageWidgetUploadConfigAllowed(uploadConfig.value)) {
-    status.value = 'uploadNotAllowed'
+    uploadAllowed.value = false
+    try {
+      if (!damConfigStore.initialized.damPrvConfig) await loadDamPrvConfig()
+      status.value = 'ready'
+    } catch (e) {
+      status.value = 'error'
+    }
     return
   }
   const promises: Promise<any>[] = []
@@ -128,6 +141,7 @@ const { t } = useI18n()
     v-if="status === 'ready'"
     ref="innerComponent"
     v-bind="props"
+    :readonly="readonly || !uploadAllowed"
     @update:model-value="emit('update:modelValue', $event)"
     @after-metadata-save-success="emit('afterMetadataSaveSuccess')"
   >
@@ -138,17 +152,29 @@ const { t } = useI18n()
       />
     </template>
   </ImageWidgetInner>
-  <div
-    v-else-if="status === 'error'"
-    class="text-error"
-  >
-    {{ t('common.damImage.error.loadingConfig') }}
-  </div>
-  <div
-    v-else-if="status === 'uploadNotAllowed'"
-    class="text-error"
-  >
-    {{ t('common.damImage.error.accessRights') }}
+  <!-- The config fails also for a user without access to the licence: the image already there is still shown. -->
+  <div v-else-if="status === 'error'">
+    <AImageWidgetSimple
+      v-if="modelValue || image"
+      :model-value="modelValue"
+      :image="image"
+      :config-name="configName"
+      :label="label"
+      :width="width"
+      :height="height"
+      :dam-width="damWidth"
+      :dam-height="damHeight"
+    >
+      <template #append="{ image: appendImage }">
+        <slot
+          name="append"
+          :image="appendImage"
+        />
+      </template>
+    </AImageWidgetSimple>
+    <div class="text-error">
+      {{ t('common.damImage.error.loadingConfig') }}
+    </div>
   </div>
   <VProgressCircular
     v-else

@@ -11,7 +11,7 @@ import AUnsavedConfirmDialog from '@/domains/unsavedGuard/components/AUnsavedCon
 import { useUnsavedChangesGuard } from '@/domains/unsavedGuard/composables/useUnsavedChangesGuard'
 import AUserOtherSystemsTable from '@/domains/anzuUser/components/AUserOtherSystemsTable.vue'
 import AUserSystemPanel from '@/domains/anzuUser/components/AUserSystemPanel.vue'
-import type { AnyUserSystemDescriptor } from '@/domains/anzuUser/composables/userSystemDescriptor'
+import { type AnyUserSystemDescriptor, descriptorMayWrite } from '@/domains/anzuUser/composables/userSystemDescriptor'
 import type { AnzuUser, BaseUser } from '@/shared/types/AnzuUser'
 import type { IntegerId } from '@/shared/types/common'
 import { UserSystemRefreshHookKey, type UserSystemRefreshHook } from '@/domains/anzuUser/composables/userSystemProbe'
@@ -170,6 +170,8 @@ const onCreate = async (descriptor: AnyUserSystemDescriptor, metadata: BaseUser)
       showError(t('common.userSystem.create.sourceChanged'))
       return
     }
+    // The create right may have gone while the source was read; nothing is offered then, so nothing is said.
+    if (!descriptorMayWrite(descriptor, 'create')) return
     // From the library factory, never assembled by hand: a body of base fields alone would have the
     // backend fill in `ROLE_USER`, leaving an account with a role nobody granted.
     //

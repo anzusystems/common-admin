@@ -4,7 +4,7 @@ import { useI18n } from 'vue-i18n'
 import AUserCreateInSystemButton from '@/domains/anzuUser/components/AUserCreateInSystemButton.vue'
 import AUserManageButton from '@/domains/anzuUser/components/AUserManageButton.vue'
 import AUserSystemStatusChip from '@/domains/anzuUser/components/AUserSystemStatusChip.vue'
-import type { AnyUserSystemDescriptor } from '@/domains/anzuUser/composables/userSystemDescriptor'
+import { type AnyUserSystemDescriptor, descriptorMayWrite } from '@/domains/anzuUser/composables/userSystemDescriptor'
 import { useUserSystemProbe, UserSystemRefreshHookKey } from '@/domains/anzuUser/composables/userSystemProbe'
 import { isAuthoritativelyAbsent, UserSystemAccess, UserSystemLoad } from '@/domains/anzuUser/utils/userSystemState'
 import type { BaseUser } from '@/shared/types/AnzuUser'
@@ -50,16 +50,23 @@ const { axes, user, probe, cancel } = useUserSystemProbe({ descriptor: props.des
 const label = computed(() => props.descriptor.label ?? props.descriptor.system)
 
 /**
- * The buttons are decided by the probe's answer, never by `<Acl>`.
+ * The buttons are decided by the probe's answer, never by `<Acl>` -- except that the admin's descriptor
+ * can say the current user may not write there (`canWrite`).
  *
  * On a cross-system surface there is no current user loaded for the other backends, so `can()`
  * would throw and `<Acl>` would silently render nothing at all. The probe is the only signal there
  * is -- which is also why its 401 handling has to be right.
  */
 const showManage = computed(
-  () => axes.value.load === UserSystemLoad.Loaded && user.value !== null && !isUndefined(props.descriptor.manage)
+  () =>
+    axes.value.load === UserSystemLoad.Loaded &&
+    user.value !== null &&
+    !isUndefined(props.descriptor.manage) &&
+    descriptorMayWrite(props.descriptor, 'update')
 )
-const showCreate = computed(() => !props.readonly && isAuthoritativelyAbsent(axes.value))
+const showCreate = computed(
+  () => !props.readonly && isAuthoritativelyAbsent(axes.value) && descriptorMayWrite(props.descriptor, 'create')
+)
 
 const manageTarget = computed(() => {
   if (user.value === null || isUndefined(props.descriptor.manage)) return null

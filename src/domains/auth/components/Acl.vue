@@ -1,10 +1,7 @@
 <script lang="ts" setup generic="TAclValue extends RegisteredAclValue">
 import { computed } from 'vue'
 import type { RegisteredAclValue } from '@/domains/auth/types/Permission'
-import { getSystemFromAcl, useAuthHelpers } from '@/domains/auth/composables/defineAuth'
-import { isArray, isUndefined } from '@/shared/utils/common'
-import { useAuthStore } from '@/domains/auth/store/authStore'
-import { warnOnceInDevelopment } from '@/shared/utils/development'
+import { useAuthHelpers } from '@/domains/auth/composables/defineAuth'
 
 const props = withDefaults(
   defineProps<{
@@ -19,56 +16,16 @@ const props = withDefaults(
   }
 )
 
-const authStore = useAuthStore()
-const { canHelper, canForAllHelper } = useAuthHelpers()
+const { canSafeHelper } = useAuthHelpers<TAclValue>()
 
 /**
- * A computed, not a watcher that latches on the first `true`.
+ * A computed, not a watcher that latches on the first `true`: it re-evaluates when its own system's
+ * current user arrives, and a permission taken away is taken away without a reload.
  *
- * The old version watched `currentUsers` without `deep`, so it ran once on mount and never again
- * -- `.set()` on the map changes no dependency the watcher had tracked. That was invisible while
- * every current user was loaded before anything mounted, and stops being invisible the moment
- * they are loaded on demand. It also meant a permission taken away stayed granted until reload.
- *
- * Reading `currentUsers.get(system)` tracks that one key, so this re-evaluates when its own
- * system arrives and stays put when another one does.
+ * This is the non-throwing variant of `can()`, for templates that may render before their system is
+ * there -- `canSafeHelper` answers false where `canHelper` would throw.
  */
-const allowed = computed<boolean>(() => {
-  const acls = isArray(props.permission) ? props.permission : [props.permission]
-
-  // No permission to check, nothing to deny. `canForAllHelper([])` has always answered true and
-  // there would be no system to ask about anyway.
-  if (acls.length === 0) {
-    return true
-  }
-
-  // Every value is checked, not just the first: an array may name more than one system, and
-  // checking only the first would leave `canHelper` to throw on the second -- exactly what this
-  // component exists to avoid.
-  const systems = acls.map((acl) => getSystemFromAcl(acl))
-
-  // `canHelper` throws for a system nothing ever tried to load. That is the right answer for
-  // `can()` in a guard, where it catches a page rendering too early -- but this component is the
-  // non-throwing variant, used in templates that may render before their system is there.
-  // Reading each user tracks that key, so this re-evaluates when its own system arrives.
-  for (const system of systems) {
-    authStore.currentUsers.value.get(system)
-    if (isUndefined(authStore.isCurrentUserLoadedBySystem(system))) {
-      return false
-    }
-  }
-
-  try {
-    return isArray(props.permission)
-      ? canForAllHelper(props.permission, props.subject)
-      : canHelper(props.permission, props.subject)
-  } catch (error) {
-    // Hidden either way; without a word it looks exactly like a missing permission.
-    const key = String(props.permission)
-    warnOnceInDevelopment(`Acl:${key}`, `[Acl] the check of ${key} threw, so the content stays hidden:`, error)
-    return false
-  }
-})
+const allowed = computed<boolean>(() => canSafeHelper(props.permission, props.subject, 'Acl'))
 </script>
 
 <template>

@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import type { RegisteredAclValue } from '@/domains/auth/types/Permission'
+import { useAclAllowed } from '@/domains/auth/composables/aclAllowed'
 import { useRouter } from 'vue-router'
 import { eventClickBlur } from '@/shared/utils/event'
 import { useI18n } from 'vue-i18n'
@@ -17,8 +19,13 @@ const props = withDefaults(
     loading?: boolean
     size?: number
     variant?: ButtonVariant
+    // Shown only when the current user passes it; no ACL, no check. An array is evaluated with AND.
+    acl?: RegisteredAclValue | RegisteredAclValue[]
+    subject?: object
   }>(),
   {
+    acl: undefined,
+    subject: undefined,
     recordId: undefined,
     routeParams: undefined,
     buttonT: 'common.button.edit',
@@ -29,9 +36,15 @@ const props = withDefaults(
     variant: 'primary',
   }
 )
+
 const emit = defineEmits<{
   (e: 'editRecord'): void
 }>()
+
+const aclAllowed = useAclAllowed(
+  () => props.acl,
+  () => props.subject
+)
 
 const { t } = useI18n()
 
@@ -65,7 +78,7 @@ const variantComputed = computed(() => {
 
 <template>
   <VBtn
-    v-if="variant === 'icon'"
+    v-if="aclAllowed && variant === 'icon'"
     :aria-label="t(buttonT)"
     :class="buttonClass"
     :data-cy="dataCy"
@@ -86,7 +99,7 @@ const variantComputed = computed(() => {
     </VTooltip>
   </VBtn>
   <VBtn
-    v-else
+    v-else-if="aclAllowed"
     :class="buttonClass"
     :variant="variantComputed"
     :data-cy="dataCy"

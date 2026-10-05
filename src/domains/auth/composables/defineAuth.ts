@@ -4,6 +4,7 @@ import { type AxiosInstance } from 'axios'
 import type { AclValue } from '@/domains/auth/types/Permission'
 import { isArray, isNull, isUndefined } from '@/shared/utils/common'
 import { objectGetValueByPath } from '@/shared/utils/object'
+import { warnOnceInDevelopment } from '@/shared/utils/development'
 import { Grant } from '@/domains/auth/valueObject/Grant'
 import { isOwnerAware } from '@/shared/types/OwnerAware'
 import { isCreatedByAware } from '@/shared/types/CreatedByAware'
@@ -31,7 +32,7 @@ export function defineAuth<TAclValue extends AclValue>(
 ) {
   const mergedConfig = { ...defaultConfig, ...config }
   const authStore = useAuthStore()
-  const { canHelper, canForAllHelper, canOwnerHelper, isAdminHelper } = useAuthHelpers()
+  const { canHelper, canForAllHelper, canOwnerHelper, isAdminHelper, canSafeHelper } = useAuthHelpers()
 
   const isAdmin = (userRoles: string[], system: string) => {
     return isAdminHelper(userRoles, system)
@@ -47,6 +48,11 @@ export function defineAuth<TAclValue extends AclValue>(
 
   const canForAll = (acls: TAclValue[], subject?: object) => {
     return canForAllHelper(acls, subject)
+  }
+
+  /** `can()` and `canForAll()` that never throw -- for templates and route guards. See `canSafeHelper`. */
+  const canSafe = (acl: TAclValue | TAclValue[], subject?: object) => {
+    return canSafeHelper(acl, subject)
   }
 
   const canForSome = (acls: TAclValue[], subject?: object) => {
@@ -168,6 +174,7 @@ export function defineAuth<TAclValue extends AclValue>(
     can,
     canForAll,
     canForSome,
+    canSafe,
     canOwner,
     useCurrentUser,
     currentUserId,
@@ -240,11 +247,41 @@ export function useAuthHelpers<TAclValue extends AclValue>() {
     return false
   }
 
+  /**
+   * `canForAll` that answers false instead of throwing: for a system nothing has tried to load yet, which a
+   * template or a route guard may reach first, and for a check that throws, such as an `allowOwner` grant
+   * with no subject. An array is evaluated with AND.
+   *
+   * Reading each system's current user tracks that key, so a render or a computed re-evaluates when its
+   * own system arrives.
+   */
+  const canSafeHelper = (acl: TAclValue | TAclValue[], subject?: object, label = 'canSafe'): boolean => {
+    const acls = isArray(acl) ? acl : [acl]
+    if (acls.length === 0) {
+      return true
+    }
+    for (const system of acls.map((value) => getSystemFromAcl(value))) {
+      authStore.currentUsers.value.get(system)
+      if (isUndefined(authStore.isCurrentUserLoadedBySystem(system))) {
+        return false
+      }
+    }
+    try {
+      return canForAllHelper(acls, subject)
+    } catch (error) {
+      // Denied either way; without a word it looks exactly like a missing permission.
+      const key = acls.join(', ')
+      warnOnceInDevelopment(`${label}:${key}`, `[${label}] the check of ${key} threw, so it is denied:`, error)
+      return false
+    }
+  }
+
   return {
     canHelper,
     canForAllHelper,
     canOwnerHelper,
     isAdminHelper,
+    canSafeHelper,
   }
 }
 

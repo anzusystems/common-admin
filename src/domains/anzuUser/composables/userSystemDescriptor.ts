@@ -104,7 +104,16 @@ export interface UserSystemDescriptor<TSystem extends string = string, TUser ext
   label?: string
   /** Added in task 2. */
   manage?: (user: TUser) => UserSystemManageTarget
+  /**
+   * Whether the current user may write this system's accounts. `false` takes away create, enable or
+   * disable, manage and the system's part of a bulk action; `undefined`, or no function, leaves it to the
+   * probe and the backend's answer, as before. Only the admin can say: the library has no current user of
+   * another system, and only the admin knows which ones it has loaded.
+   */
+  canWrite?: (action: UserSystemWriteAction) => boolean | undefined
 }
+
+export type UserSystemWriteAction = 'create' | 'update'
 
 /**
  * The erasure boundary for a heterogeneous array.
@@ -119,6 +128,10 @@ export type AnyUserSystemDescriptor = UserSystemDescriptor<string, AnzuUser>
 export const defineUserSystemDescriptor = <TSystem extends string, TUser extends AnzuUser>(
   descriptor: UserSystemDescriptor<TSystem, TUser>
 ): AnyUserSystemDescriptor => descriptor as unknown as AnyUserSystemDescriptor
+
+/** False only when the descriptor says no. Not knowing is not a no. */
+export const descriptorMayWrite = (descriptor: AnyUserSystemDescriptor, action: UserSystemWriteAction): boolean =>
+  descriptor.canWrite?.(action) !== false
 
 /**
  * The pair the probe reads through, with the one invariant the type cannot state: both branches of

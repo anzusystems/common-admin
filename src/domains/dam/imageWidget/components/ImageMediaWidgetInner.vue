@@ -302,6 +302,7 @@ const waitForFieldLockIsReallyAcquired = async () => {
 }
 
 const onDrop = async (files: File[]) => {
+  if (props.readonly) return
   // As a click on the dropzone: the field is another editor's.
   if (isLocked.value) {
     showErrorT('common.damImage.error.unableToLock')
@@ -313,6 +314,11 @@ const onDrop = async (files: File[]) => {
     await waitForFieldLockIsReallyAcquired()
     // The lock can resolve after the widget is gone; uploading into it is worse than dropping.
     if (disposed) return
+    // Turned read-only while the lock was awaited: the lock goes back and nothing is uploaded.
+    if (props.readonly) {
+      if (pendingLockWaits.size === 0 && !clickMenuOpened.value && !anyWidgetDialogOpened.value) releaseFieldLockLocal()
+      return
+    }
     cachedExtSystemId.value = config.extSystem
     uploadQueuesStore.addByFiles(props.queueKey, config.extSystem, config.licence, files)
     uploadQueueDialog.value = props.queueKey
@@ -327,6 +333,7 @@ const onDrop = async (files: File[]) => {
 }
 
 const onCopyToLicence = (data: DamImageCopyToLicenceResponse) => {
+  if (props.readonly) return
   if (!data[0]) return
   const config = imageWidgetUploadConfig.value!
   cachedExtSystemId.value = config.extSystem
@@ -343,6 +350,7 @@ const onCopyToLicence = (data: DamImageCopyToLicenceResponse) => {
 }
 
 const onFileInput = (files: File[]) => {
+  if (props.readonly) return
   const config = imageWidgetUploadConfig.value!
   cachedExtSystemId.value = config.extSystem
   uploadQueuesStore.addByFiles(props.queueKey, config.extSystem, config.licence, files)
@@ -456,6 +464,7 @@ const { getDamConfigExtSystem } = useDamConfigState()
 // copied: till then the pick counts as an open dialog, or the close watcher gave the lock up with the old value.
 const assetPickPending = ref(false)
 const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
+  if (props.readonly) return
   assetPickPending.value = true
   try {
     await pickAsset(data)
@@ -613,7 +622,8 @@ const {
   editAssetLabel,
   addFromDamLabel,
   replaceFromDamLabel,
-} = useCommonAdminCoreDamOptions()
+  // eslint-disable-next-line vue/no-setup-props-reactivity-loss
+} = useCommonAdminCoreDamOptions(props.configName)
 
 const { getExtSystemByLicence } = useDamConfigState(damClient)
 
@@ -698,6 +708,7 @@ const tryImageConfirm = async () => {
 }
 
 const onMetadataDialogConfirm = async () => {
+  if (props.readonly) return
   await tryMediaConfirm()
   await tryImageConfirm()
 }
@@ -734,6 +745,7 @@ const forceReloadViewWithExpandMetadata = () => {
 }
 
 const onAssetUploadConfirm = (items: ImageCreateUpdateAware[]) => {
+  if (props.readonly) return
   if (!items[0]) return
 
   if (!isNull(imageModel.value)) {
@@ -749,7 +761,7 @@ const onAssetUploadConfirm = (items: ImageCreateUpdateAware[]) => {
 const expandedUploadDialog = ref<InstanceType<typeof AFileInputDialog> | null>(null)
 
 const onDropzoneClick = () => {
-  if (isLocked.value) return
+  if (isLocked.value || props.readonly) return
   acquireFieldLockLocal()
   if (!props.expandOptions) {
     clickMenuOpened.value = true
@@ -761,6 +773,7 @@ const onDropzoneClick = () => {
 const detailDialogMetadataComponent = ref<InstanceType<typeof ImageDetailDialogMetadata> | null>(null)
 
 const metadataConfirm = () => {
+  if (props.readonly) return
   detailDialogMetadataComponent.value?.confirm()
 }
 
@@ -872,7 +885,7 @@ defineExpose({
             :users="collab.cachedUsers"
           />
         </div>
-        <div>
+        <div v-if="!readonly">
           <div
             v-if="expandOptions"
             class="d-flex flex-row"
@@ -1040,6 +1053,7 @@ defineExpose({
         </div>
       </div>
       <AImageDropzone
+        v-if="!readonly"
         variant="fill"
         transparent
         :accept="uploadAccept"
@@ -1054,6 +1068,7 @@ defineExpose({
       :image-media="resImageMedia"
     />
     <ImageDetailDialogMetadata
+      v-if="!readonly"
       ref="detailDialogMetadataComponent"
       v-model="metadataDialog"
       :show-dam-authors="showDamAuthorsInCmsImage"
@@ -1090,6 +1105,7 @@ defineExpose({
   <AssetDetailDialog
     v-if="assetDialog === queueKey"
     :queue-key="queueKey"
+    :config-name="configName"
     :ext-system="cachedExtSystemId"
   />
   <UploadQueueDialogSingle

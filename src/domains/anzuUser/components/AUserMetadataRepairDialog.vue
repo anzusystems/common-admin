@@ -5,7 +5,7 @@ import { useI18n } from 'vue-i18n'
 import ADialogToolbar from '@/domains/ui/components/ADialogToolbar.vue'
 import AUserMetadataForm from '@/domains/anzuUser/components/AUserMetadataForm.vue'
 import AUserSystemStatusChip from '@/domains/anzuUser/components/AUserSystemStatusChip.vue'
-import type { AnyUserSystemDescriptor } from '@/domains/anzuUser/composables/userSystemDescriptor'
+import { type AnyUserSystemDescriptor, descriptorMayWrite } from '@/domains/anzuUser/composables/userSystemDescriptor'
 import {
   pickPrefillSource,
   readMetadataField,
@@ -94,8 +94,18 @@ const sourceOptions = computed(() =>
     .map((descriptor) => ({ value: descriptor.system, title: descriptor.label ?? descriptor.system }))
 )
 
-/** Only the systems whose stored value differs. Nothing else is offered, let alone written to. */
-const differing = computed(() => (target.value === null ? [] : systemsNeedingWrite(target.value, records.value)))
+const mayUpdate = (system: string) => {
+  const descriptor = props.descriptors.find((item) => item.system === system)
+  return isUndefined(descriptor) || descriptorMayWrite(descriptor, 'update')
+}
+
+const allDiffering = computed(() => (target.value === null ? [] : systemsNeedingWrite(target.value, records.value)))
+
+/** Only the systems whose stored value differs and that may be written. Nothing else is offered, let alone written to. */
+const differing = computed(() => allDiffering.value.filter(mayUpdate))
+
+/** Differing, but the operator may not write them: listed so the repair does not look complete. */
+const differingWithoutRight = computed(() => allDiffering.value.filter((system) => !mayUpdate(system)))
 
 /** What confirm would actually write to: the differing systems that are still ticked. */
 const affected = computed(() => differing.value.filter((system) => selected.value.includes(system)))
@@ -234,6 +244,21 @@ const retryFailed = () => {
               {{ change.field }}: <s>{{ change.from || '—' }}</s> → {{ change.to || '—' }}
             </div>
           </div>
+        </div>
+        <div
+          v-for="system in differingWithoutRight"
+          :key="system"
+          class="mt-2 d-flex align-center ga-2"
+          :data-cy="`repair-system-no-right-${system}`"
+        >
+          <VCheckbox
+            :model-value="false"
+            disabled
+            density="compact"
+            hide-details
+          />
+          <span class="font-weight-medium">{{ labelFor(system) }}</span>
+          <span class="text-body-small text-medium-emphasis">{{ t('common.userSystem.state.noWriteRight') }}</span>
         </div>
       </VCardText>
       <VCardText v-else-if="showingLog">

@@ -5,6 +5,8 @@ import type { ImageStoreItem } from '@/domains/dam/types/ImageAware'
 export const useImageStore = defineStore('commonImageStore', () => {
   const images = ref<ImageStoreItem[]>([])
   const maxPosition = ref(0)
+  // Set by the widget: a read-only one saves nothing, so the mass operations must not change what it shows.
+  const readonly = ref(false)
 
   function setImages(data: ImageStoreItem[]) {
     images.value = data
@@ -27,11 +29,13 @@ export const useImageStore = defineStore('commonImageStore', () => {
   function reset() {
     images.value = []
     maxPosition.value = 0
+    readonly.value = false
   }
 
   return {
     images,
     maxPosition,
+    readonly,
     setImages,
     addImages,
     updateMaxPositionIfGreater,

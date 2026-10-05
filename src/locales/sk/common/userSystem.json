@@ -6,7 +6,8 @@
     "absent": "Konto tu nemá",
     "forbidden": "Nemáte prístup",
     "unavailable": "Systém neodpovedal",
-    "configDisabled": "Vypnuté v konfigurácii"
+    "configDisabled": "Vypnuté v konfigurácii",
+    "noWriteRight": "Bez práva na zápis"
   },
   "button": {
     "create": "Vytvoriť",

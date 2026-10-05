@@ -4,8 +4,8 @@ import { useImageRoiStore } from '@/domains/dam/cropper/store/imageRoiStore'
 import { useI18n } from 'vue-i18n'
 import { usePagination } from '@/domains/api/composables/pagination'
 import { assetFileIsImageFile } from '@/domains/dam/types/AssetFile'
-import { cloneDeep } from '@/shared/utils/common'
-import { onMounted } from 'vue'
+import { cloneDeep, isNull } from '@/shared/utils/common'
+import { computed, onMounted } from 'vue'
 import AssetDetailSidebarActionsWrapper from '@/domains/dam/assetDetail/components/AssetDetailSidebarActionsWrapper.vue'
 import AssetFileRotate from '@/domains/dam/assetDetail/components/AssetFileRotate.vue'
 import { ENTITY, fetchRoi, useFetchImageRoiList } from '@/domains/dam/api/damImageRoiApi'
@@ -17,6 +17,7 @@ import { SYSTEM_CORE_DAM } from '@/domains/dam/api/damConstants'
 import { fetchImageFile } from '@/domains/dam/api/damImageApi'
 import type { DocId } from '@/shared/types/common'
 import { useAlerts } from '@/domains/system/composables/alerts'
+import { useAuthHelpers } from '@/domains/auth/composables/defineAuth'
 
 const props = withDefaults(
   defineProps<{
@@ -38,7 +39,10 @@ const assetDetailStore = useAssetDetailStore()
 const { pagination } = usePagination(SORT_BY_ID)
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { damClient, endPointImage, endPointRoi } = useCommonAdminCoreDamOptions(props.configName)
+const { damClient, endPointImage, endPointRoi, imageRotateAcl } = useCommonAdminCoreDamOptions(props.configName)
+const { canSafeHelper } = useAuthHelpers()
+// The endpoint refuses the rotation without it.
+const rotateAllowed = computed(() => isNull(imageRotateAcl) || canSafeHelper(imageRotateAcl, undefined, 'rotate'))
 const filterFieldsInner = [] satisfies readonly MakeFilterOption[]
 const { filterConfig, filterData } = createFilter(filterFieldsInner, createFilterStore(filterFieldsInner), {
   system: SYSTEM_CORE_DAM,
@@ -155,8 +159,9 @@ onMounted(async () => {
     </div>
   </div>
   <AssetFileRotate
-    v-if="imageRoiStore.imageFile"
+    v-if="imageRoiStore.imageFile && rotateAllowed"
     :image-id="imageRoiStore.imageFile.id"
+    :config-name="configName"
     class="mx-2"
     @after-rotate="afterRotate"
   />

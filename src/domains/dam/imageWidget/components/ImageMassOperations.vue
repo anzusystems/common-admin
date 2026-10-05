@@ -19,7 +19,7 @@ import { useAlerts } from '@/domains/system/composables/alerts'
 const texts = ref({ description: '', source: '', authors: [] })
 
 const imageStore = useImageStore()
-const { images } = storeToRefs(imageStore)
+const { images, readonly } = storeToRefs(imageStore)
 const { replaceEmptyDescription, replaceEmptySource, replaceEmptyAuthors } = useImageMassOperations()
 const { t } = useI18n()
 const { showErrorsDefault } = useAlerts()
@@ -77,7 +77,10 @@ const showDamAuthorsAtLeastOne = computed(() => {
 </script>
 
 <template>
-  <div class="w-100">
+  <div
+    v-if="!readonly"
+    class="w-100"
+  >
     <VRow
       density="compact"
       class="mt-4"

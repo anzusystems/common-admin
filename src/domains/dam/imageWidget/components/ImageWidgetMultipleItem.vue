@@ -19,8 +19,12 @@ const props = withDefaults(
     showSourceEnabled?: boolean
     sourceLabel?: string
     editAssetLabel?: string
+    readonly?: boolean
+    configName?: string
   }>(),
   {
+    readonly: false,
+    configName: 'default',
     showSourceEnabled: true,
     sourceLabel: undefined,
     editAssetLabel: undefined,
@@ -66,10 +70,12 @@ const removeItem = () => {
         <AImageWidgetSimple
           :model-value="image.id"
           :image="image"
+          :config-name="configName"
         />
         <VRow density="compact">
           <VCol class="d-flex justify-space-between mt-1">
             <VBtn
+              v-if="!readonly"
               variant="text"
               size="small"
               class="mb-2"
@@ -78,6 +84,7 @@ const removeItem = () => {
               {{ editAssetLabel }}
             </VBtn>
             <AActionDeleteButton
+              v-if="!readonly"
               variant="icon"
               :size="30"
               button-class=""
@@ -85,10 +92,12 @@ const removeItem = () => {
             />
           </VCol>
         </VRow>
+        <!-- `undefined`, not `false`, when editable: the fields then still follow a parent form's readonly and disabled. -->
         <VRow density="compact">
           <VCol>
             <AFormTextarea
               v-model="image.texts.description"
+              :readonly="readonly || undefined"
               :label="t('common.damImage.image.model.texts.description')"
               :help="t('common.damImage.image.help.texts.description')"
               :v="v$.image?.texts.description"
@@ -106,6 +115,7 @@ const removeItem = () => {
             >
               <AuthorRemoteAutocompleteWithCached
                 v-model="image.damAuthors"
+                :disabled="readonly || undefined"
                 :ext-system="cachedExtSystemId"
                 :label="t('common.damImage.asset.model.authors')"
                 :author-conflicts="authorConflicts"
@@ -124,6 +134,7 @@ const removeItem = () => {
           <VCol>
             <AFormTextarea
               v-model="image.texts.source"
+              :readonly="readonly || undefined"
               :label="sourceLabel"
               :v="v$.image?.texts.source"
             />
@@ -133,6 +144,7 @@ const removeItem = () => {
           <VCol>
             <VSwitch
               v-model="image.flags.showSource"
+              :disabled="readonly || undefined"
               :label="t('common.damImage.image.model.flags.showSource')"
               density="compact"
               hide-details

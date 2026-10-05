@@ -80,3 +80,27 @@ describe('ImageWidgetInner with expandMetadata', () => {
     wrapper.unmount()
   })
 })
+
+// `readonly` used to be declared and never read: whoever passed it still got the edit, library and
+// upload buttons and the dropzone.
+describe('ImageWidgetInner readonly', () => {
+  it('keeps the image but offers none of the controls that change it', async () => {
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const editable = mountWidget({ image, modelValue: 7, expandOptions: true, expandMetadata: false }, pinia)
+    await flushPromises()
+    expect(editable.findComponent({ name: 'AFileDropzone' }).exists()).toBe(true)
+    expect(editable.findAll('.a-image-widget__options .v-btn').length).toBeGreaterThan(0)
+    editable.unmount()
+
+    const readonly = mountWidget(
+      { image, modelValue: 7, expandOptions: true, expandMetadata: false, readonly: true },
+      pinia
+    )
+    await flushPromises()
+    expect(readonly.findComponent({ name: 'AFileDropzone' }).exists()).toBe(false)
+    expect(readonly.findAll('.a-image-widget__options .v-btn')).toHaveLength(0)
+    expect(readonly.findComponent({ name: 'VImg' }).exists()).toBe(true)
+    readonly.unmount()
+  })
+})

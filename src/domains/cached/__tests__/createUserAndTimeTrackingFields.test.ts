@@ -53,6 +53,22 @@ describe('createUserAndTimeTrackingFields', () => {
     expect(rows.props('hideModifiedAt')).toBe(true)
   })
 
+  it('reads a route name function on each render, so the link can follow a permission', async () => {
+    const linked = ref(false)
+    const Rows = createUserAndTimeTrackingFields({
+      useCachedUsers: () => users,
+      userRouteName: () => (linked.value ? '/(common)/users/[id]' : undefined),
+    })
+    const wrapper = mount(Rows, {
+      props: { data: { createdBy: 1 } },
+      global: { stubs: { AUserAndTimeTrackingFields: RowsStub } },
+    })
+    expect(wrapper.findComponent(RowsStub).props('userRouteName')).toBeUndefined()
+    linked.value = true
+    await nextTick()
+    expect(wrapper.findComponent(RowsStub).props('userRouteName')).toBe('/(common)/users/[id]')
+  })
+
   it('reads the cache composable once, not on every render, and hands every new record on', async () => {
     const useCachedUsers = vi.fn(() => users)
     const Rows = createUserAndTimeTrackingFields({ useCachedUsers })

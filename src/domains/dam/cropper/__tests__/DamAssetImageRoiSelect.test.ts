@@ -62,7 +62,7 @@ const roi = () =>
     links: { image_roi_example: [] },
   }) as never
 
-const mountRoiSelect = async () => {
+const mountRoiSelect = async (extraProps: { readonly?: boolean } = {}) => {
   // A pinia of this test's own, installed on the mount as well: the shared setup registers one
   // globally, and the stores seeded here have to be the very ones the component resolves.
   const pinia = createPinia()
@@ -99,13 +99,13 @@ const mountRoiSelect = async () => {
 
   const wrapper = mount(DamAssetImageRoiSelect, {
     attachTo: host,
-    props: { extSystem: EXT_SYSTEM },
+    props: { extSystem: EXT_SYSTEM, ...extraProps },
     global: { plugins: [pinia] },
   })
 
   // The cropper loads its image before it is ready; poll rather than guess at a delay.
   const deadline = Date.now() + 5000
-  while (!host.querySelector('cropper-selection')) {
+  while (!extraProps.readonly && !host.querySelector('cropper-selection')) {
     if (Date.now() > deadline) throw new Error('the ROI cropper never rendered')
     await wait(30)
   }
@@ -115,6 +115,13 @@ const mountRoiSelect = async () => {
 }
 
 describe('DamAssetImageRoiSelect', () => {
+  it('read-only shows the image without a cropper to edit the region with', async () => {
+    const view = await mountRoiSelect({ readonly: true })
+    expect(view.host.querySelector('cropper-canvas')).toBeNull()
+    expect(view.host.querySelector('[data-cy="roi-readonly-image"]')).not.toBeNull()
+    view.destroy()
+  })
+
   it('renders the new cropper, not the deprecated one', async () => {
     const view = await mountRoiSelect()
     expect(view.host.querySelector('cropper-canvas')).not.toBeNull()

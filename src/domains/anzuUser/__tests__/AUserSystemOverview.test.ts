@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount, type VueWrapper } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
+import { ref } from 'vue'
 import { createMemoryHistory, createRouter } from 'vue-router'
 import type { AxiosInstance } from 'axios'
 import AUserSystemOverview from '@/domains/anzuUser/components/AUserSystemOverview.vue'
@@ -35,6 +36,7 @@ interface Backend {
   request: ReturnType<typeof vi.fn>
   get: ReturnType<typeof vi.fn>
   createNote?: string
+  canWrite?: AnyUserSystemDescriptor['canWrite']
 }
 
 const descriptorsOf = (backends: Backend[]): AnyUserSystemDescriptor[] =>
@@ -48,6 +50,7 @@ const descriptorsOf = (backends: Backend[]): AnyUserSystemDescriptor[] =>
       requiredMetadata: false,
       idInput: true,
       createNote: item.createNote,
+      canWrite: item.canWrite,
       endpoints: {
         anzuUser: { get: '/adm/v1/anzu-user/:id', put: '/adm/v1/anzu-user/:id', post: '/adm/v1/anzu-user' },
         base: null,
@@ -146,6 +149,22 @@ describe('after a search that found nobody', () => {
     expect(wrapper.find('[data-cy="cross-system-create-anywhere"]').exists()).toBe(false)
     expect(wrapper.find('[data-cy="cross-system-retry-search"]').exists()).toBe(true)
     expect(wrapper.text()).toContain('blog')
+  })
+
+  it('offers neither create nor a retry when the operator may create in no system', async () => {
+    const backends = ['weather', 'blog'].map((system) => ({
+      system,
+      get: vi.fn().mockResolvedValue(emptyList()),
+      request: vi.fn().mockRejectedValue(notFound()),
+      canWrite: () => false,
+    }))
+    const wrapper = await mountOverview(backends)
+
+    await search(wrapper, '42')
+
+    expect(wrapper.find('[data-cy="cross-system-not-found"]').exists()).toBe(true)
+    expect(wrapper.find('[data-cy="cross-system-create-anywhere"]').exists()).toBe(false)
+    expect(wrapper.find('[data-cy="cross-system-retry-search"]').exists()).toBe(false)
   })
 
   it('tells the operator what having an account in the chosen system means', async () => {
@@ -294,5 +313,101 @@ describe('leaving the page while work is still out', () => {
 
     expect(store.resolvedId).toBeNull()
     expect(store.results.size).toBe(0)
+  })
+})
+
+describe('a system the descriptor says may not be written', () => {
+  const person = () => ({
+    id: 42,
+    email: 'jozef@sme.sk',
+    person: { firstName: 'Jozef', lastName: 'Mrkvicka', fullName: 'Jozef Mrkvicka' },
+    avatar: { color: '#4CAF50', text: 'JM' },
+    enabled: true,
+    roles: [],
+    permissions: {},
+    permissionGroups: [],
+    resolvedPermissions: {},
+  })
+
+  it('offers neither the row actions nor the bulk actions, while an unknown answer keeps them', async () => {
+    const found = () => ({
+      get: vi.fn().mockResolvedValue(emptyList()),
+      request: vi.fn().mockResolvedValue({ status: 200, data: person() }),
+    })
+
+    let wrapper = await mountOverview([{ system: 'weather', ...found(), canWrite: () => false }])
+    await search(wrapper, '42')
+    expect(wrapper.find('[data-cy="cross-system-toggle-weather"]').exists()).toBe(false)
+    expect(wrapper.find('[data-cy="cross-system-bulk-disable"]').exists()).toBe(false)
+    wrapper.unmount()
+    mounted = null
+
+    wrapper = await mountOverview([{ system: 'weather', ...found(), canWrite: () => undefined }])
+    await search(wrapper, '42')
+    expect(wrapper.find('[data-cy="cross-system-toggle-weather"]').exists()).toBe(true)
+    expect(wrapper.find('[data-cy="cross-system-bulk-disable"]').exists()).toBe(true)
+  })
+
+  it('does not write a system whose right went away after the dialog was opened', async () => {
+    let mayWrite: boolean | undefined = undefined
+    const backend = {
+      system: 'weather',
+      get: vi.fn().mockResolvedValue(emptyList()),
+      request: vi.fn().mockResolvedValue({ status: 200, data: person() }),
+      canWrite: () => mayWrite,
+    }
+    const wrapper = await mountOverview([backend])
+    await search(wrapper, '42')
+    await wrapper.get('[data-cy="cross-system-bulk-disable"]').trigger('click')
+    await flushPromises()
+
+    mayWrite = false
+    ;(document.querySelector('[data-cy="user-bulk-confirm"]') as HTMLElement).click()
+    await flushPromises()
+
+    expect(backend.request.mock.calls.some(([config]) => (config as { method: string }).method === 'PUT')).toBe(false)
+  })
+
+  it('does not send the write when the right goes while the record is read again', async () => {
+    let mayWrite: boolean | undefined = undefined
+    const backend = {
+      system: 'weather',
+      get: vi.fn().mockResolvedValue(emptyList()),
+      request: vi.fn().mockImplementation(async (config: { method: string }) => {
+        if (config.method === 'GET' && mayWrite === undefined && backend.armed) mayWrite = false
+        return { status: 200, data: person() }
+      }),
+      canWrite: () => mayWrite,
+      armed: false,
+    }
+    const wrapper = await mountOverview([backend])
+    await search(wrapper, '42')
+    await wrapper.get('[data-cy="cross-system-bulk-disable"]').trigger('click')
+    await flushPromises()
+
+    backend.armed = true
+    ;(document.querySelector('[data-cy="user-bulk-confirm"]') as HTMLElement).click()
+    await flushPromises()
+
+    expect(backend.request.mock.calls.some(([config]) => (config as { method: string }).method === 'PUT')).toBe(false)
+  })
+
+  it('disables confirm once nothing selected may be written any more', async () => {
+    const mayWrite = ref<boolean | undefined>(undefined)
+    const backend = {
+      system: 'weather',
+      get: vi.fn().mockResolvedValue(emptyList()),
+      request: vi.fn().mockResolvedValue({ status: 200, data: person() }),
+      canWrite: () => mayWrite.value,
+    }
+    const wrapper = await mountOverview([backend])
+    await search(wrapper, '42')
+    await wrapper.get('[data-cy="cross-system-bulk-disable"]').trigger('click')
+    await flushPromises()
+
+    mayWrite.value = false
+    await flushPromises()
+    const confirm = document.querySelector('[data-cy="user-bulk-confirm"]') as HTMLButtonElement
+    expect(confirm.disabled).toBe(true)
   })
 })

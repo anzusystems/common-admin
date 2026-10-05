@@ -26,8 +26,9 @@ vi.mock('@/domains/dam/composables/commonAdminCoreDamOptions', async (importOrig
   ...(await importOriginal<object>()),
   useCommonAdminCoreDamOptions: () => ({ damClient: () => ({}), endPointAsset: '/asset', showSourceEnabled: true }),
 }))
+const assets = vi.hoisted(() => ({ fetch: vi.fn(async (): Promise<unknown[]> => []) }))
 vi.mock('@/domains/dam/api/damfetchAssetListByFileIdsMultipleLicences', () => ({
-  fetchAssetListByFileIdsMultipleLicences: async () => [],
+  fetchAssetListByFileIdsMultipleLicences: () => assets.fetch(),
 }))
 vi.mock('@/domains/dam/config/composables/damConfigState', () => ({
   useDamConfigState: () => ({ getDamConfigExtSystem: () => undefined, getExtSystemByLicence: async () => 1 }),
@@ -39,9 +40,9 @@ const Editor = defineComponent({
 })
 const Item = defineComponent({ name: 'ImageWidgetMultipleItem', setup: () => () => h('div', { class: 'row' }) })
 
-const mountWidget = (modelValue: number[]) =>
+const mountWidget = (modelValue: number[], extraProps: Record<string, unknown> = {}) =>
   mount(ImageWidgetMultipleInner, {
-    props: { modelValue, queueKey: 'gallery', uploadLicence: 1, selectLicences: [1] },
+    props: { modelValue, queueKey: 'gallery', uploadLicence: 1, selectLicences: [1], ...extraProps },
     global: {
       provide: {
         [ImageWidgetUploadConfigKey as symbol]: shallowRef({
@@ -79,5 +80,27 @@ describe('ImageWidgetMultipleInner and the global image store', () => {
     expect(galleryB.emitted('update:modelValue')?.at(-1)).toEqual([[]])
     expect(useImageStore().maxPosition).toBe(0)
     galleryB.unmount()
+  })
+})
+
+describe('ImageWidgetMultipleInner readonly', () => {
+  it('writes nothing on save and offers no reordering', async () => {
+    imageApi.bulkUpdateImages.mockClear()
+    const gallery = mountWidget([1, 2], { readonly: true })
+    await flushPromises()
+    expect(gallery.findAll('.row')).toHaveLength(2)
+    expect(gallery.findComponent({ name: 'ASortableListEditor' }).attributes('readonly')).toBeDefined()
+    expect(await (gallery.vm as any).saveImages()).toBe(true)
+    expect(imageApi.bulkUpdateImages).not.toHaveBeenCalled()
+    gallery.unmount()
+  })
+
+  it('still shows the images when DAM refuses their assets, and tells the mass operations', async () => {
+    assets.fetch.mockRejectedValueOnce(new Error('403'))
+    const gallery = mountWidget([1, 2], { readonly: true })
+    await flushPromises()
+    expect(gallery.findAll('.row')).toHaveLength(2)
+    expect(useImageStore().readonly).toBe(true)
+    gallery.unmount()
   })
 })
