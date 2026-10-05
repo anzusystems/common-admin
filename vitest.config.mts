@@ -89,6 +89,17 @@ export default defineConfig({
       'vuetify/components/VRadio',
       'vuetify/components/VRadioGroup',
       'vuetify/components/VBadge',
+      // The dependency scan does not finish on this project, so whatever is not listed is found only while the run is
+      // already going, and the reload that follows drops the test files the browser was loading.
+      '@vue/compiler-dom',
+      '@vueuse/core',
+      'axios',
+      'pinia',
+      'vue',
+      'vue-i18n',
+      'vuetify',
+      'vuetify/components',
+      'vuetify/directives',
     ],
   },
   test: {
