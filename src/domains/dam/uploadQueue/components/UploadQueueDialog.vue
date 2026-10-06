@@ -9,12 +9,13 @@ import { useTheme } from '@/domains/system/composables/themeSettings'
 import UploadQueueButtonStop from '@/domains/dam/uploadQueue/components/UploadQueueButtonStop.vue'
 import useVuelidate from '@vuelidate/core'
 import { useAlerts } from '@/domains/system/composables/alerts'
-import { bulkUpdateAssetsMetadata, fetchAsset } from '@/domains/dam/api/damAssetApi'
+import { bulkUpdateAssetsMetadata, fetchAsset, hasMetadataToSave } from '@/domains/dam/api/damAssetApi'
 import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
 import AFileInput from '@/domains/ui/file/components/AFileInput.vue'
 import AImageDropzone from '@/domains/ui/file/components/AFileDropzone.vue'
 import type { ImageStoreItem } from '@/domains/dam/types/ImageAware'
 import type { DocId, IntegerId } from '@/shared/types/common'
+import { type UploadQueueItem, UploadQueueItemStatus } from '@/domains/dam/types/UploadQueue'
 import { generateUUIDv1 } from '@/shared/utils/generator'
 import { mapUploadMetadataToImages } from '@/domains/dam/imageWidget/utils/metadataToImageMap'
 import { useImageStore } from '@/domains/dam/imageWidget/store/imageStore'
@@ -67,6 +68,13 @@ const isFinished = computed(() => {
   return queueTotalCount.value === queueProcessedCount.value
 })
 
+// Failed uploads, items still waiting for their metadata: "save" would send nothing and report it saved.
+const nothingToSave = computed(() => !items.value.some(hasMetadataToSave))
+// "Save and apply" hands the widget the items settled as uploaded (a duplicate and a copy are), saved or not: a
+// failed one has its asset and file ids too, and is no image to hand over.
+const isUploaded = (item: UploadQueueItem) => item.status === UploadQueueItemStatus.Uploaded
+const nothingToApply = computed(() => !items.value.some(isUploaded))
+
 const { t } = useI18n()
 const { toolbarColor } = useTheme()
 const { mdAndDown } = useDisplay()
@@ -115,9 +123,10 @@ const onSaveAndApply = async () => {
   }
   try {
     const res = await bulkUpdateAssetsMetadata(damClient, endPointAsset, itemsRaw)
+    const uploaded = itemsRaw.filter(isUploaded)
     const mappedItems = customUploadMetadataToImageMap
-      ? await customUploadMetadataToImageMap(itemsRaw, res, damClient, props.extSystem, props.licenceId)
-      : await mapUploadMetadataToImages(itemsRaw, res, damClient, props.extSystem, props.licenceId)
+      ? await customUploadMetadataToImageMap(uploaded, res, damClient, props.extSystem, props.licenceId)
+      : await mapUploadMetadataToImages(uploaded, res, damClient, props.extSystem, props.licenceId)
     const storeItems: ImageStoreItem[] = mappedItems.map((item) => {
       maxPosition.value++
       return {
@@ -214,7 +223,7 @@ const showDetail = async (id: DocId) => {
                 class="mr-2"
                 rounded="pill"
                 :loading="saveAndCloseButtonLoading"
-                :disabled="saveButtonLoading"
+                :disabled="saveButtonLoading || nothingToApply"
                 @click.stop="onSaveAndApply"
               >
                 {{ mdAndDown ? t('common.damImage.upload.apply') : t('common.damImage.upload.saveAndApply') }}
@@ -227,7 +236,7 @@ const showDetail = async (id: DocId) => {
                 class="mr-2 text-medium-emphasis"
                 icon
                 :loading="saveButtonLoading"
-                :disabled="saveAndCloseButtonLoading"
+                :disabled="saveAndCloseButtonLoading || nothingToSave"
                 @click.stop="onSave"
               >
                 <VIcon icon="mdi-content-save" />

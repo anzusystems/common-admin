@@ -277,6 +277,9 @@ describe('useValidate', () => {
       expect(await compare(null, since, 'laterThan')).toEqual([])
       expect(await compare(since, null, 'laterThan')).toEqual([])
       expect(await compare(null, null, 'laterThan')).toEqual([])
+      // A cleared text input is an empty string, not null.
+      expect(await compare('', since, 'laterThan')).toEqual([])
+      expect(await compare(since, '', 'earlierThan')).toEqual([])
     })
 
     it('compares values of different fraction length by instant', async () => {

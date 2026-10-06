@@ -22,11 +22,8 @@ export function useValidateCompareDates() {
     return (value: DatetimeUTCNullable) => {
       const unrefOtherDate = unref(otherDate)
 
-      if (value === null && unrefOtherDate === null) {
-        return true
-      }
-
-      if (value === null || unrefOtherDate === null) {
+      // Nothing to compare while either date is missing; a cleared input is an empty string, not null.
+      if (!value || !unrefOtherDate) {
         return true
       }
 

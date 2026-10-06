@@ -66,6 +66,7 @@ const elements = computed(() => {
           <ACustomDataFormElement
             :config="element"
             :model-value="modelValue[element.property]"
+            :validation-scope="false"
             @update:model-value="updateModelValue"
           />
           <VBtn

@@ -95,6 +95,12 @@ const mainFileSingleUse = computed({
 
 const { t } = useI18n()
 
+// The save skips an item whose metadata cannot be edited, so nothing in its row is validated: it could not be
+// put right. A scope is read once, when a field is set up - hence the key on the form.
+const metadataValidationScope = computed(() => {
+  return props.item.canEditMetadata ? ADamAssetMetadataValidationScopeSymbol : false
+})
+
 const processingStatuses: readonly UploadQueueItemStatusType[] = [
   UploadQueueItemStatus.Processing,
   UploadQueueItemStatus.Loading,
@@ -339,9 +345,11 @@ onUnmounted(() => {
         <VForm :disabled="!item.canEditMetadata">
           <AssetCustomMetadataForm
             v-if="item"
+            :key="item.canEditMetadata ? 'validated' : 'skipped'"
             v-model="customData"
             :ext-system="extSystem"
             :asset-type="assetType"
+            :validation-scope="metadataValidationScope"
           >
             <template #after-pinned>
               <VRow
@@ -362,7 +370,7 @@ onUnmounted(() => {
                       clearable
                       multiple
                       :required="keywordRequired"
-                      :validation-scope="ADamAssetMetadataValidationScopeSymbol"
+                      :validation-scope="metadataValidationScope"
                       :disabled="!item.canEditMetadata"
                     />
                   </ASystemEntityScope>
@@ -387,7 +395,7 @@ onUnmounted(() => {
                       clearable
                       multiple
                       :required="authorRequired"
-                      :validation-scope="ADamAssetMetadataValidationScopeSymbol"
+                      :validation-scope="metadataValidationScope"
                       :disabled="!item.canEditMetadata"
                     />
                   </ASystemEntityScope>

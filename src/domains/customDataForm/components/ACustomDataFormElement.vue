@@ -26,7 +26,9 @@ const emit = defineEmits<{
 
 const fixValue = (value: any) => {
   if (props.config.attributes.type === CustomDataFormElementType.Integer) {
-    return parseInt(value)
+    // A cleared input is no value, not `NaN`: an optional number can be emptied, a required one says so.
+    const parsed = parseInt(value)
+    return Number.isNaN(parsed) ? null : parsed
   }
   return value
 }
@@ -49,6 +51,8 @@ const modelValueComputed = computed(() => {
 const { maxLength, minLength, requiredIf, minValue, maxValue, stringArrayItemLength } = useValidate()
 
 const rules = computed(() => {
+  // What the user cannot change is not theirs to fix; the server does not validate it either.
+  if (props.config.attributes.readonly) return { modelValueComputed: {} }
   const dynamicRules: Record<string, any> = {
     modelValueComputed: {
       required: requiredIf(props.config.attributes.required),
@@ -173,6 +177,7 @@ const onBlur = () => {
     v-if="config.attributes.type === CustomDataFormElementType.Boolean && config.attributes.required === true"
     :label="config.name"
     :model-value="modelValueComputed"
+    :error-messages="errorMessageComputed"
     :readonly="config.attributes.readonly"
     :data-cy="'custom-field-' + config.property"
     @update:model-value="updateModelValue"

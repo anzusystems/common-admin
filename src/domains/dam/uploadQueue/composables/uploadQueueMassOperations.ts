@@ -1,7 +1,7 @@
 import type { UploadQueueKey } from '@/domains/dam/types/UploadQueue'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
 import type { DamAssetTypeType } from '@/domains/dam/types/Asset'
-import { isUndefined } from '@/shared/utils/common'
+import { isArray, isNull, isUndefined } from '@/shared/utils/common'
 
 export function useUploadQueueMassOperations(queueKey: UploadQueueKey) {
   const uploadQueuesStore = useUploadQueuesStore()
@@ -14,11 +14,10 @@ export function useUploadQueueMassOperations(queueKey: UploadQueueKey) {
     for (let i = 0; i < items.length; i++) {
       const item = items[i]!
       if (item.assetType !== data.assetType) continue
-      if (
-        forceReplace ||
-        isUndefined(item.customData[data.elementProperty]) ||
-        item.customData[data.elementProperty] === ''
-      ) {
+      const current = item.customData[data.elementProperty]
+      // `null` is how a value saved empty comes back; a field of several values is empty as an empty list.
+      const empty = isUndefined(current) || isNull(current) || current === '' || (isArray(current) && !current.length)
+      if (forceReplace || empty) {
         item.customData[data.elementProperty] = data.value
       }
     }

@@ -20,7 +20,8 @@ export interface CustomDataFormElementAttributes {
   readonly: boolean
 }
 
-export type CustomDataValue = boolean | string | number | string[] | number[]
+/** `null`: a value that was emptied (a cleared number), also as the API returns it once saved. A value never set has no key. */
+export type CustomDataValue = boolean | string | number | string[] | number[] | null
 
 export interface CustomDataAware {
   customData: { [key: string]: CustomDataValue }

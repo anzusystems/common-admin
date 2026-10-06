@@ -194,13 +194,17 @@ async function updateMetadataSequence(
   return responses
 }
 
+/** What the bulk save sends: an item with an asset whose metadata the user may edit. */
+export const hasMetadataToSave = (item: UploadQueueItem): item is UploadQueueItem & { assetId: DocId } =>
+  !isNull(item.assetId) && item.canEditMetadata
+
 function listItemsToMetadataBulkItems(
   items: UploadQueueItem[],
   mainFileSingleUseOverride: boolean | undefined = undefined
 ) {
   const dtoItems: AssetMetadataBulkItem[] = []
   items.forEach((item) => {
-    if (!isNull(item.assetId) && item.canEditMetadata) {
+    if (hasMetadataToSave(item)) {
       dtoItems.push({
         id: item.assetId,
         keywords: item.keywords,

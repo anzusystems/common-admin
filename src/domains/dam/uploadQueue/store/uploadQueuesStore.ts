@@ -16,6 +16,7 @@ import { useDamCachedKeywords } from '@/domains/dam/keyword/composables/cachedKe
 import { damFileTypeFix } from '@/domains/ui/file/utils/fileType'
 import type { DocId, DocIdNullable, IntegerId } from '@/shared/types/common'
 import { type AssetDetailItemDto, DamAssetType, type DamAssetTypeType } from '@/domains/dam/types/Asset'
+import { AssetFileFailReasonDefault } from '@/domains/dam/types/AssetFile'
 import type { AssetFileFailReasonType } from '@/domains/dam/types/AssetFile'
 import {
   type UploadQueue,
@@ -197,8 +198,14 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
       processUpload(queueKey)
     } catch (e) {
       stopSpeedCheck()
-      item.error.hasError = true
-      item.status = UploadQueueItemStatus.Failed
+      // The processed notification can beat the answer to the finish request: a row it has settled stays
+      // uploaded, whatever became of that request.
+      if (item.status !== UploadQueueItemStatus.Uploaded) {
+        item.error.hasError = true
+        item.status = UploadQueueItemStatus.Failed
+        // Its metadata event comes while the file still sends, and had enabled the form.
+        item.canEditMetadata = false
+      }
       recalculateQueueCounts(queueKey)
       processUpload(queueKey)
     }
@@ -210,62 +217,100 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
     item.progress.speed = speed
   }
 
+  // A processed file leaves no error on its row: not the one the client gave up with, nor the fallback's.
+  function clearError(item: UploadQueueItem) {
+    item.error = { hasError: false, message: '', assetFileFailReason: AssetFileFailReasonDefault }
+  }
+
+  // A processed file for a row whose metadata may be missing as well: the fallback's and the refresh button's
+  // load, and a row the client had given up on.
+  function settleWithMetadata(
+    queue: UploadQueue,
+    queueKey: UploadQueueKey,
+    item: UploadQueueItem,
+    asset: AssetDetailItemDto,
+    mainFile: NonNullable<AssetDetailItemDto['mainFile']>
+  ) {
+    const { updateNewNames, getAuthorConflicts } = useAssetSuggestions()
+    clearTimeout(item.notificationFallbackTimer)
+    // status + image (from queueItemProcessed)
+    item.status = UploadQueueItemStatus.Uploaded
+    clearError(item)
+    // A copy to the licence knows only its asset, and the image is built from the file id.
+    if (isNull(item.fileId)) item.fileId = mainFile.id
+    item.assetStatus = asset.attributes.assetStatus
+    if (mainFile.links?.image_detail) {
+      item.imagePreview = mainFile.links.image_detail
+    }
+    // metadata (from queueItemMetadataProcessed), loaded once: a row that has it keeps what the user has typed
+    // since.
+    if (!item.canEditMetadata) {
+      item.keywords = asset.keywords
+      item.authors = asset.authors
+      item.customData = asset.metadata.customData
+      item.mainFileSingleUse = asset.mainFileSingleUse
+      item.mainFileInternal = asset.mainFileInternal
+      updateNewNames(asset.metadata.authorSuggestions, queue.suggestions.newAuthorNames)
+      updateNewNames(asset.metadata.keywordSuggestions, queue.suggestions.newKeywordNames)
+      item.authorConflicts = getAuthorConflicts(asset.metadata.authorSuggestions)
+      addToCachedKeywords(item.keywords)
+      addToCachedAuthors(item.authors)
+      addToCachedAuthors(item.authorConflicts)
+      item.canEditMetadata = true
+    }
+    processUpload(queueKey)
+  }
+
   async function queueItemProcessed(assetId: DocId) {
     try {
       const asset = await fetchAsset(damClient, endPointAsset, assetId)
       if (!asset) return
+      let givenUp = false
       queues.value.forEach((queue, queueKey) => {
         queue.items.forEach((item) => {
           if (item.assetId === asset.id && asset.mainFile) {
+            // The client marks an upload failed when one of its requests fails, and the server may have finished
+            // it all the same. Such a row lost its form with the failure, and gets its metadata with this answer.
+            // Read now, not before the lookup: that request can still fail while this one is on its way.
+            if (item.status === UploadQueueItemStatus.Failed) {
+              settleWithMetadata(queue, queueKey, item, asset, asset.mainFile)
+              givenUp = true
+              return
+            }
             clearTimeout(item.notificationFallbackTimer)
             item.status = UploadQueueItemStatus.Uploaded
+            clearError(item)
             item.assetStatus = asset.attributes.assetStatus
             if (asset.mainFile.links?.image_detail) {
               item.imagePreview = asset.mainFile.links.image_detail
             }
-            item.mainFileSingleUse = asset.mainFileSingleUse
-            item.mainFileInternal = asset.mainFileInternal
+            // The switches of the row, until its metadata is loaded: after that the user may have set them.
+            if (!item.canEditMetadata) {
+              item.mainFileSingleUse = asset.mainFileSingleUse
+              item.mainFileInternal = asset.mainFileInternal
+            }
             processUpload(queueKey)
           }
         })
         recalculateQueueCounts(queueKey)
       })
+      if (givenUp) {
+        fetchCachedAuthors()
+        fetchCachedKeywords()
+      }
     } catch (e) {
       //
     }
   }
 
   async function queueItemFullyProcessed(assetId: DocId) {
-    const { updateNewNames, getAuthorConflicts } = useAssetSuggestions()
     try {
       const asset = await fetchAsset(damClient, endPointAsset, assetId)
       if (!asset) return
       queues.value.forEach((queue, queueKey) => {
         queue.items.forEach((item) => {
           if (item.assetId === asset.id && asset.mainFile && item.type) {
-            clearTimeout(item.notificationFallbackTimer)
-            // status + image (from queueItemProcessed)
-            item.status = UploadQueueItemStatus.Uploaded
-            // A copy to the licence knows only its asset, and the image is built from the file id.
-            if (isNull(item.fileId)) item.fileId = asset.mainFile.id
-            item.assetStatus = asset.attributes.assetStatus
-            if (asset.mainFile.links?.image_detail) {
-              item.imagePreview = asset.mainFile.links.image_detail
-            }
-            // metadata (from queueItemMetadataProcessed)
-            item.keywords = asset.keywords
-            item.authors = asset.authors
-            item.customData = asset.metadata.customData
-            item.mainFileSingleUse = asset.mainFileSingleUse
-            item.mainFileInternal = asset.mainFileInternal
-            updateNewNames(asset.metadata.authorSuggestions, queue.suggestions.newAuthorNames)
-            updateNewNames(asset.metadata.keywordSuggestions, queue.suggestions.newKeywordNames)
-            item.authorConflicts = getAuthorConflicts(asset.metadata.authorSuggestions)
-            addToCachedKeywords(item.keywords)
-            addToCachedAuthors(item.authors)
-            addToCachedAuthors(item.authorConflicts)
-            item.canEditMetadata = true
-            processUpload(queueKey)
+            settleWithMetadata(queue, queueKey, item, asset, asset.mainFile)
           }
         })
         recalculateQueueCounts(queueKey)
@@ -298,6 +343,7 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
           clearTimeout(item.notificationFallbackTimer)
           item.error.hasError = true
           item.status = UploadQueueItemStatus.Failed
+          item.canEditMetadata = false
         })
         recalculateQueueCounts(queueKey)
       })
@@ -367,6 +413,10 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
         queue.items.forEach((item) => {
           if (item.assetId === asset.id && item.type) {
             clearTimeout(item.notificationFallbackTimer)
+            // A failed upload stays as it is: this event can come after the failure, and made the row editable again.
+            if (item.status === UploadQueueItemStatus.Failed) return
+            // Loaded once: a row that has its metadata keeps what the user has typed since.
+            if (item.canEditMetadata) return
             item.keywords = asset.keywords
             item.authors = asset.authors
             item.customData = asset.metadata.customData
@@ -427,10 +477,11 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
       queues.value.forEach((queue, queueKey) => {
         queue.items.forEach((item) => {
           if (item.assetId !== assetId || item.status !== UploadQueueItemStatus.Processing) return
-          // The fallback poll would otherwise settle it later as uploaded, with the error still shown.
+          // The fallback poll would otherwise settle it later as uploaded.
           clearTimeout(item.notificationFallbackTimer)
           item.error.hasError = true
           item.status = UploadQueueItemStatus.Failed
+          item.canEditMetadata = false
         })
         recalculateQueueCounts(queueKey)
       })

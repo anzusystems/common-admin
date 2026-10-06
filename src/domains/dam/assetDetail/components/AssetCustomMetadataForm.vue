@@ -5,6 +5,7 @@ import { useDamConfigState } from '@/domains/dam/config/composables/damConfigSta
 import ACustomDataForm from '@/domains/customDataForm/components/ACustomDataForm.vue'
 import { ADamAssetMetadataValidationScopeSymbol } from '@/domains/dam/composables/uploadValidations'
 import type { IntegerId } from '@/shared/types/common'
+import type { ValidationScope } from '@/shared/types/Validation'
 import { isUndefined } from '@/shared/utils/common'
 
 const props = withDefaults(
@@ -14,10 +15,12 @@ const props = withDefaults(
     modelValue: { [key: string]: any }
     dataCy?: string
     readonly?: boolean
+    validationScope?: ValidationScope
   }>(),
   {
     dataCy: undefined,
     readonly: false,
+    validationScope: ADamAssetMetadataValidationScopeSymbol,
   }
 )
 const emit = defineEmits<{
@@ -54,7 +57,7 @@ const pinnedCount = computed(() => {
     :pinned-count="pinnedCount"
     :elements="elements"
     :readonly="readonly"
-    :validation-scope="ADamAssetMetadataValidationScopeSymbol"
+    :validation-scope="validationScope"
     @any-change="emit('anyChange')"
     @update:model-value="emit('update:modelValue', $event)"
   >
