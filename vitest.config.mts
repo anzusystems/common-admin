@@ -106,7 +106,7 @@ export default defineConfig({
     globals: true,
     // The eslint rule tests run in node, under vitest.config.node.mts: `Linter` is node code and
     // reaches for `process`, which the browser does not have.
-    exclude: ['**/node_modules/**', 'src/test/eslint/**', 'src/test/vite/**', 'scripts/**'],
+    exclude: ['**/node_modules/**', 'src/test/eslint/**', 'src/test/vite/**', 'scripts/**', 'doc/**'],
     // v5 default; pinned so it cannot silently flip.
     clearMocks: true,
     // Console output of passing tests is noise (thousands of lines); a failing test still shows its own.
