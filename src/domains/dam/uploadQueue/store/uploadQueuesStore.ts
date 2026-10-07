@@ -226,7 +226,7 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
   }
 
   // A processed file for a row whose metadata may be missing as well: the fallback's and the refresh button's
-  // load, and a row the client had given up on.
+  // load, a copy, and a row the client had given up on.
   function settleWithMetadata(
     queue: UploadQueue,
     queueKey: UploadQueueKey,
@@ -450,34 +450,14 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
   }
 
   async function queueItemCopied(assetId: DocId) {
-    const { updateNewNames, getAuthorConflicts } = useAssetSuggestions()
     try {
       const asset = await fetchAsset(damClient, endPointAsset, assetId)
       queues.value.forEach((queue, queueKey) => {
         queue.items.forEach((item) => {
           if (item.assetId === asset.id && asset.mainFile && item.type) {
-            clearTimeout(item.notificationFallbackTimer)
-            item.fileId = asset.mainFile.id
-            item.status = UploadQueueItemStatus.Uploaded
-            clearError(item)
-            item.assetStatus = asset.attributes.assetStatus
-            if (asset.mainFile.links?.image_detail) {
-              item.imagePreview = asset.mainFile.links.image_detail
-            }
-            item.mainFileSingleUse = asset.mainFileSingleUse
-            item.mainFileInternal = asset.mainFileInternal
-            item.keywords = asset.keywords
-            item.authors = asset.authors
-            item.customData = asset.metadata.customData
-            updateNewNames(asset.metadata.authorSuggestions, queue.suggestions.newAuthorNames)
-            updateNewNames(asset.metadata.keywordSuggestions, queue.suggestions.newKeywordNames)
-            item.authorConflicts = getAuthorConflicts(asset.metadata.authorSuggestions)
-            addToCachedKeywords(item.keywords)
-            addToCachedAuthors(item.authors)
-            addToCachedAuthors(item.authorConflicts)
-            metadataLoaded.add(toRaw(item))
-            item.canEditMetadata = true
-            processUpload(queueKey)
+            // As the fallback settles it. Its metadata notification can come first, and its form with it: what the
+            // user has typed since stays.
+            settleWithMetadata(queue, queueKey, item, asset, asset.mainFile)
           }
         })
         recalculateQueueCounts(queueKey)

@@ -18,15 +18,20 @@ const props = withDefaults(
     dataCy?: string
     assetType: DamAssetTypeType
     configName?: string
+    showRefresh?: boolean
+    refreshDisabled?: boolean
   }>(),
   {
     dataCy: undefined,
     configName: 'default',
+    showRefresh: false,
+    refreshDisabled: false,
   }
 )
 const emit = defineEmits<{
   (e: 'save'): void
   (e: 'saveAndApply'): void
+  (e: 'refresh'): void
 }>()
 
 const { t } = useI18n()
@@ -66,6 +71,14 @@ const onSaveAndApply = async () => {
     v-if="isActive"
     :queue-key="queueKey"
   >
+    <ABtnTertiary
+      v-if="showRefresh"
+      data-cy="button-refresh"
+      :disabled="refreshDisabled"
+      @click.stop="emit('refresh')"
+    >
+      {{ t('common.button.refresh') }}
+    </ABtnTertiary>
     <ABtnSecondary
       type="submit"
       class="ml-2"

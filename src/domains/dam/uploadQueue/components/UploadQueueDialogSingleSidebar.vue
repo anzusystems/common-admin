@@ -4,12 +4,18 @@ import { storeToRefs } from 'pinia'
 import type { DocId, IntegerId } from '@/shared/types/common'
 import type { DamAssetStatusType, DamAssetTypeType } from '@/domains/dam/types/Asset'
 import type { AssetFileFailReasonType, AssetFileProcessStatusType } from '@/domains/dam/types/AssetFile'
-import { computed } from 'vue'
+import { computed, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AssetDetailSidebarROI from '@/domains/dam/assetDetail/components/AssetDetailSidebarROI.vue'
 import AssetDetailSidebarActionsTeleportTarget from '@/domains/dam/assetDetail/components/AssetDetailSidebarActionsTeleportTarget.vue'
 import UploadQueueDialogSingleSidebarMetadata from '@/domains/dam/uploadQueue/components/UploadQueueDialogSingleSidebarMetadata.vue'
 import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
+import { UploadQueueItemStatus } from '@/domains/dam/types/UploadQueue'
+import {
+  SHOW_REFRESH_AFTER_SECONDS,
+  useUploadQueueItemRefresh,
+} from '@/domains/dam/uploadQueue/composables/uploadQueueItemRefresh'
+import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
 
 const props = withDefaults(
   defineProps<{
@@ -49,6 +55,33 @@ const { activeTab } = storeToRefs(assetDetailStore)
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { simpleAssetSidebarEnabled } = useCommonAdminCoreDamOptions(props.configName)
 const simpleMode = computed(() => simpleAssetSidebarEnabled && props.isImage && props.enableRoiTab)
+
+// An uploaded item whose metadata has not come: its form stays disabled, and both saves with it. Here, not in the
+// metadata tab: the wait goes on while the other tab is open.
+const uploadQueuesStore = useUploadQueuesStore()
+const item = computed(() => uploadQueuesStore.getQueueItems(props.queueKey)[0] ?? null)
+const waitsForMetadata = computed(
+  () => item.value?.status === UploadQueueItemStatus.Uploaded && !item.value.canEditMetadata
+)
+const showRefresh = ref(false)
+let refreshTimer: ReturnType<typeof setTimeout> | undefined
+watch(
+  waitsForMetadata,
+  (waits) => {
+    clearTimeout(refreshTimer)
+    showRefresh.value = false
+    if (!waits) return
+    refreshTimer = setTimeout(() => (showRefresh.value = true), SHOW_REFRESH_AFTER_SECONDS * 1000)
+  },
+  { immediate: true }
+)
+onUnmounted(() => clearTimeout(refreshTimer))
+
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { refreshing, refreshItem } = useUploadQueueItemRefresh(props.configName)
+const refresh = () => {
+  if (item.value?.assetId) refreshItem(item.value.assetId)
+}
 </script>
 
 <template>
@@ -88,6 +121,9 @@ const simpleMode = computed(() => simpleAssetSidebarEnabled && props.isImage && 
               :config-name="configName"
               :is-active="true"
               :asset-type="assetType"
+              :show-refresh="showRefresh"
+              :refresh-disabled="refreshing"
+              @refresh="refresh"
               @save="emit('save')"
               @save-and-apply="emit('saveAndApply')"
             />
@@ -111,6 +147,9 @@ const simpleMode = computed(() => simpleAssetSidebarEnabled && props.isImage && 
               :config-name="configName"
               :is-active="activeTab === AssetDetailTabImageWithRoi.Info"
               :asset-type="assetType"
+              :show-refresh="showRefresh"
+              :refresh-disabled="refreshing"
+              @refresh="refresh"
               @save="emit('save')"
               @save-and-apply="emit('saveAndApply')"
             />

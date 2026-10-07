@@ -7,11 +7,8 @@ import AssetQueueSelectedSidebar from '@/domains/dam/uploadQueue/components/Asse
 import { useDamCachedKeywords } from '@/domains/dam/keyword/composables/cachedKeywords'
 import { useDamCachedAuthors } from '@/domains/dam/author/composables/cachedAuthors'
 import type { DocId, IntegerId } from '@/shared/types/common'
-import { fetchAsset } from '@/domains/dam/api/damAssetApi'
 import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
-import { DamAssetType } from '@/domains/dam/types/Asset'
-import { useAlerts } from '@/domains/system/composables/alerts'
-import { AssetFileProcessStatus } from '@/domains/dam/types/AssetFile'
+import { useUploadQueueItemRefresh } from '@/domains/dam/uploadQueue/composables/uploadQueueItemRefresh'
 import { useEventListener } from '@vueuse/core'
 
 const props = withDefaults(
@@ -33,9 +30,10 @@ const emit = defineEmits<{
 }>()
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { damClient, endPointAsset, mainFileSingleUseEnabled } = useCommonAdminCoreDamOptions(props.configName)
+const { mainFileSingleUseEnabled } = useCommonAdminCoreDamOptions(props.configName)
 
-const refreshDisabled = ref(false)
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { refreshing, refreshItem } = useUploadQueueItemRefresh(props.configName)
 
 const uploadQueuesStore = useUploadQueuesStore()
 
@@ -49,28 +47,6 @@ const cancelItem = (data: { index: number; item: UploadQueueItem; queueKey: Uplo
 
 const removeItem = (index: number) => {
   uploadQueuesStore.removeByIndex(props.queueKey, index)
-}
-
-const { showWarningT } = useAlerts()
-
-const refreshItem = async (data: { index: number; assetId: DocId }) => {
-  refreshDisabled.value = true
-  try {
-    const asset = await fetchAsset(damClient, endPointAsset, data.assetId)
-    if (asset.mainFile?.fileAttributes.status === AssetFileProcessStatus.Processed) {
-      await uploadQueuesStore.queueItemFullyProcessed(asset.id)
-    } else if (asset.mainFile?.fileAttributes.status === AssetFileProcessStatus.Duplicate) {
-      await uploadQueuesStore.queueItemDuplicate(asset.id, asset.mainFile.originAssetFile, DamAssetType.Image)
-    } else if (asset.mainFile?.fileAttributes.status === AssetFileProcessStatus.Failed) {
-      await uploadQueuesStore.queueItemFailed(data.assetId, asset.mainFile.fileAttributes.failReason)
-    } else {
-      showWarningT('common.damImage.queueItem.stillUploadingOrProcessing')
-    }
-  } catch (e) {
-    //
-  } finally {
-    refreshDisabled.value = false
-  }
 }
 
 const { addToCachedKeywords, fetchCachedKeywords } = useDamCachedKeywords()
@@ -158,10 +134,10 @@ onBeforeUnmount(() => {
             :index="index"
             :queue-key="queueKey"
             :disable-done-animation="disableDoneAnimation"
-            :refresh-disabled="refreshDisabled"
+            :refresh-disabled="refreshing"
             @cancel-item="cancelItem"
             @remove-item="removeItem"
-            @refresh-item="refreshItem"
+            @refresh-item="refreshItem($event.assetId)"
             @show-detail="emit('showDetail', $event)"
           />
         </VRow>

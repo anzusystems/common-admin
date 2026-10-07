@@ -22,12 +22,13 @@ const extSystemConfig = {
 // long is held back, until the test lets it pass.
 const realSetTimeout = window.setTimeout
 const realClearTimeout = window.clearTimeout
-const waits = new Map<number, () => void>()
+const waits = new Map<number, { run: () => void; ms: number }>()
 let lastWait = 1_000_000
+const heldWaits = () => [...waits.values()].map((wait) => wait.ms)
 const elapse = async () => {
   const due = [...waits.values()]
   waits.clear()
-  due.forEach((run) => run())
+  due.forEach((wait) => wait.run())
   await flushPromises()
 }
 
@@ -36,7 +37,7 @@ let forget: () => void = () => {}
 beforeEach(() => {
   window.setTimeout = ((run: () => void, ms?: number, ...rest: unknown[]) => {
     if ((ms ?? 0) < 10_000) return realSetTimeout(run, ms, ...rest)
-    waits.set(++lastWait, run)
+    waits.set(++lastWait, { run, ms: ms! })
     return lastWait
   }) as typeof window.setTimeout
   window.clearTimeout = ((id?: number) => {
@@ -110,6 +111,7 @@ describe('the refresh button of an uploaded row still without its metadata', () 
   it('is offered once the row has waited, and goes when the metadata is there', async () => {
     const item = await mountRow()
     expect(refreshButton().exists()).toBe(false)
+    expect(heldWaits()).toEqual([20_000])
 
     await elapse()
     expect(refreshButton().exists()).toBe(true)

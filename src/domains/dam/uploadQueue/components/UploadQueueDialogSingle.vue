@@ -233,10 +233,26 @@ const isUploading = computed(() => {
   return queueTotalCount.value > queueProcessedCount.value
 })
 
+// The item's own switch: the store loads it with the item's metadata and leaves it to the user after that (a
+// duplicate takes over the original's). Not the asset detail's, which is set anew from the server when the item
+// turns uploaded, over what the user had chosen while the file was still on its way.
+const mainFileSingleUse = computed(() => item.value?.mainFileSingleUse ?? false)
+
+// What the original of a duplicate is, as it was found: the notice is about that asset, and does not follow the
+// switch, which is the item's value from then on.
+const originalIsSingleUse = ref(false)
+watch(
+  () => item.value?.isDuplicate,
+  (isDuplicate) => {
+    originalIsSingleUse.value = !!isDuplicate && item.value?.mainFileSingleUse === true
+  },
+  { immediate: true }
+)
+
 const onSave = async () => {
   if (items.value.length === 0) return
   try {
-    await bulkUpdateAssetsMetadata(damClient, endPointAsset, items.value, assetDetailStore.mainFileSingleUse)
+    await bulkUpdateAssetsMetadata(damClient, endPointAsset, items.value, mainFileSingleUse.value)
     showRecordWas('updated')
   } catch (error) {
     showErrorsDefault(error)
@@ -250,7 +266,7 @@ const onSaveAndApply = async () => {
       damClient,
       endPointAsset,
       items.value,
-      assetDetailStore.mainFileSingleUse
+      mainFileSingleUse.value
     )
     if (!assetsMetadataRes[0]) {
       throw new Error('Fatal error updating asset metadata')
@@ -467,7 +483,7 @@ onMounted(() => {
                   {{ t('common.damImage.asset.detail.info.status.duplicate') }}
                 </div>
                 <div
-                  v-if="item?.isDuplicate && item?.mainFileSingleUse"
+                  v-if="item?.isDuplicate && originalIsSingleUse"
                   class="text-body-small text-error px-3 py-2"
                 >
                   {{ t('common.damImage.asset.model.mainFileSingleUse') }}

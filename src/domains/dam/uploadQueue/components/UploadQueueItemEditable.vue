@@ -23,6 +23,7 @@ import { isNull } from '@/shared/utils/common'
 import { useDamKeywordAssetTypeConfig } from '@/domains/dam/keyword/composables/damKeywordConfig'
 import { useDamAuthorAssetTypeConfig } from '@/domains/dam/author/composables/damAuthorConfig'
 import AActionDeleteButton from '@/domains/ui/buttons/action/components/AActionDeleteButton.vue'
+import { SHOW_REFRESH_AFTER_SECONDS } from '@/domains/dam/uploadQueue/composables/uploadQueueItemRefresh'
 
 const props = withDefaults(
   defineProps<{
@@ -145,7 +146,6 @@ const showCancel = computed(() => {
   return showCancelStatuses.includes(props.item.status)
 })
 
-const SHOW_REFRESH_AFTER_SECONDS = 20
 const showRefresh = ref(false)
 const refreshTimer: Ref<ReturnType<typeof setTimeout> | undefined> = ref(undefined)
 

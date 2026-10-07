@@ -37,7 +37,7 @@ const { t } = useI18n()
 const panels = ref(['metadata', 'file'])
 
 const assetDetailStore = useAssetDetailStore()
-const { asset, authorConflicts, metadataAreTouched, mainFileSingleUse } = storeToRefs(assetDetailStore)
+const { asset, metadataAreTouched } = storeToRefs(assetDetailStore)
 
 const uploadQueuesStore = useUploadQueuesStore()
 
@@ -141,7 +141,7 @@ const { mainFileSingleUseEnabled, showFileInfoEnabled } = useCommonAdminCoreDamO
                     <AuthorRemoteAutocompleteWithCached
                       v-model="item.authors"
                       :label="t('common.damImage.asset.model.authors')"
-                      :author-conflicts="authorConflicts"
+                      :author-conflicts="item.authorConflicts"
                       data-cy="custom-field-authors"
                       :ext-system="extSystem"
                       clearable
@@ -161,7 +161,7 @@ const { mainFileSingleUseEnabled, showFileInfoEnabled } = useCommonAdminCoreDamO
               >
                 <VCol>
                   <VSwitch
-                    v-model="mainFileSingleUse"
+                    v-model="item.mainFileSingleUse"
                     :label="t('common.damImage.asset.model.mainFileSingleUse')"
                   />
                 </VCol>

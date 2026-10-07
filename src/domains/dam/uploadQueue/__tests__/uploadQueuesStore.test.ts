@@ -273,6 +273,31 @@ describe('the metadata of an item in the queue', () => {
     expect(item.mainFileSingleUse).toBe(false)
   })
 
+  // A copy's own notification settles it as the fallback does: its metadata may be there already.
+  it('keeps what the user typed into a copy whose metadata came before its copied notification', async () => {
+    const store = useUploadQueuesStore()
+    fetchAsset.mockImplementation(processed)
+    await store.addByCopyToLicence('q', 1, 1, ['asset-typed', 'asset-waiting'])
+    const [typed, waiting] = store.getQueueItems('q')
+    bus.listener!({ name: DamNotificationName.AssetMetadataProcessed, data: { asset: 'asset-typed' } })
+    await vi.waitFor(() => expect(typed.canEditMetadata).toBe(true))
+    typed.customData = { title: 'typed' }
+    typed.mainFileSingleUse = false
+
+    for (const asset of ['asset-typed', 'asset-waiting']) {
+      bus.listener!({ name: DamNotificationName.AssetFileCopied, data: { asset } })
+    }
+    await vi.waitFor(() =>
+      expect([typed.status, waiting.status]).toEqual([UploadQueueItemStatus.Uploaded, UploadQueueItemStatus.Uploaded])
+    )
+
+    // With its file, which the image is built from.
+    expect([typed.customData, typed.mainFileSingleUse, typed.fileId]).toEqual([{ title: 'typed' }, false, 'f'])
+    // A copy still without its metadata gets it, with its file and its form.
+    expect([waiting.customData, waiting.mainFileSingleUse]).toEqual([{ title: 'from the server' }, true])
+    expect([waiting.fileId, waiting.canEditMetadata]).toEqual(['f', true])
+  })
+
   // However the row came by its metadata, and whichever way its file is reported failed and then processed.
   it.each([
     [
