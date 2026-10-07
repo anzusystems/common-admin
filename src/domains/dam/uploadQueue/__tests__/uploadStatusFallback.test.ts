@@ -161,6 +161,37 @@ describe('an upload stopped while it finishes', () => {
   })
 })
 
+// The notification can beat the answer to the finish request. The answer then put the item back to processing: polled
+// once more, and with the fallback off left waiting for a notification that had already been.
+describe('an upload its notification settles while it finishes', () => {
+  it.each([UploadQueueItemStatus.Uploaded, UploadQueueItemStatus.Failed])(
+    'stays %s and is not polled',
+    async (settled) => {
+      const { imageUploadFinish } = await import('@/domains/dam/api/damImageApi')
+      let answer: (value: unknown) => void = () => {}
+      vi.mocked(imageUploadFinish).mockImplementationOnce(() => new Promise((resolve) => (answer = resolve)) as never)
+      const item = useUploadQueueItemFactory().createDefault(
+        'k',
+        UploadQueueItemType.File,
+        UploadQueueItemStatus.Uploading,
+        DamAssetType.Image,
+        1024,
+        1
+      )
+      item.assetId = 'asset-1'
+
+      const finished = damUploadFinish(() => ({}) as never, '/asset', '/image', item, 'sha', true)
+      item.status = settled
+      answer({})
+      await finished
+      await settle()
+
+      expect(item.status).toBe(settled)
+      expect(polls).toEqual([])
+    }
+  )
+})
+
 describe('an asset copied to the licence', () => {
   it('is polled for when no notification comes, and ends up uploaded with its file', async () => {
     fetchAsset.mockResolvedValue(asset('asset-1', AssetFileProcessStatus.Processed))
@@ -190,6 +221,26 @@ describe('an asset copied to the licence', () => {
     expect(rejections).toEqual([])
   })
 
+  // Its metadata is not its file. Loading it cancelled the poll, and an item whose file notification was then lost
+  // stayed processing.
+  it.each([
+    [
+      'its metadata notification',
+      () => state.listener!({ name: DamNotificationName.AssetMetadataProcessed, data: { asset: 'asset-1' } }),
+    ],
+    ['a save in the asset detail', () => void useUploadQueuesStore().updateFromDetail({ id: 'asset-1' } as never)],
+  ])('is still polled for after %s', async (_name, loadMetadata) => {
+    fetchAsset.mockResolvedValue(asset('asset-1', AssetFileProcessStatus.Processed))
+    const store = useUploadQueuesStore()
+    await store.addByCopyToLicence('q', 1, 1, ['asset-1'])
+    const item = store.getQueueItems('q')[0]!
+
+    loadMetadata()
+
+    await vi.waitFor(() => expect(item.status).toBe(UploadQueueItemStatus.Uploaded), { timeout: 2000 })
+    expect(polls).toEqual([10_000])
+  })
+
   it('arms no poll when the fallback is off', async () => {
     state.uploadStatusFallback = false
     const store = useUploadQueuesStore()
@@ -198,6 +249,32 @@ describe('an asset copied to the licence', () => {
 
     expect(store.getQueueItems('q')[0]!.notificationFallbackTimer).toBeUndefined()
     expect(fetchAsset).not.toHaveBeenCalled()
+  })
+})
+
+// The fallback's "this takes too long", or the failure the client gave up with: neither is true of an item once it is
+// settled as uploaded.
+describe('an item settled as a copy or as a duplicate', () => {
+  it('shows no error left from before', async () => {
+    state.uploadStatusFallback = false
+    fetchAsset.mockResolvedValue(asset('asset-copy', AssetFileProcessStatus.Processed))
+    fetchAssetByFileId.mockResolvedValue(asset('asset-original', AssetFileProcessStatus.Processed))
+    const store = useUploadQueuesStore()
+    await store.addByCopyToLicence('q', 1, 1, ['asset-copy', 'asset-duplicate'])
+    const [copy, duplicate] = store.getQueueItems('q')
+    copy.error.hasError = true
+    duplicate.error.hasError = true
+
+    state.listener!({ name: DamNotificationName.AssetFileCopied, data: { asset: 'asset-copy' } })
+    state.listener!({
+      name: DamNotificationName.AssetFileDuplicate,
+      data: { asset: 'asset-duplicate', originAssetFile: 'file-original', assetType: DamAssetType.Image },
+    })
+    await vi.waitFor(() =>
+      expect([copy.status, duplicate.status]).toEqual([UploadQueueItemStatus.Uploaded, UploadQueueItemStatus.Uploaded])
+    )
+
+    expect([copy.error.hasError, duplicate.error.hasError]).toEqual([false, false])
   })
 })
 

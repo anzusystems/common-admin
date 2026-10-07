@@ -28,7 +28,7 @@ import {
 } from '@/domains/dam/types/UploadQueue'
 import { isNull, isUndefined } from '@/shared/utils/common'
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, toRaw } from 'vue'
 
 const QUEUE_MAX_PARALLEL_UPLOADS = 2
 const QUEUE_CHUNK_SIZE = 10485760
@@ -38,6 +38,9 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
   const { addToCachedAuthors, fetchCachedAuthors } = useDamCachedAuthors()
 
   const queues = ref<Map<UploadQueueKey, UploadQueue>>(new Map())
+  // The rows that have been given their metadata. A failure takes the form of such a row away, not what the user
+  // has typed into it.
+  const metadataLoaded = new WeakSet<UploadQueueItem>()
 
   const { createDefault } = useUploadQueueItemFactory()
 
@@ -217,7 +220,7 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
     item.progress.speed = speed
   }
 
-  // A processed file leaves no error on its row: not the one the client gave up with, nor the fallback's.
+  // A row settled as uploaded shows no error: not the one the client gave up with, nor the fallback's.
   function clearError(item: UploadQueueItem) {
     item.error = { hasError: false, message: '', assetFileFailReason: AssetFileFailReasonDefault }
   }
@@ -243,19 +246,22 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
       item.imagePreview = mainFile.links.image_detail
     }
     // metadata (from queueItemMetadataProcessed), loaded once: a row that has it keeps what the user has typed
-    // since.
+    // since, also one that lost its form with a failure in between.
     if (!item.canEditMetadata) {
-      item.keywords = asset.keywords
-      item.authors = asset.authors
-      item.customData = asset.metadata.customData
-      item.mainFileSingleUse = asset.mainFileSingleUse
-      item.mainFileInternal = asset.mainFileInternal
-      updateNewNames(asset.metadata.authorSuggestions, queue.suggestions.newAuthorNames)
-      updateNewNames(asset.metadata.keywordSuggestions, queue.suggestions.newKeywordNames)
-      item.authorConflicts = getAuthorConflicts(asset.metadata.authorSuggestions)
-      addToCachedKeywords(item.keywords)
-      addToCachedAuthors(item.authors)
-      addToCachedAuthors(item.authorConflicts)
+      if (!metadataLoaded.has(toRaw(item))) {
+        item.keywords = asset.keywords
+        item.authors = asset.authors
+        item.customData = asset.metadata.customData
+        item.mainFileSingleUse = asset.mainFileSingleUse
+        item.mainFileInternal = asset.mainFileInternal
+        updateNewNames(asset.metadata.authorSuggestions, queue.suggestions.newAuthorNames)
+        updateNewNames(asset.metadata.keywordSuggestions, queue.suggestions.newKeywordNames)
+        item.authorConflicts = getAuthorConflicts(asset.metadata.authorSuggestions)
+        addToCachedKeywords(item.keywords)
+        addToCachedAuthors(item.authors)
+        addToCachedAuthors(item.authorConflicts)
+        metadataLoaded.add(toRaw(item))
+      }
       item.canEditMetadata = true
     }
     processUpload(queueKey)
@@ -270,7 +276,8 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
         queue.items.forEach((item) => {
           if (item.assetId === asset.id && asset.mainFile) {
             // The client marks an upload failed when one of its requests fails, and the server may have finished
-            // it all the same. Such a row lost its form with the failure, and gets its metadata with this answer.
+            // it all the same. Such a row lost its form with the failure, and gets it back with this answer: with
+            // its metadata, when it had none before.
             // Read now, not before the lookup: that request can still fail while this one is on its way.
             if (item.status === UploadQueueItemStatus.Failed) {
               settleWithMetadata(queue, queueKey, item, asset, asset.mainFile)
@@ -356,6 +363,7 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
           clearTimeout(item.notificationFallbackTimer)
           item.isDuplicate = true
           item.status = UploadQueueItemStatus.Uploaded
+          clearError(item)
           item.fileId = originAssetFile
           item.duplicateAssetId = assetRes.id
           item.assetStatus = assetRes.attributes.assetStatus
@@ -374,6 +382,7 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
           item.assetId = assetRes.id
           item.mainFileSingleUse = assetRes.mainFileSingleUse
           item.mainFileInternal = assetRes.mainFileInternal
+          metadataLoaded.add(toRaw(item))
           item.canEditMetadata = true
           processUpload(queueKey)
         }
@@ -412,7 +421,6 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
       queues.value.forEach((queue, queueKey) => {
         queue.items.forEach((item) => {
           if (item.assetId === asset.id && item.type) {
-            clearTimeout(item.notificationFallbackTimer)
             // A failed upload stays as it is: this event can come after the failure, and made the row editable again.
             if (item.status === UploadQueueItemStatus.Failed) return
             // Loaded once: a row that has its metadata keeps what the user has typed since.
@@ -428,6 +436,7 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
             addToCachedKeywords(item.keywords)
             addToCachedAuthors(item.authors)
             addToCachedAuthors(item.authorConflicts)
+            metadataLoaded.add(toRaw(item))
             item.canEditMetadata = true
           }
         })
@@ -450,6 +459,7 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
             clearTimeout(item.notificationFallbackTimer)
             item.fileId = asset.mainFile.id
             item.status = UploadQueueItemStatus.Uploaded
+            clearError(item)
             item.assetStatus = asset.attributes.assetStatus
             if (asset.mainFile.links?.image_detail) {
               item.imagePreview = asset.mainFile.links.image_detail
@@ -465,6 +475,7 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
             addToCachedKeywords(item.keywords)
             addToCachedAuthors(item.authors)
             addToCachedAuthors(item.authorConflicts)
+            metadataLoaded.add(toRaw(item))
             item.canEditMetadata = true
             processUpload(queueKey)
           }
@@ -529,7 +540,6 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
       queues.value.forEach((queue, queueKey) => {
         queue.items.forEach((item) => {
           if (item.assetId === assetRes.id && item.type) {
-            clearTimeout(item.notificationFallbackTimer)
             item.keywords = assetRes.keywords
             item.authors = assetRes.authors
             item.customData = assetRes.metadata.customData

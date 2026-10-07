@@ -3,6 +3,7 @@ import axios from 'axios'
 import { createPinia, setActivePinia } from 'pinia'
 import { ref } from 'vue'
 import { DamAssetType } from '@/domains/dam/types/Asset'
+import { AssetFileFailReason } from '@/domains/dam/types/AssetFile'
 import { type UploadQueueItem, UploadQueueItemStatus } from '@/domains/dam/types/UploadQueue'
 import { DamNotificationName } from '@/domains/dam/composables/damNotificationsEventBus'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
@@ -49,9 +50,13 @@ const assetWithFile = async (_c: unknown, _e: unknown, id: string) => ({
   attributes: { assetStatus: 'with_file' },
 })
 const fetchAsset = vi.fn(assetWithFile)
+// The original of a duplicate, looked up by its file.
+const noSuchFile = async (): Promise<unknown> => Promise.reject(new Error('404 Not Found'))
+const fetchAssetByFileId = vi.fn(noSuchFile)
 vi.mock('@/domains/dam/api/damAssetApi', async (importOriginal) => ({
   ...(await importOriginal<object>()),
   fetchAsset: (...a: unknown[]) => fetchAsset(...(a as [unknown, unknown, string])),
+  fetchAssetByFileId: () => fetchAssetByFileId(),
 }))
 
 vi.mock('@/domains/dam/composables/commonAdminCoreDamOptions', () => ({
@@ -74,6 +79,7 @@ beforeEach(() => {
   setActivePinia(createPinia())
   release.clear()
   fetchAsset.mockImplementation(assetWithFile)
+  fetchAssetByFileId.mockImplementation(noSuchFile)
 })
 
 describe('a zero-byte file in the upload queue', () => {
@@ -234,12 +240,74 @@ describe('the metadata of an item in the queue', () => {
     bus.listener!({ name: DamNotificationName.AssetFileProcessed, data: { asset: item.assetId } })
     await vi.waitFor(() => expect(item.status).toBe(UploadQueueItemStatus.Uploaded))
 
-    // Without its form it was a row nothing could describe: the library offers no refresh on an uploaded one.
+    // With its form at once, from the answer that settled it: without it the row waits for its refresh button.
     expect(item.canEditMetadata).toBe(true)
     expect(item.customData).toEqual({ title: 'from the server' })
     expect(item.error.hasError).toBe(false)
     // From the one answer that said the file is processed: a second request could fail and leave it failed.
     expect(fetchAsset).toHaveBeenCalledTimes(1)
+  })
+
+  // The same row, when its metadata had come before the request failed: the user may have typed into it by then.
+  it('is an uploaded item again with what the user typed, when its metadata had come before the failure', async () => {
+    const store = useUploadQueuesStore()
+    fetchAsset.mockImplementation(processed)
+    damUploadFinish.mockRejectedValueOnce(new Error('the answer to the finish request was lost'))
+    await store.addByFiles('q', 1, 1, [new File(['x'], 'typed.jpg', { type: 'image/jpeg' })])
+    await vi.waitFor(() => expect(release.has('typed.jpg')).toBe(true))
+    const [item] = store.getQueueItems('q')
+    bus.listener!({ name: DamNotificationName.AssetMetadataProcessed, data: { asset: item.assetId } })
+    await vi.waitFor(() => expect(item.canEditMetadata).toBe(true))
+    item.customData = { title: 'typed' }
+    item.mainFileSingleUse = false
+    release.get('typed.jpg')!()
+    await vi.waitFor(() => expect(item.status).toBe(UploadQueueItemStatus.Failed))
+    expect(item.canEditMetadata).toBe(false)
+
+    bus.listener!({ name: DamNotificationName.AssetFileProcessed, data: { asset: item.assetId } })
+    await vi.waitFor(() => expect(item.status).toBe(UploadQueueItemStatus.Uploaded))
+
+    // The failure took its form away, not what was in it.
+    expect(item.canEditMetadata).toBe(true)
+    expect(item.customData).toEqual({ title: 'typed' })
+    expect(item.mainFileSingleUse).toBe(false)
+  })
+
+  // However the row came by its metadata, and whichever way its file is reported failed and then processed.
+  it.each([
+    [
+      'the fallback loaded',
+      (store: ReturnType<typeof useUploadQueuesStore>) => store.queueItemFullyProcessed('asset-1'),
+    ],
+    [
+      'its copy brought',
+      () => bus.listener!({ name: DamNotificationName.AssetFileCopied, data: { asset: 'asset-1' } }),
+    ],
+    [
+      'the original of a duplicate brought',
+      () =>
+        bus.listener!({
+          name: DamNotificationName.AssetFileDuplicate,
+          data: { asset: 'asset-1', originAssetFile: 'file-original', assetType: DamAssetType.Image },
+        }),
+    ],
+  ])('keeps what the user typed over the metadata %s, through a failure of its file', async (_name, load) => {
+    const store = useUploadQueuesStore()
+    fetchAsset.mockImplementation(processed)
+    fetchAssetByFileId.mockImplementation(() => processed(null, null, 'asset-1'))
+    await store.addByCopyToLicence('q', 1, 1, ['asset-1'])
+    const [item] = store.getQueueItems('q')
+    load(store)
+    await vi.waitFor(() => expect(item.canEditMetadata).toBe(true))
+    item.customData = { title: 'typed' }
+
+    await store.queueItemFailed('asset-1', AssetFileFailReason.Unknown)
+    expect([item.status, item.canEditMetadata]).toEqual([UploadQueueItemStatus.Failed, false])
+    bus.listener!({ name: DamNotificationName.AssetFileProcessed, data: { asset: 'asset-1' } })
+    await vi.waitFor(() => expect(item.status).toBe(UploadQueueItemStatus.Uploaded))
+
+    expect(item.canEditMetadata).toBe(true)
+    expect(item.customData).toEqual({ title: 'typed' })
   })
 
   // And the third order: the notification has settled the row before the request fails.

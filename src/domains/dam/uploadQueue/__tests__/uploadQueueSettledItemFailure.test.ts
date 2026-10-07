@@ -58,7 +58,7 @@ afterEach(() => {
 })
 const settle = (ms: number) => new Promise((r) => realSetTimeout(r, ms))
 describe('a failed asset fetch on a copied or duplicate item', () => {
-  it('a copy the notification path failed is not later uploaded-with-error', async () => {
+  it('a copy the notification path failed stays failed: the fallback does not settle it later', async () => {
     fetchAsset
       .mockRejectedValueOnce(new Error('502'))
       .mockResolvedValue(asset('asset-1', AssetFileProcessStatus.Processed))
@@ -68,8 +68,9 @@ describe('a failed asset fetch on a copied or duplicate item', () => {
     await settle(50)
     const item = store.getQueueItems('q')[0]!
     expect(item.status).toBe(UploadQueueItemStatus.Failed)
+    // The fallback's wait is over by now, and its asset would answer as processed.
     await settle(800)
-    expect([item.status, item.error.hasError]).not.toEqual([UploadQueueItemStatus.Uploaded, true])
+    expect(item.status).toBe(UploadQueueItemStatus.Failed)
   })
   it('a settled copy is not failed by a late notification whose fetch fails', async () => {
     fetchAsset

@@ -187,9 +187,23 @@ watch(
       clearTimeout(refreshTimer.value)
       refreshTimer.value = undefined
       showRefresh.value = false
+      // An uploaded row whose metadata has not come by then has a disabled form, and the save skips it. Refresh
+      // loads the metadata.
+      refreshTimer.value = setTimeout(() => {
+        if (props.item.status !== UploadQueueItemStatus.Uploaded || props.item.canEditMetadata) return
+        showRefresh.value = true
+      }, SHOW_REFRESH_AFTER_SECONDS * 1000)
     }
   },
   { immediate: true }
+)
+
+watch(
+  () => props.item.canEditMetadata,
+  (canEdit) => {
+    // The metadata of an uploaded row came after all, by its notification or by that refresh.
+    if (canEdit && props.item.status === UploadQueueItemStatus.Uploaded) showRefresh.value = false
+  }
 )
 
 onUnmounted(() => {
