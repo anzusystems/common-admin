@@ -71,7 +71,8 @@ const validateAssetData = (asset: AssetDetailItemDto, licences: IntegerId[]) => 
   const allowedLicence = licences.some((licence) => licence === asset.licence) || asset.licence === props.uploadLicence
   if (!allowedLicence) return false
   if (asset.mainFileSingleUse !== true) return true
-  if (!props.singleUseAllowed || isNull(props.holder)) return false
+  if (!props.singleUseAllowed) return false
+  if (isNull(props.holder)) return true
   const holderResourceName = asset.mainFile?.fileAttributes.usedByHolderName ?? ''
   const holderResourceId = asset.mainFile?.fileAttributes.usedByHolderId ?? ''
   return (
