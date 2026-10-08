@@ -80,7 +80,7 @@
     "liveBlogFeed": "live blog"
   },
   "disabledReason": {
-    "singleUseNotAllowed": "Jednorazovo použiteľný obrázok sem možno vložiť až po prvom uložení",
+    "singleUseNotAllowed": "Jednorazovo použiteľný obrázok sem nemožno vložiť. Do nového záznamu ho vložte až po prvom uložení",
     "singleUseHeld": "Obrázok je jednorazový a už je použitý inde ({holder})",
     "directUseDisabledNotImage": "Túto licenciu možno použiť len pre obrázky",
     "directUseDisabledNoUploadLicence": "Chýba cieľová licencia na skopírovanie obrázka"
