@@ -24,9 +24,7 @@ export const resolveDisabledReason = (
   const { t } = i18n.global
   const singleUse = asset.mainFile?.flags.singleUse ?? false
 
-  // Selectable only if I am the one using it: `!singleUseAllowed` disables it outright for this
-  // context, `holder === null` means the entity has no id yet (no owner to claim it with either).
-  if (singleUse && (!options.singleUseAllowed || isNull(options.holder))) {
+  if (singleUse && !options.singleUseAllowed) {
     return t('common.assetSelect.disabledReason.singleUseNotAllowed')
   }
 
@@ -36,6 +34,7 @@ export const resolveDisabledReason = (
   // leaves the last holder behind, and without this guard that stale value would block the file forever.
   const heldByOther =
     singleUse &&
+    !isNull(options.holder) &&
     holderResourceName !== '' &&
     !holdersEqual(options.holder, {
       resourceName: holderResourceName,
