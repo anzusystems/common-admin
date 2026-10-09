@@ -432,5 +432,6 @@ onUnmounted(() => {
     :max-sizes="uploadSizes"
     @apply="onUploadApply"
     @files-input="onFileInput"
+    @drop="onFileInput"
   />
 </template>

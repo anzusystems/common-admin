@@ -6,16 +6,21 @@ import { useApiFetchByIds } from '@/domains/api/composables/useApiFetchByIds'
 import { useApiRequest } from '@/domains/api/composables/useApiRequest'
 import type { IntegerId } from '@/shared/types/common'
 
-const END_POINT = '/adm/v1/author'
-const END_POINT_LIST = END_POINT + '/ext-system/:extSystemId'
+// The address of the authors is the application's to say (`endPointAuthor` of its DAM configuration).
+const LIST = '/ext-system/:extSystemId'
 export const ENTITY = 'author'
 
-export const fetchAuthorListByIds = (client: () => AxiosInstance, extSystemId: number, ids: string[]) => {
+export const fetchAuthorListByIds = (
+  client: () => AxiosInstance,
+  endPoint: string,
+  extSystemId: number,
+  ids: string[]
+) => {
   const { execute } = useApiFetchByIds<DamAuthor>({
     client,
     system: SYSTEM_CORE_DAM,
     entity: ENTITY,
-    urlTemplate: END_POINT_LIST + '/search',
+    urlTemplate: endPoint + LIST + '/search',
     urlParams: { extSystemId },
     isSearchApi: true,
   })
@@ -23,22 +28,22 @@ export const fetchAuthorListByIds = (client: () => AxiosInstance, extSystemId: n
   return execute(ids)
 }
 
-export const useFetchAuthorList = (client: () => AxiosInstance, extSystemId: IntegerId) =>
+export const useFetchAuthorList = (client: () => AxiosInstance, endPoint: string, extSystemId: IntegerId) =>
   useApiFetchList<DamAuthor>({
     client,
     system: SYSTEM_CORE_DAM,
     entity: ENTITY,
-    urlTemplate: END_POINT_LIST,
+    urlTemplate: endPoint + LIST,
     urlParams: { extSystemId },
   })
 
-export const createAuthor = (client: () => AxiosInstance, data: DamAuthor) => {
+export const createAuthor = (client: () => AxiosInstance, endPoint: string, data: DamAuthor) => {
   const { execute } = useApiRequest<DamAuthor, DamAuthor>({
     client,
     method: 'POST',
     system: SYSTEM_CORE_DAM,
     entity: ENTITY,
-    urlTemplate: END_POINT,
+    urlTemplate: endPoint,
   })
 
   return execute({ body: data })

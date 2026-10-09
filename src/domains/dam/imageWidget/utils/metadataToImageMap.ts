@@ -30,7 +30,8 @@ export async function mapUploadMetadataToImages(
   bulkItems: AssetMetadataBulkItem[],
   damClient: () => AxiosInstance,
   extSystem: IntegerId,
-  licenceId: IntegerId
+  licenceId: IntegerId,
+  endPointAuthor: string
 ): Promise<UploadMetadataToImageMapItem[]> {
   // Build assetId -> { description, authorIds } map
   const assetMetadataMap = new Map<DocId, { description: string; authorIds: DocId[]; mainFileInternal: boolean }>()
@@ -53,7 +54,7 @@ export async function mapUploadMetadataToImages(
 
   const authorsMap = new Map<DocId, string>()
   if (authorIdsToFetch.size > 0) {
-    const authorsRes = await fetchAuthorListByIds(damClient, extSystem, [...authorIdsToFetch])
+    const authorsRes = await fetchAuthorListByIds(damClient, endPointAuthor, extSystem, [...authorIdsToFetch])
     authorsRes.forEach((author) => {
       authorsMap.set(author.id, author.name)
     })

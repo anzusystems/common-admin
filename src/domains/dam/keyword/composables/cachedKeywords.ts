@@ -20,8 +20,9 @@ const { cache, toFetch, fetch, add, addManual, addManualMinimal, has, get, isLoa
   DamKeywordMinimal
 >(mapFullToMinimal, mapIdToMinimal, (ids) => {
   const { cachedExtSystemId } = useExtSystemIdForCached()
-  const { damClient } = useCommonAdminCoreDamOptions()
-  return fetchKeywordListByIds(damClient, cachedExtSystemId.value, ids)
+  // One cache for the page, which no component hands a configuration: it asks as the default one says.
+  const { damClient, endPointKeyword } = useCommonAdminCoreDamOptions()
+  return fetchKeywordListByIds(damClient, endPointKeyword, cachedExtSystemId.value, ids)
 })
 
 export const useDamCachedKeywords = () => {

@@ -97,13 +97,8 @@ describe('import cycles', () => {
     expect(graph.size).toBeGreaterThan(400)
   })
 
-  it('leaves only the upload queue cycle, which the shared upload core removes', () => {
-    expect(cycles()).toEqual([
-      [
-        '/src/domains/dam/api/uploadApi.ts',
-        '/src/domains/dam/uploadQueue/composables/uploadService.ts',
-        '/src/domains/dam/uploadQueue/store/uploadQueuesStore.ts',
-      ],
-    ])
+  // The last one went with the poll that `api/uploadApi.ts` ran through the upload queue store.
+  it('finds none', () => {
+    expect(cycles()).toEqual([])
   })
 })

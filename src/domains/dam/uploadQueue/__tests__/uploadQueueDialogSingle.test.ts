@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount, type VueWrapper } from '@vue/test-utils'
-import { defineComponent, h } from 'vue'
+import { defineComponent, h, reactive } from 'vue'
 import { AssetDetailTabImageWithRoi, useAssetDetailStore } from '@/domains/dam/assetDetail/store/assetDetailStore'
 import { DamNotificationName } from '@/domains/dam/composables/damNotificationsEventBus'
 import { useDamConfigStore } from '@/domains/dam/config/store/damConfigStore'
@@ -12,6 +12,8 @@ import AuthorRemoteAutocompleteCachedAuthorChipConflicts from '@/domains/dam/aut
 import UploadQueueDialogSingle from '@/domains/dam/uploadQueue/components/UploadQueueDialogSingle.vue'
 import UploadQueueDialogSingleSidebar from '@/domains/dam/uploadQueue/components/UploadQueueDialogSingleSidebar.vue'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
+import { immediateScheduler } from '@/domains/dam/uploadQueue/settlement/__tests__/support/immediateScheduler'
+import { uploadSettlementRuntime } from '@/domains/dam/uploadQueue/settlement/uploadSettlementRuntime'
 
 const bus = vi.hoisted(() => ({ listener: undefined as undefined | ((event: unknown) => void) }))
 // The sidebar without tabs, which an admin can ask for.
@@ -50,13 +52,22 @@ vi.mock('@/domains/dam/composables/commonAdminCoreDamOptions', async (importOrig
     mainFileSingleUseEnabled: true,
     simpleAssetSidebarEnabled: options.simpleAssetSidebarEnabled,
   }),
-  useCommonAdminCoreDamOptionsGlobal: () => ({ uploadStatusFallback: false }),
+  useCommonAdminCoreDamOptionsGlobal: () => ({}),
 }))
 vi.mock('@/domains/dam/composables/damNotifications', () => ({
   useDamNotifications: () => ({
     addDamNotificationListener: (callback: (event: unknown) => void) => (bus.listener = callback),
   }),
 }))
+
+const showWarningT = vi.fn()
+vi.mock('@/domains/system/composables/alerts', async (importOriginal) => {
+  const original = await importOriginal<{ useAlerts: () => object }>()
+  return {
+    ...original,
+    useAlerts: () => ({ ...original.useAlerts(), showWarningT: (key: string) => showWarningT(key) }),
+  }
+})
 
 const EXT_SYSTEM = 1
 const QUEUE = 'single'
@@ -94,9 +105,16 @@ const elapse = async () => {
   await flushPromises()
 }
 
+// The dialog is not about how the queue keeps time: the read a notification asks for comes at once, and the poll
+// of the queue never.
+const realScheduler = uploadSettlementRuntime.scheduler
+
 let wrapper: VueWrapper | undefined
 beforeEach(() => {
+  uploadSettlementRuntime.scheduler = immediateScheduler()
+  showWarningT.mockClear()
   fetchAsset.mockImplementation(async () => asset())
+  fetchAssetByFileId.mockReset()
   options.simpleAssetSidebarEnabled = false
   window.setTimeout = ((run: () => void, ms?: number, ...rest: unknown[]) => {
     if ((ms ?? 0) < 10_000) return realSetTimeout(run, ms, ...rest)
@@ -110,6 +128,7 @@ beforeEach(() => {
 afterEach(() => {
   // The stores are those of the pinia every test of this file mounts with.
   useUploadQueuesStore().stopUpload(QUEUE)
+  uploadSettlementRuntime.scheduler = realScheduler
   useAssetDetailStore().reset()
   useAssetDetailStore().activeTab = AssetDetailTabImageWithRoi.Info
   const config = useDamConfigStore()
@@ -150,20 +169,24 @@ const mountWithItem = async (component: Parameters<typeof h>[0], props: Record<s
 }
 
 describe('the sidebar of the single-file upload dialog', () => {
-  const mountSidebar = () =>
-    mountWithItem(
+  /** What the dialog hands its sidebar; a case changes it where the dialog would. */
+  let handedOver: Record<string, unknown>
+  const mountSidebar = (parts: Record<string, unknown> = {}) => {
+    handedOver = reactive({
+      assetId: 'asset-1',
+      isVideo: false,
+      isAudio: false,
+      isImage: true,
+      isDocument: false,
+      enableRoiTab: true,
+      showFileInfo: false,
+      assetStatus: 'with_file',
+      assetType: DamAssetType.Image,
+      ...parts,
+    })
+    return mountWithItem(
       UploadQueueDialogSingleSidebar,
-      {
-        assetId: 'asset-1',
-        isVideo: false,
-        isAudio: false,
-        isImage: true,
-        isDocument: false,
-        enableRoiTab: true,
-        showFileInfo: false,
-        assetStatus: 'with_file',
-        assetType: DamAssetType.Image,
-      },
+      handedOver,
       // What the keyword and author inputs render asks the API for its items; the region tab is not what is asked
       // here.
       [
@@ -172,6 +195,16 @@ describe('the sidebar of the single-file upload dialog', () => {
         'AssetDetailSidebarROI',
       ]
     )
+  }
+  // The dialog offers the region tab once the item is uploaded and its asset read, not before. Until then the
+  // sidebar has its tabs, also in an application that asks for one without them.
+  const mountSidebarOfUnfinished = () => mountSidebar({ enableRoiTab: false })
+  /** What the dialog does once the item is uploaded: it reads the asset and offers the region tab. */
+  const assetRead = async () => {
+    handedOver.enableRoiTab = true
+    await flushPromises()
+  }
+  const tabs = () => wrapper!.find('.sidebar-info__tabs')
   const refreshButton = () => wrapper!.find('[data-cy="button-refresh"]')
   const saveButtons = () =>
     ['button-save', 'button-save-and-apply'].map(
@@ -229,6 +262,154 @@ describe('the sidebar of the single-file upload dialog', () => {
     detail.activeTab = AssetDetailTabImageWithRoi.Info
     await flushPromises()
     expect(refreshButton().exists()).toBe(true)
+  })
+
+  // The server can be slow to settle the file, and its notification can be lost: the row of the queue dialog offers
+  // refresh for that, and so does this dialog.
+  it.each([
+    ['in an application whose sidebar has tabs', false],
+    ['in one that asks for a sidebar without tabs', true],
+  ])('offers refresh on an item the server is still processing, which settles it (%s)', async (_name, simple) => {
+    options.simpleAssetSidebarEnabled = simple
+    const item = await mountSidebarOfUnfinished()
+    expect(item.status).toBe(UploadQueueItemStatus.Processing)
+    expect(tabs().exists()).toBe(true)
+    expect(refreshButton().exists()).toBe(false)
+    expect(heldWaits()).toEqual([20_000])
+
+    await elapse()
+    expect(refreshButton().exists()).toBe(true)
+    expect(saveButtons()).toEqual([true, true])
+    await refreshButton().trigger('click')
+    await vi.waitFor(() => expect(item.status).toBe(UploadQueueItemStatus.Uploaded))
+    await assetRead()
+
+    expect(fetchAsset).toHaveBeenCalledWith(expect.anything(), '/asset', 'asset-1')
+    expect(item.customData).toEqual({ title: 'from the server' })
+    // The sidebar without tabs is drawn from here on.
+    expect(tabs().exists()).toBe(!simple)
+    expect(refreshButton().exists()).toBe(false)
+    expect(saveButtons()).toEqual([false, false])
+    expect(heldWaits()).toEqual([])
+  })
+
+  it('keeps offering it while the server answers that the file is not processed yet', async () => {
+    const item = await mountSidebarOfUnfinished()
+    fetchAsset.mockImplementation(async () => ({
+      ...asset(),
+      mainFile: { ...asset().mainFile, fileAttributes: { status: AssetFileProcessStatus.Stored } },
+    }))
+    await elapse()
+
+    await refreshButton().trigger('click')
+    await vi.waitFor(() => expect(fetchAsset).toHaveBeenCalled())
+    await flushPromises()
+
+    expect(item.status).toBe(UploadQueueItemStatus.Processing)
+    expect(refreshButton().exists()).toBe(true)
+    expect((refreshButton().element as HTMLButtonElement).disabled).toBe(false)
+  })
+
+  it('says the state could not be loaded when the refresh cannot read the asset, and goes on offering it', async () => {
+    const item = await mountSidebarOfUnfinished()
+    fetchAsset.mockRejectedValue(new Error('502 Bad Gateway'))
+    await elapse()
+
+    await refreshButton().trigger('click')
+    await vi.waitFor(() => expect(showWarningT.mock.calls).toEqual([['common.damImage.queueItem.refreshFailed']]))
+    await flushPromises()
+
+    expect(item.status).toBe(UploadQueueItemStatus.Processing)
+    expect((refreshButton().element as HTMLButtonElement).disabled).toBe(false)
+  })
+
+  // The file is a duplicate whose original cannot be read: the press fails the item, and the dialog offers no
+  // refresh on a failed item. "Try again" would be said about a button that has just gone.
+  it('says nothing when the refresh itself fails the item, and no longer offers it', async () => {
+    const item = await mountSidebarOfUnfinished()
+    fetchAsset.mockImplementation(async () => ({
+      ...asset(),
+      mainFile: {
+        ...asset().mainFile,
+        originAssetFile: 'file-original',
+        fileAttributes: { status: AssetFileProcessStatus.Duplicate },
+      },
+    }))
+    fetchAssetByFileId.mockRejectedValue(new Error('502 Bad Gateway'))
+    await elapse()
+
+    await refreshButton().trigger('click')
+    await vi.waitFor(() => expect(item.status).toBe(UploadQueueItemStatus.Failed))
+    await flushPromises()
+
+    expect(fetchAssetByFileId).toHaveBeenCalledTimes(1)
+    expect(showWarningT).not.toHaveBeenCalled()
+    expect(refreshButton().exists()).toBe(false)
+  })
+
+  // An uploaded item still without its metadata keeps its status when it is taken out of the queue: the sidebar
+  // says in which queue it was pressed, and nobody is told to try again on an item that is gone.
+  it('says nothing when the item was taken out of its queue while its refresh was on its way', async () => {
+    const item = await mountSidebarOfUnfinished()
+    notify(DamNotificationName.AssetFileProcessed)
+    await vi.waitFor(() => expect(item.status).toBe(UploadQueueItemStatus.Uploaded))
+    await assetRead()
+    await elapse()
+    expect(refreshButton().exists()).toBe(true)
+    const readsBefore = fetchAsset.mock.calls.length
+    let failRead = (_reason: Error) => {}
+    fetchAsset.mockImplementation(() => new Promise((_resolve, reject) => (failRead = reject)))
+
+    await refreshButton().trigger('click')
+    await vi.waitFor(() => expect(fetchAsset).toHaveBeenCalledTimes(readsBefore + 1))
+    useUploadQueuesStore().removeByIndex(QUEUE, 0)
+    failRead(new Error('502 Bad Gateway'))
+    await flushPromises()
+
+    expect(item.status).toBe(UploadQueueItemStatus.Uploaded)
+    expect(showWarningT).not.toHaveBeenCalled()
+  })
+
+  it('does not offer it when the item is settled before the wait is over', async () => {
+    const item = await mountSidebarOfUnfinished()
+    notify(DamNotificationName.AssetMetadataProcessed)
+    notify(DamNotificationName.AssetFileProcessed)
+    await vi.waitFor(() => expect([item.status, item.canEditMetadata]).toEqual([UploadQueueItemStatus.Uploaded, true]))
+    await assetRead()
+
+    expect(heldWaits()).toEqual([])
+    await elapse()
+    expect(refreshButton().exists()).toBe(false)
+  })
+
+  // As the row of the queue counts: the wait for the file and the wait for the metadata each start anew.
+  it('takes it back when the item turns uploaded, and waits anew for its metadata', async () => {
+    const item = await mountSidebarOfUnfinished()
+    await elapse()
+    expect(refreshButton().exists()).toBe(true)
+
+    notify(DamNotificationName.AssetFileProcessed)
+    await vi.waitFor(() => expect(item.status).toBe(UploadQueueItemStatus.Uploaded))
+    await assetRead()
+    expect(refreshButton().exists()).toBe(false)
+    expect(heldWaits()).toEqual([20_000])
+
+    await elapse()
+    expect(refreshButton().exists()).toBe(true)
+  })
+
+  it.each([
+    ['is still being sent', UploadQueueItemStatus.Uploading],
+    ['waits its turn', UploadQueueItemStatus.Waiting],
+    ['has failed', UploadQueueItemStatus.Failed],
+  ])('does not offer it for an item that %s', async (_what, status) => {
+    const item = await mountSidebarOfUnfinished()
+    item.status = status
+    await flushPromises()
+
+    expect(heldWaits()).toEqual([])
+    await elapse()
+    expect(refreshButton().exists()).toBe(false)
   })
 
   // The form is enabled once the metadata is there, which can be while the file still sends or processes.

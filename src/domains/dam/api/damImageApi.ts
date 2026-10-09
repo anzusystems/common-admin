@@ -3,12 +3,15 @@ import axios from 'axios'
 import { type UploadQueueItem, UploadQueueItemType } from '@/domains/dam/types/UploadQueue'
 import type { DocId } from '@/shared/types/common'
 import { HTTP_STATUS_CREATED, HTTP_STATUS_OK } from '@/shared/statusCodes'
+import { AnzuApiResponseCodeError } from '@/shared/error/AnzuApiResponseCodeError'
 import { damFileTypeFix } from '@/domains/ui/file/utils/fileType'
 import type { AssetFileImage } from '@/domains/dam/types/AssetFile'
 import { SYSTEM_CORE_DAM } from '@/domains/dam/api/damConstants'
 import type { DamImageCopyToLicenceRequest, DamImageCopyToLicenceResponse } from '@/domains/dam/types/Asset'
 import { useSentry } from '@/domains/system/composables/sentry'
 import { useApiRequest } from '@/domains/api/composables/useApiRequest'
+import { requestedUrl } from '@/domains/api/composables/request'
+import { mapApiError } from '@/domains/api/utils/apiErrors'
 
 const CHUNK_UPLOAD_TIMEOUT = 420
 
@@ -287,12 +290,21 @@ export const copyToLicence = async (
       itemChunks.map((chunk) =>
         client()
           .patch(url, JSON.stringify(chunk))
-          .then((res) => (res.status === HTTP_STATUS_OK ? res.data : []))
+          .then((res) => {
+            // A success that is not "ok" carries no list of what was copied: a request that failed, not an
+            // empty answer whose assets would be left out without a word.
+            if (res.status !== HTTP_STATUS_OK) throw new AnzuApiResponseCodeError(res.status)
+            return res.data
+          })
       )
     )
 
     return responses.flat()
   } catch (error) {
-    return Promise.reject(error)
+    // The class the widgets' error alert knows, where the bare error of axios passed it by without a word; a
+    // request that was stopped becomes the one it keeps quiet about.
+    return Promise.reject(
+      mapApiError(error, { system: SYSTEM_CORE_DAM, entity: 'asset', url: requestedUrl(client, url, {}, error) })
+    )
   }
 }

@@ -403,6 +403,25 @@ import {
   initDamNotifications,
   useDamNotifications,
 } from '@/domains/dam/composables/damNotifications'
+import { useDamNotificationsConnection } from '@/domains/dam/composables/damNotificationsConnection'
+import { createUploadSettlement } from '@/domains/dam/uploadQueue/settlement/uploadSettlement'
+import { UPLOAD_POLL_SCHEDULE } from '@/domains/dam/uploadQueue/settlement/uploadPollSchedule'
+import {
+  uploadSettlementRuntime,
+  type UploadSettlementScheduler,
+  type UploadSettlementVisibility,
+} from '@/domains/dam/uploadQueue/settlement/uploadSettlementRuntime'
+import {
+  type UploadReadOptions,
+  type UploadRefreshOutcome,
+  UploadRowRole,
+  type UploadRowRoleType,
+  type UploadSettlement,
+  type UploadSettlementEvent,
+  type UploadSettlementProfile,
+  type UploadSettlementTarget,
+  type UploadSettlePolicy,
+} from '@/domains/dam/uploadQueue/settlement/uploadSettlementTypes'
 import { useDropzoneGlobalDragState } from '@/domains/ui/file/composables/dropzone'
 import { DamNotificationName, type DamNotificationNameType } from '@/domains/dam/composables/damNotificationsEventBus'
 import type { ImageAware, ImageCreateUpdateAware } from '@/domains/dam/types/ImageAware'
@@ -866,6 +885,10 @@ export {
   destroyDamNotifications,
   initDamNotifications,
   useDamNotifications,
+  useDamNotificationsConnection,
+  createUploadSettlement,
+  uploadSettlementRuntime,
+  UPLOAD_POLL_SCHEDULE,
   useDropzoneGlobalDragState,
   useDamKeywordFactory,
   useDamAuthorFactory,
@@ -1035,6 +1058,17 @@ export {
   type DamUploadStartResponse,
   type DamNotificationNameType,
   DamNotificationName,
+  UploadRowRole,
+  type UploadRowRoleType,
+  type UploadSettlement,
+  type UploadSettlementProfile,
+  type UploadSettlementEvent,
+  type UploadSettlementTarget,
+  type UploadSettlePolicy,
+  type UploadRefreshOutcome,
+  type UploadReadOptions,
+  type UploadSettlementScheduler,
+  type UploadSettlementVisibility,
   type ImageAware,
   type ImageCreateUpdateAware,
   type ImageCreateUpdateAwareKeyed,

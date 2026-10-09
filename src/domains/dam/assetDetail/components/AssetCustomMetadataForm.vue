@@ -46,8 +46,9 @@ if (isUndefined(configExtSystem)) {
   throw new Error('AssetCustomMetadataForm: Ext system must be initialised.')
 }
 
+// The number the DAM is configured with, 0 too: no field is pinned then.
 const pinnedCount = computed(() => {
-  return configExtSystem[props.assetType]?.customMetadataPinnedAmount || 2
+  return configExtSystem[props.assetType]?.customMetadataPinnedAmount ?? 2
 })
 </script>
 

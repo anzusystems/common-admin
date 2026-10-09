@@ -135,9 +135,10 @@ onBeforeUnmount(() => {
             :queue-key="queueKey"
             :disable-done-animation="disableDoneAnimation"
             :refresh-disabled="refreshing"
+            :refresh-may-help="uploadQueuesStore.refreshMayHelp(item)"
             @cancel-item="cancelItem"
             @remove-item="removeItem"
-            @refresh-item="refreshItem($event.assetId)"
+            @refresh-item="refreshItem($event.assetId, item, queueKey)"
             @show-detail="emit('showDetail', $event)"
           />
         </VRow>

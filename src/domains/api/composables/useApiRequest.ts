@@ -22,6 +22,15 @@ export type ExecuteRequestParams<B> = {
   body?: B
   /** Stops this one call, leaving the instance's other calls alone. */
   signal?: AbortSignal
+  /**
+   * `false`: a failure of this one call is thrown as ever, and not handed to the api error logger.
+   *
+   * For a caller that repeats a request on a timer and has reported its first failure already: a poll that
+   * asks every few seconds through an outage would otherwise write the same failure down each time. It is the
+   * caller's to say which call that is, call by call; it is not a way to make a kind of request quiet, and an
+   * instance has no such switch.
+   */
+  report?: boolean
 }
 
 export type UseApiRequestParams = {
@@ -87,7 +96,13 @@ const createRequest = <R, B>(params: UseApiRequestParams, interpret: Interpret<R
   const abortable: Abortable = createAbortable({ cancelPrevious })
 
   const execute = async (executeParams: ExecuteRequestParams<B> = {}): Promise<R> => {
-    const { urlTemplate: templateOverride, urlParams: paramsOverride, body, signal } = executeParams
+    const {
+      urlTemplate: templateOverride,
+      urlParams: paramsOverride,
+      body,
+      signal,
+      report: reported = true,
+    } = executeParams
 
     const template = isDefined(templateOverride) ? templateOverride : urlTemplate
     const resolvedParams = isDefined(paramsOverride) ? paramsOverride : urlParams
@@ -146,7 +161,9 @@ const createRequest = <R, B>(params: UseApiRequestParams, interpret: Interpret<R
         url: requestedUrl(client, url, options, err, dispatched),
       }
 
-      throw report(mapApiError(err, context), context)
+      const error = mapApiError(err, context)
+
+      throw reported ? report(error, context) : error
     }
   }
 

@@ -47,7 +47,7 @@ const emit = defineEmits<{
   (e: 'success', data: DamAuthor): void
 }>()
 
-const { damClient } = useCommonAdminCoreDamOptions()
+const { damClient, endPointAuthor } = useCommonAdminCoreDamOptions()
 const { getDamConfigExtSystem } = useDamConfigState()
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const configExtSystem = getDamConfigExtSystem(props.extSystem)
@@ -89,7 +89,7 @@ const onConfirm = async () => {
       buttonLoading.value = false
       return
     }
-    const res = await createAuthor(damClient, author.value)
+    const res = await createAuthor(damClient, endPointAuthor, author.value)
     emit('success', res)
     showRecordWas('created')
     dialog.value = false

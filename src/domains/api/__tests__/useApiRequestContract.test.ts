@@ -285,6 +285,46 @@ describe('what the helpers throw', () => {
   })
 })
 
+// A caller that repeats one request on a timer reports its first failure and says of the rest that it has: a
+// poll that asks through an outage would otherwise write the same failure down at every try.
+describe('a call that asks not to be reported', () => {
+  it('throws the same failure, and the logger does not hear of it', async () => {
+    const logged = vi.fn()
+    setApiErrorLogger(logged)
+    const { execute } = buildApi(failingWith({ response: { status: 500 } }))
+
+    await expect(execute({ report: false })).rejects.toBeInstanceOf(AnzuApiAxiosError)
+
+    expect(logged).not.toHaveBeenCalled()
+  })
+
+  it('is one call: the next call of the same instance is reported as ever', async () => {
+    const logged = vi.fn()
+    setApiErrorLogger(logged)
+    const { execute } = buildApi(failingWith({ response: { status: 500 } }))
+
+    await expect(execute({ report: false })).rejects.toBeInstanceOf(AnzuApiAxiosError)
+    await expect(execute()).rejects.toBeInstanceOf(AnzuApiAxiosError)
+    await expect(execute({ report: true })).rejects.toBeInstanceOf(AnzuApiAxiosError)
+
+    expect(logged).toHaveBeenCalledTimes(2)
+    expect(logged.mock.calls[0]![1]).toMatchObject({ system: 'test', entity: 'test', url: '/test', status: 500 })
+  })
+
+  it('goes for a command and for a failure the helper raises itself as well', async () => {
+    const logged = vi.fn()
+    setApiErrorLogger(logged)
+
+    await expect(buildCommand(failingWith({ response: { status: 500 } })).execute({ report: false })).rejects.toThrow()
+    // An answer without the body the call declared.
+    await expect(buildApi(answering({ status: 200, data: '' })).execute({ report: false })).rejects.toBeInstanceOf(
+      AnzuApiResponseCodeError
+    )
+
+    expect(logged).not.toHaveBeenCalled()
+  })
+})
+
 describe('what the helpers send', () => {
   it('serialises the body', async () => {
     const request = answering({ status: 200, data: { ok: true } })

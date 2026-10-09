@@ -32,7 +32,7 @@ const props = withDefaults(
 const { getCachedAuthor } = useDamCachedAuthors()
 const uploadQueuesStore = useUploadQueuesStore()
 
-const { cached, loaded } = useCachedItem(() => getCachedAuthor(props.id))
+const { cached, loaded, unresolved } = useCachedItem(() => getCachedAuthor(props.id))
 
 const displayNewIcon = computed(() => {
   if (!props.queueId) return undefined
@@ -44,6 +44,8 @@ const displayNewIcon = computed(() => {
 
 const displayTitle = computed(() => {
   if (props.title.length > 0) return props.title
+  // An author the server did not return has only its id to show.
+  if (unresolved.value) return '#' + props.id
   if (cached.value) {
     return cached.value.name + (cached.value.identifier?.length > 0 ? ` (${cached.value.identifier})` : '')
   }
@@ -64,7 +66,10 @@ const { t } = useI18n()
     <template v-if="isNull(id) || isUndefined(id)">
       <slot name="empty">-</slot>
     </template>
-    <div v-else-if="textOnly">
+    <div
+      v-else-if="textOnly"
+      :title="unresolved ? t('common.model.cachedUnavailable') : undefined"
+    >
       {{ displayTitle }}
       <VProgressCircular
         v-if="!loaded && title.length === 0"
@@ -89,6 +94,13 @@ const { t } = useI18n()
       :title="displayReviewed ? t('common.damImage.author.model.flags.reviewed') : undefined"
     >
       {{ displayTitle }}
+      <VTooltip
+        v-if="unresolved"
+        activator="parent"
+        location="bottom"
+      >
+        {{ t('common.model.cachedUnavailable') }}
+      </VTooltip>
       <VProgressCircular
         v-if="!loaded && title.length === 0"
         :size="12"

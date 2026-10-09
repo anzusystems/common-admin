@@ -80,7 +80,7 @@ const { toolbarColor } = useTheme()
 const { mdAndDown } = useDisplay()
 const v$ = useVuelidate({ $stopPropagation: true })
 const { showRecordWas, showValidationError, showErrorsDefault } = useAlerts()
-const { damClient, endPointAsset, customUploadMetadataToImageMap } = useCommonAdminCoreDamOptions()
+const { damClient, endPointAsset, endPointAuthor, customUploadMetadataToImageMap } = useCommonAdminCoreDamOptions()
 
 const saveButtonLoading = ref(false)
 const saveAndCloseButtonLoading = ref(false)
@@ -126,7 +126,7 @@ const onSaveAndApply = async () => {
     const uploaded = itemsRaw.filter(isUploaded)
     const mappedItems = customUploadMetadataToImageMap
       ? await customUploadMetadataToImageMap(uploaded, res, damClient, props.extSystem, props.licenceId)
-      : await mapUploadMetadataToImages(uploaded, res, damClient, props.extSystem, props.licenceId)
+      : await mapUploadMetadataToImages(uploaded, res, damClient, props.extSystem, props.licenceId, endPointAuthor)
     const storeItems: ImageStoreItem[] = mappedItems.map((item) => {
       maxPosition.value++
       return {

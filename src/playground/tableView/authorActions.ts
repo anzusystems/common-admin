@@ -3,6 +3,7 @@ import type { DamAuthor } from '@/domains/dam/author/types/DamAuthor'
 import type { Pagination } from '@/domains/api/composables/pagination'
 import { useAlerts } from '@/domains/system/composables/alerts'
 import { useFetchAuthorList } from '@/domains/dam/author/api/authorApi'
+import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
 import { damClient } from '@/playground/mock/coreDamClient'
 import type { FilterConfig, FilterData } from '@/domains/filters/composables/filterFactory'
 import { SORT_BY_ID } from '@/domains/filters/datatable/utils/datatableColumns'
@@ -14,7 +15,8 @@ const currentExtSystemId = ref(1)
 
 export const useAuthorListActions = () => {
   const { showErrorsDefault } = useAlerts()
-  const { execute } = useFetchAuthorList(damClient, currentExtSystemId.value)
+  const { endPointAuthor } = useCommonAdminCoreDamOptions()
+  const { execute } = useFetchAuthorList(damClient, endPointAuthor, currentExtSystemId.value)
   const listItems = ref<DamAuthor[]>([])
 
   const fetchList = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {

@@ -1,7 +1,7 @@
 import type { CommonAdminCoreDamConfig, ImageFieldValidationConfig } from '@/AnzuSystemsCommonAdmin'
 import type { AclValue } from '@/domains/auth/types/Permission'
 import { coreDamOptions as commonAdminCoreDamOptions } from '@/plugins/pluginOptions'
-import { isUndefined } from '@/shared/utils/common'
+import { isString, isUndefined } from '@/shared/utils/common'
 import { commonT } from '@/plugins/i18n'
 
 const t = commonT
@@ -17,6 +17,8 @@ export { initCommonAdminCoreDamOptions } from '@/plugins/pluginOptions'
 
 const DEFAULT_END_POINT_ROI = '/adm/v1/roi'
 const DEFAULT_END_POINT_IMAGE = '/adm/v1/image'
+const DEFAULT_END_POINT_AUTHOR = '/adm/v1/author'
+const DEFAULT_END_POINT_KEYWORD = '/adm/v1/keyword'
 
 const resolveRoiUpdateAcl = (config: CommonAdminCoreDamConfig): AclValue | null => {
   if (!isUndefined(config.roiUpdateAcl)) return config.roiUpdateAcl
@@ -47,6 +49,8 @@ export function useCommonAdminCoreDamOptions(configName: string = 'default') {
     imageRotateAcl: resolveImageRotateAcl(commonAdminCoreDamOptions.value.configs[configName]),
     endPointAsset: commonAdminCoreDamOptions.value.configs[configName].endPointAsset || '/adm/v1/asset',
     endPointRoi: commonAdminCoreDamOptions.value.configs[configName].endPointRoi || DEFAULT_END_POINT_ROI,
+    endPointAuthor: commonAdminCoreDamOptions.value.configs[configName].endPointAuthor || DEFAULT_END_POINT_AUTHOR,
+    endPointKeyword: commonAdminCoreDamOptions.value.configs[configName].endPointKeyword || DEFAULT_END_POINT_KEYWORD,
     roiUpdateAcl: resolveRoiUpdateAcl(commonAdminCoreDamOptions.value.configs[configName]),
     mainFileSingleUseEnabled: commonAdminCoreDamOptions.value.configs[configName].mainFileSingleUseEnabled ?? true,
     showSourceEnabled: commonAdminCoreDamOptions.value.configs[configName].showSourceEnabled ?? true,
@@ -77,6 +81,23 @@ export function useCommonAdminCoreDamOptions(configName: string = 'default') {
   }
 }
 
+export interface DamNotificationOptions {
+  enabled: boolean
+  webSocketUrl: string
+}
+
+// A deployment template puts the value in quotes, and renders a boolean of its variables as `True`: the text
+// "true" switches the service on as well, in any letter case and with whitespace around it. Nothing else does:
+// "false" is a text too, and used to count as on.
+export const normalizeDamNotificationOptions = (
+  raw: { enabled?: boolean | string; webSocketUrl?: string } | undefined
+): DamNotificationOptions => {
+  const webSocketUrl = isString(raw?.webSocketUrl) ? raw.webSocketUrl.trim() : ''
+  const on = raw?.enabled === true || (isString(raw?.enabled) && raw.enabled.trim().toLowerCase() === 'true')
+
+  return { enabled: on && webSocketUrl.length > 0, webSocketUrl }
+}
+
 export function useCommonAdminCoreDamOptionsGlobal() {
   if (isUndefined(commonAdminCoreDamOptions.value) || isUndefined(commonAdminCoreDamOptions.value.configs)) {
     throw new Error("Composable can't be used without properly configured common admin.")
@@ -84,8 +105,7 @@ export function useCommonAdminCoreDamOptionsGlobal() {
 
   return {
     apiTimeout: commonAdminCoreDamOptions.value.apiTimeout,
-    uploadStatusFallback: commonAdminCoreDamOptions.value.uploadStatusFallback,
-    notification: commonAdminCoreDamOptions.value.notification,
+    notification: normalizeDamNotificationOptions(commonAdminCoreDamOptions.value.notification),
     adminDomain: commonAdminCoreDamOptions.value.adminDomain,
   }
 }

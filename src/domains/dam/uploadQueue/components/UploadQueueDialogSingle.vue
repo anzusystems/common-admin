@@ -206,6 +206,7 @@ const uploadProgress = computed(() => {
 const {
   damClient,
   endPointAsset,
+  endPointAuthor,
   customUploadMetadataToImageMap,
   simpleAssetSidebarEnabled,
   roiUpdateAcl,
@@ -280,7 +281,14 @@ const onSaveAndApply = async () => {
           props.extSystem,
           props.licenceId
         )
-      : await mapUploadMetadataToImages(items.value, assetsMetadataRes, damClient, props.extSystem, props.licenceId)
+      : await mapUploadMetadataToImages(
+          items.value,
+          assetsMetadataRes,
+          damClient,
+          props.extSystem,
+          props.licenceId,
+          endPointAuthor
+        )
     emit(
       'apply',
       mappedItems.map((item) => ({

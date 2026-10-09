@@ -23,6 +23,7 @@ vi.mock('@/domains/dam/composables/commonAdminCoreDamOptions', async (importOrig
   ...(await importOriginal<object>()),
   useCommonAdminCoreDamOptions: () => ({
     damClient: () => ({}),
+    endPointAuthor: '/adm/v1/author',
     sourceLabel: 'Source',
     descriptionValidation: { required: false },
     sourceValidation: { required: false },
@@ -109,7 +110,9 @@ describe('ImageMassOperations with DAM authors', () => {
       .trigger('click')
     await settle()
 
-    expect(fetchAuthorListByIds).toHaveBeenCalledWith(expect.anything(), expect.anything(), ['author-1'])
+    expect(fetchAuthorListByIds).toHaveBeenCalledWith(expect.anything(), '/adm/v1/author', expect.anything(), [
+      'author-1',
+    ])
     expect(rejections).toEqual([])
     expect(showErrorsDefault).toHaveBeenCalledWith(lookupFailed)
     wrapper.unmount()

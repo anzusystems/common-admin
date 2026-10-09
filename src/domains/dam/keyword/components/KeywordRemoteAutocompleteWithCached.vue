@@ -76,7 +76,7 @@ const rules = {
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const v$ = useVuelidate(rules, { modelValueComputed }, { $scope: props.validationScope })
 
-const { damClient } = useCommonAdminCoreDamOptions()
+const { damClient, endPointKeyword } = useCommonAdminCoreDamOptions()
 const { getDamConfigExtSystem } = useDamConfigState()
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const configExtSystem = getDamConfigExtSystem(props.extSystem)
@@ -127,7 +127,7 @@ const createOrSelectKeyword = async (name: string) => {
   keywordCreate.name = removeLastComma(name)
   if (keywordCreate.name.length < 2) return
   try {
-    const keywordRes = await createKeyword(damClient, keywordCreate)
+    const keywordRes = await createKeyword(damClient, endPointKeyword, keywordCreate)
     afterCreate(keywordRes)
   } catch (error) {
     showErrorsDefault(error)

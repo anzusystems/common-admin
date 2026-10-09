@@ -29,8 +29,7 @@ const isStopped = (queueItem: UploadQueueItem) => queueItem.status === UploadQue
 
 const finishUpload = async (queueItem: UploadQueueItem, sha: string) => {
   const { damClient, endPointImage, endPointAsset } = useCommonAdminCoreDamOptions()
-  const { uploadStatusFallback } = useCommonAdminCoreDamOptionsGlobal()
-  return await damUploadFinish(damClient, endPointAsset, endPointImage, queueItem, sha, uploadStatusFallback)
+  return await damUploadFinish(damClient, endPointAsset, endPointImage, queueItem, sha)
 }
 
 const handleValidationErrorMessage = (error: Error | any) => {
@@ -97,7 +96,12 @@ export function useUpload(queueItem: UploadQueueItem, uploadCallback: any = unde
   let lastLoaded = 0
   let speedCheckTimerId: ReturnType<typeof setTimeout> | null = null
   let sha: ReturnType<typeof Rusha.createHash> | undefined
-  const { updateChunkSize, lastChunkSize } = useDamUploadChunkSize()
+  // Once the finish request went out the server may complete the file, whatever becomes of the answer.
+  let finishAttempted = false
+  // A chunk is sized against the timeout the application gives its DAM requests. One that gives none (`null` in
+  // a config file too) gets the default of the composable.
+  const { apiTimeout } = useCommonAdminCoreDamOptionsGlobal()
+  const { updateChunkSize, lastChunkSize } = useDamUploadChunkSize(apiTimeout ?? undefined)
 
   const getCurrentTimestamp = () => {
     return Date.now() / 1000
@@ -164,6 +168,12 @@ export function useUpload(queueItem: UploadQueueItem, uploadCallback: any = unde
     let attempt = 0
     do {
       attempt++
+      // Axios counts `loaded` from zero again when a chunk is tried again: measured against the try before, the
+      // first sample would be far below zero, and the size of the next chunk follows the speed.
+      if (attempt > 1) {
+        lastLoaded = 0
+        lastTimestamp = 0
+      }
       try {
         await uploadChunk(chunkFile, offset)
         hash.update(arrayBuffer.data)
@@ -249,6 +259,12 @@ export function useUpload(queueItem: UploadQueueItem, uploadCallback: any = unde
       queueItem.status = UploadQueueItemStatus.Uploading
       damUploadStart(damClient, endPointImage, queueItem)
         .then((res) => {
+          // Without both identifiers there is nothing to send the chunks to, nor an asset to ask about: the
+          // upload fails here, as when the start is refused, not after a round of tries that send nothing.
+          if (!res?.id || !res?.asset) {
+            reject(new Error('The start of the upload answered without the identifiers of the file and its asset.'))
+            return
+          }
           queueItem.assetId = res.asset
           queueItem.fileId = res.id
           resolve(queueItem)
@@ -279,6 +295,7 @@ export function useUpload(queueItem: UploadQueueItem, uploadCallback: any = unde
 
     endTimestamp = Date.now() / 1000
     if (isStopped(queueItem)) return Promise.reject(new Error('Upload stopped'))
+    finishAttempted = true
     return await finishUpload(queueItem, hash.digest('hex'))
   }
 
@@ -286,6 +303,7 @@ export function useUpload(queueItem: UploadQueueItem, uploadCallback: any = unde
     uploadInit,
     upload,
     stopSpeedCheck,
+    finishAttempted: () => finishAttempted,
   }
 }
 

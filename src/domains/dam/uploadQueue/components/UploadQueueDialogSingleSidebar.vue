@@ -16,6 +16,7 @@ import {
   useUploadQueueItemRefresh,
 } from '@/domains/dam/uploadQueue/composables/uploadQueueItemRefresh'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
+import { isNull } from '@/shared/utils/common'
 
 const props = withDefaults(
   defineProps<{
@@ -56,21 +57,24 @@ const { activeTab } = storeToRefs(assetDetailStore)
 const { simpleAssetSidebarEnabled } = useCommonAdminCoreDamOptions(props.configName)
 const simpleMode = computed(() => simpleAssetSidebarEnabled && props.isImage && props.enableRoiTab)
 
-// An uploaded item whose metadata has not come: its form stays disabled, and both saves with it. Here, not in the
-// metadata tab: the wait goes on while the other tab is open.
+// What the item still waits for from the server: its file to be processed, or, uploaded, its metadata. Until
+// then its form stays disabled, and both saves with it. Each wait is counted from its start, as the row of the
+// queue counts it. Here, not in the metadata tab: the wait goes on while the other tab is open.
 const uploadQueuesStore = useUploadQueuesStore()
 const item = computed(() => uploadQueuesStore.getQueueItems(props.queueKey)[0] ?? null)
-const waitsForMetadata = computed(
-  () => item.value?.status === UploadQueueItemStatus.Uploaded && !item.value.canEditMetadata
-)
+const waitsFor = computed(() => {
+  if (item.value?.status === UploadQueueItemStatus.Processing) return 'file'
+  if (item.value?.status === UploadQueueItemStatus.Uploaded && !item.value.canEditMetadata) return 'metadata'
+  return null
+})
 const showRefresh = ref(false)
 let refreshTimer: ReturnType<typeof setTimeout> | undefined
 watch(
-  waitsForMetadata,
+  waitsFor,
   (waits) => {
     clearTimeout(refreshTimer)
     showRefresh.value = false
-    if (!waits) return
+    if (isNull(waits)) return
     refreshTimer = setTimeout(() => (showRefresh.value = true), SHOW_REFRESH_AFTER_SECONDS * 1000)
   },
   { immediate: true }
@@ -80,7 +84,7 @@ onUnmounted(() => clearTimeout(refreshTimer))
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { refreshing, refreshItem } = useUploadQueueItemRefresh(props.configName)
 const refresh = () => {
-  if (item.value?.assetId) refreshItem(item.value.assetId)
+  if (item.value?.assetId) refreshItem(item.value.assetId, item.value, props.queueKey)
 }
 </script>
 

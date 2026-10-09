@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import axios from 'axios'
 import { createPinia, setActivePinia } from 'pinia'
 import { ref } from 'vue'
@@ -7,6 +7,9 @@ import { AssetFileFailReason } from '@/domains/dam/types/AssetFile'
 import { type UploadQueueItem, UploadQueueItemStatus } from '@/domains/dam/types/UploadQueue'
 import { DamNotificationName } from '@/domains/dam/composables/damNotificationsEventBus'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
+import { immediateScheduler } from '@/domains/dam/uploadQueue/settlement/__tests__/support/immediateScheduler'
+import { manualScheduler } from '@/domains/dam/uploadQueue/settlement/__tests__/support/manualScheduler'
+import { uploadSettlementRuntime } from '@/domains/dam/uploadQueue/settlement/uploadSettlementRuntime'
 
 // rusha is CommonJS and pre-bundled for the browser run: the factory returns what its `module.exports`
 // would be, and the import sees that as `default`, as it does the real package.
@@ -41,7 +44,6 @@ vi.mock('@/domains/dam/api/uploadApi', () => ({
   damUploadStart: (...a: unknown[]) => damUploadStart(...(a as [unknown, unknown, UploadQueueItem])),
   damUploadChunk: (...a: unknown[]) => damUploadChunk(...(a as [unknown, unknown, UploadQueueItem])),
   damUploadFinish: (...a: unknown[]) => damUploadFinish(...(a as [unknown, unknown, unknown, UploadQueueItem])),
-  armNotificationFallback: vi.fn(),
 }))
 
 const assetWithFile = async (_c: unknown, _e: unknown, id: string) => ({
@@ -50,6 +52,17 @@ const assetWithFile = async (_c: unknown, _e: unknown, id: string) => ({
   attributes: { assetStatus: 'with_file' },
 })
 const fetchAsset = vi.fn(assetWithFile)
+// What the poll reads: it has no notification to tell it the file is processed, the asset says so itself.
+const processedFile = async (_c: unknown, _e: unknown, id: string) => ({
+  id,
+  mainFile: { id: 'f', links: {}, fileAttributes: { status: 'processed' } },
+  attributes: { assetStatus: 'with_file' },
+  keywords: [],
+  authors: [],
+  mainFileSingleUse: null,
+  mainFileInternal: null,
+  metadata: { customData: {}, authorSuggestions: {}, keywordSuggestions: {} },
+})
 // The original of a duplicate, looked up by its file.
 const noSuchFile = async (): Promise<unknown> => Promise.reject(new Error('404 Not Found'))
 const fetchAssetByFileId = vi.fn(noSuchFile)
@@ -61,7 +74,7 @@ vi.mock('@/domains/dam/api/damAssetApi', async (importOriginal) => ({
 
 vi.mock('@/domains/dam/composables/commonAdminCoreDamOptions', () => ({
   useCommonAdminCoreDamOptions: () => ({ damClient: () => ({}), endPointImage: '/image', endPointAsset: '/asset' }),
-  useCommonAdminCoreDamOptionsGlobal: () => ({ uploadStatusFallback: false }),
+  useCommonAdminCoreDamOptionsGlobal: () => ({}),
 }))
 vi.mock('@/domains/dam/config/composables/damConfigState', () => ({
   useDamConfigState: () => ({ getDamConfigExtSystem: () => ({}) }),
@@ -75,11 +88,39 @@ vi.mock('@/domains/dam/uploadQueue/composables/damUploadChunkSize', () => ({
 
 const settle = () => new Promise((resolve) => setTimeout(resolve, 50))
 
+// These cases are not about time: the read a notification asks for comes at once, and the poll of a queue never.
+const realScheduler = uploadSettlementRuntime.scheduler
 beforeEach(() => {
   setActivePinia(createPinia())
+  uploadSettlementRuntime.scheduler = immediateScheduler()
   release.clear()
   fetchAsset.mockImplementation(assetWithFile)
   fetchAssetByFileId.mockImplementation(noSuchFile)
+})
+afterEach(() => {
+  const store = useUploadQueuesStore()
+  store.stopUpload('q')
+  store.stopUpload('removed')
+  uploadSettlementRuntime.scheduler = realScheduler
+})
+
+// An application with a queue store of its own (admin-dam) has this store alive beside it, through the components
+// it shares: with no row of its own it must not answer the notifications as well.
+describe('the notifications', () => {
+  it('are listened to from the first row of the store on, and not before', async () => {
+    bus.listener = undefined
+    const store = useUploadQueuesStore()
+    expect(bus.listener).toBeUndefined()
+
+    await store.addByCopyToLicence('q', 1, 1, ['asset-1'])
+    expect(bus.listener).toBeTypeOf('function')
+
+    // Once: a second subscription would answer every notification twice.
+    bus.listener = undefined
+    await store.addByCopyToLicence('q', 1, 1, ['asset-2'])
+    await store.addByFiles('q', 1, 1, [new File([], 'empty.jpg', { type: 'image/jpeg' })])
+    expect(bus.listener).toBeUndefined()
+  })
 })
 
 describe('a zero-byte file in the upload queue', () => {
@@ -97,21 +138,29 @@ describe('a zero-byte file in the upload queue', () => {
   })
 })
 
+// The read failed, not the copy: failing the row for it left a copy the server had made out of reach.
 describe('an asset copied to the licence whose detail fails to load', () => {
-  it('ends up marked as failed rather than processing forever', async () => {
-    fetchAsset.mockRejectedValue(new Error('502 Bad Gateway'))
+  it('waits on rather than fail, and is settled by the next read of its queue', async () => {
+    const clock = manualScheduler()
+    uploadSettlementRuntime.scheduler = clock
+    fetchAsset.mockClear()
+    fetchAsset.mockRejectedValueOnce(new Error('502 Bad Gateway'))
+    fetchAsset.mockImplementation(processedFile)
     const store = useUploadQueuesStore()
     await store.addByCopyToLicence('q', 1, 1, ['asset-1'])
     const item = store.getQueueItems('q')[0]
     expect(item.status).toBe(UploadQueueItemStatus.Processing)
-    // Copied items get no notification fallback timer: the notification is all there is.
-    expect(item.notificationFallbackTimer).toBeUndefined()
 
     bus.listener!({ name: DamNotificationName.AssetFileCopied, data: { asset: 'asset-1' } })
-    await vi.waitFor(() => expect(fetchAsset).toHaveBeenCalled())
-    await settle()
+    await clock.advance(1000)
 
-    expect(item.error.hasError).toBe(true)
+    expect(fetchAsset).toHaveBeenCalledTimes(1)
+    expect([item.status, item.error.hasError]).toEqual([UploadQueueItemStatus.Processing, false])
+    expect(store.getQueueProcessedCount('q')).toBe(0)
+
+    await clock.advance(4000)
+
+    expect([item.status, item.fileId, item.canEditMetadata]).toEqual([UploadQueueItemStatus.Uploaded, 'f', true])
     expect(store.getQueueProcessedCount('q')).toBe(store.getQueueTotalCount('q'))
   })
 })
@@ -384,7 +433,7 @@ describe('the metadata of an item in the queue', () => {
     expect(item.customData).toEqual({ title: 'from the server' })
   })
 
-  it('stops being editable when the lookup that should settle it fails', async () => {
+  it('stops being editable when the original of a duplicate cannot be read; a copy whose read fails waits on', async () => {
     const store = useUploadQueuesStore()
     await store.addByCopyToLicence('q', 1, 1, ['asset-duplicate', 'asset-copy'])
     const [duplicate, copy] = store.getQueueItems('q')
@@ -398,11 +447,13 @@ describe('the metadata of an item in the queue', () => {
       data: { asset: 'asset-duplicate', originAssetFile: 'file-original', assetType: DamAssetType.Image },
     })
     bus.listener!({ name: DamNotificationName.AssetFileCopied, data: { asset: 'asset-copy' } })
-    await vi.waitFor(() =>
-      expect([duplicate.status, copy.status]).toEqual([UploadQueueItemStatus.Failed, UploadQueueItemStatus.Failed])
-    )
+    await vi.waitFor(() => expect(duplicate.status).toBe(UploadQueueItemStatus.Failed))
+    await vi.waitFor(() => expect(fetchAsset).toHaveBeenCalled())
+    await settle()
 
-    expect([duplicate.canEditMetadata, copy.canEditMetadata]).toEqual([false, false])
+    expect(duplicate.canEditMetadata).toBe(false)
+    // The duplicate has no other asset to become; the copy is there, and only its read failed.
+    expect([copy.status, copy.canEditMetadata]).toEqual([UploadQueueItemStatus.Processing, true])
   })
 })
 

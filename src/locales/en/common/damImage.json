@@ -52,6 +52,7 @@
     "error": "Error",
     "copyAssetId": "Copy asset ID",
     "stillUploadingOrProcessing": "Asset is still uploading or being processed by server",
+    "refreshFailed": "The item's state could not be loaded. Try again.",
     "removeFromQueue": "Remove item from queue?",
     "errorUnableToCopyToLicence": "Error, unable to copy assets to licence"
   },
@@ -209,7 +210,8 @@
     "offset": "Invalid offset",
     "mimeType": "Invalid file format",
     "chunkValidationFailed": "Upload chunk validation failed. Please contact the administrator.",
-    "processingTooLong": "Processing is taking too long. Use the item's refresh button, or remove the item and try again later."
+    "processingTooLong": "Processing is taking too long. Use the item's refresh button, or remove the item and try again later.",
+    "readFailed": "Data could not be loaded. Use the item's refresh button, or remove the item and try again."
   },
   "notificationsNotConnected": "The notification service is temporarily down, some features may not behave correctly.",
   "public": {

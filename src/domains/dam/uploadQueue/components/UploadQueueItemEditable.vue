@@ -38,10 +38,17 @@ const props = withDefaults(
     mainFileSingleUse: boolean | null
     mainFileSingleUseEnabled?: boolean
     disableDoneAnimation?: boolean
+    /**
+     * A failed row a refresh may still change: its finish request went out and the server has said nothing final
+     * about it, or the original of its duplicate could not be read. The queue knows which rows those are; a row
+     * shown outside a queue has no such state.
+     */
+    refreshMayHelp?: boolean
   }>(),
   {
     mainFileSingleUseEnabled: true,
     disableDoneAnimation: false,
+    refreshMayHelp: false,
   }
 )
 
@@ -146,8 +153,19 @@ const showCancel = computed(() => {
   return showCancelStatuses.includes(props.item.status)
 })
 
-const showRefresh = ref(false)
+// Of a row that has not failed: offered once it has waited, for its file or for its metadata.
+const refreshDue = ref(false)
 const refreshTimer: Ref<ReturnType<typeof setTimeout> | undefined> = ref(undefined)
+// A failed row offers refresh only while one may still change it. One whose chunk the server never took, or
+// whose file the server has failed, has nothing a refresh could find.
+const showRefresh = computed(() => {
+  if (props.item.status === UploadQueueItemStatus.Failed) return props.refreshMayHelp && !isNull(props.item.assetId)
+  return refreshDue.value
+})
+// Remove comes with refresh, and a failed row has it at once: nothing else takes such a row out of the queue.
+const showRemove = computed(() => {
+  return showRefresh.value || props.item.status === UploadQueueItemStatus.Failed
+})
 
 const showDetail = async () => {
   if (isNull(props.item.assetId)) return
@@ -180,19 +198,24 @@ watch(
       clearTimeout(refreshTimer.value)
       refreshTimer.value = setTimeout(() => {
         if (newValue === UploadQueueItemStatus.Uploading || newValue === UploadQueueItemStatus.Processing) {
-          showRefresh.value = true
+          refreshDue.value = true
         }
       }, SHOW_REFRESH_AFTER_SECONDS * 1000)
     } else if (newValue === UploadQueueItemStatus.Uploaded) {
       clearTimeout(refreshTimer.value)
       refreshTimer.value = undefined
-      showRefresh.value = false
+      refreshDue.value = false
       // An uploaded row whose metadata has not come by then has a disabled form, and the save skips it. Refresh
       // loads the metadata.
       refreshTimer.value = setTimeout(() => {
         if (props.item.status !== UploadQueueItemStatus.Uploaded || props.item.canEditMetadata) return
-        showRefresh.value = true
+        refreshDue.value = true
       }, SHOW_REFRESH_AFTER_SECONDS * 1000)
+    } else if (newValue === UploadQueueItemStatus.Failed) {
+      // Its wait is over: what a failed row offers follows `refreshMayHelp`, at once.
+      clearTimeout(refreshTimer.value)
+      refreshTimer.value = undefined
+      refreshDue.value = false
     }
   },
   { immediate: true }
@@ -202,7 +225,7 @@ watch(
   () => props.item.canEditMetadata,
   (canEdit) => {
     // The metadata of an uploaded row came after all, by its notification or by that refresh.
-    if (canEdit && props.item.status === UploadQueueItemStatus.Uploaded) showRefresh.value = false
+    if (canEdit && props.item.status === UploadQueueItemStatus.Uploaded) refreshDue.value = false
   }
 )
 
@@ -328,7 +351,7 @@ onUnmounted(() => {
                   </VTooltip>
                 </VBtn>
                 <AActionDeleteButton
-                  v-if="showRefresh"
+                  v-if="showRemove"
                   variant="icon"
                   button-class=""
                   dialog-message-t="common.damImage.queueItem.removeFromQueue"

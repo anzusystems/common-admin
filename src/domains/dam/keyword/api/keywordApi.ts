@@ -5,16 +5,21 @@ import { useApiFetchList } from '@/domains/api/composables/useApiFetchList'
 import { useApiFetchByIds } from '@/domains/api/composables/useApiFetchByIds'
 import { useApiRequest } from '@/domains/api/composables/useApiRequest'
 
-const END_POINT = '/adm/v1/keyword'
-const END_POINT_LIST = END_POINT + '/ext-system/:extSystemId'
+// The address of the keywords is the application's to say (`endPointKeyword` of its DAM configuration).
+const LIST = '/ext-system/:extSystemId'
 export const ENTITY = 'keyword'
 
-export const fetchKeywordListByIds = (client: () => AxiosInstance, extSystemId: number, ids: string[]) => {
+export const fetchKeywordListByIds = (
+  client: () => AxiosInstance,
+  endPoint: string,
+  extSystemId: number,
+  ids: string[]
+) => {
   const { execute } = useApiFetchByIds<DamKeyword>({
     client,
     system: SYSTEM_CORE_DAM,
     entity: ENTITY,
-    urlTemplate: END_POINT_LIST + '/search',
+    urlTemplate: endPoint + LIST + '/search',
     urlParams: { extSystemId },
     isSearchApi: true,
   })
@@ -22,22 +27,22 @@ export const fetchKeywordListByIds = (client: () => AxiosInstance, extSystemId: 
   return execute(ids)
 }
 
-export const useFetchKeywordList = (client: () => AxiosInstance, extSystemId: number) =>
+export const useFetchKeywordList = (client: () => AxiosInstance, endPoint: string, extSystemId: number) =>
   useApiFetchList<DamKeyword>({
     client,
     system: SYSTEM_CORE_DAM,
     entity: ENTITY,
-    urlTemplate: END_POINT_LIST,
+    urlTemplate: endPoint + LIST,
     urlParams: { extSystemId },
   })
 
-export const createKeyword = (client: () => AxiosInstance, data: DamKeyword) => {
+export const createKeyword = (client: () => AxiosInstance, endPoint: string, data: DamKeyword) => {
   const { execute } = useApiRequest<DamKeyword, DamKeyword>({
     client,
     method: 'POST',
     system: SYSTEM_CORE_DAM,
     entity: ENTITY,
-    urlTemplate: END_POINT,
+    urlTemplate: endPoint,
   })
 
   return execute({ body: data })

@@ -21,6 +21,16 @@ describe('exports the admins redefined', () => {
   it('include tearing down the DAM notification socket', () => {
     expect(lib.destroyDamNotifications).toBeTypeOf('function')
   })
+
+  // An application with an upload queue store of its own (admin-dam) settles its rows through the same modules.
+  it('include the settlement of the upload queue', () => {
+    expect(lib.createUploadSettlement).toBeTypeOf('function')
+    expect(lib.useDamNotificationsConnection).toBeTypeOf('function')
+    expect(lib.uploadSettlementRuntime.scheduler.now).toBeTypeOf('function')
+    expect(lib.uploadSettlementRuntime.visibility.isVisible).toBeTypeOf('function')
+    expect(Object.keys(lib.UPLOAD_POLL_SCHEDULE)).toEqual(['dense', 'sparse'])
+    expect(lib.UploadRowRole.MassEdit).toBe('massEdit')
+  })
 })
 
 describe('apiErrorStatus', () => {

@@ -50,3 +50,66 @@ describe('mass operations of the upload queue: a custom value', () => {
     ).toEqual(['filled', 'kept'])
   })
 })
+
+// The same rule for the keywords and the authors of the rows: what is empty is filled, the rest is kept unless
+// everything is to be replaced.
+const lists: Array<['keywords' | 'authors', 'replaceEmptyKeywords' | 'replaceEmptyAuthors']> = [
+  ['keywords', 'replaceEmptyKeywords'],
+  ['authors', 'replaceEmptyAuthors'],
+]
+describe.each(lists)('mass operations of the upload queue: %s', (field, operation) => {
+  const row = (assetType: string, ids: string[] | undefined) =>
+    ({ assetType, [field]: ids }) as unknown as UploadQueueItem
+  const fill = (items: UploadQueueItem[], forceReplace?: boolean) => {
+    queue.items = items
+    useUploadQueueMassOperations('queue')[operation](['filled-1', 'filled-2'], forceReplace)
+    return items.map((one) => one[field])
+  }
+
+  it('fill the rows that have none', () => {
+    expect(fill([row(DamAssetType.Image, []), row(DamAssetType.Image, undefined)])).toEqual([
+      ['filled-1', 'filled-2'],
+      ['filled-1', 'filled-2'],
+    ])
+  })
+
+  it('keep what a row has', () => {
+    expect(fill([row(DamAssetType.Image, ['kept']), row(DamAssetType.Image, [])])).toEqual([
+      ['kept'],
+      ['filled-1', 'filled-2'],
+    ])
+  })
+
+  it('replace what every row has on request', () => {
+    expect(fill([row(DamAssetType.Image, ['kept']), row(DamAssetType.Image, [])], true)).toEqual([
+      ['filled-1', 'filled-2'],
+      ['filled-1', 'filled-2'],
+    ])
+  })
+
+  // Unlike a custom value, which is written to the rows of its own asset type only. The library queues images
+  // only, so the two rules meet no row they would disagree on.
+  it('go into the rows of every asset type', () => {
+    expect(fill([row(DamAssetType.Image, []), row(DamAssetType.Audio, []), row(DamAssetType.Video, ['kept'])])).toEqual(
+      [['filled-1', 'filled-2'], ['filled-1', 'filled-2'], ['kept']]
+    )
+  })
+
+  it('leave the other of the two alone', () => {
+    const other = field === 'keywords' ? 'authors' : 'keywords'
+    const item = { assetType: DamAssetType.Image, keywords: [], authors: [] } as unknown as UploadQueueItem
+
+    fill([item])
+
+    expect(item[other]).toEqual([])
+  })
+
+  // Today: the rows are given the very list they were filled with, not a copy each.
+  it('hand every filled row the same list', () => {
+    const items = [row(DamAssetType.Image, []), row(DamAssetType.Image, [])]
+
+    fill(items)
+
+    expect(items[0][field]).toBe(items[1][field])
+  })
+})

@@ -52,6 +52,7 @@
     "error": "Chyba",
     "copyAssetId": "Kopírovať asset ID",
     "stillUploadingOrProcessing": "Asset sa stále nahráva alebo spracováva serverom",
+    "refreshFailed": "Stav položky sa nepodarilo načítať. Skúste to znova.",
     "removeFromQueue": "Odstrániť z fronty nahrávania?",
     "errorUnableToCopyToLicence": "Chyba, nie je možné kopírovať assety do licencie"
   },
@@ -209,7 +210,8 @@
     "offset": "Nesprávny offset",
     "mimeType": "Nesprávny formát súboru",
     "chunkValidationFailed": "Kontrola časti nahrávaného súboru zlyhala. Kontaktujte administrátora.",
-    "processingTooLong": "Spracovanie trvá príliš dlho. Použite tlačidlo obnovenia položky alebo položku odstráňte a skúste to neskôr."
+    "processingTooLong": "Spracovanie trvá príliš dlho. Použite tlačidlo obnovenia položky alebo položku odstráňte a skúste to neskôr.",
+    "readFailed": "Údaje sa nepodarilo načítať. Použite tlačidlo obnovenia položky alebo položku odstráňte a skúste to znova."
   },
   "notificationsNotConnected": "Notifikačná služba má dočasný výpadok, niektoré funkcie sa nemusia správať korektne.",
   "public": {

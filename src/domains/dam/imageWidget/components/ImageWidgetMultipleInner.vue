@@ -272,6 +272,7 @@ const assetSelectConfirmMap = async (items: AssetSearchListItemDto[]): Promise<I
       if (authorIdsToFetch.size > 0) {
         const authorsRes = await fetchAuthorListByIds(
           damClient,
+          endPointAuthor,
           assetSelectStore.requireSelectedSelectConfig().extSystem,
           [...authorIdsToFetch]
         )
@@ -374,6 +375,7 @@ const { loading: assetLoading, dialog: assetDialog } = storeToRefs(assetDetailSt
 const {
   damClient,
   endPointAsset,
+  endPointAuthor,
   showSourceEnabled,
   sourceLabel,
   editAssetLabel,
@@ -449,7 +451,12 @@ const saveImages = async () => {
         assetUpdateItems.push({ id: image.assetId, authors: image.damAuthors })
       }
       if (authorEnabled.value && image.showDamAuthors && image.damAuthors.length > 0) {
-        const authorsRes = await fetchAuthorListByIds(damClient, cachedExtSystemId.value, image.damAuthors)
+        const authorsRes = await fetchAuthorListByIds(
+          damClient,
+          endPointAuthor,
+          cachedExtSystemId.value,
+          image.damAuthors
+        )
         image.texts.source = authorsRes.map((author) => author.name).join(', ')
       }
     }
@@ -714,6 +721,7 @@ onMounted(() => {
       multiple
       @apply="onAssetUploadConfirm"
       @files-input="onFileInput"
+      @drop="onFileInput"
     />
     <AssetDetailDialog
       v-if="assetDialog === queueKey"

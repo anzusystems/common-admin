@@ -32,9 +32,14 @@ const elapse = async () => {
   await flushPromises()
 }
 
+// What the queue tells the row of a failed item: whether the server may still finish its file. The store has it
+// for the rows whose finish request went out (`uploadStatusFallback.test.ts`); here the row is shown by itself.
+const queueSays = reactive<{ refreshMayHelp: boolean | undefined }>({ refreshMayHelp: false })
+
 let wrapper: VueWrapper | undefined
 let forget: () => void = () => {}
 beforeEach(() => {
+  queueSays.refreshMayHelp = false
   window.setTimeout = ((run: () => void, ms?: number, ...rest: unknown[]) => {
     if ((ms ?? 0) < 10_000) return realSetTimeout(run, ms, ...rest)
     waits.set(++lastWait, { run, ms: ms! })
@@ -53,8 +58,8 @@ afterEach(() => {
   waits.clear()
 })
 
-// An uploaded row, still without its metadata.
-const mountRow = async () => {
+// An uploaded row, still without its metadata, unless the test says otherwise.
+const mountRow = async (parts: Partial<UploadQueueItem> = {}) => {
   const item = reactive(
     useUploadQueueItemFactory().createDefault(
       'row',
@@ -66,6 +71,7 @@ const mountRow = async () => {
     )
   )
   item.assetId = 'asset-1'
+  Object.assign(item, parts)
   const Queue = defineComponent({
     setup() {
       // The configuration the row reads, in the pinia the components use.
@@ -92,6 +98,7 @@ const mountRow = async () => {
           item,
           refreshDisabled: false,
           mainFileSingleUse: item.mainFileSingleUse,
+          ...(queueSays.refreshMayHelp === undefined ? {} : { refreshMayHelp: queueSays.refreshMayHelp }),
         })
     },
   })
@@ -104,6 +111,9 @@ const mountRow = async () => {
   return item
 }
 const refreshButton = () => wrapper!.find('.mdi-refresh')
+const removeButton = () => wrapper!.find('[data-cy="button-delete"]')
+const cancelButton = () => wrapper!.find('.mdi-close-circle-outline')
+const row = () => wrapper!.findComponent(UploadQueueItemEditable)
 
 // Its form is disabled and the save skips it. When its metadata notification is lost, nothing else in the dialog
 // loads the metadata.
@@ -126,15 +136,163 @@ describe('the refresh button of an uploaded row still without its metadata', () 
     expect(refreshButton().exists()).toBe(false)
   })
 
-  it.each([
-    ['its metadata comes', (item: UploadQueueItem) => (item.canEditMetadata = true)],
-    ['the row fails', (item: UploadQueueItem) => (item.status = UploadQueueItemStatus.Failed)],
-  ])('is not offered when %s before the wait is over', async (_name, change) => {
+  it('is not offered when its metadata comes before the wait is over', async () => {
     const item = await mountRow()
-    change(item)
+    item.canEditMetadata = true
     await flushPromises()
 
     await elapse()
     expect(refreshButton().exists()).toBe(false)
+  })
+})
+
+// A failed row is done as far as the queue counts go, and stays in the dialog: the user takes it out. Refresh asks
+// the server what became of the file, which only one kind of failed row has a use for: the one whose finish
+// request went out before the client gave it up, and about which the server has said nothing final. A row whose
+// chunk the server never took, and one the server itself has failed, would only be told to wait.
+describe('the buttons of a failed row', () => {
+  const failed = { status: UploadQueueItemStatus.Failed }
+  const buttons = () => [removeButton().exists(), refreshButton().exists(), cancelButton().exists()]
+
+  it('are remove alone, at once, when a chunk failed: it has an asset, and the server will never finish it', async () => {
+    await mountRow(failed)
+
+    expect(heldWaits()).toEqual([])
+    expect(buttons()).toEqual([true, false, false])
+  })
+
+  it('are remove and refresh, at once, when its finish request went out: the server may finish the file yet', async () => {
+    queueSays.refreshMayHelp = true
+    await mountRow(failed)
+
+    expect(heldWaits()).toEqual([])
+    expect(buttons()).toEqual([true, true, false])
+
+    await refreshButton().trigger('click')
+    expect(row().emitted('refreshItem')).toEqual([[{ index: 0, assetId: 'asset-1' }]])
+  })
+
+  // A file of no bytes, a start request the server refused: nothing was created to ask about, whatever the
+  // queue says of the row.
+  it('is remove alone, at once, when the row failed before it had an asset', async () => {
+    queueSays.refreshMayHelp = true
+    await mountRow({ ...failed, assetId: null })
+
+    expect(heldWaits()).toEqual([])
+    expect(buttons()).toEqual([true, false, false])
+  })
+
+  // Nothing says the server may finish it: the row is shown by a parent that has no queue to ask.
+  it('are remove alone for a row shown outside a queue, whatever its asset', async () => {
+    queueSays.refreshMayHelp = undefined
+    await mountRow(failed)
+
+    expect(buttons()).toEqual([true, false, false])
+  })
+
+  it('takes the row out of the queue once the user confirms', async () => {
+    await mountRow({ ...failed, assetId: null })
+
+    await removeButton().trigger('click')
+    await flushPromises()
+    // The confirmation renders into the body.
+    document.body.querySelector<HTMLElement>('[data-cy="delete-panel"] [data-cy="button-confirm-delete"]')!.click()
+    await flushPromises()
+
+    expect(row().emitted('removeItem')).toEqual([[0]])
+  })
+
+  it.each([
+    ['being sent, on a chunk', UploadQueueItemStatus.Uploading, true, false],
+    ['being sent, on its finish request', UploadQueueItemStatus.Uploading, true, true],
+    ['waiting for the server, by the word of the server', UploadQueueItemStatus.Processing, false, false],
+  ])(
+    'come as soon as a row fails that was %s, not when its wait would have been over',
+    async (_was, status, cancel, refreshMayHelp) => {
+      const item = await mountRow({ status })
+      expect(heldWaits()).toEqual([20_000])
+      expect(buttons()).toEqual([false, false, cancel])
+
+      // The queue says so in the same breath as it fails the row.
+      item.status = UploadQueueItemStatus.Failed
+      queueSays.refreshMayHelp = refreshMayHelp
+      await flushPromises()
+
+      expect(heldWaits()).toEqual([])
+      expect(buttons()).toEqual([true, refreshMayHelp, false])
+    }
+  )
+
+  // Twenty seconds into a slow upload the row offers refresh; a chunk that then fails takes it back.
+  it('lose the refresh a row had come to offer while it was being sent, when a chunk of it fails', async () => {
+    const item = await mountRow({ status: UploadQueueItemStatus.Uploading })
+    await elapse()
+    expect(buttons()).toEqual([true, true, true])
+
+    item.status = UploadQueueItemStatus.Failed
+    await flushPromises()
+
+    expect(buttons()).toEqual([true, false, false])
+  })
+
+  it('are remove alone for a row the server failed after it was uploaded, in place of its wait for the metadata', async () => {
+    const item = await mountRow()
+    expect(heldWaits()).toEqual([20_000])
+
+    item.status = UploadQueueItemStatus.Failed
+    await flushPromises()
+
+    expect(heldWaits()).toEqual([])
+    expect(buttons()).toEqual([true, false, false])
+  })
+
+  // The finish request went out, the client gave the row up, and then the server said the file failed: there is
+  // nothing left to ask it.
+  it('lose refresh, and keep remove, when the server reports the file failed after all', async () => {
+    queueSays.refreshMayHelp = true
+    await mountRow(failed)
+    expect(buttons()).toEqual([true, true, false])
+
+    queueSays.refreshMayHelp = false
+    await flushPromises()
+
+    expect(buttons()).toEqual([true, false, false])
+  })
+
+  // The client gives a row up when one of its requests fails; the server may have finished the file all the same.
+  it('go when the row turns out uploaded after all, with its metadata', async () => {
+    queueSays.refreshMayHelp = true
+    const item = await mountRow(failed)
+
+    item.status = UploadQueueItemStatus.Uploaded
+    item.canEditMetadata = true
+    queueSays.refreshMayHelp = false
+    await flushPromises()
+
+    expect([removeButton().exists(), refreshButton().exists()]).toEqual([false, false])
+    await elapse()
+    expect([removeButton().exists(), refreshButton().exists()]).toEqual([false, false])
+  })
+})
+
+// What the fix of the failed row must leave alone.
+describe('the buttons of a row that has not failed', () => {
+  it.each([
+    ['waiting its turn', UploadQueueItemStatus.Waiting, [], true],
+    ['being sent', UploadQueueItemStatus.Uploading, [20_000], true],
+    ['waiting for the server', UploadQueueItemStatus.Processing, [20_000], false],
+  ])('%s: neither refresh nor remove until it has waited', async (_what, status, waiting, cancel) => {
+    await mountRow({ status })
+
+    expect(heldWaits()).toEqual(waiting)
+    expect([removeButton().exists(), refreshButton().exists(), cancelButton().exists()]).toEqual([false, false, cancel])
+
+    await elapse()
+    const offered = waiting.length > 0
+    expect([removeButton().exists(), refreshButton().exists(), cancelButton().exists()]).toEqual([
+      offered,
+      offered,
+      cancel,
+    ])
   })
 })

@@ -22,8 +22,9 @@ const { cache, toFetch, fetch, add, addManual, addManualMinimal, has, get, isLoa
   DamAuthorMinimal
 >(mapFullToMinimal, mapIdToMinimal, (ids) => {
   const { cachedExtSystemId } = useExtSystemIdForCached()
-  const { damClient } = useCommonAdminCoreDamOptions()
-  return fetchAuthorListByIds(damClient, cachedExtSystemId.value, ids)
+  // One cache for the page, which no component hands a configuration: it asks as the default one says.
+  const { damClient, endPointAuthor } = useCommonAdminCoreDamOptions()
+  return fetchAuthorListByIds(damClient, endPointAuthor, cachedExtSystemId.value, ids)
 })
 
 export const useDamCachedAuthors = () => {

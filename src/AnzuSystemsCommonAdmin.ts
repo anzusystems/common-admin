@@ -66,6 +66,14 @@ export interface CommonAdminCoreDamConfig {
   endPointImage?: string
   endPointRoi?: string
   /**
+   * Where the authors of DAM are listed, looked up by id and created; `/adm/v1/author` by default. Read from the
+   * configuration a component runs under, and from `default` by what has no configuration of its own to name:
+   * the cache of author names and the author inputs.
+   */
+  endPointAuthor?: string
+  /** The same for the keywords of DAM; `/adm/v1/keyword` by default. */
+  endPointKeyword?: string
+  /**
    * The grant a region of interest's save needs, checked before the editor is offered. By default
    * `dam_regionOfInterest_update` for the default `/adm/v1/roi`, and none for another endpoint (the UGC one checks no
    * grant); `null` checks none.
@@ -93,11 +101,16 @@ export type CommonAdminCoreDamOptions =
   | {
       configs: { [key: string]: CommonAdminCoreDamConfig }
       apiTimeout: number
-      uploadStatusFallback: boolean
+      /** @deprecated The state of an upload is always polled for; the value is not read. */
+      uploadStatusFallback?: boolean
       adminDomain: string
-      notification: {
-        enabled: boolean
-        webSocketUrl: string
+      /**
+       * The notification service is used only with an address and `enabled` either `true` or the text "true", in
+       * any letter case and with whitespace around it ignored ("True", " TRUE "). Any other value is off.
+       */
+      notification?: {
+        enabled?: boolean | string
+        webSocketUrl?: string
       }
     }
 

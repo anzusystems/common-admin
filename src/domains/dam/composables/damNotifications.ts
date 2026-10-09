@@ -1,8 +1,9 @@
 import { useWebSocket } from '@vueuse/core'
-import { type EffectScope, effectScope, ref } from 'vue'
+import { type EffectScope, effectScope, ref, watch } from 'vue'
 import { commonT } from '@/plugins/i18n'
 import { type DamNotification, useDamNotificationsEventBus } from '@/domains/dam/composables/damNotificationsEventBus'
 import { useCommonAdminCoreDamOptionsGlobal } from '@/domains/dam/composables/commonAdminCoreDamOptions'
+import { setDamNotificationsPushAlive } from '@/domains/dam/composables/damNotificationsConnection'
 import { useAlerts } from '@/domains/system/composables/alerts'
 
 const t = commonT
@@ -18,7 +19,7 @@ let singletonKey: string | undefined = undefined
 function createDamNotifications(onDispose: () => void = () => {}) {
   const { notification } = useCommonAdminCoreDamOptionsGlobal()
 
-  const enabled = notification.enabled && notification.webSocketUrl.length > 0
+  const enabled = notification.enabled
 
   const eventBus = useDamNotificationsEventBus()
 
@@ -49,6 +50,12 @@ function createDamNotifications(onDispose: () => void = () => {}) {
     },
   })
 
+  // Only an open socket counts: one that still connects, or has given up, brings no notification.
+  watch(status, (current) => setDamNotificationsPushAlive(enabled && current === 'OPEN'), {
+    immediate: true,
+    flush: 'sync',
+  })
+
   const closeConnection = () => {
     if (warningTimer) {
       clearTimeout(warningTimer)
@@ -69,6 +76,7 @@ function createDamNotifications(onDispose: () => void = () => {}) {
   const dispose = () => {
     disposed = true
     closeConnection()
+    setDamNotificationsPushAlive(false)
     onDispose()
   }
 

@@ -26,7 +26,7 @@ import type { DamMediaFromDam } from '@/domains/dam/types/MediaAware'
 const END_POINT_CMS_ASSET = '/adm/v1/cms/asset/'
 const BULK_METADATA_LIMIT = 10
 export const ENTITY = 'asset'
-const FETCH_BY_IDS_MAX_LIMIT = 25
+const FETCH_BY_IDS_MAX_LIMIT = 50
 
 export interface AssetMetadataBulkItem {
   id: DocId
@@ -39,6 +39,10 @@ export interface AssetMetadataBulkItem {
   mainFileOverrideInternal: boolean | null
 }
 
+// What a save sends. Whether the main file is internal is set in the DAM itself: a save from here leaves the two
+// as they are, and reads them from the answer.
+type AssetMetadataBulkItemBody = Omit<AssetMetadataBulkItem, 'mainFileInternal' | 'mainFileOverrideInternal'>
+
 export declare type AssetCustomData = Record<string, any>
 
 export const useFetchAssetList = (client: () => AxiosInstance, endPoint: string, licenceId: IntegerId) =>
@@ -50,7 +54,16 @@ export const useFetchAssetList = (client: () => AxiosInstance, endPoint: string,
     urlParams: { licenceId },
   })
 
-export const fetchAsset = (client: () => AxiosInstance, endPoint: string, id: DocId) => {
+/**
+ * `options.report: false`: a failure of this read is not handed to the api error logger. For the upload queue,
+ * which asks for the same asset again and again and reports only the first failure of a streak.
+ */
+export const fetchAsset = (
+  client: () => AxiosInstance,
+  endPoint: string,
+  id: DocId,
+  options: { report?: boolean } = {}
+) => {
   const { execute } = useApiRequest<AssetDetailItemDto, null>({
     client,
     method: 'GET',
@@ -59,7 +72,7 @@ export const fetchAsset = (client: () => AxiosInstance, endPoint: string, id: Do
     urlTemplate: endPoint + '/:id',
   })
 
-  return execute({ urlParams: { id } })
+  return execute({ urlParams: { id }, report: options.report })
 }
 
 export const fetchAssetAsCmsMedia = <T extends DamMediaFromDam>(client: () => AxiosInstance, id: DocId) => {
@@ -162,7 +175,10 @@ export const fetchAssetListByIds: (
         ) {
           const final = []
           for (let i = 0; i < responses.length; i++) {
-            final.push(...responses[i]!.data.data)
+            const list = responses[i]!.data?.data
+            // Not "none of them exists": the upload queue counts the assets an answer does not carry.
+            if (!Array.isArray(list)) return reject(responses)
+            final.push(...list)
           }
           resolve(final as AssetDetailItemDto[])
         } else {
@@ -179,7 +195,7 @@ export const fetchAssetListByIds: (
 async function updateMetadataSequence(
   client: () => AxiosInstance,
   endPoint: string,
-  bulkItems: AssetMetadataBulkItem[]
+  bulkItems: AssetMetadataBulkItemBody[]
 ) {
   const totalCalls = Math.ceil(bulkItems.length / BULK_METADATA_LIMIT)
   const responses: AxiosResponse[] = []
@@ -202,7 +218,7 @@ function listItemsToMetadataBulkItems(
   items: UploadQueueItem[],
   mainFileSingleUseOverride: boolean | undefined = undefined
 ) {
-  const dtoItems: AssetMetadataBulkItem[] = []
+  const dtoItems: AssetMetadataBulkItemBody[] = []
   items.forEach((item) => {
     if (hasMetadataToSave(item)) {
       dtoItems.push({
@@ -212,8 +228,6 @@ function listItemsToMetadataBulkItems(
         described: true,
         customData: item.customData,
         mainFileSingleUse: isUndefined(mainFileSingleUseOverride) ? item.mainFileSingleUse : mainFileSingleUseOverride,
-        mainFileInternal: false,
-        mainFileOverrideInternal: false,
       })
     }
   })
@@ -257,15 +271,13 @@ export const updateAssetMetadata = (
   mainFileSingleUse: boolean | null
 ) => {
   return new Promise((resolve, reject) => {
-    const data: AssetMetadataBulkItem = {
+    const data: AssetMetadataBulkItemBody = {
       id: asset.id,
       keywords: asset.keywords,
       authors: asset.authors,
       described: true,
       customData: asset.metadata.customData,
       mainFileSingleUse: mainFileSingleUse,
-      mainFileInternal: false,
-      mainFileOverrideInternal: false,
     }
     client()
       .patch(endPoint + '/metadata-bulk-update', JSON.stringify([data]))

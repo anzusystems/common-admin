@@ -10,7 +10,7 @@ import type { Ref } from 'vue'
 import type { FilterConfig, FilterData } from '@/domains/filters/composables/filterFactory'
 
 export const useAuthorSelectActions = (extSystem: IntegerId) => {
-  const { damClient } = useCommonAdminCoreDamOptions()
+  const { damClient, endPointAuthor } = useCommonAdminCoreDamOptions()
   const { getDamConfigExtSystem } = useDamConfigState()
 
   const configExtSystem = getDamConfigExtSystem(extSystem)
@@ -38,7 +38,7 @@ export const useAuthorSelectActions = (extSystem: IntegerId) => {
     return authors.map((author: DamAuthor) => mapToMinimal(author))
   }
 
-  const { execute } = useFetchAuthorList(damClient, extSystem)
+  const { execute } = useFetchAuthorList(damClient, endPointAuthor, extSystem)
 
   const fetchItems = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
     return mapToValueObjects(await execute(pagination, filterData, filterConfig))
@@ -49,11 +49,11 @@ export const useAuthorSelectActions = (extSystem: IntegerId) => {
   }
 
   const fetchItemsByIds = async (ids: string[]) => {
-    return mapToValueObjects(await fetchAuthorListByIds(damClient, extSystem, ids))
+    return mapToValueObjects(await fetchAuthorListByIds(damClient, endPointAuthor, extSystem, ids))
   }
 
   const fetchItemsMinimalByIds = async (ids: string[]) => {
-    return mapToMinimals(await fetchAuthorListByIds(damClient, extSystem, ids))
+    return mapToMinimals(await fetchAuthorListByIds(damClient, endPointAuthor, extSystem, ids))
   }
 
   return {

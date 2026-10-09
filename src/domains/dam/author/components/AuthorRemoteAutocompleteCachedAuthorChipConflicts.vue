@@ -1,10 +1,9 @@
 <script lang="ts" setup>
-import { computed, shallowRef, watch } from 'vue'
+import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { DocId } from '@/shared/types/common'
 import { useDamCachedAuthors } from '@/domains/dam/author/composables/cachedAuthors'
-import type { CachedItem } from '@/domains/cached/composables/defineCached'
-import type { DamAuthorMinimal } from '@/domains/dam/author/types/DamAuthor'
-import { isUndefined } from '@/shared/utils/common'
+import { useCachedItem } from '@/domains/cached/composables/useCachedItem'
 
 const props = withDefaults(
   defineProps<{
@@ -25,30 +24,19 @@ const clickClose = () => {
 
 const { getCachedAuthor } = useDamCachedAuthors()
 
-const cached = shallowRef<undefined | CachedItem<DamAuthorMinimal>>(undefined)
-const loaded = shallowRef<boolean>(false)
-
-const item = computed(() => {
-  return getCachedAuthor(props.id)
-})
+// As the author chip reads it. An author the server did not return is settled too: it has only its id to show,
+// until a later ask for it finds it.
+const { cached, loaded, unresolved } = useCachedItem(() => getCachedAuthor(props.id))
 
 const displayTitle = computed(() => {
+  if (unresolved.value) return '#' + props.id
   if (cached.value) {
     return cached.value.name + (cached.value.identifier?.length > 0 ? ` (${cached.value.identifier})` : '')
   }
   return ''
 })
 
-watch(
-  item,
-  async (newValue) => {
-    if (loaded.value) return
-    if (isUndefined(newValue) || newValue._loaded === false) return
-    cached.value = newValue
-    loaded.value = true
-  },
-  { immediate: true }
-)
+const { t } = useI18n()
 </script>
 
 <template>
@@ -59,6 +47,13 @@ watch(
     @click:close="clickClose"
   >
     {{ displayTitle }}
+    <VTooltip
+      v-if="unresolved"
+      activator="parent"
+      location="bottom"
+    >
+      {{ t('common.model.cachedUnavailable') }}
+    </VTooltip>
     <VProgressCircular
       v-if="!loaded"
       :size="12"

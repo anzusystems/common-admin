@@ -1,7 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { CommonAdminCoreDamOptions } from '@/AnzuSystemsCommonAdmin'
 import { initCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
-import { destroyDamNotifications, initDamNotifications } from '@/domains/dam/composables/damNotifications'
+import { type DamSocket, stubDamSocket } from '@/domains/dam/__tests__/support/damSocket'
+import {
+  destroyDamNotifications,
+  initDamNotifications,
+  useDamNotifications,
+} from '@/domains/dam/composables/damNotifications'
+import { type DamNotification, DamNotificationName } from '@/domains/dam/composables/damNotificationsEventBus'
 
 // initDamNotifications() used to be unguarded: every call built a fresh socket that nothing could
 // close, so a router guard accumulated one per attempt. Pins the singleton contract.
@@ -95,5 +101,81 @@ describe('damNotifications singleton', () => {
     handle.openConnection()
 
     expect(handle.status.value).toBe(statusAfterFirst)
+  })
+})
+
+// The way of a notification from the server to whoever listens: a frame on the socket, an event for the listeners.
+describe('the notification socket', () => {
+  let socket: DamSocket
+  let off: () => void = () => {}
+  const heard: DamNotification[] = []
+
+  beforeEach(() => {
+    socket = stubDamSocket()
+    heard.length = 0
+    off = useDamNotifications().addDamNotificationListener((event) => heard.push(event))
+  })
+  afterEach(() => {
+    off()
+    destroyDamNotifications()
+    socket.restore()
+  })
+
+  it.each([
+    ['switched off', 'ws://localhost/notifications', false],
+    ['switched on without an address', '', true],
+  ])('is not opened when it is %s, and the notifications still count as started', (_name, webSocketUrl, enabled) => {
+    setOptions(webSocketUrl, enabled)
+    const notifications = initDamNotifications()
+
+    notifications.openConnection()
+
+    expect(socket.sockets).toEqual([])
+    expect(notifications.damNotificationsInitialized.value).toBe(true)
+    expect(notifications.status.value).toBe('CLOSED')
+  })
+
+  it('is opened once, at the configured address', () => {
+    setOptions('ws://localhost/notifications')
+    const notifications = initDamNotifications()
+
+    notifications.openConnection()
+    notifications.openConnection()
+
+    expect(socket.sockets.map((one) => one.url)).toEqual(['ws://localhost/notifications'])
+  })
+
+  it('hands a frame to the listeners as the name of the event and its data', () => {
+    setOptions('ws://localhost/notifications')
+    initDamNotifications().openConnection()
+    socket.accept()
+
+    socket.deliver(DamNotificationName.AssetFileProcessed, { asset: 'asset-1', id: 'file-1' })
+    socket.deliver(DamNotificationName.AssetFileFailed, { asset: 'asset-2', id: 'file-2', failReason: 'unknown' })
+
+    expect(heard).toEqual([
+      { name: 'asset_file_processed', data: { asset: 'asset-1', id: 'file-1' } },
+      { name: 'asset_file_failed', data: { asset: 'asset-2', id: 'file-2', failReason: 'unknown' } },
+    ])
+  })
+
+  it('hands a frame without data to the listeners with no data', () => {
+    setOptions('ws://localhost/notifications')
+    initDamNotifications().openConnection()
+    socket.accept()
+
+    socket.deliver(DamNotificationName.UserUpdated)
+
+    expect(heard).toEqual([{ name: 'user_updated', data: undefined }])
+  })
+
+  it('hands on a name it does not know as well: the listeners decide', () => {
+    setOptions('ws://localhost/notifications')
+    initDamNotifications().openConnection()
+    socket.accept()
+
+    socket.deliver('a_name_of_tomorrow', { any: 'thing' })
+
+    expect(heard).toEqual([{ name: 'a_name_of_tomorrow', data: { any: 'thing' } }])
   })
 })

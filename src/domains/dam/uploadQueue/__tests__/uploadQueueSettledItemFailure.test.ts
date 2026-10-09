@@ -5,6 +5,11 @@ import { UploadQueueItemStatus } from '@/domains/dam/types/UploadQueue'
 import { AssetFileProcessStatus } from '@/domains/dam/types/AssetFile'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
 import { DamNotificationName } from '@/domains/dam/composables/damNotificationsEventBus'
+import {
+  type ManualScheduler,
+  manualScheduler,
+} from '@/domains/dam/uploadQueue/settlement/__tests__/support/manualScheduler'
+import { uploadSettlementRuntime } from '@/domains/dam/uploadQueue/settlement/uploadSettlementRuntime'
 const state = vi.hoisted(() => ({ listener: undefined as undefined | ((event: unknown) => void) }))
 vi.mock('@/domains/dam/api/damImageApi', () => ({
   fetchImageFile: vi.fn(),
@@ -29,7 +34,7 @@ vi.mock('@/domains/dam/api/damAssetApi', () => ({
 }))
 vi.mock('@/domains/dam/composables/commonAdminCoreDamOptions', () => ({
   useCommonAdminCoreDamOptions: () => ({ damClient: () => ({}), endPointImage: '/image', endPointAsset: '/asset' }),
-  useCommonAdminCoreDamOptionsGlobal: () => ({ uploadStatusFallback: true }),
+  useCommonAdminCoreDamOptionsGlobal: () => ({}),
 }))
 vi.mock('@/domains/dam/composables/damNotifications', () => ({
   useDamNotifications: () => ({ addDamNotificationListener: (cb: (e: unknown) => void) => (state.listener = cb) }),
@@ -47,42 +52,49 @@ const asset = (id: string, status: string) => ({
   mainFileSingleUse: null,
   mainFileInternal: null,
 })
-const realSetTimeout = window.setTimeout
+// The reads are timed by the queue: the one a notification asks for a moment after it, the poll five seconds after
+// the row began to wait.
+const realScheduler = uploadSettlementRuntime.scheduler
+let clock: ManualScheduler
 beforeEach(() => {
   setActivePinia(createPinia())
-  window.setTimeout = ((fn: () => void, ms?: number, ...rest: unknown[]) =>
-    realSetTimeout(fn, (ms ?? 0) < 10_000 ? ms : 300, ...rest)) as typeof window.setTimeout
+  fetchAsset.mockReset()
+  clock = manualScheduler()
+  uploadSettlementRuntime.scheduler = clock
 })
 afterEach(() => {
-  window.setTimeout = realSetTimeout
+  useUploadQueuesStore().stopUpload('q')
+  uploadSettlementRuntime.scheduler = realScheduler
 })
-const settle = (ms: number) => new Promise((r) => realSetTimeout(r, ms))
 describe('a failed asset fetch on a copied or duplicate item', () => {
-  it('a copy the notification path failed stays failed: the fallback does not settle it later', async () => {
+  // The read failed, not the copy: failed for it, a copy the server had made was out of reach.
+  it('a copy whose read after its notification failed waits on, and the poll settles it', async () => {
     fetchAsset
       .mockRejectedValueOnce(new Error('502'))
       .mockResolvedValue(asset('asset-1', AssetFileProcessStatus.Processed))
     const store = useUploadQueuesStore()
     await store.addByCopyToLicence('q', 1, 1, ['asset-1'])
     state.listener!({ name: DamNotificationName.AssetFileCopied, data: { asset: 'asset-1' } })
-    await settle(50)
+    await clock.advance(1000)
     const item = store.getQueueItems('q')[0]!
-    expect(item.status).toBe(UploadQueueItemStatus.Failed)
-    // The fallback's wait is over by now, and its asset would answer as processed.
-    await settle(800)
-    expect(item.status).toBe(UploadQueueItemStatus.Failed)
+    expect(fetchAsset).toHaveBeenCalledTimes(1)
+    expect([item.status, item.error.hasError]).toEqual([UploadQueueItemStatus.Processing, false])
+    // The first read of its queue is due by now, and its asset answers as processed.
+    await clock.advance(4000)
+    expect([item.status, item.fileId]).toEqual([UploadQueueItemStatus.Uploaded, 'file-of-asset-1'])
   })
   it('a settled copy is not failed by a late notification whose fetch fails', async () => {
     fetchAsset
       .mockResolvedValueOnce(asset('asset-1', AssetFileProcessStatus.Processed))
-      .mockResolvedValueOnce(asset('asset-1', AssetFileProcessStatus.Processed))
-      .mockRejectedValueOnce(new Error('502'))
+      .mockRejectedValue(new Error('502'))
     const store = useUploadQueuesStore()
     await store.addByCopyToLicence('q', 1, 1, ['asset-1'])
     const item = store.getQueueItems('q')[0]!
-    await vi.waitFor(() => expect(item.status).toBe(UploadQueueItemStatus.Uploaded), { timeout: 2000 })
-    state.listener!({ name: DamNotificationName.AssetFileCopied, data: { asset: 'asset-1' } })
-    await settle(50)
+    await clock.advance(5000)
     expect(item.status).toBe(UploadQueueItemStatus.Uploaded)
+    state.listener!({ name: DamNotificationName.AssetFileCopied, data: { asset: 'asset-1' } })
+    await clock.advance(1000)
+    expect(fetchAsset).toHaveBeenCalledTimes(2)
+    expect([item.status, item.error.hasError]).toEqual([UploadQueueItemStatus.Uploaded, false])
   })
 })

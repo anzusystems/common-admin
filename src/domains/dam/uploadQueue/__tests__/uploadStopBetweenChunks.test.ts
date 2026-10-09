@@ -25,7 +25,7 @@ vi.mock('@/domains/dam/api/uploadApi', () => ({
 }))
 vi.mock('@/domains/dam/composables/commonAdminCoreDamOptions', () => ({
   useCommonAdminCoreDamOptions: () => ({ damClient: () => ({}), endPointImage: '/image', endPointAsset: '/asset' }),
-  useCommonAdminCoreDamOptionsGlobal: () => ({ uploadStatusFallback: false }),
+  useCommonAdminCoreDamOptionsGlobal: () => ({}),
 }))
 vi.mock('@/domains/dam/uploadQueue/composables/damUploadChunkSize', () => ({
   useDamUploadChunkSize: () => ({ updateChunkSize: () => false, lastChunkSize: ref(1024) }),

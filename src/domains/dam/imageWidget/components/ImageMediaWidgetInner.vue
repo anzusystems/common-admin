@@ -569,6 +569,7 @@ const pickAsset = async (data: AssetSelectReturnData) => {
       if (assetRes.authors.length > 0) {
         const authorsRes = await fetchAuthorListByIds(
           damClient,
+          endPointAuthor,
           assetSelectStore.requireSelectedSelectConfig().extSystem,
           assetRes.authors
         )
@@ -617,6 +618,7 @@ const { loading: assetLoading, dialog: assetDialog, asset } = storeToRefs(assetD
 const {
   damClient,
   endPointAsset,
+  endPointAuthor,
   showSourceEnabled,
   sourceLabel,
   editAssetLabel,
@@ -676,6 +678,7 @@ const tryImageConfirm = async () => {
       if (asset.value.authors.length > 0) {
         const authorsRes = await fetchAuthorListByIds(
           damClient,
+          endPointAuthor,
           assetSelectStore.requireSelectedSelectConfig().extSystem,
           asset.value.authors
         )

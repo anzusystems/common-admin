@@ -30,14 +30,14 @@ export function useImageMassOperations() {
     }
   }
 
-  const { damClient } = useCommonAdminCoreDamOptions()
+  const { damClient, endPointAuthor } = useCommonAdminCoreDamOptions()
   const { cachedExtSystemId } = useExtSystemIdForCached()
 
   const replaceEmptyAuthors = async (value: DocId[], forceReplace = false) => {
     if (imageStore.readonly) return
     const authorsMap = new Map<DocId, string>()
     const authorNames: string[] = []
-    const authorsRes = await fetchAuthorListByIds(damClient, cachedExtSystemId.value, [...value])
+    const authorsRes = await fetchAuthorListByIds(damClient, endPointAuthor, cachedExtSystemId.value, [...value])
     // The widget may have turned read-only while the authors loaded.
     if (imageStore.readonly) return
     authorsRes.forEach((author) => {

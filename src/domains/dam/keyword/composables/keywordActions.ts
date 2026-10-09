@@ -10,7 +10,7 @@ import type { Ref } from 'vue'
 import type { FilterConfig, FilterData } from '@/domains/filters/composables/filterFactory'
 
 export const useKeywordSelectActions = (extSystem: IntegerId) => {
-  const { damClient } = useCommonAdminCoreDamOptions()
+  const { damClient, endPointKeyword } = useCommonAdminCoreDamOptions()
   const { getDamConfigExtSystem } = useDamConfigState()
 
   const configExtSystem = getDamConfigExtSystem(extSystem)
@@ -36,7 +36,7 @@ export const useKeywordSelectActions = (extSystem: IntegerId) => {
     return keywords.map((keyword: DamKeyword) => mapToMinimal(keyword))
   }
 
-  const { execute } = useFetchKeywordList(damClient, extSystem)
+  const { execute } = useFetchKeywordList(damClient, endPointKeyword, extSystem)
 
   const fetchItems = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
     return mapToValueObjects(await execute(pagination, filterData, filterConfig))
@@ -47,7 +47,7 @@ export const useKeywordSelectActions = (extSystem: IntegerId) => {
   }
 
   const fetchItemsByIds = async (ids: string[]) => {
-    return mapToValueObjects(await fetchKeywordListByIds(damClient, extSystem, ids))
+    return mapToValueObjects(await fetchKeywordListByIds(damClient, endPointKeyword, extSystem, ids))
   }
 
   return {

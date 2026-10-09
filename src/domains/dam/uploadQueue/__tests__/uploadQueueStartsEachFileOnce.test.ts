@@ -32,12 +32,11 @@ vi.mock('@/domains/dam/api/uploadApi', () => ({
   damUploadStart: (...args: unknown[]) => damUploadStart(...(args as [unknown, unknown, { file: File }])),
   damUploadChunk: (...args: unknown[]) => damUploadChunk(...(args as [])),
   damUploadFinish: (...args: unknown[]) => damUploadFinish(...(args as [])),
-  armNotificationFallback: vi.fn(),
 }))
 
 vi.mock('@/domains/dam/composables/commonAdminCoreDamOptions', () => ({
   useCommonAdminCoreDamOptions: () => ({ damClient: () => ({}), endPointImage: '/image', endPointAsset: '/asset' }),
-  useCommonAdminCoreDamOptionsGlobal: () => ({ uploadStatusFallback: false }),
+  useCommonAdminCoreDamOptionsGlobal: () => ({}),
 }))
 
 vi.mock('@/domains/dam/composables/damNotifications', () => ({
