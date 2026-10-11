@@ -3,10 +3,12 @@ import { flushPromises, mount, type VueWrapper } from '@vue/test-utils'
 import { defineComponent, h, reactive } from 'vue'
 import { useDamConfigStore } from '@/domains/dam/config/store/damConfigStore'
 import { DamAssetType } from '@/domains/dam/types/Asset'
+import { AssetFileFailReason } from '@/domains/dam/types/AssetFile'
 import type { DamExtSystemConfig } from '@/domains/dam/types/DamConfig'
 import { type UploadQueueItem, UploadQueueItemStatus, UploadQueueItemType } from '@/domains/dam/types/UploadQueue'
 import UploadQueueItemEditable from '@/domains/dam/uploadQueue/components/UploadQueueItemEditable.vue'
 import { useUploadQueueItemFactory } from '@/domains/dam/uploadQueue/factory/UploadQueueItemFactory'
+import { commonT } from '@/plugins/i18n'
 
 vi.mock('@/domains/dam/composables/commonAdminCoreDamOptions', async (importOriginal) => ({
   ...(await importOriginal<object>()),
@@ -143,6 +145,33 @@ describe('the refresh button of an uploaded row still without its metadata', () 
 
     await elapse()
     expect(refreshButton().exists()).toBe(false)
+  })
+})
+
+// What the settlement leaves of a row whose file the server finished while its asset could not be read: uploaded,
+// without its metadata, and warned that its data could not be loaded (N-Z21 of `uploadSettlement.test.ts`). A row
+// shown so from the start waits as any uploaded row does; the warning offers nothing sooner.
+describe('the buttons of a row shown already uploaded, without its metadata and with a warning', () => {
+  const warned: Partial<UploadQueueItem> = {
+    status: UploadQueueItemStatus.Uploaded,
+    canEditMetadata: false,
+    error: {
+      hasError: true,
+      message: commonT('common.damImage.uploadErrors.readFailed'),
+      assetFileFailReason: AssetFileFailReason.None,
+    },
+  }
+
+  it('are neither refresh nor remove until the row has waited, and both after', async () => {
+    const item = await mountRow(warned)
+    expect(wrapper!.find('.dam-upload-queue__overlay--error').text()).toContain(warned.error!.message)
+    expect(heldWaits()).toEqual([20_000])
+    expect([removeButton().exists(), refreshButton().exists()]).toEqual([false, false])
+
+    await elapse()
+    expect([removeButton().exists(), refreshButton().exists()]).toEqual([true, true])
+    await refreshButton().trigger('click')
+    expect(row().emitted('refreshItem')).toEqual([[{ index: 0, assetId: item.assetId }]])
   })
 })
 

@@ -1509,3 +1509,68 @@ export type { CachedPermissionGroupsParams } from '@/domains/permission/group/co
 export type { CachedAnzuUsersParams } from '@/domains/anzuUser/composables/cachedAnzuUsers'
 export { syncUserAndTimeTracking } from '@/shared/utils/userAndTimeTracking'
 export type { UserAndTimeTrackingData, UserAndTimeTrackingUsers } from '@/shared/types/UserAndTimeTracking'
+
+// DAM upload core (step 5)
+// Named without "image": admin-dam sends them to the endpoint of each asset type.
+export {
+  imageUploadStart as damFileUploadStart,
+  imageUploadChunk as damFileUploadChunk,
+  imageUploadFinish as damFileUploadFinish,
+} from '@/domains/dam/api/damImageApi'
+export {
+  useUpload as useDamUpload,
+  uploadStop,
+  uploadValidationMessage,
+} from '@/domains/dam/uploadQueue/composables/uploadService'
+export { adminDamUploadPreset } from '@/domains/dam/uploadQueue/presets/uploadPresets'
+export type {
+  UploadHash,
+  UploadMessages,
+  UploadPreset,
+  UploadProgressCallback,
+  UploadRun,
+  UploadRunRequests,
+  UploadSide,
+} from '@/domains/dam/uploadQueue/presets/uploadPresets'
+export { createUploadQueueCore, UPLOAD_QUEUE_ITEM_CHUNK_SIZE } from '@/domains/dam/uploadQueue/core/uploadQueueCore'
+export { adminDamImportRun, adminDamQueuePreset } from '@/domains/dam/uploadQueue/presets/queuePresets'
+export {
+  fillAuthors as uploadQueueFillAuthors,
+  fillCustomDataValue as uploadQueueFillCustomDataValue,
+  fillKeywords as uploadQueueFillKeywords,
+} from '@/domains/dam/uploadQueue/core/uploadQueueFill'
+export type {
+  UploadQueueCore,
+  UploadQueuePreset,
+  UploadQueueSettlementProfile,
+} from '@/domains/dam/uploadQueue/core/uploadQueueCoreTypes'
+
+// DAM upload components (step 5)
+export { default as ADamAssetImage } from '@/domains/dam/assetDetail/components/AssetImage.vue'
+export { default as ADamAssetImageMetaIcons } from '@/domains/dam/assetDetail/components/AssetImageMetaIcons.vue'
+export { default as ADamAssetFileFailReasonChip } from '@/domains/dam/assetDetail/components/AssetFileFailReasonChip.vue'
+export { useAssetFileFailReason as useDamAssetFileFailReason } from '@/domains/dam/assetDetail/composables/assetFileFailReason'
+export { default as ADamAssetCustomMetadataForm } from '@/domains/dam/assetDetail/components/AssetCustomMetadataForm.vue'
+export { default as ADamUploadQueueStopButton } from '@/domains/dam/uploadQueue/components/UploadQueueButtonStop.vue'
+export { default as ADamKeywordRemoteAutocompleteWithCached } from '@/domains/dam/keyword/components/KeywordRemoteAutocompleteWithCached.vue'
+export { default as ADamAuthorRemoteAutocompleteWithCached } from '@/domains/dam/author/components/AuthorRemoteAutocompleteWithCached.vue'
+export { default as ADamAuthorCachedChip } from '@/domains/dam/author/components/AuthorRemoteAutocompleteCachedAuthorChip.vue'
+export { default as ADamAuthorCreateButton } from '@/domains/dam/author/components/AuthorCreateButton.vue'
+export { useDamCachedAuthors } from '@/domains/dam/author/composables/cachedAuthors'
+export { useDamCachedKeywords } from '@/domains/dam/keyword/composables/cachedKeywords'
+export { useExtSystemIdForCached } from '@/domains/dam/composables/extSystemIdForCached'
+export { useDamKeywordAssetTypeConfig } from '@/domains/dam/keyword/composables/damKeywordConfig'
+export { useDamAuthorAssetTypeConfig } from '@/domains/dam/author/composables/damAuthorConfig'
+export { useFormatAndSizeCheck } from '@/domains/ui/file/composables/formatAndSizeCheck'
+export { UploadQueueSuggestionsKey } from '@/domains/dam/uploadQueue/components/uploadQueueBindings'
+export type {
+  DamFieldsDisabledAs,
+  UploadQueueSuggestionsLookup,
+} from '@/domains/dam/uploadQueue/components/uploadQueueBindings'
+export { default as ADamUploadQueueItem } from '@/domains/dam/uploadQueue/components/UploadQueueItemEditable.vue'
+export { default as ADamUploadQueueList } from '@/domains/dam/uploadQueue/components/UploadQueueEditable.vue'
+export { default as ADamUploadQueueMassOperations } from '@/domains/dam/uploadQueue/components/AssetQueueSelectedSidebar.vue'
+export type {
+  UploadQueueListBinding,
+  UploadQueueMassOperationsBinding,
+} from '@/domains/dam/uploadQueue/components/uploadQueueBindings'

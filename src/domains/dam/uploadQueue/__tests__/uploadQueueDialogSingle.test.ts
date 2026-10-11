@@ -42,6 +42,7 @@ vi.mock('@/domains/dam/api/damAssetApi', () => ({
   updateAssetMetadata: vi.fn(),
   updateAssetAuthors: vi.fn(),
   bulkUpdateAssetsAuthors: vi.fn(),
+  showMetadataSaveError: vi.fn(),
 }))
 vi.mock('@/domains/dam/composables/commonAdminCoreDamOptions', async (importOriginal) => ({
   ...(await importOriginal<object>()),
@@ -323,9 +324,9 @@ describe('the sidebar of the single-file upload dialog', () => {
     expect((refreshButton().element as HTMLButtonElement).disabled).toBe(false)
   })
 
-  // The file is a duplicate whose original cannot be read: the press fails the item, and the dialog offers no
-  // refresh on a failed item. "Try again" would be said about a button that has just gone.
-  it('says nothing when the refresh itself fails the item, and no longer offers it', async () => {
+  // The file is a duplicate whose original cannot be read: the press fails the item. A failed item whose refresh
+  // may still help is offered it, as its row in the queue is (finding 25); the press says nothing of its own failure.
+  it('says nothing when the refresh itself fails the item, and still offers it', async () => {
     const item = await mountSidebarOfUnfinished()
     fetchAsset.mockImplementation(async () => ({
       ...asset(),
@@ -344,7 +345,35 @@ describe('the sidebar of the single-file upload dialog', () => {
 
     expect(fetchAssetByFileId).toHaveBeenCalledTimes(1)
     expect(showWarningT).not.toHaveBeenCalled()
-    expect(refreshButton().exists()).toBe(false)
+    expect(refreshButton().exists()).toBe(true)
+  })
+
+  // Finding 25: as the row of the queue, a failed item whose refresh may still help has it, and the press reads again.
+  it('offers it to a failed item whose refresh may still help, and reads again when pressed', async () => {
+    const item = await mountSidebarOfUnfinished()
+    fetchAsset.mockImplementation(async () => ({
+      ...asset(),
+      mainFile: {
+        ...asset().mainFile,
+        originAssetFile: 'file-original',
+        fileAttributes: { status: AssetFileProcessStatus.Duplicate },
+      },
+    }))
+    fetchAssetByFileId.mockRejectedValueOnce(new Error('502 Bad Gateway'))
+    await elapse()
+    await refreshButton().trigger('click')
+    await vi.waitFor(() => expect(item.status).toBe(UploadQueueItemStatus.Failed))
+    await flushPromises()
+    expect(useUploadQueuesStore().refreshMayHelp(item)).toBe(true)
+    expect(refreshButton().exists()).toBe(true)
+    const readsBefore = fetchAsset.mock.calls.length
+    fetchAssetByFileId.mockResolvedValue(asset())
+
+    await refreshButton().trigger('click')
+    await flushPromises()
+
+    expect(fetchAsset.mock.calls.length).toBeGreaterThan(readsBefore)
+    expect(fetchAssetByFileId).toHaveBeenCalledTimes(2)
   })
 
   // An uploaded item still without its metadata keeps its status when it is taken out of the queue: the sidebar

@@ -11,8 +11,9 @@ import { useDamNotifications } from '@/domains/dam/composables/damNotifications'
 import { useDamNotificationsConnection } from '@/domains/dam/composables/damNotificationsConnection'
 import { type DamNotification, DamNotificationName } from '@/domains/dam/composables/damNotificationsEventBus'
 import { getAssetTypeByMimeType } from '@/domains/dam/uploadQueue/utils/mimeTypeHelper'
-import { uploadStop, useUpload } from '@/domains/dam/uploadQueue/composables/uploadService'
-import { createUploadSettlement } from '@/domains/dam/uploadQueue/settlement/uploadSettlement'
+import { createUploadQueueCore, UPLOAD_QUEUE_ITEM_CHUNK_SIZE } from '@/domains/dam/uploadQueue/core/uploadQueueCore'
+import type { UploadQueueSettlementProfile } from '@/domains/dam/uploadQueue/core/uploadQueueCoreTypes'
+import { libraryQueuePreset } from '@/domains/dam/uploadQueue/presets/queuePresets'
 import {
   type UploadReadOptions,
   type UploadRefreshOutcome,
@@ -21,7 +22,7 @@ import {
 } from '@/domains/dam/uploadQueue/settlement/uploadSettlementTypes'
 import { useDamCachedKeywords } from '@/domains/dam/keyword/composables/cachedKeywords'
 import { damFileTypeFix } from '@/domains/ui/file/utils/fileType'
-import axios, { type AxiosRequestConfig } from 'axios'
+import type { AxiosRequestConfig } from 'axios'
 import type { DocId, DocIdNullable, IntegerId } from '@/shared/types/common'
 import { type AssetDetailItemDto, DamAssetType, type DamAssetTypeType } from '@/domains/dam/types/Asset'
 import type { AssetFileFailReasonType } from '@/domains/dam/types/AssetFile'
@@ -29,7 +30,6 @@ import {
   type UploadQueue,
   type UploadQueueItem,
   UploadQueueItemStatus,
-  type UploadQueueItemStatusType,
   UploadQueueItemType,
   type UploadQueueKey,
 } from '@/domains/dam/types/UploadQueue'
@@ -37,41 +37,30 @@ import { AnzuApiResponseCodeError } from '@/shared/error/AnzuApiResponseCodeErro
 import { isArray, isUndefined } from '@/shared/utils/common'
 import { commonT } from '@/plugins/i18n'
 import { defineStore } from 'pinia'
-import { getCurrentScope, onScopeDispose, reactive, ref, toRaw } from 'vue'
-
-const QUEUE_MAX_PARALLEL_UPLOADS = 2
-const QUEUE_CHUNK_SIZE = 10485760
-
-// An answer of the server that says no (4xx). The requests of an upload reject with the error of axios as it is.
-const isRefusal = (error: unknown) => {
-  const status = axios.isAxiosError(error) ? error.response?.status : apiErrorStatus(error)
-
-  return !isUndefined(status) && status >= 400 && status < 500
-}
-
-// A file name is not unique, nor is an asset added twice: rows that share a `:key` have Vue patch the wrong one.
-let queueItemSequence = 0
-const uniqueQueueItemKey = (prefix: string) => `${prefix}_${++queueItemSequence}`
+import { getCurrentScope, ref } from 'vue'
 
 export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () => {
   const { addToCachedKeywords, fetchCachedKeywords } = useDamCachedKeywords()
   const { addToCachedAuthors, fetchCachedAuthors } = useDamCachedAuthors()
 
   const queues = ref<Map<UploadQueueKey, UploadQueue>>(new Map())
-  // The failed rows a refresh may still change, as the settlement tells them: given up by the client after their
-  // finish request went out and asked about since, or left without the original of their duplicate. Reactive,
-  // for the rows that show it.
-  const refreshable = reactive(new WeakSet<UploadQueueItem>())
 
   const { createDefault } = useUploadQueueItemFactory()
 
-  const { damClient, endPointAsset } = useCommonAdminCoreDamOptions()
+  // The DAM configuration each queue was made under: its files are sent, and its rows asked about, by the client
+  // and at the addresses of that configuration. A queue the store was given no name for is under `default`.
+  const configNames = new Map<UploadQueueKey, string>()
+  const configOf = (queueKey?: UploadQueueKey) =>
+    (isUndefined(queueKey) ? undefined : configNames.get(queueKey)) ?? 'default'
+  // Read when a request is made, by the queue it is for.
+  const damOf = (queueKey?: UploadQueueKey) => useCommonAdminCoreDamOptions(configOf(queueKey))
 
   // The poll asks for as long as a row waits: the settlement says of each of its requests whether a failure of it
   // is the first of a streak, and only that one is reported.
 
   // An asset that does not exist is an answer, which the settlement counts; anything else is a read that failed.
   const readAsset = async (assetId: DocId, options?: UploadReadOptions) => {
+    const { damClient, endPointAsset } = damOf(options?.queueKey)
     try {
       // Called as ever unless it is to be quiet.
       return options?.report === false
@@ -85,6 +74,7 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
 
   // The list goes to the client as it is, and reports nothing by itself.
   const readAssets = async (licenceId: IntegerId, assetIds: DocId[], options?: UploadReadOptions) => {
+    const { damClient, endPointAsset } = damOf(options?.queueKey)
     try {
       return await fetchAssetListByIds(damClient, endPointAsset, assetIds, licenceId)
     } catch (failure) {
@@ -106,9 +96,9 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
   }
 
   // What becomes of a row once its file is with the server: the poll of its queue, the notifications and the
-  // refresh button all go through here.
-  const settlement = createUploadSettlement({
-    queues: () => queues.value.entries(),
+  // refresh button all go through here. The core counts the queue and starts the next row after a final state, and
+  // keeps the failed rows a refresh may still change.
+  const profile: UploadQueueSettlementProfile = {
     roleOf: (row) => (row.type === UploadQueueItemType.Asset ? UploadRowRole.Copy : UploadRowRole.Upload),
     policyFor: () => ({ reader: 'asset', settleOn: 'read', duplicate: 'becomeOriginal', metadata: 'load' }),
     // By the asset alone, whatever the file an event names.
@@ -116,7 +106,10 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
     readers: {
       asset: readAsset,
       assets: readAssets,
-      duplicateOriginAsset: (originFileId) => fetchAssetByFileId(damClient, endPointAsset, originFileId),
+      duplicateOriginAsset: async (originFileId, options) => {
+        const { damClient, endPointAsset } = damOf(options?.queueKey)
+        return fetchAssetByFileId(damClient, endPointAsset, originFileId)
+      },
     },
     caches: {
       addAuthors: addToCachedAuthors,
@@ -129,22 +122,30 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
       readFailed: () => commonT('common.damImage.uploadErrors.readFailed'),
       assetMissing: () => commonT('common.damImage.uploadErrors.unknownError'),
     },
-    hooks: {
-      onRowFinal: (queueKey) => {
-        recalculateQueueCounts(queueKey)
-        processUpload(queueKey)
-      },
-      onRefreshMayHelp: (_queueKey, row, mayHelp) => {
-        if (mayHelp) refreshable.add(toRaw(row))
-        else refreshable.delete(toRaw(row))
-      },
-    },
     connection: useDamNotificationsConnection(),
-  })
+  }
+
+  // Every row of this store is uploaded through the library's upload service. Made in the scope of the store: a
+  // store disposed of leaves no timer of a poll, no listener for the tab or for the socket.
+  const core = createUploadQueueCore(libraryQueuePreset({ queues, settlement: profile, configOf }))
+  const { settlement } = core
+
+  // The key of a queue is one widget's, and so of one configuration: a queue that has rows takes none under another
+  // name. Refused, not sent under the name the queue has: that is not where the caller said. The queue is named
+  // with its row, and nothing is awaited between the two: of two adds that overlap, the one whose row is in the
+  // queue first has named it. The row starts at once, under that name.
+  function addRowUnder(queueKey: UploadQueueKey, configName: string, item: UploadQueueItem) {
+    const known = configNames.get(queueKey)
+    if (!isUndefined(known) && known !== configName && core.getQueueItems(queueKey).length > 0) {
+      throw new Error(
+        `useUploadQueuesStore: the queue "${queueKey}" has rows under the DAM configuration "${known}", none is added under "${configName}".`
+      )
+    }
+    configNames.set(queueKey, configName)
+    core.addRow(queueKey, item)
+  }
 
   const storeScope = getCurrentScope()
-  // A store disposed of leaves nothing behind: no timer of a poll, no listener for the tab or for the socket.
-  if (storeScope) onScopeDispose(() => settlement.dispose())
 
   // Without the file a notification names: the rows are matched by their asset alone, and a read asked for
   // about a file that is not the main one would take the state of that file from the notification unchecked.
@@ -189,25 +190,12 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
     else listen()
   }
 
-  function getQueue(queueKey: UploadQueueKey) {
-    if (queues.value.has(queueKey)) {
-      return queues.value.get(queueKey)
-    }
-    return null
-  }
-
-  function getQueueItems(queueKey: UploadQueueKey) {
-    if (queues.value.has(queueKey)) {
-      return queues.value.get(queueKey)?.items || []
-    }
-    return []
-  }
-
   async function addByCopyToLicence(
     queueKey: UploadQueueKey,
     extSystem: IntegerId,
     assetLicence: IntegerId,
-    assets: DocId[]
+    assets: DocId[],
+    configName = 'default'
   ) {
     const { getDamConfigExtSystem } = useDamConfigState()
 
@@ -215,143 +203,57 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
     if (isUndefined(configExtSystem)) {
       throw new Error('useUploadQueuesStore.addByCopyToLicence: Ext system must be initialised.')
     }
+    // Thrown here for a configuration the application has not got, before anything is done for it.
+    useCommonAdminCoreDamOptions(configName)
     listenToNotifications()
     for (const assetId of assets) {
       const queueItem = createDefault(
-        uniqueQueueItemKey('asset_' + assetId),
+        core.uniqueKey('asset_' + assetId),
         UploadQueueItemType.Asset,
         UploadQueueItemStatus.Processing,
         DamAssetType.Image, // only image now
-        QUEUE_CHUNK_SIZE,
+        UPLOAD_QUEUE_ITEM_CHUNK_SIZE,
         assetLicence
       )
       queueItem.assetId = assetId
-      createQueue(queueKey)
-      addQueueItem(queueKey, queueItem)
-      recalculateQueueCounts(queueKey)
-      processUpload(queueKey)
+      addRowUnder(queueKey, configName, queueItem)
       // Nothing is uploaded here: the copy waits for the server from the start.
-      const added = getQueueItems(queueKey).at(-1)
-      if (added) settlement.track(queueKey, added)
+      const added = core.getQueueItems(queueKey).at(-1)
+      if (added) core.track(queueKey, added)
     }
   }
 
-  async function addByFiles(queueKey: UploadQueueKey, extSystem: IntegerId, assetLicence: IntegerId, files: File[]) {
+  async function addByFiles(
+    queueKey: UploadQueueKey,
+    extSystem: IntegerId,
+    assetLicence: IntegerId,
+    files: File[],
+    configName = 'default'
+  ) {
     const { getDamConfigExtSystem } = useDamConfigState()
 
     const configExtSystem = getDamConfigExtSystem(extSystem)
     if (isUndefined(configExtSystem)) {
       throw new Error('useUploadQueuesStore.addByFiles: Ext system must be initialised.')
     }
+    // Thrown here for a configuration the application has not got, before anything is done for it.
+    useCommonAdminCoreDamOptions(configName)
     listenToNotifications()
     for await (const file of files) {
       const type = getAssetTypeByMimeType(damFileTypeFix(file), configExtSystem)
       if (!type || type !== DamAssetType.Image) continue // only image now
       const queueItem = createDefault(
-        uniqueQueueItemKey('file_' + file.name),
+        core.uniqueKey('file_' + file.name),
         UploadQueueItemType.File,
         UploadQueueItemStatus.Waiting,
         type,
-        QUEUE_CHUNK_SIZE,
+        UPLOAD_QUEUE_ITEM_CHUNK_SIZE,
         assetLicence
       )
       queueItem.file = file
       queueItem.displayTitle = file.name
-      createQueue(queueKey)
-      addQueueItem(queueKey, queueItem)
-      recalculateQueueCounts(queueKey)
-      processUpload(queueKey)
+      addRowUnder(queueKey, configName, queueItem)
     }
-  }
-
-  function addQueueItem(queueKey: UploadQueueKey, item: UploadQueueItem) {
-    const queue = queues.value.get(queueKey)
-    if (!queue) return
-    queue.items.push(item)
-  }
-
-  function createQueue(queueKey: UploadQueueKey) {
-    if (!queues.value.has(queueKey)) {
-      queues.value.set(queueKey, {
-        items: [],
-        totalCount: 0,
-        processedCount: 0,
-        fileInputKey: 0,
-        suggestions: { newKeywordNames: new Set<string>(), newAuthorNames: new Set<string>() },
-      })
-    }
-  }
-
-  function recalculateQueueCounts(queueKey: UploadQueueKey) {
-    const queue = queues.value.get(queueKey)
-    if (!queue) return
-    queue.totalCount = queue.items.length
-    queue.processedCount =
-      getQueueItemsByStatus(queueKey, UploadQueueItemStatus.Uploaded).length +
-      getQueueItemsByStatus(queueKey, UploadQueueItemStatus.Failed).length
-  }
-
-  function getQueueItemsByStatus(queueKey: UploadQueueKey, status: UploadQueueItemStatusType) {
-    const queue = queues.value.get(queueKey)
-    if (!queue) return []
-    return queue.items.filter((item) => item.status === status)
-  }
-
-  function processUpload(queueKey: UploadQueueKey) {
-    const waitingItems = getQueueItemsByStatus(queueKey, UploadQueueItemStatus.Waiting)
-    if (waitingItems.length === 0) {
-      // upload finished
-      return
-    }
-    const uploadingCount = getQueueItemsByStatus(queueKey, UploadQueueItemStatus.Uploading).length
-    const freeSlots = QUEUE_MAX_PARALLEL_UPLOADS - uploadingCount
-    for (let i = 0; i < freeSlots; i++) {
-      const item = waitingItems[i]
-      if (item) queueItemUploadStart(item, queueKey)
-    }
-  }
-
-  async function queueItemUploadStart(item: UploadQueueItem, queueKey: UploadQueueKey) {
-    const { upload, uploadInit, stopSpeedCheck, finishAttempted } = useUpload(
-      item,
-      (progress: number, speed: number, estimate: number) => {
-        setUploadSpeed(item, progress, speed, estimate)
-      }
-    )
-    try {
-      await uploadInit()
-      await upload()
-      // Not a row its notification has settled meanwhile, nor a stopped one.
-      if (item.status === UploadQueueItemStatus.Processing) settlement.track(queueKey, item)
-      processUpload(queueKey)
-    } catch (e) {
-      stopSpeedCheck()
-      // Failed before its request was: only its notification does that, and the server takes a failed file
-      // nowhere from there.
-      const failedByServer = item.status === UploadQueueItemStatus.Failed
-      // The processed notification can beat the answer to the finish request: a row it has settled stays
-      // uploaded, whatever became of that request.
-      if (item.status !== UploadQueueItemStatus.Uploaded) {
-        item.error.hasError = true
-        item.status = UploadQueueItemStatus.Failed
-        // Its metadata event comes while the file still sends, and had enabled the form.
-        item.canEditMetadata = false
-      }
-      // The finish request went out, so the server may complete the file all the same: the row is asked about
-      // for as long as it stays in the queue. Not when the server answered that request with a refusal: it is
-      // sent once, and a file the server has refused to finish it will not finish.
-      if (finishAttempted() && !failedByServer && !isRefusal(e) && item.status === UploadQueueItemStatus.Failed) {
-        settlement.track(queueKey, item, { clientFailed: true })
-      }
-      recalculateQueueCounts(queueKey)
-      processUpload(queueKey)
-    }
-  }
-
-  function setUploadSpeed(item: UploadQueueItem, progress: number, speed: number, estimate: number) {
-    item.progress.progressPercent = progress
-    item.progress.remainingTime = estimate
-    item.progress.speed = speed
   }
 
   // The names of before the settlement, kept for their callers until the queues are unified.
@@ -376,59 +278,20 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
     settlement.settleKnownFailed({ assetId, fileId: null }, failReason)
   }
 
-  /**
-   * Whether a refresh may still change a failed row: its finish request went out before the client gave it up and
-   * the server has said nothing final about it since, or its file is a duplicate whose original could not be
-   * read. A row that failed otherwise has no use for refresh.
-   */
-  function refreshMayHelp(item: UploadQueueItem) {
-    return item.status === UploadQueueItemStatus.Failed && refreshable.has(toRaw(item))
-  }
-
   /** The refresh button of a row: asks what became of the file now, and settles the rows of the asset by it. */
   function refreshAsset(assetId: DocId): Promise<UploadRefreshOutcome> {
     return settlement.refreshAsset({ assetId, fileId: null })
   }
 
-  // A removed item is stopped as a stopped upload is: the poll no longer asks about it, and a read already on its
-  // way finds it gone. An upload still sending went on unseen, then was polled, and no longer counted against the
-  // parallel limit.
-  function stopRemoved(item: UploadQueueItem) {
-    settlement.untrack(item)
-    const active: UploadQueueItemStatusType[] = [
-      UploadQueueItemStatus.Waiting,
-      UploadQueueItemStatus.Uploading,
-      UploadQueueItemStatus.Processing,
-    ]
-    if (!active.includes(item.status)) return
-    item.status = UploadQueueItemStatus.Stop
-    if (item.latestChunkAbortController) uploadStop(item.latestChunkAbortController)
-  }
-
-  function removeByIndex(queueKey: UploadQueueKey, index: number) {
-    const queue = queues.value.get(queueKey)
-    if (!queue || !queue.items[index]) return
-    stopRemoved(queue.items[index])
-    queue.items.splice(index, 1)
-    recalculateQueueCounts(queueKey)
-  }
-
   async function stopItemUpload(queueKey: UploadQueueKey, queueItem: UploadQueueItem, _index?: number) {
-    const queue = queues.value.get(queueKey)
-    if (!queue || queue.items.length === 0) return
-    queueItem.status = UploadQueueItemStatus.Stop
-    if (queueItem.latestChunkAbortController) {
-      uploadStop(queueItem.latestChunkAbortController)
-    }
-    // By identity: the position the caller saw the row at is another row's once the list has changed.
-    const currentIndex = queue.items.indexOf(queueItem)
-    if (currentIndex > -1) removeByIndex(queueKey, currentIndex)
-    processUpload(queueKey)
+    core.stopItemUpload(queueKey, queueItem)
   }
 
-  async function updateFromDetail(asset: AssetDetailItemDto) {
+  /** `configName`: the DAM configuration the detail was saved under. */
+  async function updateFromDetail(asset: AssetDetailItemDto, configName?: string) {
     const { updateNewNames, getAuthorConflicts } = useAssetSuggestions()
     try {
+      const { damClient, endPointAsset } = useCommonAdminCoreDamOptions(configName)
       const assetRes = await fetchAsset(damClient, endPointAsset, asset.id)
       queues.value.forEach((queue, queueKey) => {
         queue.items.forEach((item) => {
@@ -446,7 +309,7 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
             addToCachedAuthors(item.authorConflicts)
           }
         })
-        recalculateQueueCounts(queueKey)
+        core.recalculateQueueCounts(queueKey)
         fetchCachedAuthors()
         fetchCachedKeywords()
       })
@@ -455,86 +318,9 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
     }
   }
 
-  function getQueueTotalCount(queueKey: UploadQueueKey) {
-    const queue = queues.value.get(queueKey)
-    if (!queue) return 0
-    return queue.totalCount
-  }
-
-  function getQueueProcessedCount(queueKey: UploadQueueKey) {
-    const queue = queues.value.get(queueKey)
-    if (!queue) return 0
-    return queue.processedCount
-  }
-
-  function stopUpload(queueKey: UploadQueueKey) {
-    const queue = queues.value.get(queueKey)
-    if (!queue) return
-    if (queue.items.length === 0) {
-      // Emptied row by row, the queue still has its idle poll: it goes with the queue.
-      settlement.dropQueue(queueKey)
-      return
-    }
-    const currentItems = getQueueItemsByStatus(queueKey, UploadQueueItemStatus.Uploading)
-    queue.items.forEach((item) => {
-      item.status = UploadQueueItemStatus.Stop
-    })
-    if (currentItems.length > 0) {
-      currentItems.forEach((item) => {
-        if (item.latestChunkAbortController) {
-          uploadStop(item.latestChunkAbortController)
-        }
-      })
-    }
-    clearQueue(queueKey)
-    forceReloadFileInput(queueKey)
-  }
-
-  function forceReloadFileInput(queueKey: UploadQueueKey) {
-    createQueue(queueKey)
-    const queue = queues.value.get(queueKey)
-    if (!queue) return
-    queue.fileInputKey++
-  }
-
-  function getQueueFileInputKey(queueKey: UploadQueueKey) {
-    const queue = queues.value.get(queueKey)
-    if (!queue) return -1
-    return queue.fileInputKey
-  }
-
-  function clearQueue(queueKey: UploadQueueKey) {
-    const queue = queues.value.get(queueKey)
-    if (!queue) return
-    // Before the queue is replaced: its rows are no longer asked about.
-    settlement.dropQueue(queueKey)
-    queues.value.set(queueKey, {
-      items: [],
-      totalCount: 0,
-      processedCount: 0,
-      fileInputKey: getQueueFileInputKey(queueKey) + 1,
-      suggestions: { newKeywordNames: new Set<string>(), newAuthorNames: new Set<string>() },
-    })
-  }
-
-  function getQueueItemsTypes(queueKey: UploadQueueKey) {
-    const types: Array<DamAssetTypeType> = []
-    const queue = queues.value.get(queueKey)
-    if (!queue) return types
-    if (queue.items.length > 0) {
-      for (let i = 0; i < queue.items.length; i++) {
-        if (types.includes(queue.items[i]!.assetType)) {
-          continue
-        }
-        types.push(queue.items[i]!.assetType)
-      }
-    }
-    return types
-  }
-
   return {
-    getQueue,
-    getQueueItems,
+    getQueue: core.getQueue,
+    getQueueItems: core.getQueueItems,
     addByFiles,
     addByCopyToLicence,
     queueItemProcessed,
@@ -542,14 +328,19 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
     queueItemDuplicate,
     queueItemFailed,
     refreshAsset,
-    refreshMayHelp,
-    removeByIndex,
+    /**
+     * Whether a refresh may still change a failed row: its finish request went out before the client gave it up and
+     * the server has said nothing final about it since, or its file is a duplicate whose original could not be
+     * read. A row that failed otherwise has no use for refresh.
+     */
+    refreshMayHelp: core.refreshMayHelp,
+    removeByIndex: core.removeByIndex,
     stopItemUpload,
-    getQueueTotalCount,
-    getQueueProcessedCount,
-    stopUpload,
-    getQueueItemsTypes,
+    getQueueTotalCount: core.getQueueTotalCount,
+    getQueueProcessedCount: core.getQueueProcessedCount,
+    stopUpload: core.stopUpload,
+    getQueueItemsTypes: core.getQueueItemsTypes,
     updateFromDetail,
-    forceReloadFileInput,
+    forceReloadFileInput: core.forceReloadFileInput,
   }
 })

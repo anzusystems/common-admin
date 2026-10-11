@@ -167,7 +167,7 @@ describe.each([DamAssetType.Audio, DamAssetType.Video, DamAssetType.Document])('
     expect(await outcome(damUploadChunk(dam.client, IMAGE, item, 'file-1', new Blob(['12345']), 5, 0, undefined))).toBe(
       'rejected'
     )
-    expect(await outcome(damUploadFinish(dam.client, ASSET, IMAGE, item, 'sha'))).toBe('rejected')
+    expect(await outcome(damUploadFinish(dam.client, IMAGE, item, 'sha'))).toBe('rejected')
 
     expect(dam.requests).toEqual([])
     expect(item.status).toBe(UploadQueueItemStatus.Uploading)

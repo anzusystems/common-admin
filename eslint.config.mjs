@@ -98,6 +98,17 @@ export default defineConfigWithVueTs(
       'vue/one-component-per-file': 'off',
     },
   },
+  {
+    // Factories: each call makes one component, and the two of a teleport slot share its target.
+    name: 'app/component-factories',
+    files: [
+      'src/domains/remoteAutocomplete/composables/createRemoteAutocomplete.ts',
+      'src/domains/system/appShell/composables/teleportSlot.ts',
+    ],
+    rules: {
+      'vue/one-component-per-file': 'off',
+    },
+  },
   ...vuetify.configs['flat/recommended-v4'],
   // Derives the disabled-rule list from .oxlintrc.json, so enabling a rule in
   // oxlint automatically stops eslint from running it.

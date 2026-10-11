@@ -18,6 +18,7 @@ import { fetchImageFile } from '@/domains/dam/api/damImageApi'
 import type { DocId } from '@/shared/types/common'
 import { useAlerts } from '@/domains/system/composables/alerts'
 import { useAuthHelpers } from '@/domains/auth/composables/defineAuth'
+import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 
 const props = withDefaults(
   defineProps<{
@@ -26,9 +27,11 @@ const props = withDefaults(
     configName?: string
   }>(),
   {
-    configName: 'default',
+    configName: undefined,
   }
 )
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const damConfigName = useDamConfigName(props.configName)
 
 const { t } = useI18n()
 const { showErrorsDefault } = useAlerts()
@@ -38,8 +41,7 @@ const assetDetailStore = useAssetDetailStore()
 
 const { pagination } = usePagination(SORT_BY_ID)
 
-// eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { damClient, endPointImage, endPointRoi, imageRotateAcl } = useCommonAdminCoreDamOptions(props.configName)
+const { damClient, endPointImage, endPointRoi, imageRotateAcl } = useCommonAdminCoreDamOptions(damConfigName)
 const { canSafeHelper } = useAuthHelpers()
 // The endpoint refuses the rotation without it.
 const rotateAllowed = computed(() => isNull(imageRotateAcl) || canSafeHelper(imageRotateAcl, undefined, 'rotate'))
@@ -161,7 +163,7 @@ onMounted(async () => {
   <AssetFileRotate
     v-if="imageRoiStore.imageFile && rotateAllowed"
     :image-id="imageRoiStore.imageFile.id"
-    :config-name="configName"
+    :config-name="damConfigName"
     class="mx-2"
     @after-rotate="afterRotate"
   />

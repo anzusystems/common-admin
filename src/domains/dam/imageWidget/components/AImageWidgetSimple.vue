@@ -8,6 +8,7 @@ import { useImageActions } from '@/domains/dam/imageWidget/composables/imageActi
 import type { IntegerIdNullable } from '@/shared/types/common'
 import { useAlerts } from '@/domains/system/composables/alerts'
 import { useI18n } from 'vue-i18n'
+import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 
 const props = withDefaults(
   defineProps<{
@@ -28,7 +29,7 @@ const props = withDefaults(
     sourceLabel?: string | undefined
   }>(),
   {
-    configName: 'default',
+    configName: undefined,
     label: undefined,
     image: undefined,
     width: undefined,
@@ -44,11 +45,12 @@ const props = withDefaults(
     sourceLabel: undefined,
   }
 )
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const damConfigName = useDamConfigName(props.configName)
 
 const { showErrorsDefault } = useAlerts()
 
-// eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const imageOptions = useCommonAdminImageOptions(props.configName)
+const imageOptions = useCommonAdminImageOptions(damConfigName)
 const { imageClient, imageApi } = imageOptions
 const { widgetImageToDamImageUrl } = useImageActions(imageOptions)
 

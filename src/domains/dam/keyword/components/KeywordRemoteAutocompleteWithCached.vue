@@ -21,6 +21,9 @@ import { useDamConfigState } from '@/domains/dam/config/composables/damConfigSta
 import ARow from '@/domains/ui/components/ARow.vue'
 import { useKeywordInnerFilter } from '@/domains/dam/keyword/filter/KeywordFilter'
 import { FilterInnerConfigKey, FilterInnerDataKey } from '@/domains/filters/utils/filterInjectionKeys'
+import { useAclAllowed } from '@/domains/auth/composables/aclAllowed'
+import type { DamFieldsDisabledAs } from '@/domains/dam/uploadQueue/components/uploadQueueBindings'
+import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 
 const props = withDefaults(
   defineProps<{
@@ -34,6 +37,10 @@ const props = withDefaults(
     clearable?: boolean
     dataCy?: string
     validationScope?: ValidationScope
+    /** While disabled: the chips of the keywords (today's library), or the input switched off. */
+    disabledAs?: DamFieldsDisabledAs
+    /** The DAM configuration to work under. Left out: that of the component it is in, else `default`. */
+    configName?: string
   }>(),
   {
     label: undefined,
@@ -44,11 +51,15 @@ const props = withDefaults(
     clearable: false,
     dataCy: undefined,
     validationScope: undefined,
+    disabledAs: 'chips',
+    configName: undefined,
   }
 )
 const emit = defineEmits<{
   (e: 'update:modelValue', data: DocId | null | DocId[]): void
 }>()
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const damConfigName = useDamConfigName(props.configName)
 
 const modelValueComputed = computed({
   get() {
@@ -76,7 +87,8 @@ const rules = {
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const v$ = useVuelidate(rules, { modelValueComputed }, { $scope: props.validationScope })
 
-const { damClient, endPointKeyword } = useCommonAdminCoreDamOptions()
+const { damClient, endPointKeyword, keywordCreateAcl } = useCommonAdminCoreDamOptions(damConfigName)
+const createAllowed = useAclAllowed(keywordCreateAcl ?? undefined)
 const { getDamConfigExtSystem } = useDamConfigState()
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const configExtSystem = getDamConfigExtSystem(props.extSystem)
@@ -85,7 +97,7 @@ if (isUndefined(configExtSystem)) {
 }
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { fetchItemsMinimal } = useKeywordSelectActions(props.extSystem)
+const { fetchItemsMinimal } = useKeywordSelectActions(props.extSystem, damConfigName)
 
 const { filterData, filterConfig } = useKeywordInnerFilter()
 provide(FilterInnerConfigKey, filterConfig)
@@ -140,16 +152,19 @@ const removeLastComma = (value: string) => {
 }
 
 const onEnterKeyup = () => {
+  if (!createAllowed.value) return
   const value = removeLastComma(search.value)
   createOrSelectKeyword(value)
 }
 
 const onCommaKeyup = () => {
+  if (!createAllowed.value) return
   const value = removeLastComma(search.value)
   createOrSelectKeyword(value)
 }
 
 const showAdd = computed(() => {
+  if (!createAllowed.value) return false
   if (loadingLocal.value) return false
   if (search.value.length < 2 || search.value.length > 255) return false
   if (fetchedItemsMinimal.value.size === 0) return true
@@ -162,7 +177,7 @@ const showAdd = computed(() => {
 <template>
   <div class="d-flex">
     <ARow
-      v-if="disabled && multiple"
+      v-if="disabled && disabledAs === 'chips' && multiple"
       :title="label"
     >
       <KeywordRemoteAutocompleteCachedKeywordChip
@@ -175,7 +190,7 @@ const showAdd = computed(() => {
       />
     </ARow>
     <ARow
-      v-else-if="disabled && !multiple"
+      v-else-if="disabled && disabledAs === 'chips' && !multiple"
       :title="label"
     >
       <KeywordRemoteAutocompleteCachedKeywordChip
@@ -198,6 +213,7 @@ const showAdd = computed(() => {
       :fetch-items-minimal="fetchItemsMinimal"
       :multiple="multiple"
       :clearable="clearable"
+      :disabled="disabled || undefined"
       filter-by-field="text"
       :filter-sort-by="null"
       item-title="name"

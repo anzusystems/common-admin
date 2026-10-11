@@ -6,6 +6,7 @@ import {
   useCommonAdminCoreDamOptionsGlobal,
   useCommonAdminCoreDamOptions,
 } from '@/domains/dam/composables/commonAdminCoreDamOptions'
+import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 const props = withDefaults(
   defineProps<{
     assetId?: DocIdNullable
@@ -13,13 +14,14 @@ const props = withDefaults(
   }>(),
   {
     assetId: null,
-    configName: 'default',
+    configName: undefined,
   }
 )
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const damConfigName = useDamConfigName(props.configName)
 
 const { adminDomain } = useCommonAdminCoreDamOptionsGlobal()
-// eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { editAssetLabel } = useCommonAdminCoreDamOptions(props.configName)
+const { editAssetLabel } = useCommonAdminCoreDamOptions(damConfigName)
 
 const href = computed(() => {
   return adminDomain + '/asset/' + props.assetId

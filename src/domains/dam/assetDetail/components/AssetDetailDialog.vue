@@ -1,20 +1,16 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
-import { useTheme } from '@/domains/system/composables/themeSettings'
-import { AssetDetailTabImageWithRoi, useAssetDetailStore } from '@/domains/dam/assetDetail/store/assetDetailStore'
-import { DamAssetStatusDefault, DamAssetType, DamAssetTypeDefault } from '@/domains/dam/types/Asset'
-import AssetDetailDialogLoader from '@/domains/dam/assetDetail/components/AssetDetailDialogLoader.vue'
-import AssetImage from '@/domains/dam/assetDetail/components/AssetImage.vue'
+import { useAssetDetailStore } from '@/domains/dam/assetDetail/store/assetDetailStore'
+import { DamAssetType } from '@/domains/dam/types/Asset'
+import AssetDetailDialogFrame from '@/domains/dam/assetDetail/components/AssetDetailDialogFrame.vue'
 import AssetDetailDialogSidebar from '@/domains/dam/assetDetail/components/AssetDetailDialogSidebar.vue'
-import { assetFileIsImageFile } from '@/domains/dam/types/AssetFile'
-import DamAssetImageRoiSelectLazy from '@/domains/dam/cropper/components/DamAssetImageRoiSelectLazy.vue'
-import { useAuthHelpers } from '@/domains/auth/composables/defineAuth'
+import { assetDetailViewOfAsset } from '@/domains/dam/assetDetail/composables/assetDetailView'
 import type { UploadQueueKey } from '@/domains/dam/types/UploadQueue'
 import type { IntegerId } from '@/shared/types/common'
-import { isNull } from '@/shared/utils/common'
 import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
+import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 
 const props = withDefaults(
   defineProps<{
@@ -23,26 +19,24 @@ const props = withDefaults(
     configName?: string
   }>(),
   {
-    configName: 'default',
+    configName: undefined,
   }
 )
 
 const emit = defineEmits<{
   (e: 'close'): void
 }>()
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const damConfigName = useDamConfigName(props.configName)
 
 const { t } = useI18n()
-const { canSafeHelper } = useAuthHelpers()
-
-const { toolbarColor } = useTheme()
 
 const assetDetailStore = useAssetDetailStore()
-const { asset, dialog, activeTab, loading } = storeToRefs(assetDetailStore)
+const { asset, dialog, loading } = storeToRefs(assetDetailStore)
 
-// eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { simpleAssetSidebarEnabled, roiUpdateAcl } = useCommonAdminCoreDamOptions(props.configName)
-// The endpoint refuses the region's save without it: the region tab then only shows the image.
-const roiEditable = computed(() => isNull(roiUpdateAcl) || canSafeHelper(roiUpdateAcl, undefined, 'roi'))
+const { simpleAssetSidebarEnabled } = useCommonAdminCoreDamOptions(damConfigName)
+
+const view = computed(() => assetDetailViewOfAsset(asset.value, simpleAssetSidebarEnabled))
 
 const closeDialog = () => {
   assetDetailStore.setAsset(null)
@@ -50,191 +44,59 @@ const closeDialog = () => {
   emit('close')
 }
 
-const sidebar = ref(true)
-
-const toggleSidebar = () => {
-  sidebar.value = !sidebar.value
-}
-
-const onImageLoad = () => {
-  // imageLoading.value = false
-}
-
-const assetType = computed(() => {
-  return asset.value?.attributes.assetType || DamAssetTypeDefault
-})
-
-const assetStatus = computed(() => {
-  if (!asset.value) return DamAssetStatusDefault
-  return asset.value.attributes.assetStatus
-})
-
-const isTypeImage = computed(() => {
-  return assetType.value === DamAssetType.Image
-})
-const simpleMode = computed(() => simpleAssetSidebarEnabled && isTypeImage.value)
-const isTypeVideo = computed(() => {
-  return assetType.value === DamAssetType.Video
-})
-const isTypeAudio = computed(() => {
-  return assetType.value === DamAssetType.Audio
-})
-const isTypeDocument = computed(() => {
-  return assetType.value === DamAssetType.Document
-})
-
-const imageProperties = computed(() => {
-  if (asset.value?.mainFile && asset.value.mainFile.links && asset.value.mainFile.links.image_detail) {
-    return {
-      url: asset.value.mainFile.links.image_detail.url,
-      width: asset.value.mainFile.links.image_detail.width,
-      height: asset.value.mainFile.links.image_detail.height,
-      bgColor:
-        assetFileIsImageFile(asset.value.mainFile) &&
-        asset.value.mainFile.imageAttributes &&
-        asset.value.mainFile.imageAttributes.mostDominantColor
-          ? asset.value.mainFile.imageAttributes.mostDominantColor
-          : '#ccc',
-    }
-  }
-  return {
-    url: '',
-    width: 356,
-    height: 200,
-    bgColor: '#ccc',
-  }
-})
 const toolbarTitle = computed(() => {
   if (!asset.value) return ''
   return asset.value.texts.displayTitle
 })
-
-const assetMainFile = computed(() => {
-  return asset.value?.mainFile || undefined
-})
 </script>
 
 <template>
-  <VDialog
-    :model-value="true"
-    fullscreen
-    eager
+  <AssetDetailDialogFrame
+    :loading="loading"
+    :view="view"
+    :ext-system="extSystem"
+    :config-name="damConfigName"
+    @close="closeDialog"
   >
-    <AssetDetailDialogLoader
-      v-if="loading"
-      @close-dialog="closeDialog"
-    />
-    <VCard
-      v-else-if="asset"
-      class="dam-image-detail"
-      :class="{ 'dam-image-detail--sidebar-active': sidebar }"
-    >
-      <div class="dam-image-detail__wrapper d-flex flex-column">
-        <VToolbar
-          :color="toolbarColor"
-          density="compact"
-          :height="64"
-          class="border-b pr-1"
+    <template #title>
+      <div>{{ t('common.damImage.asset.detail.sourceSystem') }}: {{ toolbarTitle }}</div>
+    </template>
+    <template #toolbar-actions>
+      <VBtn
+        :aria-label="t('common.button.close')"
+        icon
+        variant="text"
+        :width="36"
+        :height="36"
+        class="mr-1"
+        @click.stop="closeDialog"
+      >
+        <VIcon icon="mdi-close" />
+        <VTooltip
+          activator="parent"
+          location="bottom"
         >
-          <div class="text-label-large d-flex px-2">
-            <div>{{ t('common.damImage.asset.detail.sourceSystem') }}: {{ toolbarTitle }}</div>
-          </div>
-          <VSpacer />
-          <div class="pr-2">
-            <VBtn
-              :aria-label="t('common.damImage.asset.detail.toggleInfo')"
-              :active="sidebar"
-              :variant="sidebar ? 'flat' : 'text'"
-              :color="sidebar ? 'secondary' : ''"
-              icon
-              class="mr-1"
-              :width="36"
-              :height="36"
-              @click.stop="toggleSidebar"
-            >
-              <VIcon
-                icon="mdi-information-outline"
-                class="d-none d-md-flex"
-              />
-              <VIcon
-                icon="mdi-image-outline"
-                class="d-flex d-md-none"
-              />
-              <VTooltip
-                activator="parent"
-                location="bottom"
-              >
-                {{ t('common.damImage.asset.detail.toggleInfo') }}
-              </VTooltip>
-            </VBtn>
-            <VBtn
-              :aria-label="t('common.button.close')"
-              icon
-              variant="text"
-              :width="36"
-              :height="36"
-              class="mr-1"
-              @click.stop="closeDialog"
-            >
-              <VIcon icon="mdi-close" />
-              <VTooltip
-                activator="parent"
-                location="bottom"
-              >
-                {{ t('common.button.close') }}
-              </VTooltip>
-            </VBtn>
-          </div>
-        </VToolbar>
-        <div class="d-flex w-100 h-100 position-relative dam-image-detail__content">
-          <div class="d-flex w-100 align-center dam-image-detail__left">
-            <div
-              v-if="activeTab === AssetDetailTabImageWithRoi.ROI || simpleMode"
-              class="w-100 h-100 pa-2 d-flex align-center justify-center"
-            >
-              <DamAssetImageRoiSelectLazy
-                :ext-system="extSystem"
-                :config-name="configName"
-                :readonly="!roiEditable"
-              />
-            </div>
-            <div
-              v-else
-              class="w-100 h-100 pa-2 d-flex align-center justify-center"
-            >
-              <AssetImage
-                :asset-type="assetType"
-                :asset-status="assetStatus"
-                :src="imageProperties.url"
-                :background-color="imageProperties.bgColor"
-                :width="imageProperties.width"
-                :height="imageProperties.height"
-                use-component
-                @load="onImageLoad"
-                @error="onImageLoad"
-              />
-            </div>
-          </div>
-          <div class="h-100 d-flex dam-image-detail__sidebar border-s">
-            <AssetDetailDialogSidebar
-              v-if="asset"
-              :key="asset.id"
-              :queue-key="queueKey"
-              :ext-system="extSystem"
-              :config-name="configName"
-              :asset-id="asset.id"
-              :is-video="isTypeVideo"
-              :is-audio="isTypeAudio"
-              :is-image="isTypeImage"
-              :is-document="isTypeDocument"
-              :asset-status="assetStatus"
-              :asset-type="assetType"
-              :asset-main-file-status="assetMainFile ? assetMainFile.fileAttributes.status : undefined"
-              :asset-main-file-fail-reason="assetMainFile ? assetMainFile.fileAttributes.failReason : undefined"
-            />
-          </div>
-        </div>
-      </div>
-    </VCard>
-  </VDialog>
+          {{ t('common.button.close') }}
+        </VTooltip>
+      </VBtn>
+    </template>
+    <template #sidebar="{ view: shown }">
+      <AssetDetailDialogSidebar
+        v-if="shown.id"
+        :key="shown.id"
+        :queue-key="queueKey"
+        :ext-system="extSystem"
+        :config-name="damConfigName"
+        :asset-id="shown.id"
+        :is-video="shown.assetType === DamAssetType.Video"
+        :is-audio="shown.assetType === DamAssetType.Audio"
+        :is-image="shown.assetType === DamAssetType.Image"
+        :is-document="shown.assetType === DamAssetType.Document"
+        :asset-status="shown.assetStatus"
+        :asset-type="shown.assetType"
+        :asset-main-file-status="shown.mainFile ? shown.mainFile.fileAttributes.status : undefined"
+        :asset-main-file-fail-reason="shown.mainFile ? shown.mainFile.fileAttributes.failReason : undefined"
+      />
+    </template>
+  </AssetDetailDialogFrame>
 </template>

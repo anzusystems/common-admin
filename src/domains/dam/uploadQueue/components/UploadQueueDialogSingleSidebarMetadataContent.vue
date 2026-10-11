@@ -2,24 +2,21 @@
 import { useI18n } from 'vue-i18n'
 import { computed, ref } from 'vue'
 import { DamAssetType } from '@/domains/dam/types/Asset'
-import { type AssetFile, assetFileIsImageFile } from '@/domains/dam/types/AssetFile'
 import { useAssetDetailStore } from '@/domains/dam/assetDetail/store/assetDetailStore'
 import { storeToRefs } from 'pinia'
 import AssetCustomMetadataForm from '@/domains/dam/assetDetail/components/AssetCustomMetadataForm.vue'
-import ACopyText from '@/domains/ui/components/ACopyText.vue'
-import { prettyBytes } from '@/shared/utils/file'
-import AssetMetadataImageAttributes from '@/domains/dam/assetDetail/components/AssetMetadataImageAttributes.vue'
+import AssetFileInfoPanel from '@/domains/dam/assetDetail/components/AssetFileInfoPanel.vue'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
 import type { UploadQueueItem } from '@/domains/dam/types/UploadQueue'
 import AuthorRemoteAutocompleteWithCached from '@/domains/dam/author/components/AuthorRemoteAutocompleteWithCached.vue'
 import KeywordRemoteAutocompleteWithCached from '@/domains/dam/keyword/components/KeywordRemoteAutocompleteWithCached.vue'
 import ASystemEntityScope from '@/domains/form/components/ASystemEntityScope.vue'
 import { ADamAssetMetadataValidationScopeSymbol } from '@/domains/dam/composables/uploadValidations'
-import { dateTimePretty } from '@/shared/utils/datetime'
 import { useDamKeywordAssetTypeConfig } from '@/domains/dam/keyword/composables/damKeywordConfig'
 import { useDamAuthorAssetTypeConfig } from '@/domains/dam/author/composables/damAuthorConfig'
 import type { IntegerId } from '@/shared/types/common'
 import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
+import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 
 const props = withDefaults(
   defineProps<{
@@ -28,9 +25,11 @@ const props = withDefaults(
     configName?: string
   }>(),
   {
-    configName: 'default',
+    configName: undefined,
   }
 )
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const damConfigName = useDamConfigName(props.configName)
 
 const { t } = useI18n()
 
@@ -53,14 +52,6 @@ const assetType = computed(() => {
   return DamAssetType.Image
 })
 
-const isTypeImage = computed(() => {
-  return assetType.value === DamAssetType.Image
-})
-
-const assetMainFile = computed<null | AssetFile>(() => {
-  return asset.value && asset.value.mainFile ? (asset.value.mainFile as AssetFile) : null
-})
-
 const onAnyMetadataChange = () => {
   metadataAreTouched.value = true
 }
@@ -77,8 +68,7 @@ const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(
   assetType.value,
   props.extSystem
 )
-// eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { mainFileSingleUseEnabled, showFileInfoEnabled } = useCommonAdminCoreDamOptions(props.configName)
+const { mainFileSingleUseEnabled, showFileInfoEnabled } = useCommonAdminCoreDamOptions(damConfigName)
 </script>
 
 <template>
@@ -171,77 +161,10 @@ const { mainFileSingleUseEnabled, showFileInfoEnabled } = useCommonAdminCoreDamO
         </VForm>
       </VExpansionPanelText>
     </VExpansionPanel>
-    <VExpansionPanel
+    <AssetFileInfoPanel
       v-if="asset && showFileInfoEnabled"
-      elevation="0"
-      :title="t('common.damImage.asset.detail.info.file')"
-      value="file"
-    >
-      <VExpansionPanelText class="text-body-small">
-        <!-- all types -->
-        <VRow>
-          <VCol cols="3">
-            {{ t('common.damImage.asset.detail.info.field.id') }}
-          </VCol>
-          <VCol cols="9">
-            <ACopyText :value="asset.id" />
-          </VCol>
-        </VRow>
-        <VRow>
-          <VCol cols="3">
-            {{ t('common.damImage.asset.detail.info.field.type') }}
-          </VCol>
-          <VCol cols="9">
-            {{ asset.attributes.assetType }}
-          </VCol>
-        </VRow>
-        <VRow>
-          <VCol cols="3">
-            {{ t('common.model.tracking.created') }}
-          </VCol>
-          <VCol cols="9">
-            {{ dateTimePretty(asset.createdAt) }}
-          </VCol>
-        </VRow>
-        <VRow>
-          <VCol cols="3">
-            {{ t('common.model.tracking.modified') }}
-          </VCol>
-          <VCol cols="9">
-            {{ dateTimePretty(asset.modifiedAt) }}
-          </VCol>
-        </VRow>
-        <template v-if="assetMainFile">
-          <VRow>
-            <VCol cols="3">
-              {{ t('common.damImage.asset.detail.info.field.mainFileId') }}
-            </VCol>
-            <VCol cols="9">
-              <ACopyText :value="assetMainFile.id" />
-            </VCol>
-          </VRow>
-          <VRow>
-            <VCol cols="3">
-              {{ t('common.damImage.asset.detail.info.field.mimeType') }}
-            </VCol>
-            <VCol cols="9">
-              {{ assetMainFile.fileAttributes.mimeType }}
-            </VCol>
-          </VRow>
-          <VRow>
-            <VCol cols="3">
-              {{ t('common.damImage.asset.detail.info.field.size') }}
-            </VCol>
-            <VCol cols="9">
-              {{ prettyBytes(assetMainFile.fileAttributes.size) }}
-            </VCol>
-          </VRow>
-          <AssetMetadataImageAttributes
-            v-if="isTypeImage && assetFileIsImageFile(assetMainFile)"
-            :file="assetMainFile"
-          />
-        </template>
-      </VExpansionPanelText>
-    </VExpansionPanel>
+      :asset="asset"
+      :show-users="false"
+    />
   </VExpansionPanels>
 </template>

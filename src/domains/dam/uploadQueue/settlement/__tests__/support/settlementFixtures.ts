@@ -143,7 +143,12 @@ export function fakeDamServer() {
   const failingAssets = new Set<DocId>()
   const requests: Array<{ kind: RequestKind; ids: DocId[]; licenceId?: IntegerId }> = []
   // Whether each request was let report a failure of it, beside `requests` and in its order.
-  const told: Array<{ kind: RequestKind; ids: DocId[]; report: boolean | undefined }> = []
+  const told: Array<{
+    kind: RequestKind
+    ids: DocId[]
+    report: boolean | undefined
+    queueKey: UploadQueueKey | undefined
+  }> = []
   const waiting: Array<() => void> = []
   let held = false
   let running = 0
@@ -156,10 +161,10 @@ export function fakeDamServer() {
     ids: DocId[],
     licenceId: IntegerId | undefined,
     compute: () => T,
-    options?: UploadReadOptions
+    options?: Partial<UploadReadOptions>
   ) => {
     requests.push(licenceId === undefined ? { kind, ids } : { kind, ids, licenceId })
-    told.push({ kind, ids, report: options?.report })
+    told.push({ kind, ids, report: options?.report, queueKey: options?.queueKey })
     mostRunning = Math.max(mostRunning, ++running)
     try {
       const fails =
@@ -203,12 +208,18 @@ export function fakeDamServer() {
       ),
     slotFiles: (assetId: DocId, options?: UploadReadOptions) =>
       answer('slots', [assetId], undefined, () => structuredClone(slots.get(assetId) ?? []), options),
-    duplicateOriginAsset: (originFileId: DocId) =>
-      answer('originAsset', [originFileId], undefined, () => {
-        const origin = originAssets.get(originFileId)
-        if (!origin) throw new Error('fakeDamServer: no asset of the file ' + originFileId)
-        return structuredClone(origin)
-      }),
+    duplicateOriginAsset: (originFileId: DocId, options?: Pick<UploadReadOptions, 'queueKey'>) =>
+      answer(
+        'originAsset',
+        [originFileId],
+        undefined,
+        () => {
+          const origin = originAssets.get(originFileId)
+          if (!origin) throw new Error('fakeDamServer: no asset of the file ' + originFileId)
+          return structuredClone(origin)
+        },
+        options
+      ),
     duplicateOriginFile: (originFileId: DocId, _assetType: DamAssetTypeType) =>
       answer('originFile', [originFileId], undefined, () => {
         const origin = originFiles.get(originFileId)
@@ -262,6 +273,8 @@ export function fakeDamServer() {
           return typeof only === 'string' ? one.kind === only : one.ids.includes(only.asset)
         })
         .map((one) => one.report),
+    /** The queue each request of the given kind was said to be for, in the order they were asked. */
+    queuesOf: (kind: RequestKind) => told.filter((one) => one.kind === kind).map((one) => one.queueKey),
     /** The bulk read of the licence answers with something that is no list. */
     garbleList: (licenceId: IntegerId) => garbledLicences.add(licenceId),
     /** The answers from now on are on their way until `release`. */
@@ -463,6 +476,7 @@ export const settledState = (row: UploadQueueItem) => ({
   assetId: row.assetId,
   fileId: row.fileId,
   duplicateAssetId: row.duplicateAssetId,
+  uploadedAssetId: row.uploadedAssetId,
   assetStatus: row.assetStatus,
   imagePreview: row.imagePreview,
   canEditMetadata: row.canEditMetadata,

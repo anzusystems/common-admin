@@ -9,7 +9,13 @@ import { useTheme } from '@/domains/system/composables/themeSettings'
 import UploadQueueButtonStop from '@/domains/dam/uploadQueue/components/UploadQueueButtonStop.vue'
 import useVuelidate from '@vuelidate/core'
 import { useAlerts } from '@/domains/system/composables/alerts'
-import { bulkUpdateAssetsMetadata, fetchAsset, hasMetadataToSave } from '@/domains/dam/api/damAssetApi'
+import {
+  type AssetMetadataBulkItem,
+  bulkUpdateAssetsMetadata,
+  fetchAsset,
+  hasMetadataToSave,
+  showMetadataSaveError,
+} from '@/domains/dam/api/damAssetApi'
 import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
 import AFileInput from '@/domains/ui/file/components/AFileInput.vue'
 import AImageDropzone from '@/domains/ui/file/components/AFileDropzone.vue'
@@ -18,9 +24,9 @@ import type { DocId, IntegerId } from '@/shared/types/common'
 import { type UploadQueueItem, UploadQueueItemStatus } from '@/domains/dam/types/UploadQueue'
 import { generateUUIDv1 } from '@/shared/utils/generator'
 import { mapUploadMetadataToImages } from '@/domains/dam/imageWidget/utils/metadataToImageMap'
-import { useImageStore } from '@/domains/dam/imageWidget/store/imageStore'
 import { storeToRefs } from 'pinia'
 import { useAssetDetailStore } from '@/domains/dam/assetDetail/store/assetDetailStore'
+import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 
 const props = withDefaults(
   defineProps<{
@@ -33,7 +39,7 @@ const props = withDefaults(
     configName?: string
   }>(),
   {
-    configName: 'default',
+    configName: undefined,
   }
 )
 
@@ -42,11 +48,11 @@ const emit = defineEmits<{
   (e: 'filesInput', files: File[]): void
   (e: 'apply', items: ImageStoreItem[]): void
 }>()
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const damConfigName = useDamConfigName(props.configName)
 
 const { uploadQueueDialog, uploadQueueSidebar, toggleUploadQueueSidebar } = useUploadQueueDialog()
 
-const imageStore = useImageStore()
-const { maxPosition } = storeToRefs(imageStore)
 const uploadQueuesStore = useUploadQueuesStore()
 const queueTotalCount = computed(() => {
   return uploadQueuesStore.getQueueTotalCount(props.queueKey)
@@ -80,7 +86,8 @@ const { toolbarColor } = useTheme()
 const { mdAndDown } = useDisplay()
 const v$ = useVuelidate({ $stopPropagation: true })
 const { showRecordWas, showValidationError, showErrorsDefault } = useAlerts()
-const { damClient, endPointAsset, endPointAuthor, customUploadMetadataToImageMap } = useCommonAdminCoreDamOptions()
+const { damClient, endPointAsset, endPointAuthor, customUploadMetadataToImageMap } =
+  useCommonAdminCoreDamOptions(damConfigName)
 
 const saveButtonLoading = ref(false)
 const saveAndCloseButtonLoading = ref(false)
@@ -104,8 +111,7 @@ const onSave = async () => {
     await bulkUpdateAssetsMetadata(damClient, endPointAsset, itemsRaw)
     showRecordWas('updated')
   } catch (error) {
-    console.error(error)
-    showErrorsDefault(error)
+    showMetadataSaveError(error, props.extSystem)
   } finally {
     saveButtonLoading.value = false
   }
@@ -122,24 +128,29 @@ const onSaveAndApply = async () => {
     return
   }
   try {
-    const res = await bulkUpdateAssetsMetadata(damClient, endPointAsset, itemsRaw)
+    let res: AssetMetadataBulkItem[]
+    try {
+      res = await bulkUpdateAssetsMetadata(damClient, endPointAsset, itemsRaw)
+    } catch (error) {
+      showMetadataSaveError(error, props.extSystem)
+      return
+    }
     const uploaded = itemsRaw.filter(isUploaded)
     const mappedItems = customUploadMetadataToImageMap
       ? await customUploadMetadataToImageMap(uploaded, res, damClient, props.extSystem, props.licenceId)
       : await mapUploadMetadataToImages(uploaded, res, damClient, props.extSystem, props.licenceId, endPointAuthor)
-    const storeItems: ImageStoreItem[] = mappedItems.map((item) => {
-      maxPosition.value++
-      return {
-        key: generateUUIDv1(),
-        ...item,
-        position: maxPosition.value,
-        damAuthors: item.authorIds ?? [],
-        showDamAuthors: (item.authorIds ?? []).length === 0,
-        assetId: item.assetId ?? undefined,
-      }
-    })
+    // No position is given here: the widget that takes the images gives each its own, after the last it has, also
+    // over one a mapping of the application may have put into the image.
+    const storeItems: ImageStoreItem[] = mappedItems.map((item) => ({
+      key: generateUUIDv1(),
+      ...item,
+      damAuthors: item.authorIds ?? [],
+      showDamAuthors: (item.authorIds ?? []).length === 0,
+      assetId: item.assetId ?? undefined,
+    }))
     emit('apply', storeItems)
   } catch (error) {
+    // The save is said above. What follows it, the images made of its answer, is said as it was before.
     showErrorsDefault(error)
   } finally {
     saveAndCloseButtonLoading.value = false
@@ -309,7 +320,7 @@ const showDetail = async (id: DocId) => {
           <UploadQueueEditable
             :queue-key="queueKey"
             :ext-system="extSystem"
-            :config-name="configName"
+            :config-name="damConfigName"
             :mass-operations="uploadQueueSidebar"
             @show-detail="showDetail"
           />

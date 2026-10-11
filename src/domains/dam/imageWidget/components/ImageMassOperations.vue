@@ -15,12 +15,25 @@ import { buildFieldRules } from '@/domains/dam/composables/uploadValidations'
 import { useDamConfigState } from '@/domains/dam/config/composables/damConfigState'
 import { DamAssetType } from '@/domains/dam/types/Asset'
 import { useAlerts } from '@/domains/system/composables/alerts'
+import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
+
+const props = withDefaults(
+  defineProps<{
+    /** The DAM configuration to work under. Left out: that of the component it is in, else `default`. */
+    configName?: string
+  }>(),
+  {
+    configName: undefined,
+  }
+)
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const damConfigName = useDamConfigName(props.configName)
 
 const texts = ref({ description: '', source: '', authors: [] })
 
 const imageStore = useImageStore()
 const { images, readonly } = storeToRefs(imageStore)
-const { replaceEmptyDescription, replaceEmptySource, replaceEmptyAuthors } = useImageMassOperations()
+const { replaceEmptyDescription, replaceEmptySource, replaceEmptyAuthors } = useImageMassOperations(damConfigName)
 const { t } = useI18n()
 const { showErrorsDefault } = useAlerts()
 
@@ -59,7 +72,7 @@ const authorEnabled = computed(() => {
   return !!getDamConfigExtSystem(cachedExtSystemId.value)?.[DamAssetType.Image]?.authors?.enabled
 })
 
-const { descriptionValidation, sourceValidation, sourceLabel } = useCommonAdminCoreDamOptions()
+const { descriptionValidation, sourceValidation, sourceLabel } = useCommonAdminCoreDamOptions(damConfigName)
 const validators = useValidate()
 
 const rules = computed(() => ({

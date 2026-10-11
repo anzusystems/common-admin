@@ -36,7 +36,6 @@ createApp(App)
         },
       },
       apiTimeout: 30,
-      uploadStatusFallback: true,
       adminDomain: 'http://admin-dam.sme.localhost:8150',
       notification: {
         enabled: true,

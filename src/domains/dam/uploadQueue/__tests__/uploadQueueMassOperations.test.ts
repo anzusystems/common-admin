@@ -49,6 +49,31 @@ describe('mass operations of the upload queue: a custom value', () => {
       fill([item(DamAssetType.Image, { title: 'kept' }), item(DamAssetType.Audio, { title: 'kept' })], true)
     ).toEqual(['filled', 'kept'])
   })
+
+  // Z24: a field of several values, as the keywords and the authors; an edit of one row changes no other.
+  it.each([
+    ['fills', false, {}],
+    ['replaces', true, { tags: ['kept'] }],
+  ])('hands every row it %s a list of its own', (_how, forceReplace, customData) => {
+    const items = [item(DamAssetType.Image, { ...customData }), item(DamAssetType.Image, { ...customData })]
+    const value = ['one', 'two']
+    queue.items = items
+
+    useUploadQueueMassOperations('queue').replaceEmptyCustomDataValue(
+      { assetType: DamAssetType.Image, elementProperty: 'tags', value },
+      forceReplace
+    )
+
+    const [first, second] = items.map((one) => one.customData.tags as string[])
+    expect([first, second]).toEqual([value, value])
+    expect(first).not.toBe(second)
+    expect([first, second]).not.toContain(value)
+    first!.push('own')
+    expect([second, value]).toEqual([
+      ['one', 'two'],
+      ['one', 'two'],
+    ])
+  })
 })
 
 // The same rule for the keywords and the authors of the rows: what is empty is filled, the rest is kept unless
@@ -104,12 +129,21 @@ describe.each(lists)('mass operations of the upload queue: %s', (field, operatio
     expect(item[other]).toEqual([])
   })
 
-  // Today: the rows are given the very list they were filled with, not a copy each.
-  it('hand every filled row the same list', () => {
+  // Z24: each row a copy of its own, and none the list it was filled with; an edit of one changes no other.
+  it('hand every filled row a list of its own', () => {
     const items = [row(DamAssetType.Image, []), row(DamAssetType.Image, [])]
+    const value = ['filled-1', 'filled-2']
+    queue.items = items
 
-    fill(items)
+    useUploadQueueMassOperations('queue')[operation](value)
 
-    expect(items[0][field]).toBe(items[1][field])
+    expect(items.map((one) => one[field])).toEqual([value, value])
+    expect(items[0][field]).not.toBe(items[1][field])
+    expect(items.some((one) => one[field] === value)).toBe(false)
+    items[0][field]!.push('own')
+    expect([items[1][field], value]).toEqual([
+      ['filled-1', 'filled-2'],
+      ['filled-1', 'filled-2'],
+    ])
   })
 })

@@ -1,16 +1,12 @@
 <script lang="ts" setup>
 import { useI18n } from 'vue-i18n'
 import { computed, ref } from 'vue'
-import { DamAssetType, DamAssetTypeDefault } from '@/domains/dam/types/Asset'
-import { type AssetFile, assetFileIsImageFile } from '@/domains/dam/types/AssetFile'
+import { DamAssetTypeDefault } from '@/domains/dam/types/Asset'
 import { useAssetDetailStore } from '@/domains/dam/assetDetail/store/assetDetailStore'
 import { storeToRefs } from 'pinia'
 import AssetCustomMetadataForm from '@/domains/dam/assetDetail/components/AssetCustomMetadataForm.vue'
-import ACopyText from '@/domains/ui/components/ACopyText.vue'
-import { prettyBytes } from '@/shared/utils/file'
-import AssetMetadataImageAttributes from '@/domains/dam/assetDetail/components/AssetMetadataImageAttributes.vue'
+import AssetFileInfoPanel from '@/domains/dam/assetDetail/components/AssetFileInfoPanel.vue'
 import ASystemEntityScope from '@/domains/form/components/ASystemEntityScope.vue'
-import { dateTimePretty } from '@/shared/utils/datetime'
 import { ADamAssetMetadataValidationScopeSymbol } from '@/domains/dam/composables/uploadValidations'
 import AuthorRemoteAutocompleteWithCached from '@/domains/dam/author/components/AuthorRemoteAutocompleteWithCached.vue'
 import KeywordRemoteAutocompleteWithCached from '@/domains/dam/keyword/components/KeywordRemoteAutocompleteWithCached.vue'
@@ -19,9 +15,8 @@ import { useDamAuthorAssetTypeConfig } from '@/domains/dam/author/composables/da
 import type { IntegerId } from '@/shared/types/common'
 import ABooleanValue from '@/domains/ui/components/ABooleanValue.vue'
 import ARow from '@/domains/ui/components/ARow.vue'
-import ACachedUserChip from '@/domains/cached/components/ACachedUserChip.vue'
-import { useDamCachedUsers } from '@/domains/dam/author/composables/cachedUsers'
 import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
+import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 
 const props = withDefaults(
   defineProps<{
@@ -32,7 +27,7 @@ const props = withDefaults(
   }>(),
   {
     readonly: false,
-    configName: 'default',
+    configName: undefined,
     showEditButton: false,
   }
 )
@@ -40,6 +35,8 @@ const props = withDefaults(
 const emit = defineEmits<{
   (e: 'editInDam'): void
 }>()
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const damConfigName = useDamConfigName(props.configName)
 
 const { t } = useI18n()
 
@@ -50,14 +47,6 @@ const { asset, authorConflicts, metadataAreTouched, mainFileSingleUse } = storeT
 
 const assetType = computed(() => {
   return asset.value?.attributes.assetType || DamAssetTypeDefault
-})
-
-const isTypeImage = computed(() => {
-  return assetType.value === DamAssetType.Image
-})
-
-const assetMainFile = computed<null | AssetFile>(() => {
-  return asset.value && asset.value.mainFile ? (asset.value.mainFile as AssetFile) : null
 })
 
 const onAnyMetadataChange = () => {
@@ -77,9 +66,7 @@ const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(
   props.extSystem
 )
 
-const { getCachedUser } = useDamCachedUsers()
-
-const { mainFileSingleUseEnabled, showFileInfoEnabled, editAssetLabel } = useCommonAdminCoreDamOptions(props.configName) // eslint-disable-line vue/no-setup-props-reactivity-loss
+const { mainFileSingleUseEnabled, showFileInfoEnabled, editAssetLabel } = useCommonAdminCoreDamOptions(damConfigName)
 </script>
 
 <template>
@@ -186,88 +173,12 @@ const { mainFileSingleUseEnabled, showFileInfoEnabled, editAssetLabel } = useCom
         </AssetCustomMetadataForm>
       </VExpansionPanelText>
     </VExpansionPanel>
-    <VExpansionPanel
+    <!-- The detail breaks its texts only between words, unlike the card it is in (design 1.10, JS29). -->
+    <AssetFileInfoPanel
       v-if="showFileInfoEnabled"
-      elevation="0"
-      :title="t('common.damImage.asset.detail.info.file')"
-      value="file"
-    >
-      <VExpansionPanelText
-        class="text-body-small"
-        style="overflow-wrap: normal"
-      >
-        <!-- all types -->
-        <VRow>
-          <VCol cols="3">
-            {{ t('common.damImage.asset.detail.info.field.id') }}
-          </VCol>
-          <VCol cols="9">
-            <ACopyText :value="asset.id" />
-          </VCol>
-        </VRow>
-        <VRow>
-          <VCol cols="3">
-            {{ t('common.damImage.asset.detail.info.field.type') }}
-          </VCol>
-          <VCol cols="9">
-            {{ asset.attributes.assetType }}
-          </VCol>
-        </VRow>
-        <VRow>
-          <VCol cols="3">
-            {{ t('common.model.tracking.created') }}
-          </VCol>
-          <VCol cols="9">
-            {{ dateTimePretty(asset.createdAt) }}<br />
-            <ACachedUserChip
-              :id="asset.createdBy"
-              :get-cached-fn="getCachedUser"
-            />
-          </VCol>
-        </VRow>
-        <VRow>
-          <VCol cols="3">
-            {{ t('common.model.tracking.modified') }}
-          </VCol>
-          <VCol cols="9">
-            {{ dateTimePretty(asset.modifiedAt) }}<br />
-            <ACachedUserChip
-              :id="asset.modifiedBy"
-              :get-cached-fn="getCachedUser"
-            />
-          </VCol>
-        </VRow>
-        <template v-if="assetMainFile">
-          <VRow>
-            <VCol cols="3">
-              {{ t('common.damImage.asset.detail.info.field.mainFileId') }}
-            </VCol>
-            <VCol cols="9">
-              <ACopyText :value="assetMainFile.id" />
-            </VCol>
-          </VRow>
-          <VRow>
-            <VCol cols="3">
-              {{ t('common.damImage.asset.detail.info.field.mimeType') }}
-            </VCol>
-            <VCol cols="9">
-              {{ assetMainFile.fileAttributes.mimeType }}
-            </VCol>
-          </VRow>
-          <VRow>
-            <VCol cols="3">
-              {{ t('common.damImage.asset.detail.info.field.size') }}
-            </VCol>
-            <VCol cols="9">
-              {{ prettyBytes(assetMainFile.fileAttributes.size) }}
-            </VCol>
-          </VRow>
-          <AssetMetadataImageAttributes
-            v-if="isTypeImage && assetFileIsImageFile(assetMainFile)"
-            :file="assetMainFile"
-          />
-        </template>
-      </VExpansionPanelText>
-    </VExpansionPanel>
+      :asset="asset"
+      show-users
+      style="overflow-wrap: normal"
+    />
   </VExpansionPanels>
 </template>

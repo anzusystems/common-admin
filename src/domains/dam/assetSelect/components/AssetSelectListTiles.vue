@@ -4,6 +4,7 @@ import { useGridView } from '@/domains/dam/assetSelect/composables/assetSelectGr
 import { useAssetSelectActions } from '@/domains/dam/assetSelect/composables/assetSelectListActions'
 import { useI18n } from 'vue-i18n'
 import type { IntegerId } from '@/shared/types/common'
+import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 
 withDefaults(
   defineProps<{
@@ -13,7 +14,7 @@ withDefaults(
 )
 
 const { gridView } = useGridView()
-const { onItemClick, assetListItems, loader } = useAssetSelectActions()
+const { onItemClick, assetListItems, loader } = useAssetSelectActions(useDamConfigName())
 
 const { t } = useI18n()
 </script>

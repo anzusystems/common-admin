@@ -37,6 +37,8 @@ export interface AssetFileProperties {
   fromRss: boolean
   width: number
   height: number
+  /** A synthesized audio (TTS); not every backend says it. */
+  ttsAudio?: boolean
 }
 
 interface Flags {

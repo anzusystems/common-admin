@@ -11,6 +11,7 @@ import {
   type DamNotificationNameType,
   useDamNotificationsEventBus,
 } from '@/domains/dam/composables/damNotificationsEventBus'
+import { useDamConfigStore } from '@/domains/dam/config/store/damConfigStore'
 import { DamAssetType } from '@/domains/dam/types/Asset'
 import { AssetFileFailReason, AssetFileProcessStatus } from '@/domains/dam/types/AssetFile'
 import { UploadQueueItemStatus } from '@/domains/dam/types/UploadQueue'
@@ -458,26 +459,66 @@ describe('the failed notification', () => {
     })
   })
 
-  it('frees the place of a file that is still being sent for the next one', async () => {
+  // Z26: the server takes a failed file nowhere. What is left of it is not sent, so two files go out, not three.
+  // Nothing here waits on real time: each step waits for the state of the requests.
+  it('stops sending a file that is still being sent, and gives its place to the next one', async () => {
     const store = useUploadQueuesStore()
-    dam.hold('POST', dam.routes.chunk)
+    // Three chunks to a file of 3000 bytes.
+    useDamConfigStore().damPrvConfig.settings.imageChunkConfig = { minSize: 1000, maxSize: 1000 }
+    const chunks = dam.hold('POST', dam.routes.chunk)
     const statuses = () => store.getQueueItems(QUEUE).map((item) => item.status)
+    const onTheirWay = () => chunks.waiting.map((held) => held.request.url).sort()
     await store.addByFiles(QUEUE, extSystem, licence, [photo('a.jpg'), photo('b.jpg'), photo('c.jpg')])
-    await vi.waitFor(() => expect(dam.sentTo('POST', dam.routes.chunk)).toHaveLength(2))
+    const [first, second, third] = store.getQueueItems(QUEUE)
+    const chunkOf = (item: typeof first) => `/adm/v1/image/${item.fileId}/chunk`
+    /** The chunks of the file of a row that went out, each by where it begins and how long it is. */
+    const chunksSentOf = (item: typeof first) =>
+      dam
+        .sentTo('POST', dam.routes.chunk)
+        .filter((request) => request.url === chunkOf(item))
+        .map((request) => (request.data as FormData).get('chunk'))
+    await vi.waitFor(() => expect(onTheirWay()).toEqual([chunkOf(first), chunkOf(second)].sort()))
     expect(statuses()).toEqual([
       UploadQueueItemStatus.Uploading,
       UploadQueueItemStatus.Uploading,
       UploadQueueItemStatus.Waiting,
     ])
 
-    failed(store.getQueueItems(QUEUE)[0].assetId!)
-    await vi.waitFor(() => expect(dam.sentTo('POST', dam.routes.start)).toHaveLength(3))
-
+    failed(first.assetId!)
+    // Its chunk on the way is cancelled, and the third file starts in its place.
+    await vi.waitFor(() => expect(onTheirWay()).toEqual([chunkOf(second), chunkOf(third)].sort()))
     expect(statuses()).toEqual([
       UploadQueueItemStatus.Failed,
       UploadQueueItemStatus.Uploading,
       UploadQueueItemStatus.Uploading,
     ])
     expect(store.getQueueProcessedCount(QUEUE)).toBe(1)
+
+    // The other two go on, chunk by chunk, to their end. Of the failed file nothing more goes out: neither its two
+    // chunks that were left, nor its finish.
+    await vi.waitFor(() => {
+      chunks.release()
+      expect([second.status, third.status]).toEqual([
+        UploadQueueItemStatus.Processing,
+        UploadQueueItemStatus.Processing,
+      ])
+    })
+    expect([chunksSentOf(first), chunksSentOf(second).length, chunksSentOf(third).length]).toEqual([
+      ['{"offset":0,"size":1000}'],
+      3,
+      3,
+    ])
+    expect(
+      dam
+        .sentTo('PATCH', dam.routes.finish)
+        .map((request) => request.url)
+        .sort()
+    ).toEqual([`/adm/v1/image/${second.fileId}/uploaded`, `/adm/v1/image/${third.fileId}/uploaded`].sort())
+    // The row says why the server failed it, and the end of its run wrote nothing over that.
+    expect(first.error).toEqual({
+      hasError: true,
+      message: '',
+      assetFileFailReason: AssetFileFailReason.DownloadFailed,
+    })
   })
 })

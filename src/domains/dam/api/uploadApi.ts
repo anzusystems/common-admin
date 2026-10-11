@@ -54,8 +54,6 @@ export const damUploadChunk = (
 
 export const damUploadFinish = (
   client: () => AxiosInstance,
-  // Not read since the queue polls for the state itself. It keeps its place: callers hand the row by position.
-  _endPointAsset: string,
   endPointImage: string,
   item: UploadQueueItem,
   sha: string

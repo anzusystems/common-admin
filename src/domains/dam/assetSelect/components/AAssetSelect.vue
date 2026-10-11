@@ -28,6 +28,8 @@ import { storeToRefs } from 'pinia'
 import { useAssetDetailStore } from '@/domains/dam/assetDetail/store/assetDetailStore'
 import { type DatatableOrderingOption } from '@/domains/filters/datatable/utils/datatableColumns'
 import { DatatablePaginationKey } from '@/domains/filters/utils/filterInjectionKeys'
+import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
+import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 
 const props = withDefaults(
   defineProps<{
@@ -46,7 +48,7 @@ const props = withDefaults(
     inPodcast: null,
     uploadLicence: undefined,
     returnType: AssetSelectReturnType.MainFileId,
-    configName: 'default',
+    configName: undefined,
     skipCurrentUserCheck: false,
     onDetailLoadedCallback: undefined,
   }
@@ -59,6 +61,8 @@ const emit = defineEmits<{
 const modelValue = defineModel<boolean>({ default: false, required: false })
 const sortModel = defineModel<number>('sort', { default: 1, required: false })
 const ready = defineModel<boolean>('ready', { default: false, required: false })
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const damConfigName = useDamConfigName(props.configName)
 
 const loading = ref(false)
 const copyToLicence = ref(false)
@@ -77,7 +81,7 @@ const {
   fetchAssetListDebounced,
   reset,
   // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-} = useAssetSelectActions('default', props.onDetailLoadedCallback)
+} = useAssetSelectActions(damConfigName, props.onDetailLoadedCallback)
 // The ordering in the list bar reads this; without it the dialog would pick up the host page's pagination.
 provide(DatatablePaginationKey, pagination)
 
@@ -88,6 +92,7 @@ const assetDetailStore = useAssetDetailStore()
 const { asset } = storeToRefs(assetDetailStore)
 const assetSelectStore = useAssetSelectStore()
 const { selectedLicenceId } = storeToRefs(assetSelectStore)
+const { copyToLicenceEnabled } = useCommonAdminCoreDamOptions(damConfigName)
 
 const selectConfigs = shallowRef<DamConfigLicenceExtSystemReturnType[]>([])
 
@@ -103,6 +108,8 @@ const onOpen = () => {
   }
   if (selectConfigLocal.length === 0) {
     showErrorT('common.assetSelect.error.unallowedLicence')
+    // Not opened over no licence: it would list nothing, and the next press would not say why.
+    modelValue.value = false
     return
   }
 
@@ -134,8 +141,17 @@ const onClose = () => {
   reset()
 }
 
+// The switch as the user left it, for the picked assets of another licence than the one of the upload: the picked ones
+// outlive a change of the licence browsed, so the licence of each decides, not the one browsed now. One already in
+// the licence of the upload is not copied; the widget takes it as it is.
 const getCopyToLicenceId = () => {
-  if (copyToLicence.value && props.uploadLicence) {
+  if (
+    copyToLicenceEnabled !== false &&
+    props.assetType === DamAssetType.Image &&
+    copyToLicence.value &&
+    props.uploadLicence &&
+    [...assetSelectStore.selectedAssets.values()].some(({ asset }) => asset.licence !== props.uploadLicence)
+  ) {
     return props.uploadLicence
   }
   return undefined
@@ -156,6 +172,7 @@ const { gridView } = useGridView()
 
 const showCopyToLicence = computed(() => {
   return (
+    copyToLicenceEnabled !== false &&
     props.assetType === DamAssetType.Image &&
     selectedLicenceId.value > 0 &&
     !isUndefined(props.uploadLicence) &&
@@ -280,7 +297,7 @@ defineExpose({
           }"
         >
           <div class="subject-select__sidebar border-e">
-            <AssetSelectFilter :config-name="configName" />
+            <AssetSelectFilter :config-name="damConfigName" />
           </div>
           <div class="subject-select__content">
             <component

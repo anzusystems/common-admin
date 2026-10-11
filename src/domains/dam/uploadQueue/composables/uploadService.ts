@@ -1,6 +1,5 @@
 import { ref } from 'vue'
 import axios from 'axios'
-import { commonT } from '@/plugins/i18n'
 import {
   type AnzuApiValidationResponseData,
   axiosErrorResponseHasValidationData,
@@ -9,54 +8,45 @@ import { type UploadQueueItem, UploadQueueItemStatus } from '@/domains/dam/types
 import { NEW_LINE_MARK } from '@/domains/system/composables/alerts'
 import { isUndefined } from '@/shared/utils/common'
 import { useDamUploadChunkSize } from '@/domains/dam/uploadQueue/composables/damUploadChunkSize'
-import { damUploadChunk, damUploadFinish, damUploadStart } from '@/domains/dam/api/uploadApi'
+import { useUploadMeter } from '@/domains/dam/uploadQueue/composables/uploadMeter'
 import {
-  useCommonAdminCoreDamOptions,
-  useCommonAdminCoreDamOptionsGlobal,
-} from '@/domains/dam/composables/commonAdminCoreDamOptions'
-import type Rusha from 'rusha'
-import { withTimeout } from '@/domains/listEditor/utils/listEditorLoader'
+  libraryUploadPreset,
+  type UploadHash,
+  type UploadMessages,
+  type UploadPreset,
+  uploadPresetMembers,
+  type UploadProgressCallback,
+  type UploadRun,
+  uploadSide,
+  type UploadSide,
+} from '@/domains/dam/uploadQueue/presets/uploadPresets'
 
 // const CHUNK_MAX_RETRY = 6
 const CHUNK_MAX_RETRY = 4
-const SPEED_CHECK_INTERVAL = 1000
 const CHUNK_RETRY_INTERVAL = 1000
 const CHUNK_RETRY_MULTIPLY = 3
-const HASH_LOAD_TIMEOUT = 15_000
 
-// A call, not an inline comparison: TypeScript keeps a status narrowed across the awaits in between.
-const isStopped = (queueItem: UploadQueueItem) => queueItem.status === UploadQueueItemStatus.Stop
-
-const finishUpload = async (queueItem: UploadQueueItem, sha: string) => {
-  const { damClient, endPointImage, endPointAsset } = useCommonAdminCoreDamOptions()
-  return await damUploadFinish(damClient, endPointAsset, endPointImage, queueItem, sha)
-}
-
-const handleValidationErrorMessage = (error: Error | any) => {
-  const t = commonT
-  if (!error || !error.response || !error.response.data) {
-    // @ts-ignore
-    return t('common.damImage.uploadErrors.unknownError')
-  }
-  const data = error.response.data as AnzuApiValidationResponseData
+/** The text of a validation answer (422 with `fields`): one line per field, in the texts of the side. */
+export function uploadValidationMessage(error: unknown, messages: UploadMessages): string {
+  if (!axios.isAxiosError(error) || !error.response || !error.response.data) return messages.unknownError()
+  const data = error.response.data as Partial<AnzuApiValidationResponseData>
   const errorMessages: string[] = []
-  for (const [key, values] of Object.entries(data.fields)) {
+  for (const [key, values] of Object.entries(data.fields ?? {})) {
     switch (key) {
       case 'size':
-        errorMessages.push(t('common.damImage.uploadErrors.size'))
+        errorMessages.push(messages.size())
         break
       case 'offset':
-        errorMessages.push(t('common.damImage.uploadErrors.offset'))
+        errorMessages.push(messages.offset())
         break
       case 'mimeType':
-        errorMessages.push(t('common.damImage.uploadErrors.mimeType'))
+        errorMessages.push(messages.mimeType())
         break
       default:
-        // @ts-ignore
-        errorMessages.push(t('common.damImage.uploadErrors.systemError') + ': ' + key + ' - ' + values.join(','))
+        errorMessages.push(messages.systemError() + ': ' + key + ' - ' + values.join(','))
     }
   }
-  return errorMessages.length > 0 ? errorMessages.join(NEW_LINE_MARK) : t('common.damImage.uploadErrors.unknownError')
+  return errorMessages.length > 0 ? errorMessages.join(NEW_LINE_MARK) : messages.unknownError()
 }
 
 const readFile = async (offset: number, size: number, file: File): Promise<{ data: ArrayBuffer; offset: number }> => {
@@ -84,61 +74,51 @@ const sleep = (ms: number) => {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
-export function useUpload(queueItem: UploadQueueItem, uploadCallback: any = undefined) {
-  const { damClient, endPointImage } = useCommonAdminCoreDamOptions()
+const stoppedError = () => new Error('Upload stopped')
+
+/** One run for both sides; without a set it is the library's. Public as `useDamUpload`. */
+export function useUpload(
+  queueItem: UploadQueueItem,
+  uploadCallback?: UploadProgressCallback,
+  preset?: undefined
+): UploadRun<'library'> & { stopSpeedCheck(): void }
+/** The run of the side of the set. */
+export function useUpload<S extends UploadSide>(
+  queueItem: UploadQueueItem,
+  uploadCallback: UploadProgressCallback | undefined,
+  preset: UploadPreset<S>
+): UploadRun<S> & { stopSpeedCheck(): void }
+export function useUpload(
+  queueItem: UploadQueueItem,
+  uploadCallback?: UploadProgressCallback,
+  preset?: UploadPreset
+): UploadRun & { stopSpeedCheck(): void } {
+  // Made only when none is given: it reads the options of the plugin, which a side with a set of its own need not
+  // have.
+  const set = preset ?? libraryUploadPreset()
+  const { requests, messages, apiTimeout, loadHash, emptyFile } = set[uploadPresetMembers]
   const fileSize = ref(0)
 
-  const progress = ref(0)
-
-  let speedStack: any[] = []
-  let lastTimestamp = 0
-  let endTimestamp = 0
-  let lastLoaded = 0
-  let speedCheckTimerId: ReturnType<typeof setTimeout> | null = null
-  let sha: ReturnType<typeof Rusha.createHash> | undefined
+  const meter = useUploadMeter(uploadCallback)
+  let sha: UploadHash | undefined
   // Once the finish request went out the server may complete the file, whatever becomes of the answer.
   let finishAttempted = false
-  // A chunk is sized against the timeout the application gives its DAM requests. One that gives none (`null` in
-  // a config file too) gets the default of the composable.
-  const { apiTimeout } = useCommonAdminCoreDamOptionsGlobal()
+  // Set by `stop()`; the queue may stop a run by the status of its row instead, and every check reads both.
+  let stopRequested = false
   const { updateChunkSize, lastChunkSize } = useDamUploadChunkSize(apiTimeout ?? undefined)
 
-  const getCurrentTimestamp = () => {
-    return Date.now() / 1000
-  }
-
-  // @ts-ignore
-  function progressCallback(progressEvent) {
-    const currentStamp = getCurrentTimestamp()
-    if (lastTimestamp === 0) {
-      lastTimestamp = currentStamp
-
-      return
-    }
-
-    const dataSent = lastLoaded > 0 ? progressEvent.loaded - lastLoaded : progressEvent.loaded
-    lastLoaded = progressEvent.total === progressEvent.loaded ? 0 : progressEvent.loaded
-    speedStack.push(dataSent / (currentStamp - lastTimestamp))
-
-    lastTimestamp = currentStamp
-  }
+  // A call, not an inline comparison: TypeScript keeps a status narrowed across the awaits in between.
+  const stopped = () => stopRequested || queueItem.status === UploadQueueItemStatus.Stop
 
   const uploadChunk = async (chunkFile: File, offset: number) => {
     return new Promise((resolve, reject) => {
+      const onUploadProgress = meter.attempt(chunkFile.size)
       if (!queueItem.fileId) {
         reject()
         return
       }
-      damUploadChunk(
-        damClient,
-        endPointImage,
-        queueItem,
-        queueItem.fileId,
-        chunkFile,
-        chunkFile.size,
-        offset,
-        progressCallback
-      )
+      requests
+        .chunk(queueItem, queueItem.fileId, chunkFile, chunkFile.size, offset, onUploadProgress)
         .then((result) => {
           resolve(result)
         })
@@ -148,7 +128,8 @@ export function useUpload(queueItem: UploadQueueItem, uploadCallback: any = unde
     })
   }
 
-  const processAndUploadChunk = async (offset: number, hash: ReturnType<typeof Rusha.createHash>): Promise<File> => {
+  const processAndUploadChunk = async (offset: number, hash: UploadHash): Promise<File> => {
+    if (stopped()) return Promise.reject(stoppedError())
     updateChunkSize(queueItem.progress.speed)
     let arrayBuffer: { data: ArrayBuffer; offset: number } = await readFile(
       offset,
@@ -160,7 +141,7 @@ export function useUpload(queueItem: UploadQueueItem, uploadCallback: any = unde
     })
 
     // Stop between chunks has no request to cancel: the controller below would be a fresh one.
-    if (isStopped(queueItem)) return Promise.reject(new Error('Upload stopped'))
+    if (stopped()) return Promise.reject(stoppedError())
     queueItem.currentChunkIndex = offset
     queueItem.latestChunkAbortController = new AbortController()
 
@@ -168,31 +149,29 @@ export function useUpload(queueItem: UploadQueueItem, uploadCallback: any = unde
     let attempt = 0
     do {
       attempt++
-      // Axios counts `loaded` from zero again when a chunk is tried again: measured against the try before, the
-      // first sample would be far below zero, and the size of the next chunk follows the speed.
-      if (attempt > 1) {
-        lastLoaded = 0
-        lastTimestamp = 0
-      }
       try {
         await uploadChunk(chunkFile, offset)
+        meter.chunkDone(chunkFile.size)
         hash.update(arrayBuffer.data)
 
         return chunkFile
       } catch (error) {
-        if (axios.isCancel(error) || isStopped(queueItem)) return Promise.reject(error)
+        meter.attemptFailed()
+        if (axios.isCancel(error) || stopped()) return Promise.reject(error)
+        const lastAttempt = attempt >= CHUNK_MAX_RETRY
         // Check for 400 Bad Request error on last attempt
-        if (axios.isAxiosError(error) && error.response?.status === 400 && attempt >= CHUNK_MAX_RETRY) {
-          queueItem.error.message = commonT('common.damImage.uploadErrors.chunkValidationFailed')
+        if (lastAttempt && axios.isAxiosError(error) && error.response?.status === 400) {
+          queueItem.error.message = messages.chunkValidationFailed()
           return Promise.reject(error)
         }
 
-        // in error recompute
         if (axiosErrorResponseHasValidationData(error as Error)) {
-          attempt = CHUNK_MAX_RETRY
-          queueItem.error.message = handleValidationErrorMessage(error)
+          queueItem.error.message = uploadValidationMessage(error, messages)
           return Promise.reject(error)
         }
+
+        // Before the work for an attempt that never happens: the loop ends here.
+        if (lastAttempt) break
 
         if (updateChunkSize(queueItem.progress.speed)) {
           arrayBuffer = await readFile(offset, lastChunkSize.value, queueItem.file!)
@@ -202,71 +181,52 @@ export function useUpload(queueItem: UploadQueueItem, uploadCallback: any = unde
         }
 
         await sleep(sleepTime)
-        attempt === CHUNK_MAX_RETRY - 1 ? (sleepTime = 1) : (sleepTime *= CHUNK_RETRY_MULTIPLY)
+        // A stop in the pause had no request to cancel.
+        if (stopped()) return Promise.reject(stoppedError())
+        sleepTime *= CHUNK_RETRY_MULTIPLY
       }
     } while (attempt < CHUNK_MAX_RETRY)
     return Promise.reject('Unable to upload chunk, max tries exceeded')
   }
 
-  function speedCheck() {
-    function speedCheckRun() {
-      speedStack = speedStack.slice(-15)
-      if (speedStack.length > 0) {
-        const avgSpeed = Math.ceil(speedStack.reduce((sum, current) => sum + current) / speedStack.length)
-        const remainingBytes = Math.ceil(fileSize.value * ((100 - progress.value) / 100))
-
-        uploadCallback(progress.value, avgSpeed, Math.ceil(remainingBytes / avgSpeed))
-      }
-
-      if (endTimestamp === 0) {
-        speedCheckTimerId = setTimeout(function () {
-          speedCheckRun()
-        }, SPEED_CHECK_INTERVAL)
-      }
-    }
-
-    speedCheckRun()
-  }
-
-  const stopSpeedCheck = () => {
-    if (speedCheckTimerId !== null) {
-      clearTimeout(speedCheckTimerId)
-      speedCheckTimerId = null
-    }
-    endTimestamp = Date.now() / 1000
-  }
+  const stopSpeedCheck = () => meter.stop()
 
   const uploadInit = async () => {
-    // Taken before the first await, as it was before rusha loaded here: the queue starts every item it still
-    // sees waiting, and it looks again after each file it adds.
-    if (queueItem.file && queueItem.file.size > 0) queueItem.status = UploadQueueItemStatus.Uploading
-    // rusha is loaded when a file starts uploading, not with every page that shows the upload queue, and
-    // before the asset is created: a chunk that does not arrive fails the item without an empty asset.
-    const rusha = await withTimeout(
-      import('rusha'),
-      HASH_LOAD_TIMEOUT,
-      `rusha did not load within ${HASH_LOAD_TIMEOUT} ms.`
-    )
-    // Stop has no request to cancel while rusha loads, so it is checked once rusha is here.
-    if (queueItem.status === UploadQueueItemStatus.Stop) throw new Error('Upload stopped')
-    sha = rusha.default.createHash()
+    const sendable = !!queueItem.file && (emptyFile === 'send' || queueItem.file.size > 0)
+    // Taken before the first await: the queue starts every item it still sees waiting, and it looks again after
+    // each file it adds.
+    if (sendable) queueItem.status = UploadQueueItemStatus.Uploading
+    const hash = await loadHash()
+    // Stop has no request to cancel while the hash is prepared, so it is checked once the hash is here.
+    if (stopped()) throw stoppedError()
+    sha = hash
     return new Promise((resolve, reject) => {
-      if (!queueItem.file || queueItem.file.size < 1) {
+      if (!queueItem.file) {
+        reject(new Error('uploadService: the queue item has no file'))
+        return
+      }
+      if (!sendable) {
         reject(new Error('Empty file'))
         return
       }
       fileSize.value = queueItem.file.size
       queueItem.status = UploadQueueItemStatus.Uploading
-      damUploadStart(damClient, endPointImage, queueItem)
+      requests
+        .start(queueItem)
         .then((res) => {
           // Without both identifiers there is nothing to send the chunks to, nor an asset to ask about: the
           // upload fails here, as when the start is refused, not after a round of tries that send nothing.
           if (!res?.id || !res?.asset) {
-            reject(new Error('The start of the upload answered without the identifiers of the file and its asset.'))
+            reject(new Error('uploadService: the start answer names no file or no asset'))
             return
           }
           queueItem.assetId = res.asset
           queueItem.fileId = res.id
+          // A stop asked for while this was on the wire; the asset it created stays on the server.
+          if (stopped()) {
+            reject(stoppedError())
+            return
+          }
           resolve(queueItem)
         })
         .catch((err) => {
@@ -276,32 +236,43 @@ export function useUpload(queueItem: UploadQueueItem, uploadCallback: any = unde
   }
 
   const upload = async () => {
-    if (uploadCallback) {
-      speedCheck()
+    meter.start(fileSize.value)
+
+    // Every way out but the finish answered stops the meter: no later second reports on a run that failed.
+    try {
+      const filesize = queueItem.file?.size
+      const hash = sha
+      if (isUndefined(filesize) || isUndefined(hash)) throw undefined
+      // A stop while the asset was being created had no chunk request to cancel either.
+      if (stopped()) throw stoppedError()
+
+      let i = 0
+      while (i < filesize) {
+        const uploadedChunk = await processAndUploadChunk(i, hash)
+        i += uploadedChunk.size
+      }
+
+      meter.lastChunkSent()
+      if (stopped()) throw stoppedError()
+      finishAttempted = true
+      return await requests.finish(queueItem, hash.digest('hex'))
+    } catch (error) {
+      stopSpeedCheck()
+      throw error
     }
+  }
 
-    const filesize = queueItem.file?.size
-    const hash = sha
-    if (isUndefined(filesize) || isUndefined(hash)) return Promise.reject()
-    // A stop while the asset was being created had no chunk request to cancel either.
-    if (queueItem.status === UploadQueueItemStatus.Stop) return Promise.reject(new Error('Upload stopped'))
-
-    let i = 0
-    while (i < filesize) {
-      const uploadedChunk = await processAndUploadChunk(i, hash)
-      i += uploadedChunk.size
-      progress.value = (i / filesize) * 100
-    }
-
-    endTimestamp = Date.now() / 1000
-    if (isStopped(queueItem)) return Promise.reject(new Error('Upload stopped'))
-    finishAttempted = true
-    return await finishUpload(queueItem, hash.digest('hex'))
+  const stop = () => {
+    stopRequested = true
+    stopSpeedCheck()
+    queueItem.latestChunkAbortController?.abort()
   }
 
   return {
+    [uploadSide]: set[uploadSide],
     uploadInit,
     upload,
+    stop,
     stopSpeedCheck,
     finishAttempted: () => finishAttempted,
   }

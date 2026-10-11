@@ -24,6 +24,8 @@ import ARow from '@/domains/ui/components/ARow.vue'
 import DamAdminAssetLink from '@/domains/dam/components/DamAdminAssetLink.vue'
 import { isNull } from '@/shared/utils/common'
 import { DamMediaType } from '@/domains/dam/types/MediaAware'
+import { createDamImage } from '@/domains/dam/imageWidget/utils/damImage'
+import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 
 const props = withDefaults(
   defineProps<{
@@ -75,26 +77,14 @@ const imageSourceRequired = computed(() => {
 const imageMedia = computed<ImageCreateUpdateAware | undefined>(() => {
   if (!isMediaAware(detail.value) || isNull(detail.value.damMedia.imageFileId)) return undefined
 
-  return {
-    texts: {
-      description: '',
-      source: '',
-    },
-    dam: {
-      damId: detail.value.damMedia.imageFileId,
-      licenceId: detail.value.damMedia.licenceId!,
-      regionPosition: 0,
-      internal: false,
-    },
-    flags: {
-      showSource: false,
-      internal: false,
-      overrideInternal: false,
-    },
-  }
+  return createDamImage(
+    { fileId: detail.value.damMedia.imageFileId, licenceId: detail.value.damMedia.licenceId! },
+    {},
+    { showSource: false }
+  )
 })
 
-const { v$ } = useImageValidation(detail, imageSourceRequired)
+const { v$ } = useImageValidation(detail, imageSourceRequired, useDamConfigName())
 
 const { showValidationError } = useAlerts()
 

@@ -36,6 +36,7 @@ import { useUploadQueueDialog } from '@/domains/dam/uploadQueue/composables/useU
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
 import UploadQueueDialog from '@/domains/dam/uploadQueue/components/UploadQueueDialog.vue'
 import AFileInput from '@/domains/ui/file/components/AFileInput.vue'
+import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 
 const props = withDefaults(
   defineProps<{
@@ -50,7 +51,7 @@ const props = withDefaults(
   }>(),
   {
     inPodcast: null,
-    configName: 'default',
+    configName: undefined,
     skipCurrentUserCheck: false,
     onDetailLoadedCallback: undefined,
     variant: 'default',
@@ -58,6 +59,8 @@ const props = withDefaults(
 )
 
 const sortModel = defineModel<number>('sort', { default: 1, required: false })
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const damConfigName = useDamConfigName(props.configName)
 
 const { t } = useI18n()
 
@@ -72,12 +75,11 @@ const {
   reset,
   resetAssetList,
   // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-} = useAssetSelectActions('default', props.onDetailLoadedCallback)
+} = useAssetSelectActions(damConfigName, props.onDetailLoadedCallback)
 // The ordering in the list bar reads this; without it the dialog would pick up the host page's pagination.
 provide(DatatablePaginationKey, pagination)
 
-// eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { assetListEnabledFilters, endPointAsset } = useCommonAdminCoreDamOptions(props.configName)
+const { assetListEnabledFilters, endPointAsset } = useCommonAdminCoreDamOptions(damConfigName)
 
 const { loadDamConfigAssetCustomFormElements, getDamConfigAssetCustomFormElements } = useDamConfigState(damClient)
 
@@ -206,7 +208,7 @@ const onFileInput = (files: File[]) => {
   if (files.length === 0) return
   const config = imageWidgetUploadConfig?.value
   if (!config) return
-  uploadQueuesStore.addByFiles(props.queueKey, config.extSystem, config.licence, files)
+  uploadQueuesStore.addByFiles(props.queueKey, config.extSystem, config.licence, files, damConfigName)
   uploadQueueDialog.value = props.queueKey
 }
 
@@ -300,7 +302,7 @@ onUnmounted(() => {
               use-config-layout
               hide-text-search
               :enabled-filters="assetListEnabledFilters"
-              :config-name="configName"
+              :config-name="damConfigName"
             />
           </template>
         </AFilterWrapper>

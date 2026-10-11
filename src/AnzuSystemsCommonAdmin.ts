@@ -67,8 +67,8 @@ export interface CommonAdminCoreDamConfig {
   endPointRoi?: string
   /**
    * Where the authors of DAM are listed, looked up by id and created; `/adm/v1/author` by default. Read from the
-   * configuration a component runs under, and from `default` by what has no configuration of its own to name:
-   * the cache of author names and the author inputs.
+   * configuration a component runs under, and from `default` by the cache of author names, which has no
+   * configuration of its own to name.
    */
   endPointAuthor?: string
   /** The same for the keywords of DAM; `/adm/v1/keyword` by default. */
@@ -81,7 +81,17 @@ export interface CommonAdminCoreDamConfig {
   roiUpdateAcl?: AclValue | null
   /** The grant an image's rotation needs, as `roiUpdateAcl`: `dam_image_update` for the default `/adm/v1/image`. */
   imageRotateAcl?: AclValue | null
+  /** The grant creating a keyword needs, checked before it is offered (Enter, comma, "+ name"). None by default. */
+  keywordCreateAcl?: AclValue | null
+  /** The same for an author, also the "+" button. */
+  authorCreateAcl?: AclValue | null
   mainFileSingleUseEnabled?: boolean
+  /**
+   * The copy of a picked asset into the licence a widget uploads into: the asset picker offers it and the widgets send
+   * it. On unless `false`; an application whose licence of the upload is the only one it picks from has no use for it
+   * and is to turn it off, as admin-ugc is.
+   */
+  copyToLicenceEnabled?: boolean
   showSourceEnabled?: boolean
   showFileInfoEnabled?: boolean
   sourceLabel?: string

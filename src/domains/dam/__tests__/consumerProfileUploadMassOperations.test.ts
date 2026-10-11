@@ -1,6 +1,7 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { type DOMWrapper, flushPromises, mount, type VueWrapper } from '@vue/test-utils'
 import { createPinia, type Pinia, setActivePinia } from 'pinia'
+import { createI18n } from 'vue-i18n'
 import {
   cmsConfiguration,
   consumerProfiles,
@@ -11,9 +12,14 @@ import { holdLongWaits, type LongWaits } from '@/domains/dam/__tests__/support/l
 import { damText } from '@/domains/dam/__tests__/support/uploadUi'
 import AuthorRemoteAutocompleteWithCached from '@/domains/dam/author/components/AuthorRemoteAutocompleteWithCached.vue'
 import { useDamNotificationsEventBus } from '@/domains/dam/composables/damNotificationsEventBus'
+import { useDamConfigStore } from '@/domains/dam/config/store/damConfigStore'
 import KeywordRemoteAutocompleteWithCached from '@/domains/dam/keyword/components/KeywordRemoteAutocompleteWithCached.vue'
+import { DamAssetType } from '@/domains/dam/types/Asset'
 import AssetQueueSelectedSidebar from '@/domains/dam/uploadQueue/components/AssetQueueSelectedSidebar.vue'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
+import cs from '@/locales/cs'
+import en from '@/locales/en'
+import sk from '@/locales/sk'
 
 // The mass operations of the queue dialog, under each of the two applications: a scratch form beside the rows,
 // whose values the user copies into the rows, one field at a time or all at once. The real form over the real
@@ -72,17 +78,39 @@ describe.each(consumerProfiles)('the mass operations of an upload queue under th
       input: field.find<HTMLInputElement | HTMLTextAreaElement>('input, textarea:not([aria-hidden="true"])'),
     }))
   const customField = (label: string) => customFields().find((field) => field.label === label)!
-  /** The two buttons on the line of a field: the one that fills the rows where it is empty, the one that replaces it. */
-  const onTheLine = (line: Element) => {
+  /**
+   * The two buttons on the line of a field: the one that fills the rows where it is empty, the one that replaces it.
+   * Each is found by its accessible name, which says what it does and to which field.
+   */
+  const onTheLine = (line: Element, field: string) => {
     const button = (name: string) =>
-      line.querySelector<HTMLButtonElement>(`button[aria-label="${damText(`asset.massOperations.${name}`)}"]`)!
-    return { fillEmpty: button('fillOneEmpty'), replace: button('replaceOne') }
+      line.querySelector<HTMLButtonElement>(
+        `button[aria-label="${damText(`asset.massOperations.${name}`, { field })}"]`
+      )!
+    return { fillEmpty: button('fillOneEmptyField'), replace: button('replaceOneField') }
   }
-  const beside = (field: DOMWrapper<Element>) => onTheLine(field.element.closest('.d-flex')!)
+  /** Beside a custom field, which is named by its label. */
+  const beside = (field: DOMWrapper<Element>, label: string) => onTheLine(field.element.closest('.d-flex')!, label)
   // The inputs of keywords and authors sit in a box of their own, beside their two buttons.
-  const besideList = (input: VueWrapper) => onTheLine(input.element.closest('[style*="min-width"]')!.parentElement!)
+  const besideList = (input: VueWrapper, label: string) =>
+    onTheLine(input.element.closest('[style*="min-width"]')!.parentElement!, label)
+  const KEYWORDS = damText('asset.model.keywords')
+  const AUTHORS = damText('asset.model.authors')
   const keywords = () => wrapper!.findComponent(KeywordRemoteAutocompleteWithCached)
   const authors = () => wrapper!.findComponent(AuthorRemoteAutocompleteWithCached)
+  /** The words of the tooltip of the button of that name, as a pointer over the button opens them. */
+  const tooltipOf = async (name: string) => {
+    const button = wrapper!.findAllComponents({ name: 'VBtn' }).find((one) => one.attributes('aria-label') === name)!
+    const tooltip = button.findComponent({ name: 'VTooltip' })
+    button.element.dispatchEvent(new MouseEvent('mouseenter'))
+    const opened = () => {
+      const content = (tooltip.vm as unknown as { contentEl?: HTMLElement }).contentEl
+      return content?.closest('.v-overlay--active') ? content : null
+    }
+    await vi.waitFor(() => expect(opened()).not.toBeNull())
+
+    return opened()!.textContent!.trim()
+  }
   const atTheBottom = (name: 'fillAllEmpty' | 'replaceAll' | 'clearForm') =>
     wrapper!
       .findAll('.sidebar-info__actions button')
@@ -96,6 +124,55 @@ describe.each(consumerProfiles)('the mass operations of an upload queue under th
     expect(wrapper!.text().includes(damText('asset.massOperations.general'))).toBe(isCms)
     expect(wrapper!.text()).toContain(damText('asset.assetType.image'))
     expect(wrapper!.text()).toContain(damText('asset.massOperations.description'))
+  })
+
+  // First set, point 7: who cannot see the icons hears which field each of the two buttons beside it acts on.
+  it('names the two buttons beside each field by what they do and by the field', async () => {
+    await mountBesideRows()
+    const fields = [...(isCms ? [KEYWORDS, AUTHORS] : []), untouched, typedInto]
+    const names = wrapper!.findAll('button[aria-label]').map((button) => button.attributes('aria-label')!)
+
+    expect(names.filter((name) => name.includes(': ')).sort()).toEqual(
+      fields.flatMap((field) => [`Fill empty field: ${field}`, `Replace everywhere: ${field}`]).sort()
+    )
+    // The name without the field is the name of none of them any more; the tooltips keep it.
+    expect(names).not.toContain(damText('asset.massOperations.fillOneEmpty'))
+    expect(names).not.toContain(damText('asset.massOperations.replaceOne'))
+  })
+
+  // What is seen stays as it was: the tooltip of each button says what it does, and no field.
+  it('keeps the tooltips of those buttons short, without the field', async () => {
+    await mountBesideRows()
+    const fields = [...(isCms ? [KEYWORDS, AUTHORS] : []), untouched, typedInto]
+
+    const shown = await Promise.all(
+      fields.flatMap((field) => [tooltipOf(`Fill empty field: ${field}`), tooltipOf(`Replace everywhere: ${field}`)])
+    )
+
+    expect(shown).toEqual(
+      fields.flatMap(() => [damText('asset.massOperations.fillOneEmpty'), damText('asset.massOperations.replaceOne')])
+    )
+  })
+
+  // A custom field is shown to the user under its name; its property is what the DAM knows it by, and what a row
+  // keeps it under. The configurations of the tests name every field as its property.
+  it('names the buttons of a custom field by the name it is shown under, and writes it under its property', async () => {
+    const elements = useDamConfigStore(pinia).damConfigAssetCustomFormElements.get(extSystem)![DamAssetType.Image]
+    elements.find((element) => element.property === typedInto)!.name = 'Shown to the user'
+    const [first] = await mountBesideRows()
+    const names = wrapper!.findAll('button[aria-label]').map((button) => button.attributes('aria-label')!)
+
+    expect(names.filter((name) => name.endsWith(': Shown to the user')).sort()).toEqual([
+      'Fill empty field: Shown to the user',
+      'Replace everywhere: Shown to the user',
+    ])
+    expect(names.filter((name) => name.endsWith(`: ${typedInto}`))).toEqual([])
+
+    await customField('Shown to the user').input.setValue('for all')
+    beside(customField('Shown to the user').input, 'Shown to the user').replace.click()
+    await flushPromises()
+
+    expect(first.customData).toEqual({ [typedInto]: 'for all' })
   })
 
   it('offers no field beside a queue without rows, only its three buttons', async () => {
@@ -117,7 +194,7 @@ describe.each(consumerProfiles)('the mass operations of an upload queue under th
       await customField(typedInto).input.setValue('for all')
       await customField(untouched).input.setValue('not asked for')
 
-      beside(customField(typedInto).input).fillEmpty.click()
+      beside(customField(typedInto).input, typedInto).fillEmpty.click()
       await flushPromises()
 
       expect([first, second, third].map((row) => row.customData)).toEqual([
@@ -132,7 +209,7 @@ describe.each(consumerProfiles)('the mass operations of an upload queue under th
       second.customData = { [typedInto]: 'of the row', [untouched]: 'kept' }
       await customField(typedInto).input.setValue('for all')
 
-      beside(customField(typedInto).input).replace.click()
+      beside(customField(typedInto).input, typedInto).replace.click()
       await flushPromises()
 
       expect([first, second, third].map((row) => row.customData)).toEqual([
@@ -199,20 +276,20 @@ describe.each(consumerProfiles)('the mass operations of an upload queue under th
         second.authors = ['author-row']
         await pickOnTheForm()
 
-        besideList(keywords()).fillEmpty.click()
+        besideList(keywords(), KEYWORDS).fillEmpty.click()
         expect([first, second].map((row) => [row.keywords, row.authors])).toEqual([
           [['keyword-form'], []],
           [['keyword-row'], ['author-row']],
         ])
 
-        besideList(authors()).replace.click()
+        besideList(authors(), AUTHORS).replace.click()
         expect([first, second].map((row) => [row.keywords, row.authors])).toEqual([
           [['keyword-form'], ['author-form']],
           [['keyword-row'], ['author-form']],
         ])
 
-        besideList(keywords()).replace.click()
-        besideList(authors()).fillEmpty.click()
+        besideList(keywords(), KEYWORDS).replace.click()
+        besideList(authors(), AUTHORS).fillEmpty.click()
         expect([first, second].map((row) => [row.keywords, row.authors])).toEqual([
           [['keyword-form'], ['author-form']],
           [['keyword-form'], ['author-form']],
@@ -275,5 +352,22 @@ describe.each(consumerProfiles)('the mass operations of an upload queue under th
     await atTheBottom('replaceAll').trigger('click')
 
     expect(dam.requests).toEqual([])
+  })
+})
+
+// The components are mounted in English; the two names are in three languages, and each is to say the field.
+describe('the names of the two buttons beside a field of the mass operations', () => {
+  const languages = createI18n({ legacy: false, locale: 'en', messages: { sk, en, cs } })
+
+  it.each([
+    ['sk', 'Vyplňte prázdne pole: Titulok', 'Nahradiť všade: Titulok'],
+    ['en', 'Fill empty field: Titulok', 'Replace everywhere: Titulok'],
+    ['cs', 'Vyplňte prázdné pole: Titulok', 'Nahradit všude: Titulok'],
+  ] as const)('say the field after what the button does, in %s', (language, fillEmpty, replace) => {
+    const name = (key: string) =>
+      languages.global.t(`common.damImage.asset.massOperations.${key}`, { field: 'Titulok' }, { locale: language })
+
+    expect(name('fillOneEmptyField')).toBe(fillEmpty)
+    expect(name('replaceOneField')).toBe(replace)
   })
 })

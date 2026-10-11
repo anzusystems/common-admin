@@ -181,12 +181,13 @@ describe.each(consumerProfiles)('the upload dialog under the $name', (profile) =
           texts: { description: 'described', source: profile === ugcConfiguration ? 'A. Author' : '' },
           dam: { damId: 'file-1', licenceId: licence, regionPosition: 0, internal: false },
           flags: { showSource: true, internal: false, overrideInternal: false },
-          position: 1,
           damAuthors: [],
           showDamAuthors: true,
         },
       ],
     ])
+    // Its position is the widget's to give (finding 31).
+    expect('position' in (wrapper!.emitted('apply')![0] as [object[]])[0][0]!).toBe(false)
     // Neither map asks for an author here.
     const ownPrefix = endPoints.asset.replace(/\/asset$/, '/')
     expect(dam.requests.filter((request) => !request.url.startsWith(ownPrefix))).toEqual([])

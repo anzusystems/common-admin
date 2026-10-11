@@ -6,6 +6,7 @@ import { isNull, isString, isUndefined } from '@/shared/utils/common'
 import { fetchAuthorListByIds } from '@/domains/dam/author/api/authorApi'
 import type { AxiosInstance } from 'axios'
 import type { AssetDetailItemDto } from '@/domains/dam/types/Asset'
+import { createDamImage } from '@/domains/dam/imageWidget/utils/damImage'
 
 export interface UploadMetadataToImageMapItem extends ImageCreateUpdateAware {
   authorIds: DocId[]
@@ -77,21 +78,14 @@ export async function mapUploadMetadataToImages(
     }
 
     return {
-      texts: {
-        description: description ?? '',
-        source: authorNames.join(', '),
-      },
-      flags: {
-        showSource: true,
-        internal: false,
-        overrideInternal: false,
-      },
-      dam: {
-        damId: queueItem.fileId as DocId,
-        regionPosition: 0,
-        licenceId,
-        internal: assetMetadataMap.get(queueItem.assetId!)?.mainFileInternal ?? false,
-      },
+      ...createDamImage(
+        {
+          fileId: queueItem.fileId as DocId,
+          licenceId,
+          internal: assetMetadataMap.get(queueItem.assetId!)?.mainFileInternal,
+        },
+        { description: description ?? '', source: authorNames.join(', ') }
+      ),
       authorIds: authorIds || [],
       assetId: queueItem.assetId || undefined,
     }

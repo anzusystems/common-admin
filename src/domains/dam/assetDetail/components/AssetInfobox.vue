@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { useI18n } from 'vue-i18n'
 import {
+  AssetFileFailReason,
   type AssetFileFailReasonType,
   AssetFileProcessStatus,
   type AssetFileProcessStatusType,
@@ -38,7 +39,8 @@ const { t } = useI18n()
   >
     <VAlert type="error">
       {{ t('common.damImage.asset.detail.info.status.failed') }}
-      <div v-if="assetMainFileFailReason">
+      <!-- As the row of the queue: no chip for the reason that is none. -->
+      <div v-if="assetMainFileFailReason && assetMainFileFailReason !== AssetFileFailReason.None">
         <br />
         <AssetFileFailReasonChip :reason="assetMainFileFailReason" />
       </div>

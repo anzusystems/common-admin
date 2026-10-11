@@ -2,37 +2,29 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
-import { useTheme } from '@/domains/system/composables/themeSettings'
 import { AssetDetailTabImageWithRoi, useAssetDetailStore } from '@/domains/dam/assetDetail/store/assetDetailStore'
-import {
-  type AssetDetailItemDto,
-  DamAssetStatusDefault,
-  DamAssetType,
-  DamAssetTypeDefault,
-} from '@/domains/dam/types/Asset'
-import AssetDetailDialogLoader from '@/domains/dam/assetDetail/components/AssetDetailDialogLoader.vue'
-import AssetImage from '@/domains/dam/assetDetail/components/AssetImage.vue'
-import { AssetFileFailReason, assetFileIsImageFile } from '@/domains/dam/types/AssetFile'
-import DamAssetImageRoiSelectLazy from '@/domains/dam/cropper/components/DamAssetImageRoiSelectLazy.vue'
-import { useAuthHelpers } from '@/domains/auth/composables/defineAuth'
+import { DamAssetType } from '@/domains/dam/types/Asset'
+import AssetDetailDialogFrame from '@/domains/dam/assetDetail/components/AssetDetailDialogFrame.vue'
+import { assetDetailViewOfUploadItem } from '@/domains/dam/assetDetail/composables/assetDetailView'
 import type { ImageCreateUpdateAware } from '@/domains/dam/types/ImageAware'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
 import { useUploadQueueDialog } from '@/domains/dam/uploadQueue/composables/useUploadQueueDialog'
-import {
-  type UploadQueueItem,
-  UploadQueueItemStatus,
-  type UploadQueueItemStatusType,
-} from '@/domains/dam/types/UploadQueue'
-import { dateTimeNow } from '@/shared/utils/datetime'
-import AssetFileFailReasonChip from '@/domains/dam/assetDetail/components/AssetFileFailReasonChip.vue'
+import { type UploadQueueItem, UploadQueueItemStatus } from '@/domains/dam/types/UploadQueue'
+import UploadQueueItemErrorOverlay from '@/domains/dam/uploadQueue/components/UploadQueueItemErrorOverlay.vue'
 import { useAlerts } from '@/domains/system/composables/alerts'
-import { bulkUpdateAssetsMetadata, fetchAsset } from '@/domains/dam/api/damAssetApi'
+import {
+  type AssetMetadataBulkItem,
+  bulkUpdateAssetsMetadata,
+  fetchAsset,
+  showMetadataSaveError,
+} from '@/domains/dam/api/damAssetApi'
 import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
 import UploadQueueDialogSingleSidebar from '@/domains/dam/uploadQueue/components/UploadQueueDialogSingleSidebar.vue'
 import UploadQueueButtonStop from '@/domains/dam/uploadQueue/components/UploadQueueButtonStop.vue'
 import { isNull } from '@/shared/utils/common'
 import { mapUploadMetadataToImages } from '@/domains/dam/imageWidget/utils/metadataToImageMap'
 import type { IntegerId } from '@/shared/types/common'
+import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 
 const props = withDefaults(
   defineProps<{
@@ -46,7 +38,7 @@ const props = withDefaults(
     disableDoneAnimation?: boolean
   }>(),
   {
-    configName: 'default',
+    configName: undefined,
     disableDoneAnimation: false,
   }
 )
@@ -54,15 +46,12 @@ const props = withDefaults(
 const emit = defineEmits<{
   (e: 'apply', items: ImageCreateUpdateAware[]): void
 }>()
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const damConfigName = useDamConfigName(props.configName)
 
 const { showErrorsDefault, showRecordWas } = useAlerts()
 
-const IMAGE_ASPECT_RATIO = 16 / 9
-
 const { t } = useI18n()
-const { canSafeHelper } = useAuthHelpers()
-
-const { toolbarColor } = useTheme()
 
 const assetDetailStore = useAssetDetailStore()
 const { activeTab, loading, asset: assetDetail } = storeToRefs(assetDetailStore)
@@ -79,142 +68,20 @@ const item = computed<UploadQueueItem | null>(() => {
   return items.value[0] ?? null
 })
 
-const asset = computed<AssetDetailItemDto | null>(() => {
-  if (!item.value || !item.value.assetId) return null
-  if (isDone.value && assetDetail.value) return assetDetail.value
-  return {
-    id: item.value.assetId,
-    texts: {
-      displayTitle: '',
-    },
-    attributes: {
-      assetType: item.value.assetType,
-      assetStatus: item.value.assetStatus,
-    },
-    mainFileSingleUse: false,
-    mainFileInternal: item.value.mainFileInternal ?? null,
-    mainFileOverrideInternal: null,
-    flags: {
-      described: false,
-      visible: false,
-    },
-    siblingToAsset: null,
-    licence: item.value.licenceId,
-    mainFile: null,
-    keywords: [],
-    authors: [],
-    podcasts: [],
-    metadata: {
-      authorSuggestions: {},
-      keywordSuggestions: {},
-      customData: {},
-    },
-    distributionCategory: null,
-    assetFileProperties: {
-      distributesInServices: [],
-      slotNames: [],
-      fromRss: false,
-      width: 0,
-      height: 0,
-    },
-    _resourceName: 'asset',
-    _system: 'coreDam',
-    createdAt: dateTimeNow(),
-    modifiedAt: dateTimeNow(),
-    createdBy: null,
-    modifiedBy: null,
-  }
-})
-
-const sidebar = ref(true)
-
-const toggleSidebar = () => {
-  sidebar.value = !sidebar.value
-}
-
-const assetType = computed(() => {
-  return asset.value?.attributes.assetType || DamAssetTypeDefault
-})
-
-const assetStatus = computed(() => {
-  if (!asset.value) return DamAssetStatusDefault
-  return asset.value.attributes.assetStatus
-})
-
-const isTypeImage = computed(() => {
-  return assetType.value === DamAssetType.Image
-})
-const isTypeVideo = computed(() => {
-  return assetType.value === DamAssetType.Video
-})
-const isTypeAudio = computed(() => {
-  return assetType.value === DamAssetType.Audio
-})
-const isTypeDocument = computed(() => {
-  return assetType.value === DamAssetType.Document
-})
-
-const imageProperties = computed(() => {
-  if (item.value?.imagePreview) {
-    return {
-      url: item.value.imagePreview.url,
-      width: item.value.imagePreview.requestedWidth || undefined,
-      height: item.value.imagePreview.requestedHeight || undefined,
-      bgColor:
-        assetFileIsImageFile(asset.value?.mainFile) &&
-        asset.value?.mainFile.imageAttributes &&
-        asset.value?.mainFile.imageAttributes.mostDominantColor
-          ? asset.value.mainFile.imageAttributes.mostDominantColor
-          : '#ccc',
-    }
-  }
-  return {
-    url: '',
-    width: 356,
-    height: 200,
-    bgColor: '#ccc',
-  }
-})
-
-const assetMainFile = computed(() => {
-  return asset.value?.mainFile || undefined
-})
-
-const processingStatuses: readonly UploadQueueItemStatusType[] = [
-  UploadQueueItemStatus.Processing,
-  UploadQueueItemStatus.Loading,
-]
-const processing = computed(() => {
-  return !isNull(item.value) && processingStatuses.includes(item.value.status)
-})
-const waiting = computed(() => {
-  return !isNull(item.value) && item.value.status === UploadQueueItemStatus.Waiting
-})
 const isDone = computed(() => {
   return !isNull(item.value) && item.value.status === UploadQueueItemStatus.Uploaded
 })
-const showDone = computed(() => {
-  return !props.disableDoneAnimation && isDone.value
-})
-const uploading = computed(() => {
-  return !isNull(item.value) && item.value.status === UploadQueueItemStatus.Uploading
-})
-const uploadProgress = computed(() => {
-  return item.value?.progress.progressPercent
-})
 
-const {
-  damClient,
-  endPointAsset,
-  endPointAuthor,
-  customUploadMetadataToImageMap,
-  simpleAssetSidebarEnabled,
-  roiUpdateAcl,
-  // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-} = useCommonAdminCoreDamOptions(props.configName)
-// The endpoint refuses the region's save without it: the region tab then only shows the image.
-const roiEditable = computed(() => isNull(roiUpdateAcl) || canSafeHelper(roiUpdateAcl, undefined, 'roi'))
-const simpleMode = computed(() => simpleAssetSidebarEnabled && isTypeImage.value && enableRoiTab.value)
+const { damClient, endPointAsset, endPointAuthor, customUploadMetadataToImageMap, simpleAssetSidebarEnabled } =
+  useCommonAdminCoreDamOptions(damConfigName)
+
+const view = computed(() =>
+  assetDetailViewOfUploadItem(item.value, assetDetail.value, {
+    enableRoiTab: enableRoiTab.value,
+    disableDoneAnimation: props.disableDoneAnimation,
+    simpleAssetSidebarEnabled,
+  })
+)
 
 const onStopConfirm = async () => {
   uploadQueuesStore.stopUpload(props.queueKey)
@@ -250,27 +117,35 @@ watch(
   { immediate: true }
 )
 
+// Which of the two buttons saves, while it does: the other one waits, and neither sends a second request.
+const saving = ref<'save' | 'saveAndApply' | null>(null)
+
 const onSave = async () => {
-  if (items.value.length === 0) return
+  if (items.value.length === 0 || !isNull(saving.value)) return
+  saving.value = 'save'
   try {
     await bulkUpdateAssetsMetadata(damClient, endPointAsset, items.value, mainFileSingleUse.value)
     showRecordWas('updated')
   } catch (error) {
-    showErrorsDefault(error)
+    showMetadataSaveError(error, props.extSystem)
+  } finally {
+    saving.value = null
   }
 }
 
 const onSaveAndApply = async () => {
-  if (items.value.length === 0) return
+  if (items.value.length === 0 || !isNull(saving.value)) return
+  saving.value = 'saveAndApply'
   try {
-    const assetsMetadataRes = await bulkUpdateAssetsMetadata(
-      damClient,
-      endPointAsset,
-      items.value,
-      mainFileSingleUse.value
-    )
-    if (!assetsMetadataRes[0]) {
-      throw new Error('Fatal error updating asset metadata')
+    let assetsMetadataRes: AssetMetadataBulkItem[]
+    try {
+      assetsMetadataRes = await bulkUpdateAssetsMetadata(damClient, endPointAsset, items.value, mainFileSingleUse.value)
+      if (!assetsMetadataRes[0]) {
+        throw new Error('Fatal error updating asset metadata')
+      }
+    } catch (error) {
+      showMetadataSaveError(error, props.extSystem)
+      return
     }
     showRecordWas('updated')
     const mappedItems = customUploadMetadataToImageMap
@@ -298,7 +173,10 @@ const onSaveAndApply = async () => {
     )
     await onStopConfirm()
   } catch (error) {
+    // The save is said above. What follows it, the images made of its answer, is said as it was before.
     showErrorsDefault(error)
+  } finally {
+    saving.value = null
   }
 }
 
@@ -323,184 +201,78 @@ onMounted(() => {
 </script>
 
 <template>
-  <VDialog
-    :model-value="true"
-    fullscreen
-    eager
+  <AssetDetailDialogFrame
+    :loading="loading || !item"
+    :view="view"
+    :ext-system="extSystem"
+    :config-name="damConfigName"
+    @close="onStopConfirm"
   >
-    <AssetDetailDialogLoader
-      v-if="loading || !item"
-      @close-dialog="onStopConfirm"
-    />
-    <VCard
-      v-else-if="item"
-      class="dam-image-detail"
-      :class="{ 'dam-image-detail--sidebar-active': sidebar }"
-    >
-      <div class="dam-image-detail__wrapper d-flex flex-column">
-        <VToolbar
-          :color="toolbarColor"
-          density="compact"
-          :height="64"
-          class="border-b pr-1"
-        >
-          <div class="text-label-large d-flex px-2">
-            <div
-              v-if="isUploading"
-              class="text-label-large"
-            >
-              {{ t('common.damImage.upload.title') }}
-            </div>
-            <div
-              v-else
-              class="text-label-large text-green-darken-3 font-weight-bold"
-            >
-              {{ t('common.damImage.upload.titleDone') }}
-            </div>
-          </div>
-          <VSpacer />
-          <div class="pr-3">
-            <VBtn
-              :aria-label="t('common.damImage.asset.detail.toggleInfo')"
-              :active="sidebar"
-              :variant="sidebar ? 'flat' : 'text'"
-              :color="sidebar ? 'secondary' : ''"
-              icon
-              class="mr-1"
-              :width="36"
-              :height="36"
-              @click.stop="toggleSidebar"
-            >
-              <VIcon
-                icon="mdi-information-outline"
-                class="d-none d-md-flex"
-              />
-              <VIcon
-                icon="mdi-image-outline"
-                class="d-flex d-md-none"
-              />
-              <VTooltip
-                activator="parent"
-                location="bottom"
-              >
-                {{ t('common.damImage.asset.detail.toggleInfo') }}
-              </VTooltip>
-            </VBtn>
-            <UploadQueueButtonStop
-              data-cy="button-close"
-              :button-size="36"
-              :is-uploading="isUploading"
-              @confirm="onStopConfirm"
-            />
-          </div>
-        </VToolbar>
-        <div class="d-flex w-100 h-100 position-relative dam-image-detail__content">
-          <div class="d-flex w-100 align-center dam-image-detail__left">
-            <div
-              v-if="(activeTab === AssetDetailTabImageWithRoi.ROI && enableRoiTab) || simpleMode"
-              class="w-100 h-100 pa-2 d-flex align-center justify-center"
-            >
-              <DamAssetImageRoiSelectLazy
-                :ext-system="extSystem"
-                :config-name="configName"
-                :readonly="!roiEditable"
-              />
-            </div>
-            <div
-              v-else
-              class="w-100 h-100 pa-2 d-flex align-center justify-center"
-            >
-              <div class="position-relative">
-                <AssetImage
-                  v-if="item"
-                  :asset-type="assetType"
-                  :asset-status="assetStatus"
-                  :src="imageProperties.url"
-                  :background-color="imageProperties.bgColor"
-                  :width="imageProperties.width"
-                  :height="imageProperties.height"
-                  :show-uploading="uploading"
-                  :show-processing="processing"
-                  :show-waiting="waiting"
-                  :show-done="showDone"
-                  :uploading-progress="uploadProgress"
-                  :remaining-time="item.progress.remainingTime"
-                  use-component
-                  :aspect-ratio="IMAGE_ASPECT_RATIO"
-                />
-                <div
-                  v-if="item && item.error.hasError"
-                  :class="
-                    'dam-upload-queue__overlay dam-upload-queue__overlay--error ' +
-                    'd-flex align-center justify-center flex-column'
-                  "
-                >
-                  <VIcon
-                    icon="mdi-alert"
-                    class="ma-1"
-                    size="x-small"
-                    color="error"
-                  />
-                  <div class="text-error">
-                    {{ t('common.damImage.queueItem.error') }}
-                  </div>
-                  <div
-                    v-if="item && item.error.message.length"
-                    class="text-body-small"
-                    v-text="item.error.message"
-                  />
-                  <div v-else-if="item.error.assetFileFailReason !== AssetFileFailReason.None">
-                    <AssetFileFailReasonChip :reason="item.error.assetFileFailReason" />
-                  </div>
-                  <div
-                    v-else
-                    class="text-body-small"
-                  >
-                    {{ t('common.damImage.uploadErrors.unknownError') }}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="h-100 d-flex dam-image-detail__sidebar border-s">
-            <UploadQueueDialogSingleSidebar
-              v-if="asset"
-              :key="asset.id"
-              :queue-key="queueKey"
-              :ext-system="extSystem"
-              :config-name="configName"
-              :enable-roi-tab="enableRoiTab"
-              :show-file-info="enableRoiTab"
-              :asset-id="asset.id"
-              :is-video="isTypeVideo"
-              :is-audio="isTypeAudio"
-              :is-image="isTypeImage"
-              :is-document="isTypeDocument"
-              :asset-status="assetStatus"
-              :asset-type="assetType"
-              :asset-main-file-status="assetMainFile ? assetMainFile.fileAttributes.status : undefined"
-              :asset-main-file-fail-reason="assetMainFile ? assetMainFile.fileAttributes.failReason : undefined"
-              @save="onSave"
-              @save-and-apply="onSaveAndApply"
-            >
-              <template #prepend-sidebar>
-                <div
-                  v-if="item?.isDuplicate"
-                  class="text-body-small text-warning px-3 py-2"
-                >
-                  {{ t('common.damImage.asset.detail.info.status.duplicate') }}
-                </div>
-                <div
-                  v-if="item?.isDuplicate && originalIsSingleUse"
-                  class="text-body-small text-error px-3 py-2"
-                >
-                  {{ t('common.damImage.asset.model.mainFileSingleUse') }}
-                </div>
-              </template>
-            </UploadQueueDialogSingleSidebar>
-          </div>
-        </div>
+    <template #title>
+      <div
+        v-if="isUploading"
+        class="text-label-large"
+      >
+        {{ t('common.damImage.upload.title') }}
       </div>
-    </VCard>
-  </VDialog>
+      <div
+        v-else
+        class="text-label-large text-green-darken-3 font-weight-bold"
+      >
+        {{ t('common.damImage.upload.titleDone') }}
+      </div>
+    </template>
+    <template #toolbar-actions>
+      <UploadQueueButtonStop
+        data-cy="button-close"
+        :button-size="36"
+        :is-uploading="isUploading"
+        @confirm="onStopConfirm"
+      />
+    </template>
+    <template #image-overlay>
+      <UploadQueueItemErrorOverlay
+        v-if="item && item.error.hasError"
+        :error="item.error"
+      />
+    </template>
+    <template #sidebar="{ view: shown }">
+      <UploadQueueDialogSingleSidebar
+        v-if="shown.id"
+        :key="shown.id"
+        :queue-key="queueKey"
+        :ext-system="extSystem"
+        :config-name="damConfigName"
+        :enable-roi-tab="enableRoiTab"
+        :show-file-info="enableRoiTab"
+        :asset-id="shown.id"
+        :is-video="shown.assetType === DamAssetType.Video"
+        :is-audio="shown.assetType === DamAssetType.Audio"
+        :is-image="shown.assetType === DamAssetType.Image"
+        :is-document="shown.assetType === DamAssetType.Document"
+        :asset-status="shown.assetStatus"
+        :asset-type="shown.assetType"
+        :asset-main-file-status="shown.mainFile ? shown.mainFile.fileAttributes.status : undefined"
+        :asset-main-file-fail-reason="shown.mainFile ? shown.mainFile.fileAttributes.failReason : undefined"
+        :saving="saving"
+        @save="onSave"
+        @save-and-apply="onSaveAndApply"
+      >
+        <template #prepend-sidebar>
+          <div
+            v-if="item?.isDuplicate"
+            class="text-body-small text-warning px-3 py-2"
+          >
+            {{ t('common.damImage.asset.detail.info.status.duplicate') }}
+          </div>
+          <div
+            v-if="item?.isDuplicate && originalIsSingleUse"
+            class="text-body-small text-error px-3 py-2"
+          >
+            {{ t('common.damImage.asset.model.mainFileSingleUse') }}
+          </div>
+        </template>
+      </UploadQueueDialogSingleSidebar>
+    </template>
+  </AssetDetailDialogFrame>
 </template>

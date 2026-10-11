@@ -23,6 +23,7 @@ export function useUploadQueueItemFactory() {
       status: status,
       isDuplicate: false,
       duplicateAssetId: null,
+      uploadedAssetId: null,
       assetType: assetType,
       assetStatus: DamAssetStatusDefault,
       displayTitle: '',

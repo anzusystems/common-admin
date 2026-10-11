@@ -11,7 +11,7 @@ import type { DamImageCopyToLicenceRequest, DamImageCopyToLicenceResponse } from
 import { useSentry } from '@/domains/system/composables/sentry'
 import { useApiRequest } from '@/domains/api/composables/useApiRequest'
 import { requestedUrl } from '@/domains/api/composables/request'
-import { mapApiError } from '@/domains/api/utils/apiErrors'
+import { mapApiError, report } from '@/domains/api/utils/apiErrors'
 
 const CHUNK_UPLOAD_TIMEOUT = 420
 
@@ -302,9 +302,9 @@ export const copyToLicence = async (
     return responses.flat()
   } catch (error) {
     // The class the widgets' error alert knows, where the bare error of axios passed it by without a word; a
-    // request that was stopped becomes the one it keeps quiet about.
-    return Promise.reject(
-      mapApiError(error, { system: SYSTEM_CORE_DAM, entity: 'asset', url: requestedUrl(client, url, {}, error) })
-    )
+    // request that was stopped becomes the one it keeps quiet about. Handed to the api error logger as every
+    // other request of the family is.
+    const context = { system: SYSTEM_CORE_DAM, entity: 'asset', url: requestedUrl(client, url, {}, error) }
+    return Promise.reject(report(mapApiError(error, context), context))
   }
 }

@@ -11,6 +11,7 @@ import { AImageMetadataValidationScopeSymbol, useImageValidation } from '@/domai
 import AuthorRemoteAutocompleteWithCached from '@/domains/dam/author/components/AuthorRemoteAutocompleteWithCached.vue'
 import ASystemEntityScope from '@/domains/form/components/ASystemEntityScope.vue'
 import { useExtSystemIdForCached } from '@/domains/dam/composables/extSystemIdForCached'
+import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 
 const props = withDefaults(
   defineProps<{
@@ -24,7 +25,7 @@ const props = withDefaults(
   }>(),
   {
     readonly: false,
-    configName: 'default',
+    configName: undefined,
     showSourceEnabled: true,
     sourceLabel: undefined,
     editAssetLabel: undefined,
@@ -35,6 +36,8 @@ const emit = defineEmits<{
   (e: 'editAsset', data: DocId): void
   (e: 'removeItem', index: number): void
 }>()
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const damConfigName = useDamConfigName(props.configName)
 
 const imageStore = useImageStore()
 const { t } = useI18n()
@@ -49,7 +52,7 @@ const imageSourceRequired = computed(() => {
   return !(image.value.showDamAuthors && props.authorEnabled)
 })
 
-const { v$ } = useImageValidation(image, imageSourceRequired)
+const { v$ } = useImageValidation(image, imageSourceRequired, damConfigName)
 
 const onEditAsset = () => {
   if (isNull(image.value) || isUndefined(image.value)) return
@@ -70,7 +73,7 @@ const removeItem = () => {
         <AImageWidgetSimple
           :model-value="image.id"
           :image="image"
-          :config-name="configName"
+          :config-name="damConfigName"
         />
         <VRow density="compact">
           <VCol class="d-flex justify-space-between mt-1">

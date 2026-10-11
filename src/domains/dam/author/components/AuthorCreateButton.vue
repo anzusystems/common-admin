@@ -19,6 +19,7 @@ import ARow from '@/domains/ui/components/ARow.vue'
 import AFormTextField from '@/domains/form/components/AFormTextField.vue'
 import AFormValueObjectOptionsSelect from '@/domains/form/components/AFormValueObjectOptionsSelect.vue'
 import type { IntegerId } from '@/shared/types/common'
+import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 
 const props = withDefaults(
   defineProps<{
@@ -31,6 +32,8 @@ const props = withDefaults(
     dataCy?: string
     disabled?: boolean | undefined
     validationScope?: ValidationScope
+    /** The DAM configuration to work under. Left out: that of the component it is in, else `default`. */
+    configName?: string
   }>(),
   {
     initialValue: '',
@@ -41,13 +44,16 @@ const props = withDefaults(
     dataCy: undefined,
     disabled: undefined,
     validationScope: ADamAuthorCreateValidationScopeSymbol,
+    configName: undefined,
   }
 )
 const emit = defineEmits<{
   (e: 'success', data: DamAuthor): void
 }>()
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const damConfigName = useDamConfigName(props.configName)
 
-const { damClient, endPointAuthor } = useCommonAdminCoreDamOptions()
+const { damClient, endPointAuthor } = useCommonAdminCoreDamOptions(damConfigName)
 const { getDamConfigExtSystem } = useDamConfigState()
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const configExtSystem = getDamConfigExtSystem(props.extSystem)

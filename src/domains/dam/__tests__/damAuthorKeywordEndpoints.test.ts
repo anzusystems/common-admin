@@ -368,7 +368,8 @@ describe('the components that ask for authors and keywords, in a configuration t
     })
   })
 
-  // No component gives these a configuration: they ask as the default one says.
+  // Given no configuration and inside nothing that has one, they ask as the default one says. Under a named one:
+  // `damNamedConfigurationComponents.test.ts`.
   describe('the two that make a new author and a new keyword, by the default configuration', () => {
     beforeEach(() => configure({ endPointAuthor: OWN_AUTHOR, endPointKeyword: OWN_KEYWORD }))
 
@@ -409,8 +410,9 @@ describe('the components that ask for authors and keywords, in a configuration t
   })
 
   // The dialog of an upload hands the address to the library's map of an upload to images, which looks up the
-  // names of the authors for the source of each image. Nothing gives either dialog a configuration, the
-  // single-file one neither (the widgets that open it pass none): both ask as the default one says.
+  // names of the authors for the source of each image. Here neither dialog is given a configuration, nor is inside
+  // a widget that has one: both ask as the default one says. Under a named one:
+  // `damNamedConfigurationComponents.test.ts`.
   describe('the two dialogs of an upload, on "save and apply", by the default configuration', () => {
     let waits: LongWaits
     let socket: DamSocket

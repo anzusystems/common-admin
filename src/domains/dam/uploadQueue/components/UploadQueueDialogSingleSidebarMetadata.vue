@@ -9,6 +9,7 @@ import { ADamAssetMetadataValidationScopeSymbol } from '@/domains/dam/composable
 import { useAlerts } from '@/domains/system/composables/alerts'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
 import type { IntegerId } from '@/shared/types/common'
+import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 
 const props = withDefaults(
   defineProps<{
@@ -20,12 +21,15 @@ const props = withDefaults(
     configName?: string
     showRefresh?: boolean
     refreshDisabled?: boolean
+    /** Which of the two buttons saves, while it does. */
+    saving?: 'save' | 'saveAndApply' | null
   }>(),
   {
     dataCy: undefined,
-    configName: 'default',
+    configName: undefined,
     showRefresh: false,
     refreshDisabled: false,
+    saving: null,
   }
 )
 const emit = defineEmits<{
@@ -33,6 +37,8 @@ const emit = defineEmits<{
   (e: 'saveAndApply'): void
   (e: 'refresh'): void
 }>()
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const damConfigName = useDamConfigName(props.configName)
 
 const { t } = useI18n()
 
@@ -83,7 +89,8 @@ const onSaveAndApply = async () => {
       type="submit"
       class="ml-2"
       data-cy="button-save"
-      :disabled="!canEditMetadata"
+      :loading="saving === 'save'"
+      :disabled="!canEditMetadata || saving === 'saveAndApply'"
       @click.stop="onSave"
     >
       {{ t('common.button.save') }}
@@ -92,7 +99,8 @@ const onSaveAndApply = async () => {
       type="submit"
       class="mx-2"
       data-cy="button-save-and-apply"
-      :disabled="!canEditMetadata"
+      :loading="saving === 'saveAndApply'"
+      :disabled="!canEditMetadata || saving === 'save'"
       @click.stop="onSaveAndApply"
     >
       {{ t('common.damImage.upload.saveAndApply') }}
@@ -101,6 +109,6 @@ const onSaveAndApply = async () => {
   <UploadQueueDialogSingleSidebarMetadataContent
     :queue-key="queueKey"
     :ext-system="extSystem"
-    :config-name="configName"
+    :config-name="damConfigName"
   />
 </template>

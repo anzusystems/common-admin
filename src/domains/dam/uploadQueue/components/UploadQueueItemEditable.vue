@@ -9,13 +9,12 @@ import {
   type UploadQueueItemStatusType,
   type UploadQueueKey,
 } from '@/domains/dam/types/UploadQueue'
-import { AssetFileFailReason } from '@/domains/dam/types/AssetFile'
+import type { ValidationScope } from '@/shared/types/Validation'
 import ATableCopyIdButton from '@/domains/ui/buttons/table/components/ATableCopyIdButton.vue'
 import { prettyBytes } from '@/shared/utils/file'
 import ASystemEntityScope from '@/domains/form/components/ASystemEntityScope.vue'
 import AssetCustomMetadataForm from '@/domains/dam/assetDetail/components/AssetCustomMetadataForm.vue'
 import AssetImage from '@/domains/dam/assetDetail/components/AssetImage.vue'
-import AssetFileFailReasonChip from '@/domains/dam/assetDetail/components/AssetFileFailReasonChip.vue'
 import AuthorRemoteAutocompleteWithCached from '@/domains/dam/author/components/AuthorRemoteAutocompleteWithCached.vue'
 import { ADamAssetMetadataValidationScopeSymbol } from '@/domains/dam/composables/uploadValidations'
 import KeywordRemoteAutocompleteWithCached from '@/domains/dam/keyword/components/KeywordRemoteAutocompleteWithCached.vue'
@@ -24,11 +23,13 @@ import { useDamKeywordAssetTypeConfig } from '@/domains/dam/keyword/composables/
 import { useDamAuthorAssetTypeConfig } from '@/domains/dam/author/composables/damAuthorConfig'
 import AActionDeleteButton from '@/domains/ui/buttons/action/components/AActionDeleteButton.vue'
 import { SHOW_REFRESH_AFTER_SECONDS } from '@/domains/dam/uploadQueue/composables/uploadQueueItemRefresh'
+import UploadQueueItemErrorOverlay from '@/domains/dam/uploadQueue/components/UploadQueueItemErrorOverlay.vue'
+import type { DamFieldsDisabledAs } from '@/domains/dam/uploadQueue/components/uploadQueueBindings'
 
 const props = withDefaults(
   defineProps<{
     index: number
-    queueKey: string
+    queueKey: UploadQueueKey
     extSystem: IntegerId
     customData: AssetCustomData
     keywords: DocId[]
@@ -44,11 +45,37 @@ const props = withDefaults(
      * shown outside a queue has no such state.
      */
     refreshMayHelp?: boolean
+    /** Where "cancel" is offered. */
+    cancelStatuses?: readonly UploadQueueItemStatusType[]
+    /** The line "The main file is a duplicate." under the title. */
+    duplicateNotice?: boolean
+    /** The form stays off on a duplicate whatever its metadata. */
+    disableFormOnDuplicate?: boolean
+    /** The scope the fields of an editable row report to; a row that cannot be edited reports to none. */
+    validationScope?: ValidationScope
+    /** How keywords and authors look while the row cannot be edited; handed to both inputs as `disabledAs`. */
+    disabledFieldsAs?: DamFieldsDisabledAs
+    /** A duplicate gets no edit button at all: neither the `edit` slot nor its default is drawn. */
+    hideEditOnDuplicate?: boolean
+    /** Whether the row offers refresh, worked out by its host. Without it the row works it out itself. */
+    refreshOffered?: boolean | undefined
   }>(),
   {
     mainFileSingleUseEnabled: true,
     disableDoneAnimation: false,
     refreshMayHelp: false,
+    cancelStatuses: () => [
+      UploadQueueItemStatus.Loading,
+      UploadQueueItemStatus.Waiting,
+      UploadQueueItemStatus.Uploading,
+    ],
+    duplicateNotice: true,
+    disableFormOnDuplicate: false,
+    validationScope: ADamAssetMetadataValidationScopeSymbol,
+    disabledFieldsAs: 'chips',
+    hideEditOnDuplicate: false,
+    // Declared, or Vue would make an absent boolean `false` and the row would never offer refresh by itself.
+    refreshOffered: undefined,
   }
 )
 
@@ -61,6 +88,15 @@ const emit = defineEmits<{
   (e: 'removeItem', index: number): void
   (e: 'showDetail', data: DocId): void
   (e: 'refreshItem', data: { index: number; assetId: DocId }): void
+}>()
+
+defineSlots<{
+  /** Over the picture, under the error overlay. */
+  'image-overlay'?(props: { item: UploadQueueItem }): unknown
+  /** Left of the action line. Default: "Edit in Media Library", disabled without metadata, emits `showDetail`. */
+  edit?(props: { item: UploadQueueItem }): unknown
+  /** Last of the action line. Default: "Remove from queue" while it is offered, emits `removeItem`. */
+  remove?(props: { item: UploadQueueItem; index: number; offered: boolean }): unknown
 }>()
 
 const IMAGE_ASPECT_RATIO = 16 / 9
@@ -106,7 +142,7 @@ const { t } = useI18n()
 // The save skips an item whose metadata cannot be edited, so nothing in its row is validated: it could not be
 // put right. A scope is read once, when a field is set up - hence the key on the form.
 const metadataValidationScope = computed(() => {
-  return props.item.canEditMetadata ? ADamAssetMetadataValidationScopeSymbol : false
+  return props.item.canEditMetadata ? props.validationScope : false
 })
 
 const processingStatuses: readonly UploadQueueItemStatusType[] = [
@@ -144,13 +180,8 @@ const cancelItem = () => {
   emit('cancelItem', { index: props.index, item: props.item, queueKey: props.queueKey })
 }
 
-const showCancelStatuses: readonly UploadQueueItemStatusType[] = [
-  UploadQueueItemStatus.Loading,
-  UploadQueueItemStatus.Waiting,
-  UploadQueueItemStatus.Uploading,
-]
 const showCancel = computed(() => {
-  return showCancelStatuses.includes(props.item.status)
+  return props.cancelStatuses.includes(props.item.status)
 })
 
 // Of a row that has not failed: offered once it has waited, for its file or for its metadata.
@@ -158,9 +189,12 @@ const refreshDue = ref(false)
 const refreshTimer: Ref<ReturnType<typeof setTimeout> | undefined> = ref(undefined)
 // A failed row offers refresh only while one may still change it. One whose chunk the server never took, or
 // whose file the server has failed, has nothing a refresh could find.
-const showRefresh = computed(() => {
+const offeredByRow = computed(() => {
   if (props.item.status === UploadQueueItemStatus.Failed) return props.refreshMayHelp && !isNull(props.item.assetId)
   return refreshDue.value
+})
+const showRefresh = computed(() => {
+  return props.refreshOffered ?? offeredByRow.value
 })
 // Remove comes with refresh, and a failed row has it at once: nothing else takes such a row out of the queue.
 const showRemove = computed(() => {
@@ -261,37 +295,14 @@ onUnmounted(() => {
             cover
             :aspect-ratio="IMAGE_ASPECT_RATIO"
           />
-          <div
+          <slot
+            name="image-overlay"
+            :item="item"
+          />
+          <UploadQueueItemErrorOverlay
             v-if="item.error.hasError"
-            :class="
-              'dam-upload-queue__overlay dam-upload-queue__overlay--error ' +
-              'd-flex align-center justify-center flex-column'
-            "
-          >
-            <VIcon
-              icon="mdi-alert"
-              class="ma-1"
-              size="x-small"
-              color="error"
-            />
-            <div class="text-error">
-              {{ t('common.damImage.queueItem.error') }}
-            </div>
-            <div
-              v-if="item.error.message.length"
-              class="text-body-small"
-              v-text="item.error.message"
-            />
-            <div v-else-if="item.error.assetFileFailReason !== AssetFileFailReason.None">
-              <AssetFileFailReasonChip :reason="item.error.assetFileFailReason" />
-            </div>
-            <div
-              v-else
-              class="text-body-small"
-            >
-              {{ t('common.damImage.uploadErrors.unknownError') }}
-            </div>
-          </div>
+            :error="item.error"
+          />
         </div>
         <VRow
           density="compact"
@@ -300,17 +311,23 @@ onUnmounted(() => {
           <VCol>
             <div class="w-100 d-flex justify-space-between align-center">
               <div>
-                <VBtn
-                  size="small"
-                  variant="text"
-                  :disabled="!item.canEditMetadata"
-                  @click.stop="showDetail"
-                >
-                  {{ t('common.damImage.image.button.editAsset') }}
-                </VBtn>
+                <template v-if="!(hideEditOnDuplicate && item.isDuplicate)">
+                  <slot
+                    name="edit"
+                    :item="item"
+                  >
+                    <VBtn
+                      size="small"
+                      variant="text"
+                      :disabled="!item.canEditMetadata"
+                      @click.stop="showDetail"
+                    >
+                      {{ t('common.damImage.image.button.editAsset') }}
+                    </VBtn>
+                  </slot>
+                </template>
               </div>
               <div>
-                <div v-if="item.isDuplicate" />
                 <ATableCopyIdButton
                   v-if="item.assetId"
                   :id="item.assetId"
@@ -350,13 +367,20 @@ onUnmounted(() => {
                     {{ t('common.button.cancel') }}
                   </VTooltip>
                 </VBtn>
-                <AActionDeleteButton
-                  v-if="showRemove"
-                  variant="icon"
-                  button-class=""
-                  dialog-message-t="common.damImage.queueItem.removeFromQueue"
-                  @delete-record="emit('removeItem', index)"
-                />
+                <slot
+                  name="remove"
+                  :item="item"
+                  :index="index"
+                  :offered="showRemove"
+                >
+                  <AActionDeleteButton
+                    v-if="showRemove"
+                    variant="icon"
+                    button-class=""
+                    dialog-message-t="common.damImage.queueItem.removeFromQueue"
+                    @delete-record="emit('removeItem', index)"
+                  />
+                </slot>
               </div>
             </div>
           </VCol>
@@ -372,14 +396,14 @@ onUnmounted(() => {
           </VCol>
         </VRow>
         <VRow
-          v-if="item.isDuplicate"
+          v-if="duplicateNotice && item.isDuplicate"
           class="text-body-small text-warning"
         >
           <VCol class="pt-0">
             {{ t('common.damImage.asset.detail.info.status.duplicate') }}
           </VCol>
         </VRow>
-        <VForm :disabled="!item.canEditMetadata">
+        <VForm :disabled="!item.canEditMetadata || (disableFormOnDuplicate && item.isDuplicate)">
           <AssetCustomMetadataForm
             v-if="item"
             :key="item.canEditMetadata ? 'validated' : 'skipped'"
@@ -409,6 +433,7 @@ onUnmounted(() => {
                       :required="keywordRequired"
                       :validation-scope="metadataValidationScope"
                       :disabled="!item.canEditMetadata"
+                      :disabled-as="disabledFieldsAs"
                     />
                   </ASystemEntityScope>
                 </VCol>
@@ -434,6 +459,7 @@ onUnmounted(() => {
                       :required="authorRequired"
                       :validation-scope="metadataValidationScope"
                       :disabled="!item.canEditMetadata"
+                      :disabled-as="disabledFieldsAs"
                     />
                   </ASystemEntityScope>
                 </VCol>

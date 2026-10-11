@@ -1,13 +1,9 @@
 <script setup lang="ts">
-import { AssetDetailTabImageWithRoi, useAssetDetailStore } from '@/domains/dam/assetDetail/store/assetDetailStore'
-import { storeToRefs } from 'pinia'
 import type { DocId, IntegerId } from '@/shared/types/common'
 import type { DamAssetStatusType, DamAssetTypeType } from '@/domains/dam/types/Asset'
 import type { AssetFileFailReasonType, AssetFileProcessStatusType } from '@/domains/dam/types/AssetFile'
 import { computed, onUnmounted, ref, watch } from 'vue'
-import { useI18n } from 'vue-i18n'
-import AssetDetailSidebarROI from '@/domains/dam/assetDetail/components/AssetDetailSidebarROI.vue'
-import AssetDetailSidebarActionsTeleportTarget from '@/domains/dam/assetDetail/components/AssetDetailSidebarActionsTeleportTarget.vue'
+import AssetDetailSidebarFrame from '@/domains/dam/assetDetail/components/AssetDetailSidebarFrame.vue'
 import UploadQueueDialogSingleSidebarMetadata from '@/domains/dam/uploadQueue/components/UploadQueueDialogSingleSidebarMetadata.vue'
 import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
 import { UploadQueueItemStatus } from '@/domains/dam/types/UploadQueue'
@@ -17,6 +13,7 @@ import {
 } from '@/domains/dam/uploadQueue/composables/uploadQueueItemRefresh'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
 import { isNull } from '@/shared/utils/common'
+import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 
 const props = withDefaults(
   defineProps<{
@@ -35,26 +32,25 @@ const props = withDefaults(
     assetMainFileStatus?: AssetFileProcessStatusType | undefined
     assetMainFileFailReason?: AssetFileFailReasonType | undefined
     configName?: string
+    /** Which of the two buttons of the metadata saves, while it does. */
+    saving?: 'save' | 'saveAndApply' | null
   }>(),
   {
     assetMainFileStatus: undefined,
     assetMainFileFailReason: undefined,
     dataCy: undefined,
-    configName: 'default',
+    configName: undefined,
+    saving: null,
   }
 )
 const emit = defineEmits<{
   (e: 'save'): void
   (e: 'saveAndApply'): void
 }>()
-
-const { t } = useI18n()
-
-const assetDetailStore = useAssetDetailStore()
-const { activeTab } = storeToRefs(assetDetailStore)
-
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { simpleAssetSidebarEnabled } = useCommonAdminCoreDamOptions(props.configName)
+const damConfigName = useDamConfigName(props.configName)
+
+const { simpleAssetSidebarEnabled } = useCommonAdminCoreDamOptions(damConfigName)
 const simpleMode = computed(() => simpleAssetSidebarEnabled && props.isImage && props.enableRoiTab)
 
 // What the item still waits for from the server: its file to be processed, or, uploaded, its metadata. Until
@@ -67,112 +63,58 @@ const waitsFor = computed(() => {
   if (item.value?.status === UploadQueueItemStatus.Uploaded && !item.value.canEditMetadata) return 'metadata'
   return null
 })
-const showRefresh = ref(false)
+const refreshDue = ref(false)
 let refreshTimer: ReturnType<typeof setTimeout> | undefined
 watch(
   waitsFor,
   (waits) => {
     clearTimeout(refreshTimer)
-    showRefresh.value = false
+    refreshDue.value = false
     if (isNull(waits)) return
-    refreshTimer = setTimeout(() => (showRefresh.value = true), SHOW_REFRESH_AFTER_SECONDS * 1000)
+    refreshTimer = setTimeout(() => (refreshDue.value = true), SHOW_REFRESH_AFTER_SECONDS * 1000)
   },
   { immediate: true }
 )
 onUnmounted(() => clearTimeout(refreshTimer))
+// A failed item offers refresh, as the row of the queue does, while one may still change it: the store says so, and
+// the item has its asset.
+const showRefresh = computed(() => {
+  if (item.value?.status === UploadQueueItemStatus.Failed) {
+    return uploadQueuesStore.refreshMayHelp(item.value) && !isNull(item.value.assetId)
+  }
+  return refreshDue.value
+})
 
-// eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { refreshing, refreshItem } = useUploadQueueItemRefresh(props.configName)
+const { refreshing, refreshItem } = useUploadQueueItemRefresh(damConfigName)
 const refresh = () => {
   if (item.value?.assetId) refreshItem(item.value.assetId, item.value, props.queueKey)
 }
 </script>
 
 <template>
-  <div
-    class="sidebar-info d-flex w-100 h-100 flex-column"
-    :class="{ 'sidebar-info--no-tabs': simpleMode }"
+  <AssetDetailSidebarFrame
+    :queue-key="queueKey"
+    :config-name="damConfigName"
+    :roi-tab="isImage && enableRoiTab"
+    :simple-mode="simpleMode"
   >
-    <div class="w-100 h-100 d-flex flex-column">
-      <VTabs
-        v-if="!simpleMode"
-        v-model="activeTab"
-        show-arrows
-        class="sidebar-info__tabs"
-      >
-        <VTab
-          :value="AssetDetailTabImageWithRoi.Info"
-          data-cy="button-meta"
-        >
-          {{ t('common.damImage.asset.detail.tabs.info') }}
-        </VTab>
-        <VTab
-          v-if="isImage && enableRoiTab"
-          :value="AssetDetailTabImageWithRoi.ROI"
-          data-cy="button-focus"
-        >
-          {{ t('common.damImage.asset.detail.tabs.roi') }}
-        </VTab>
-      </VTabs>
-
-      <div class="sidebar-info__content">
-        <slot name="prepend-sidebar" />
-        <template v-if="simpleMode">
-          <div class="py-2">
-            <UploadQueueDialogSingleSidebarMetadata
-              :queue-key="queueKey"
-              :ext-system="extSystem"
-              :config-name="configName"
-              :is-active="true"
-              :asset-type="assetType"
-              :show-refresh="showRefresh"
-              :refresh-disabled="refreshing"
-              @refresh="refresh"
-              @save="emit('save')"
-              @save-and-apply="emit('saveAndApply')"
-            />
-          </div>
-          <div class="py-2">
-            <AssetDetailSidebarROI
-              :queue-key="queueKey"
-              :is-active="true"
-              :config-name="configName"
-            />
-          </div>
-        </template>
-        <template v-else>
-          <div
-            v-if="activeTab === AssetDetailTabImageWithRoi.Info"
-            class="py-2"
-          >
-            <UploadQueueDialogSingleSidebarMetadata
-              :queue-key="queueKey"
-              :ext-system="extSystem"
-              :config-name="configName"
-              :is-active="activeTab === AssetDetailTabImageWithRoi.Info"
-              :asset-type="assetType"
-              :show-refresh="showRefresh"
-              :refresh-disabled="refreshing"
-              @refresh="refresh"
-              @save="emit('save')"
-              @save-and-apply="emit('saveAndApply')"
-            />
-          </div>
-          <div
-            v-if="isImage && activeTab === AssetDetailTabImageWithRoi.ROI"
-            class="py-2"
-          >
-            <AssetDetailSidebarROI
-              :queue-key="queueKey"
-              :is-active="activeTab === AssetDetailTabImageWithRoi.ROI"
-              :config-name="configName"
-            />
-          </div>
-        </template>
-      </div>
-      <div class="sidebar-info__actions px-2">
-        <AssetDetailSidebarActionsTeleportTarget :queue-key="queueKey" />
-      </div>
-    </div>
-  </div>
+    <template #prepend>
+      <slot name="prepend-sidebar" />
+    </template>
+    <template #info="{ isActive }">
+      <UploadQueueDialogSingleSidebarMetadata
+        :queue-key="queueKey"
+        :ext-system="extSystem"
+        :config-name="damConfigName"
+        :is-active="isActive"
+        :asset-type="assetType"
+        :show-refresh="showRefresh"
+        :refresh-disabled="refreshing"
+        :saving="saving"
+        @refresh="refresh"
+        @save="emit('save')"
+        @save-and-apply="emit('saveAndApply')"
+      />
+    </template>
+  </AssetDetailSidebarFrame>
 </template>

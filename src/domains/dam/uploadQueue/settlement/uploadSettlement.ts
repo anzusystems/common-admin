@@ -351,7 +351,10 @@ export function createUploadSettlement(profile: UploadSettlementProfile): Upload
     if (!units.length) return
     // Each request is told whether a failure of it is the first of a streak: for every request of a tick that
     // begins one, since they go out together.
-    const options = units.map((unit) => ({ report: !failing && unit.rows.every(({ state }) => !state.reported) }))
+    const options = units.map((unit) => ({
+      report: !failing && unit.rows.every(({ state }) => !state.reported),
+      queueKey,
+    }))
     // The requests go out together; what they brought is written one after another.
     const answers = await Promise.allSettled(units.map((unit, index) => unit.read(options[index]!)))
     if (!goesOn()) return
@@ -484,7 +487,7 @@ export function createUploadSettlement(profile: UploadSettlementProfile): Upload
       const report = !failing && read.failures === 0 && read.misses === 0 && untold(askedFor)
       let asset: AssetDetailItemDto | null
       try {
-        asset = await profile.readers.asset(read.assetId, { report })
+        asset = await profile.readers.asset(read.assetId, { report, queueKey: askedFor[0]!.queueKey })
       } catch {
         if (isDisposed()) return
         // Its rows left while it was on the wire: nobody waits for another try, and it begins no streak.
@@ -556,8 +559,10 @@ export function createUploadSettlement(profile: UploadSettlementProfile): Upload
     enqueueRead(async (startedAt) => {
       try {
         if (isDisposed()) return 'error'
+        // The queue of the first row the read is for, noted before it is asked.
+        const queueKey = concernedRows(target.assetId, [{ fileId: target.fileId, intent }])[0]?.queueKey
         // The user asked: every failure of it is reported.
-        const asset = await profile.readers.asset(target.assetId, { report: true })
+        const asset = await profile.readers.asset(target.assetId, { report: true, queueKey })
         if (isDisposed()) return 'error'
         failing = false
         const concerned = concernedRows(target.assetId, [{ fileId: target.fileId, intent }])

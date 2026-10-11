@@ -5,6 +5,7 @@ import { useDamConfigStore } from '@/domains/dam/config/store/damConfigStore'
 import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
 import { useDamConfigState } from '@/domains/dam/config/composables/damConfigState'
 import { useI18n } from 'vue-i18n'
+import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 
 const props = withDefaults(
   defineProps<{
@@ -12,18 +13,19 @@ const props = withDefaults(
     configName?: string
   }>(),
   {
-    configName: 'default',
+    configName: undefined,
   }
 )
 const emit = defineEmits<{
   (e: 'change'): void
 }>()
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const damConfigName = useDamConfigName(props.configName)
 
 const status = ref<'loading' | 'ready' | 'error'>('loading')
 
 const damConfigStore = useDamConfigStore()
-// eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { damClient } = useCommonAdminCoreDamOptions(props.configName)
+const { damClient } = useCommonAdminCoreDamOptions(damConfigName)
 const { loadDamPrvConfig } = useDamConfigState(damClient)
 
 const items = computed(() => {

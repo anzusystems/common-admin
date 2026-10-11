@@ -1,10 +1,16 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount, type VueWrapper } from '@vue/test-utils'
+import { createI18n } from 'vue-i18n'
 import { damText, uiText } from '@/domains/dam/__tests__/support/uploadUi'
 import UploadQueueButtonStop from '@/domains/dam/uploadQueue/components/UploadQueueButtonStop.vue'
+import cs from '@/locales/cs'
+import en from '@/locales/en'
+import sk from '@/locales/sk'
 
 // The button that closes an upload dialog, as both dialogs of the library have it: a queue that is done is closed
 // at once, one that still uploads only after the user says so.
+
+const languages = createI18n({ legacy: false, locale: 'en', messages: { sk, en, cs } })
 
 let wrapper: VueWrapper | undefined
 afterEach(() => {
@@ -50,8 +56,32 @@ describe('the button that closes an upload dialog', () => {
 
     expect(confirmed()).toHaveLength(0)
     expect(question()!.textContent).toContain(damText('upload.stopConfirmQuestion'))
-    expect(answer('button-confirm').textContent).toContain(damText('upload.stop'))
+    expect(answer('button-confirm').textContent?.trim()).toBe(damText('upload.stopConfirm'))
     expect(answer('button-cancel').textContent).toContain(uiText('common.button.cancel'))
+  })
+
+  // Finding 43: the question had two "close", its answer and its cross. The answer says what it does; the cross and
+  // the button that opens the question keep their name.
+  it('names the answer of its question for what it does, and keeps "close" for its cross and for itself', async () => {
+    await mountButton(true)
+
+    await wrapper!.find('[data-cy="button-stop"]').trigger('click')
+    await flushPromises()
+
+    expect(answer('button-confirm').textContent?.trim()).toBe('Stop')
+    expect(question()!.querySelector('[data-cy="button-close"]')!.getAttribute('aria-label')).toBe('Close')
+    expect(wrapper!.find('[data-cy="button-stop"]').attributes('aria-label')).toBe('Close')
+  })
+
+  it.each([
+    ['sk', 'Zastaviť', 'Zatvoriť'],
+    ['en', 'Stop', 'Close'],
+    ['cs', 'Zastavit', 'Zavřít'],
+  ] as const)('has the answer and the name of the button in %s', (language, answerWord, buttonWord) => {
+    const text = (key: string) => languages.global.t(key, {}, { locale: language })
+
+    expect(text('common.damImage.upload.stopConfirm')).toBe(answerWord)
+    expect(text('common.damImage.upload.stop')).toBe(buttonWord)
   })
 
   it('closes once the user confirms, and the question goes', async () => {

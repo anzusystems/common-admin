@@ -193,23 +193,20 @@ describe('an upload stopped', () => {
   })
 })
 
-// The speed is bytes over seconds between two progress reports of axios, averaged once a second; the queue shows
-// it, and sizes the next chunk by it. Axios counts the bytes of each request from zero.
+// The speed is the bytes of the file sent in the last ten seconds, from the request of its first chunk on, reported
+// once a second; the queue shows it, and sizes the next chunk by it. Axios counts the bytes of each request from zero.
 describe('the speed of an upload', () => {
   type Progress = (event: { loaded: number; total: number }) => void
-  const realNow = Date.now
-  /**
-   * How far the test has moved the clock on, in ms: the seconds of a sample are the test's, and long enough for
-   * those of the machine not to show in it.
-   */
+  /** How far the test has moved the clock on, in ms. The clock stands otherwise: the seconds are the test's. */
   let ahead = 0
-  let reports: Array<{ speed: number; remaining: number }>
+  let reports: Array<{ percent: number; speed: number; remaining: number }>
 
   beforeEach(() => {
     ahead = 0
     reports = []
-    vi.spyOn(Date, 'now').mockImplementation(() => realNow() + ahead)
-    // The second between two averages and the pause before a retry are both held, and let pass by the test.
+    const start = Date.now()
+    vi.spyOn(Date, 'now').mockImplementation(() => start + ahead)
+    // The second between two reports and the pause before a retry are both held, and let pass by the test.
     waits.restore()
     waits = holdLongWaits(1_000)
   })
@@ -217,11 +214,13 @@ describe('the speed of an upload', () => {
     vi.mocked(Date.now).mockRestore()
   })
 
-  const startedWithReports = async () => {
+  /** A file of the given number of bytes. */
+  const startedWithReports = async (size: number) => {
     const chunks = dam.hold('POST', dam.routes.chunk)
     const item = row()
-    const { uploadInit, upload } = useUpload(item, (_percent: number, speed: number, remaining: number) =>
-      reports.push({ speed, remaining })
+    item.file = new File([new Uint8Array(size)], 'photo.jpg', { type: 'image/jpeg' })
+    const { uploadInit, upload } = useUpload(item, (percent: number, speed: number, remaining: number) =>
+      reports.push({ percent, speed, remaining })
     )
     await uploadInit()
     const uploading = outcome(upload())
@@ -233,59 +232,62 @@ describe('the speed of an upload', () => {
     }
     return { uploading, onItsWay }
   }
-  const speeds = () => reports.map((report) => report.speed)
+  it('is measured anew when a chunk is sent again: the try that failed is not counted, and the share does not go back', async () => {
+    // One chunk of 10 000 bytes.
+    const { uploading, onItsWay } = await startedWithReports(10_000)
 
-  it('is measured anew when a chunk is sent again: the bytes of the try that failed are not counted back', async () => {
-    const { uploading, onItsWay } = await startedWithReports()
-
-    // The first try gets most of the chunk out, 900 bytes a second, and fails.
+    // The first try gets most of the chunk out in a second, counted from its request, and fails.
     const first = await onItsWay()
-    first.progress({ loaded: 100, total: 1_000_000 })
-    ahead += 1_000_000
-    first.progress({ loaded: 900_000, total: 1_000_000 })
+    ahead += 1_000
+    first.progress({ loaded: 9_000, total: 10_000 })
+    await waits.elapse()
+    expect(reports).toEqual([{ percent: 90, speed: 9_000, remaining: 1 }])
     first.held.release({ status: 503 })
     await vi.waitFor(() => expect(waits.waiting()).toBe(2))
-    await waits.elapse()
-    expect(speeds()).toEqual([900])
 
-    // The retry starts from nothing. Counted from where the first try got to, its first report would be 890 000
-    // bytes backwards.
+    // The pause before the retry: no speed, so no report, and the row keeps the last.
+    ahead += 1_000
+    await waits.elapse()
+    expect(reports).toHaveLength(1)
+
+    // The retry starts from nothing. Counted from where the first try got to, it would be 7 000 bytes backwards.
     const second = await onItsWay()
-    ahead += 100_000
-    second.progress({ loaded: 10_000, total: 1_000_000 })
+    ahead += 1_000
+    second.progress({ loaded: 2_000, total: 10_000 })
     await waits.elapse()
-    expect(speeds()).toEqual([900, 900])
+    expect(reports.at(-1)).toEqual({ percent: 90, speed: 2_000, remaining: 4 })
 
-    ahead += 100_000
-    second.progress({ loaded: 1_000_000, total: 1_000_000 })
+    ahead += 1_000
+    second.progress({ loaded: 10_000, total: 10_000 })
     second.held.release()
     expect(await uploading).toBe('resolved')
     await waits.elapse()
 
+    // The whole file in the two seconds of the retry.
+    expect(reports.at(-1)).toEqual({ percent: 100, speed: 5_000, remaining: 0 })
     expect(reports).toHaveLength(3)
-    expect(reports.every((report) => report.speed > 0 && Number.isFinite(report.speed))).toBe(true)
-    expect(reports.every((report) => report.remaining >= 0)).toBe(true)
   })
 
-  // Only a retry starts the measuring anew. The first try of the next chunk goes on from the last report of the
-  // chunk before, the time between the two requests included. (Decision D4 of the upload plan: measuring anew
-  // with every chunk is to come with the shared upload service; this case is then turned around.)
+  // Only a retry starts the measuring anew. The first try of the next chunk goes on from the answer to the chunk
+  // before: the time the server took to answer is counted.
   it('goes on from the chunk before when the next chunk is sent for the first time', async () => {
-    useDamConfigStore().damPrvConfig.settings.imageChunkConfig = { minSize: 3, maxSize: 3 }
-    const { uploading, onItsWay } = await startedWithReports()
+    useDamConfigStore().damPrvConfig.settings.imageChunkConfig = { minSize: 10_000, maxSize: 10_000 }
+    const { uploading, onItsWay } = await startedWithReports(20_000)
 
+    // The first chunk is out in a second, and answered a second later.
     const first = await onItsWay()
-    first.progress({ loaded: 100, total: 1_000_000 })
-    ahead += 1_000_000
-    first.progress({ loaded: 1_000_000, total: 1_000_000 })
+    ahead += 1_000
+    first.progress({ loaded: 10_000, total: 10_000 })
+    ahead += 1_000
     first.held.release()
 
     const second = await onItsWay()
-    ahead += 2_000_000
-    second.progress({ loaded: 5_000_000, total: 10_000_000 })
+    ahead += 1_000
+    second.progress({ loaded: 8_000, total: 10_000 })
     await waits.elapse()
-    // 1000 bytes a second, then 2500: their average.
-    expect(speeds()).toEqual([1750])
+    // 18 000 bytes in three seconds. Measured anew for the second chunk, it would be 8 000 a second; without the
+    // second of the answer, 9 000.
+    expect(reports).toEqual([{ percent: 90, speed: 6_000, remaining: 1 }])
 
     second.held.release()
     expect(await uploading).toBe('resolved')

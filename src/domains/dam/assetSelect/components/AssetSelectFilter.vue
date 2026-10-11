@@ -12,23 +12,25 @@ import AFilterWrapperSubjectSelect from '@/domains/subjectSelect/components/AFil
 import { useFilterHelpers } from '@/domains/filters/composables/filterFactory'
 import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
 import { useSidebar } from '@/domains/dam/assetSelect/composables/assetSelectFilterSidebar'
+import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 
 const props = withDefaults(
   defineProps<{
     configName?: string
   }>(),
   {
-    configName: 'default',
+    configName: undefined,
   }
 )
-
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { assetListEnabledFilters } = useCommonAdminCoreDamOptions(props.configName)
+const damConfigName = useDamConfigName(props.configName)
+
+const { assetListEnabledFilters } = useCommonAdminCoreDamOptions(damConfigName)
 
 const { t } = useI18n()
 const { mdAndDown } = useDisplay()
 const { closeSidebarLeft } = useSidebar()
-const { fetchAssetListDebounced, resetAssetList, pagination } = useAssetSelectActions()
+const { fetchAssetListDebounced, resetAssetList, pagination } = useAssetSelectActions(damConfigName)
 
 const assetSelectStore = useAssetSelectStore()
 const { selectedLicenceId, selectConfig } = storeToRefs(assetSelectStore)
@@ -92,7 +94,7 @@ onMounted(() => {
           <component
             :is="componentComputed"
             :enabled-filters="assetListEnabledFilters"
-            :config-name="configName"
+            :config-name="damConfigName"
           />
         </template>
         <VRow v-if="selectConfig.length > 1">
@@ -109,7 +111,7 @@ onMounted(() => {
         <component
           :is="componentComputed"
           :enabled-filters="assetListEnabledFilters"
-          :config-name="configName"
+          :config-name="damConfigName"
         />
       </AFilterWrapperSubjectSelect>
     </div>

@@ -200,10 +200,12 @@ export function createFakeDam(endPoints: FakeDamEndPoints) {
       return found ? { status: 200, data: found } : { status: 404 }
     }
     if ((match = url.match(routes.byIds))) {
+      // Under the licence the read names, as the DAM reads them: an asset of another licence is not there.
+      const licence = Number(match[1])
       const found = match[2]!
         .split(',')
         .map((id) => assets.get(id))
-        .filter((one) => one !== undefined)
+        .filter((one) => one !== undefined && one.licence === licence)
       return { status: 200, data: { data: found, totalCount: found.length } }
     }
     if ((match = url.match(routes.one))) {
@@ -238,7 +240,8 @@ export function createFakeDam(endPoints: FakeDamEndPoints) {
     })
     const answered = answer(request).then((one) => {
       const response = { status: one.status, statusText: '', data: one.data, headers: {}, config: sent }
-      if (settled(one.status)) return response
+      // As axios settles an answer: by the `validateStatus` of the request, where it has one.
+      if ((config.validateStatus ?? settled)(one.status)) return response
       throw new axios.AxiosError(
         `Request failed with status code ${one.status}`,
         one.status >= 500 ? axios.AxiosError.ERR_BAD_RESPONSE : axios.AxiosError.ERR_BAD_REQUEST,

@@ -17,6 +17,7 @@ import AImageWidgetSimple from '@/domains/dam/imageWidget/components/AImageWidge
 import AMediaWidgetSimple from '@/domains/dam/imageWidget/components/AMediaWidgetSimple.vue'
 import type { MediaAware } from '@/domains/dam/types/MediaAware'
 import { useI18n } from 'vue-i18n'
+import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 
 const props = withDefaults(
   defineProps<{
@@ -42,7 +43,7 @@ const props = withDefaults(
     damHeight?: undefined | number
   }>(),
   {
-    configName: 'default',
+    configName: undefined,
     collab: undefined,
     collabStatus: CollabStatus.Inactive,
     label: undefined,
@@ -70,6 +71,8 @@ const emit = defineEmits<{
 }>()
 
 const mediaModel = defineModel<MediaAware | null>('media', { required: true })
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const damConfigName = useDamConfigName(props.configName)
 // Declared: the read-only fallback renders the slots too, and inferred they would take its looser types.
 defineSlots<{
   append?: (props: { imageMedia: ImageCreateUpdateAware | MediaAware | null }) => unknown
@@ -80,8 +83,7 @@ const status = ref<'loading' | 'ready' | 'error'>('loading')
 // Not being allowed to upload is no reason to hide the image that is already there: it is shown read-only.
 const uploadAllowed = ref(true)
 
-// eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { damClient } = useCommonAdminCoreDamOptions(props.configName)
+const { damClient } = useCommonAdminCoreDamOptions(damConfigName)
 const {
   loadDamPrvConfig,
   loadDamConfigAssetCustomFormElements,
@@ -169,7 +171,7 @@ const { t } = useI18n()
     <AMediaWidgetSimple
       v-if="mediaModel"
       :media="mediaModel"
-      :config-name="configName"
+      :config-name="damConfigName"
       :label="label"
       :width="width"
       :height="height"
@@ -194,7 +196,7 @@ const { t } = useI18n()
       v-else-if="imageModel || initialImage"
       :model-value="imageModel"
       :image="initialImage"
-      :config-name="configName"
+      :config-name="damConfigName"
       :label="label"
       :width="width"
       :height="height"

@@ -7,6 +7,7 @@ import {
 } from '@/domains/dam/assetSelect/composables/podcastFilterAndActions'
 import AFilterRemoteAutocomplete from '@/domains/remoteAutocomplete/components/AFilterRemoteAutocomplete.vue'
 import type { IntegerId } from '@/shared/types/common'
+import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 
 const props = withDefaults(
   defineProps<{
@@ -20,7 +21,7 @@ const emit = defineEmits<{
 }>()
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { fetchItems, fetchItemsByIds } = usePodcastSelectActions(props.licenceId)
+const { fetchItems, fetchItemsByIds } = usePodcastSelectActions(props.licenceId, useDamConfigName())
 const { filterData, filterConfig } = usePodcastInnerFilter()
 provide(FilterInnerConfigKey, filterConfig)
 provide(FilterInnerDataKey, filterData)

@@ -83,7 +83,7 @@ const { t } = useI18n()
           data-cy="button-confirm"
           @click.stop="onConfirm"
         >
-          {{ t('common.damImage.upload.stop') }}
+          {{ t('common.damImage.upload.stopConfirm') }}
         </ABtnPrimary>
       </VCardActions>
     </VCard>

@@ -121,6 +121,8 @@
       "fillOneEmpty": "Vyplňte prázdne pole",
       "fillAllEmpty": "Vyplniť len prázdne",
       "replaceOne": "Nahradiť všade",
+      "fillOneEmptyField": "Vyplňte prázdne pole: {field}",
+      "replaceOneField": "Nahradiť všade: {field}",
       "replaceAll": "Nahradiť všetko",
       "clearForm": "Vyčistiť",
       "general": "Hlavné"
@@ -129,6 +131,7 @@
       "low": "Nízka kvalita",
       "slots": "Sloty",
       "rss": "RSS",
+      "tts": "Syntetické (TTS)",
       "fullHd": "FullHD",
       "2k": "2K",
       "qhd": "QHD",
@@ -157,6 +160,8 @@
     "title": "Nahrávanie",
     "titleDone": "Nahrávanie ukončené",
     "stopConfirmQuestion": "Chcete ukončiť nahrávanie?",
+    "stopConfirm": "Zastaviť",
+    "onlyOneFile": "Sem sa dá nahrať len jeden súbor; použije sa prvý.",
     "limits": {
       "uploadWarning": "Varovanie pri nahrávaní",
       "onUploadLimit": "Dosiahli ste limit nahrávania ({limit}). Dokončite nahrávanie a skúste znova.",

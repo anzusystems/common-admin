@@ -7,6 +7,7 @@ import type { UploadQueueKey } from '@/domains/dam/types/UploadQueue'
 import type { DamConfigLicenceExtSystemReturnType } from '@/domains/dam/types/DamConfig'
 import { isUndefined } from '@/shared/utils/common'
 import { ImageWidgetUploadConfigKey } from '@/domains/dam/imageWidget/utils/imageWidgetInkectionKeys'
+import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 
 const props = withDefaults(
   defineProps<{
@@ -36,6 +37,8 @@ if (isUndefined(imageWidgetUploadConfig) || isUndefined(imageWidgetUploadConfig.
 }
 
 const uploadQueuesStore = useUploadQueuesStore()
+// The queue of the widget this dialog belongs to: its files go where the widget's own do.
+const damConfigName = useDamConfigName()
 
 const uploadQueueTotalCount = computed(() => {
   return uploadQueuesStore.getQueueTotalCount(props.queueKey)
@@ -59,7 +62,8 @@ const onDialogConfirm = async () => {
     props.queueKey,
     imageWidgetUploadConfig.value.extSystem,
     imageWidgetUploadConfig.value.licence,
-    files
+    files,
+    damConfigName
   )
   fileCache.value = []
   uploadDialogLoader.value = false

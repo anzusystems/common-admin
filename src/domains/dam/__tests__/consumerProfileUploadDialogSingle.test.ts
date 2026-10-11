@@ -8,7 +8,13 @@ import {
 } from '@/domains/dam/__tests__/support/consumerProfiles'
 import { answerDamNames, damNameLookups, damNamesAsked } from '@/domains/dam/__tests__/support/damNames'
 import { type DamSocket, stubDamSocket } from '@/domains/dam/__tests__/support/damSocket'
-import { createFakeDam, type FakeDam } from '@/domains/dam/__tests__/support/fakeDam'
+import {
+  createFakeDam,
+  damImageFile,
+  damImageLinks,
+  type FakeDam,
+  type FakeDamAnswer,
+} from '@/domains/dam/__tests__/support/fakeDam'
 import { holdLongWaits, type LongWaits } from '@/domains/dam/__tests__/support/longWaits'
 import {
   alertText,
@@ -20,6 +26,7 @@ import {
   uiText,
 } from '@/domains/dam/__tests__/support/uploadUi'
 import AssetDetailSidebarROI from '@/domains/dam/assetDetail/components/AssetDetailSidebarROI.vue'
+import AssetImage from '@/domains/dam/assetDetail/components/AssetImage.vue'
 import { AssetDetailTabImageWithRoi, useAssetDetailStore } from '@/domains/dam/assetDetail/store/assetDetailStore'
 import AuthorRemoteAutocompleteWithCached from '@/domains/dam/author/components/AuthorRemoteAutocompleteWithCached.vue'
 import { initCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
@@ -29,12 +36,14 @@ import { useDamConfigStore } from '@/domains/dam/config/store/damConfigStore'
 import DamAssetImageRoiSelectLazy from '@/domains/dam/cropper/components/DamAssetImageRoiSelectLazy.vue'
 import type { UploadMetadataToImageMapFn } from '@/domains/dam/imageWidget/utils/metadataToImageMap'
 import KeywordRemoteAutocompleteWithCached from '@/domains/dam/keyword/components/KeywordRemoteAutocompleteWithCached.vue'
-import { DamAssetType } from '@/domains/dam/types/Asset'
+import { DamAssetStatus, DamAssetType } from '@/domains/dam/types/Asset'
 import { AssetFileFailReason, AssetFileProcessStatus } from '@/domains/dam/types/AssetFile'
 import { UploadQueueItemStatus } from '@/domains/dam/types/UploadQueue'
 import UploadQueueDialogSingle from '@/domains/dam/uploadQueue/components/UploadQueueDialogSingle.vue'
 import { useUploadQueueDialog } from '@/domains/dam/uploadQueue/composables/useUploadQueueDialog'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
+// Not applied by importing it: the case that needs the style of the library puts it in the page, and takes it out.
+import libraryStyle from '@/styles/main.scss?inline'
 
 // The dialog of an image widget for one uploaded file, under each of the two applications: what it consists of
 // while the file is on its way and once it is done, who may edit the region of interest in it, and what its "save",
@@ -101,7 +110,8 @@ describe.each(consumerProfiles)('the dialog of one uploaded file under the $name
 
   const queue = () => useUploadQueuesStore(pinia)
   const item = () => queue().getQueueItems(QUEUE)[0]
-  const mountDialog = async () => {
+  /** With the real picture where a test reads how it is drawn: it asks no server for a file without a preview. */
+  const mountDialog = async (realPicture = false) => {
     wrapper = mount(UploadQueueDialogSingle, {
       attachTo: document.body,
       props: {
@@ -117,7 +127,7 @@ describe.each(consumerProfiles)('the dialog of one uploaded file under the $name
         // The picture would ask the image server; the editor of the region of interest is the cropper, and its
         // sidebar asks the DAM for the regions; the inputs of keywords and authors ask it for names to offer.
         stubs: {
-          AssetImage: true,
+          AssetImage: !realPicture,
           DamAssetImageRoiSelectLazy: true,
           AssetDetailSidebarROI: true,
           AFormRemoteAutocompleteWithCached: true,
@@ -169,6 +179,20 @@ describe.each(consumerProfiles)('the dialog of one uploaded file under the $name
   const saves = () => dam.sentTo('PATCH', dam.routes.bulkMetadata)
   const updated = ['success', alertText('common.alert.recordWas.updated')]
   const fixTheForm = ['error', alertText('common.alert.fixValidationErrors')]
+  const systemError = ['error', alertText('common.alert.unknownError')]
+  /** The one alert of a refusal by validation: its heading, and the field each of its lines names. */
+  const refusalSaid = () => {
+    expect(shownAlerts()).toHaveLength(1)
+    const [[colour, text]] = shownAlerts() as Array<[string, string]>
+    const [heading, ...lines] = text.split('\n')
+
+    return { colour, heading, fields: lines.map((line) => line.split(': ')[0]) }
+  }
+  /** The DAM answers every save of metadata so. */
+  const refuseSaves = (answer: FakeDamAnswer) =>
+    dam.reply((request) =>
+      request.method === 'PATCH' && dam.routes.bulkMetadata.test(request.url) ? answer : undefined
+    )
   const outsideOwnPrefix = () =>
     dam.requests.filter((request) => request.url.startsWith(foreignPrefix) && !/\/(author|keyword)\//.test(request.url))
 
@@ -187,6 +211,212 @@ describe.each(consumerProfiles)('the dialog of one uploaded file under the $name
       expect([button('button-save').disabled, button('button-save-and-apply').disabled]).toEqual([true, true])
       // The dialog has read no asset for its detail yet.
       expect(useAssetDetailStore(pinia).asset).toBeNull()
+    })
+  })
+
+  // Over the picture, in the ratio of 16 to 9, the dialog shows how far the upload is, as its row has it. The picture
+  // is the preview of the row once it has one, in the size the preview was asked for (not the size it came out in),
+  // on the dominant colour of the main file; until then a grey box of 356 by 200, of the kind and the state of the row.
+  describe('the picture of the file', () => {
+    const COLOUR = '#3a6b8c'
+    const drawn = () => wrapper!.findComponent(AssetImage)
+    const shows = () => {
+      const { showUploading, showProcessing, showWaiting, showDone, aspectRatio } = drawn().props()
+
+      return { showUploading, showProcessing, showWaiting, showDone, aspectRatio }
+    }
+    const states = (uploading: boolean, processing: boolean, done: boolean) => ({
+      showUploading: uploading,
+      showProcessing: processing,
+      showWaiting: false,
+      showDone: done,
+      aspectRatio: 16 / 9,
+    })
+    /** The picture of a row without a preview yet: of the type and the state of the row. */
+    const greyBox = () => ({
+      src: '',
+      width: 356,
+      height: 200,
+      backgroundColor: '#ccc',
+      assetType: item().assetType,
+      assetStatus: item().assetStatus,
+    })
+
+    it('shows the file being sent, then processed, then done, and then its preview', async () => {
+      const chunks = dam.hold('POST', dam.routes.chunk)
+      await queue().addByFiles(QUEUE, extSystem, licence, [photo()])
+      await mountDialog()
+      await vi.waitFor(() => expect(chunks.waiting).toHaveLength(1))
+      await flushPromises()
+      expect(item().status).toBe(Uploading)
+      // How far the chunk is, as the store writes it from the progress the client reports; the fake DAM reports none.
+      item().progress.progressPercent = 37.5
+      item().progress.remainingTime = 12
+      await flushPromises()
+      expect(shows()).toEqual(states(true, false, false))
+      expect(drawn().props()).toMatchObject({ uploadingProgress: 37.5, remainingTime: 12, ...greyBox() })
+
+      chunks.release()
+      await vi.waitFor(() => expect(item().status).toBe(Processing))
+      await flushPromises()
+      expect(shows()).toEqual(states(false, true, false))
+      expect(drawn().props()).toMatchObject(greyBox())
+
+      const file = item().fileId!
+      const links = damImageLinks(file)
+      // The preview was asked for in another size than it came out in.
+      Object.assign(links, { image_detail: { ...links.image_detail!, requestedWidth: 1280, requestedHeight: 720 } })
+      dam.fileBecomes(item().assetId!, AssetFileProcessStatus.Processed, metadata({ description: 'from the server' }), {
+        links,
+        imageAttributes: {
+          ...damImageFile(file, item().assetId!, AssetFileProcessStatus.Processed).imageAttributes,
+          mostDominantColor: COLOUR,
+        },
+      })
+      await waits.elapse()
+      await vi.waitFor(() => expect(item().status).toBe(Uploaded))
+      await vi.waitFor(() => expect(useAssetDetailStore(pinia).asset?.id).toBe(item().assetId))
+      await flushPromises()
+      // admin-ugc has the editor of the region of interest in place of the picture once the file is done.
+      expect(drawn().exists()).toBe(isCms)
+      if (!isCms) return
+      expect(shows()).toEqual(states(false, false, true))
+      expect(drawn().props()).toMatchObject({
+        src: links.image_detail!.url,
+        width: 1280,
+        height: 720,
+        backgroundColor: COLOUR,
+        assetType: DamAssetType.Image,
+        assetStatus: DamAssetStatus.WithFile,
+      })
+    })
+
+    // A row of another kind and in another state than the defaults of the picture: the grey box says what the row is.
+    it('draws the grey box of the kind and the state of its row', async () => {
+      const chunks = dam.hold('POST', dam.routes.chunk)
+      await queue().addByFiles(QUEUE, extSystem, licence, [photo()])
+      await mountDialog()
+      await vi.waitFor(() => expect(chunks.waiting).toHaveLength(1))
+      item().assetType = DamAssetType.Video
+      item().assetStatus = DamAssetStatus.Deleting
+      await flushPromises()
+
+      expect(drawn().props()).toMatchObject({
+        ...greyBox(),
+        assetType: DamAssetType.Video,
+        assetStatus: DamAssetStatus.Deleting,
+      })
+    })
+
+    // The overlay of the error is laid out in the positioned box of the picture (design 2.8): the box holds the
+    // picture and then the overlay, so the overlay is drawn over it. How large the box is, is not pinned: the
+    // owner has U6 give it a size (finding 64).
+    it('draws the error of a refused file in the positioned box of the picture, after the picture', async () => {
+      await queue().addByFiles(QUEUE, extSystem, licence, [photo()])
+      await mountDialog(true)
+      await vi.waitFor(() => expect(item().status).toBe(Processing))
+      dam.fileBecomes(
+        item().assetId!,
+        AssetFileProcessStatus.Failed,
+        {},
+        { failReason: AssetFileFailReason.InvalidMimeType }
+      )
+      await waits.elapse()
+      await vi.waitFor(() => expect(item().status).toBe(Failed))
+      await flushPromises()
+
+      const picture = leftPane().querySelector<HTMLElement>('.asset-image')!
+      const overlay = leftPane().querySelector<HTMLElement>('.dam-upload-queue__overlay')!
+      const box = picture.parentElement!
+      expect(overlay.offsetParent).toBe(box)
+      expect([...box.children]).toEqual([picture, overlay])
+      expect(shows()).toEqual(states(false, false, false))
+    })
+
+    // Finding 64: under the style of the library the box has the area of the left side, as the picture of the detail
+    // has: the grey placeholder of a refused file fills it, and the overlay covers it. Without a size of its own the box
+    // was 0 by 0, and so were the placeholder and the overlay: the icon and the texts of the error stood over nothing.
+    it('gives the grey placeholder of a refused file and its overlay the area of the picture, under the style of the library', async () => {
+      const style = document.createElement('style')
+      style.textContent = libraryStyle
+      document.head.append(style)
+      try {
+        await queue().addByFiles(QUEUE, extSystem, licence, [photo()])
+        await mountDialog(true)
+        await vi.waitFor(() => expect(item().status).toBe(Processing))
+        dam.fileBecomes(
+          item().assetId!,
+          AssetFileProcessStatus.Failed,
+          {},
+          { failReason: AssetFileFailReason.InvalidMimeType }
+        )
+        await waits.elapse()
+        await vi.waitFor(() => expect(item().status).toBe(Failed))
+        await flushPromises()
+
+        const picture = leftPane().querySelector<HTMLElement>('.asset-image')!
+        const area = (element: Element) => {
+          const { left, top, right, bottom, width, height } = element.getBoundingClientRect()
+          return { left, top, right, bottom, width, height }
+        }
+        const box = area(picture.parentElement!)
+        const drawn = area(picture)
+        const covering = area(leftPane().querySelector('.dam-upload-queue__overlay')!)
+        expect(picture.classList.contains('asset-image--placeholder')).toBe(true)
+        expect([box, drawn, covering].map(({ width, height }) => width > 0 && height > 0)).toEqual([true, true, true])
+        expect([
+          covering.left <= drawn.left,
+          covering.top <= drawn.top,
+          covering.right >= drawn.right,
+          covering.bottom >= drawn.bottom,
+        ]).toEqual([true, true, true, true])
+      } finally {
+        style.remove()
+      }
+    })
+
+    // Only the placeholder takes the area: the preview of an uploaded file keeps the size it was asked in, as before U6,
+    // and is cut off where the area is smaller, not shrunk to it; the veil of "done" covers the preview, not the area.
+    it('draws the preview of an uploaded file in the size it was asked in, under the style of the library', async () => {
+      const style = document.createElement('style')
+      style.textContent = libraryStyle
+      document.head.append(style)
+      try {
+        await queue().addByFiles(QUEUE, extSystem, licence, [photo()])
+        await mountDialog(true)
+        await vi.waitFor(() => expect(item().status).toBe(Processing))
+        // A preview asked for in a size other than the one it came out in, and taller than the area.
+        const links = damImageLinks(item().fileId!)
+        Object.assign(links, { image_detail: { ...links.image_detail!, requestedWidth: 1280, requestedHeight: 1600 } })
+        dam.fileBecomes(
+          item().assetId!,
+          AssetFileProcessStatus.Processed,
+          metadata({ description: 'from the server' }),
+          {
+            links,
+          }
+        )
+        await waits.elapse()
+        await vi.waitFor(() => expect(item().status).toBe(Uploaded))
+        await vi.waitFor(() => expect(useAssetDetailStore(pinia).asset?.id).toBe(item().assetId))
+        await flushPromises()
+        // admin-ugc has the editor of the region of interest in place of the picture once the file is done.
+        expect(leftPane().querySelector('.asset-image') !== null).toBe(isCms)
+        if (!isCms) return
+
+        const { requestedWidth, requestedHeight } = item().imagePreview!
+        // An area lower than the preview, whatever the height of the window the test runs in.
+        leftPane().style.height = '400px'
+        await flushPromises()
+        expect(leftPane().getBoundingClientRect().height).toBeLessThan(requestedHeight!)
+        const picture = leftPane().querySelector<HTMLElement>('.asset-image')!
+        const { width, height } = picture.getBoundingClientRect()
+        expect(picture.classList.contains('asset-image--placeholder')).toBe(false)
+        expect([width, height]).toEqual([requestedWidth, requestedHeight])
+        expect(picture.parentElement!.getBoundingClientRect().width).toBe(requestedWidth)
+      } finally {
+        style.remove()
+      }
     })
   })
 
@@ -213,14 +443,16 @@ describe.each(consumerProfiles)('the dialog of one uploaded file under the $name
       expect(roiEditor().exists()).toBe(!isCms)
       expect(leftPane().querySelector('asset-image-stub') !== null).toBe(isCms)
       expect(wrapper!.findComponent(AssetDetailSidebarROI).exists()).toBe(!isCms)
-
-      if (!isCms) return
+      if (!isCms) {
+        expect(wrapper!.findComponent(AssetDetailSidebarROI).props()).toMatchObject({ isActive: true, queueKey: QUEUE })
+        return
+      }
       // The tab of the region of interest puts its editor in place of the picture, and its regions in place of the
       // form; the buttons of the form go with the form.
       tab('button-focus')!.click()
       await vi.waitFor(() => expect(roiEditor().exists()).toBe(true))
       expect(leftPane().querySelector('asset-image-stub')).toBeNull()
-      expect(wrapper!.findComponent(AssetDetailSidebarROI).exists()).toBe(true)
+      expect(wrapper!.findComponent(AssetDetailSidebarROI).props()).toMatchObject({ isActive: true, queueKey: QUEUE })
       expect(fields()).toEqual([])
       expect(inDialog('[data-cy="button-save-and-apply"]')).toBeNull()
       expect(useAssetDetailStore(pinia).activeTab).toBe(AssetDetailTabImageWithRoi.ROI)
@@ -247,6 +479,22 @@ describe.each(consumerProfiles)('the dialog of one uploaded file under the $name
       // The file panel names the asset and its file.
       expect(sidebar().textContent!.includes('file-1')).toBe(isCms)
     })
+
+    // The card breaks a long word anywhere, and the panel of the file of this dialog keeps that; the detail of an
+    // asset breaks its own only between words (design 1.10, JS29).
+    if (isCms) {
+      it('breaks the texts of the panel of the file as the rest of its card does', async () => {
+        await uploaded()
+
+        const filePanel = allInDialog<HTMLElement>('.v-expansion-panel').find(
+          (panel) =>
+            panel.querySelector('.v-expansion-panel-title')?.textContent?.trim() === damText('asset.detail.info.file')
+        )!
+        expect(getComputedStyle(filePanel.querySelector('.v-expansion-panel-text__wrapper')!).overflowWrap).toBe(
+          'break-word'
+        )
+      })
+    }
   })
 
   describe('the editor of the region of interest', () => {
@@ -397,16 +645,11 @@ describe.each(consumerProfiles)('the dialog of one uploaded file under the $name
       expect(useUploadQueueDialog().uploadQueueDialog.value).toBe(QUEUE)
     })
 
-    // Today's behaviour, pinned as it is. A save the DAM refuses rejects with the error of axios as it is, and a
-    // save answered with no asset throws an error of the dialog's own: the alert for errors lets both pass without
-    // a word. The dialog stays as it was, with nothing said.
     it.each([
       ['refuses the save', { status: 500 }],
       ['answers the save with no asset', { status: 200, data: [] }],
-    ])('hands over nothing, keeps the dialog and says nothing when the DAM %s', async (_what, answer) => {
-      dam.reply((request) =>
-        request.method === 'PATCH' && dam.routes.bulkMetadata.test(request.url) ? answer : undefined
-      )
+    ])('hands over nothing, keeps the dialog and says the save failed when the DAM %s', async (_what, answer) => {
+      refuseSaves(answer)
       await typedIn()
 
       button('button-save-and-apply').click()
@@ -414,11 +657,30 @@ describe.each(consumerProfiles)('the dialog of one uploaded file under the $name
       await waits.settle()
 
       expect(wrapper!.emitted('apply')).toBeUndefined()
-      expect(shownAlerts()).toEqual([])
+      expect(shownAlerts()).toEqual([systemError])
       expect(item().status).toBe(Uploaded)
       expect(useAssetDetailStore(pinia).asset?.id).toBe('asset-1')
       expect(useUploadQueueDialog().uploadQueueDialog.value).toBe(QUEUE)
     })
+
+    // admin-ugc brings its own map. What it throws after the save is not the save's to say: the save has said it
+    // succeeded, and the map's error of its own is said as it was before, which is not at all.
+    if (!isCms) {
+      it('says only that the save succeeded when the map of the application fails after it', async () => {
+        await typedIn()
+        mapOfTheApplication!.mockRejectedValue(new Error('the map of the application failed'))
+
+        button('button-save-and-apply').click()
+        await vi.waitFor(() => expect(mapOfTheApplication).toHaveBeenCalledTimes(1))
+        await waits.settle()
+
+        expect(saves()).toHaveLength(1)
+        expect(shownAlerts()).toEqual([updated])
+        expect(wrapper!.emitted('apply')).toBeUndefined()
+        expect(item().status).toBe(Uploaded)
+        expect(useUploadQueueDialog().uploadQueueDialog.value).toBe(QUEUE)
+      })
+    }
   })
 
   describe('"save"', () => {
@@ -440,6 +702,79 @@ describe.each(consumerProfiles)('the dialog of one uploaded file under the $name
       expect(item().status).toBe(Uploaded)
       expect(useUploadQueueDialog().uploadQueueDialog.value).toBe(QUEUE)
     })
+
+    it('keeps the dialog and says the save failed when the DAM refuses it', async () => {
+      refuseSaves({ status: 500 })
+      await uploaded()
+
+      button('button-save').click()
+      await vi.waitFor(() => expect(shownAlerts()).toEqual([systemError]))
+
+      expect(saves()).toHaveLength(1)
+      expect(item().status).toBe(Uploaded)
+      expect(useUploadQueueDialog().uploadQueueDialog.value).toBe(QUEUE)
+      expect([button('button-save').disabled, button('button-save-and-apply').disabled]).toEqual([false, false])
+    })
+
+    it('says the user may not, when the DAM forbids the save', async () => {
+      refuseSaves({ status: 403 })
+      await uploaded()
+
+      button('button-save').click()
+
+      await vi.waitFor(() => expect(shownAlerts()).toEqual([['error', alertText('common.alert.forbiddenError')]]))
+    })
+
+    it.each([
+      ['a custom field by the name its form gives it', '[0].customData.description', 'Description of the image'],
+      ['the keywords by theirs', '[0].keywords', alertText('common.damImage.asset.model.keywords')],
+    ])('names a field the DAM refuses as the form does: %s', async (_what, key, name) => {
+      const elements = useDamConfigStore(pinia).damConfigAssetCustomFormElements.get(extSystem)![DamAssetType.Image]
+      elements.find((element) => element.property === 'description')!.name = 'Description of the image'
+      refuseSaves({
+        status: 422,
+        data: { contextId: 'context', error: 'validation_failed', fields: { [key]: ['error_field_empty'] } },
+      })
+      await uploaded()
+
+      button('button-save').click()
+      await vi.waitFor(() => expect(shownAlerts()).toHaveLength(1))
+      await flushPromises()
+
+      expect(refusalSaid()).toEqual({
+        colour: 'error',
+        heading: alertText('common.alert.fixApiValidationErrors'),
+        fields: [name],
+      })
+    })
+
+    // As the dialog of a queue of files: the button that saves spins, the other one waits, and a second press
+    // sends nothing more.
+    it.each([
+      ['button-save', 'button-save-and-apply'],
+      ['button-save-and-apply', 'button-save'],
+    ] as const)(
+      '%s spins while the save runs, and sends one request however often it is pressed',
+      async (pressed, other) => {
+        const held = dam.hold('PATCH', dam.routes.bulkMetadata)
+        await uploaded()
+
+        button(pressed).click()
+        button(pressed).click()
+        await vi.waitFor(() => expect(held.waiting).toHaveLength(1))
+        await flushPromises()
+
+        expect(button(pressed).classList.contains('v-btn--loading')).toBe(true)
+        expect(button(other).disabled).toBe(true)
+        button(other).click()
+        await flushPromises()
+        expect(saves()).toHaveLength(1)
+
+        held.release()
+        await vi.waitFor(() => expect(shownAlerts()).toEqual([updated]))
+        expect(saves()).toHaveLength(1)
+      }
+    )
   })
 
   describe('a file the server refuses', () => {

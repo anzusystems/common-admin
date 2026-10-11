@@ -29,6 +29,7 @@ import {
   fetchAssetByFileId,
   fetchAssetListByIds,
   type IdsGroupedByLicences,
+  showMetadataSaveError,
 } from '@/domains/dam/api/damAssetApi'
 import { useAssetDetailStore } from '@/domains/dam/assetDetail/store/assetDetailStore'
 import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
@@ -46,7 +47,9 @@ import ImageWidgetMultipleLimitDialog from '@/domains/dam/imageWidget/components
 import { ImageWidgetUploadConfigKey } from '@/domains/dam/imageWidget/utils/imageWidgetInkectionKeys'
 import { fetchAssetListByFileIdsMultipleLicences } from '@/domains/dam/api/damfetchAssetListByFileIdsMultipleLicences'
 import { copyToLicence } from '@/domains/dam/api/damImageApi'
+import { createDamImage, imageFieldsOf } from '@/domains/dam/imageWidget/utils/damImage'
 import { useDamConfigState } from '@/domains/dam/config/composables/damConfigState'
+import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 
 const props = withDefaults(
   defineProps<{
@@ -65,7 +68,7 @@ const props = withDefaults(
     skipCurrentUserCheck?: boolean
   }>(),
   {
-    configName: 'default',
+    configName: undefined,
     label: undefined,
     image: undefined,
     readonly: false,
@@ -83,6 +86,8 @@ const props = withDefaults(
 const emit = defineEmits<{
   (e: 'update:modelValue', data: IntegerId[]): void
 }>()
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const damConfigName = useDamConfigName(props.configName)
 
 const assetSelectDialog = ref(false)
 
@@ -95,8 +100,7 @@ if (isUndefined(imageWidgetUploadConfig) || isUndefined(imageWidgetUploadConfig.
   throw new Error("Fatal error, parent component doesn't provide necessary config ext system config.")
 }
 
-// eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const imageOptions = useCommonAdminImageOptions(props.configName)
+const imageOptions = useCommonAdminImageOptions(damConfigName)
 const { imageClient, imageApi } = imageOptions
 const { showErrorsDefault, showValidationError, showErrorT, showUnknownError } = useAlerts()
 const uploadButtonComponent = ref<InstanceType<any> | null>(null)
@@ -196,6 +200,8 @@ const { uploadQueueDialog } = useUploadQueueDialog()
 
 const onFileInput = (files: File[]) => {
   if (props.readonly) return
+  // The input has turned every file away, and said so: the queue dialog would open over nothing new.
+  if (files.length === 0) return
   const config = imageWidgetUploadConfig.value
   if (isUndefined(config)) return
   cachedExtSystemId.value = config.extSystem
@@ -205,6 +211,8 @@ const onFileInput = (files: File[]) => {
 
 const onDrop = (files: File[]) => {
   if (props.readonly) return
+  // As the input: the dropzone has turned every file away, and said so.
+  if (files.length === 0) return
   const config = imageWidgetUploadConfig.value
   if (isUndefined(config)) return
   cachedExtSystemId.value = config.extSystem
@@ -221,9 +229,21 @@ const onCopyToLicence = (data: DamImageCopyToLicenceResponse) => {
   let refused = 0
   data.forEach((item) => {
     if (item.result === 'copy') {
-      uploadQueuesStore.addByCopyToLicence(props.queueKey, config.extSystem, config.licence, [item.targetAsset])
+      uploadQueuesStore.addByCopyToLicence(
+        props.queueKey,
+        config.extSystem,
+        config.licence,
+        [item.targetAsset],
+        damConfigName
+      )
     } else if (item.result === 'exists') {
-      uploadQueuesStore.addByCopyToLicence(props.queueKey, config.extSystem, config.licence, [item.targetAsset])
+      uploadQueuesStore.addByCopyToLicence(
+        props.queueKey,
+        config.extSystem,
+        config.licence,
+        [item.targetAsset],
+        damConfigName
+      )
       uploadQueuesStore.queueItemDuplicate(item.targetAsset, item.targetMainFile, DamAssetType.Image)
     } else {
       refused++
@@ -238,14 +258,26 @@ const afterLimitDialogAdd = () => {
   uploadQueueDialog.value = props.queueKey
 }
 
-const assetSelectConfirmMap = async (items: AssetSearchListItemDto[]): Promise<ImageStoreItem[]> => {
+/**
+ * The images of picked assets, without their position. `readUnder`: the licence the assets are in and its ext system,
+ * where it is known; otherwise they are read under the licence browsed (finding 74).
+ */
+const assetSelectConfirmMap = async (
+  items: AssetSearchListItemDto[],
+  readUnder?: { licence: IntegerId; extSystem: IntegerId }
+): Promise<ImageStoreItem[]> => {
   const assetSelectStore = useAssetSelectStore()
   const ids = items.map((item) => item.id)
   const assetMetadataMap = new Map<DocId, { description: string; authorIds: DocId[] }>()
   const authorIdsToFetch = new Set<DocId>()
   const authorsMap = new Map<DocId, string>()
   try {
-    const assetDetails = await fetchAssetListByIds(damClient, endPointAsset, ids, assetSelectStore.selectedLicenceId)
+    const assetDetails = await fetchAssetListByIds(
+      damClient,
+      endPointAsset,
+      ids,
+      readUnder ? readUnder.licence : assetSelectStore.selectedLicenceId
+    )
     if (customAssetSelectMetadataToImageMap) {
       assetDetails.forEach((assetDetail) => {
         const mapped = customAssetSelectMetadataToImageMap(assetDetail)
@@ -273,7 +305,7 @@ const assetSelectConfirmMap = async (items: AssetSearchListItemDto[]): Promise<I
         const authorsRes = await fetchAuthorListByIds(
           damClient,
           endPointAuthor,
-          assetSelectStore.requireSelectedSelectConfig().extSystem,
+          readUnder ? readUnder.extSystem : assetSelectStore.requireSelectedSelectConfig().extSystem,
           [...authorIdsToFetch]
         )
         authorsRes.forEach((author) => {
@@ -286,29 +318,17 @@ const assetSelectConfirmMap = async (items: AssetSearchListItemDto[]): Promise<I
   }
 
   return items.map((asset) => {
-    maxPosition.value++
     const authorIds = assetMetadataMap.get(asset.id)?.authorIds || []
     const description = assetMetadataMap.get(asset.id)?.description ?? ''
 
     if (customAssetSelectMetadataToImageMap) {
       return {
         key: generateUUIDv1(),
-        texts: {
-          description: description,
-          source: authorsMap.get(asset.id) ?? '',
-        },
-        flags: {
-          showSource: true,
-          internal: false,
-          overrideInternal: false,
-        },
-        dam: {
-          damId: asset.mainFile!.id,
-          regionPosition: 0,
-          licenceId: asset.licence,
-          internal: asset.mainFileInternal ?? false,
-        },
-        position: maxPosition.value,
+        ...createDamImage(
+          { fileId: asset.mainFile!.id, licenceId: asset.licence, internal: asset.mainFileInternal },
+          { description, source: authorsMap.get(asset.id) ?? '' },
+          { position: 0 }
+        ),
         damAuthors: [],
         showDamAuthors: false,
         assetId: asset.id,
@@ -325,22 +345,11 @@ const assetSelectConfirmMap = async (items: AssetSearchListItemDto[]): Promise<I
 
     return {
       key: generateUUIDv1(),
-      texts: {
-        description: description,
-        source: authorNames.join(', '),
-      },
-      flags: {
-        showSource: true,
-        internal: false,
-        overrideInternal: false,
-      },
-      dam: {
-        damId: asset.mainFile!.id,
-        regionPosition: 0,
-        licenceId: asset.licence,
-        internal: asset.mainFileInternal ?? false,
-      },
-      position: maxPosition.value,
+      ...createDamImage(
+        { fileId: asset.mainFile!.id, licenceId: asset.licence, internal: asset.mainFileInternal },
+        { description, source: authorNames.join(', ') },
+        { position: 0 }
+      ),
       damAuthors: authorIds,
       showDamAuthors: authorIds.length === 0,
       assetId: asset.id,
@@ -348,26 +357,45 @@ const assetSelectConfirmMap = async (items: AssetSearchListItemDto[]): Promise<I
   })
 }
 
+const positioned = (items: ImageStoreItem[]) =>
+  items.map((item) => {
+    maxPosition.value++
+    return { ...item, position: maxPosition.value }
+  })
+
 const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
   if (props.readonly) return
   if (data.type !== 'asset' || data.value.length === 0) return
-  if (!isUndefined(data.copyToLicence)) {
-    try {
-      const copyRes = await copyToLicence(
-        damClient,
-        endPointAsset,
-        data.value
-          .filter((asset) => !isNull(asset.mainFile))
-          .map((asset) => ({ asset: asset.id, targetAssetLicence: data.copyToLicence! }))
-      )
-      onCopyToLicence(copyRes)
-    } catch (e) {
-      showErrorsDefault(e)
-    }
+  const picked = data.value.filter((asset) => !isNull(asset.mainFile))
+  // Copied: the picked assets of another licence than the one of the upload. One already in it is taken as it is, at
+  // once; the copies come in once the dialog of the queue is used.
+  const toCopy =
+    copyToLicenceEnabled !== false && !isUndefined(data.copyToLicence)
+      ? picked.filter((asset) => asset.licence !== data.copyToLicence)
+      : []
+  if (toCopy.length === 0) {
+    imageStore.addImages(positioned(await assetSelectConfirmMap(picked)))
     return
   }
-  const items = await assetSelectConfirmMap(data.value.filter((asset) => !isNull(asset.mainFile)))
-  imageStore.addImages(items)
+  try {
+    const copyRes = await copyToLicence(
+      damClient,
+      endPointImage,
+      toCopy.map((asset) => ({ asset: asset.id, targetAssetLicence: data.copyToLicence! }))
+    )
+    onCopyToLicence(copyRes)
+  } catch (e) {
+    showErrorsDefault(e)
+  }
+  const asTheyAre = picked.filter((asset) => !toCopy.includes(asset))
+  if (asTheyAre.length === 0) return
+  // Read under the licence they are in, the one of the upload, and its ext system: not the one browsed.
+  const config = imageWidgetUploadConfig.value
+  const images = await assetSelectConfirmMap(
+    asTheyAre,
+    config ? { licence: data.copyToLicence!, extSystem: config.extSystem } : undefined
+  )
+  imageStore.addImages(positioned(images))
 }
 
 const assetDetailStore = useAssetDetailStore()
@@ -375,14 +403,15 @@ const { loading: assetLoading, dialog: assetDialog } = storeToRefs(assetDetailSt
 const {
   damClient,
   endPointAsset,
+  endPointImage,
   endPointAuthor,
+  copyToLicenceEnabled,
   showSourceEnabled,
   sourceLabel,
   editAssetLabel,
   addFromDamLabel,
   customAssetSelectMetadataToImageMap,
-  // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-} = useCommonAdminCoreDamOptions(props.configName)
+} = useCommonAdminCoreDamOptions(damConfigName)
 
 const onEditAsset = async (assetFileId: DocId) => {
   assetLoading.value = true
@@ -404,15 +433,7 @@ const onEditAsset = async (assetFileId: DocId) => {
 const onAssetUploadConfirm = (items: ImageStoreItem[]) => {
   if (props.readonly) return
   if (items.length === 0) return
-  imageStore.addImages(
-    items.map((item) => {
-      maxPosition.value++
-      return {
-        ...item,
-        position: maxPosition.value,
-      }
-    })
-  )
+  imageStore.addImages(positioned(items))
   uploadQueueDialog.value = null
   uploadQueuesStore.stopUpload(props.queueKey)
 }
@@ -447,7 +468,7 @@ const saveImages = async () => {
     const assetUpdateItems: AssetAuthorsItems = []
     const imagesRaw = toRaw(images.value)
     for (const image of imagesRaw) {
-      if (authorEnabled.value && image.showDamAuthors && image.assetId) {
+      if (authorEnabled.value && image.showDamAuthors && image.assetId && image.damAuthors.length > 0) {
         assetUpdateItems.push({ id: image.assetId, authors: image.damAuthors })
       }
       if (authorEnabled.value && image.showDamAuthors && image.damAuthors.length > 0) {
@@ -465,7 +486,7 @@ const saveImages = async () => {
     if (assetUpdateItems.length) {
       await bulkUpdateAssetsAuthors(damClient, endPointAsset, assetUpdateItems)
     }
-    const resItems = await imageApi.bulkUpdateImages(imageClient, imagesRaw)
+    const resItems = await imageApi.bulkUpdateImages(imageClient, imagesRaw.map(imageFieldsOf))
     const ids: IntegerId[] = []
     const items = resItems.map((resItem) => {
       ids.push(resItem.id)
@@ -492,7 +513,7 @@ const saveImages = async () => {
         ...item,
         damAuthors: matchedImage ? matchedImage.damAuthors : item.damAuthors,
         showDamAuthors: matchedImage ? matchedImage.damAuthors.length === 0 : item.damAuthors.length === 0,
-        assetId: item.assetId,
+        assetId: matchedImage ? matchedImage.assetId : item.assetId,
       }
     }
 
@@ -504,8 +525,8 @@ const saveImages = async () => {
     emit('update:modelValue', ids)
     return true
   } catch (e) {
-    // showErrorsDefault reports nothing for non-Anzu errors; its boolean return is for this fallback.
-    if (!showErrorsDefault(e)) showUnknownError()
+    // The authors refused by validation are named as the forms name them; anything else as before.
+    showMetadataSaveError(e, cachedExtSystemId.value)
     return false
   }
 }
@@ -544,10 +565,7 @@ watch(
 // upload / asset-select flow, not the editor's add button (which is hidden).
 const createImageStoreItem = (): ImageStoreItem => ({
   key: generateUUIDv1(),
-  texts: { description: '', source: '' },
-  dam: { damId: '', licenceId: 0, regionPosition: 0, internal: false },
-  flags: { showSource: true, internal: false, overrideInternal: false },
-  position: 0,
+  ...createDamImage({ fileId: '', licenceId: 0 }, {}, { position: 0 }),
   damAuthors: [],
   showDamAuthors: false,
   assetId: undefined,
@@ -618,7 +636,7 @@ onMounted(() => {
       :max-count="50"
       :asset-type="DamAssetType.Image"
       :skip-current-user-check="skipCurrentUserCheck"
-      :config-name="configName"
+      :config-name="damConfigName"
       return-type="asset"
       @confirm="onAssetSelectConfirm"
     >
@@ -671,7 +689,7 @@ onMounted(() => {
               :edit-asset-label="editAssetLabel"
               :author-enabled="authorEnabled"
               :readonly="readonly"
-              :config-name="configName"
+              :config-name="damConfigName"
               @edit-asset="onEditAsset"
               @remove-item="removeItem"
             />
@@ -683,7 +701,7 @@ onMounted(() => {
               <AImageWidgetSimple
                 :model-value="raw.id"
                 :image="raw"
-                :config-name="configName"
+                :config-name="damConfigName"
               />
             </div>
             <div class="image-widget-multiple-reorder__meta">
@@ -726,7 +744,7 @@ onMounted(() => {
     <AssetDetailDialog
       v-if="assetDialog === queueKey"
       :queue-key="queueKey"
-      :config-name="configName"
+      :config-name="damConfigName"
       :ext-system="cachedExtSystemId"
     />
     <ImageWidgetMultipleLimitDialog

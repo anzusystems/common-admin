@@ -11,6 +11,7 @@ import { useDamConfigState } from '@/domains/dam/config/composables/damConfigSta
 import type { DocId, IntegerId } from '@/shared/types/common'
 import { isUndefined } from '@/shared/utils/common'
 import { fetchImageFile } from '@/domains/dam/api/damImageApi'
+import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 
 const props = withDefaults(
   defineProps<{
@@ -19,10 +20,12 @@ const props = withDefaults(
     readonly?: boolean
   }>(),
   {
-    configName: 'default',
+    configName: undefined,
     readonly: false,
   }
 )
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const damConfigName = useDamConfigName(props.configName)
 
 const { showRecordWas, showErrorsDefault } = useAlerts()
 
@@ -34,8 +37,7 @@ const cropperShadeColor = 'rgba(241, 244, 246, 0.5)'
 
 const imageRoiStore = useImageRoiStore()
 
-// eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { damClient, endPointImage, endPointRoi } = useCommonAdminCoreDamOptions(props.configName)
+const { damClient, endPointImage, endPointRoi } = useCommonAdminCoreDamOptions(damConfigName)
 const { getDamConfigExtSystem } = useDamConfigState()
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const configExtSystem = getDamConfigExtSystem(props.extSystem)

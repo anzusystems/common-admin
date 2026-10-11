@@ -52,6 +52,12 @@ export interface UploadQueueItem {
   displayTitle: string
   assetId: DocIdNullable
   duplicateAssetId: DocIdNullable
+  /**
+   * The asset the row pointed to when the server found its file a duplicate: the one its upload made, or for a slot
+   * or mass-edit row the asset it edits. `assetId` names the original once the row has become it (the library).
+   * Null while the row is no duplicate.
+   */
+  uploadedAssetId?: DocIdNullable
   fileId: DocIdNullable
   externalProviderAssetId: AssetExternalProviderIdNullable
   externalProviderName: string | null

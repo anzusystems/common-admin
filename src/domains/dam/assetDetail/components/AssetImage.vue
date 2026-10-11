@@ -38,6 +38,8 @@ const props = withDefaults(
     hideIcon?: boolean
     showMetaIcons?: boolean
     assetFileProperties?: AssetFileProperties | undefined
+    /** Handed to the meta icons: the icon of a synthesized audio (TTS). */
+    showTts?: boolean
   }>(),
   {
     assetType: DamAssetType.Image,
@@ -63,6 +65,7 @@ const props = withDefaults(
     hideIcon: false,
     showMetaIcons: false,
     assetFileProperties: undefined,
+    showTts: false,
   }
 )
 const emit = defineEmits<{
@@ -239,6 +242,7 @@ const { remainingTimeShort } = useRemainingTime()
         v-if="showMetaIcons && assetFileProperties"
         :asset-file-properties="assetFileProperties"
         :asset-type="assetType"
+        :show-tts="showTts"
       />
     </template>
   </VImg>
@@ -275,6 +279,7 @@ const { remainingTimeShort } = useRemainingTime()
       v-if="showMetaIcons && assetFileProperties"
       :asset-file-properties="assetFileProperties"
       :asset-type="assetType"
+      :show-tts="showTts"
     />
   </div>
   <div
@@ -320,6 +325,7 @@ const { remainingTimeShort } = useRemainingTime()
       v-if="showMetaIcons && assetFileProperties"
       :asset-file-properties="assetFileProperties"
       :asset-type="assetType"
+      :show-tts="showTts"
     />
   </div>
 </template>

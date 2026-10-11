@@ -1,7 +1,10 @@
 <script lang="ts" setup>
-import { computed } from 'vue'
+import { computed, inject } from 'vue'
 import { useDamCachedAuthors } from '@/domains/dam/author/composables/cachedAuthors'
-import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
+import {
+  libraryUploadQueueSuggestions,
+  UploadQueueSuggestionsKey,
+} from '@/domains/dam/uploadQueue/components/uploadQueueBindings'
 import { isNull, isUndefined } from '@/shared/utils/common'
 import type { DocId } from '@/shared/types/common'
 import { useI18n } from 'vue-i18n'
@@ -30,15 +33,16 @@ const props = withDefaults(
 )
 
 const { getCachedAuthor } = useDamCachedAuthors()
-const uploadQueuesStore = useUploadQueuesStore()
+// The application's queues where it provides them, else the library's store, asked for only when a chip needs it.
+const suggestionsOf = inject(UploadQueueSuggestionsKey, null) ?? libraryUploadQueueSuggestions
 
 const { cached, loaded, unresolved } = useCachedItem(() => getCachedAuthor(props.id))
 
 const displayNewIcon = computed(() => {
-  if (!props.queueId) return undefined
-  const queue = uploadQueuesStore.getQueue(props.queueId)
-  if (!queue || !cached.value) return undefined
-  if (queue.suggestions.newAuthorNames.has(cached.value.name)) return 'mdi-new-box'
+  if (!props.queueId || !cached.value) return undefined
+  const suggestions = suggestionsOf(props.queueId)
+  if (!suggestions) return undefined
+  if (suggestions.newAuthorNames.has(cached.value.name)) return 'mdi-new-box'
   return undefined
 })
 

@@ -135,3 +135,16 @@ describe('the plugin options of admin-ugc', () => {
     expect(useCommonAdminImageOptions().imageApi).toEqual(image!.configs.default!.imageApi)
   })
 })
+
+// A widget, a queue or a detail is under the DAM configuration it names. One the application has not named is
+// refused, and so is what every object has by itself: read as a configuration, it had no client.
+describe('a DAM configuration the application has not named', () => {
+  it.each(['unknown', 'constructor', 'toString', '__proto__'])('is refused: %s', (name) => {
+    install(cmsConfiguration)
+
+    expect(() => useCommonAdminCoreDamOptions(name)).toThrow(
+      "Composable can't be used without properly configured common admin."
+    )
+    expect(useCommonAdminCoreDamOptions('default').endPointAsset).toBe('/adm/v1/asset')
+  })
+})

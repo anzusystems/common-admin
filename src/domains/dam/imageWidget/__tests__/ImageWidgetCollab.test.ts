@@ -300,6 +300,69 @@ describe('ImageWidgetInner in a collab room', () => {
     wrapper.unmount()
   })
 
+  // Finding 30: the dropzone has turned every file away, and nothing is to be uploaded. The field is not asked for.
+  it('asks for no lock for a drop that brings no file', async () => {
+    const { wrapper } = mountWidget('listing-empty-drop')
+    await flushPromises()
+
+    wrapper.findComponent({ name: 'AFileDropzone' }).vm.$emit('drop', [])
+    await flushPromises()
+
+    expect(acquired).not.toHaveBeenCalled()
+    expect(wrapper.findComponent({ name: 'UploadQueueDialogSingle' }).exists()).toBe(false)
+    wrapper.unmount()
+  })
+
+  // Finding 47: the upload dialog shows one file. A second drop while the first still waits for the lock of the
+  // field is not taken; both used to queue their file once the lock came.
+  it('takes one drop while its lock is asked for, and the next one once that is over', async () => {
+    const { wrapper } = mountWidget('listing-one-drop-at-a-time')
+    const addByFiles = vi.spyOn(useUploadQueuesStore(), 'addByFiles').mockResolvedValue(undefined as never)
+    await flushPromises()
+    const dropzone = wrapper.findComponent({ name: 'AFileDropzone' })
+    const queued = () => addByFiles.mock.calls.map((call) => (call[3] as File[]).map((file) => file.name))
+
+    dropzone.vm.$emit('drop', [new File(['x'], 'x.jpg')])
+    await flushPromises()
+    dropzone.vm.$emit('drop', [new File(['y'], 'y.jpg')])
+    await flushPromises()
+    lock.status!({ status: CollabFieldLockStatus.Success, type: CollabFieldLockType.Acquire } as never)
+    await new Promise((resolve) => setTimeout(resolve, 300))
+    await flushPromises()
+    expect(queued()).toEqual([['x.jpg']])
+
+    dropzone.vm.$emit('drop', [new File(['z'], 'z.jpg')])
+    await new Promise((resolve) => setTimeout(resolve, 300))
+    await flushPromises()
+    expect(queued()).toEqual([['x.jpg'], ['z.jpg']])
+    addByFiles.mockRestore()
+    wrapper.unmount()
+  })
+
+  // A refused request is asked for again by the next drop, as before; of the two drops then waiting, the later one
+  // is uploaded.
+  it('uploads the later drop alone when it asked again after a refusal', async () => {
+    const { wrapper } = mountWidget('listing-drop-after-refusal')
+    const addByFiles = vi.spyOn(useUploadQueuesStore(), 'addByFiles').mockResolvedValue(undefined as never)
+    await flushPromises()
+    const dropzone = wrapper.findComponent({ name: 'AFileDropzone' })
+
+    dropzone.vm.$emit('drop', [new File(['x'], 'x.jpg')])
+    await flushPromises()
+    lock.status!({ status: CollabFieldLockStatus.Failure, type: CollabFieldLockType.Acquire } as never)
+    await flushPromises()
+    dropzone.vm.$emit('drop', [new File(['y'], 'y.jpg')])
+    await flushPromises()
+    expect(acquired).toHaveBeenCalledTimes(2)
+    lock.status!({ status: CollabFieldLockStatus.Success, type: CollabFieldLockType.Acquire } as never)
+    await new Promise((resolve) => setTimeout(resolve, 300))
+    await flushPromises()
+
+    expect(addByFiles.mock.calls.map((call) => (call[3] as File[]).map((file) => file.name))).toEqual([['y.jpg']])
+    addByFiles.mockRestore()
+    wrapper.unmount()
+  })
+
   it('asks once for two drops while the request is out', async () => {
     const { wrapper } = mountWidget('listing-two-drops')
     await flushPromises()

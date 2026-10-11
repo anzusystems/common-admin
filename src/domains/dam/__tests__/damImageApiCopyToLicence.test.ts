@@ -1,6 +1,8 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import axios from 'axios'
+import { defaultApiErrorLogger, setApiErrorLogger } from '@/domains/api/utils/apiErrors'
 import { createFakeDam, type FakeDam, type FakeDamRule } from '@/domains/dam/__tests__/support/fakeDam'
+import { SYSTEM_CORE_DAM } from '@/domains/dam/api/damConstants'
 import { copyToLicence } from '@/domains/dam/api/damImageApi'
 import type { DamImageCopyToLicenceRequest, DamImageCopyToLicenceResponseItem } from '@/domains/dam/types/Asset'
 import { useAlerts } from '@/domains/system/composables/alerts'
@@ -12,14 +14,15 @@ import { AnzuApiResponseCodeError } from '@/shared/error/AnzuApiResponseCodeErro
 import { AnzuApiTimeoutError } from '@/shared/error/AnzuApiTimeoutError'
 
 // The request that copies picked assets to the licence of a widget: how many assets a request, and what comes
-// back for all of them. The rows of the upload queue are made from its answer.
+// back for all of them. The rows of the upload queue are made from its answer. The copy path is the image
+// endpoint's, which is what the widgets hand in.
 
-const END_POINT = '/adm/v1/asset'
+const END_POINT = '/adm/v1/image'
 const COPY = /\/copy-to-licence$/
 
 let dam: FakeDam
 beforeEach(() => {
-  dam = createFakeDam({ asset: END_POINT, image: '/adm/v1/image' })
+  dam = createFakeDam({ asset: '/adm/v1/asset', image: END_POINT })
   // The DAM answers each asset it was sent, copied.
   dam.reply((request) =>
     request.method === 'PATCH' && COPY.test(request.url)
@@ -60,7 +63,7 @@ describe('the copy of assets to a licence', () => {
     const answer = await copyToLicence(dam.client, END_POINT, picked(2))
 
     expect(dam.requests.map((request) => `${request.method} ${request.url}`)).toEqual([
-      'PATCH /adm/v1/asset/copy-to-licence',
+      'PATCH /adm/v1/image/copy-to-licence',
     ])
     expect(sent()).toEqual([picked(2)])
     expect(answer).toEqual(picked(2).map(copied))
@@ -141,5 +144,39 @@ describe('the copy of assets to a licence', () => {
 
     expect(failure).toBeInstanceOf(AnzuApiCancelledError)
     expect(shown(failure)).toEqual([])
+  })
+})
+
+// A failed copy is written down as every other request of the family is; a stopped one is no failure.
+describe('the failure of a copy, for the api error logger', () => {
+  afterEach(() => {
+    // Module state shared by every file this worker runs.
+    setApiErrorLogger(defaultApiErrorLogger)
+  })
+
+  it.each<[string, FakeDamRule, number]>([
+    ['is handed a request answered with 500, with what was asked', () => ({ status: 500 }), 1],
+    [
+      'does not hear of a request that was stopped',
+      (asked) => {
+        throw new axios.CanceledError(undefined, undefined, asked.config as never)
+      },
+      0,
+    ],
+  ])('%s', async (_, second, times) => {
+    const logged = vi.fn()
+    setApiErrorLogger(logged)
+
+    await failureOf(second)
+
+    expect(logged).toHaveBeenCalledTimes(times)
+    if (times) {
+      expect(logged.mock.calls[0]![1]).toMatchObject({
+        system: SYSTEM_CORE_DAM,
+        entity: 'asset',
+        url: expect.stringContaining('/adm/v1/image/copy-to-licence'),
+        status: 500,
+      })
+    }
   })
 })

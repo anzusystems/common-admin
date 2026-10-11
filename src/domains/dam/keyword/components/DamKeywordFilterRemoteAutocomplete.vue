@@ -5,20 +5,27 @@ import AFilterRemoteAutocomplete from '@/domains/remoteAutocomplete/components/A
 import type { IntegerId } from '@/shared/types/common'
 import { provide } from 'vue'
 import { FilterInnerConfigKey, FilterInnerDataKey } from '@/domains/filters/utils/filterInjectionKeys'
+import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 
 const props = withDefaults(
   defineProps<{
     name: string
     extSystem: IntegerId
+    /** The DAM configuration to work under. Left out: that of the component it is in, else `default`. */
+    configName?: string
   }>(),
-  {}
+  {
+    configName: undefined,
+  }
 )
 const emit = defineEmits<{
   (e: 'change'): void
 }>()
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const damConfigName = useDamConfigName(props.configName)
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { fetchItems, fetchItemsByIds } = useKeywordSelectActions(props.extSystem)
+const { fetchItems, fetchItemsByIds } = useKeywordSelectActions(props.extSystem, damConfigName)
 
 const { filterData, filterConfig } = useKeywordInnerFilter()
 provide(FilterInnerConfigKey, filterConfig)

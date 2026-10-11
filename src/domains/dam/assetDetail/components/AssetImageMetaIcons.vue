@@ -7,6 +7,7 @@ import {
   ICON_LOW,
   ICON_RSS,
   ICON_SLOTS,
+  ICON_TTS,
   LOW_DIMENSION,
 } from '@/domains/dam/assetDetail/utils/assetImageIconsConfig'
 import { useDamConfigStore } from '@/domains/dam/config/store/damConfigStore'
@@ -16,9 +17,12 @@ const props = withDefaults(
     assetType: DamAssetTypeType
     assetFileProperties: AssetFileProperties
     disableAbsolute?: boolean
+    /** The icon of a synthesized audio (TTS); off by default, as the backend says it to every admin. */
+    showTts?: boolean
   }>(),
   {
     disableAbsolute: false,
+    showTts: false,
   }
 )
 
@@ -66,6 +70,10 @@ const data = computed(() => {
   if (props.assetFileProperties.fromRss) {
     icons.push(ICON_RSS)
     titles.push(t('common.damImage.asset.metaIcons.rss'))
+  }
+  if (props.showTts && props.assetFileProperties.ttsAudio) {
+    icons.push(ICON_TTS)
+    titles.push(t('common.damImage.asset.metaIcons.tts'))
   }
   checkDimensions(icons, titles)
   checkDistributions(icons, titles)

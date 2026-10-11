@@ -5,8 +5,10 @@ import { useApiFetchList } from '@/domains/api/composables/useApiFetchList'
 import { createFilter, createFilterStore, type MakeFilterOption } from '@/domains/filters/composables/filterFactory'
 import { usePagination } from '@/domains/api/composables/pagination'
 import { SortOrder } from '@/domains/api/types/SortOrder'
+import { defaultApiErrorLogger, setApiErrorLogger } from '@/domains/api/utils/apiErrors'
 import { AnzuApiAxiosError } from '@/shared/error/AnzuApiAxiosError'
 import { AnzuApiForbiddenError } from '@/shared/error/AnzuApiForbiddenError'
+import { AnzuApiResponseCodeError } from '@/shared/error/AnzuApiResponseCodeError'
 import { AnzuApiTimeoutError } from '@/shared/error/AnzuApiTimeoutError'
 
 // The list fetch, and the part of it a caller cannot see: what it writes back into pagination.
@@ -165,5 +167,37 @@ describe('what the list fetch throws', () => {
 
   it('hands back every other axios failure with the response on its cause', async () => {
     await expect(failing({ response: { status: 500 } })()).rejects.toBeInstanceOf(AnzuApiAxiosError)
+  })
+})
+
+// A caller that reads a list again on a timer reports its first failure and says of the rest that it has, as with
+// `useApiRequest`: a poll that asks through an outage would otherwise write the same failure down at every try.
+describe('a list call that asks not to be reported', () => {
+  afterEach(() => {
+    // Module state shared by every file this worker runs.
+    setApiErrorLogger(defaultApiErrorLogger)
+  })
+
+  it('throws as ever and the logger does not hear of it; the calls around it are reported as ever', async () => {
+    const logged = vi.fn()
+    setApiErrorLogger(logged)
+    const get = vi
+      .fn()
+      .mockImplementation((url: string) => Promise.reject(axiosError({ response: { status: 500 } }, url)))
+    const { execute, filterData, filterConfig, pagination } = buildApi(get)
+    const fetchList = (params?: { report: boolean }) => execute(pagination, filterData, filterConfig, params)
+
+    await expect(fetchList({ report: false })).rejects.toBeInstanceOf(AnzuApiAxiosError)
+    expect(logged).not.toHaveBeenCalled()
+    // An answer without the body a list needs: a failure the helper raises itself.
+    get.mockResolvedValueOnce({ status: 200, data: '' })
+    await expect(fetchList({ report: false })).rejects.toBeInstanceOf(AnzuApiResponseCodeError)
+    expect(logged).not.toHaveBeenCalled()
+
+    await expect(fetchList()).rejects.toBeInstanceOf(AnzuApiAxiosError)
+    await expect(fetchList({ report: true })).rejects.toBeInstanceOf(AnzuApiAxiosError)
+
+    expect(logged).toHaveBeenCalledTimes(2)
+    expect(logged.mock.calls[0]![1]).toMatchObject({ system: 'test', entity: 'test', status: 500 })
   })
 })

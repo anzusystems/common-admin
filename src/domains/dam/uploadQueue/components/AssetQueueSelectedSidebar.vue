@@ -1,59 +1,73 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
 import { DamAssetType, type DamAssetTypeType } from '@/domains/dam/types/Asset'
 import ASystemEntityScope from '@/domains/form/components/ASystemEntityScope.vue'
 import AssetCustomMetadataFormMassOperations from '@/domains/dam/uploadQueue/components/AssetCustomMetadataFormMassOperations.vue'
 import AuthorRemoteAutocompleteWithCached from '@/domains/dam/author/components/AuthorRemoteAutocompleteWithCached.vue'
 import KeywordRemoteAutocompleteWithCached from '@/domains/dam/keyword/components/KeywordRemoteAutocompleteWithCached.vue'
-import { useUploadQueueMassOperations } from '@/domains/dam/uploadQueue/composables/uploadQueueMassOperations'
 import type { IntegerId } from '@/shared/types/common'
+import type { CustomDataValue } from '@/domains/customDataForm/types/CustomDataForm'
 import { useDamConfigState } from '@/domains/dam/config/composables/damConfigState'
+import type { UploadQueueKey } from '@/domains/dam/types/UploadQueue'
+import {
+  type UploadQueueMassOperationsBinding,
+  useLibraryUploadQueueMassOperationsBinding,
+} from '@/domains/dam/uploadQueue/components/uploadQueueBindings'
 
 const props = withDefaults(
   defineProps<{
-    queueKey: string
+    queueKey: UploadQueueKey
     extSystem: IntegerId
+    /** What the mass operations ask of their host; without it the library's store. */
+    operations?: UploadQueueMassOperationsBinding
   }>(),
-  {}
+  {
+    operations: undefined,
+  }
 )
 
-const massOperationsData = ref({ image: {}, video: {}, audio: {}, document: {} })
+const massOperationsData = ref<Record<'image' | 'video' | 'audio' | 'document', Record<string, CustomDataValue>>>({
+  image: {},
+  video: {},
+  audio: {},
+  document: {},
+})
 const massOperationsKeywords = ref([])
 const massOperationsAuthors = ref([])
 
 const { t } = useI18n()
 
+// The two icon buttons beside a field, named for who cannot see them: what each does, and to which field.
+const fillEmptyName = (field: string) => t('common.damImage.asset.massOperations.fillOneEmptyField', { field })
+const replaceName = (field: string) => t('common.damImage.asset.massOperations.replaceOneField', { field })
+
 const panels = ref<Array<string>>(['general'])
 
-const uploadQueuesStore = useUploadQueuesStore()
-
-const { replaceEmptyCustomDataValue, replaceEmptyAuthors, replaceEmptyKeywords } =
-  // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-  useUploadQueueMassOperations(props.queueKey)
+// Created only when the host binds none.
+const operations = props.operations ?? useLibraryUploadQueueMassOperationsBinding(() => props.queueKey)
 
 const fillEmptyField = (data: { assetType: DamAssetTypeType; elementProperty: string; value: any }) => {
-  replaceEmptyCustomDataValue(data)
+  operations.fillCustomDataValue(data)
 }
 const replaceField = (data: { assetType: DamAssetTypeType; elementProperty: string; value: any }) => {
-  replaceEmptyCustomDataValue(data, true)
+  operations.fillCustomDataValue(data, true)
 }
 const fillEmptyKeywords = () => {
-  replaceEmptyKeywords(massOperationsKeywords.value)
+  operations.fillKeywords(massOperationsKeywords.value)
 }
 const replaceKeywords = () => {
-  replaceEmptyKeywords(massOperationsKeywords.value, true)
+  operations.fillKeywords(massOperationsKeywords.value, true)
 }
 const fillEmptyAuthors = () => {
-  replaceEmptyAuthors(massOperationsAuthors.value)
+  operations.fillAuthors(massOperationsAuthors.value)
 }
 const replaceAuthors = () => {
-  replaceEmptyAuthors(massOperationsAuthors.value, true)
+  operations.fillAuthors(massOperationsAuthors.value, true)
 }
 const fillAll = (forceReplace = false) => {
   for (const [elementProperty, value] of Object.entries(massOperationsData.value.image)) {
-    replaceEmptyCustomDataValue(
+    operations.fillCustomDataValue(
       {
         assetType: DamAssetType.Image,
         elementProperty,
@@ -63,7 +77,7 @@ const fillAll = (forceReplace = false) => {
     )
   }
   for (const [elementProperty, value] of Object.entries(massOperationsData.value.video)) {
-    replaceEmptyCustomDataValue(
+    operations.fillCustomDataValue(
       {
         assetType: DamAssetType.Video,
         elementProperty,
@@ -73,7 +87,7 @@ const fillAll = (forceReplace = false) => {
     )
   }
   for (const [elementProperty, value] of Object.entries(massOperationsData.value.audio)) {
-    replaceEmptyCustomDataValue(
+    operations.fillCustomDataValue(
       {
         assetType: DamAssetType.Audio,
         elementProperty,
@@ -83,7 +97,7 @@ const fillAll = (forceReplace = false) => {
     )
   }
   for (const [elementProperty, value] of Object.entries(massOperationsData.value.document)) {
-    replaceEmptyCustomDataValue(
+    operations.fillCustomDataValue(
       {
         assetType: DamAssetType.Document,
         elementProperty,
@@ -101,12 +115,12 @@ const fillAll = (forceReplace = false) => {
 }
 const clearForm = () => {
   massOperationsData.value = { image: {}, video: {}, audio: {}, document: {} }
-  if (authorEnabled.value) massOperationsAuthors.value = []
-  if (keywordEnabled.value) massOperationsKeywords.value = []
+  massOperationsAuthors.value = []
+  massOperationsKeywords.value = []
 }
 
 const assetTypes = computed(() => {
-  return uploadQueuesStore.getQueueItemsTypes(props.queueKey)
+  return operations.assetTypes()
 })
 
 const { getDamConfigExtSystem } = useDamConfigState()
@@ -174,7 +188,7 @@ onMounted(() => {
                         />
                       </div>
                       <VBtn
-                        :aria-label="t('common.damImage.asset.massOperations.fillOneEmpty')"
+                        :aria-label="fillEmptyName(t('common.damImage.asset.model.keywords'))"
                         icon
                         size="small"
                         variant="text"
@@ -190,7 +204,7 @@ onMounted(() => {
                         </VTooltip>
                       </VBtn>
                       <VBtn
-                        :aria-label="t('common.damImage.asset.massOperations.replaceOne')"
+                        :aria-label="replaceName(t('common.damImage.asset.model.keywords'))"
                         icon
                         size="small"
                         variant="text"
@@ -230,7 +244,7 @@ onMounted(() => {
                         />
                       </div>
                       <VBtn
-                        :aria-label="t('common.damImage.asset.massOperations.fillOneEmpty')"
+                        :aria-label="fillEmptyName(t('common.damImage.asset.model.authors'))"
                         icon
                         size="small"
                         variant="text"
@@ -246,7 +260,7 @@ onMounted(() => {
                         </VTooltip>
                       </VBtn>
                       <VBtn
-                        :aria-label="t('common.damImage.asset.massOperations.replaceOne')"
+                        :aria-label="replaceName(t('common.damImage.asset.model.authors'))"
                         icon
                         size="small"
                         variant="text"
@@ -276,6 +290,54 @@ onMounted(() => {
               <AssetCustomMetadataFormMassOperations
                 v-model="massOperationsData.image"
                 :asset-type="DamAssetType.Image"
+                :ext-system="extSystem"
+                @fill-empty-field="fillEmptyField"
+                @replace-field="replaceField"
+              />
+            </VExpansionPanelText>
+          </VExpansionPanel>
+          <VExpansionPanel
+            v-if="assetTypes.includes(DamAssetType.Video)"
+            elevation="0"
+            :title="t('common.damImage.asset.assetType.video')"
+            :value="DamAssetType.Video"
+          >
+            <VExpansionPanelText>
+              <AssetCustomMetadataFormMassOperations
+                v-model="massOperationsData.video"
+                :asset-type="DamAssetType.Video"
+                :ext-system="extSystem"
+                @fill-empty-field="fillEmptyField"
+                @replace-field="replaceField"
+              />
+            </VExpansionPanelText>
+          </VExpansionPanel>
+          <VExpansionPanel
+            v-if="assetTypes.includes(DamAssetType.Audio)"
+            elevation="0"
+            :title="t('common.damImage.asset.assetType.audio')"
+            :value="DamAssetType.Audio"
+          >
+            <VExpansionPanelText>
+              <AssetCustomMetadataFormMassOperations
+                v-model="massOperationsData.audio"
+                :asset-type="DamAssetType.Audio"
+                :ext-system="extSystem"
+                @fill-empty-field="fillEmptyField"
+                @replace-field="replaceField"
+              />
+            </VExpansionPanelText>
+          </VExpansionPanel>
+          <VExpansionPanel
+            v-if="assetTypes.includes(DamAssetType.Document)"
+            elevation="0"
+            :title="t('common.damImage.asset.assetType.document')"
+            :value="DamAssetType.Document"
+          >
+            <VExpansionPanelText>
+              <AssetCustomMetadataFormMassOperations
+                v-model="massOperationsData.document"
+                :asset-type="DamAssetType.Document"
                 :ext-system="extSystem"
                 @fill-empty-field="fillEmptyField"
                 @replace-field="replaceField"

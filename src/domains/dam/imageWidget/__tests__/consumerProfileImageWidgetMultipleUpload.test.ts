@@ -1,3 +1,4 @@
+import axios from 'axios'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount, type VueWrapper } from '@vue/test-utils'
 import { createPinia, type Pinia, setActivePinia } from 'pinia'
@@ -10,7 +11,12 @@ import {
 } from '@/domains/dam/__tests__/support/consumerProfiles'
 import { answerDamNames, damNameLookups, damNamesAsked } from '@/domains/dam/__tests__/support/damNames'
 import { type DamSocket, stubDamSocket } from '@/domains/dam/__tests__/support/damSocket'
-import { createFakeDam, damAssetWithFile, type FakeDam } from '@/domains/dam/__tests__/support/fakeDam'
+import {
+  createFakeDam,
+  damAssetWithFile,
+  type FakeDam,
+  type FakeDamRule,
+} from '@/domains/dam/__tests__/support/fakeDam'
 import { holdLongWaits, type LongWaits } from '@/domains/dam/__tests__/support/longWaits'
 import {
   alertText,
@@ -20,6 +26,8 @@ import {
   signInToDam,
   signOutOfDam,
 } from '@/domains/dam/__tests__/support/uploadUi'
+import { updateAssetMetadata } from '@/domains/dam/api/damAssetApi'
+import { useAssetDetailStore } from '@/domains/dam/assetDetail/store/assetDetailStore'
 import AuthorRemoteAutocompleteWithCached from '@/domains/dam/author/components/AuthorRemoteAutocompleteWithCached.vue'
 import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
 import { destroyDamNotifications, initDamNotifications } from '@/domains/dam/composables/damNotifications'
@@ -36,6 +44,7 @@ import { UploadQueueItemStatus } from '@/domains/dam/types/UploadQueue'
 import UploadQueueDialog from '@/domains/dam/uploadQueue/components/UploadQueueDialog.vue'
 import { useUploadQueueDialog } from '@/domains/dam/uploadQueue/composables/useUploadQueueDialog'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
+import type { DocId } from '@/shared/types/common'
 
 // The widget of several images (a gallery), under each of the two applications: how it loads the images it
 // has, what an upload adds to them, what a row of it offers, and what its save writes. The real widget with its real
@@ -298,6 +307,66 @@ describe.each(consumerProfiles)('the widget of several images under the $name', 
       expect(widget!.findComponent(UploadQueueDialog).exists()).toBe(true)
       expect(queueDialog()!.textContent).toContain(damText('upload.title'))
     })
+
+    // Finding 30: nothing is queued, and no queue dialog opens over a queue that got no row. It used to, empty.
+    const nothingIsQueued = () => {
+      expect(queue().getQueueItems(QUEUE)).toEqual([])
+      expect(dam.sentTo('POST', dam.routes.start)).toEqual([])
+      expect(useUploadQueueDialog().uploadQueueDialog.value).toBeNull()
+      expect(queueDialog()).toBeNull()
+    }
+
+    it('of a type the ext system does not take: is turned away with a warning, and no queue dialog opens', async () => {
+      await mountWidget()
+      const input = (widget!.element as Element).querySelector<HTMLInputElement>('input[type="file"]')!
+
+      input.files = carrying([new File([new Uint8Array(3000)], 'scan.tiff', { type: 'image/tiff' })]).files
+      input.dispatchEvent(new Event('change', { bubbles: true }))
+      await flushPromises()
+
+      expect(shownAlerts()).toEqual([['warning', `${alertText('common.system.upload.incorrectFormatSize')}:scan.tiff`]])
+      nothingIsQueued()
+    })
+
+    // What is left of the files goes on as before: those the ext system takes are queued, the other is named.
+    it('some of a type the ext system does not take: those are turned away with a warning, the rest is queued', async () => {
+      const chunks = dam.hold('POST', dam.routes.chunk)
+      await mountWidget()
+      const input = (widget!.element as Element).querySelector<HTMLInputElement>('input[type="file"]')!
+
+      input.files = carrying([
+        new File([new Uint8Array(3000)], 'scan.tiff', { type: 'image/tiff' }),
+        photo('a.jpg'),
+        photo('b.jpg'),
+      ]).files
+      input.dispatchEvent(new Event('change', { bubbles: true }))
+      await vi.waitFor(() => expect(chunks.waiting).toHaveLength(2))
+
+      expect(shownAlerts()).toEqual([['warning', `${alertText('common.system.upload.incorrectFormatSize')}:scan.tiff`]])
+      expect(queue().getQueueItems(QUEUE)).toMatchObject([{ displayTitle: 'a.jpg' }, { displayTitle: 'b.jpg' }])
+      expect(useUploadQueueDialog().uploadQueueDialog.value).toBe(QUEUE)
+    })
+
+    // The dropzone checks the files as the input does, and hands over what is left: here, nothing.
+    it('dropped, none of which the dropzone lets through: nothing is queued, and no queue dialog opens', async () => {
+      await mountWidget()
+
+      widget!.findComponent({ name: 'AFileDropzone' }).vm.$emit('drop', [])
+      await flushPromises()
+
+      nothingIsQueued()
+    })
+
+    it('dropped, which the dropzone lets through: are queued, and the queue dialog opens over them', async () => {
+      const chunks = dam.hold('POST', dam.routes.chunk)
+      await mountWidget()
+
+      widget!.findComponent({ name: 'AFileDropzone' }).vm.$emit('drop', [photo('a.jpg')])
+      await vi.waitFor(() => expect(chunks.waiting).toHaveLength(1))
+
+      expect(queue().getQueueItems(QUEUE)).toMatchObject([{ displayTitle: 'a.jpg', licenceId: licence }])
+      expect(useUploadQueueDialog().uploadQueueDialog.value).toBe(QUEUE)
+    })
   })
 
   describe('"save and apply" of its queue dialog', () => {
@@ -326,10 +395,10 @@ describe.each(consumerProfiles)('the widget of several images under the $name', 
           showDamAuthors: true,
         },
       ])
-      // Today's behaviour, pinned as it is: the dialog and the widget each count the position on, so the new
-      // images come after the old ones with a gap of their own number between.
-      expect(images().map((image) => image.position)).toEqual([1, 2, 5, 6])
-      expect(useImageStore(pinia).maxPosition).toBe(6)
+      // Finding 31: the widget alone counts the position on, so the new images follow the old ones without a gap.
+      // The dialog used to count it on as well: 5 and 6.
+      expect(images().map((image) => image.position)).toEqual([1, 2, 3, 4])
+      expect(useImageStore(pinia).maxPosition).toBe(4)
       expect(new Set(images().map((image) => image.key)).size).toBe(4)
       // Not saved as images yet: they have no id, and the form's value is as it was.
       expect(images().map((image) => image.id)).toEqual([11, 12, undefined, undefined])
@@ -424,27 +493,26 @@ describe.each(consumerProfiles)('the widget of several images under the $name', 
       expect(sent.map((image) => [image.id, image.position, image.dam.damId])).toEqual([
         [11, 1, 'file-11'],
         [12, 2, 'file-12'],
-        [undefined, 5, a.fileId],
-        [undefined, 6, b.fileId],
+        // One after another, without a gap (finding 31): they used to be 5 and 6.
+        [undefined, 3, a.fileId],
+        [undefined, 4, b.fileId],
+      ])
+      // Only the fields of an image (finding 36): neither the key, the asset and the authors of a row, nor what the
+      // map of an upload added.
+      expect(sent.map((image) => Object.keys(image).sort())).toEqual([
+        ['dam', 'flags', 'id', 'position', 'texts'],
+        ['dam', 'flags', 'id', 'position', 'texts'],
+        ['dam', 'flags', 'position', 'texts'],
+        ['dam', 'flags', 'position', 'texts'],
       ])
       expect(imageApi.requests.at(-1)?.url).toBe(isCms ? '/adm/v1/image' : undefined)
       expect(mounted.emitted('update:modelValue')!.at(-1)).toEqual([[11, 12, 501, 502]])
       expect(images().map((image) => image.id)).toEqual([11, 12, 501, 502])
       expect(shownAlerts().filter(([colour]) => colour === 'error')).toEqual([])
-      // Today's behaviour, pinned as it is: admin-cms writes the authors of every image that is offered the
-      // authors of the DAM back into its asset, also when the user picked none: an empty list, for the assets
-      // that had no author when the widget read them. admin-ugc writes nothing into the DAM.
-      const authorWrites = dam.sentTo('PATCH', dam.routes.bulkMetadata).slice(writesBefore)
-      expect(authorWrites.map((request) => dam.body(request))).toEqual(
-        isCms
-          ? [
-              [
-                { id: 'asset-12', authors: [] },
-                { id: b.assetId, authors: [] },
-              ],
-            ]
-          : []
-      )
+      // admin-cms writes the authors of an image into its asset only when the user picked some in its row: the
+      // images offered the authors of the DAM here have none picked, and an empty list would take away an author
+      // the asset got meanwhile. admin-ugc writes nothing into the DAM.
+      expect(dam.sentTo('PATCH', dam.routes.bulkMetadata).slice(writesBefore)).toEqual([])
     })
 
     if (isCms) {
@@ -473,6 +541,134 @@ describe.each(consumerProfiles)('the widget of several images under the $name', 
         expect(imagesWrittenBefore).toBe(0)
         const [, sent] = imageApi.calls.at(-1) as ['bulkUpdateImages', ImageAware[]]
         expect(sent.map((image) => image.texts.source)).toEqual(['source 11', 'Name of author-7, Name of author-8'])
+      })
+
+      /** Each list of authors written into the asset, in the order the DAM got them. */
+      const authorsWrittenInto = (asset: DocId) =>
+        dam
+          .sentTo('PATCH', dam.routes.bulkMetadata)
+          .flatMap((request) => dam.body(request) as Array<{ id: DocId; authors?: DocId[] }>)
+          .filter((item) => item.id === asset && item.authors !== undefined)
+          .map((item) => item.authors)
+
+      // "Edit asset" of a row opens the detail of its asset. An author saved there is not taken into the row, which
+      // goes on offering the authors of the DAM with none picked.
+      it('keeps an author saved meanwhile in the detail of the asset, where the row has none picked', async () => {
+        await withTwoImages()
+        const { editAssetLabel, damClient, endPointAsset } = useCommonAdminCoreDamOptions()
+        await rows()[1]
+          .findAll('button')
+          .find((button) => button.text() === editAssetLabel)!
+          .trigger('click')
+        const detail = useAssetDetailStore(pinia)
+        await vi.waitFor(() => expect(detail.asset?.id).toBe('asset-12'))
+        // The detail is not mounted here: this is what its save does with an author the user picks in it.
+        detail.asset!.authors = ['author-9']
+        await updateAssetMetadata(damClient, endPointAsset, detail.asset!, extSystem, detail.mainFileSingleUse)
+        await flushPromises()
+        expect(authorsWrittenInto('asset-12')).toEqual([['author-9']])
+        expect(images()[1]).toMatchObject({ assetId: 'asset-12', damAuthors: [], showDamAuthors: true })
+
+        expect(await save()).toBe(true)
+
+        expect(authorsWrittenInto('asset-12')).toEqual([['author-9']])
+      })
+
+      it('writes no authors for an image picked from the DAM whose read failed, though its row offers them', async () => {
+        dam.assets.set(
+          'asset-31',
+          damAssetWithFile('asset-31', 'file-31', AssetFileProcessStatus.Processed, { licence, authors: ['author-5'] })
+        )
+        const mounted = await mountWidget()
+        dam.reply((request) =>
+          request.method === 'GET' && dam.routes.byIds.test(request.url) ? { status: 500 } : undefined
+        )
+        mounted.findComponent(Picker).vm.$emit('confirm', {
+          type: 'asset',
+          value: [{ id: 'asset-31', licence, mainFile: { id: 'file-31' } }],
+        })
+        await vi.waitFor(() => expect(images()).toHaveLength(1))
+        await flushPromises()
+        // The asset has an author, but the widget could not read it: the row offers the authors of the DAM.
+        expect(dam.sentTo('GET', dam.routes.byIds)).toHaveLength(1)
+        expect(images()[0]).toMatchObject({ assetId: 'asset-31', damAuthors: [], showDamAuthors: true })
+
+        expect(await save()).toBe(true)
+
+        expect(dam.sentTo('PATCH', dam.routes.bulkMetadata)).toEqual([])
+        const [call, sent] = imageApi.calls.at(-1) as ['bulkUpdateImages', ImageAware[]]
+        expect([call, sent.map((image) => image.dam.damId)]).toEqual(['bulkUpdateImages', ['file-31']])
+      })
+
+      it('writes the authors picked in a row after a first save, into the asset of the row', async () => {
+        await withTwoImages()
+        expect(await save()).toBe(true)
+        await flushPromises()
+        const writesBefore = dam.sentTo('PATCH', dam.routes.bulkMetadata).length
+
+        rows()[1].findComponent(AuthorRemoteAutocompleteWithCached).vm.$emit('update:modelValue', ['author-7'])
+        await flushPromises()
+        expect(await save()).toBe(true)
+
+        const patches = dam.sentTo('PATCH', dam.routes.bulkMetadata).slice(writesBefore)
+        expect(patches.map((request) => dam.body(request))).toEqual([[{ id: 'asset-12', authors: ['author-7'] }]])
+      })
+
+      /** An author is picked in the row of the second image, and the DAM answers the save of the authors so. */
+      const authorPickedAndAnswered = async (rule: FakeDamRule) => {
+        await withTwoImages()
+        rows()[1].findComponent(AuthorRemoteAutocompleteWithCached).vm.$emit('update:modelValue', ['author-7'])
+        await flushPromises()
+        dam.reply((request) =>
+          request.method === 'PATCH' && dam.routes.bulkMetadata.test(request.url) ? rule(request) : undefined
+        )
+      }
+
+      it.each<[string, FakeDamRule, string]>([
+        ['the user may not, when the DAM forbids', () => ({ status: 403 }), 'common.alert.forbiddenError'],
+        [
+          'the request timed out, when the DAM does not answer in time',
+          (asked) => {
+            throw new axios.AxiosError('timeout of 1ms exceeded', axios.AxiosError.ECONNABORTED, asked.config as never)
+          },
+          'error.apiTimedOut.message',
+        ],
+      ])('writes no images, and says %s the authors picked in a row', async (_what, rule, alert) => {
+        await authorPickedAndAnswered(rule)
+
+        expect(await save()).toBe(false)
+
+        expect(shownAlerts()).toEqual([['error', alertText(alert)]])
+        expect(imageApi.calls.map(([call]) => call)).toEqual(['fetchImageListByIds'])
+      })
+
+      it('writes no images, and names the authors, when the DAM refuses the authors picked in a row by validation', async () => {
+        await authorPickedAndAnswered(() => ({
+          status: 422,
+          data: { contextId: 'context', error: 'validation_failed', fields: { '[0].authors': ['error_field_empty'] } },
+        }))
+
+        expect(await save()).toBe(false)
+
+        expect(shownAlerts()).toHaveLength(1)
+        const [[colour, text]] = shownAlerts() as Array<[string, string]>
+        const [heading, ...lines] = text.split('\n')
+        expect([colour, heading, lines.map((line) => line.split(': ')[0])]).toEqual([
+          'error',
+          alertText('common.alert.fixApiValidationErrors'),
+          [alertText('common.damImage.asset.model.authors')],
+        ])
+        expect(imageApi.calls.map(([call]) => call)).toEqual(['fetchImageListByIds'])
+      })
+
+      // Nothing reads what the DAM answers a save of the authors with.
+      it('writes the images when the DAM answers the save of the authors with 200 and no list', async () => {
+        await authorPickedAndAnswered(() => ({ status: 200, data: {} }))
+
+        expect(await save()).toBe(true)
+
+        expect(shownAlerts().filter(([colour]) => colour === 'error')).toEqual([])
+        expect(imageApi.calls.map(([call]) => call)).toEqual(['fetchImageListByIds', 'bulkUpdateImages'])
       })
 
       it('writes nothing, and says what to fix, while an image has neither a source nor authors of the DAM to take one from', async () => {

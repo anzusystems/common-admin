@@ -19,6 +19,10 @@ import AuthorCreateButton from '@/domains/dam/author/components/AuthorCreateButt
 import ARow from '@/domains/ui/components/ARow.vue'
 import { FilterInnerConfigKey, FilterInnerDataKey } from '@/domains/filters/utils/filterInjectionKeys'
 import { useAuthorInnerFilter } from '@/domains/dam/author/filter/AuthorFilter'
+import { useAclAllowed } from '@/domains/auth/composables/aclAllowed'
+import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
+import type { DamFieldsDisabledAs } from '@/domains/dam/uploadQueue/components/uploadQueueBindings'
+import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 
 const props = withDefaults(
   defineProps<{
@@ -33,6 +37,10 @@ const props = withDefaults(
     authorConflicts?: DocId[]
     dataCy?: string
     validationScope?: ValidationScope
+    /** While disabled: the chips of the authors (today's library), or the input and its "+" switched off. */
+    disabledAs?: DamFieldsDisabledAs
+    /** The DAM configuration to work under. Left out: that of the component it is in, else `default`. */
+    configName?: string
   }>(),
   {
     label: undefined,
@@ -44,11 +52,15 @@ const props = withDefaults(
     authorConflicts: undefined,
     dataCy: undefined,
     validationScope: undefined,
+    disabledAs: 'chips',
+    configName: undefined,
   }
 )
 const emit = defineEmits<{
   (e: 'update:modelValue', data: DocId | null | DocId[]): void
 }>()
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const damConfigName = useDamConfigName(props.configName)
 
 const modelValueComputed = computed({
   get() {
@@ -79,11 +91,21 @@ const rules = {
 const v$ = useVuelidate(rules, { modelValueComputed }, { $scope: props.validationScope })
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { fetchItemsMinimal } = useAuthorSelectActions(props.extSystem)
+const { fetchItemsMinimal } = useAuthorSelectActions(props.extSystem, damConfigName)
+
+const { authorCreateAcl } = useCommonAdminCoreDamOptions(damConfigName)
+const createAllowed = useAclAllowed(authorCreateAcl ?? undefined)
 
 const { filterData, filterConfig } = useAuthorInnerFilter()
 provide(FilterInnerConfigKey, filterConfig)
 provide(FilterInnerDataKey, filterData)
+
+// The conflicts the user can still take: an author the input has already is not offered again.
+const offeredConflicts = computed(() =>
+  (props.authorConflicts ?? []).filter((id) =>
+    isArray(modelValueComputed.value) ? !modelValueComputed.value.includes(id) : modelValueComputed.value !== id
+  )
+)
 
 const addAuthor = async (id: null | DocId | undefined) => {
   if (!id) return
@@ -128,16 +150,19 @@ const removeLastComma = (value: string) => {
 }
 
 const onEnterKeyup = () => {
+  if (!createAllowed.value) return
   const value = removeLastComma(search.value)
   authorCreateButton.value?.open(value)
 }
 
 const onCommaKeyup = () => {
+  if (!createAllowed.value) return
   const value = removeLastComma(search.value)
   authorCreateButton.value?.open(value)
 }
 
 const showAdd = computed(() => {
+  if (!createAllowed.value) return false
   if (loadingLocal.value) return false
   if (search.value.length < 2 || search.value.length > 255) return false
   if (fetchedItemsMinimal.value.size === 0) return true
@@ -150,7 +175,7 @@ const showAdd = computed(() => {
 <template>
   <div class="d-flex">
     <ARow
-      v-if="disabled && multiple"
+      v-if="disabled && disabledAs === 'chips' && multiple"
       :title="label"
     >
       <AuthorRemoteAutocompleteCachedAuthorChip
@@ -163,7 +188,7 @@ const showAdd = computed(() => {
       />
     </ARow>
     <ARow
-      v-else-if="disabled && !multiple"
+      v-else-if="disabled && disabledAs === 'chips' && !multiple"
       :title="label"
     >
       <AuthorRemoteAutocompleteCachedAuthorChip
@@ -186,6 +211,7 @@ const showAdd = computed(() => {
       :fetch-items-minimal="fetchItemsMinimal"
       :multiple="multiple"
       :clearable="clearable"
+      :disabled="disabled || undefined"
       filter-by-field="text"
       :filter-sort-by="null"
       :data-cy="dataCy"
@@ -248,8 +274,9 @@ const showAdd = computed(() => {
         </VListItem>
       </template>
     </AFormRemoteAutocompleteWithCached>
-    <div v-show="!disabled">
+    <div v-show="!disabled || disabledAs === 'input'">
       <AuthorCreateButton
+        v-if="createAllowed"
         ref="authorCreateButton"
         variant="icon"
         :ext-system="extSystem"
@@ -262,7 +289,7 @@ const showAdd = computed(() => {
     </div>
   </div>
   <div
-    v-if="!disabled && authorConflicts && authorConflicts.length > 0"
+    v-if="!disabled && offeredConflicts.length > 0"
     class="d-flex flex-column"
   >
     <div>
@@ -270,7 +297,7 @@ const showAdd = computed(() => {
     </div>
     <div>
       <AuthorRemoteAutocompleteCachedAuthorChipConflicts
-        v-for="authorId in authorConflicts"
+        v-for="authorId in offeredConflicts"
         :id="authorId"
         :key="authorId"
         class="mr-1 mt-1"

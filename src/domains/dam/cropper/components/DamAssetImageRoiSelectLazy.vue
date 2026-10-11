@@ -3,18 +3,21 @@ import { type Component, onMounted, ref, shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { loadDamAssetImageRoiSelect } from '@/domains/dam/cropper/utils/damAssetImageRoiSelectLoader'
 import type { IntegerId } from '@/shared/types/common'
+import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     extSystem: IntegerId
     configName?: string
     readonly?: boolean
   }>(),
   {
-    configName: 'default',
+    configName: undefined,
     readonly: false,
   }
 )
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const damConfigName = useDamConfigName(props.configName)
 
 const { t } = useI18n()
 
@@ -38,7 +41,7 @@ onMounted(load)
     :is="roiSelect"
     v-if="roiSelect"
     :ext-system="extSystem"
-    :config-name="configName"
+    :config-name="damConfigName"
     :readonly="readonly"
   />
   <div

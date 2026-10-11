@@ -3,6 +3,7 @@ import { useI18n } from 'vue-i18n'
 import AssetSelectTableRowItem from '@/domains/dam/assetSelect/components/AssetSelectTableRowItem.vue'
 import { useAssetSelectActions } from '@/domains/dam/assetSelect/composables/assetSelectListActions'
 import type { IntegerId } from '@/shared/types/common'
+import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 
 withDefaults(
   defineProps<{
@@ -13,7 +14,7 @@ withDefaults(
 
 const { t } = useI18n()
 
-const { onItemClick, assetListItems, loader } = useAssetSelectActions()
+const { onItemClick, assetListItems, loader } = useAssetSelectActions(useDamConfigName())
 </script>
 
 <template>

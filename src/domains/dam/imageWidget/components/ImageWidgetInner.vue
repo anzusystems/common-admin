@@ -51,6 +51,9 @@ import {
   useImageMediaWidgetStore,
 } from '@/domains/dam/imageWidget/store/imageMediaWidgetStore'
 import { copyToLicence } from '@/domains/dam/api/damImageApi'
+import { createDamImage, imageFieldsOf } from '@/domains/dam/imageWidget/utils/damImage'
+import { assetMetadataMayStillChange } from '@/domains/dam/assetDetail/utils/assetMetadataMayStillChange'
+import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 
 const props = withDefaults(
   defineProps<{
@@ -77,7 +80,7 @@ const props = withDefaults(
     skipCurrentUserCheck?: boolean
   }>(),
   {
-    configName: 'default',
+    configName: undefined,
     collab: undefined,
     collabStatus: CollabStatus.Inactive,
     label: undefined,
@@ -105,6 +108,8 @@ const emit = defineEmits<{
 }>()
 
 const modelValue = defineModel<IntegerIdNullable>({ required: true })
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const damConfigName = useDamConfigName(props.configName)
 const showDamAuthorsInCmsImage = ref(false)
 
 // Collaboration
@@ -191,10 +196,9 @@ if (isUndefined(imageWidgetUploadConfig) || isUndefined(imageWidgetUploadConfig.
 
 const { t } = useI18n()
 
-const { showErrorsDefault, showErrorT } = useAlerts()
+const { showErrorsDefault, showErrorT, showWarningT } = useAlerts()
 
-// eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const imageOptions = useCommonAdminImageOptions(props.configName)
+const imageOptions = useCommonAdminImageOptions(damConfigName)
 const { imageClient, imageApi } = imageOptions
 const { widgetImageToDamImageUrl } = useImageActions(imageOptions)
 const uploadQueuesStore = useUploadQueuesStore()
@@ -291,8 +295,16 @@ const waitForFieldLockIsReallyAcquired = async () => {
   return checkLock()
 }
 
+// The drop that is uploaded once the lock of the field comes: one, as the upload dialog shows one file while it saves
+// all it is given. Each drop that waited used to queue its file.
+let dropInWait: symbol | null = null
+
 const onDrop = async (files: File[]) => {
   if (props.readonly) return
+  // The dropzone has turned every file away, and said so: there is nothing to ask the lock of the field for.
+  if (files.length === 0) return
+  // The lock an earlier drop asked for is still on its way: this one is not taken.
+  if (!isNull(dropInWait) && lockRequestPending.value) return
   // As a click on the dropzone: the field is another editor's.
   if (isLocked.value) {
     showErrorT('common.damImage.error.unableToLock')
@@ -300,10 +312,14 @@ const onDrop = async (files: File[]) => {
   }
   acquireFieldLockLocal(true)
   const config = imageWidgetUploadConfig.value!
+  // After a refusal this drop has asked again, as before: it takes the place of the one still waiting.
+  const thisDrop = Symbol('drop')
+  dropInWait = thisDrop
   try {
     await waitForFieldLockIsReallyAcquired()
     // The lock can resolve after the widget is gone; uploading into it is worse than dropping.
     if (disposed) return
+    if (dropInWait !== thisDrop) return
     // Turned read-only while the lock was awaited: the lock goes back and nothing is uploaded.
     if (props.readonly) {
       if (pendingLockWaits.size === 0 && !clickMenuOpened.value && !anyWidgetDialogOpened.value)
@@ -311,7 +327,10 @@ const onDrop = async (files: File[]) => {
       return
     }
     cachedExtSystemId.value = config.extSystem
-    uploadQueuesStore.addByFiles(props.queueKey, config.extSystem, config.licence, files)
+    // The widget holds one image, and its upload dialog shows one file: of several dropped at once the first is
+    // uploaded, and the user is told. The others used to be uploaded too, unseen, and left without an image.
+    if (files.length > 1) showWarningT('common.damImage.upload.onlyOneFile')
+    uploadQueuesStore.addByFiles(props.queueKey, config.extSystem, config.licence, files.slice(0, 1), damConfigName)
     uploadQueueDialog.value = props.queueKey
   } catch (e) {
     if (disposed || e === LOCK_WAIT_CANCELLED) return
@@ -321,6 +340,8 @@ const onDrop = async (files: File[]) => {
     if (pendingLockWaits.size === 0 && !clickMenuOpened.value && !anyWidgetDialogOpened.value)
       releaseFieldLockLocal(modelValue.value)
     showErrorT('common.damImage.error.unableToLock')
+  } finally {
+    if (dropInWait === thisDrop) dropInWait = null
   }
 }
 
@@ -330,9 +351,21 @@ const onCopyToLicence = (data: DamImageCopyToLicenceResponse) => {
   const config = imageWidgetUploadConfig.value!
   cachedExtSystemId.value = config.extSystem
   if (data[0].result === 'copy') {
-    uploadQueuesStore.addByCopyToLicence(props.queueKey, config.extSystem, config.licence, [data[0].targetAsset])
+    uploadQueuesStore.addByCopyToLicence(
+      props.queueKey,
+      config.extSystem,
+      config.licence,
+      [data[0].targetAsset],
+      damConfigName
+    )
   } else if (data[0].result === 'exists') {
-    uploadQueuesStore.addByCopyToLicence(props.queueKey, config.extSystem, config.licence, [data[0].targetAsset])
+    uploadQueuesStore.addByCopyToLicence(
+      props.queueKey,
+      config.extSystem,
+      config.licence,
+      [data[0].targetAsset],
+      damConfigName
+    )
     uploadQueuesStore.queueItemDuplicate(data[0].targetAsset, data[0].targetMainFile, DamAssetType.Image)
   } else {
     showErrorT('common.damImage.queueItem.errorUnableToCopyToLicence')
@@ -343,9 +376,11 @@ const onCopyToLicence = (data: DamImageCopyToLicenceResponse) => {
 
 const onFileInput = (files: File[]) => {
   if (props.readonly) return
+  // The input has turned every file away, and said so: a dialog over a queue without a row would only load.
+  if (files.length === 0) return
   const config = imageWidgetUploadConfig.value!
   cachedExtSystemId.value = config.extSystem
-  uploadQueuesStore.addByFiles(props.queueKey, config.extSystem, config.licence, files)
+  uploadQueuesStore.addByFiles(props.queueKey, config.extSystem, config.licence, files, damConfigName)
   uploadQueueDialog.value = props.queueKey
 }
 
@@ -353,6 +388,11 @@ const { uploadSizes, uploadAccept } = useDamAcceptTypeAndSizeHelper(
   DamAssetType.Image,
   imageWidgetUploadConfig.value.extSystemConfig
 )
+
+// The id of the image this widget has just created. Its model changes to that id, and what the widget shows is the
+// answer to the create: read again, the preview fell back to the placeholder meanwhile, and a read that failed said
+// an error after a save that went through. Any other change of the id is read as before.
+let createdImageId: IntegerIdNullable = null
 
 const reload = async (newImage: ImageCreateUpdateAware | undefined, newImageId: IntegerIdNullable, force = false) => {
   resolvedSrc.value = imagePlaceholderPath
@@ -427,9 +467,14 @@ const pickAsset = async (data: AssetSelectReturnData) => {
   let source = ''
   if (data.type === 'asset') {
     if (!data.value[0] || !data.value[0].mainFile) return
-    if (!isUndefined(data.copyToLicence)) {
+    // An asset already in the licence of the upload is taken as it is.
+    if (
+      copyToLicenceEnabled !== false &&
+      !isUndefined(data.copyToLicence) &&
+      data.value[0].licence !== data.copyToLicence
+    ) {
       try {
-        const copyRes = await copyToLicence(damClient, endPointAsset, [
+        const copyRes = await copyToLicence(damClient, endPointImage, [
           { asset: data.value[0].id, targetAssetLicence: data.copyToLicence },
         ])
         onCopyToLicence(copyRes)
@@ -461,7 +506,9 @@ const pickAsset = async (data: AssetSelectReturnData) => {
           source = authorsRes.map((author) => author.name).join(', ')
         } else if (assetRes.authors.length === 0) {
           const configExtSystem = getDamConfigExtSystem(imageWidgetUploadConfig.value!.extSystem)
-          if (configExtSystem?.[DamAssetType.Image]?.authors?.enabled) {
+          // Not while the server may yet fill in its metadata from the file: saving the authors marks the asset
+          // described, and the server then fills in nothing.
+          if (configExtSystem?.[DamAssetType.Image]?.authors?.enabled && !assetMetadataMayStillChange(assetRes)) {
             showDamAuthorsInCmsImage.value = true
             asset.value = assetRes
           }
@@ -470,27 +517,15 @@ const pickAsset = async (data: AssetSelectReturnData) => {
     } catch (e) {
       showErrorsDefault(e)
     }
-    const image: ImageCreateUpdateAware = {
-      texts: {
-        description: description,
-        source: source,
-      },
-      flags: {
-        showSource: true,
-        internal: false,
-        overrideInternal: false,
-      },
-      dam: {
-        damId: data.value[0].mainFile.id,
-        regionPosition: 0,
+    const image = createDamImage(
+      {
+        fileId: data.value[0].mainFile.id,
         licenceId: data.value[0].licence,
-        internal: data.value[0].mainFileInternal ?? false,
+        internal: data.value[0].mainFileInternal,
       },
-      position: 1,
-    }
-    if (!isNull(modelValue.value)) {
-      image.id = modelValue.value
-    }
+      { description, source },
+      { position: 1, id: isNull(modelValue.value) ? undefined : modelValue.value }
+    )
     imageMediaWidgetStore.setDetail(image)
     metadataDialogLoading.value = false
     if (props.expandMetadata) {
@@ -502,12 +537,13 @@ const pickAsset = async (data: AssetSelectReturnData) => {
 const assetDetailStore = useAssetDetailStore()
 const { loading: assetLoading, dialog: assetDialog, asset } = storeToRefs(assetDetailStore)
 
-// eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const coreDamOptions = useCommonAdminCoreDamOptions(props.configName)
+const coreDamOptions = useCommonAdminCoreDamOptions(damConfigName)
 const {
   damClient,
   endPointAsset,
+  endPointImage,
   endPointAuthor,
+  copyToLicenceEnabled,
   showSourceEnabled,
   sourceLabel,
   editAssetLabel,
@@ -563,10 +599,12 @@ const onMetadataDialogConfirm = async () => {
         showDamAuthorsInCmsImage.value = false
       }
     }
-    const res = detail.value.id
-      ? await imageApi.updateImage(imageClient, detail.value.id, detail.value)
-      : await imageApi.createImage(imageClient, detail.value)
+    const image = imageFieldsOf(detail.value)
+    const res = image.id
+      ? await imageApi.updateImage(imageClient, image.id, image)
+      : await imageApi.createImage(imageClient, image)
     metadataDialog.value = false
+    if (!image.id) createdImageId = res.id
     modelValue.value = res.id
     imageMediaWidgetStore.setDetail(null)
     // Before the dialog's close is seen, so this release, with the id just assigned, is the one that goes.
@@ -684,7 +722,10 @@ watch(
 
 watch(
   [() => props.image, modelValue],
-  async ([newImage, newImageId]) => {
+  async ([newImage, newImageId], [oldImage]) => {
+    const created = createdImageId
+    createdImageId = null
+    if (!isNull(created) && newImageId === created && newImage === oldImage) return
     await reload(newImage, newImageId)
   },
   { immediate: true }
@@ -917,7 +958,7 @@ defineExpose({
     :max-count="1"
     :asset-type="DamAssetType.Image"
     :skip-current-user-check="skipCurrentUserCheck"
-    :config-name="configName"
+    :config-name="damConfigName"
     return-type="asset"
     @confirm="onAssetSelectConfirm"
   >
@@ -934,7 +975,7 @@ defineExpose({
   <AssetDetailDialog
     v-if="assetDialog === queueKey"
     :queue-key="queueKey"
-    :config-name="configName"
+    :config-name="damConfigName"
     :ext-system="cachedExtSystemId"
   />
   <UploadQueueDialogSingle

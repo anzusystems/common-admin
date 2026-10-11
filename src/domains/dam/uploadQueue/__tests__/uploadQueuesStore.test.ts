@@ -36,14 +36,14 @@ const damUploadChunk = vi.fn(
     })
 )
 // As the real one: a finished upload leaves "uploading" for "processing".
-const damUploadFinish = vi.fn(async (_c: unknown, _a: unknown, _i: unknown, item: UploadQueueItem) => {
+const damUploadFinish = vi.fn(async (_c: unknown, _i: unknown, item: UploadQueueItem) => {
   item.status = UploadQueueItemStatus.Processing
   return {}
 })
 vi.mock('@/domains/dam/api/uploadApi', () => ({
   damUploadStart: (...a: unknown[]) => damUploadStart(...(a as [unknown, unknown, UploadQueueItem])),
   damUploadChunk: (...a: unknown[]) => damUploadChunk(...(a as [unknown, unknown, UploadQueueItem])),
-  damUploadFinish: (...a: unknown[]) => damUploadFinish(...(a as [unknown, unknown, unknown, UploadQueueItem])),
+  damUploadFinish: (...a: unknown[]) => damUploadFinish(...(a as [unknown, unknown, UploadQueueItem])),
 }))
 
 const assetWithFile = async (_c: unknown, _e: unknown, id: string) => ({
@@ -466,14 +466,17 @@ describe('an upload removed while it sends', () => {
     await store.addByFiles('removed', 1, 1, files)
     await vi.waitFor(() => expect(release.size).toBe(2))
     const removed = store.getQueueItems('removed')[0]!
+    const chunkOfA = removed.latestChunkAbortController!.signal
 
-    // Its chunk request never answers: only the abort frees the slot for c.
+    // Its chunk request never answers. Taken out, it is stopped with its run and the chunk on the wire, and c starts
+    // in its place at once: the core starts the next row when a row leaves (Z15), not when the cancelled run ends.
     store.removeByIndex('removed', 0)
     await vi.waitFor(() => expect(release.has('c.jpg')).toBe(true))
     await settle()
 
-    expect(damUploadFinish.mock.calls.some((call) => call[3].file?.name === 'a.jpg')).toBe(false)
-    expect(removed.status).not.toBe(UploadQueueItemStatus.Processing)
+    expect(chunkOfA.aborted).toBe(true)
+    expect(removed.status).toBe(UploadQueueItemStatus.Stop)
+    expect(damUploadFinish.mock.calls.some((call) => call[2].file?.name === 'a.jpg')).toBe(false)
   })
 })
 

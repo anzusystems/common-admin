@@ -189,6 +189,13 @@ export function decorateRow(
   }
 }
 
+// Both ways of settling a duplicate mark the row through here.
+const markAsDuplicate = (row: UploadQueueItem) => {
+  row.isDuplicate = true
+  // Once, before anything may write the original over `assetId`.
+  row.uploadedAssetId ??= row.assetId
+}
+
 /**
  * The writes of the settlement: a read asset or a known state into the rows of the queues. No timers and no reads
  * of its own, but for the original of a duplicate.
@@ -424,7 +431,7 @@ export function createUploadSettle(
   ) => {
     const marked: Array<{ row: UploadQueueItem; mark: number }> = []
     for (const { queueKey, row } of duplicateRows(target, 'markDuplicate', eligible)) {
-      row.isDuplicate = true
+      markAsDuplicate(row)
       row.status = UploadQueueItemStatus.Uploaded
       row.canEditMetadata = false
       clearRowError(row)
@@ -477,7 +484,7 @@ export function createUploadSettle(
     let original: AssetDetailItemDto
     try {
       if (!profile.readers.duplicateOriginAsset) throw new Error('uploadSettlement: no reader of the original asset')
-      original = await profile.readers.duplicateOriginAsset(originFileId)
+      original = await profile.readers.duplicateOriginAsset(originFileId, { queueKey: candidates[0]!.queueKey })
     } catch {
       if (isDisposed()) return false
       let leftWithout = false
@@ -508,7 +515,7 @@ export function createUploadSettle(
     if (isDisposed()) return false
     for (const { queueKey, queue, row } of untouched()) {
       const authorSuggestions = original.metadata.authorSuggestions ?? {}
-      row.isDuplicate = true
+      markAsDuplicate(row)
       row.status = UploadQueueItemStatus.Uploaded
       clearRowError(row)
       row.fileId = originFileId

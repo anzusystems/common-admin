@@ -7,6 +7,7 @@ import { useImageActions } from '@/domains/dam/imageWidget/composables/imageActi
 import { DamMediaType, type MediaAware } from '@/domains/dam/types/MediaAware'
 import { DamAssetType, type DamAssetTypeType } from '@/domains/dam/types/Asset'
 import MediaWidgetSimpleDialog from '@/domains/dam/imageWidget/components/MediaWidgetSimpleDialog.vue'
+import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 
 const props = withDefaults(
   defineProps<{
@@ -25,7 +26,7 @@ const props = withDefaults(
     widgetClass?: string | undefined
   }>(),
   {
-    configName: 'default',
+    configName: undefined,
     label: undefined,
     media: undefined,
     width: undefined,
@@ -40,9 +41,10 @@ const props = withDefaults(
     widgetClass: undefined,
   }
 )
-
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const imageOptions = useCommonAdminImageOptions(props.configName)
+const damConfigName = useDamConfigName(props.configName)
+
+const imageOptions = useCommonAdminImageOptions(damConfigName)
 const { damImageIdToDamImageUrl } = useImageActions(imageOptions)
 
 const resMedia = ref<null | MediaAware>(null)

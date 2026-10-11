@@ -8,6 +8,7 @@ import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAd
 import { FilterInnerConfigKey, FilterInnerDataKey } from '@/domains/filters/utils/filterInjectionKeys'
 import type { IntegerId } from '@/shared/types/common'
 import type { AFormFieldValidation } from '@/shared/types/Validation'
+import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 
 const props = withDefaults(
   defineProps<{
@@ -29,14 +30,15 @@ const props = withDefaults(
     clearable: false,
     dataCy: '',
     v: null,
-    configName: 'default',
+    configName: undefined,
     client: undefined,
   }
 )
 const modelValue = defineModel<IntegerId | IntegerId[] | null>({ required: true })
-
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const client = props.client ?? useCommonAdminCoreDamOptions(props.configName).damClient
+const damConfigName = useDamConfigName(props.configName)
+
+const client = props.client ?? useCommonAdminCoreDamOptions(damConfigName).damClient
 const { fetchItems, fetchItemsByIds } = useDamUserSelectAction(client)
 
 const { filterData, filterConfig } = useDamUserInnerFilter()

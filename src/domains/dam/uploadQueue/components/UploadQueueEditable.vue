@@ -1,27 +1,37 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, onBeforeUnmount } from 'vue'
-import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
 import type { UploadQueueItem, UploadQueueKey } from '@/domains/dam/types/UploadQueue'
 import UploadQueueItemEditable from '@/domains/dam/uploadQueue/components/UploadQueueItemEditable.vue'
 import AssetQueueSelectedSidebar from '@/domains/dam/uploadQueue/components/AssetQueueSelectedSidebar.vue'
-import { useDamCachedKeywords } from '@/domains/dam/keyword/composables/cachedKeywords'
-import { useDamCachedAuthors } from '@/domains/dam/author/composables/cachedAuthors'
 import type { DocId, IntegerId } from '@/shared/types/common'
-import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
-import { useUploadQueueItemRefresh } from '@/domains/dam/uploadQueue/composables/uploadQueueItemRefresh'
+import {
+  type UploadQueueListBinding,
+  useLibraryUploadQueueListBinding,
+} from '@/domains/dam/uploadQueue/components/uploadQueueBindings'
+import { createUploadQueueItemRefresh } from '@/domains/dam/uploadQueue/composables/uploadQueueItemRefresh'
 import { useEventListener } from '@vueuse/core'
+import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 
 const props = withDefaults(
   defineProps<{
-    queueKey: string
+    queueKey: UploadQueueKey
     extSystem: IntegerId
     massOperations: boolean
     configName?: string
     disableDoneAnimation?: boolean
+    /** What the list asks of its host; without it the library's store, caches, alerts and options. */
+    queue?: UploadQueueListBinding
+    /** From how many rows the mass operations are beside the list. */
+    massOperationsFrom?: number
+    /** The arrow keys, PageUp, PageDown, Home and End scroll the list. */
+    keyboardScroll?: boolean
   }>(),
   {
-    configName: 'default',
+    configName: undefined,
     disableDoneAnimation: false,
+    queue: undefined,
+    massOperationsFrom: 1,
+    keyboardScroll: true,
   }
 )
 
@@ -29,33 +39,51 @@ const emit = defineEmits<{
   (e: 'showDetail', data: DocId): void
 }>()
 
+defineSlots<{
+  /** Default: the library's row, its v-models on the item, as today. */
+  item?(props: {
+    item: UploadQueueItem
+    index: number
+    refreshDisabled: boolean
+    refresh: () => void
+    refreshMayHelp: boolean
+  }): unknown
+  /**
+   * Default: the library's mass operations of `queueKey`, over the library's store even when `queue` is bound: a host
+   * with its own store gives its sidebar here, as admin-dam does.
+   */
+  sidebar?(props: { queueKey: UploadQueueKey }): unknown
+}>()
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { mainFileSingleUseEnabled } = useCommonAdminCoreDamOptions(props.configName)
+const damConfigName = useDamConfigName(props.configName)
 
-// eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { refreshing, refreshItem } = useUploadQueueItemRefresh(props.configName)
+// Created only when the host binds none: a list with its own binding touches nothing of the library's.
+const queue = props.queue ?? useLibraryUploadQueueListBinding(() => props.queueKey, damConfigName)
 
-const uploadQueuesStore = useUploadQueuesStore()
+const { refreshing, refreshItem } = createUploadQueueItemRefresh(queue)
 
 const list = computed(() => {
-  return uploadQueuesStore.getQueueItems(props.queueKey)
+  return queue.items()
 })
-
-const cancelItem = (data: { index: number; item: UploadQueueItem; queueKey: UploadQueueKey }) => {
-  uploadQueuesStore.stopItemUpload(data.queueKey, data.item, data.index)
-}
-
-const removeItem = (index: number) => {
-  uploadQueuesStore.removeByIndex(props.queueKey, index)
-}
-
-const { addToCachedKeywords, fetchCachedKeywords } = useDamCachedKeywords()
-const { addToCachedAuthors, fetchCachedAuthors } = useDamCachedAuthors()
 
 const scrollableContainer = ref<HTMLElement | null>(null)
 
+// Inputs that do nothing with these keys themselves, as a switch: on them the keys still scroll the list.
+const KEYLESS_INPUT_TYPES = ['checkbox', 'button', 'submit', 'reset', 'image', 'file']
+
+// A key typed into a field of a row moves its caret or its value: it is left to the browser, and the list stays.
+const isTypedIntoField = (target: EventTarget | null) =>
+  (target instanceof HTMLInputElement && !KEYLESS_INPUT_TYPES.includes(target.type)) ||
+  target instanceof HTMLTextAreaElement ||
+  target instanceof HTMLSelectElement ||
+  (target instanceof HTMLElement && target.isContentEditable)
+
+// So is one pressed in an open menu, as the one of a field: it moves through that menu. Other overlays, as the dialog
+// the list is in or a snackbar, leave the keys to the list.
+const isInMenu = (target: EventTarget | null) => target instanceof Element && !!target.closest('.v-menu')
+
 const handleKeyboardNavigation = (e: KeyboardEvent) => {
-  if (!scrollableContainer.value) return
+  if (!scrollableContainer.value || isTypedIntoField(e.target) || isInMenu(e.target)) return
 
   const container = scrollableContainer.value
   const scrollAmount = 100
@@ -92,14 +120,9 @@ const handleKeyboardNavigation = (e: KeyboardEvent) => {
 let cleanup: (() => void) | undefined
 
 onMounted(() => {
-  list.value.forEach((item) => {
-    addToCachedKeywords(item.keywords)
-    addToCachedAuthors(item.authors)
-  })
-  fetchCachedKeywords()
-  fetchCachedAuthors()
+  queue.prime(list.value)
 
-  cleanup = useEventListener(document, 'keydown', handleKeyboardNavigation)
+  if (props.keyboardScroll) cleanup = useEventListener(document, 'keydown', handleKeyboardNavigation)
 })
 
 onBeforeUnmount(() => {
@@ -121,37 +144,54 @@ onBeforeUnmount(() => {
         style="outline: none"
       >
         <VRow class="dam-upload-queue dam-upload-queue--editable pa-2 mb-5">
-          <UploadQueueItemEditable
+          <template
             v-for="(item, index) in list"
             :key="item.key"
-            v-model:custom-data="item.customData"
-            v-model:keywords="item.keywords"
-            v-model:authors="item.authors"
-            v-model:main-file-single-use="item.mainFileSingleUse"
-            :main-file-single-use-enabled="mainFileSingleUseEnabled"
-            :ext-system="extSystem"
-            :item="item"
-            :index="index"
-            :queue-key="queueKey"
-            :disable-done-animation="disableDoneAnimation"
-            :refresh-disabled="refreshing"
-            :refresh-may-help="uploadQueuesStore.refreshMayHelp(item)"
-            @cancel-item="cancelItem"
-            @remove-item="removeItem"
-            @refresh-item="refreshItem($event.assetId, item, queueKey)"
-            @show-detail="emit('showDetail', $event)"
-          />
+          >
+            <slot
+              name="item"
+              :item="item"
+              :index="index"
+              :refresh-disabled="refreshing"
+              :refresh="() => refreshItem(item)"
+              :refresh-may-help="queue.refreshMayHelp(item)"
+            >
+              <UploadQueueItemEditable
+                v-model:custom-data="item.customData"
+                v-model:keywords="item.keywords"
+                v-model:authors="item.authors"
+                v-model:main-file-single-use="item.mainFileSingleUse"
+                :main-file-single-use-enabled="queue.mainFileSingleUseEnabled"
+                :ext-system="extSystem"
+                :item="item"
+                :index="index"
+                :queue-key="queueKey"
+                :disable-done-animation="disableDoneAnimation"
+                :refresh-disabled="refreshing"
+                :refresh-may-help="queue.refreshMayHelp(item)"
+                @cancel-item="queue.cancel($event.item, $event.index, $event.queueKey)"
+                @remove-item="queue.remove($event)"
+                @refresh-item="refreshItem(item)"
+                @show-detail="emit('showDetail', $event)"
+              />
+            </slot>
+          </template>
         </VRow>
       </div>
     </div>
     <div
-      v-if="list.length > 0"
+      v-if="list.length >= massOperationsFrom"
       class="asset-queue-editable__sidebar border-s"
     >
-      <AssetQueueSelectedSidebar
+      <slot
+        name="sidebar"
         :queue-key="queueKey"
-        :ext-system="extSystem"
-      />
+      >
+        <AssetQueueSelectedSidebar
+          :queue-key="queueKey"
+          :ext-system="extSystem"
+        />
+      </slot>
     </div>
   </div>
 </template>

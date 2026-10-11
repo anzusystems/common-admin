@@ -5,6 +5,7 @@ import type { DocId } from '@/shared/types/common'
 import { useAlerts } from '@/domains/system/composables/alerts'
 import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
 import { rotateImage } from '@/domains/dam/api/damImageApi'
+import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 
 const props = withDefaults(
   defineProps<{
@@ -14,19 +15,20 @@ const props = withDefaults(
   }>(),
   {
     dataCy: undefined,
-    configName: 'default',
+    configName: undefined,
   }
 )
 const emit = defineEmits<{
   (e: 'afterRotate'): void
 }>()
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const damConfigName = useDamConfigName(props.configName)
 
 const { showRecordWas, showErrorsDefault } = useAlerts()
 
 const loading = ref(false)
 
-// eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { damClient, endPointImage } = useCommonAdminCoreDamOptions(props.configName)
+const { damClient, endPointImage } = useCommonAdminCoreDamOptions(damConfigName)
 
 const rotate = async (angle: 90 | 270) => {
   try {

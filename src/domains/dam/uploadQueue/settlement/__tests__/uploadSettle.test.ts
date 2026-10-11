@@ -365,6 +365,8 @@ describe('a duplicate file, in the library', () => {
       assetId: 'asset-original',
       fileId: 'file-original',
       duplicateAssetId: 'asset-original',
+      // The asset its upload made, which it no longer names.
+      uploadedAssetId: 'asset-1',
       assetStatus: DamAssetStatus.WithFile,
       imagePreview: previewOf('file-original'),
       canEditMetadata: true,
@@ -389,11 +391,27 @@ describe('a duplicate file, in the library', () => {
 
     await settle.settleKnownDuplicate(TARGET, 'file-original', DamAssetType.Image)
 
-    expect(rows.map((row) => [row.status, row.assetId, row.fileId])).toEqual([
-      [UploadQueueItemStatus.Uploaded, 'asset-original', 'file-original'],
-      [UploadQueueItemStatus.Uploaded, 'asset-original', 'file-original'],
+    expect(rows.map((row) => [row.status, row.assetId, row.fileId, row.uploadedAssetId])).toEqual([
+      [UploadQueueItemStatus.Uploaded, 'asset-original', 'file-original', 'asset-1'],
+      [UploadQueueItemStatus.Uploaded, 'asset-original', 'file-original', 'asset-1'],
     ])
     expect(server.asked('originAsset')).toHaveLength(1)
+  })
+
+  it('N-S7 a row that became the original keeps the asset its upload made when it is marked a duplicate again', async () => {
+    const { settle, add, server } = lib()
+    server.originAssets.set('file-original', original())
+    server.originAssets.set(
+      'file-other',
+      damAsset('asset-other', damFile('file-other', AssetFileProcessStatus.Processed, { asset: 'asset-other' }))
+    )
+    const row = add(QUEUE, queueRow())
+
+    await settle.settleKnownDuplicate(TARGET, 'file-original', DamAssetType.Image)
+    // The row names the original now, and the server finds that one a duplicate as well.
+    await settle.settleKnownDuplicate({ assetId: 'asset-original', fileId: null }, 'file-other', DamAssetType.Image)
+
+    expect([row.assetId, row.duplicateAssetId, row.uploadedAssetId]).toEqual(['asset-other', 'asset-other', 'asset-1'])
   })
 
   it('N-S7 an original that cannot be read fails only the row that still waits', async () => {
@@ -407,7 +425,9 @@ describe('a duplicate file, in the library', () => {
     expect(waiting).toMatchObject({
       status: UploadQueueItemStatus.Failed,
       isDuplicate: false,
+      // No duplicate: its own asset is still where it was.
       assetId: 'asset-1',
+      uploadedAssetId: null,
       canEditMetadata: false,
       error: { hasError: true },
     })
@@ -466,6 +486,7 @@ describe('a duplicate file, in the DAM application', () => {
       assetId: 'asset-1',
       fileId: 'file-1',
       duplicateAssetId: null,
+      uploadedAssetId: 'asset-1',
       error: noError,
     })
     expect(calls.final).toEqual([row.key])
@@ -480,6 +501,7 @@ describe('a duplicate file, in the DAM application', () => {
       assetId: 'asset-1',
       fileId: 'file-original',
       duplicateAssetId: 'asset-original',
+      uploadedAssetId: 'asset-1',
       mainFileSingleUse: true,
       imagePreview: previewOf('file-original'),
     })
@@ -498,6 +520,7 @@ describe('a duplicate file, in the DAM application', () => {
       isDuplicate: true,
       fileId: 'file-1',
       duplicateAssetId: null,
+      uploadedAssetId: 'asset-1',
     })
   })
 
@@ -771,8 +794,10 @@ describe('a row whose state a processed file never changes (mass edit)', () => {
       status: UploadQueueItemStatus.Uploaded,
       isDuplicate: true,
       canEditMetadata: false,
+      // The asset the row edits, which is the one the server found the duplicate on.
+      uploadedAssetId: 'asset-1',
     })
-    expect(withoutFile).toMatchObject({ isDuplicate: false, canEditMetadata: true })
+    expect(withoutFile).toMatchObject({ isDuplicate: false, canEditMetadata: true, uploadedAssetId: null })
   })
 })
 

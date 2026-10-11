@@ -9,7 +9,7 @@ import {
 } from '@/domains/dam/__tests__/support/consumerProfiles'
 import { answerDamNames, damNameLookups, damNamesAsked } from '@/domains/dam/__tests__/support/damNames'
 import { type DamSocket, stubDamSocket } from '@/domains/dam/__tests__/support/damSocket'
-import { createFakeDam, type FakeDam } from '@/domains/dam/__tests__/support/fakeDam'
+import { createFakeDam, type FakeDam, type FakeDamAnswer } from '@/domains/dam/__tests__/support/fakeDam'
 import { holdLongWaits, type LongWaits } from '@/domains/dam/__tests__/support/longWaits'
 import { alertText, damText, forgetAlerts, shownAlerts } from '@/domains/dam/__tests__/support/uploadUi'
 import { useAssetDetailStore } from '@/domains/dam/assetDetail/store/assetDetailStore'
@@ -163,6 +163,20 @@ describe.each(consumerProfiles)('the buttons of the upload dialog under the $nam
     )
   const updated = ['success', alertText('common.alert.recordWas.updated')]
   const fixTheForm = ['error', alertText('common.alert.fixValidationErrors')]
+  const systemError = ['error', alertText('common.alert.unknownError')]
+  /** The one alert of a refusal by validation: its heading, and the field each of its lines names. */
+  const refusalSaid = () => {
+    expect(shownAlerts()).toHaveLength(1)
+    const [[colour, text]] = shownAlerts() as Array<[string, string]>
+    const [heading, ...lines] = text.split('\n')
+
+    return { colour, heading, fields: lines.map((line) => line.split(': ')[0]) }
+  }
+  /** The DAM answers every save of metadata so; returns what takes it back. */
+  const refuseSaves = (answer: FakeDamAnswer) =>
+    dam.reply((request) =>
+      request.method === 'PATCH' && dam.routes.bulkMetadata.test(request.url) ? answer : undefined
+    )
 
   /** Three files: the first is processed and has its form, the second failed, the third still waits. */
   const oneOfEachKind = async () => {
@@ -242,12 +256,8 @@ describe.each(consumerProfiles)('the buttons of the upload dialog under the $nam
       expect(saves()).toHaveLength(1)
     })
 
-    // Today's behaviour, pinned as it is: the request of the save rejects with the error of axios as it is, which
-    // the alert for errors lets pass without a word. The user sees the button stop spinning, and nothing else.
-    it('says nothing when the DAM refuses the save: the button stops spinning, and can be pressed again', async () => {
-      const refusal = dam.reply((request) =>
-        request.method === 'PATCH' && dam.routes.bulkMetadata.test(request.url) ? { status: 500 } : undefined
-      )
+    it('says the save failed when the DAM refuses it: the button stops spinning, and can be pressed again', async () => {
+      const refusal = refuseSaves({ status: 500 })
       await oneOfEachKind()
 
       save().click()
@@ -255,14 +265,57 @@ describe.each(consumerProfiles)('the buttons of the upload dialog under the $nam
       await vi.waitFor(() => expect(save().querySelector('.v-btn__loader')).toBeNull())
       await flushPromises()
 
-      expect(shownAlerts()).toEqual([])
+      expect(shownAlerts()).toEqual([systemError])
       expect(wrapper!.emitted('apply')).toBeUndefined()
       expect(save().disabled).toBe(false)
 
       refusal()
       save().click()
-      await vi.waitFor(() => expect(shownAlerts()).toEqual([updated]))
+      await vi.waitFor(() => expect(shownAlerts()).toEqual([systemError, updated]))
       expect(saves()).toHaveLength(2)
+    })
+
+    it('says the user may not, when the DAM forbids the save', async () => {
+      refuseSaves({ status: 403 })
+      await oneOfEachKind()
+
+      save().click()
+      await vi.waitFor(() => expect(shownAlerts()).toEqual([['error', alertText('common.alert.forbiddenError')]]))
+      expect(saves()).toHaveLength(1)
+    })
+
+    // The server names a field by the place of its asset in the request: one of each asset, said once, by the name
+    // the form of the rows gives it.
+    it('names the fields the DAM refuses as the form of the rows does, each once', async () => {
+      const elements = useDamConfigStore(pinia).damConfigAssetCustomFormElements.get(extSystem)![DamAssetType.Image]
+      elements.find((element) => element.property === 'description')!.name = 'Description of the image'
+      refuseSaves({
+        status: 422,
+        data: {
+          contextId: 'context',
+          error: 'validation_failed',
+          fields: {
+            '[0].customData.description': ['error_field_empty'],
+            '[1].customData.description': ['error_field_empty'],
+            '[1].keywords': ['error_field_empty'],
+          },
+        },
+      })
+      const [a, b] = await pick('a.jpg', 'b.jpg')
+      await vi.waitFor(() => expect(statuses()).toEqual([Processing, Processing]))
+      dam.fileBecomes(a.assetId!, AssetFileProcessStatus.Processed, metadata({ description: 'first' }))
+      dam.fileBecomes(b.assetId!, AssetFileProcessStatus.Processed, metadata({ description: 'second' }))
+      await asked([Uploaded, Uploaded])
+
+      save().click()
+      await vi.waitFor(() => expect(shownAlerts()).toHaveLength(1))
+
+      expect(refusalSaid()).toEqual({
+        colour: 'error',
+        heading: alertText('common.alert.fixApiValidationErrors'),
+        fields: ['Description of the image', alertText('common.damImage.asset.model.keywords')],
+      })
+      expect((dam.body(saves()[0]) as Array<{ id: string }>).map((sent) => sent.id)).toEqual([a.assetId, b.assetId])
     })
   })
 
@@ -292,7 +345,9 @@ describe.each(consumerProfiles)('the buttons of the upload dialog under the $nam
       return { a, b, c }
     }
 
-    it('saves the rows that can be saved, and hands the widget an image of each uploaded row, after its last', async () => {
+    // Finding 31: the images are handed over without a position, and the count of the widget is left alone. The
+    // dialog used to count it on (8 and 9 here), and the widget once more.
+    it('saves the rows that can be saved, and hands the widget an image of each uploaded row, for it to place', async () => {
       const { a, b, c } = await twoUploadedOneFailed()
       // The widget already has seven images.
       useImageStore(pinia).maxPosition = 7
@@ -314,7 +369,6 @@ describe.each(consumerProfiles)('the buttons of the upload dialog under the $nam
           },
           dam: { damId: a.fileId, licenceId: licence, regionPosition: 0, internal: false },
           flags: { showSource: true, internal: false, overrideInternal: false },
-          position: 8,
           // The authors of the DAM are offered in the widget only for an image that came without any.
           damAuthors: isCms ? ['author-1', 'author-2'] : [],
           showDamAuthors: !isCms,
@@ -323,7 +377,6 @@ describe.each(consumerProfiles)('the buttons of the upload dialog under the $nam
           assetId: b.assetId,
           texts: { description: 'second', source: '' },
           dam: { damId: b.fileId, licenceId: licence },
-          position: 9,
           damAuthors: [],
           showDamAuthors: true,
         },
@@ -331,7 +384,8 @@ describe.each(consumerProfiles)('the buttons of the upload dialog under the $nam
       // The failed row has its asset and its file too, and is no image to hand over.
       expect(images.map((image) => image.assetId)).not.toContain(c.assetId)
       expect(new Set(images.map((image) => image.key)).size).toBe(2)
-      expect(useImageStore(pinia).maxPosition).toBe(9)
+      expect(images.map((image) => 'position' in image)).toEqual([false, false])
+      expect(useImageStore(pinia).maxPosition).toBe(7)
       // The library's map asks for the names of the authors, once; the map of admin-ugc asks for nothing.
       expect(damNameLookups(dam).length - lookupsBefore).toBe(isCms ? 1 : 0)
       expect(dam.unanswered).toEqual([])
@@ -363,11 +417,8 @@ describe.each(consumerProfiles)('the buttons of the upload dialog under the $nam
       expect([extSystemHanded, licenceHanded]).toEqual([extSystem, licence])
     })
 
-    // As "save": a refused save is not said (today's behaviour, pinned as it is). Nothing is handed over.
-    it('hands over nothing when the DAM refuses the save, and says nothing', async () => {
-      dam.reply((request) =>
-        request.method === 'PATCH' && dam.routes.bulkMetadata.test(request.url) ? { status: 500 } : undefined
-      )
+    it('hands over nothing when the DAM refuses the save, and says the save failed', async () => {
+      refuseSaves({ status: 500 })
       await twoUploadedOneFailed()
 
       saveAndApply()!.click()
@@ -376,10 +427,28 @@ describe.each(consumerProfiles)('the buttons of the upload dialog under the $nam
       await flushPromises()
 
       expect(wrapper!.emitted('apply')).toBeUndefined()
-      expect(shownAlerts()).toEqual([])
+      expect(shownAlerts()).toEqual([systemError])
       expect(useImageStore(pinia).maxPosition).toBe(0)
       expect(saveAndApply()!.disabled).toBe(false)
     })
+
+    // admin-ugc brings its own map. What it throws after the save is not the save's to say: it is said as it was
+    // before, which for an error of its own is nothing.
+    if (!isCms) {
+      it('says nothing of the save when the map of the application fails after it', async () => {
+        await twoUploadedOneFailed()
+        mapOfTheApplication!.mockRejectedValue(new Error('the map of the application failed'))
+
+        saveAndApply()!.click()
+        await vi.waitFor(() => expect(mapOfTheApplication).toHaveBeenCalledTimes(1))
+        await vi.waitFor(() => expect(saveAndApply()!.querySelector('.v-btn__loader')).toBeNull())
+        await flushPromises()
+
+        expect(saves()).toHaveLength(1)
+        expect(wrapper!.emitted('apply')).toBeUndefined()
+        expect(shownAlerts()).toEqual([])
+      })
+    }
   })
 
   describe('the button that closes it', () => {

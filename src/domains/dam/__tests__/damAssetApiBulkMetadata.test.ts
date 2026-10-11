@@ -1,10 +1,26 @@
-import { beforeEach, describe, expect, it } from 'vitest'
-import { createFakeDam, damAsset, type FakeDam } from '@/domains/dam/__tests__/support/fakeDam'
-import { bulkUpdateAssetsMetadata, updateAssetMetadata } from '@/domains/dam/api/damAssetApi'
+import axios from 'axios'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { createPinia, setActivePinia } from 'pinia'
+import { defaultApiErrorLogger, setApiErrorLogger } from '@/domains/api/utils/apiErrors'
+import { createFakeDam, damAsset, type FakeDam, type FakeDamRule } from '@/domains/dam/__tests__/support/fakeDam'
+import { alertText, forgetAlerts, shownAlerts } from '@/domains/dam/__tests__/support/uploadUi'
+import {
+  bulkUpdateAssetsAuthors,
+  bulkUpdateAssetsMetadata,
+  showMetadataSaveError,
+  updateAssetMetadata,
+} from '@/domains/dam/api/damAssetApi'
+import { useDamConfigStore } from '@/domains/dam/config/store/damConfigStore'
 import { mapUploadMetadataToImages } from '@/domains/dam/imageWidget/utils/metadataToImageMap'
 import { DamAssetType } from '@/domains/dam/types/Asset'
 import { type UploadQueueItem, UploadQueueItemStatus, UploadQueueItemType } from '@/domains/dam/types/UploadQueue'
 import { useUploadQueueItemFactory } from '@/domains/dam/uploadQueue/factory/UploadQueueItemFactory'
+import type { CustomDataFormElement } from '@/domains/customDataForm/types/CustomDataForm'
+import { AnzuApiAxiosError } from '@/shared/error/AnzuApiAxiosError'
+import { AnzuApiForbiddenError } from '@/shared/error/AnzuApiForbiddenError'
+import { AnzuApiResponseCodeError } from '@/shared/error/AnzuApiResponseCodeError'
+import { AnzuApiTimeoutError } from '@/shared/error/AnzuApiTimeoutError'
+import { AnzuApiValidationError } from '@/shared/error/AnzuApiValidationError'
 
 // The one request of the upload that writes what the user typed: the metadata of the rows of a queue, saved in
 // bulk. What is sent for a row, which rows are sent, and in how many requests. The endpoint is the one handed in:
@@ -96,13 +112,15 @@ describe('the bulk save of the metadata of a queue', () => {
     expect(images[0].flags).toEqual({ showSource: true, internal: false, overrideInternal: false })
   })
 
+  // Never null (finding 36): the DAM makes "off" of null, and both dialogs of the queue now send the same.
   it.each([
-    ['is not known yet', null],
-    ['is switched off', false],
-  ])('sends the single-use switch of a row also when it %s', async (_what, mainFileSingleUse) => {
+    ['is not known yet, as off', null, false],
+    ['is switched off', false, false],
+    ['is switched on', true, true],
+  ])('sends the single-use switch of a row also when it %s', async (_what, mainFileSingleUse, sentAs) => {
     await bulkUpdateAssetsMetadata(dam.client, ASSET, [row('asset-1', { mainFileSingleUse })])
 
-    expect(sent()[0]).toHaveProperty('mainFileSingleUse', mainFileSingleUse)
+    expect(sent()[0]).toHaveProperty('mainFileSingleUse', sentAs)
   })
 
   it.each([true, false])(
@@ -219,5 +237,164 @@ describe('the save of the metadata of one asset', () => {
     await updateAssetMetadata(dam.client, ASSET, damAsset('asset-1'), 4, null)
 
     expect(sent()[0]).toHaveProperty('mainFileSingleUse', null)
+  })
+})
+
+// What a failed save is made into: an error of a kind the alert of errors knows, which the dialogs and the detail
+// say as it is. Written down only when nobody planned it: not a request of nobody signed in, of a user who may not,
+// or one the server refused by validation.
+// The bulk save of a queue builds on its answer, the two others read nothing of it.
+describe.each([
+  ['the bulk save of a queue', () => bulkUpdateAssetsMetadata(dam.client, ASSET, [row('asset-1')]), true],
+  [
+    'the save of the metadata of one asset',
+    () => updateAssetMetadata(dam.client, ASSET, damAsset('asset-1'), 4, null),
+    false,
+  ],
+  [
+    'the save of the authors of a gallery',
+    () => bulkUpdateAssetsAuthors(dam.client, ASSET, [{ id: 'asset-1', authors: ['author-1'] }]),
+    false,
+  ],
+])('%s that fails', (_name, save: () => Promise<unknown>, readsTheAnswer) => {
+  const refusal = {
+    contextId: 'context',
+    error: 'validation_failed',
+    fields: { '[0].customData.title': ['error_field_empty'] },
+  }
+  const failureOf = (rule: FakeDamRule) => {
+    dam.reply((request) =>
+      request.method === 'PATCH' && dam.routes.bulkMetadata.test(request.url) ? rule(request) : undefined
+    )
+
+    return save().then(
+      () => undefined,
+      (error: unknown) => error
+    )
+  }
+
+  beforeEach(() => setApiErrorLogger(null))
+  afterEach(() => setApiErrorLogger(defaultApiErrorLogger))
+
+  type Refusal = [string, FakeDamRule, new (...args: never[]) => Error]
+  const noList: Refusal = [
+    'is answered with 200 and no list',
+    () => ({ status: 200, data: {} }),
+    AnzuApiResponseCodeError,
+  ]
+
+  it.each<Refusal>([
+    ['is answered with 403', () => ({ status: 403 }), AnzuApiForbiddenError],
+    ['is refused by validation', () => ({ status: 422, data: refusal }), AnzuApiValidationError],
+    ['is answered with 500', () => ({ status: 500 }), AnzuApiAxiosError],
+    // Only a 200 carries the saved assets.
+    ['is answered with 201', () => ({ status: 201, data: [] }), AnzuApiAxiosError],
+    ['is answered with 204', () => ({ status: 204 }), AnzuApiAxiosError],
+    ...(readsTheAnswer ? [noList] : []),
+    [
+      'never reaches the server',
+      (asked) => {
+        throw new axios.AxiosError('Network Error', axios.AxiosError.ERR_NETWORK, asked.config as never)
+      },
+      AnzuApiAxiosError,
+    ],
+    [
+      'is not answered in time',
+      (asked) => {
+        throw new axios.AxiosError('timeout of 1ms exceeded', axios.AxiosError.ECONNABORTED, asked.config as never)
+      },
+      AnzuApiTimeoutError,
+    ],
+  ])('is an error the alert of errors knows when its request %s', async (_what, rule, kind) => {
+    expect(await failureOf(rule)).toBeInstanceOf(kind)
+  })
+
+  if (!readsTheAnswer) {
+    it('is no failure when its request is answered with 200 and no list: nothing reads the answer', async () => {
+      expect(await failureOf(() => ({ status: 200, data: {} }))).toBeUndefined()
+      expect(saves()).toHaveLength(1)
+    })
+  }
+
+  it.each([
+    ['is written down', { status: 500 }, 1],
+    ['is not written down when nobody is signed in', { status: 401 }, 0],
+    ['is not written down when the user may not', { status: 403 }, 0],
+    ['is not written down when the server says what to fix', { status: 422, data: refusal }, 0],
+  ])('%s', async (_what, answer, written) => {
+    const logged = vi.fn()
+    setApiErrorLogger(logged)
+
+    const failure = await failureOf(() => answer)
+
+    // The save went out and failed, whether it was written down or not.
+    expect(saves()).toHaveLength(1)
+    expect(failure).toBeInstanceOf(Error)
+    expect(logged).toHaveBeenCalledTimes(written)
+    if (written) {
+      expect(logged.mock.calls[0]![1]).toMatchObject({
+        system: 'coreDam',
+        entity: 'asset',
+        url: `${ASSET}/metadata-bulk-update`,
+        status: 500,
+      })
+    }
+  })
+})
+
+describe('a save refused by validation, as the user is told it', () => {
+  const extSystem = 4
+  const element = (property: string, name: string) => ({ property, name }) as CustomDataFormElement
+  const refused = (key: string) => ({
+    status: 422,
+    data: { contextId: 'context', error: 'validation_failed', fields: { [key]: ['error_field_empty'] } },
+  })
+  /** The fields the one alert names, each before what is wrong with it. */
+  const fieldsSaid = () => {
+    expect(shownAlerts()).toHaveLength(1)
+    const [[colour, text]] = shownAlerts() as Array<[string, string]>
+    const [heading, ...lines] = text.split('\n')
+
+    return { colour, heading, fields: lines.map((line) => line.split(': ')[0]) }
+  }
+
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    forgetAlerts()
+    setApiErrorLogger(null)
+    useDamConfigStore().damConfigAssetCustomFormElements.set(extSystem, {
+      [DamAssetType.Image]: [element('description', 'Description of the image')],
+      [DamAssetType.Video]: [element('description', 'Description of the video')],
+      [DamAssetType.Audio]: [],
+      [DamAssetType.Document]: [],
+    })
+  })
+  afterEach(() => setApiErrorLogger(defaultApiErrorLogger))
+
+  // The server names the place of the asset in the request it refused, and the second request starts again at 0.
+  it('names a custom field by the form of the type of its asset, in the batch the server refused', async () => {
+    const rows = [
+      ...Array.from({ length: 10 }, (_, index) => row(`image-${index}`)),
+      row('video-1', { assetType: DamAssetType.Video }),
+    ]
+    let request = 0
+    dam.reply((asked) =>
+      asked.method === 'PATCH' && dam.routes.bulkMetadata.test(asked.url) && ++request === 2
+        ? refused('[0].customData.description')
+        : undefined
+    )
+
+    const failure = await bulkUpdateAssetsMetadata(dam.client, ASSET, rows).then(
+      () => undefined,
+      (error: unknown) => error
+    )
+    showMetadataSaveError(failure, extSystem)
+
+    expect(saves().map((one) => (dam.body(one) as unknown[]).length)).toEqual([10, 1])
+    expect(fieldsSaid()).toEqual({
+      colour: 'error',
+      heading: alertText('common.alert.fixApiValidationErrors'),
+      fields: ['Description of the video'],
+    })
   })
 })

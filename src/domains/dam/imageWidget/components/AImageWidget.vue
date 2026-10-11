@@ -14,6 +14,7 @@ import { type CollabComponentConfig, CollabStatus, type CollabStatusType } from 
 import type { DamConfigLicenceExtSystemReturnType } from '@/domains/dam/types/DamConfig'
 import { useDamConfigStore } from '@/domains/dam/config/store/damConfigStore'
 import { useI18n } from 'vue-i18n'
+import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 
 const props = withDefaults(
   defineProps<{
@@ -40,7 +41,7 @@ const props = withDefaults(
     damHeight?: undefined | number
   }>(),
   {
-    configName: 'default',
+    configName: undefined,
     collab: undefined,
     collabStatus: CollabStatus.Inactive,
     label: undefined,
@@ -66,6 +67,8 @@ const emit = defineEmits<{
   (e: 'update:modelValue', data: IntegerIdNullable): void
   (e: 'afterMetadataSaveSuccess'): void
 }>()
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const damConfigName = useDamConfigName(props.configName)
 // Declared: the read-only fallback renders the slot too, and inferred it would take its looser type.
 defineSlots<{
   append?: (props: { image: ImageCreateUpdateAware | null }) => unknown
@@ -75,8 +78,7 @@ const status = ref<'loading' | 'ready' | 'error'>('loading')
 // Not being allowed to upload is no reason to hide the image that is already there: it is shown read-only.
 const uploadAllowed = ref(true)
 
-// eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { damClient } = useCommonAdminCoreDamOptions(props.configName)
+const { damClient } = useCommonAdminCoreDamOptions(damConfigName)
 const {
   loadDamPrvConfig,
   loadDamConfigAssetCustomFormElements,
@@ -158,7 +160,7 @@ const { t } = useI18n()
       v-if="modelValue || image"
       :model-value="modelValue"
       :image="image"
-      :config-name="configName"
+      :config-name="damConfigName"
       :label="label"
       :width="width"
       :height="height"

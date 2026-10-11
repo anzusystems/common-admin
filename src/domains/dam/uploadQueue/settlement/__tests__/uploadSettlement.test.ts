@@ -2255,3 +2255,111 @@ describe('which failed reads a reader is let report', () => {
     expect(server.letReport('slots').slice(3, 5)).toEqual([true, false])
   })
 })
+
+// A store whose queues are under more than one DAM configuration asks under the configuration of the queue a read
+// is for: the settlement names that queue with every read. A reader that does not look at it asks as before.
+describe('the queue a reader is told a read is for', () => {
+  const stored = (assetId: string) => server.fileBecomes(assetId, AssetFileProcessStatus.Stored)
+
+  it('the poll: the queue of the tick, for an asset asked for by itself and for several asked for at once', async () => {
+    const { add } = lib()
+    stored('asset-1')
+    stored('asset-2')
+    stored('asset-3')
+    settlement.track('first', add('first', queueRow()))
+    settlement.track('second', add('second', queueRow({ assetId: 'asset-2', fileId: 'file-2' })))
+    settlement.track('second', add('second', queueRow({ assetId: 'asset-3', fileId: 'file-3' })))
+
+    await clock.advance(5 * S)
+
+    expect(server.queuesOf('asset')).toEqual(['first'])
+    expect(server.queuesOf('assets')).toEqual(['second'])
+  })
+
+  it('the poll of the DAM application: the queue of the tick, for the slots too', async () => {
+    const { add } = dam()
+    stored('asset-1')
+    server.slots.set('asset-2', [damFile('file-2', AssetFileProcessStatus.Stored)])
+    settlement.track('first', add('first', queueRow()))
+    settlement.track(
+      'second',
+      add('second', queueRow({ assetId: 'asset-2', fileId: 'file-2', type: UploadQueueItemType.SlotFile }))
+    )
+
+    await clock.advance(5 * S)
+
+    expect(server.queuesOf('asset')).toEqual(['first'])
+    expect(server.queuesOf('slots')).toEqual(['second'])
+  })
+
+  it('a notification: the queue of the first row it concerns, tracked or not', async () => {
+    const { add } = lib()
+    server.fileBecomes('asset-1', AssetFileProcessStatus.Processed)
+    add('first', queueRow())
+    settlement.track('second', add('second', queueRow()))
+
+    const settled = settlement.notify(processedEvent)
+    await clock.advance(250)
+    await settled
+
+    expect(server.queuesOf('asset')).toEqual(['first'])
+  })
+
+  it('the refresh: the queue of the first row of the asset, and none for an asset no row has', async () => {
+    const { add } = lib()
+    stored('asset-1')
+    add('first', queueRow())
+    add('second', queueRow())
+
+    await settlement.refreshAsset({ assetId: 'asset-1', fileId: null })
+    await settlement.refreshAsset({ assetId: 'asset-of-no-row', fileId: null })
+
+    expect(server.queuesOf('asset')).toEqual(['first', undefined])
+  })
+
+  // Noted before the read is asked for: by the time it answers the row may be gone.
+  it('the refresh: the queue of a row that leaves while the read is on the wire', async () => {
+    const { add, queues } = lib()
+    stored('asset-1')
+    add(QUEUE, queueRow())
+    server.hold()
+
+    const outcome = settlement.refreshAsset({ assetId: 'asset-1', fileId: null })
+    await clock.settle()
+    expect(server.requests).toHaveLength(1)
+    queues.get(QUEUE)!.items.splice(0)
+    server.release()
+    await outcome
+
+    expect(server.queuesOf('asset')).toEqual([QUEUE])
+  })
+
+  it('the original of a duplicate: the queue of the first row that is to become it', async () => {
+    const { add } = lib()
+    server.originAssets.set('file-original', damAsset('asset-original', damFile('file-original')))
+    const first = add('first', queueRow())
+    const second = add('second', queueRow())
+
+    await settlement.settleKnownDuplicate({ assetId: 'asset-1', fileId: null }, 'file-original', 'image')
+
+    expect(server.queuesOf('originAsset')).toEqual(['first'])
+    expect([first.assetId, second.assetId]).toEqual(['asset-original', 'asset-original'])
+  })
+
+  // The tick is of the second queue, and the asset it reads is also that of a row of the first, which it writes
+  // into as well: the original is asked for under the queue of that row, the first to become it.
+  it('the original of a duplicate a tick has found: the queue of the first row to become it, not that of the tick', async () => {
+    const { add } = lib()
+    server.originAssets.set('file-original', damAsset('asset-original', damFile('file-original')))
+    server.fileBecomes('asset-1', AssetFileProcessStatus.Duplicate, { originAssetFile: 'file-original' })
+    const ofFirst = add('first', queueRow())
+    const ofSecond = add('second', queueRow())
+    settlement.track('second', ofSecond)
+
+    await clock.advance(5 * S)
+
+    expect(server.queuesOf('asset')).toEqual(['second'])
+    expect(server.queuesOf('originAsset')).toEqual(['first'])
+    expect([ofFirst.assetId, ofSecond.assetId]).toEqual(['asset-original', 'asset-original'])
+  })
+})

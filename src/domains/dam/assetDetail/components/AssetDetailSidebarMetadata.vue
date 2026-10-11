@@ -2,19 +2,21 @@
 import AssetDetailSidebarActionsWrapper from '@/domains/dam/assetDetail/components/AssetDetailSidebarActionsWrapper.vue'
 import { isNull } from '@/shared/utils/common'
 import { useI18n } from 'vue-i18n'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useAlerts } from '@/domains/system/composables/alerts'
 import useVuelidate from '@vuelidate/core'
 import type { DamAssetTypeType } from '@/domains/dam/types/Asset'
 import { useAssetDetailStore } from '@/domains/dam/assetDetail/store/assetDetailStore'
 import { storeToRefs } from 'pinia'
 import AssetMetadata from '@/domains/dam/assetDetail/components/AssetMetadata.vue'
-import { updateAssetMetadata } from '@/domains/dam/api/damAssetApi'
+import { showMetadataSaveError, updateAssetMetadata } from '@/domains/dam/api/damAssetApi'
 import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
 import { ADamAssetMetadataValidationScopeSymbol } from '@/domains/dam/composables/uploadValidations'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
 import type { UploadQueueKey } from '@/domains/dam/types/UploadQueue'
 import type { IntegerId } from '@/shared/types/common'
+import { assetMetadataMayStillChange } from '@/domains/dam/assetDetail/utils/assetMetadataMayStillChange'
+import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 
 const props = withDefaults(
   defineProps<{
@@ -27,9 +29,11 @@ const props = withDefaults(
   }>(),
   {
     dataCy: undefined,
-    configName: 'default',
+    configName: undefined,
   }
 )
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const damConfigName = useDamConfigName(props.configName)
 
 const { t } = useI18n()
 
@@ -38,15 +42,18 @@ const { asset, updateUploadStore, mainFileSingleUse } = storeToRefs(assetDetailS
 const uploadQueueStore = useUploadQueuesStore()
 
 const saveButtonLoading = ref(false)
+// Saved before the server has processed the file, the form would write over what the server fills in from the file.
+// The detail is not read again by itself: once the file is processed, the user opens it anew.
+const saveBlocked = computed(() => !isNull(asset.value) && assetMetadataMayStillChange(asset.value))
 
-const { showRecordWas, showValidationError, showErrorsDefault } = useAlerts()
+const { showRecordWas, showValidationError } = useAlerts()
 
 const v$ = useVuelidate({ $scope: ADamAssetMetadataValidationScopeSymbol, $stopPropagation: true })
 
-const { damClient, endPointAsset } = useCommonAdminCoreDamOptions()
+const { damClient, endPointAsset } = useCommonAdminCoreDamOptions(damConfigName)
 
 const onSave = async () => {
-  if (isNull(asset.value)) return
+  if (isNull(asset.value) || saveBlocked.value) return
   saveButtonLoading.value = true
   v$.value.$touch()
   if (v$.value.$invalid) {
@@ -57,11 +64,11 @@ const onSave = async () => {
   try {
     await updateAssetMetadata(damClient, endPointAsset, asset.value, props.extSystem, mainFileSingleUse.value)
     if (updateUploadStore.value && !isNull(asset.value)) {
-      await uploadQueueStore.updateFromDetail(asset.value)
+      await uploadQueueStore.updateFromDetail(asset.value, damConfigName)
     }
     showRecordWas('updated')
   } catch (error) {
-    showErrorsDefault(error)
+    showMetadataSaveError(error, props.extSystem)
   } finally {
     saveButtonLoading.value = false
   }
@@ -78,13 +85,21 @@ const onSave = async () => {
       class="ml-2"
       data-cy="button-save"
       :loading="saveButtonLoading"
+      :disabled="saveBlocked"
       @click.stop="onSave"
     >
       {{ t('common.button.save') }}
     </ABtnPrimary>
   </AssetDetailSidebarActionsWrapper>
+  <div
+    v-if="isActive && saveBlocked"
+    class="text-body-small px-4 pt-2"
+    data-cy="save-blocked"
+  >
+    {{ t('common.damImage.queueItem.stillUploadingOrProcessing') }}
+  </div>
   <AssetMetadata
     :ext-system="extSystem"
-    :config-name="configName"
+    :config-name="damConfigName"
   />
 </template>

@@ -38,6 +38,8 @@ export function useCommonAdminCoreDamOptions(configName: string = 'default') {
   if (
     isUndefined(commonAdminCoreDamOptions.value) ||
     isUndefined(commonAdminCoreDamOptions.value.configs) ||
+    // Only what the application has named: `constructor` and the like, which every object has, name no configuration.
+    !Object.hasOwn(commonAdminCoreDamOptions.value.configs, configName) ||
     isUndefined(commonAdminCoreDamOptions.value.configs[configName])
   ) {
     throw new Error("Composable can't be used without properly configured common admin.")
@@ -52,7 +54,11 @@ export function useCommonAdminCoreDamOptions(configName: string = 'default') {
     endPointAuthor: commonAdminCoreDamOptions.value.configs[configName].endPointAuthor || DEFAULT_END_POINT_AUTHOR,
     endPointKeyword: commonAdminCoreDamOptions.value.configs[configName].endPointKeyword || DEFAULT_END_POINT_KEYWORD,
     roiUpdateAcl: resolveRoiUpdateAcl(commonAdminCoreDamOptions.value.configs[configName]),
+    keywordCreateAcl: commonAdminCoreDamOptions.value.configs[configName].keywordCreateAcl,
+    authorCreateAcl: commonAdminCoreDamOptions.value.configs[configName].authorCreateAcl,
     mainFileSingleUseEnabled: commonAdminCoreDamOptions.value.configs[configName].mainFileSingleUseEnabled ?? true,
+    // As configured: on unless `false`, which those who read it check.
+    copyToLicenceEnabled: commonAdminCoreDamOptions.value.configs[configName].copyToLicenceEnabled,
     showSourceEnabled: commonAdminCoreDamOptions.value.configs[configName].showSourceEnabled ?? true,
     showFileInfoEnabled: commonAdminCoreDamOptions.value.configs[configName].showFileInfoEnabled ?? true,
     sourceLabel:

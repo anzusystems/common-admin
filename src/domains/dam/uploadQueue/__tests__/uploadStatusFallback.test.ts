@@ -1337,7 +1337,7 @@ describe('the answer to the finish request', () => {
   it('turns a row that is being sent into one that waits for the server', async () => {
     const item = sending()
 
-    await damUploadFinish(dam.client, endPoints.asset, endPoints.image, item, 'sha')
+    await damUploadFinish(dam.client, endPoints.image, item, 'sha')
 
     expect(item.status).toBe(Processing)
     expect(dam.requests.map((request) => `${request.method} ${request.url}`)).toEqual([
@@ -1350,7 +1350,7 @@ describe('the answer to the finish request', () => {
     const finish = dam.hold('PATCH', dam.routes.finish)
     const item = sending()
 
-    const finished = damUploadFinish(dam.client, endPoints.asset, endPoints.image, item, 'sha')
+    const finished = damUploadFinish(dam.client, endPoints.image, item, 'sha')
     await vi.waitFor(() => expect(finish.waiting).toHaveLength(1))
     item.status = settled
     finish.release()

@@ -5,7 +5,7 @@ import { fetchAuthorListByIds } from '@/domains/dam/author/api/authorApi'
 import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
 import { useExtSystemIdForCached } from '@/domains/dam/composables/extSystemIdForCached'
 
-export function useImageMassOperations() {
+export function useImageMassOperations(configName?: string) {
   const imageStore = useImageStore()
 
   const replaceEmptyDescription = (value: string, forceReplace = false) => {
@@ -30,7 +30,7 @@ export function useImageMassOperations() {
     }
   }
 
-  const { damClient, endPointAuthor } = useCommonAdminCoreDamOptions()
+  const { damClient, endPointAuthor } = useCommonAdminCoreDamOptions(configName)
   const { cachedExtSystemId } = useExtSystemIdForCached()
 
   const replaceEmptyAuthors = async (value: DocId[], forceReplace = false) => {

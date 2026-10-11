@@ -45,6 +45,12 @@ export interface UploadReadOptions {
    * refresh) is always `true`.
    */
   report: boolean
+  /**
+   * The queue the read is for: of the poll its own queue; of a read a notification or the refresh asked for, the
+   * queue of the first row it concerns. For a reader that asks under the configuration of the queue. Not given when
+   * the read concerns no row.
+   */
+  queueKey?: UploadQueueKey
 }
 
 /** What a store hands its settlement. */
@@ -66,8 +72,11 @@ export interface UploadSettlementProfile {
     assets(licenceId: IntegerId, assetIds: DocId[], options?: UploadReadOptions): Promise<AssetDetailItemDto[]>
     /** DAM: the files of all the slots of an asset. An answer that is no list throws. */
     slotFiles?(assetId: DocId, options?: UploadReadOptions): Promise<AssetFileNullable[]>
-    /** LIB: the asset the original file of a duplicate belongs to. */
-    duplicateOriginAsset?(originFileId: DocId): Promise<AssetDetailItemDto>
+    /** LIB: the asset the original file of a duplicate belongs to. `queueKey`: of the first row that is to become it. */
+    duplicateOriginAsset?(
+      originFileId: DocId,
+      options?: Pick<UploadReadOptions, 'queueKey'>
+    ): Promise<AssetDetailItemDto>
     /** DAM: the original file of a duplicate, by its type. */
     duplicateOriginFile?(originFileId: DocId, assetType: DamAssetTypeType): Promise<AssetFileNullable>
   }

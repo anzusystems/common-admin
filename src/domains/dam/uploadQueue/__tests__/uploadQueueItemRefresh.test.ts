@@ -3,7 +3,11 @@ import { flushPromises, mount, type VueWrapper } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { DamAssetType } from '@/domains/dam/types/Asset'
 import { AssetFileFailReason, AssetFileProcessStatus } from '@/domains/dam/types/AssetFile'
-import { UploadQueueItemStatus } from '@/domains/dam/types/UploadQueue'
+import {
+  type UploadQueueItem,
+  UploadQueueItemStatus,
+  type UploadQueueItemStatusType,
+} from '@/domains/dam/types/UploadQueue'
 import { DamNotificationName } from '@/domains/dam/composables/damNotificationsEventBus'
 import UploadQueueEditable from '@/domains/dam/uploadQueue/components/UploadQueueEditable.vue'
 import UploadQueueItemEditable from '@/domains/dam/uploadQueue/components/UploadQueueItemEditable.vue'
@@ -248,6 +252,129 @@ describe('the upload queue', () => {
     await vi.waitFor(() => expect(fetchAsset).toHaveBeenCalledTimes(readsBefore + 1))
     if (removed) useUploadQueuesStore().removeByIndex('q', 0)
     failRead(new Error('502 Bad Gateway'))
+    await flushPromises()
+
+    expect(item.status).toBe(UploadQueueItemStatus.Uploaded)
+    expect(useUploadQueuesStore().getQueueItems('q')).toHaveLength(removed ? 0 : 1)
+    expect(warned()).toEqual(said)
+  })
+})
+
+// "Still uploading or processing" is for a row the read found as it was. One that ended while the refresh was
+// reading, or was taken out of its queue, is not told it, as it is not told to try again. Called without the row, the
+// refresh cannot tell, and says it as before.
+describe('the warning that the file of a pressed row is not done yet', () => {
+  const mountList = () => {
+    wrapper = mount(UploadQueueEditable, {
+      props: { queueKey: 'q', extSystem: 1, massOperations: false },
+      global: { stubs: { UploadQueueItemEditable: true, AssetQueueSelectedSidebar: true } },
+    })
+  }
+  /** Holds the next read of the asset until the case answers it. */
+  const holdRead = () => {
+    const readsBefore = fetchAsset.mock.calls.length
+    const held = {
+      answer: (_asset: unknown) => {},
+      started: () => expect(fetchAsset).toHaveBeenCalledTimes(readsBefore + 1),
+    }
+    fetchAsset.mockImplementation(() => new Promise((resolve) => (held.answer = resolve)))
+    return held
+  }
+  const fromTheList = () =>
+    wrapper!.findComponent(UploadQueueItemEditable).vm.$emit('refreshItem', { index: 0, assetId: 'asset-1' })
+  const withTheRow = (item: UploadQueueItem) => void useUploadQueueItemRefresh().refreshItem('asset-1', item, 'q')
+  const withTheRowOnly = (item: UploadQueueItem) => void useUploadQueueItemRefresh().refreshItem('asset-1', item)
+  const withoutTheRow = () => void useUploadQueueItemRefresh().refreshItem('asset-1')
+  const failedByItsNotification = async (item: UploadQueueItem) => {
+    bus.listener!({
+      name: DamNotificationName.AssetFileFailed,
+      data: { asset: 'asset-1', id: 'file-1', failReason: AssetFileFailReason.InvalidSize },
+    })
+    await vi.waitFor(() => expect(item.status).toBe(UploadQueueItemStatus.Failed))
+  }
+  const stopped = (item: UploadQueueItem) => useUploadQueuesStore().stopItemUpload('q', item)
+
+  it.each([
+    [
+      'the list: not to a row its failed notification settles during the read',
+      fromTheList,
+      failedByItsNotification,
+      UploadQueueItemStatus.Failed,
+      [],
+    ],
+    [
+      'the list: to a row the read finds still processing',
+      fromTheList,
+      undefined,
+      UploadQueueItemStatus.Processing,
+      [STILL_PROCESSING],
+    ],
+    [
+      'the refresh given the row: not to a row settled during the read',
+      withTheRow,
+      failedByItsNotification,
+      UploadQueueItemStatus.Failed,
+      [],
+    ],
+    // Not told its queue, the refresh does not know the row is gone: that it stopped is enough.
+    [
+      'the refresh given the row and not its queue: not to a row stopped during the read',
+      withTheRowOnly,
+      stopped,
+      UploadQueueItemStatus.Stop,
+      [],
+    ],
+    [
+      'the refresh given no row: as before, to a row settled during the read',
+      withoutTheRow,
+      failedByItsNotification,
+      UploadQueueItemStatus.Failed,
+      [STILL_PROCESSING],
+    ],
+  ])(
+    'is said by %s',
+    async (
+      _what,
+      press: (item: UploadQueueItem) => void,
+      meanwhile: ((item: UploadQueueItem) => unknown) | undefined,
+      status: UploadQueueItemStatusType,
+      said: string[]
+    ) => {
+      mountList()
+      const item = await processingItem()
+      await flushPromises()
+      const read = holdRead()
+
+      press(item)
+      await vi.waitFor(read.started)
+      await meanwhile?.(item)
+      read.answer(asset(AssetFileProcessStatus.Stored))
+      await flushPromises()
+
+      expect(item.status).toBe(status)
+      expect(warned()).toEqual(said)
+    }
+  )
+
+  // An uploaded row still without its metadata keeps its status when it is taken out: only its queue tells.
+  it.each([
+    ['still in the list is told the file is not done', false, [STILL_PROCESSING]],
+    ['taken out of the list during the read is not told it', true, []],
+  ])('is said to an uploaded row %s', async (_what, removed, said) => {
+    fetchAsset.mockResolvedValue(asset(AssetFileProcessStatus.Processed))
+    mountList()
+    const item = await processingItem()
+    bus.listener!({ name: DamNotificationName.AssetFileProcessed, data: { asset: 'asset-1' } })
+    await vi.waitFor(() => expect(item.status).toBe(UploadQueueItemStatus.Uploaded))
+    // The read the notification asks for is over before the refresh is pressed.
+    await vi.waitFor(() => expect(fetchAsset).toHaveBeenCalled())
+    await flushPromises()
+    const read = holdRead()
+
+    fromTheList()
+    await vi.waitFor(read.started)
+    if (removed) useUploadQueuesStore().removeByIndex('q', 0)
+    read.answer(asset(AssetFileProcessStatus.Stored))
     await flushPromises()
 
     expect(item.status).toBe(UploadQueueItemStatus.Uploaded)

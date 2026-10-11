@@ -13,6 +13,7 @@ import { isUndefined } from '@/shared/utils/common'
 import { onMounted, provide, ref, shallowRef } from 'vue'
 import { useExtSystemIdForCached } from '@/domains/dam/composables/extSystemIdForCached'
 import { useI18n } from 'vue-i18n'
+import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 
 const props = withDefaults(
   defineProps<{
@@ -28,7 +29,7 @@ const props = withDefaults(
     callDeleteApiOnRemove?: boolean
   }>(),
   {
-    configName: 'default',
+    configName: undefined,
     label: undefined,
     image: undefined,
     readonly: false,
@@ -44,13 +45,14 @@ const props = withDefaults(
 const emit = defineEmits<{
   (e: 'update:modelValue', data: IntegerId[]): void
 }>()
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const damConfigName = useDamConfigName(props.configName)
 
 const status = ref<'loading' | 'ready' | 'error'>('loading')
 // Not being allowed to upload is no reason to hide the image that is already there: it is shown read-only.
 const uploadAllowed = ref(true)
 
-// eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { damClient } = useCommonAdminCoreDamOptions(props.configName)
+const { damClient } = useCommonAdminCoreDamOptions(damConfigName)
 const {
   loadDamPrvConfig,
   loadDamConfigAssetCustomFormElements,
@@ -127,7 +129,7 @@ const { t } = useI18n()
     <AImageWidgetMultipleSimple
       v-if="modelValue.length"
       :model-value="modelValue"
-      :config-name="configName"
+      :config-name="damConfigName"
       :label="label"
       :width="width"
     />

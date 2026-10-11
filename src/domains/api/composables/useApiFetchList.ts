@@ -35,6 +35,13 @@ export type FetchListParams = {
   forceElastic?: boolean
   /** Stops this one call, leaving the instance's other calls alone. */
   signal?: AbortSignal
+  /**
+   * `false`: a failure of this one call is thrown as ever, and not handed to the api error logger.
+   *
+   * As in `useApiRequest`: for a caller that reads a list again on a timer and has reported its first failure
+   * already. It is the caller's to say which call that is, call by call; an instance has no such switch.
+   */
+  report?: boolean
 }
 
 export const generateListQuery = (
@@ -72,7 +79,13 @@ export const useApiFetchList = <T>(params: UseApiFetchListParams): UseApiFetchLi
     filterConfig: FilterConfig<any>,
     fetchParams: FetchListParams = {}
   ): Promise<T[]> => {
-    const { urlTemplate: urlTemplateOverride, urlParams: urlParamsOverride, forceElastic = false, signal } = fetchParams
+    const {
+      urlTemplate: urlTemplateOverride,
+      urlParams: urlParamsOverride,
+      forceElastic = false,
+      signal,
+      report: reported = true,
+    } = fetchParams
 
     // Assigned inside `run`, once, at the moment there is a url to ask for. It stays undefined until
     // then, and that is what a failure before dispatch reports: the field says which url was
@@ -179,7 +192,9 @@ export const useApiFetchList = <T>(params: UseApiFetchListParams): UseApiFetchLi
         url: requestedUrl(client, url, options, err, dispatched),
       }
 
-      throw report(mapApiError(err, context), context)
+      const error = mapApiError(err, context)
+
+      throw reported ? report(error, context) : error
     }
   }
 

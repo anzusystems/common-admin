@@ -6,20 +6,27 @@ import { useI18n } from 'vue-i18n'
 import AFilterRemoteAutocompleteWithMinimal from '@/domains/remoteAutocomplete/components/AFilterRemoteAutocompleteWithMinimal.vue'
 import { provide } from 'vue'
 import { FilterInnerConfigKey, FilterInnerDataKey } from '@/domains/filters/utils/filterInjectionKeys'
+import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 
 const props = withDefaults(
   defineProps<{
     name: string
     extSystem: IntegerId
+    /** The DAM configuration to work under. Left out: that of the component it is in, else `default`. */
+    configName?: string
   }>(),
-  {}
+  {
+    configName: undefined,
+  }
 )
 const emit = defineEmits<{
   (e: 'change'): void
 }>()
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const damConfigName = useDamConfigName(props.configName)
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { fetchItemsMinimal, fetchItemsMinimalByIds } = useAuthorSelectActions(props.extSystem)
+const { fetchItemsMinimal, fetchItemsMinimalByIds } = useAuthorSelectActions(props.extSystem, damConfigName)
 
 const { filterData, filterConfig } = useAuthorInnerFilter()
 provide(FilterInnerConfigKey, filterConfig)

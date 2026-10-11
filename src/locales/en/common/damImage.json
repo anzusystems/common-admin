@@ -121,6 +121,8 @@
       "fillOneEmpty": "Fill empty field",
       "fillAllEmpty": "Fill only empty",
       "replaceOne": "Replace everywhere",
+      "fillOneEmptyField": "Fill empty field: {field}",
+      "replaceOneField": "Replace everywhere: {field}",
       "replaceAll": "Replace all",
       "clearForm": "Clear",
       "general": "Main"
@@ -129,6 +131,7 @@
       "low": "Low quality",
       "slots": "Slots",
       "rss": "RSS",
+      "tts": "Synthesized (TTS)",
       "fullHd": "FullHD",
       "2k": "2K",
       "qhd": "QHD",
@@ -157,6 +160,8 @@
     "title": "Uploading",
     "titleDone": "Uploading completed",
     "stopConfirmQuestion": "Do you want to stop the upload?",
+    "stopConfirm": "Stop",
+    "onlyOneFile": "Only one file can be uploaded here; the first one is used.",
     "limits": {
       "uploadWarning": "Upload warning",
       "onUploadLimit": "You are already on upload limit ({limit}). Finish upload, then try again.",

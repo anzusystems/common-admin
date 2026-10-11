@@ -16,6 +16,8 @@ import ARow from '@/domains/ui/components/ARow.vue'
 import useVuelidate from '@vuelidate/core'
 import { useValidate } from '@/shared/validators/vuelidate/useValidate'
 import { buildFieldRules } from '@/domains/dam/composables/uploadValidations'
+import { createDamImage } from '@/domains/dam/imageWidget/utils/damImage'
+import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 
 const props = withDefaults(
   defineProps<{
@@ -27,26 +29,30 @@ const props = withDefaults(
   }>(),
   {
     image: undefined,
-    configName: 'default',
+    configName: undefined,
     labelT: 'common.damImage.public.idOrUrl',
     dataCy: undefined,
   }
 )
 const modelValue = defineModel<IntegerIdNullable>({ default: null, required: true })
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const damConfigName = useDamConfigName(props.configName)
 const inputField = ref('')
 const meta = ref({ description: '', source: '' })
 
 const resolvedSrc = ref('')
 const resImage = ref<null | ImageCreateUpdateAware>(null)
+// The id of the image this input has just created. Its model changes to that id, and the fields are filled from the
+// answer to the create: the image is not read again. Any other change of the id is read as before.
+let createdImageId: IntegerIdNullable = null
 
 const isValid = ref(true)
 const isDirty = ref(false)
 
-// eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const imageOptions = useCommonAdminImageOptions(props.configName)
+const imageOptions = useCommonAdminImageOptions(damConfigName)
 const { imageClient, imageApi } = imageOptions
 const { damClient, endPointAsset, sourceLabel, descriptionValidation, sourceValidation } =
-  useCommonAdminCoreDamOptions()
+  useCommonAdminCoreDamOptions(damConfigName)
 const { widgetImageToDamImageOriginalUrl } = useImageActions(imageOptions)
 
 const { showErrorsDefault, showValidationError } = useAlerts()
@@ -111,32 +117,19 @@ const submit = async () => {
       showValidationError()
       return Promise.reject('Invalid source or description')
     }
-    const data: ImageCreateUpdateAware = {
-      texts: {
-        description: meta.value.description.trim(),
-        source: meta.value.source.trim(),
-      },
-      flags: {
-        showSource: true,
-        internal: false,
-        overrideInternal: false,
-      },
-      dam: {
-        damId: asset.mainFile!.id,
-        licenceId: asset.licence,
-        regionPosition: 0,
-        internal: asset.mainFileInternal ?? false,
-      },
-      position: 0,
-    }
-    if (resImage.value?.id) {
-      data.id = resImage.value.id
-    }
+    const data = createDamImage(
+      { fileId: asset.mainFile!.id, licenceId: asset.licence, internal: asset.mainFileInternal },
+      { description: meta.value.description.trim(), source: meta.value.source.trim() },
+      { position: 0, id: resImage.value?.id || undefined }
+    )
     const imageRes = resImage.value?.id
       ? await imageApi.updateImage(imageClient, resImage.value.id, data)
       : await imageApi.createImage(imageClient, data)
     resImage.value = imageRes
+    if (!data.id) createdImageId = imageRes.id
     modelValue.value = imageRes.id
+    // What the read of the created image used to put into the fields, from the answer to its create.
+    if (!data.id) await reload(imageRes, imageRes.id, true)
     return Promise.resolve({ asset: asset, image: imageRes })
   } catch (e) {
     showErrorsDefault(e)
@@ -145,23 +138,7 @@ const submit = async () => {
 }
 
 const updatePreviewAndTexts = () => {
-  resolvedSrc.value = widgetImageToDamImageOriginalUrl({
-    texts: {
-      description: '',
-      source: '',
-    },
-    flags: {
-      showSource: true,
-      internal: false,
-      overrideInternal: false,
-    },
-    dam: {
-      damId: inputField.value,
-      licenceId: 0,
-      regionPosition: 0,
-      internal: false,
-    },
-  })
+  resolvedSrc.value = widgetImageToDamImageOriginalUrl(createDamImage({ fileId: inputField.value, licenceId: 0 }))
 }
 
 const onBlur = async () => {
@@ -210,7 +187,10 @@ const disabled = computed(() => !(isValid.value && isDirty.value))
 
 watch(
   [() => props.image, modelValue],
-  async ([newImage, newImageId]) => {
+  async ([newImage, newImageId], [oldImage]) => {
+    const created = createdImageId
+    createdImageId = null
+    if (!isNull(created) && newImageId === created && newImage === oldImage) return
     await reload(newImage, newImageId)
   },
   { immediate: true }

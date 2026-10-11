@@ -6,6 +6,7 @@ import { ref, toRefs, watch } from 'vue'
 import { cloneDeep } from '@/shared/utils/common'
 import { useAlerts } from '@/domains/system/composables/alerts'
 import { useCommonAdminImageOptions } from '@/domains/dam/imageWidget/composables/commonAdminImageOptions'
+import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 
 const props = withDefaults(
   defineProps<{
@@ -21,7 +22,7 @@ const props = withDefaults(
   }>(),
   {
     images: () => [],
-    configName: 'default',
+    configName: undefined,
     label: undefined,
     image: undefined,
     width: undefined,
@@ -31,6 +32,8 @@ const props = withDefaults(
     showSource: false,
   }
 )
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const damConfigName = useDamConfigName(props.configName)
 
 const { images, modelValue } = toRefs(props)
 
@@ -38,8 +41,7 @@ const resImages = ref<ImageAware[]>([])
 
 const { showErrorsDefault } = useAlerts()
 
-// eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const imageOptions = useCommonAdminImageOptions(props.configName)
+const imageOptions = useCommonAdminImageOptions(damConfigName)
 const { imageClient, imageApi } = imageOptions
 
 watch(
@@ -76,7 +78,7 @@ watch(
           <AImageWidgetSimple
             :model-value="image.id"
             :image="image"
-            :config-name="configName"
+            :config-name="damConfigName"
             :width="width"
             :disable-aspect-ratio="disableAspectRatio"
             :aspect-ratio="aspectRatio"
