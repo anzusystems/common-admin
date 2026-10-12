@@ -15,6 +15,7 @@ import {
   createFakeDam,
   damAssetWithFile,
   type FakeDam,
+  type FakeDamRequest,
   type FakeDamRule,
 } from '@/domains/dam/__tests__/support/fakeDam'
 import { holdLongWaits, type LongWaits } from '@/domains/dam/__tests__/support/longWaits'
@@ -28,11 +29,14 @@ import {
   uiText,
 } from '@/domains/dam/__tests__/support/uploadUi'
 import { updateAssetMetadata } from '@/domains/dam/api/damAssetApi'
+import AssetDetailSidebarActionsTeleportTarget from '@/domains/dam/assetDetail/components/AssetDetailSidebarActionsTeleportTarget.vue'
+import AssetDetailSidebarMetadata from '@/domains/dam/assetDetail/components/AssetDetailSidebarMetadata.vue'
 import { useAssetDetailStore } from '@/domains/dam/assetDetail/store/assetDetailStore'
 import { useAssetSelectStore } from '@/domains/dam/assetSelect/store/assetSelectStore'
 import AuthorRemoteAutocompleteWithCached from '@/domains/dam/author/components/AuthorRemoteAutocompleteWithCached.vue'
 import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
 import { destroyDamNotifications, initDamNotifications } from '@/domains/dam/composables/damNotifications'
+import { useExtSystemIdForCached } from '@/domains/dam/composables/extSystemIdForCached'
 import { DamNotificationName, useDamNotificationsEventBus } from '@/domains/dam/composables/damNotificationsEventBus'
 import { useDamConfigStore } from '@/domains/dam/config/store/damConfigStore'
 import ImageWidgetMultipleInner from '@/domains/dam/imageWidget/components/ImageWidgetMultipleInner.vue'
@@ -40,7 +44,7 @@ import ImageWidgetMultipleItem from '@/domains/dam/imageWidget/components/ImageW
 import { useImageMassOperations } from '@/domains/dam/imageWidget/composables/useImageMassOperations'
 import { useImageStore } from '@/domains/dam/imageWidget/store/imageStore'
 import { ImageWidgetUploadConfigKey } from '@/domains/dam/imageWidget/utils/imageWidgetInkectionKeys'
-import type { DamImageCopyToLicenceResponseItem } from '@/domains/dam/types/Asset'
+import { DamAssetType, type DamImageCopyToLicenceResponseItem } from '@/domains/dam/types/Asset'
 import { AssetFileProcessStatus } from '@/domains/dam/types/AssetFile'
 import type { ImageAware } from '@/domains/dam/types/ImageAware'
 import { UploadQueueItemStatus } from '@/domains/dam/types/UploadQueue'
@@ -54,8 +58,8 @@ import type { DocId, IntegerId } from '@/shared/types/common'
 // file input, limit check, queue dialog and rows over the real queue and the real image store; the DAM and the
 // backend of the images are clients that record their requests, and only the long waits are taken out of real time.
 // Not mounted for real: the sortable list around the rows (a stand-in draws the rows), the asset picker, the
-// pictures, the asset detail, the mass operations of the queue dialog, the dropzones, and the inputs that ask the
-// DAM for names to offer.
+// pictures, what the dialog of the asset detail frames (the dialog itself is the real one, and closes as it does),
+// the mass operations of the queue dialog, the dropzones, and the inputs that ask the DAM for names to offer.
 
 const QUEUE = 'gallery'
 const { Processing, Uploaded } = UploadQueueItemStatus
@@ -163,7 +167,7 @@ describe.each(consumerProfiles)('the widget of several images under the $name', 
         stubs: {
           ASortableListEditor: Editor,
           AAssetSelect: Picker,
-          AssetDetailDialog: true,
+          AssetDetailDialogFrame: true,
           AImageWidgetSimple: true,
           AssetImage: true,
           AssetQueueSelectedSidebar: true,
@@ -707,10 +711,15 @@ describe.each(consumerProfiles)('the widget of several images under the $name', 
     })
 
     // With the notifications a file is uploaded before its metadata comes, and "save and apply" is offered by then.
-    // The save skips a row without its metadata, so its answer has nothing for the asset of that row.
+    // The save skips a row without its metadata, so its answer has nothing for the asset of that row. "Save and
+    // apply" asks about such a row once more first, and stops where that brings its form.
     if (profile.notifications) {
-      /** Two files are uploaded: the first has its metadata and no authors, the second an author and no metadata yet. */
-      const secondWithoutItsMetadata = async () => {
+      /**
+       * Two files are uploaded: the first has its metadata and no authors, the second an author and no metadata yet.
+       * `unreadable`: nor does the DAM answer for the asset of the second from here on, so no form comes of the read
+       * "save and apply" makes, and the row is handed over as it is.
+       */
+      const secondWithoutItsMetadata = async (unreadable = true) => {
         await mountWidget()
         await pick('a.jpg', 'b.jpg')
         await vi.waitFor(() => expect(statuses()).toEqual([Processing, Processing]))
@@ -727,8 +736,58 @@ describe.each(consumerProfiles)('the widget of several images under the $name', 
         await vi.waitFor(() => expect(statuses()).toEqual([Uploaded, Uploaded]))
         await flushPromises()
         expect([a.canEditMetadata, b.canEditMetadata]).toEqual([true, false])
+        if (unreadable) {
+          dam.reply((request) =>
+            request.method === 'GET' && request.url === `${endPoints.asset}/${b.assetId}` ? { status: 500 } : undefined
+          )
+        }
         return { a, b }
       }
+
+      // The read "save and apply" makes of such a row brings its metadata: the press ends there, for the user to see
+      // the form that has just come. Pressed again, the image comes with the texts and the authors of its asset. It
+      // used to come at once, without them, and its asset was left unsaved.
+      it('stops once when the metadata of an uploaded file comes with "save and apply": pressed again, its image has its texts', async () => {
+        const { a, b } = await secondWithoutItsMetadata(false)
+
+        saveAndApply().click()
+        await vi.waitFor(() =>
+          expect(shownAlerts()).toEqual([['warning', alertText('common.damImage.upload.metadataJustLoaded')]])
+        )
+        await vi.waitFor(() => expect(saveAndApply().classList.contains('v-btn--loading')).toBe(false))
+        await flushPromises()
+
+        expect(metadataWrites()).toEqual([])
+        expect(images()).toEqual([])
+        expect(queueDialog()).not.toBeNull()
+        expect(statuses()).toEqual([Uploaded, Uploaded])
+        expect(b).toMatchObject({
+          canEditMetadata: true,
+          authors: ['author-5'],
+          customData: { description: 'second upload' },
+        })
+
+        await damNamesAsked()
+        saveAndApply().click()
+        await vi.waitFor(() => expect(images()).toHaveLength(2))
+        await flushPromises()
+
+        expect(metadataWrites().map((sent) => sent.map((one) => one.id))).toEqual([[a.assetId, b.assetId]])
+        expect(images()).toMatchObject([
+          { assetId: a.assetId, texts: { description: 'first upload' }, damAuthors: [], showDamAuthors: true },
+          {
+            assetId: b.assetId,
+            texts: { description: 'second upload', source: 'Name of author-5' },
+            dam: { damId: b.fileId },
+            damAuthors: ['author-5'],
+            showDamAuthors: false,
+          },
+        ])
+        expect(offersAuthors()).toEqual([true, false])
+        expect(textsOf(rows()[1].element)).toEqual(['second upload', 'Name of author-5'])
+        expect(queueDialog()).toBeNull()
+        expect(queue().getQueueItems(QUEUE)).toEqual([])
+      })
 
       it('gives the image of an uploaded file whose metadata never came its source, and writes no authors into its asset', async () => {
         const { a, b } = await secondWithoutItsMetadata()
@@ -944,37 +1003,6 @@ describe.each(consumerProfiles)('the widget of several images under the $name', 
         await flushPromises()
         expect(images()[1]).toMatchObject({ damAuthors: ['author-7', 'author-8'], showDamAuthors: false })
         expect(textsOf(rows()[1].element)).toEqual(['image 12', 'Name of author-7, Name of author-8'])
-      })
-
-      /** Each list of authors written into the asset, in the order the DAM got them. */
-      const authorsWrittenInto = (asset: DocId) =>
-        dam
-          .sentTo('PATCH', dam.routes.bulkMetadata)
-          .flatMap((request) => dam.body(request) as Array<{ id: DocId; authors?: DocId[] }>)
-          .filter((item) => item.id === asset && item.authors !== undefined)
-          .map((item) => item.authors)
-
-      // "Edit asset" of a row opens the detail of its asset. An author saved there is not taken into the row, which
-      // goes on offering the authors of the DAM with none picked.
-      it('keeps an author saved meanwhile in the detail of the asset, where the row has none picked', async () => {
-        await withTwoImages()
-        const { editAssetLabel, damClient, endPointAsset } = useCommonAdminCoreDamOptions()
-        await rows()[1]
-          .findAll('button')
-          .find((button) => button.text() === editAssetLabel)!
-          .trigger('click')
-        const detail = useAssetDetailStore(pinia)
-        await vi.waitFor(() => expect(detail.asset?.id).toBe('asset-12'))
-        // The detail is not mounted here: this is what its save does with an author the user picks in it.
-        detail.asset!.authors = ['author-9']
-        await updateAssetMetadata(damClient, endPointAsset, detail.asset!, extSystem, detail.mainFileSingleUse)
-        await flushPromises()
-        expect(authorsWrittenInto('asset-12')).toEqual([['author-9']])
-        expect(images()[1]).toMatchObject({ assetId: 'asset-12', damAuthors: [], showDamAuthors: true })
-
-        expect(await save()).toBe(true)
-
-        expect(authorsWrittenInto('asset-12')).toEqual([['author-9']])
       })
 
       /**
@@ -1216,6 +1244,618 @@ describe.each(consumerProfiles)('the widget of several images under the $name', 
         expect(imageApi.calls.map(([call]) => call)).toEqual(['fetchImageListByIds', 'bulkUpdateImages'])
         expect(toForeignPrefix()).toEqual([])
       })
+    }
+  })
+
+  // "Edit asset" of a row opens the detail of its asset, where the user may save authors into it. The row was not
+  // told: it went on offering an empty pick of the authors of the DAM, what was picked in it, also by the mass
+  // operations, was written into the asset over the authors of the detail, and with nothing picked the image was
+  // saved without a source. When the detail closes the asset it showed is read again, and the rows of that asset
+  // that offer the pick take the authors it has by then.
+  describe('the detail of the asset of a row, once it has closed', () => {
+    let detailForm: VueWrapper | undefined
+
+    afterEach(() => {
+      detailForm?.unmount()
+      detailForm = undefined
+    })
+
+    const detail = () => useAssetDetailStore(pinia)
+    const byFile = (file: string) => `${endPoints.asset}/asset-file/${file}`
+    /** The reads of the asset a file belongs to: what "edit asset" of a row opens the detail with. */
+    const readsByFile = () => dam.sentTo('GET', dam.routes.byFile).map((request) => request.url)
+    /** The reads of an asset by its id: what the widget reads again once the detail has closed. */
+    const rereadsOf = (asset: DocId) =>
+      dam.sentTo('GET', dam.routes.one).filter((request) => request.url === `${endPoints.asset}/${asset}`)
+    /** The ext system of each lookup of the names of exactly these authors. */
+    const namesAskedOf = (ids: string) =>
+      damNameLookups(dam)
+        .map((request) => request.url.match(DAM_NAMES)!)
+        .filter((match) => match[1] === 'author' && new URLSearchParams(match[3]).get('id') === ids)
+        .map((match) => Number(match[2]))
+    /** The DAM takes the authors a save of metadata writes into an asset: a later read of it answers with them. */
+    const keepAuthorsOf = (request: FakeDamRequest) => {
+      for (const sent of dam.body(request) as Array<{ id: DocId; authors?: DocId[] }>) {
+        const asset = dam.assets.get(sent.id)
+        if (asset && sent.authors) asset.authors = [...sent.authors]
+      }
+    }
+    const damKeepsAuthors = () =>
+      dam.reply((request) => {
+        if (request.method === 'PATCH' && dam.routes.bulkMetadata.test(request.url)) keepAuthorsOf(request)
+        return undefined
+      })
+    /** The saves of metadata wait for `answer`: the DAM has their authors only from then on. */
+    const holdSaves = () => {
+      const held = dam.hold('PATCH', dam.routes.bulkMetadata)
+      return {
+        waiting: held.waiting,
+        answer: () => {
+          held.waiting.forEach(({ request }) => keepAuthorsOf(request))
+          held.release()
+        },
+      }
+    }
+    /** What each save of metadata wrote into the DAM: the asset and its authors. */
+    const authorsWritten = () => metadataWrites().map((sent) => sent.map((one) => [one.id, one.authors]))
+    const sourcesSaved = () => {
+      const [, sent] = imageApi.calls.at(-1) as ['bulkUpdateImages', ImageAware[]]
+      return sent.map((image) => image.texts.source)
+    }
+    const clickEditAsset = async (row: number) => {
+      const { editAssetLabel } = useCommonAdminCoreDamOptions()
+      const buttons = rows()[row].findAll('button')
+      await buttons.find((button) => button.text() === editAssetLabel)!.trigger('click')
+    }
+    /** What the DAM has of an asset is its own from here on: what is typed into the detail is not, until it is saved. */
+    const detailHasItsOwn = (asset: DocId) => dam.assets.set(asset, structuredClone(dam.assets.get(asset)!))
+    /** "Edit asset" of a row: the detail of its asset is open. */
+    const editAssetOf = async (row: number) => {
+      const asset = images()[row].assetId!
+      await clickEditAsset(row)
+      await vi.waitFor(() => expect(detail().asset?.id).toBe(asset))
+      await flushPromises()
+      detailHasItsOwn(asset)
+    }
+    /** The form of the detail is not drawn here: this is what its save sends, with the authors the user picks in it. */
+    const saveInDetail = async (authors: DocId[]) => {
+      const { damClient, endPointAsset } = useCommonAdminCoreDamOptions()
+      detail().asset!.authors = authors
+      await updateAssetMetadata(damClient, endPointAsset, detail().asset!, extSystem, detail().mainFileSingleUse)
+      await flushPromises()
+    }
+    /** The part of the detail that saves, as the dialog draws it in its sidebar: the real form and its "save". */
+    const mountDetailForm = async () => {
+      const Form = defineComponent({
+        setup: () => () =>
+          h('div', [
+            h(AssetDetailSidebarMetadata, {
+              queueKey: QUEUE,
+              isActive: true,
+              assetType: DamAssetType.Image,
+              extSystem,
+            }),
+            h(AssetDetailSidebarActionsTeleportTarget, { queueKey: QUEUE }),
+          ]),
+      })
+      detailForm = mount(Form, {
+        attachTo: document.body,
+        global: { plugins: [pinia], stubs: { AFormRemoteAutocompleteWithCached: true, ACachedUserChip: true } },
+      })
+      await flushPromises()
+      await flushPromises()
+    }
+    const saveOfDetail = () => document.body.querySelector<HTMLButtonElement>('[data-cy="button-save"]')!
+    /** The detail is closed with its own button: the real dialog, of which only what it frames is not drawn. */
+    const closeDetail = async () => {
+      widget!.findComponent({ name: 'AssetDetailDialogFrame' }).vm.$emit('close')
+      await flushPromises()
+    }
+    const pickInRow = async (row: number, authors: DocId[]) => {
+      rows()[row].findComponent(AuthorRemoteAutocompleteWithCached).vm.$emit('update:modelValue', authors)
+      await flushPromises()
+    }
+    const taken = (row: number) => vi.waitFor(() => expect(images()[row].showDamAuthors).toBe(false))
+    /** The entity has these images, each of an asset without authors unless a file is named for it. */
+    const withImages = async (
+      ids: number[],
+      files: Record<number, string> = {},
+      licences: Record<number, IntegerId> = {}
+    ) => {
+      ids.forEach((id, index) => {
+        const image = stored(id, index + 1)
+        const of = licences[id] ?? licence
+        imageApi.has({ ...image, dam: { ...image.dam, damId: files[id] ?? image.dam.damId, licenceId: of } })
+        if (files[id]) return
+        dam.assets.set(
+          `asset-${id}`,
+          damAssetWithFile(`asset-${id}`, `file-${id}`, AssetFileProcessStatus.Processed, { licence: of })
+        )
+      })
+      const mounted = await mountWidget(ids)
+      await vi.waitFor(() => expect(images()).toHaveLength(ids.length))
+      await damNamesAsked()
+      await flushPromises()
+      return mounted
+    }
+
+    // That text is the user's, whatever authors the asset gets. admin-ugc has no authors of the DAM, so every row of
+    // it has its source; in admin-cms the row of an asset that has authors has.
+    it('reads nothing, and leaves alone a row that has its source', async () => {
+      await withTwoImages()
+      damKeepsAuthors()
+      const row = isCms ? 0 : 1
+      const asItWas = JSON.parse(JSON.stringify(images()))
+      const shown = textsOf(rows()[row].element)
+
+      await editAssetOf(row)
+      await saveInDetail(['author-9'])
+      await closeDetail()
+      await waits.settle()
+
+      expect(detail().dialog).toBeNull()
+      expect(readsByFile()).toEqual([byFile(`file-1${row + 1}`)])
+      expect(rereadsOf(`asset-1${row + 1}`)).toEqual([])
+      expect(namesAskedOf('author-9')).toEqual([])
+      expect(JSON.parse(JSON.stringify(images()))).toEqual(asItWas)
+      expect(textsOf(rows()[row].element)).toEqual(shown)
+      expect(shownAlerts()).toEqual([])
+    })
+
+    if (isCms) {
+      it('gives a row that offers the authors of the DAM the authors the detail saved: named as its source, and offered no more', async () => {
+        await withTwoImages()
+        damKeepsAuthors()
+        await editAssetOf(1)
+        await saveInDetail(['author-9', 'author-8'])
+        // Until the detail closes the row is as it was.
+        expect(images()[1]).toMatchObject({ damAuthors: [], showDamAuthors: true })
+
+        await closeDetail()
+        await taken(1)
+        await flushPromises()
+
+        // The asset is read once more, by its id, and the names of its authors once.
+        expect(readsByFile()).toEqual([byFile('file-12')])
+        expect(rereadsOf('asset-12')).toHaveLength(1)
+        expect(namesAskedOf('author-9,author-8')).toEqual([extSystem])
+        expect(images()[1]).toMatchObject({
+          id: 12,
+          assetId: 'asset-12',
+          damAuthors: ['author-9', 'author-8'],
+          showDamAuthors: false,
+          texts: { description: 'image 12', source: 'Name of author-9, Name of author-8' },
+        })
+        expect(offersAuthors()).toEqual([false, false])
+        expect(textsOf(rows()[1].element)).toEqual(['image 12', 'Name of author-9, Name of author-8'])
+        // The other row is of another asset.
+        expect(images()[0]).toMatchObject({ damAuthors: ['author-1'], texts: { source: 'source 11' } })
+        expect(shownAlerts()).toEqual([])
+
+        // The save of the widget writes no authors into the asset, and the image with its source.
+        expect(await save()).toBe(true)
+        expect(authorsWritten()).toEqual([[['asset-12', ['author-9', 'author-8']]]])
+        expect(sourcesSaved()).toEqual(['source 11', 'Name of author-9, Name of author-8'])
+        expect(dam.assets.get('asset-12')!.authors).toEqual(['author-9', 'author-8'])
+      })
+
+      // What the user picked in the row before the detail was for an asset without authors: it gives way to what the
+      // detail saved.
+      it('writes nothing over the authors of the detail: those picked in the row before give way to them', async () => {
+        await withTwoImages()
+        damKeepsAuthors()
+        await pickInRow(1, ['author-7'])
+        await editAssetOf(1)
+        await saveInDetail(['author-9'])
+
+        await closeDetail()
+        await taken(1)
+        expect(images()[1]).toMatchObject({ damAuthors: ['author-9'], texts: { source: 'Name of author-9' } })
+        expect(await save()).toBe(true)
+
+        // Only the save of the detail has written into the asset.
+        expect(authorsWritten()).toEqual([[['asset-12', ['author-9']]]])
+        expect(dam.assets.get('asset-12')!.authors).toEqual(['author-9'])
+        expect(sourcesSaved()).toEqual(['source 11', 'Name of author-9'])
+      })
+
+      it('lets "fill empty" of the mass operations write nothing over the authors of the detail', async () => {
+        await withTwoImages()
+        damKeepsAuthors()
+        await editAssetOf(1)
+        await saveInDetail(['author-9'])
+        await closeDetail()
+        await taken(1)
+
+        await fillEmptyAuthors(['author-7'])
+        expect(images()[1]).toMatchObject({ damAuthors: ['author-9'], texts: { source: 'Name of author-9' } })
+        expect(await save()).toBe(true)
+
+        expect(authorsWritten()).toEqual([[['asset-12', ['author-9']]]])
+        expect(dam.assets.get('asset-12')!.authors).toEqual(['author-9'])
+        expect(sourcesSaved()).toEqual(['source 11', 'Name of author-9'])
+      })
+
+      // The detail saved something else, or nothing: the asset is as the row knows it.
+      it('leaves a row as it is while the asset has no authors: those picked in it are written into it as before', async () => {
+        await withTwoImages()
+        damKeepsAuthors()
+        await pickInRow(1, ['author-7'])
+        await editAssetOf(1)
+        await saveInDetail([])
+
+        await closeDetail()
+        await vi.waitFor(() => expect(rereadsOf('asset-12')).toHaveLength(1))
+        await waits.settle()
+
+        expect(images()[1]).toMatchObject({
+          damAuthors: ['author-7'],
+          showDamAuthors: true,
+          texts: { source: 'source 12' },
+        })
+        expect(offersAuthors()).toEqual([false, true])
+        expect(shownAlerts()).toEqual([])
+        expect(await save()).toBe(true)
+        expect(dam.assets.get('asset-12')!.authors).toEqual(['author-7'])
+        expect(sourcesSaved()).toEqual(['source 11', 'Name of author-7'])
+      })
+
+      // The rows of an asset are those that have its id: an image the entity has several times is as many of them.
+      it('gives them to every row of that asset that offers the pick: to none that has its source, and to none of another asset', async () => {
+        await withImages([12, 13, 14, 15], { 13: 'file-12', 15: 'file-12' })
+        damKeepsAuthors()
+        expect(images().map((image) => [image.assetId, image.showDamAuthors])).toEqual([
+          ['asset-12', true],
+          ['asset-12', true],
+          ['asset-14', true],
+          ['asset-12', true],
+        ])
+        // The last has its source, as a row whose asset was not read when it was picked.
+        images()[3].showDamAuthors = false
+        images()[3].texts.source = 'typed by hand'
+        await flushPromises()
+
+        await editAssetOf(1)
+        await saveInDetail(['author-9'])
+        await closeDetail()
+        await taken(1)
+
+        expect(images().map((image) => [image.id, image.damAuthors, image.showDamAuthors, image.texts.source])).toEqual(
+          [
+            [12, ['author-9'], false, 'Name of author-9'],
+            [13, ['author-9'], false, 'Name of author-9'],
+            [14, [], true, 'source 14'],
+            [15, [], false, 'typed by hand'],
+          ]
+        )
+        // Each row has a list of its own.
+        expect(images()[0].damAuthors).not.toBe(images()[1].damAuthors)
+        expect(rereadsOf('asset-12')).toHaveLength(1)
+        expect(rereadsOf('asset-14')).toEqual([])
+      })
+
+      // The licence of an image need not be the one the widget uploads into: the names are those of the ext system
+      // of the licence the asset is in, whatever ext system the page asks for names under by then.
+      it('names the authors under the ext system of the licence of the asset', async () => {
+        const OTHER = 300003
+        const OTHER_EXT_SYSTEM = 7
+        const config = useDamConfigStore(pinia)
+        config.damConfigLicenceExtSystem.set(OTHER, { name: '', extSystem: OTHER_EXT_SYSTEM })
+        config.damConfigExtSystem.set(OTHER_EXT_SYSTEM, config.damConfigExtSystem.get(extSystem)!)
+        await withImages([12], {}, { 12: OTHER })
+        damKeepsAuthors()
+
+        await editAssetOf(0)
+        await saveInDetail(['author-9'])
+        // Another widget of the page has set it meanwhile.
+        useExtSystemIdForCached().cachedExtSystemId.value = extSystem
+        await closeDetail()
+        await taken(0)
+
+        expect(namesAskedOf('author-9')).toEqual([OTHER_EXT_SYSTEM])
+        expect(images()[0]).toMatchObject({ damAuthors: ['author-9'], texts: { source: 'Name of author-9' } })
+      })
+
+      // The row keeps its pick, and the save of the widget goes on as it did: what is picked in the row is written
+      // into the asset.
+      it.each<[string, () => unknown]>([
+        [
+          'the asset cannot be read',
+          () =>
+            dam.reply((request) =>
+              request.method === 'GET' && request.url === `${endPoints.asset}/asset-12` ? { status: 500 } : undefined
+            ),
+        ],
+        [
+          'the names of its authors cannot be read',
+          () =>
+            dam.reply((request) =>
+              DAM_NAMES.test(request.url) && request.url.includes('author-9') ? { status: 500 } : undefined
+            ),
+        ],
+      ])('leaves the row as it is, and says the read failed, when %s', async (_what, refuse) => {
+        await withTwoImages()
+        damKeepsAuthors()
+        await pickInRow(1, ['author-7'])
+        await editAssetOf(1)
+        await saveInDetail(['author-9'])
+        refuse()
+
+        await closeDetail()
+        await vi.waitFor(() => expect(shownAlerts()).toEqual([['error', alertText('common.alert.unknownError')]]))
+        await waits.settle()
+
+        expect(images()[1]).toMatchObject({
+          damAuthors: ['author-7'],
+          showDamAuthors: true,
+          texts: { source: 'source 12' },
+        })
+        expect(offersAuthors()).toEqual([false, true])
+        expect(shownAlerts()).toEqual([['error', alertText('common.alert.unknownError')]])
+
+        expect(await save()).toBe(true)
+        expect(authorsWritten()).toEqual([[['asset-12', ['author-9']]], [['asset-12', ['author-7']]]])
+        expect(sourcesSaved()).toEqual(['source 11', 'Name of author-7'])
+      })
+
+      // The read takes a moment, and the row offers its pick until it lands: a save of the widget in that moment
+      // waits for it, or it would write what the row has picked over the authors of the detail.
+      it('holds the save of the widget until the asset of a detail that has just closed is read', async () => {
+        await withTwoImages()
+        damKeepsAuthors()
+        await pickInRow(1, ['author-7'])
+        await editAssetOf(1)
+        await saveInDetail(['author-9'])
+        const held = dam.hold('GET', dam.routes.one)
+
+        await closeDetail()
+        await vi.waitFor(() => expect(held.waiting).toHaveLength(1))
+        const saved = save()
+        await waits.settle()
+        expect(authorsWritten()).toEqual([[['asset-12', ['author-9']]]])
+        expect(imageApi.calls.map(([call]) => call)).toEqual(['fetchImageListByIds'])
+
+        held.release()
+        expect(await saved).toBe(true)
+
+        expect(authorsWritten()).toEqual([[['asset-12', ['author-9']]]])
+        expect(dam.assets.get('asset-12')!.authors).toEqual(['author-9'])
+        expect(sourcesSaved()).toEqual(['source 11', 'Name of author-9'])
+      })
+
+      // The form of the detail is not locked while its save runs, and the detail can be closed before the DAM answers
+      // it. Read at once, the asset was as it was before that save, and the row went on offering its pick.
+      it('waits for a save of the detail that is on its way when the detail closes, and reads the asset once the DAM has answered it', async () => {
+        await withTwoImages()
+        await pickInRow(1, ['author-7'])
+        await editAssetOf(1)
+        await mountDetailForm()
+        const saves = holdSaves()
+        // An author is picked in the detail, "save" is pressed, and the detail closed at once.
+        detail().asset!.authors = ['author-9']
+        saveOfDetail().click()
+        await vi.waitFor(() => expect(saves.waiting).toHaveLength(1))
+        detailForm!.unmount()
+        detailForm = undefined
+        await closeDetail()
+        await waits.settle()
+
+        expect(rereadsOf('asset-12')).toEqual([])
+        expect(images()[1]).toMatchObject({ damAuthors: ['author-7'], showDamAuthors: true })
+
+        saves.answer()
+        await taken(1)
+
+        expect(rereadsOf('asset-12')).toHaveLength(1)
+        expect(images()[1]).toMatchObject({ damAuthors: ['author-9'], texts: { source: 'Name of author-9' } })
+        expect(detail().saving).toBeNull()
+        expect(await save()).toBe(true)
+        expect(authorsWritten()).toEqual([[['asset-12', ['author-9']]]])
+        expect(sourcesSaved()).toEqual(['source 11', 'Name of author-9'])
+      })
+
+      // "Edit asset" writes its answer into the detail whenever it comes: closed from its loader and opened from
+      // another row, the detail shows the asset whose answer came last. What it showed is what was saved in it.
+      it('reads the asset the detail showed, when a late answer made it another than that of the row that opened it', async () => {
+        await withImages([12, 14])
+        damKeepsAuthors()
+        const held = dam.hold('GET', dam.routes.byFile)
+        await clickEditAsset(0)
+        await vi.waitFor(() => expect(held.waiting).toHaveLength(1))
+        const [first] = held.waiting
+        await closeDetail()
+        await clickEditAsset(1)
+        await vi.waitFor(() => expect(held.waiting).toHaveLength(2))
+        held.waiting[1].release()
+        await vi.waitFor(() => expect(detail().asset?.id).toBe('asset-14'))
+        first.release()
+        await vi.waitFor(() => expect(detail().asset?.id).toBe('asset-12'))
+        await flushPromises()
+        detailHasItsOwn('asset-12')
+        await saveInDetail(['author-9'])
+
+        await closeDetail()
+        await taken(0)
+
+        expect(rereadsOf('asset-12')).toHaveLength(1)
+        expect(rereadsOf('asset-14')).toEqual([])
+        expect(images().map((image) => [image.assetId, image.damAuthors, image.showDamAuthors])).toEqual([
+          ['asset-12', ['author-9'], false],
+          ['asset-14', [], true],
+        ])
+      })
+
+      // A detail that showed no asset had nothing saved in it. It used to be read again by the file of its row, and
+      // a read that failed was said a second time.
+      it('reads nothing for a detail closed from its loader, also over an asset a late answer has left behind', async () => {
+        await withTwoImages()
+        const held = dam.hold('GET', dam.routes.byFile)
+        await clickEditAsset(1)
+        await vi.waitFor(() => expect(held.waiting).toHaveLength(1))
+        await closeDetail()
+        // The answer comes after the detail has closed, and stays in the store of the detail.
+        held.release()
+        await vi.waitFor(() => expect(detail().asset?.id).toBe('asset-12'))
+        await flushPromises()
+
+        await clickEditAsset(1)
+        await vi.waitFor(() => expect(held.waiting).toHaveLength(1))
+        await closeDetail()
+        held.release()
+        await waits.settle()
+
+        // The two reads "edit asset" made, and none after either close.
+        expect(readsByFile()).toEqual([byFile('file-12'), byFile('file-12')])
+        expect(rereadsOf('asset-12')).toEqual([])
+        expect(images()[1]).toMatchObject({ damAuthors: [], showDamAuthors: true })
+        expect(shownAlerts()).toEqual([])
+      })
+
+      it('reads nothing for a detail whose asset could not be read, and says that failure once', async () => {
+        await withTwoImages()
+        dam.reply((request) => (dam.routes.byFile.test(request.url) ? { status: 500 } : undefined))
+        await clickEditAsset(1)
+        await vi.waitFor(() => expect(shownAlerts()).toEqual([['error', alertText('common.alert.unknownError')]]))
+        await flushPromises()
+
+        await closeDetail()
+        await waits.settle()
+
+        expect(readsByFile()).toEqual([byFile('file-12')])
+        expect(rereadsOf('asset-12')).toEqual([])
+        expect(shownAlerts()).toEqual([['error', alertText('common.alert.unknownError')]])
+      })
+
+      // The detail a row of the queue dialog opens is drawn by the widget as well: its save writes into the rows of
+      // the queue, and its close reads nothing for the rows of the widget, also when one of them is of that asset.
+      it('reads nothing when the detail was opened from a row of the queue dialog', async () => {
+        await withTwoImages()
+        // A detail of a row of the widget was opened and closed before: nothing of it is left for the next one.
+        await editAssetOf(1)
+        await closeDetail()
+        await vi.waitFor(() => expect(rereadsOf('asset-12')).toHaveLength(1))
+        // The queue has a row of the asset of that row: a copy to the licence, which waits for the server.
+        await queue().addByCopyToLicence(QUEUE, extSystem, licence, ['asset-12'])
+        useUploadQueueDialog().uploadQueueDialog.value = QUEUE
+        await waits.elapse()
+        await vi.waitFor(() => expect(statuses()).toEqual([Uploaded]))
+        await flushPromises()
+
+        Array.from(
+          queueDialog()!.querySelectorAll<HTMLElement>('.dam-upload-queue__item')[0].querySelectorAll('button')
+        )
+          .find((button) => button.textContent?.trim() === damText('image.button.editAsset'))!
+          .click()
+        await vi.waitFor(() => expect(detail().asset?.id).toBe('asset-12'))
+        await flushPromises()
+        detailHasItsOwn('asset-12')
+        damKeepsAuthors()
+        await saveInDetail(['author-9'])
+        const readBefore = rereadsOf('asset-12').length
+        await closeDetail()
+        await waits.settle()
+
+        expect(detail().dialog).toBeNull()
+        expect(rereadsOf('asset-12')).toHaveLength(readBefore)
+        expect(images()[1]).toMatchObject({ damAuthors: [], showDamAuthors: true })
+      })
+
+      // Whether the page draws the pick of the authors goes by one ext system for the whole page, which "edit asset"
+      // sets to that of its asset. The rows that offered the pick when the detail closed are the ones that take the
+      // authors, whatever the page draws by the time the read ends.
+      it('gives the authors to the rows that offered the pick, also when the detail of an asset of an ext system without authors is opened before the read ends', async () => {
+        const OTHER = 300003
+        const OTHER_EXT_SYSTEM = 7
+        const config = useDamConfigStore(pinia)
+        const own = config.damConfigExtSystem.get(extSystem)!
+        config.damConfigLicenceExtSystem.set(OTHER, { name: '', extSystem: OTHER_EXT_SYSTEM })
+        config.damConfigExtSystem.set(OTHER_EXT_SYSTEM, {
+          ...own,
+          image: { ...own.image!, authors: { enabled: false, required: false } },
+        })
+        await withImages([12, 13], {}, { 13: OTHER })
+        damKeepsAuthors()
+        await editAssetOf(0)
+        await saveInDetail(['author-9'])
+        const held = dam.hold('GET', dam.routes.one)
+        await closeDetail()
+        await vi.waitFor(() => expect(held.waiting).toHaveLength(1))
+
+        await editAssetOf(1)
+        expect(offersAuthors()).toEqual([false, false])
+        held.release()
+        await taken(0)
+
+        expect(namesAskedOf('author-9')).toEqual([extSystem])
+        expect(images()[0]).toMatchObject({
+          damAuthors: ['author-9'],
+          showDamAuthors: false,
+          texts: { source: 'Name of author-9' },
+        })
+      })
+
+      it('reads nothing when the widget has turned read-only by the time the detail closes', async () => {
+        const mounted = await withTwoImages()
+        damKeepsAuthors()
+        await editAssetOf(1)
+        await saveInDetail(['author-9'])
+        await mounted.setProps({ readonly: true })
+
+        await closeDetail()
+        await waits.settle()
+
+        expect(rereadsOf('asset-12')).toEqual([])
+        expect(images()[1]).toMatchObject({ damAuthors: [], showDamAuthors: true, texts: { source: 'source 12' } })
+      })
+
+      it('writes nothing into its rows when it turns read-only while the asset is read', async () => {
+        const mounted = await withTwoImages()
+        damKeepsAuthors()
+        await editAssetOf(1)
+        await saveInDetail(['author-9'])
+        const held = dam.hold('GET', dam.routes.one)
+        await closeDetail()
+        await vi.waitFor(() => expect(held.waiting).toHaveLength(1))
+        await mounted.setProps({ readonly: true })
+
+        held.release()
+        await vi.waitFor(() => expect(namesAskedOf('author-9')).toHaveLength(1))
+        await waits.settle()
+
+        expect(images()[1]).toMatchObject({ damAuthors: [], showDamAuthors: true, texts: { source: 'source 12' } })
+      })
+
+      // The store of the images is one for every widget of the page. By the time the read ends the widget may be
+      // gone, and the store filled by the next one: with rows of the same asset when its entity has the same image.
+      it.each<[string, boolean]>([
+        ['finds authors in the asset', false],
+        ['fails', true],
+      ])(
+        'writes nothing and says nothing once the widget is gone, when the read %s: the rows of the next widget stay as they are',
+        async (_what, fails) => {
+          const first = await withTwoImages()
+          await editAssetOf(1)
+          const held = dam.hold('GET', dam.routes.one)
+          await closeDetail()
+          await vi.waitFor(() => expect(held.waiting).toHaveLength(1))
+
+          first.unmount()
+          await mountWidget([12, 11])
+          await vi.waitFor(() => expect(images()).toHaveLength(2))
+          await flushPromises()
+          await pickInRow(1, ['author-7'])
+
+          held.release(
+            fails ? { status: 500 } : { status: 200, data: { ...dam.assets.get('asset-12')!, authors: ['author-9'] } }
+          )
+          if (!fails) await vi.waitFor(() => expect(namesAskedOf('author-9')).toHaveLength(1))
+          await waits.settle()
+
+          expect(images()[1]).toMatchObject({ assetId: 'asset-12', damAuthors: ['author-7'], showDamAuthors: true })
+          expect(offersAuthors()).toEqual([false, true])
+          expect(shownAlerts()).toEqual([])
+        }
+      )
     }
   })
 })

@@ -27,6 +27,7 @@ import { mapUploadMetadataToImages } from '@/domains/dam/imageWidget/utils/metad
 import { storeToRefs } from 'pinia'
 import { useAssetDetailStore } from '@/domains/dam/assetDetail/store/assetDetailStore'
 import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
+import { isNull } from '@/shared/utils/common'
 
 const props = withDefaults(
   defineProps<{
@@ -81,12 +82,15 @@ const nothingToSave = computed(() => !items.value.some(hasMetadataToSave))
 // failed one has its asset and file ids too, and is no image to hand over.
 const isUploaded = (item: UploadQueueItem) => item.status === UploadQueueItemStatus.Uploaded
 const nothingToApply = computed(() => !items.value.some(isUploaded))
+// An uploaded row whose metadata did not come with its file, by a notification that is late or lost: its form is off.
+const isUploadedWithoutForm = (item: UploadQueueItem): item is UploadQueueItem & { assetId: DocId } =>
+  isUploaded(item) && !item.canEditMetadata && !isNull(item.assetId)
 
 const { t } = useI18n()
 const { toolbarColor } = useTheme()
 const { mdAndDown } = useDisplay()
 const v$ = useVuelidate({ $stopPropagation: true })
-const { showRecordWas, showValidationError, showErrorsDefault } = useAlerts()
+const { showRecordWas, showValidationError, showErrorsDefault, showWarningT } = useAlerts()
 const { damClient, endPointAsset, endPointAuthor, customUploadMetadataToImageMap } =
   useCommonAdminCoreDamOptions(damConfigName)
 
@@ -139,6 +143,18 @@ const onSaveAndApply = async () => {
   const itemsRaw = toRaw(items.value)
   if (itemsRaw.length === 0) return
   saveAndCloseButtonLoading.value = true
+  // The save skips a row without its form: its image is handed over without texts, and its asset stays unsaved. Such
+  // a row is asked about once more, as its own refresh asks. A form that comes of it is one the user has not seen:
+  // nothing is saved or handed over until the button is pressed again. Where none comes, all goes on as it did.
+  const withoutForm = itemsRaw.filter(isUploadedWithoutForm)
+  if (withoutForm.length > 0) {
+    await Promise.all(withoutForm.map((item) => uploadQueuesStore.refreshAsset(item.assetId)))
+    if (withoutForm.some((item) => item.canEditMetadata)) {
+      showWarningT('common.damImage.upload.metadataJustLoaded')
+      saveAndCloseButtonLoading.value = false
+      return
+    }
+  }
   v$.value.$touch()
   if (v$.value.$invalid) {
     showValidationError()
@@ -292,7 +308,6 @@ const showDetail = async (id: DocId) => {
                 <template #activator="{ props: fileInputProps }">
                   <VBtn
                     :aria-label="t('common.damImage.upload.add')"
-                    tabindex="-1"
                     icon
                     variant="text"
                     :height="34"

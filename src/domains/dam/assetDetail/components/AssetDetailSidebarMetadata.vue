@@ -69,7 +69,10 @@ const onSave = async () => {
   const savedSingleUse = mainFileSingleUse.value
   const tellsQueue = updateUploadStore.value
   try {
-    await updateAssetMetadata(damClient, endPointAsset, saved, props.extSystem, savedSingleUse)
+    const sent = updateAssetMetadata(damClient, endPointAsset, saved, props.extSystem, savedSingleUse)
+    // Kept where the host of the detail finds it: closed before the answer, the detail has its host wait for it.
+    assetDetailStore.setSaving(sent)
+    await sent
     if (tellsQueue) {
       await uploadQueueStore.updateFromDetail(saved, damConfigName, savedSingleUse)
     }

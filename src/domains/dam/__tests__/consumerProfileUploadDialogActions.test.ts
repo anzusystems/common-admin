@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, type Mock, vi } from 'vitest'
 import { flushPromises, mount, type VueWrapper } from '@vue/test-utils'
 import { createPinia, type Pinia, setActivePinia } from 'pinia'
+import { userEvent } from 'vitest/browser'
 import { CustomDataFormElementType } from '@/domains/customDataForm/types/CustomDataFormElementTypes'
 import {
   cmsConfiguration,
@@ -363,11 +364,16 @@ describe.each(consumerProfiles)('the buttons of the upload dialog under the $nam
       // The widget already has seven images.
       useImageStore(pinia).maxPosition = 7
       const lookupsBefore = damNameLookups(dam).length
+      const requestsBefore = dam.requests.length
       expect(toolbar().textContent).toContain(damText('upload.titleDone'))
 
       saveAndApply()!.click()
       await vi.waitFor(() => expect(wrapper!.emitted('apply')).toHaveLength(1))
 
+      // Every uploaded row has its form: nothing is asked about first. The save, and the names for the library's map.
+      expect(
+        dam.requests.slice(requestsBefore).map((request) => `${request.method} ${request.url.split('?')[0]}`)
+      ).toEqual([`PATCH ${bulkSave}`, ...(isCms ? [`GET /adm/v1/author/ext-system/${extSystem}/search`] : [])])
       expect(saves().map((request) => request.url)).toEqual([bulkSave])
       expect((dam.body(saves()[0]) as Array<{ id: string }>).map((sent) => sent.id)).toEqual([a.assetId, b.assetId])
       const [images] = wrapper!.emitted('apply')![0] as [ImageStoreItem[]]
@@ -452,34 +458,180 @@ describe.each(consumerProfiles)('the buttons of the upload dialog under the $nam
     })
 
     // With the notifications a file is uploaded before its metadata comes, and "save and apply" is offered by then.
-    // The save skips a row without its metadata: here it has nothing to send, and answers for no asset.
+    // The save skips a row without its metadata, so its image was handed over without its texts and its asset stayed
+    // unsaved, without a word. The dialog asks about such a row once more first, as the refresh of the row asks: a
+    // form that comes of it is for the user to see before anything is saved or handed over.
     if (profile.notifications) {
-      it('has the widget offer them for no image of a row uploaded without its metadata, which the save skips', async () => {
-        const [a] = await pick('a.jpg')
-        await vi.waitFor(() => expect(statuses()).toEqual([Processing]))
-        dam.fileBecomes(a.assetId!, AssetFileProcessStatus.Processed, {
-          ...metadata({ description: 'from the server' }),
-          authors: ['author-1'],
-        })
-        socket.deliver(DamNotificationName.AssetFileProcessed, { asset: a.assetId, id: a.fileId })
-        await vi.waitFor(() => expect(statuses()).toEqual([Uploaded]))
-        await flushPromises()
-        expect(a).toMatchObject({ canEditMetadata: false, authors: [] })
+      const justLoaded = ['warning', alertText('common.damImage.upload.metadataJustLoaded')]
+      const sentIds = () =>
+        saves().map((request) => (dam.body(request) as Array<{ id: string }>).map((sent) => sent.id))
+      const spins = () => saveAndApply()!.classList.contains('v-btn--loading')
+      const readsOf = (asset: string | null) =>
+        dam.sentTo('GET', dam.routes.one).filter((request) => request.url === `${endPoints.asset}/${asset}`)
 
+      /**
+       * Two files are uploaded: the first has its form, the second is announced as processed and its metadata is
+       * not. The DAM has the metadata of both, an author of the second, and its file as an internal one.
+       */
+      const secondWithoutItsForm = async () => {
+        const [a, b] = await pick('a.jpg', 'b.jpg')
+        await vi.waitFor(() => expect(statuses()).toEqual([Processing, Processing]))
+        dam.fileBecomes(a.assetId!, AssetFileProcessStatus.Processed, metadata({ description: 'first' }))
+        dam.fileBecomes(b.assetId!, AssetFileProcessStatus.Processed, {
+          ...metadata({ description: 'second' }),
+          authors: ['author-1'],
+          mainFileInternal: true,
+        })
+        socket.deliver(DamNotificationName.AssetFileProcessed, { asset: b.assetId, id: b.fileId })
+        await vi.waitFor(() => expect(statuses()).toEqual([Processing, Uploaded]))
+        await asked([Uploaded, Uploaded])
+        await damNamesAsked()
+        expect([a.canEditMetadata, b.canEditMetadata]).toEqual([true, false])
+        expect(b.authors).toEqual([])
+        return { a, b }
+      }
+
+      it('reads a row uploaded without its form once more, and stops with a warning when its form comes: pressed again, it saves and hands over all', async () => {
+        const { a, b } = await secondWithoutItsForm()
+        const readsBefore = dam.assetReads().length
+
+        saveAndApply()!.click()
+        await vi.waitFor(() => expect(shownAlerts()).toEqual([justLoaded]))
+        await vi.waitFor(() => expect(spins()).toBe(false))
+        await flushPromises()
+
+        // The one read the refresh of that row makes: its asset, by its id.
+        expect(
+          dam
+            .assetReads()
+            .slice(readsBefore)
+            .map((request) => request.url)
+        ).toEqual([`${endPoints.asset}/${b.assetId}`])
+        expect(b).toMatchObject({
+          canEditMetadata: true,
+          authors: ['author-1'],
+          customData: { description: 'second' },
+        })
+        // Nothing is saved or handed over, and the dialog stays as it is, for the user to look at the new form.
+        expect(saves()).toEqual([])
+        expect(wrapper!.emitted('apply')).toBeUndefined()
+        expect(statuses()).toEqual([Uploaded, Uploaded])
+        expect(useUploadQueueDialog().uploadQueueDialog.value).toBe(QUEUE)
+        expect([saveAndApply()!.disabled, save().disabled]).toEqual([false, false])
+        expect(useUploadQueueDialog().uploadQueueDialogSaving.value).toBeNull()
+
+        await damNamesAsked()
         saveAndApply()!.click()
         await vi.waitFor(() => expect(wrapper!.emitted('apply')).toHaveLength(1))
 
-        expect(saves()).toEqual([])
+        // No row is without its form now: nothing more is read, and both are saved in one request.
+        expect(dam.assetReads()).toHaveLength(readsBefore + 1)
+        expect(sentIds()).toEqual([[a.assetId, b.assetId]])
         const [images] = wrapper!.emitted('apply')![0] as [ImageStoreItem[]]
         expect(images).toMatchObject([
+          { assetId: a.assetId, texts: { description: 'first', source: '' }, damAuthors: [], showDamAuthors: true },
           {
-            assetId: a.assetId,
-            texts: { description: '', source: '' },
-            dam: { damId: a.fileId },
-            damAuthors: [],
+            assetId: b.assetId,
+            texts: { description: 'second', source: 'Name of author-1' },
+            dam: { damId: b.fileId },
+            damAuthors: ['author-1'],
             showDamAuthors: false,
           },
         ])
+        expect(shownAlerts()).toEqual([justLoaded])
+      })
+
+      // As before: the save skips the row, and its image is handed over without texts and authors. Whether its file
+      // is internal the row knows from the read that settled it: the save has no answer to take it from.
+      it.each<[string, FakeDamAnswer]>([
+        ['fails', { status: 500 }],
+        ['finds no asset', { status: 404 }],
+      ])(
+        'hands over a row uploaded without its form as it is when the read of its asset %s, and says nothing',
+        async (_what, answer) => {
+          const { a, b } = await secondWithoutItsForm()
+          dam.reply((request) =>
+            request.method === 'GET' && request.url === `${endPoints.asset}/${b.assetId}` ? answer : undefined
+          )
+          const readsBefore = readsOf(b.assetId).length
+
+          saveAndApply()!.click()
+          await vi.waitFor(() => expect(wrapper!.emitted('apply')).toHaveLength(1))
+
+          expect(readsOf(b.assetId)).toHaveLength(readsBefore + 1)
+          expect(b.canEditMetadata).toBe(false)
+          expect(sentIds()).toEqual([[a.assetId]])
+          const [images] = wrapper!.emitted('apply')![0] as [ImageStoreItem[]]
+          expect(images).toMatchObject([
+            { assetId: a.assetId, texts: { description: 'first' }, damAuthors: [], showDamAuthors: true },
+            {
+              assetId: b.assetId,
+              texts: { description: '', source: '' },
+              dam: { damId: b.fileId, internal: true },
+              damAuthors: [],
+              showDamAuthors: false,
+            },
+          ])
+          expect(shownAlerts()).toEqual([])
+        }
+      )
+
+      // The read is part of the press: the button spins from the first of it, and the dialog takes no file meanwhile.
+      it('takes no second press while it reads: one read, one warning, and its host is told it is busy', async () => {
+        const { b } = await secondWithoutItsForm()
+        const readsBefore = readsOf(b.assetId).length
+        const held = dam.hold('GET', dam.routes.one)
+
+        saveAndApply()!.click()
+        expect(useUploadQueueDialog().uploadQueueDialogSaving.value).toBe(QUEUE)
+        await vi.waitFor(() => expect(held.waiting).toHaveLength(1))
+        await flushPromises()
+        expect(spins()).toBe(true)
+        expect(save().disabled).toBe(true)
+        saveAndApply()!.click()
+        saveAndApply()!.click()
+        await flushPromises()
+
+        held.release()
+        await vi.waitFor(() => expect(spins()).toBe(false))
+        await waits.settle()
+        expect(held.waiting).toEqual([])
+        expect(readsOf(b.assetId)).toHaveLength(readsBefore + 1)
+        expect(shownAlerts()).toEqual([justLoaded])
+        expect(saves()).toEqual([])
+        expect(wrapper!.emitted('apply')).toBeUndefined()
+        expect(useUploadQueueDialog().uploadQueueDialogSaving.value).toBeNull()
+      })
+
+      // The read comes first: what a form that has just come holds is checked with the rest, on the next press.
+      it('reads such a row before it checks the forms: a field to fix is said on the next press', async () => {
+        const elements = useDamConfigStore(pinia).damConfigAssetCustomFormElements.get(extSystem)![DamAssetType.Image]
+        elements.find((element) => element.property === 'title')!.attributes.required = true
+        const { b } = await secondWithoutItsForm()
+
+        saveAndApply()!.click()
+        await vi.waitFor(() => expect(shownAlerts()).toEqual([justLoaded]))
+        await vi.waitFor(() => expect(spins()).toBe(false))
+        expect(b.canEditMetadata).toBe(true)
+
+        saveAndApply()!.click()
+        await vi.waitFor(() => expect(shownAlerts()).toEqual([justLoaded, fixTheForm]))
+        await flushPromises()
+        expect(saves()).toEqual([])
+        expect(wrapper!.emitted('apply')).toBeUndefined()
+      })
+
+      it('leaves "save" as it was: it asks about no row, and sends the rows that have their form', async () => {
+        const { a, b } = await secondWithoutItsForm()
+        const readsBefore = dam.assetReads().length
+
+        save().click()
+        await vi.waitFor(() => expect(shownAlerts()).toEqual([updated]))
+
+        expect(dam.assetReads()).toHaveLength(readsBefore)
+        expect(sentIds()).toEqual([[a.assetId]])
+        expect(b.canEditMetadata).toBe(false)
+        expect(wrapper!.emitted('apply')).toBeUndefined()
       })
     }
 
@@ -619,6 +771,42 @@ describe.each(consumerProfiles)('the buttons of the upload dialog under the $nam
       held.release()
       await vi.waitFor(() => expect(pressed().classList.contains('v-btn--loading')).toBe(false))
       expect(savingTold()).toBeNull()
+    })
+
+    // The input under the "+" is hidden, and the dropzone takes the mouse alone: the "+" is the one way to add a file
+    // to the open dialog from the keyboard. Tab used to pass it by.
+    it('are added from the keyboard too: Tab stops at the "+", and Enter and Space open the choice of files', async () => {
+      await oneUploaded()
+      save().focus()
+
+      await userEvent.tab()
+      expect(document.activeElement).toBe(plus())
+
+      await userEvent.keyboard('{Enter}')
+      expect(choicesOpened).toBe(1)
+      // The input takes no second click within a moment of the first.
+      await waits.settle(300)
+      await userEvent.keyboard(' ')
+      expect(choicesOpened).toBe(2)
+
+      await choose('picked.jpg')
+      await vi.waitFor(() => expect(titles()).toEqual(['a.jpg', 'picked.jpg']))
+    })
+
+    // Off, the "+" is no stop of Tab: nor is "save" while "save and apply" runs.
+    it('are not offered to the keyboard while a save runs: Tab passes the "+" by', async () => {
+      const held = dam.hold('PATCH', dam.routes.bulkMetadata)
+      await oneUploaded()
+      saveAndApply()!.click()
+      await vi.waitFor(() => expect(held.waiting).toHaveLength(1))
+      await flushPromises()
+      saveAndApply()!.focus()
+
+      await userEvent.tab()
+      expect(document.activeElement).toBe(massOperations())
+
+      held.release()
+      await vi.waitFor(() => expect(saveAndApply()!.classList.contains('v-btn--loading')).toBe(false))
     })
 
     // The host takes the dialog away when its close button is used, also in the middle of a save.

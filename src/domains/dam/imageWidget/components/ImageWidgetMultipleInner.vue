@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import type { DocId, IntegerId } from '@/shared/types/common'
-import { computed, inject, onMounted, ref, type ShallowRef, toRaw, watch } from 'vue'
+import { computed, inject, onBeforeUnmount, onMounted, ref, type ShallowRef, toRaw, watch } from 'vue'
 import { isNull, isString, isUndefined } from '@/shared/utils/common'
 import type { UploadQueueKey } from '@/domains/dam/types/UploadQueue'
 import type { DamConfigLicenceExtSystemReturnType } from '@/domains/dam/types/DamConfig'
@@ -10,6 +10,7 @@ import { storeToRefs } from 'pinia'
 import { useCommonAdminImageOptions } from '@/domains/dam/imageWidget/composables/commonAdminImageOptions'
 import { useAlerts } from '@/domains/system/composables/alerts'
 import {
+  type AssetDetailItemDto,
   type AssetSearchListItemDto,
   DamAssetType,
   type DamImageCopyToLicenceResponse,
@@ -26,6 +27,7 @@ import AssetDetailDialog from '@/domains/dam/assetDetail/components/AssetDetailD
 import {
   type AssetAuthorsItems,
   bulkUpdateAssetsAuthors,
+  fetchAsset,
   fetchAssetByFileId,
   fetchAssetListByIds,
   type IdsGroupedByLicences,
@@ -427,9 +429,21 @@ const {
   customAssetSelectMetadataToImageMap,
 } = useCommonAdminCoreDamOptions(damConfigName)
 
+// Whether the detail was opened by "edit asset" of a row, until it closes. Not so the detail a row of the queue
+// dialog opens, which is drawn here as well: nothing is read when that one closes.
+let detailOfRow = false
+// The read of an asset whose detail has closed: the save of the widget waits for it.
+let detailAssetRead: Promise<void> = Promise.resolve()
+// Such a read may end once the widget is gone, and the images in the store are the next widget's by then.
+let unmounted = false
+onBeforeUnmount(() => {
+  unmounted = true
+})
+
 const onEditAsset = async (assetFileId: DocId) => {
   assetLoading.value = true
   assetDialog.value = props.queueKey
+  detailOfRow = true
   try {
     const asset = await fetchAssetByFileId(damClient, endPointAsset, assetFileId)
     const extSystem = await getExtSystemByLicence(asset.licence)
@@ -464,6 +478,61 @@ const authorEnabled = computed(() => {
   return !!getDamConfigExtSystem(cachedExtSystemId.value)?.[DamAssetType.Image]?.authors?.enabled
 })
 
+/**
+ * The detail may have given authors to an asset whose row offers the pick of them. Left as it was, the row would write
+ * what is picked in it over those authors with the save of the widget, and with nothing picked its image would be
+ * saved without a source. So the asset is read again, and once it has authors its rows that offer the pick take them
+ * over what was picked there, as a row of an asset picked with its authors has them: named in its source, under the
+ * ext system of the licence of the asset. A row that has its source is left alone: that text is the user's.
+ * `detailSave`: the save of the detail that was on its way when it closed. `pageExtSystem`: the ext system the page
+ * asked for names under by then.
+ */
+const takeAuthorsOfDetailAsset = async (assetId: DocId, detailSave: Promise<void> | null, pageExtSystem: IntegerId) => {
+  try {
+    // Read before the DAM has answered that save, the asset would be as it was before it.
+    await detailSave
+    const asset = await fetchAsset(damClient, endPointAsset, assetId)
+    if (asset.authors.length === 0) return
+    const extSystem = (await getExtSystemByLicence(asset.licence)) ?? pageExtSystem
+    const authorsRes = await fetchAuthorListByIds(damClient, endPointAuthor, extSystem, asset.authors)
+    // The widget is gone, or has turned read-only meanwhile: nothing is written.
+    if (unmounted || props.readonly) return
+    const authorNames: string[] = []
+    asset.authors.forEach((authorId) => {
+      const name = authorsRes.find((author) => author.id === authorId)?.name
+      if (!isUndefined(name) && name.trim().length > 0) {
+        authorNames.push(name)
+      }
+    })
+    images.value.forEach((image) => {
+      // By the row's own flag. Whether the page draws the pick goes by an ext system that the detail of another asset,
+      // opened meanwhile, may have changed.
+      if (image.assetId !== asset.id || !image.showDamAuthors) return
+      image.damAuthors = [...asset.authors]
+      image.texts.source = authorNames.join(', ')
+      image.showDamAuthors = false
+    })
+  } catch (e) {
+    if (!unmounted && !showErrorsDefault(e)) showUnknownError()
+  }
+}
+
+/**
+ * `shown`: the asset the detail showed, which a late answer can make another than that of the row that opened it.
+ * What the read goes by is noted here, before anything is awaited: whether a row of that asset offers the pick, the
+ * save of the detail that is on its way, and the ext system of the page.
+ */
+const onAssetDetailClose = (shown: AssetDetailItemDto | null) => {
+  const ofRow = detailOfRow
+  detailOfRow = false
+  if (!ofRow || isNull(shown) || props.readonly || !authorEnabled.value) return
+  const assetId = shown.id
+  if (!images.value.some((image) => image.assetId === assetId && image.showDamAuthors)) return
+  const detailSave = assetDetailStore.saving
+  const pageExtSystem = cachedExtSystemId.value
+  detailAssetRead = detailAssetRead.then(() => takeAuthorsOfDetailAsset(assetId, detailSave, pageExtSystem))
+}
+
 const saveImages = async () => {
   // Nothing of the user's to write; the images stay as they were loaded.
   if (props.readonly) return true
@@ -473,6 +542,9 @@ const saveImages = async () => {
     showUnknownError()
     return false
   }
+  // The asset of a detail that has just closed is still being read: its rows are not written before they have its
+  // authors.
+  await detailAssetRead
   v$.value.$touch()
   if (v$.value.$invalid) {
     showValidationError()
@@ -762,6 +834,7 @@ onMounted(() => {
       :queue-key="queueKey"
       :config-name="damConfigName"
       :ext-system="cachedExtSystemId"
+      @close="onAssetDetailClose"
     />
     <ImageWidgetMultipleLimitDialog
       ref="limitDialogComponent"

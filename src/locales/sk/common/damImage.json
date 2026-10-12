@@ -162,6 +162,7 @@
     "stopConfirmQuestion": "Chcete ukončiť nahrávanie?",
     "stopConfirm": "Zastaviť",
     "onlyOneFile": "Sem sa dá nahrať len jeden súbor; použije sa prvý.",
+    "metadataJustLoaded": "Niektorým súborom sa práve načítali metadáta. Skontrolujte ich a uložte znova.",
     "limits": {
       "uploadWarning": "Varovanie pri nahrávaní",
       "onUploadLimit": "Dosiahli ste limit nahrávania ({limit}). Dokončite nahrávanie a skúste znova.",

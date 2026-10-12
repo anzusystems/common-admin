@@ -162,6 +162,7 @@
     "stopConfirmQuestion": "Do you want to stop the upload?",
     "stopConfirm": "Stop",
     "onlyOneFile": "Only one file can be uploaded here; the first one is used.",
+    "metadataJustLoaded": "The metadata of some files have just been loaded. Check them and save again.",
     "limits": {
       "uploadWarning": "Upload warning",
       "onUploadLimit": "You are already on upload limit ({limit}). Finish upload, then try again.",

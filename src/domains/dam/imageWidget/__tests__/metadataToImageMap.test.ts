@@ -215,6 +215,22 @@ describe('the map of an upload to images', () => {
       expect(images[1]!.texts.source).toBe('Anna Author')
     })
 
+    // The answer of the save says whether the main file is internal. Without an answer for its asset the row says
+    // it, which has it from the read that settled it: the image of an internal file used to come as one that is not.
+    it.each([
+      ['knows it is', true, true],
+      ['knows it is not', false, false],
+      ['does not know', null, false],
+    ])(
+      'mark the image of a row the save answered nothing for internal when the row %s',
+      async (_what, mainFileInternal, internal) => {
+        const [image] = await map([row('skipped', { mainFileInternal })], [saved('a')])
+
+        expect(image!.dam.internal).toBe(internal)
+        expect(image!.flags).toEqual({ showSource: true, internal: false, overrideInternal: false })
+      }
+    )
+
     it('are none when the queue is empty: nothing is asked for', async () => {
       expect(await map([], [])).toEqual([])
       expect(dam.requests).toEqual([])

@@ -169,6 +169,39 @@ describe.each(consumerProfiles)('the save of the detail of an asset under the $n
     expect(shownAlerts()).toEqual([['success', alertText('common.alert.recordWas.updated')]])
   })
 
+  // The form is not locked while the save runs, and the detail can be closed before the DAM answers. Its host may
+  // read the asset again then: it finds the save that is on its way in the store of the detail, and waits for it.
+  it.each<[string, FakeDamAnswer | undefined]>([
+    ['answers it', undefined],
+    ['refuses it', { status: 500 }],
+  ])(
+    'keeps the save that is on its way where its host finds it, until the DAM %s: never as one that fails',
+    async (_what, answer) => {
+      const held = dam.hold('PATCH', dam.routes.bulkMetadata)
+      await openDetail()
+      const detail = useAssetDetailStore(pinia)
+      expect(detail.saving).toBeNull()
+
+      save().click()
+      await vi.waitFor(() => expect(held.waiting).toHaveLength(1))
+      const onItsWay = detail.saving
+      expect(onItsWay).toBeInstanceOf(Promise)
+      // Pressed again while it runs, the button sends nothing: the save on its way is still that one.
+      save().click()
+      await flushPromises()
+      expect(detail.saving).toBe(onItsWay)
+      // The detail goes, and its save goes on.
+      wrapper!.unmount()
+      wrapper = undefined
+      expect(detail.saving).toBe(onItsWay)
+
+      held.release(answer)
+      await expect(onItsWay).resolves.toBeUndefined()
+      await flushPromises()
+      expect(detail.saving).toBeNull()
+    }
+  )
+
   // Opened from a row of the upload queue, the detail tells the queue what it saved, and the queue reads the asset
   // once more. When that read fails the rows take what the detail saved, and the switch it keeps apart from the
   // asset: left as they were, the next save of the queue would send their old values over the save of the detail.

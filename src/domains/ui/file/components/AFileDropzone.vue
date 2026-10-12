@@ -63,6 +63,7 @@ const { t } = useI18n()
       'a-file-dropzone--bg': !transparent,
       'a-file-dropzone--over': isOverDropZone && isDraggingFile,
       'a-file-dropzone--possibility': isDraggingFile,
+      'a-file-dropzone--disabled': disabled,
       [`a-file-dropzone--${variant}`]: true,
       [`a-file-dropzone--${size}`]: true,
       [`a-file-dropzone--hover-only`]: hoverOnly,
@@ -146,7 +147,8 @@ $class-name-root: 'a-file-dropzone';
     display: none;
   }
 
-  &--hide-text .text {
+  &--hide-text .text,
+  &--disabled .text {
     display: none;
   }
 

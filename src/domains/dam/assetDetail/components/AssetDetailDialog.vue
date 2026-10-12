@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
 import { useAssetDetailStore } from '@/domains/dam/assetDetail/store/assetDetailStore'
-import { DamAssetType } from '@/domains/dam/types/Asset'
+import { type AssetDetailItemDto, DamAssetType } from '@/domains/dam/types/Asset'
 import AssetDetailDialogFrame from '@/domains/dam/assetDetail/components/AssetDetailDialogFrame.vue'
 import AssetDetailDialogSidebar from '@/domains/dam/assetDetail/components/AssetDetailDialogSidebar.vue'
 import { assetDetailViewOfAsset } from '@/domains/dam/assetDetail/composables/assetDetailView'
@@ -24,7 +24,8 @@ const props = withDefaults(
 )
 
 const emit = defineEmits<{
-  (e: 'close'): void
+  /** `shown`: the asset the detail showed when it closed; none when it was closed from its loader, or had none. */
+  (e: 'close', shown: AssetDetailItemDto | null): void
 }>()
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const damConfigName = useDamConfigName(props.configName)
@@ -39,9 +40,11 @@ const { simpleAssetSidebarEnabled } = useCommonAdminCoreDamOptions(damConfigName
 const view = computed(() => assetDetailViewOfAsset(asset.value, simpleAssetSidebarEnabled))
 
 const closeDialog = () => {
+  // Noted before the store is emptied: its host cannot ask the store what was shown.
+  const shown = loading.value ? null : asset.value
   assetDetailStore.setAsset(null)
   dialog.value = null
-  emit('close')
+  emit('close', shown)
 }
 
 const toolbarTitle = computed(() => {
