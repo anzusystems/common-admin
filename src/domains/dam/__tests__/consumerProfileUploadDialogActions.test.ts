@@ -15,7 +15,7 @@ import { alertText, damText, forgetAlerts, shownAlerts } from '@/domains/dam/__t
 import { useAssetDetailStore } from '@/domains/dam/assetDetail/store/assetDetailStore'
 import { initCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
 import { destroyDamNotifications, initDamNotifications } from '@/domains/dam/composables/damNotifications'
-import { useDamNotificationsEventBus } from '@/domains/dam/composables/damNotificationsEventBus'
+import { DamNotificationName, useDamNotificationsEventBus } from '@/domains/dam/composables/damNotificationsEventBus'
 import { useDamConfigStore } from '@/domains/dam/config/store/damConfigStore'
 import { useImageStore } from '@/domains/dam/imageWidget/store/imageStore'
 import type { UploadMetadataToImageMapFn } from '@/domains/dam/imageWidget/utils/metadataToImageMap'
@@ -92,10 +92,15 @@ describe.each(consumerProfiles)('the buttons of the upload dialog under the $nam
 
   const queue = () => useUploadQueuesStore(pinia)
   const rowsOfQueue = () => queue().getQueueItems(QUEUE)
-  /** Files are picked: the widget queues them and opens the dialog of its queue. */
-  const pick = async (...names: string[]) => {
-    await queue().addByFiles(QUEUE, extSystem, licence, names.map(photo))
-    wrapper = mount(UploadQueueDialog, {
+  /**
+   * The dialog over its queue. `takesFiles`: with its real "+" and dropzone, whose files are queued as the widget
+   * queues them; left out, the two are not drawn.
+   */
+  const mountDialog = (takesFiles = false) => {
+    const add = (files: File[]) => {
+      if (files.length > 0) void queue().addByFiles(QUEUE, extSystem, licence, files)
+    }
+    return mount(UploadQueueDialog, {
       attachTo: document.body,
       props: {
         queueKey: QUEUE,
@@ -104,6 +109,7 @@ describe.each(consumerProfiles)('the buttons of the upload dialog under the $nam
         extSystem,
         accept: undefined,
         maxSizes: undefined,
+        ...(takesFiles ? { onFilesInput: add, onDrop: add } : {}),
       },
       global: {
         plugins: [pinia],
@@ -113,11 +119,16 @@ describe.each(consumerProfiles)('the buttons of the upload dialog under the $nam
           AssetImage: true,
           AFormRemoteAutocompleteWithCached: true,
           AssetQueueSelectedSidebar: true,
-          AFileInput: true,
-          AFileDropzone: true,
+          AFileInput: !takesFiles,
+          AFileDropzone: !takesFiles,
         },
       },
     })
+  }
+  /** Files are picked: the widget queues them and opens the dialog of its queue. */
+  const pick = async (...names: string[]) => {
+    await queue().addByFiles(QUEUE, extSystem, licence, names.map(photo))
+    wrapper = mountDialog()
     await flushPromises()
     return rowsOfQueue()
   }
@@ -417,6 +428,61 @@ describe.each(consumerProfiles)('the buttons of the upload dialog under the $nam
       expect([extSystemHanded, licenceHanded]).toEqual([extSystem, licence])
     })
 
+    // The images are made of what the save answers. An asset it has no answer for is handed over all the same,
+    // without authors, and whether it has any is not known: the widget is told to offer the authors of the DAM only
+    // for an asset the save answered for. What is picked there is written into the asset in place of its authors.
+    it('has the widget offer the authors of the DAM for no image whose asset the save did not answer for', async () => {
+      const { a, b } = await twoUploadedOneFailed()
+      dam.reply((request) =>
+        request.method === 'PATCH' && dam.routes.bulkMetadata.test(request.url)
+          ? { status: 200, data: (dam.body(request) as Array<{ id: string }>).filter((sent) => sent.id !== b.assetId) }
+          : undefined
+      )
+
+      saveAndApply()!.click()
+      await vi.waitFor(() => expect(wrapper!.emitted('apply')).toHaveLength(1))
+
+      const [images] = wrapper!.emitted('apply')![0] as [ImageStoreItem[]]
+      expect(images.map((image) => [image.assetId, image.damAuthors, image.showDamAuthors])).toEqual([
+        // Answered for: as before.
+        [a.assetId, isCms ? ['author-1', 'author-2'] : [], !isCms],
+        [b.assetId, [], false],
+      ])
+      expect(images[1]).toMatchObject({ texts: { description: '', source: '' }, dam: { damId: b.fileId } })
+    })
+
+    // With the notifications a file is uploaded before its metadata comes, and "save and apply" is offered by then.
+    // The save skips a row without its metadata: here it has nothing to send, and answers for no asset.
+    if (profile.notifications) {
+      it('has the widget offer them for no image of a row uploaded without its metadata, which the save skips', async () => {
+        const [a] = await pick('a.jpg')
+        await vi.waitFor(() => expect(statuses()).toEqual([Processing]))
+        dam.fileBecomes(a.assetId!, AssetFileProcessStatus.Processed, {
+          ...metadata({ description: 'from the server' }),
+          authors: ['author-1'],
+        })
+        socket.deliver(DamNotificationName.AssetFileProcessed, { asset: a.assetId, id: a.fileId })
+        await vi.waitFor(() => expect(statuses()).toEqual([Uploaded]))
+        await flushPromises()
+        expect(a).toMatchObject({ canEditMetadata: false, authors: [] })
+
+        saveAndApply()!.click()
+        await vi.waitFor(() => expect(wrapper!.emitted('apply')).toHaveLength(1))
+
+        expect(saves()).toEqual([])
+        const [images] = wrapper!.emitted('apply')![0] as [ImageStoreItem[]]
+        expect(images).toMatchObject([
+          {
+            assetId: a.assetId,
+            texts: { description: '', source: '' },
+            dam: { damId: a.fileId },
+            damAuthors: [],
+            showDamAuthors: false,
+          },
+        ])
+      })
+    }
+
     it('hands over nothing when the DAM refuses the save, and says the save failed', async () => {
       refuseSaves({ status: 500 })
       await twoUploadedOneFailed()
@@ -479,6 +545,137 @@ describe.each(consumerProfiles)('the buttons of the upload dialog under the $nam
       expect(saves()).toHaveLength(1)
       expect(wrapper!.emitted('apply') ?? []).toHaveLength(applies ? 1 : 0)
       expect(shownAlerts()).toEqual(applies ? [] : [updated])
+    })
+  })
+
+  // "Save and apply" ends with the host closing the dialog and emptying its queue: a file added while it ran began
+  // to upload and went with the queue, without a word, its asset left in the DAM. While either save runs the dialog
+  // takes no file: its "+" is off, and its dropzone lets a drop pass.
+  describe('files added through the dialog', () => {
+    let choicesOpened = 0
+
+    const plus = () => toolbar().querySelector<HTMLButtonElement>(`button[aria-label="${damText('upload.add')}"]`)!
+    const fileInput = () => toolbar().querySelector<HTMLInputElement>('input[type="file"]')!
+    const titles = () => rowsOfQueue().map((row) => row.displayTitle)
+    /** The queue whose dialog says it is saving: what a host reads before it takes a file for that queue. */
+    const savingTold = () => useUploadQueueDialog().uploadQueueDialogSaving.value
+    const carrying = (names: string[]) => {
+      const transfer = new DataTransfer()
+      names.forEach((name) => transfer.items.add(photo(name)))
+      return transfer
+    }
+    /** One uploaded file, in the dialog with its real "+" and dropzone. The file choice the "+" opens is counted. */
+    const oneUploaded = async () => {
+      await queue().addByFiles(QUEUE, extSystem, licence, [photo('a.jpg')])
+      wrapper = mountDialog(true)
+      await flushPromises()
+      await vi.waitFor(() => expect(statuses()).toEqual([Processing]))
+      const [a] = rowsOfQueue()
+      dam.fileBecomes(a.assetId!, AssetFileProcessStatus.Processed, metadata({ description: 'from the server' }))
+      await asked([Uploaded])
+      choicesOpened = 0
+      // The "+" clicks the input, which opens the choice of the system: counted here, and not opened.
+      fileInput().addEventListener('click', (event) => {
+        choicesOpened++
+        event.preventDefault()
+      })
+    }
+    /** The choice of the system answers with these files. */
+    const choose = async (...names: string[]) => {
+      fileInput().files = carrying(names).files
+      fileInput().dispatchEvent(new Event('change', { bubbles: true }))
+      await flushPromises()
+    }
+    const drop = async (...names: string[]) => {
+      document.body
+        .querySelector<HTMLElement>('.a-file-dropzone')!
+        .dispatchEvent(new DragEvent('drop', { dataTransfer: carrying(names), bubbles: true, cancelable: true }))
+      await flushPromises()
+    }
+
+    it.each<[string, () => HTMLButtonElement]>([
+      ['"save and apply"', () => saveAndApply()!],
+      ['"save"', () => save()],
+    ])('are not taken while %s runs: the "+" is off, and a drop adds nothing', async (_name, pressed) => {
+      const held = dam.hold('PATCH', dam.routes.bulkMetadata)
+      await oneUploaded()
+      expect(plus().disabled).toBe(false)
+
+      pressed().click()
+      // Its host is told at once, for an entry of its own to the queue: not a moment after the save began.
+      expect(savingTold()).toBe(QUEUE)
+      await vi.waitFor(() => expect(held.waiting).toHaveLength(1))
+      await flushPromises()
+
+      expect(plus().disabled).toBe(true)
+      plus().click()
+      await drop('dropped.jpg')
+      await waits.settle()
+      expect(choicesOpened).toBe(0)
+      expect(titles()).toEqual(['a.jpg'])
+      expect(dam.sentTo('POST', dam.routes.start)).toHaveLength(1)
+      expect(savingTold()).toBe(QUEUE)
+
+      held.release()
+      await vi.waitFor(() => expect(pressed().classList.contains('v-btn--loading')).toBe(false))
+      expect(savingTold()).toBeNull()
+    })
+
+    // The host takes the dialog away when its close button is used, also in the middle of a save.
+    it('takes back what it told its host of a save when it goes in the middle of one', async () => {
+      const held = dam.hold('PATCH', dam.routes.bulkMetadata)
+      await oneUploaded()
+      saveAndApply()!.click()
+      await vi.waitFor(() => expect(held.waiting).toHaveLength(1))
+      expect(savingTold()).toBe(QUEUE)
+
+      wrapper!.unmount()
+      wrapper = undefined
+      expect(savingTold()).toBeNull()
+
+      held.release()
+      await waits.settle()
+      expect(savingTold()).toBeNull()
+    })
+
+    it('tells its host nothing of a save that a field of a row stops before it is sent', async () => {
+      const elements = useDamConfigStore(pinia).damConfigAssetCustomFormElements.get(extSystem)![DamAssetType.Image]
+      elements.find((element) => element.property === 'description')!.attributes.required = true
+      await queue().addByFiles(QUEUE, extSystem, licence, [photo('a.jpg')])
+      wrapper = mountDialog(true)
+      await flushPromises()
+      await vi.waitFor(() => expect(statuses()).toEqual([Processing]))
+      dam.fileBecomes(rowsOfQueue()[0].assetId!, AssetFileProcessStatus.Processed, metadata({}))
+      await asked([Uploaded])
+
+      saveAndApply()!.click()
+      await flushPromises()
+
+      expect(shownAlerts()).toEqual([fixTheForm])
+      expect([savingTold(), plus().disabled]).toEqual([null, false])
+    })
+
+    // The dialog stays open after "save", and after a save the DAM refused: files are added to it as before.
+    it.each<[string, () => HTMLButtonElement, FakeDamAnswer | undefined]>([
+      ['"save" that went through', () => save(), undefined],
+      ['"save" the DAM refused', () => save(), { status: 500 }],
+      ['"save and apply" the DAM refused', () => saveAndApply()!, { status: 500 }],
+    ])('are taken again after %s: picked with the "+", and dropped', async (_name, pressed, refusal) => {
+      if (refusal) refuseSaves(refusal)
+      await oneUploaded()
+
+      pressed().click()
+      await vi.waitFor(() => expect(saves()).toHaveLength(1))
+      await vi.waitFor(() => expect(pressed().classList.contains('v-btn--loading')).toBe(false))
+      await flushPromises()
+
+      expect(plus().disabled).toBe(false)
+      plus().click()
+      expect(choicesOpened).toBe(1)
+      await choose('picked.jpg')
+      await vi.waitFor(() => expect(titles()).toEqual(['a.jpg', 'picked.jpg']))
+      await drop('dropped.jpg')
+      await vi.waitFor(() => expect(titles()).toEqual(['a.jpg', 'picked.jpg', 'dropped.jpg']))
     })
   })
 

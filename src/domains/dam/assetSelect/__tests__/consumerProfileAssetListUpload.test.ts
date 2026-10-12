@@ -8,7 +8,12 @@ import {
   installConsumerProfile,
 } from '@/domains/dam/__tests__/support/consumerProfiles'
 import { type DamSocket, stubDamSocket } from '@/domains/dam/__tests__/support/damSocket'
-import { createFakeDam, type FakeDam, type FakeDamRequest } from '@/domains/dam/__tests__/support/fakeDam'
+import {
+  createFakeDam,
+  type FakeDam,
+  type FakeDamAnswer,
+  type FakeDamRequest,
+} from '@/domains/dam/__tests__/support/fakeDam'
 import { holdLongWaits, type LongWaits } from '@/domains/dam/__tests__/support/longWaits'
 import {
   alertText,
@@ -82,6 +87,7 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
     wrapper?.unmount()
     wrapper = undefined
     useUploadQueueDialog().uploadQueueDialog.value = null
+    useUploadQueueDialog().uploadQueueDialogSaving.value = null
     useUploadQueuesStore(pinia).stopUpload(QUEUE)
     destroyDamNotifications()
     waits.restore()
@@ -319,6 +325,134 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
       expect(useUploadQueueDialog().uploadQueueDialog.value).toBeNull()
       expect(queue().getQueueItems(QUEUE)).toEqual([])
       expect(toForeignPrefix()).toEqual([])
+    })
+  })
+
+  // The page has an entry of its own to the queue, which the list hands it through the slot: the asset page of
+  // admin-ugc draws its button with it, and a dropzone over the whole window, which lies above the queue dialog.
+  // A file handed over that way while the dialog saved was queued, began to upload, and went with the queue when
+  // "save and apply" ended, its asset left in the DAM. The list takes none for as long as the dialog saves.
+  describe('a file the page hands over while the queue dialog saves', () => {
+    const { Processing, Uploaded } = UploadQueueItemStatus
+    const rows = () => queue().getQueueItems(QUEUE)
+    const titles = () => rows().map((row) => row.displayTitle)
+    const uploadsStarted = () => dam.sentTo('POST', dam.routes.start).length
+    const saving = () => useUploadQueueDialog().uploadQueueDialogSaving.value
+    const save = () =>
+      Array.from(queueDialog()!.querySelectorAll<HTMLButtonElement>('.v-toolbar button')).find((button) =>
+        button.querySelector('.mdi-content-save')
+      )!
+    /** The last file queued is uploaded, and the server has processed it. */
+    const uploaded = async () => {
+      const last = () => rows().at(-1)
+      await vi.waitFor(() => expect(last()?.status).toBe(Processing))
+      dam.fileBecomes(last()!.assetId!, AssetFileProcessStatus.Processed, {
+        metadata: { customData: { description: 'from the server' }, authorSuggestions: {}, keywordSuggestions: {} },
+      })
+      await waits.elapse()
+      await vi.waitFor(() => expect(last()!.status).toBe(Uploaded))
+      await flushPromises()
+    }
+    /** The list on a page with an entry of its own, one file uploaded through it. Returns that entry. */
+    const oneUploaded = async () => {
+      if (isCms) signInToDam(extSystem)
+      let handed: { onFileInput: (files: File[]) => void }
+      await mountList({
+        slots: {
+          'upload-activator': (slotProps: never) => {
+            handed = slotProps
+            return h('button')
+          },
+        },
+      })
+      await listed()
+      handed!.onFileInput([photo('a.jpg')])
+      await uploaded()
+      return (name: string) => handed.onFileInput([photo(name)])
+    }
+
+    it('is not queued, and no upload starts, while "save and apply" runs', async () => {
+      const handOver = await oneUploaded()
+      const held = dam.hold('PATCH', dam.routes.bulkMetadata)
+
+      saveAndApply().click()
+      await vi.waitFor(() => expect(held.waiting).toHaveLength(1))
+      handOver('late.jpg')
+      await waits.settle()
+
+      expect(titles()).toEqual(['a.jpg'])
+      expect(uploadsStarted()).toBe(1)
+
+      // The save ends as before: the dialog closes, the queue is emptied, and nothing of the late file is left.
+      held.release()
+      await listed(2)
+      await flushPromises()
+      expect([queueDialog(), rows(), uploadsStarted()]).toEqual([null, [], 1])
+    })
+
+    it.each<[string, () => HTMLButtonElement, FakeDamAnswer | undefined]>([
+      ['"save" that went through', () => save(), undefined],
+      ['"save and apply" the DAM refused', () => saveAndApply(), { status: 500 }],
+    ])(
+      'is not queued while it runs, and is again after %s: the dialog is still open',
+      async (_name, pressed, answer) => {
+        const handOver = await oneUploaded()
+        const held = dam.hold('PATCH', dam.routes.bulkMetadata)
+
+        pressed().click()
+        await vi.waitFor(() => expect(held.waiting).toHaveLength(1))
+        handOver('late.jpg')
+        await waits.settle()
+        expect(titles()).toEqual(['a.jpg'])
+
+        held.release(answer)
+        await vi.waitFor(() => expect(saving()).toBeNull())
+        handOver('after.jpg')
+        await vi.waitFor(() => expect(titles()).toEqual(['a.jpg', 'after.jpg']))
+        expect(queueDialog()).not.toBeNull()
+      }
+    )
+
+    // The close button empties the queue and takes the dialog away, also in the middle of a save. What the dialog
+    // told of its save goes with it: that save may end only after the next dialog has begun a save of its own.
+    it('is queued again once the dialog was closed in the middle of its save, whose end changes nothing', async () => {
+      const handOver = await oneUploaded()
+      const held = dam.hold('PATCH', dam.routes.bulkMetadata)
+      saveAndApply().click()
+      await vi.waitFor(() => expect(held.waiting).toHaveLength(1))
+      expect(saving()).toBe(QUEUE)
+      const [saveOfTheClosedDialog] = held.waiting
+
+      queueDialog()!.querySelector<HTMLButtonElement>('[data-cy="button-close"]')!.click()
+      await flushPromises()
+      expect([queueDialog(), rows(), saving()]).toEqual([null, [], null])
+
+      handOver('next.jpg')
+      await uploaded()
+      expect(titles()).toEqual(['next.jpg'])
+
+      // The dialog of the next file saves, and the save of the closed one ends meanwhile.
+      save().click()
+      await vi.waitFor(() => expect(held.waiting).toHaveLength(2))
+      saveOfTheClosedDialog!.release()
+      await waits.settle()
+      expect(saving()).toBe(QUEUE)
+      handOver('late.jpg')
+      await waits.settle()
+      expect(titles()).toEqual(['next.jpg'])
+
+      held.release()
+      await vi.waitFor(() => expect(saving()).toBeNull())
+    })
+
+    // The dialog of another widget on the page, over a queue of its own, holds this list back from nothing.
+    it('is queued while the dialog of another queue saves', async () => {
+      const handOver = await oneUploaded()
+
+      useUploadQueueDialog().uploadQueueDialogSaving.value = 'queue-of-another-widget'
+      handOver('meanwhile.jpg')
+
+      await vi.waitFor(() => expect(titles()).toEqual(['a.jpg', 'meanwhile.jpg']))
     })
   })
 

@@ -33,10 +33,11 @@ import { useAssetSelectStore } from '@/domains/dam/assetSelect/store/assetSelect
 import AuthorRemoteAutocompleteWithCached from '@/domains/dam/author/components/AuthorRemoteAutocompleteWithCached.vue'
 import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
 import { destroyDamNotifications, initDamNotifications } from '@/domains/dam/composables/damNotifications'
-import { useDamNotificationsEventBus } from '@/domains/dam/composables/damNotificationsEventBus'
+import { DamNotificationName, useDamNotificationsEventBus } from '@/domains/dam/composables/damNotificationsEventBus'
 import { useDamConfigStore } from '@/domains/dam/config/store/damConfigStore'
 import ImageWidgetMultipleInner from '@/domains/dam/imageWidget/components/ImageWidgetMultipleInner.vue'
 import ImageWidgetMultipleItem from '@/domains/dam/imageWidget/components/ImageWidgetMultipleItem.vue'
+import { useImageMassOperations } from '@/domains/dam/imageWidget/composables/useImageMassOperations'
 import { useImageStore } from '@/domains/dam/imageWidget/store/imageStore'
 import { ImageWidgetUploadConfigKey } from '@/domains/dam/imageWidget/utils/imageWidgetInkectionKeys'
 import type { DamImageCopyToLicenceResponseItem } from '@/domains/dam/types/Asset'
@@ -234,6 +235,23 @@ describe.each(consumerProfiles)('the widget of several images under the $name', 
     )!
   const toForeignPrefix = () =>
     dam.requests.filter((request) => request.url.startsWith(foreignPrefix) && !/\/(author|keyword)\//.test(request.url))
+  const save = () => (widget!.vm as unknown as { saveImages: () => Promise<boolean> }).saveImages()
+  /** What each save of metadata has sent to the DAM, in order: those of the queue dialog, and the authors of rows. */
+  const metadataWrites = () =>
+    dam
+      .sentTo('PATCH', dam.routes.bulkMetadata)
+      .map((request) => dam.body(request) as Array<{ id: DocId; authors?: DocId[] }>)
+  const offersAuthors = () => rows().map((row) => row.findComponent(AuthorRemoteAutocompleteWithCached).exists())
+  /** "Replace everywhere" of the mass operations above the widget: every row gets the authors, named as its source. */
+  const replaceAuthorsEverywhere = async (authors: DocId[]) => {
+    await useImageMassOperations().replaceEmptyAuthors(authors, true)
+    await flushPromises()
+  }
+  /** "Fill empty" of the same: the rows without authors of the DAM, but for one that shows a source filled in. */
+  const fillEmptyAuthors = async (authors: DocId[]) => {
+    await useImageMassOperations().replaceEmptyAuthors(authors)
+    await flushPromises()
+  }
 
   describe('the images the entity already has', () => {
     it('are read from the image API of the application, and their assets from the DAM of the application', async () => {
@@ -582,6 +600,37 @@ describe.each(consumerProfiles)('the widget of several images under the $name', 
         expect(authorLookups()).toEqual(isCms ? lookups : [])
       }
     )
+
+    // An asset that could not be read may have authors all the same, and the authors picked in a row are written
+    // into its asset in place of those it has. So its row has the source, as a row whose asset the DAM did not return
+    // when the widget loaded: it used to offer an empty pick of the authors of the DAM.
+    it.each<[string, boolean]>([
+      ['whose read the DAM refuses', true],
+      ['the DAM leaves out of its answer', false],
+    ])('offers the source, not the authors of the DAM, for an asset %s', async (_which, refused) => {
+      // Listed in the licence of the widget. Left out: the DAM has it in another licence by now.
+      inTheDam('asset-41', refused ? licence : THIRD, ['author-1'])
+      inTheDam('asset-42', OTHER, [])
+      if (refused) {
+        dam.reply((request) => {
+          const match = request.method === 'GET' ? request.url.match(dam.routes.byIds) : null
+          return match && Number(match[1]) === licence ? { status: 500 } : undefined
+        })
+      }
+
+      await confirmInPicker(OTHER, [listed('asset-41', licence), listed('asset-42', OTHER)])
+
+      expect(shownAlerts()).toEqual(refused ? [['error', alertText('common.alert.unknownError')]] : [])
+      expect(images().map((image) => [image.assetId, image.damAuthors, image.showDamAuthors])).toEqual([
+        ['asset-41', [], false],
+        // Read, and without authors: admin-cms offers them, as before. admin-ugc has none to offer.
+        ['asset-42', [], isCms],
+      ])
+      expect(offersAuthors()).toEqual([false, isCms])
+      const [unread, read] = rows()
+      expect(textsOf(unread.element)).toEqual(['', ''])
+      expect(textsOf(read.element)).toEqual(isCms ? ['of asset-42'] : ['of asset-42', 'Blogger of asset-42'])
+    })
   })
 
   describe('"save and apply" of its queue dialog', () => {
@@ -630,6 +679,108 @@ describe.each(consumerProfiles)('the widget of several images under the $name', 
       expect(textsOf(fourth.element)).toEqual(isCms ? ['second upload'] : ['second upload', ''])
       expect(fourth.findComponent(AuthorRemoteAutocompleteWithCached).exists()).toBe(isCms)
     })
+
+    // The save of the queue answers with every asset it was sent, and the images are made of that answer. An asset
+    // it does not answer for is handed over without authors all the same, and whether it has any is not known: its
+    // row has the source. It used to offer an empty pick of the authors of the DAM, and what was picked there was
+    // written into the asset in place of the authors it has.
+    it('gives the image of an uploaded file the save of the queue did not answer for its source, not the authors of the DAM', async () => {
+      await mountWidget()
+      const { a, b } = await twoUploaded()
+      dam.reply((request) =>
+        request.method === 'PATCH' && dam.routes.bulkMetadata.test(request.url)
+          ? { status: 200, data: (dam.body(request) as Array<{ id: DocId }>).filter((sent) => sent.id !== b.assetId) }
+          : undefined
+      )
+
+      saveAndApply().click()
+      await vi.waitFor(() => expect(images()).toHaveLength(2))
+      await flushPromises()
+
+      expect(images().map((image) => [image.assetId, image.damAuthors, image.showDamAuthors])).toEqual([
+        // Answered for: as before.
+        [a.assetId, isCms ? ['author-2'] : [], !isCms],
+        [b.assetId, [], false],
+      ])
+      expect(offersAuthors()).toEqual([false, false])
+      expect(textsOf(rows()[1].element)).toEqual(['', ''])
+    })
+
+    // With the notifications a file is uploaded before its metadata comes, and "save and apply" is offered by then.
+    // The save skips a row without its metadata, so its answer has nothing for the asset of that row.
+    if (profile.notifications) {
+      /** Two files are uploaded: the first has its metadata and no authors, the second an author and no metadata yet. */
+      const secondWithoutItsMetadata = async () => {
+        await mountWidget()
+        await pick('a.jpg', 'b.jpg')
+        await vi.waitFor(() => expect(statuses()).toEqual([Processing, Processing]))
+        const [a, b] = queue().getQueueItems(QUEUE)
+        dam.fileBecomes(a.assetId!, AssetFileProcessStatus.Processed, metadata({ description: 'first upload' }))
+        dam.fileBecomes(b.assetId!, AssetFileProcessStatus.Processed, {
+          ...metadata({ description: 'second upload' }),
+          authors: ['author-5'],
+        })
+        // The file of the second is announced as processed; its metadata is not.
+        socket.deliver(DamNotificationName.AssetFileProcessed, { asset: b.assetId, id: b.fileId })
+        await vi.waitFor(() => expect(statuses()).toEqual([Processing, Uploaded]))
+        await waits.elapse()
+        await vi.waitFor(() => expect(statuses()).toEqual([Uploaded, Uploaded]))
+        await flushPromises()
+        expect([a.canEditMetadata, b.canEditMetadata]).toEqual([true, false])
+        return { a, b }
+      }
+
+      it('gives the image of an uploaded file whose metadata never came its source, and writes no authors into its asset', async () => {
+        const { a, b } = await secondWithoutItsMetadata()
+
+        saveAndApply().click()
+        await vi.waitFor(() => expect(images()).toHaveLength(2))
+        await flushPromises()
+
+        // The save of the queue: the row with its metadata alone.
+        expect(metadataWrites().map((sent) => sent.map((one) => one.id))).toEqual([[a.assetId]])
+        expect(images()).toMatchObject([
+          { assetId: a.assetId, texts: { description: 'first upload' }, damAuthors: [], showDamAuthors: true },
+          {
+            assetId: b.assetId,
+            texts: { description: '', source: '' },
+            dam: { damId: b.fileId },
+            damAuthors: [],
+            showDamAuthors: false,
+          },
+        ])
+        expect(offersAuthors()).toEqual([true, false])
+        expect(textsOf(rows()[1].element)).toEqual(['', ''])
+
+        await replaceAuthorsEverywhere(['author-7'])
+        expect(await save()).toBe(true)
+
+        // Only the asset the save answered for gets the authors; the author of the other stays.
+        expect(metadataWrites().slice(1)).toEqual([[{ id: a.assetId, authors: ['author-7'] }]])
+        const [, sent] = imageApi.calls.at(-1) as ['bulkUpdateImages', ImageAware[]]
+        expect(sent.map((image) => [image.dam.damId, image.texts.source])).toEqual([
+          [a.fileId, 'Name of author-7'],
+          [b.fileId, 'Name of author-7'],
+        ])
+      })
+
+      // Unchanged: an uploaded file the save answered for, without authors, is offered them, and they are its.
+      it('writes the authors picked in the row of an uploaded file without authors into its asset', async () => {
+        const { a } = await secondWithoutItsMetadata()
+        saveAndApply().click()
+        await vi.waitFor(() => expect(images()).toHaveLength(2))
+        await flushPromises()
+        images()[1].texts.source = 'typed by hand'
+
+        rows()[0].findComponent(AuthorRemoteAutocompleteWithCached).vm.$emit('update:modelValue', ['author-8'])
+        await flushPromises()
+        expect(await save()).toBe(true)
+
+        expect(metadataWrites().slice(1)).toEqual([[{ id: a.assetId, authors: ['author-8'] }]])
+        const [, sent] = imageApi.calls.at(-1) as ['bulkUpdateImages', ImageAware[]]
+        expect(sent.map((image) => image.texts.source)).toEqual(['Name of author-8', 'typed by hand'])
+      })
+    }
   })
 
   // The picker offers the copy when the user browses another licence than the one the widget uploads into, which
@@ -691,8 +842,6 @@ describe.each(consumerProfiles)('the widget of several images under the $name', 
   }
 
   describe('the save of the widget', () => {
-    const save = () => (widget!.vm as unknown as { saveImages: () => Promise<boolean> }).saveImages()
-
     it('writes the images, old and new, through the image API of the application, and hands the form their ids', async () => {
       const mounted = await withTwoImages()
       const { a, b } = await twoUploaded()
@@ -828,32 +977,150 @@ describe.each(consumerProfiles)('the widget of several images under the $name', 
         expect(authorsWrittenInto('asset-12')).toEqual([['author-9']])
       })
 
-      it('writes no authors for an image picked from the DAM whose read failed, though its row offers them', async () => {
+      /**
+       * Two assets are picked in the library, one after the other: `asset-31` has an author and is not read (its
+       * read is refused, or the DAM leaves it out of its answer), `asset-32` has none and is read.
+       */
+      const unreadAndReadPicked = async (refused: boolean) => {
         dam.assets.set(
           'asset-31',
-          damAssetWithFile('asset-31', 'file-31', AssetFileProcessStatus.Processed, { licence, authors: ['author-5'] })
+          damAssetWithFile('asset-31', 'file-31', AssetFileProcessStatus.Processed, {
+            // Left out: listed in the licence of the widget, the DAM has it in another one by now.
+            licence: refused ? licence : 300003,
+            authors: ['author-5'],
+          })
+        )
+        dam.assets.set(
+          'asset-32',
+          damAssetWithFile('asset-32', 'file-32', AssetFileProcessStatus.Processed, { licence })
         )
         const mounted = await mountWidget()
-        dam.reply((request) =>
-          request.method === 'GET' && dam.routes.byIds.test(request.url) ? { status: 500 } : undefined
-        )
-        mounted.findComponent(Picker).vm.$emit('confirm', {
-          type: 'asset',
-          value: [{ id: 'asset-31', licence, mainFile: { id: 'file-31' } }],
-        })
-        await vi.waitFor(() => expect(images()).toHaveLength(1))
-        await flushPromises()
-        // The asset has an author, but the widget could not read it, and says so: the row offers the authors of
-        // the DAM.
-        expect(dam.sentTo('GET', dam.routes.byIds)).toHaveLength(1)
-        expect(shownAlerts()).toEqual([['error', alertText('common.alert.unknownError')]])
-        expect(images()[0]).toMatchObject({ assetId: 'asset-31', damAuthors: [], showDamAuthors: true })
+        const confirmPick = async (id: number, expected: number) => {
+          mounted.findComponent(Picker).vm.$emit('confirm', {
+            type: 'asset',
+            value: [{ id: `asset-${id}`, licence, mainFile: { id: `file-${id}` } }],
+          })
+          await vi.waitFor(() => expect(images()).toHaveLength(expected))
+          await flushPromises()
+        }
+        const readAgain = refused
+          ? dam.reply((request) =>
+              request.method === 'GET' && dam.routes.byIds.test(request.url) ? { status: 500 } : undefined
+            )
+          : () => undefined
+        await confirmPick(31, 1)
+        readAgain()
+        await confirmPick(32, 2)
+        expect(dam.sentTo('GET', dam.routes.byIds)).toHaveLength(2)
+        // A read that fails is said; an asset left out of an answer is not.
+        expect(shownAlerts()).toEqual(refused ? [['error', alertText('common.alert.unknownError')]] : [])
+        forgetAlerts()
+      }
 
+      // The asset has an author the widget does not know of. Its row used to offer an empty pick of the authors of
+      // the DAM all the same, and what was picked there, also by the mass operations, was written into the asset in
+      // place of the authors it has. The row has the source now, and nothing of it is the asset's.
+      it.each<[string, boolean]>([
+        ['whose read failed', true],
+        ['the DAM left out of its answer', false],
+      ])(
+        'writes no authors into an asset picked from the DAM %s: its row has the source, not the authors',
+        async (_what, refused) => {
+          await unreadAndReadPicked(refused)
+          expect(images().map((image) => [image.assetId, image.damAuthors, image.showDamAuthors])).toEqual([
+            ['asset-31', [], false],
+            ['asset-32', [], true],
+          ])
+          expect(offersAuthors()).toEqual([false, true])
+          expect(textsOf(rows()[0].element)).toEqual(['', ''])
+
+          await replaceAuthorsEverywhere(['author-7'])
+          expect(await save()).toBe(true)
+
+          // Only the asset that was read gets them.
+          expect(metadataWrites()).toEqual([[{ id: 'asset-32', authors: ['author-7'] }]])
+          const [call, sent] = imageApi.calls.at(-1) as ['bulkUpdateImages', ImageAware[]]
+          expect([call, sent.map((image) => [image.dam.damId, image.texts.source])]).toEqual([
+            'bulkUpdateImages',
+            [
+              ['file-31', 'Name of author-7'],
+              ['file-32', 'Name of author-7'],
+            ],
+          ])
+        }
+      )
+
+      // As every row that has the source: admin-cms requires it. The widget cannot name the authors of the asset,
+      // so the source of such an image is typed by hand.
+      it('asks for the source of an image whose asset could not be read, before it writes anything', async () => {
+        await unreadAndReadPicked(true)
+
+        expect(await save()).toBe(false)
+
+        expect(shownAlerts()).toEqual([['error', alertText('common.alert.fixValidationErrors')]])
+        expect(imageApi.calls.map(([call]) => call)).toEqual([])
+        expect(metadataWrites()).toEqual([])
+
+        images()[0].texts.source = 'typed by hand'
+        await flushPromises()
         expect(await save()).toBe(true)
 
-        expect(dam.sentTo('PATCH', dam.routes.bulkMetadata)).toEqual([])
-        const [call, sent] = imageApi.calls.at(-1) as ['bulkUpdateImages', ImageAware[]]
-        expect([call, sent.map((image) => image.dam.damId)]).toEqual(['bulkUpdateImages', ['file-31']])
+        expect(metadataWrites()).toEqual([])
+        const [, sent] = imageApi.calls.at(-1) as ['bulkUpdateImages', ImageAware[]]
+        expect(sent.map((image) => [image.dam.damId, image.texts.source])).toEqual([
+          ['file-31', 'typed by hand'],
+          ['file-32', ''],
+        ])
+      })
+
+      // The empty source of such a row is filled by "fill empty" of the mass operations, with the names of the picked
+      // authors. The authors themselves go with the rows that offer them: none is written into the unread asset.
+      it('writes the source "fill empty" gave an image whose asset could not be read, and no authors into that asset', async () => {
+        await unreadAndReadPicked(true)
+
+        await fillEmptyAuthors(['author-7'])
+        expect(textsOf(rows()[0].element)).toEqual(['', 'Name of author-7'])
+        expect(await save()).toBe(true)
+
+        expect(metadataWrites()).toEqual([[{ id: 'asset-32', authors: ['author-7'] }]])
+        const [, sent] = imageApi.calls.at(-1) as ['bulkUpdateImages', ImageAware[]]
+        expect(sent.map((image) => [image.dam.damId, image.texts.source])).toEqual([
+          ['file-31', 'Name of author-7'],
+          ['file-32', 'Name of author-7'],
+        ])
+      })
+
+      // Once typed, the source of such a row is the user's: "fill empty" leaves it.
+      it('keeps the source typed for an image whose asset could not be read, when "fill empty" fills the others', async () => {
+        await unreadAndReadPicked(true)
+        images()[0].texts.source = 'typed by hand'
+        await flushPromises()
+
+        await fillEmptyAuthors(['author-7'])
+        expect(await save()).toBe(true)
+
+        expect(metadataWrites()).toEqual([[{ id: 'asset-32', authors: ['author-7'] }]])
+        const [, sent] = imageApi.calls.at(-1) as ['bulkUpdateImages', ImageAware[]]
+        expect(sent.map((image) => [image.dam.damId, image.texts.source])).toEqual([
+          ['file-31', 'typed by hand'],
+          ['file-32', 'Name of author-7'],
+        ])
+      })
+
+      // Unchanged: an asset that was read and has no authors is offered them, and what is picked in its row is its.
+      it('writes the authors picked in the row of an asset picked from the DAM, read and without authors, into it', async () => {
+        await unreadAndReadPicked(true)
+        images()[0].texts.source = 'typed by hand'
+
+        rows()[1]
+          .findComponent(AuthorRemoteAutocompleteWithCached)
+          .vm.$emit('update:modelValue', ['author-7', 'author-8'])
+        await flushPromises()
+        expect(await save()).toBe(true)
+
+        expect(metadataWrites()).toEqual([[{ id: 'asset-32', authors: ['author-7', 'author-8'] }]])
+        const [, sent] = imageApi.calls.at(-1) as ['bulkUpdateImages', ImageAware[]]
+        expect(sent.map((image) => image.texts.source)).toEqual(['typed by hand', 'Name of author-7, Name of author-8'])
       })
 
       it('writes the authors picked in a row after a first save, into the asset of the row', async () => {

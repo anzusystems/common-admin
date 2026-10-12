@@ -87,6 +87,9 @@ const onInputFileChange = (payload: Event) => {
   const event = payload as InputFileChangeEvent
   emit('change', event)
   validateData(Array.from(event.target?.files ?? []))
+  // Handed over, or refused with its warning: emptied, the input tells of the same file when it is picked again. With
+  // the value kept it told nothing until its host changed `fileInputKey`, which not every host is given.
+  if (event.target) event.target.value = ''
 }
 
 const onFileDropzoneClick = () => {

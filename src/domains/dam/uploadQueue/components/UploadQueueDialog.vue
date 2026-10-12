@@ -3,7 +3,7 @@ import { useUploadQueueDialog } from '@/domains/dam/uploadQueue/composables/useU
 import { useI18n } from 'vue-i18n'
 import UploadQueueEditable from '@/domains/dam/uploadQueue/components/UploadQueueEditable.vue'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
-import { computed, ref, toRaw } from 'vue'
+import { computed, onBeforeUnmount, ref, toRaw, watch } from 'vue'
 import { useDisplay } from 'vuetify'
 import { useTheme } from '@/domains/system/composables/themeSettings'
 import UploadQueueButtonStop from '@/domains/dam/uploadQueue/components/UploadQueueButtonStop.vue'
@@ -51,7 +51,8 @@ const emit = defineEmits<{
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const damConfigName = useDamConfigName(props.configName)
 
-const { uploadQueueDialog, uploadQueueSidebar, toggleUploadQueueSidebar } = useUploadQueueDialog()
+const { uploadQueueDialog, uploadQueueDialogSaving, uploadQueueSidebar, toggleUploadQueueSidebar } =
+  useUploadQueueDialog()
 
 const uploadQueuesStore = useUploadQueuesStore()
 const queueTotalCount = computed(() => {
@@ -91,6 +92,20 @@ const { damClient, endPointAsset, endPointAuthor, customUploadMetadataToImageMap
 
 const saveButtonLoading = ref(false)
 const saveAndCloseButtonLoading = ref(false)
+
+// Known outside the dialog for as long as either save runs, from the moment it begins: its host takes no file for
+// this queue through an entry of its own meanwhile, as the "+" and the dropzone here take none. Taken back with the
+// dialog, also when it goes in the middle of a save: that save may end after another dialog has begun its own.
+watch(
+  () => saveButtonLoading.value || saveAndCloseButtonLoading.value,
+  (saving) => {
+    uploadQueueDialogSaving.value = saving ? props.queueKey : null
+  },
+  { flush: 'sync' }
+)
+onBeforeUnmount(() => {
+  if (uploadQueueDialogSaving.value === props.queueKey) uploadQueueDialogSaving.value = null
+})
 
 const onStopConfirm = async () => {
   uploadQueuesStore.stopUpload(props.queueKey)
@@ -142,13 +157,17 @@ const onSaveAndApply = async () => {
     const mappedItems = customUploadMetadataToImageMap
       ? await customUploadMetadataToImageMap(uploaded, res, damClient, props.extSystem, props.licenceId)
       : await mapUploadMetadataToImages(uploaded, res, damClient, props.extSystem, props.licenceId, endPointAuthor)
+    // The save skips a row whose metadata never came, and its image is handed over all the same, without authors.
+    // Whether its asset has any is not known: the authors of the DAM are offered only for an asset the save answered
+    // for, or those picked in the widget would replace the ones the asset has.
+    const savedAssetIds = new Set(res.map((saved) => saved.id))
     // No position is given here: the widget that takes the images gives each its own, after the last it has, also
     // over one a mapping of the application may have put into the image.
     const storeItems: ImageStoreItem[] = mappedItems.map((item) => ({
       key: generateUUIDv1(),
       ...item,
       damAuthors: item.authorIds ?? [],
-      showDamAuthors: (item.authorIds ?? []).length === 0,
+      showDamAuthors: !!item.assetId && savedAssetIds.has(item.assetId) && (item.authorIds ?? []).length === 0,
       assetId: item.assetId ?? undefined,
     }))
     emit('apply', storeItems)
@@ -261,6 +280,8 @@ const showDetail = async (id: DocId) => {
                   {{ t('common.damImage.upload.save') }}
                 </VTooltip>
               </VBtn>
+              <!-- No file is added while a save runs: "save and apply" ends with the host closing the dialog and
+                   emptying its queue, and a file added meanwhile went with it, half uploaded and without a word. -->
               <AFileInput
                 :file-input-key="fileInputKey"
                 :accept="accept"
@@ -277,6 +298,7 @@ const showDetail = async (id: DocId) => {
                     :height="34"
                     :width="34"
                     class="text-medium-emphasis"
+                    :disabled="saveButtonLoading || saveAndCloseButtonLoading"
                     v-bind="fileInputProps"
                   >
                     <VIcon icon="mdi-plus" />
@@ -334,6 +356,7 @@ const showDetail = async (id: DocId) => {
           hover-only
           :accept="accept"
           :max-sizes="maxSizes"
+          :disabled="saveButtonLoading || saveAndCloseButtonLoading"
           @drop="emit('drop', $event)"
         />
       </div>

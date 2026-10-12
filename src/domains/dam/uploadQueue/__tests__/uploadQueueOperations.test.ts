@@ -667,6 +667,59 @@ describe('a save in the asset detail', () => {
     expect(here.keywords).toEqual(['keyword-saved'])
   })
 
+  // The detail goes on telling the queue once it was opened from a row, also about an asset opened from elsewhere:
+  // its save used to wait for a read of that asset, with no row to write it into.
+  it.each([
+    ['whose asset the DAM can be asked for', false],
+    ['whose asset cannot be read', true],
+  ])(
+    'asks the DAM for nothing, and leaves every row as it is, when no queue holds a row of the asset %s',
+    async (_which, unreadable) => {
+      const { store, here, other, there } = await copiesInTwoQueues()
+      const untouched = [here, other, there].map(rowState)
+      const countsBefore = [counts(), counts(OTHER_QUEUE)]
+      const detail = damAssetWithFile('asset-3', 'file-3', AssetFileProcessStatus.Processed, structuredClone(saved))
+      if (!unreadable) dam.assets.set('asset-3', detail)
+      const asked = dam.requests.length
+
+      await expect(store.updateFromDetail(detail, undefined, true)).resolves.toBeUndefined()
+
+      expect(dam.requests.slice(asked)).toEqual([])
+      expect([here, other, there].map(rowState)).toEqual(untouched)
+      expect([counts(), counts(OTHER_QUEUE)]).toEqual(countsBefore)
+    }
+  )
+
+  it('asks the DAM for nothing when there is no queue at all', async () => {
+    const detail = dam.fileBecomes('asset-1', AssetFileProcessStatus.Processed, saved)
+
+    await useUploadQueuesStore().updateFromDetail(detail)
+
+    expect(dam.requests).toEqual([])
+  })
+
+  // The read is asked for as before while a row of the asset is in a queue, whatever queue it is.
+  it('asks the DAM for the asset once, when only another queue than the first holds a row of it', async () => {
+    const store = useUploadQueuesStore()
+    dam.assets.set('asset-1', damAssetWithFile('asset-1', 'file-1', AssetFileProcessStatus.Processed))
+    dam.assets.set('asset-2', damAssetWithFile('asset-2', 'file-2', AssetFileProcessStatus.Processed))
+    await store.addByCopyToLicence(QUEUE, extSystem, licence, ['asset-2'])
+    await store.addByCopyToLicence(OTHER_QUEUE, extSystem, licence, ['asset-1'])
+    const [there] = store.getQueueItems(OTHER_QUEUE)
+    const reads = dam.assetReads().length
+    const detail = dam.fileBecomes('asset-1', AssetFileProcessStatus.Processed, saved)
+
+    await store.updateFromDetail(detail)
+
+    expect(
+      dam
+        .assetReads()
+        .slice(reads)
+        .map((read) => read.url)
+    ).toEqual(['/adm/v1/asset/asset-1'])
+    expect(there).toMatchObject({ keywords: ['keyword-saved'], customData: { title: 'saved in the detail' } })
+  })
+
   describe('when the asset cannot be read again', () => {
     /** The asset as the detail holds it after its save: with what was saved, and the switch it had when loaded. */
     const heldByTheDetail = (mainFileSingleUse: boolean | null = null) =>

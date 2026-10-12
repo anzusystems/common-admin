@@ -300,6 +300,12 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
       // The application has no configuration of that name: the rows are left alone, in silence, as ever.
       return
     }
+    // The detail goes on telling the queue once it was opened from a row, also of an asset no queue holds a row of:
+    // there is nothing to write then, and its save would wait for the read in vain.
+    const hasRowOfAsset = Array.from(queues.value.values()).some((queue) =>
+      queue.items.some((item) => item.assetId === asset.id && item.type)
+    )
+    if (!hasRowOfAsset) return
     try {
       const assetRes = await fetchAsset(dam.damClient, dam.endPointAsset, asset.id)
       queues.value.forEach((queue, queueKey) => {

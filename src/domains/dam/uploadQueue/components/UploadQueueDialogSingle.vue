@@ -193,6 +193,8 @@ watch(
       assetDetailStore.setAsset(res)
       enableRoiTab.value = true
     } catch (e) {
+      // Closed meanwhile as well: the error would be shown over whatever the user has gone on to.
+      if (item.value?.assetId !== assetId) return
       showErrorsDefault(e)
     }
   },

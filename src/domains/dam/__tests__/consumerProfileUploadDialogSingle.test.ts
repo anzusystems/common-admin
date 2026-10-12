@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, type Mock, vi } from 'vitest'
 import { flushPromises, mount, type VueWrapper } from '@vue/test-utils'
 import { createPinia, type Pinia, setActivePinia } from 'pinia'
+import { type ApiErrorLogger, defaultApiErrorLogger, setApiErrorLogger } from '@/domains/api/utils/apiErrors'
 import {
   cmsConfiguration,
   consumerProfiles,
@@ -926,6 +927,71 @@ describe.each(consumerProfiles)('the dialog of one uploaded file under the $name
       // admin-cms shows what the DAM knows of the file as soon as the detail has an asset.
       expect(sidebar().textContent).not.toContain('file-1')
       expect(detail.asset).toBeNull()
+    })
+
+    // The same read, failing. Said while the dialog is open, as before; after it was closed the error used to be
+    // shown all the same, an alert that stays until it is closed, about a dialog the user no longer sees. The
+    // failure goes to the api error logger either way.
+    describe('when the read of the asset for its detail fails', () => {
+      const logged = vi.fn<ApiErrorLogger>()
+
+      beforeEach(() => {
+        logged.mockClear()
+        setApiErrorLogger(logged)
+      })
+      afterEach(() => {
+        setApiErrorLogger(defaultApiErrorLogger)
+      })
+
+      /** The file is done and the dialog has asked for its asset: the DAM answers when the test says. */
+      const readOfTheDialogOnItsWay = async () => {
+        const fail: Array<() => void> = []
+        dam.reply((request) =>
+          request.method === 'GET' && dam.routes.one.test(request.url) && item()?.status === Uploaded
+            ? new Promise<FakeDamAnswer>((resolve) => fail.push(() => resolve({ status: 500 })))
+            : undefined
+        )
+        await pickOne()
+        dam.fileBecomes('asset-1', AssetFileProcessStatus.Processed, metadata({ description: 'from the server' }))
+        await waits.elapse()
+        await vi.waitFor(() => expect(fail).toHaveLength(1))
+        return fail[0]!
+      }
+      const failureLogged = () => {
+        expect(logged).toHaveBeenCalledTimes(1)
+        expect(logged.mock.calls[0]![1]).toMatchObject({ entity: 'asset', status: 500 })
+        expect(logged.mock.calls[0]![1].url).toContain(`${endPoints.asset}/asset-1`)
+      }
+
+      it('says so while the dialog is open', async () => {
+        const fail = await readOfTheDialogOnItsWay()
+
+        fail()
+        await vi.waitFor(() => expect(shownAlerts()).toEqual([systemError]))
+        await waits.settle()
+
+        expect(shownAlerts()).toEqual([systemError])
+        expect(useAssetDetailStore(pinia).asset).toBeNull()
+        failureLogged()
+      })
+
+      it('says nothing once the dialog was closed', async () => {
+        const fail = await readOfTheDialogOnItsWay()
+        button('button-close').click()
+        await flushPromises()
+        expect(queue().getQueueItems(QUEUE)).toEqual([])
+        // As the widget does with the dialog of a queue that is closed.
+        wrapper!.unmount()
+        wrapper = undefined
+
+        fail()
+        await vi.waitFor(() => expect(logged).toHaveBeenCalled())
+        await waits.settle()
+
+        expect(shownAlerts()).toEqual([])
+        expect(useAssetDetailStore(pinia).asset).toBeNull()
+        failureLogged()
+      })
     })
   })
 

@@ -191,7 +191,7 @@ const onCloseEditDialog = async () => {
 const imageWidgetUploadConfig = inject(ImageWidgetUploadConfigKey, undefined)
 const uploadEnabled = computed(() => isDefined(imageWidgetUploadConfig) && isDefined(imageWidgetUploadConfig.value))
 
-const { uploadQueueDialog } = useUploadQueueDialog()
+const { uploadQueueDialog, uploadQueueDialogSaving } = useUploadQueueDialog()
 const uploadQueuesStore = useUploadQueuesStore()
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
@@ -206,6 +206,10 @@ const uploadQueue = computed(() => {
 
 const onFileInput = (files: File[]) => {
   if (files.length === 0) return
+  // The page has an entry of its own (its button, a dropzone over the whole window) that reaches here past the
+  // dialog. While the dialog of this queue saves no file is taken: "save and apply" ends with the queue emptied, and
+  // a file queued meanwhile went with it, half uploaded and without a word.
+  if (uploadQueueDialogSaving.value === props.queueKey) return
   const config = imageWidgetUploadConfig?.value
   if (!config) return
   uploadQueuesStore.addByFiles(props.queueKey, config.extSystem, config.licence, files, damConfigName)

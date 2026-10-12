@@ -363,7 +363,9 @@ const assetSelectConfirmMap = async (
         { position: 0 }
       ),
       damAuthors: authorIds,
-      showDamAuthors: authorIds.length === 0,
+      // Only for an asset that was read: of one that was not, nobody knows whether it has authors, and those picked
+      // in its row would replace them in the DAM. Its row has the source, as one whose asset was not returned at load.
+      showDamAuthors: assetMetadataMap.has(asset.id) && authorIds.length === 0,
       assetId: asset.id,
     }
   })

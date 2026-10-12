@@ -35,6 +35,8 @@ export function useImageMassOperations(configName?: string) {
 
   const replaceEmptyAuthors = async (value: DocId[], forceReplace = false) => {
     if (imageStore.readonly) return
+    // No authors picked fill nothing: written all the same, they would only take the source of the rows away.
+    if (!forceReplace && value.length === 0) return
     const authorsMap = new Map<DocId, string>()
     const authorNames: string[] = []
     const authorsRes = await fetchAuthorListByIds(damClient, endPointAuthor, cachedExtSystemId.value, [...value])
@@ -52,7 +54,12 @@ export function useImageMassOperations(configName?: string) {
     const items = imageStore.images
     for (let i = 0; i < items.length; i++) {
       const item = items[i]!
-      if (forceReplace || isUndefined(item.damAuthors) || item.damAuthors.length === 0) {
+      const noAuthors = isUndefined(item.damAuthors) || item.damAuthors.length === 0
+      // Of white space alone it is empty too, as the check of a required source takes it.
+      const noSource = isUndefined(item.texts.source) || item.texts.source.trim().length === 0
+      // A row that does not offer the authors shows its source: filled in, that source is the user's, and the names
+      // of the picked authors are not written over it.
+      if (forceReplace || (noAuthors && (item.showDamAuthors || noSource))) {
         item.damAuthors = value
         item.texts.source = authorNames.join(', ')
       }

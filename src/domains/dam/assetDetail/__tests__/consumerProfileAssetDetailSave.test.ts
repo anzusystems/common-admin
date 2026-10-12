@@ -11,6 +11,7 @@ import {
   type FakeDamAnswer,
 } from '@/domains/dam/__tests__/support/fakeDam'
 import { holdLongWaits, type LongWaits } from '@/domains/dam/__tests__/support/longWaits'
+import { rowState } from '@/domains/dam/__tests__/support/uploadQueueRow'
 import { alertText, forgetAlerts, shownAlerts } from '@/domains/dam/__tests__/support/uploadUi'
 import AssetDetailSidebarActionsTeleportTarget from '@/domains/dam/assetDetail/components/AssetDetailSidebarActionsTeleportTarget.vue'
 import AssetDetailSidebarMetadata from '@/domains/dam/assetDetail/components/AssetDetailSidebarMetadata.vue'
@@ -221,6 +222,50 @@ describe.each(consumerProfiles)('the save of the detail of an asset under the $n
       expect(assetReads()).toEqual([`${endPoints.asset}/asset-1`])
       expect(shownAlerts()).toEqual([updated])
       expect(row).toMatchObject({ customData: { description: 'from the server' }, mainFileSingleUse: true })
+    })
+
+    it('reads the asset again, and hands the rows of its asset what the DAM has by then', async () => {
+      const { row } = await openedFromRow()
+      dam.assets.set(
+        'asset-1',
+        damAssetWithFile('asset-1', 'file-1', AssetFileProcessStatus.Processed, {
+          licence,
+          metadata: {
+            customData: { description: 'as the DAM has it now' },
+            authorSuggestions: {},
+            keywordSuggestions: {},
+          },
+          mainFileSingleUse: false,
+        })
+      )
+
+      await saved()
+
+      expect(assetReads()).toEqual([`${endPoints.asset}/asset-1`])
+      expect(shownAlerts()).toEqual([updated])
+      expect(row).toMatchObject({ customData: { description: 'as the DAM has it now' }, mainFileSingleUse: false })
+    })
+
+    // The dialog of a queue turns the telling on when it opens the detail of a row, and nothing turns it off: a
+    // detail opened afterwards from elsewhere tells the queue too, of an asset no queue holds a row of. Its save
+    // used to wait for one more read of that asset, with no row to write it into.
+    it.each<[string, string[]]>([
+      ['no queue has a row', []],
+      ['the rows of the queue are of other assets', ['asset-2', 'asset-3']],
+    ])('reads no asset after its save, the telling still on, when %s', async (_what, others) => {
+      const queue = useUploadQueuesStore(pinia)
+      if (others.length > 0) await queue.addByCopyToLicence(ROWS, extSystem, licence, others)
+      const rows = () => queue.getQueueItems(ROWS).map(rowState)
+      const untouched = rows()
+      await openDetail()
+      useAssetDetailStore(pinia).updateUploadStore = true
+
+      await saved()
+
+      expect(saves()).toHaveLength(1)
+      expect(assetReads()).toEqual([])
+      expect(shownAlerts()).toEqual([updated])
+      expect(rows()).toEqual(untouched)
     })
 
     // The form is not locked while the save runs. What is typed or switched meanwhile is not saved, and is not the

@@ -30,6 +30,90 @@ describe('AFileInput limits that arrive after mount', () => {
   })
 })
 
+// A browser tells of a pick only when it changes what the input holds: an input that kept its file told nothing when
+// the same file was picked again. Its host could make it anew by changing `fileInputKey`, and a host that is not
+// given the key (a button drawn through a slot of the asset list) could not: after a failed or stopped upload the
+// same file could not be picked again. The input lets go of its files once it has handed them over.
+describe('AFileInput once a pick is handled', () => {
+  const jpeg = (name: string) => new File([new Uint8Array(100)], name, { type: 'image/jpeg' })
+  const tiff = (name: string) => new File([new Uint8Array(100)], name, { type: 'image/tiff' })
+  const alerts = () => useAlertsQueue().value.map((alert) => [alert.color, alert.text])
+  const refused = (name: string) => ['warning', `${commonT('common.system.upload.incorrectFormatSize')}:${name}`]
+  const handedOver = (wrapper: VueWrapper) =>
+    (wrapper.emitted('filesInput') ?? []).map(([files]) => (files as File[]).map((file) => file.name))
+  const inputOf = (wrapper: VueWrapper) => wrapper.find('input[type="file"]').element as HTMLInputElement
+  const held = (input: HTMLInputElement) => Array.from(input.files ?? []).map((file) => file.name)
+  /** As the system dialog of a browser: a pick of the very files the input holds changes nothing, and is not told. */
+  const pickInBrowser = async (input: HTMLInputElement, ...files: File[]) => {
+    if (held(input).join('/') === files.map((file) => file.name).join('/')) return
+    await pick(input, ...files)
+  }
+
+  beforeEach(() => {
+    useAlertsQueue().value = []
+  })
+
+  it('holds no file, so the same file picked again is handed over again, by the same input', async () => {
+    const wrapper = mount(AFileInput, { props: { accept: 'image/jpeg', multiple: true } })
+    const input = inputOf(wrapper)
+    const photo = jpeg('photo.jpg')
+
+    await pickInBrowser(input, photo)
+    expect([input.value, held(input)]).toEqual(['', []])
+    expect(handedOver(wrapper)).toEqual([['photo.jpg']])
+
+    await pickInBrowser(input, photo)
+    expect(handedOver(wrapper)).toEqual([['photo.jpg'], ['photo.jpg']])
+    // Still the files the user picked, though the input no longer holds them.
+    expect((wrapper.emitted('filesInput')![1]![0] as File[])[0]).toBe(photo)
+    expect(inputOf(wrapper)).toBe(input)
+    wrapper.unmount()
+  })
+
+  it('holds no file after a pick it refused either: picked again, the file is refused and named again', async () => {
+    const wrapper = mount(AFileInput, { props: { accept: 'image/jpeg', multiple: true } })
+    const input = inputOf(wrapper)
+    const scan = tiff('scan.tiff')
+
+    await pickInBrowser(input, scan)
+    expect([input.value, held(input)]).toEqual(['', []])
+    await pickInBrowser(input, scan)
+
+    expect(handedOver(wrapper)).toEqual([[], []])
+    expect(alerts()).toEqual([refused('scan.tiff'), refused('scan.tiff')])
+    wrapper.unmount()
+  })
+
+  // A host that listens to `change` reads the files of the input while the event is handled, as before.
+  it('still holds the files of the pick while its change event is told', async () => {
+    const seen: string[][] = []
+    const wrapper = mount(AFileInput, {
+      props: { multiple: true, onChange: (event: Event) => seen.push(held(event.target as HTMLInputElement)) },
+    })
+
+    await pickInBrowser(inputOf(wrapper), jpeg('first.jpg'), jpeg('second.jpg'))
+
+    expect(seen).toEqual([['first.jpg', 'second.jpg']])
+    expect(handedOver(wrapper)).toEqual([['first.jpg', 'second.jpg']])
+    wrapper.unmount()
+  })
+
+  // The way of the hosts that have the key: as before, a changed key is a new input.
+  it('is made anew when its host changes the key, and the new input hands over what is picked', async () => {
+    const wrapper = mount(AFileInput, { props: { fileInputKey: 1, multiple: true } })
+    const first = inputOf(wrapper)
+    await pickInBrowser(first, jpeg('photo.jpg'))
+
+    await wrapper.setProps({ fileInputKey: 2 })
+    const second = inputOf(wrapper)
+    await pickInBrowser(second, jpeg('photo.jpg'))
+
+    expect(second).not.toBe(first)
+    expect(handedOver(wrapper)).toEqual([['photo.jpg'], ['photo.jpg']])
+    wrapper.unmount()
+  })
+})
+
 // The input with a dropzone of its own, as the file dialog of the image widgets has it. A drop can carry several
 // files whatever the input takes; the system dialog of an input that takes one hands over one. The real dropzone
 // under a real drop; the alerts are read from their queue, which no component of a test shows.
