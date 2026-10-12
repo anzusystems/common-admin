@@ -196,19 +196,14 @@ const onSaveAndApply = async () => {
 }
 
 const assetDetailStore = useAssetDetailStore()
-const { loading, dialog, updateUploadStore } = storeToRefs(assetDetailStore)
+const { updateUploadStore } = storeToRefs(assetDetailStore)
 
 const showDetail = async (id: DocId) => {
+  updateUploadStore.value = true
   try {
-    assetDetailStore.setAsset(null)
-    loading.value = true
-    dialog.value = props.queueKey
-    updateUploadStore.value = true
-    assetDetailStore.setAsset(await fetchAsset(damClient, endPointAsset, id))
+    await assetDetailStore.open(props.queueKey, () => fetchAsset(damClient, endPointAsset, id))
   } catch (e) {
     showErrorsDefault(e)
-  } finally {
-    loading.value = false
   }
 }
 </script>

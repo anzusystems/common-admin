@@ -167,14 +167,16 @@ $class-name-root: 'a-file-dropzone';
       background-color: #d4d4d4;
     }
 
-    &--over:not(&--disabled) {
-      background-color: #dcedc8;
-      outline: 2px dashed #7cb342;
-    }
-
     &--possibility:not(&--disabled) {
       background-color: #e5edf1;
       outline: 2px dashed #bacfd4;
+    }
+
+    // After `--possibility`, here and under the dark theme: a zone with the file over it has both classes, and of two
+    // rules of the same weight the later one is drawn.
+    &--over:not(&--disabled) {
+      background-color: #dcedc8;
+      outline: 2px dashed #7cb342;
     }
   }
 }
@@ -189,14 +191,14 @@ $class-name-root: 'a-file-dropzone';
       background-color: #393939;
     }
 
-    &--over:not(&--disabled) {
-      background-color: #283121;
-      outline: 2px dashed #333e28;
-    }
-
     &--possibility:not(&--disabled) {
       background-color: #212531;
       outline: 2px dashed #01579b;
+    }
+
+    &--over:not(&--disabled) {
+      background-color: #283121;
+      outline: 2px dashed #333e28;
     }
   }
 }

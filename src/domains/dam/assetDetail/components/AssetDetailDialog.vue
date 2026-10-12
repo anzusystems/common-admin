@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
 import { useAssetDetailStore } from '@/domains/dam/assetDetail/store/assetDetailStore'
@@ -39,13 +39,23 @@ const { simpleAssetSidebarEnabled } = useCommonAdminCoreDamOptions(damConfigName
 
 const view = computed(() => assetDetailViewOfAsset(asset.value, simpleAssetSidebarEnabled))
 
+// What the detail shows while its button closes it. Noted before the store is emptied: its host cannot ask the store.
+let shownAtClose: AssetDetailItemDto | null = null
 const closeDialog = () => {
-  // Noted before the store is emptied: its host cannot ask the store what was shown.
-  const shown = loading.value ? null : asset.value
-  assetDetailStore.setAsset(null)
-  dialog.value = null
-  emit('close', shown)
+  shownAtClose = loading.value ? null : asset.value
+  assetDetailStore.close()
+  shownAtClose = null
 }
+// The store closes the detail by itself as well, after a read that failed: the host is told of either close, once.
+// Only a change that takes this detail away is its close. Until its host has drawn again this dialog still sees what
+// follows, the next opening of its host or of another.
+watch(
+  dialog,
+  (_now, before) => {
+    if (before === props.queueKey) emit('close', shownAtClose)
+  },
+  { flush: 'sync' }
+)
 
 const toolbarTitle = computed(() => {
   if (!asset.value) return ''

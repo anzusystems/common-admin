@@ -540,7 +540,7 @@ const pickAsset = async (data: AssetSelectReturnData) => {
 }
 
 const assetDetailStore = useAssetDetailStore()
-const { loading: assetLoading, dialog: assetDialog, asset } = storeToRefs(assetDetailStore)
+const { dialog: assetDialog, asset } = storeToRefs(assetDetailStore)
 
 const coreDamOptions = useCommonAdminCoreDamOptions(damConfigName)
 const {
@@ -560,19 +560,23 @@ const {
 const { getExtSystemByLicence } = useDamConfigState(damClient)
 
 const onEditAsset = async (assetFileId: DocId) => {
-  assetLoading.value = true
-  assetDialog.value = props.queueKey
+  let extSystem: IntegerId | null = null
   try {
-    const assetRes = await fetchAssetByFileId(damClient, endPointAsset, assetFileId)
-    const extSystem = await getExtSystemByLicence(assetRes.licence)
-    if (extSystem) {
-      cachedExtSystemId.value = extSystem
-    }
-    assetDetailStore.setAsset(assetRes)
+    await assetDetailStore.open(
+      props.queueKey,
+      async () => {
+        const assetRes = await fetchAssetByFileId(damClient, endPointAsset, assetFileId)
+        extSystem = await getExtSystemByLicence(assetRes.licence)
+        return assetRes
+      },
+      // Only for the asset the detail shows: an answer it no longer waits for must not change the ext system the page
+      // asks for names under.
+      () => {
+        if (extSystem) cachedExtSystemId.value = extSystem
+      }
+    )
   } catch (e) {
     showErrorsDefault(e)
-  } finally {
-    assetLoading.value = false
   }
 }
 

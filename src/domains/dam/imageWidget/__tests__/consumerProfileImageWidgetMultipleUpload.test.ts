@@ -842,6 +842,173 @@ describe.each(consumerProfiles)('the widget of several images under the $name', 
     }
   })
 
+  // An uploaded file that is a duplicate of one the widget has becomes the asset of that image in the queue, with its
+  // form, and "save and apply" writes the authors of that form into the asset and adds a second row of the file. The
+  // row the widget had went on offering an empty pick of the authors of the DAM: what was picked there was written
+  // over the authors just saved, and with nothing picked its image kept the source it had. admin-cms only: admin-ugc
+  // has no authors of the DAM.
+  if (isCms) {
+    describe('"save and apply" over an uploaded file that is a duplicate of an image the widget has', () => {
+      /** A file is uploaded that the DAM finds to be `file-12` again: its row of the queue is `asset-12`, with its form. */
+      const duplicateOfTheSecondUploaded = async () => {
+        await pick('again.jpg')
+        await vi.waitFor(() => expect(statuses()).toEqual([Processing]))
+        const [row] = queue().getQueueItems(QUEUE)
+        dam.fileBecomes(row.assetId!, AssetFileProcessStatus.Duplicate, {}, { originAssetFile: 'file-12' })
+        await waits.elapse()
+        await vi.waitFor(() => expect(statuses()).toEqual([Uploaded]))
+        await damNamesAsked()
+        await flushPromises()
+        expect(row).toMatchObject({ assetId: 'asset-12', fileId: 'file-12', isDuplicate: true, canEditMetadata: true })
+      }
+      /** The user picks authors in the form of that row of the queue. */
+      const pickInQueueRow = async (authors: DocId[]) => {
+        widget!
+          .findComponent(UploadQueueDialog)
+          .findComponent(AuthorRemoteAutocompleteWithCached)
+          .vm.$emit('update:modelValue', authors)
+        await flushPromises()
+      }
+      /** "Save and apply" is pressed, and the widget has the image of the file. */
+      const applied = async (expected: number) => {
+        saveAndApply().click()
+        await vi.waitFor(() => expect(images()).toHaveLength(expected))
+        await flushPromises()
+      }
+      const readsOfAssets = () => dam.assetReads().length + dam.originReads().length
+      const asRows = () =>
+        images().map((image) => [image.id, image.assetId, image.damAuthors, image.showDamAuthors, image.texts.source])
+      const sourcesSaved = () => {
+        const [, sent] = imageApi.calls.at(-1) as ['bulkUpdateImages', ImageAware[]]
+        return sent.map((image) => [image.dam.damId, image.texts.source])
+      }
+
+      it('gives the row the widget had the authors the queue saved, named as its source: it offers them no more, and the save of the widget writes none into the asset', async () => {
+        await withTwoImages()
+        // What is picked in the row of the widget gives way to what the queue saves, as it does to a save of the detail.
+        rows()[1].findComponent(AuthorRemoteAutocompleteWithCached).vm.$emit('update:modelValue', ['author-7'])
+        await flushPromises()
+        await duplicateOfTheSecondUploaded()
+        await pickInQueueRow(['author-9', 'author-8'])
+        expect(offersAuthors()).toEqual([false, true])
+        const readBefore = readsOfAssets()
+
+        await applied(3)
+
+        // The save of the queue has written them into the asset.
+        expect(metadataWrites().map((sent) => sent.map((one) => [one.id, one.authors]))).toEqual([
+          [['asset-12', ['author-9', 'author-8']]],
+        ])
+        const names = 'Name of author-9, Name of author-8'
+        expect(asRows()).toEqual([
+          [11, 'asset-11', ['author-1'], false, 'source 11'],
+          [12, 'asset-12', ['author-9', 'author-8'], false, names],
+          [undefined, 'asset-12', ['author-9', 'author-8'], false, names],
+        ])
+        // Each row has a list of its own.
+        expect(images()[1].damAuthors).not.toBe(images()[2].damAuthors)
+        expect(offersAuthors()).toEqual([false, false, false])
+        expect(textsOf(rows()[1].element)).toEqual(['image 12', names])
+        // The applied image carries the authors and their names: no asset is read for them.
+        await waits.settle()
+        expect(readsOfAssets()).toBe(readBefore)
+
+        expect(await save()).toBe(true)
+        await flushPromises()
+
+        expect(metadataWrites()).toHaveLength(1)
+        expect(sourcesSaved()).toEqual([
+          ['file-11', 'source 11'],
+          ['file-12', names],
+          ['file-12', names],
+        ])
+        // After the save the two rows of the file are the same but for their image.
+        expect(asRows()).toEqual([
+          [11, 'asset-11', ['author-1'], false, 'source 11'],
+          [12, 'asset-12', ['author-9', 'author-8'], false, names],
+          [501, 'asset-12', ['author-9', 'author-8'], false, names],
+        ])
+        expect(offersAuthors()).toEqual([false, false, false])
+      })
+
+      // Nothing was saved into the asset that the row does not know of.
+      it('leaves the row the widget had as it is when the image of the file has no authors', async () => {
+        await withTwoImages()
+        rows()[1].findComponent(AuthorRemoteAutocompleteWithCached).vm.$emit('update:modelValue', ['author-7'])
+        await flushPromises()
+        await duplicateOfTheSecondUploaded()
+
+        await applied(3)
+
+        expect(asRows()).toEqual([
+          [11, 'asset-11', ['author-1'], false, 'source 11'],
+          [12, 'asset-12', ['author-7'], true, 'source 12'],
+          [undefined, 'asset-12', [], true, ''],
+        ])
+        expect(offersAuthors()).toEqual([false, true, true])
+      })
+
+      it('gives them to every row of that asset that offers the pick: to none that has its source, and to none of another asset', async () => {
+        // Three images: two of `file-12`, one of `file-14`.
+        imageApi.has(stored(12, 1))
+        imageApi.has({ ...stored(13, 2), dam: { ...stored(13, 2).dam, damId: 'file-12' } })
+        imageApi.has(stored(14, 3))
+        dam.assets.set(
+          'asset-12',
+          damAssetWithFile('asset-12', 'file-12', AssetFileProcessStatus.Processed, { licence })
+        )
+        dam.assets.set(
+          'asset-14',
+          damAssetWithFile('asset-14', 'file-14', AssetFileProcessStatus.Processed, { licence })
+        )
+        await mountWidget([12, 13, 14])
+        await vi.waitFor(() => expect(images()).toHaveLength(3))
+        await damNamesAsked()
+        // The second has its source, as a row whose asset was not read when it was picked.
+        images()[1].showDamAuthors = false
+        images()[1].texts.source = 'typed by hand'
+        await flushPromises()
+        await duplicateOfTheSecondUploaded()
+        await pickInQueueRow(['author-9'])
+
+        await applied(4)
+
+        expect(asRows()).toEqual([
+          [12, 'asset-12', ['author-9'], false, 'Name of author-9'],
+          [13, 'asset-12', [], false, 'typed by hand'],
+          [14, 'asset-14', [], true, 'source 14'],
+          [undefined, 'asset-12', ['author-9'], false, 'Name of author-9'],
+        ])
+        expect(offersAuthors()).toEqual([false, false, true, false])
+      })
+
+      // An ext system without the authors of the DAM: every row shows its source, which is the text of the user. The
+      // asset of the duplicate can have authors all the same, and the image of the file is named after them.
+      it('leaves the row the widget had as it is where the page draws no pick of the authors', async () => {
+        const config = useDamConfigStore(pinia)
+        const own = config.damConfigExtSystem.get(extSystem)!
+        config.damConfigExtSystem.set(extSystem, {
+          ...own,
+          image: { ...own.image!, authors: { enabled: false, required: false } },
+        })
+        await withTwoImages()
+        expect(offersAuthors()).toEqual([false, false])
+        // The asset has got an author since the widget read it.
+        dam.assets.get('asset-12')!.authors = ['author-9']
+        await duplicateOfTheSecondUploaded()
+
+        await applied(3)
+
+        expect(asRows()).toEqual([
+          [11, 'asset-11', ['author-1'], false, 'source 11'],
+          [12, 'asset-12', [], true, 'source 12'],
+          [undefined, 'asset-12', ['author-9'], false, 'Name of author-9'],
+        ])
+        expect(textsOf(rows()[1].element)).toEqual(['image 12', 'source 12'])
+      })
+    })
+  }
+
   // The picker offers the copy when the user browses another licence than the one the widget uploads into, which
   // only admin-cms has. Where the request of the copy goes is not what is asked here.
   if (isCms) {
@@ -1654,49 +1821,64 @@ describe.each(consumerProfiles)('the widget of several images under the $name', 
         expect(sourcesSaved()).toEqual(['source 11', 'Name of author-9'])
       })
 
-      // "Edit asset" writes its answer into the detail whenever it comes: closed from its loader and opened from
-      // another row, the detail shows the asset whose answer came last. What it showed is what was saved in it.
-      it('reads the asset the detail showed, when a late answer made it another than that of the row that opened it', async () => {
-        await withImages([12, 14])
-        damKeepsAuthors()
-        const held = dam.hold('GET', dam.routes.byFile)
-        await clickEditAsset(0)
-        await vi.waitFor(() => expect(held.waiting).toHaveLength(1))
-        const [first] = held.waiting
-        await closeDetail()
-        await clickEditAsset(1)
-        await vi.waitFor(() => expect(held.waiting).toHaveLength(2))
-        held.waiting[1].release()
-        await vi.waitFor(() => expect(detail().asset?.id).toBe('asset-14'))
-        first.release()
-        await vi.waitFor(() => expect(detail().asset?.id).toBe('asset-12'))
-        await flushPromises()
-        detailHasItsOwn('asset-12')
-        await saveInDetail(['author-9'])
+      // Closed from its loader and opened from another row, the detail has two reads on their way. It shows the asset
+      // of the row that opened it last, whichever answer comes first, and that asset is read when it closes. The
+      // answer that came last used to be shown, and read: this case pinned the asset of the row opened before.
+      it.each<[string, boolean]>([
+        ['first', true],
+        ['last', false],
+      ])(
+        'reads the asset of the row that opened the detail last, when the answer for the row opened before comes %s',
+        async (_when, olderFirst) => {
+          await withImages([12, 14])
+          damKeepsAuthors()
+          const held = dam.hold('GET', dam.routes.byFile)
+          await clickEditAsset(0)
+          await vi.waitFor(() => expect(held.waiting).toHaveLength(1))
+          const [first] = held.waiting
+          await closeDetail()
+          await clickEditAsset(1)
+          await vi.waitFor(() => expect(held.waiting).toHaveLength(2))
+          const second = held.waiting[1]
+          if (olderFirst) {
+            first.release()
+            await waits.settle()
+            expect([detail().asset, detail().loading]).toEqual([null, true])
+            second.release()
+          } else {
+            second.release()
+            await vi.waitFor(() => expect(detail().asset?.id).toBe('asset-14'))
+            first.release()
+          }
+          await vi.waitFor(() => expect(detail().asset?.id).toBe('asset-14'))
+          await waits.settle()
+          expect(detail().asset?.id).toBe('asset-14')
+          detailHasItsOwn('asset-14')
+          await saveInDetail(['author-9'])
 
-        await closeDetail()
-        await taken(0)
+          await closeDetail()
+          await taken(1)
 
-        expect(rereadsOf('asset-12')).toHaveLength(1)
-        expect(rereadsOf('asset-14')).toEqual([])
-        expect(images().map((image) => [image.assetId, image.damAuthors, image.showDamAuthors])).toEqual([
-          ['asset-12', ['author-9'], false],
-          ['asset-14', [], true],
-        ])
-      })
+          expect(rereadsOf('asset-14')).toHaveLength(1)
+          expect(rereadsOf('asset-12')).toEqual([])
+          expect(images().map((image) => [image.assetId, image.damAuthors, image.showDamAuthors])).toEqual([
+            ['asset-12', [], true],
+            ['asset-14', ['author-9'], false],
+          ])
+        }
+      )
 
-      // A detail that showed no asset had nothing saved in it. It used to be read again by the file of its row, and
-      // a read that failed was said a second time.
-      it('reads nothing for a detail closed from its loader, also over an asset a late answer has left behind', async () => {
+      // A detail that showed no asset had nothing saved in it. The answer that comes once it has closed is not taken:
+      // it used to stay in the store of the detail, which this case pinned.
+      it('reads nothing for a detail closed from its loader, and takes nothing of the answer that comes after', async () => {
         await withTwoImages()
         const held = dam.hold('GET', dam.routes.byFile)
         await clickEditAsset(1)
         await vi.waitFor(() => expect(held.waiting).toHaveLength(1))
         await closeDetail()
-        // The answer comes after the detail has closed, and stays in the store of the detail.
         held.release()
-        await vi.waitFor(() => expect(detail().asset?.id).toBe('asset-12'))
-        await flushPromises()
+        await waits.settle()
+        expect([detail().dialog, detail().asset, detail().loading]).toEqual([null, null, false])
 
         await clickEditAsset(1)
         await vi.waitFor(() => expect(held.waiting).toHaveLength(1))
@@ -1707,20 +1889,22 @@ describe.each(consumerProfiles)('the widget of several images under the $name', 
         // The two reads "edit asset" made, and none after either close.
         expect(readsByFile()).toEqual([byFile('file-12'), byFile('file-12')])
         expect(rereadsOf('asset-12')).toEqual([])
+        expect(detail().asset).toBeNull()
         expect(images()[1]).toMatchObject({ damAuthors: [], showDamAuthors: true })
         expect(shownAlerts()).toEqual([])
       })
 
-      it('reads nothing for a detail whose asset could not be read, and says that failure once', async () => {
+      // Such a detail closes by itself: it used to stay, over the whole page, with nothing drawn in it, and this case
+      // closed it by hand.
+      it('reads nothing for a detail whose asset could not be read: it closes by itself, and that failure is said once', async () => {
         await withTwoImages()
         dam.reply((request) => (dam.routes.byFile.test(request.url) ? { status: 500 } : undefined))
         await clickEditAsset(1)
         await vi.waitFor(() => expect(shownAlerts()).toEqual([['error', alertText('common.alert.unknownError')]]))
-        await flushPromises()
-
-        await closeDetail()
         await waits.settle()
 
+        expect([detail().dialog, detail().loading]).toEqual([null, false])
+        expect(widget!.findComponent({ name: 'AssetDetailDialogFrame' }).exists()).toBe(false)
         expect(readsByFile()).toEqual([byFile('file-12')])
         expect(rereadsOf('asset-12')).toEqual([])
         expect(shownAlerts()).toEqual([['error', alertText('common.alert.unknownError')]])
@@ -1728,37 +1912,61 @@ describe.each(consumerProfiles)('the widget of several images under the $name', 
 
       // The detail a row of the queue dialog opens is drawn by the widget as well: its save writes into the rows of
       // the queue, and its close reads nothing for the rows of the widget, also when one of them is of that asset.
-      it('reads nothing when the detail was opened from a row of the queue dialog', async () => {
-        await withTwoImages()
-        // A detail of a row of the widget was opened and closed before: nothing of it is left for the next one.
-        await editAssetOf(1)
-        await closeDetail()
-        await vi.waitFor(() => expect(rereadsOf('asset-12')).toHaveLength(1))
-        // The queue has a row of the asset of that row: a copy to the licence, which waits for the server.
-        await queue().addByCopyToLicence(QUEUE, extSystem, licence, ['asset-12'])
-        useUploadQueueDialog().uploadQueueDialog.value = QUEUE
-        await waits.elapse()
-        await vi.waitFor(() => expect(statuses()).toEqual([Uploaded]))
-        await flushPromises()
+      // Nothing of a detail of a row of the widget is left for it: neither of one the user closed, nor of one that
+      // closed by itself, of which the widget is told as of any close.
+      it.each<[string, () => Promise<void>]>([
+        [
+          'the user closed',
+          async () => {
+            await editAssetOf(1)
+            await closeDetail()
+            await vi.waitFor(() => expect(rereadsOf('asset-12')).toHaveLength(1))
+          },
+        ],
+        [
+          'that closed by itself, its asset unreadable',
+          async () => {
+            const answerAgain = dam.reply((request) =>
+              dam.routes.byFile.test(request.url) ? { status: 500 } : undefined
+            )
+            await clickEditAsset(1)
+            await vi.waitFor(() => expect(shownAlerts()).toHaveLength(1))
+            await waits.settle()
+            expect(detail().dialog).toBeNull()
+            answerAgain()
+          },
+        ],
+      ])(
+        'reads nothing when the detail was opened from a row of the queue dialog, after one of a row %s',
+        async (_which, before) => {
+          await withTwoImages()
+          await before()
+          // The queue has a row of the asset of that row: a copy to the licence, which waits for the server.
+          await queue().addByCopyToLicence(QUEUE, extSystem, licence, ['asset-12'])
+          useUploadQueueDialog().uploadQueueDialog.value = QUEUE
+          await waits.elapse()
+          await vi.waitFor(() => expect(statuses()).toEqual([Uploaded]))
+          await flushPromises()
 
-        Array.from(
-          queueDialog()!.querySelectorAll<HTMLElement>('.dam-upload-queue__item')[0].querySelectorAll('button')
-        )
-          .find((button) => button.textContent?.trim() === damText('image.button.editAsset'))!
-          .click()
-        await vi.waitFor(() => expect(detail().asset?.id).toBe('asset-12'))
-        await flushPromises()
-        detailHasItsOwn('asset-12')
-        damKeepsAuthors()
-        await saveInDetail(['author-9'])
-        const readBefore = rereadsOf('asset-12').length
-        await closeDetail()
-        await waits.settle()
+          Array.from(
+            queueDialog()!.querySelectorAll<HTMLElement>('.dam-upload-queue__item')[0].querySelectorAll('button')
+          )
+            .find((button) => button.textContent?.trim() === damText('image.button.editAsset'))!
+            .click()
+          await vi.waitFor(() => expect(detail().asset?.id).toBe('asset-12'))
+          await flushPromises()
+          detailHasItsOwn('asset-12')
+          damKeepsAuthors()
+          await saveInDetail(['author-9'])
+          const readBefore = rereadsOf('asset-12').length
+          await closeDetail()
+          await waits.settle()
 
-        expect(detail().dialog).toBeNull()
-        expect(rereadsOf('asset-12')).toHaveLength(readBefore)
-        expect(images()[1]).toMatchObject({ damAuthors: [], showDamAuthors: true })
-      })
+          expect(detail().dialog).toBeNull()
+          expect(rereadsOf('asset-12')).toHaveLength(readBefore)
+          expect(images()[1]).toMatchObject({ damAuthors: [], showDamAuthors: true })
+        }
+      )
 
       // Whether the page draws the pick of the authors goes by one ext system for the whole page, which "edit asset"
       // sets to that of its asset. The rows that offered the pick when the detail closed are the ones that take the

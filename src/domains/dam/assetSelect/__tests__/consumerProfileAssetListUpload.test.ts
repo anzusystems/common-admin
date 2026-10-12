@@ -10,6 +10,7 @@ import {
 import { type DamSocket, stubDamSocket } from '@/domains/dam/__tests__/support/damSocket'
 import {
   createFakeDam,
+  damAssetWithFile,
   type FakeDam,
   type FakeDamAnswer,
   type FakeDamRequest,
@@ -24,7 +25,9 @@ import {
   signOutOfDam,
   uiText,
 } from '@/domains/dam/__tests__/support/uploadUi'
+import { useAssetDetailStore } from '@/domains/dam/assetDetail/store/assetDetailStore'
 import AAssetListInner from '@/domains/dam/assetSelect/components/AAssetListInner.vue'
+import { useSidebar } from '@/domains/dam/assetSelect/composables/assetSelectFilterSidebar'
 import { useAssetSelectStore } from '@/domains/dam/assetSelect/store/assetSelectStore'
 import { destroyDamNotifications, initDamNotifications } from '@/domains/dam/composables/damNotifications'
 import { useDamNotificationsEventBus } from '@/domains/dam/composables/damNotificationsEventBus'
@@ -42,7 +45,8 @@ import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueu
 // does, and which filters it has. The real list with its real filter and its real queue dialog over the real queue;
 // the DAM is a client that records its requests, and only the long waits are taken out of real time. Not mounted for
 // real: the bar, the tiles and the table of the list, the metadata of the picked asset, the asset detail, the rows
-// inside the queue dialog, and the inputs of the filter (each is named by a stand-in).
+// inside the queue dialog, and the inputs of the filter (each is named by a stand-in). The cases of the side panel
+// and the detail mount the tiles, the rows and the dialog of the detail for real.
 
 const QUEUE = 'asset-page'
 const FILTER_INPUTS = [
@@ -108,8 +112,12 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
     upload?: boolean
     props?: Record<string, unknown>
     slots?: Record<string, (props: never) => unknown>
+    /** Mounted for real, of what a stand-in names otherwise. */
+    real?: string[]
+    /** Named by a stand-in as well: what the parts mounted for real would draw. */
+    standIns?: string[]
   }
-  const mountList = async ({ upload = true, props = {}, slots = {} }: MountOptions = {}) => {
+  const mountList = async ({ upload = true, props = {}, slots = {}, real = [], standIns = [] }: MountOptions = {}) => {
     wrapper = mount(AAssetListInner, {
       attachTo: document.body,
       props: {
@@ -133,7 +141,10 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
             'AssetDetailDialog',
             'UploadQueueEditable',
             ...FILTER_INPUTS,
-          ].map((name) => [name, true])
+            ...standIns,
+          ]
+            .filter((name) => !real.includes(name))
+            .map((name) => [name, true])
         ),
       },
     })
@@ -455,6 +466,154 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
       await vi.waitFor(() => expect(titles()).toEqual(['a.jpg', 'meanwhile.jpg']))
     })
   })
+
+  // The side panel of the list shows the asset picked by a click, and the detail of an asset shows the asset of the
+  // same store, one for the page. When a detail closes the list reads the asset of its side panel again. Since a
+  // detail of a row of the queue closes by itself when its asset cannot be read, that read can still be on its way
+  // when "edit asset" of the row is pressed again: written whenever it answered, the asset of the side panel was what
+  // the detail of the row showed, and what its save wrote into. The asset page of admin-ugc is where the list has
+  // an upload.
+  if (!isCms) {
+    describe('the asset of its side panel, read again when a detail has closed', () => {
+      const { Processing, Uploaded } = UploadQueueItemStatus
+      const detail = () => useAssetDetailStore(pinia)
+      const picked = (title: string) =>
+        damAssetWithFile('asset-50', 'file-50', AssetFileProcessStatus.Processed, {
+          licence,
+          texts: { displayTitle: title },
+        })
+      const readOf = (asset: string) => new RegExp(`^${endPoints.asset}/${asset}$`)
+      const readsOf = (asset: string) => dam.sentTo('GET', readOf(asset)).length
+      const closeDetail = () => wrapper!.findComponent({ name: 'AssetDetailDialogFrame' }).vm.$emit('close')
+      const editAssetOfRow = () =>
+        Array.from(queueDialog()!.querySelectorAll<HTMLButtonElement>('.dam-upload-queue__item button')).find(
+          (button) => button.textContent?.trim() === damText('image.button.editAsset')
+        )!
+
+      afterEach(() => useSidebar().closeSidebarRight())
+
+      /** The list has one asset, which the user picks by a click: its side panel shows it. Returns the page's entry. */
+      const mountWithPickedAsset = async () => {
+        dam.assets.set('asset-50', picked('Picked in the list'))
+        dam.reply((request) =>
+          isListRequest(request)
+            ? { status: 200, data: { data: [dam.assets.get('asset-50')], totalCount: 1 } }
+            : undefined
+        )
+        let handed: { onFileInput: (files: File[]) => void }
+        await mountList({
+          real: ['AssetSelectListTiles', 'AssetDetailDialog', 'UploadQueueEditable'],
+          standIns: [
+            'AssetDetailDialogFrame',
+            'AssetImagePreview',
+            'AssetImage',
+            'AssetQueueSelectedSidebar',
+            'AFileDropzone',
+            'AFormRemoteAutocompleteWithCached',
+          ],
+          slots: {
+            'upload-activator': (slotProps: never) => {
+              handed = slotProps
+              return h('button')
+            },
+          },
+        })
+        await listed()
+        await wrapper!.find('.asset-list-tiles__item').trigger('click')
+        await vi.waitFor(() => expect(detail().asset?.id).toBe('asset-50'))
+        await flushPromises()
+        expect(readsOf('asset-50')).toBe(1)
+        return (name: string) => handed.onFileInput([photo(name)])
+      }
+      /** A file is uploaded through the page's entry: its row of the queue is `asset-1`, with its form. */
+      const oneUploaded = async (handOver: (name: string) => void) => {
+        handOver('a.jpg')
+        const row = () => queue().getQueueItems(QUEUE)[0]
+        await vi.waitFor(() => expect(row()?.status).toBe(Processing))
+        dam.fileBecomes('asset-1', AssetFileProcessStatus.Processed, {
+          texts: { displayTitle: 'Uploaded' },
+          metadata: { customData: { description: 'from the server' }, authorSuggestions: {}, keywordSuggestions: {} },
+        })
+        await waits.elapse()
+        await vi.waitFor(() => expect(row()!.status).toBe(Uploaded))
+        await flushPromises()
+      }
+
+      // The path that did not change: one read of the picked asset, and the side panel shows what it answers with.
+      it('shows the picked asset as it is by then, once the detail opened from the side panel is closed by its button', async () => {
+        await mountWithPickedAsset()
+        // The side panel is a column of a wide window, and a dialog of a narrow one, which its button opens.
+        useSidebar().openSidebarRight()
+        await flushPromises()
+
+        wrapper!.findComponent({ name: 'AssetMetadata' }).vm.$emit('editInDam')
+        await flushPromises()
+        expect([detail().dialog, detail().asset?.id]).toEqual([QUEUE, 'asset-50'])
+        // As a save of the detail leaves it in the DAM.
+        dam.assets.set('asset-50', picked('Saved in the detail'))
+        const before = dam.requests.length
+
+        closeDetail()
+        await vi.waitFor(() => expect(detail().asset?.texts.displayTitle).toBe('Saved in the detail'))
+        await flushPromises()
+
+        expect([detail().dialog, detail().asset?.id, detail().loading]).toEqual([null, 'asset-50', false])
+        expect(dam.requests.slice(before).map((request) => `${request.method} ${request.url}`)).toEqual([
+          `GET ${endPoints.asset}/asset-50`,
+        ])
+        expect(shownAlerts()).toEqual([])
+      })
+
+      it.each<[string, boolean]>([
+        ['first', true],
+        ['last', false],
+      ])(
+        'leaves the detail of a row of the queue, opened again while that read is on its way, the asset of the row: the answer for the side panel comes %s',
+        async (_when, panelFirst) => {
+          await oneUploaded(await mountWithPickedAsset())
+          const answerAgain = dam.reply((request) =>
+            request.method === 'GET' && readOf('asset-1').test(request.url) ? { status: 500 } : undefined
+          )
+          const panel = dam.hold('GET', readOf('asset-50'))
+
+          // The asset of the row cannot be read: its detail closes by itself, and the list reads its side panel again.
+          editAssetOfRow().click()
+          await vi.waitFor(() => expect(shownAlerts()).toHaveLength(1))
+          await vi.waitFor(() => expect(panel.waiting).toHaveLength(1))
+          expect([detail().dialog, detail().asset]).toEqual([null, null])
+          const readForThePanel = panel.waiting[0]!
+
+          answerAgain()
+          const row = dam.hold('GET', readOf('asset-1'))
+          editAssetOfRow().click()
+          await vi.waitFor(() => expect(row.waiting).toHaveLength(1))
+
+          if (panelFirst) {
+            readForThePanel.release()
+            await waits.settle()
+            expect([detail().dialog, detail().asset, detail().loading]).toEqual([QUEUE, null, true])
+            row.release()
+          } else {
+            row.release()
+            await vi.waitFor(() => expect(detail().asset?.id).toBe('asset-1'))
+            readForThePanel.release()
+          }
+          await vi.waitFor(() => expect(detail().asset?.id).toBe('asset-1'))
+          await waits.settle()
+
+          expect([detail().dialog, detail().asset?.id, detail().loading]).toEqual([QUEUE, 'asset-1', false])
+          expect(shownAlerts()).toHaveLength(1)
+
+          // Closed by its button, the detail has the list read its side panel again: it shows the picked asset.
+          closeDetail()
+          await vi.waitFor(() => expect(panel.waiting).toHaveLength(1))
+          panel.release()
+          await vi.waitFor(() => expect(detail().asset?.id).toBe('asset-50'))
+          expect([detail().dialog, readsOf('asset-50')]).toEqual([null, 3])
+        }
+      )
+    })
+  }
 
   describe('its filter', () => {
     // admin-ugc names the two filters its users get; admin-cms names none and gets them all.

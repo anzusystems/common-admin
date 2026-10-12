@@ -179,8 +179,9 @@ const onCloseEditDialog = async () => {
   if (!activeItem) return
   detailLoading.value = true
   try {
-    const assetData = await fetchAsset(damClient, endPointAsset, activeItem.asset.id)
-    assetDetailStore.setAsset(assetData)
+    // Not written over a detail: one of a row of the queue closes by itself when its asset cannot be read, and can be
+    // opened again before this read answers.
+    await assetDetailStore.readBesideDetail(() => fetchAsset(damClient, endPointAsset, activeItem.asset.id))
   } catch (e) {
     showErrorsDefault(e)
   } finally {

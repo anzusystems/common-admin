@@ -415,7 +415,7 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
 }
 
 const assetDetailStore = useAssetDetailStore()
-const { loading: assetLoading, dialog: assetDialog } = storeToRefs(assetDetailStore)
+const { dialog: assetDialog } = storeToRefs(assetDetailStore)
 const {
   damClient,
   endPointAsset,
@@ -441,26 +441,44 @@ onBeforeUnmount(() => {
 })
 
 const onEditAsset = async (assetFileId: DocId) => {
-  assetLoading.value = true
-  assetDialog.value = props.queueKey
   detailOfRow = true
+  let extSystem: IntegerId | null = null
   try {
-    const asset = await fetchAssetByFileId(damClient, endPointAsset, assetFileId)
-    const extSystem = await getExtSystemByLicence(asset.licence)
-    if (extSystem) {
-      cachedExtSystemId.value = extSystem
-    }
-    assetDetailStore.setAsset(asset)
+    await assetDetailStore.open(
+      props.queueKey,
+      async () => {
+        const asset = await fetchAssetByFileId(damClient, endPointAsset, assetFileId)
+        extSystem = await getExtSystemByLicence(asset.licence)
+        return asset
+      },
+      // Only for the asset the detail shows: an answer it no longer waits for must not change the ext system the page
+      // asks for names under.
+      () => {
+        if (extSystem) cachedExtSystemId.value = extSystem
+      }
+    )
   } catch (e) {
     showErrorsDefault(e)
-  } finally {
-    assetLoading.value = false
   }
 }
 
 const onAssetUploadConfirm = (items: ImageStoreItem[]) => {
   if (props.readonly) return
   if (items.length === 0) return
+  // A file that is a duplicate of one the widget has becomes the asset of that image in the queue, and the dialog has
+  // just saved its authors. The rows of that asset that offer the pick take them with their names, as after its detail
+  // has closed: left as they were, what is picked in them would be written over those authors.
+  if (authorEnabled.value) {
+    items.forEach((item) => {
+      if (isUndefined(item.assetId) || item.damAuthors.length === 0) return
+      images.value.forEach((image) => {
+        if (image.assetId !== item.assetId || !image.showDamAuthors) return
+        image.damAuthors = [...item.damAuthors]
+        image.texts.source = item.texts.source
+        image.showDamAuthors = false
+      })
+    })
+  }
   imageStore.addImages(positioned(items))
   uploadQueueDialog.value = null
   uploadQueuesStore.stopUpload(props.queueKey)
@@ -518,7 +536,7 @@ const takeAuthorsOfDetailAsset = async (assetId: DocId, detailSave: Promise<void
 }
 
 /**
- * `shown`: the asset the detail showed, which a late answer can make another than that of the row that opened it.
+ * `shown`: the asset the detail showed; none when it closed from its loader, or by itself after a read that failed.
  * What the read goes by is noted here, before anything is awaited: whether a row of that asset offers the pick, the
  * save of the detail that is on its way, and the ext system of the page.
  */
