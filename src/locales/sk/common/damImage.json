@@ -200,7 +200,8 @@
       "agency": "Agentúra"
     },
     "button": {
-      "add": "Pridať nového autora"
+      "add": "Pridať nového autora",
+      "addConflict": "Pridať autora"
     },
     "meta": {
       "create": "Vytvorenie autora"

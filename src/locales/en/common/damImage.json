@@ -200,7 +200,8 @@
       "agency": "Agency"
     },
     "button": {
-      "add": "Add new author"
+      "add": "Add new author",
+      "addConflict": "Add author"
     },
     "meta": {
       "create": "Creating author"

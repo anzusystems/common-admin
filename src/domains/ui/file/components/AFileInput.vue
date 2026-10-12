@@ -4,6 +4,7 @@ import { isBoolean, isUndefined } from '@/shared/utils/common'
 import AFileDropzone from '@/domains/ui/file/components/AFileDropzone.vue'
 import type { InputFileChangeEvent } from '@/shared/types/ChangeEvent'
 import { useFormatAndSizeCheck } from '@/domains/ui/file/composables/formatAndSizeCheck'
+import { useAlerts } from '@/domains/system/composables/alerts'
 
 /**
  * For accept and maxSizes check docs {@see useFormatAndSizeCheck}
@@ -58,6 +59,7 @@ const { checkFormatsAndSizes } = useFormatAndSizeCheck(
   () => props.accept,
   () => props.maxSizes
 )
+const { showWarningT } = useAlerts()
 
 const validateData = (files: File[]) => {
   if (!props.multiple && files.length > 0) {
@@ -70,7 +72,15 @@ const validateData = (files: File[]) => {
 }
 
 const onDropzoneDrop = (files: File[]) => {
-  validateData(files)
+  if (props.multiple) {
+    validateData(files)
+    return
+  }
+  // One file is taken: the first the check lets through. Taken before the check, the first dropped lost a file
+  // the check lets through whenever one it refuses was dropped before it.
+  const checked = checkFormatsAndSizes(files)
+  if (checked.length > 1) showWarningT('common.damImage.upload.onlyOneFile')
+  emit('filesInput', checked.slice(0, 1))
 }
 
 const onInputFileChange = (payload: Event) => {

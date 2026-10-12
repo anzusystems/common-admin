@@ -37,6 +37,10 @@ const { replaceEmptyDescription, replaceEmptySource, replaceEmptyAuthors } = use
 const { t } = useI18n()
 const { showErrorsDefault } = useAlerts()
 
+// The two icon buttons beside a field, named for who cannot see them: what each does, and to which field.
+const fillEmptyName = (field: string) => t('common.damImage.asset.massOperations.fillOneEmptyField', { field })
+const replaceName = (field: string) => t('common.damImage.asset.massOperations.replaceOneField', { field })
+
 // The authors' names are looked up first, and nothing is filled when that fails.
 const fillAuthors = async (forceReplace: boolean) => {
   try {
@@ -106,7 +110,7 @@ const showDamAuthorsAtLeastOne = computed(() => {
             :label="t('common.damImage.image.model.texts.description')"
           />
           <VBtn
-            :aria-label="t('common.damImage.asset.massOperations.fillOneEmpty')"
+            :aria-label="fillEmptyName(t('common.damImage.image.model.texts.description'))"
             icon
             size="small"
             variant="text"
@@ -122,7 +126,7 @@ const showDamAuthorsAtLeastOne = computed(() => {
             </VTooltip>
           </VBtn>
           <VBtn
-            :aria-label="t('common.damImage.asset.massOperations.replaceOne')"
+            :aria-label="replaceName(t('common.damImage.image.model.texts.description'))"
             icon
             size="small"
             variant="text"
@@ -161,7 +165,7 @@ const showDamAuthorsAtLeastOne = computed(() => {
               />
             </div>
             <VBtn
-              :aria-label="t('common.damImage.asset.massOperations.fillOneEmpty')"
+              :aria-label="fillEmptyName(t('common.damImage.asset.model.authors'))"
               icon
               size="small"
               variant="text"
@@ -177,7 +181,7 @@ const showDamAuthorsAtLeastOne = computed(() => {
               </VTooltip>
             </VBtn>
             <VBtn
-              :aria-label="t('common.damImage.asset.massOperations.replaceOne')"
+              :aria-label="replaceName(t('common.damImage.asset.model.authors'))"
               icon
               size="small"
               variant="text"
@@ -207,7 +211,7 @@ const showDamAuthorsAtLeastOne = computed(() => {
             :label="sourceLabel"
           />
           <VBtn
-            :aria-label="t('common.damImage.asset.massOperations.fillOneEmpty')"
+            :aria-label="fillEmptyName(sourceLabel)"
             icon
             size="small"
             variant="text"
@@ -223,7 +227,7 @@ const showDamAuthorsAtLeastOne = computed(() => {
             </VTooltip>
           </VBtn>
           <VBtn
-            :aria-label="t('common.damImage.asset.massOperations.replaceOne')"
+            :aria-label="replaceName(sourceLabel)"
             icon
             size="small"
             variant="text"

@@ -161,8 +161,10 @@ const { mainFileSingleUseEnabled, showFileInfoEnabled } = useCommonAdminCoreDamO
         </VForm>
       </VExpansionPanelText>
     </VExpansionPanel>
+    <!-- Of the asset of this row only: the store is shared, and holds what was left in it until the dialog has
+         read its own. -->
     <AssetFileInfoPanel
-      v-if="asset && showFileInfoEnabled"
+      v-if="asset && asset.id === item.assetId && showFileInfoEnabled"
       :asset="asset"
       :show-users="false"
     />

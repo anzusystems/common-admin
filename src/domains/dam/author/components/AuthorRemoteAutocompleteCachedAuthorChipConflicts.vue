@@ -40,10 +40,12 @@ const { t } = useI18n()
 </script>
 
 <template>
+  <!-- The "+" adds the author, and is named so: Vuetify translates the key, as it does its own "close". -->
   <VChip
     size="small"
     closable
     close-icon="mdi-plus"
+    close-label="common.damImage.author.button.addConflict"
     @click:close="clickClose"
   >
     {{ displayTitle }}

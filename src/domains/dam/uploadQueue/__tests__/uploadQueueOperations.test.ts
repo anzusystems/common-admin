@@ -667,15 +667,101 @@ describe('a save in the asset detail', () => {
     expect(here.keywords).toEqual(['keyword-saved'])
   })
 
-  it('leaves the rows as they are when the asset cannot be read', async () => {
-    const { store, here, there } = await copiesInTwoQueues()
-    const before = [here, there].map(rowState)
-    const detail = dam.fileBecomes('asset-1', AssetFileProcessStatus.Processed, saved)
-    dam.reply((request) => (request.method === 'GET' ? { status: 502 } : undefined))
+  describe('when the asset cannot be read again', () => {
+    /** The asset as the detail holds it after its save: with what was saved, and the switch it had when loaded. */
+    const heldByTheDetail = (mainFileSingleUse: boolean | null = null) =>
+      damAssetWithFile('asset-1', 'file-1', AssetFileProcessStatus.Processed, {
+        ...structuredClone(saved),
+        mainFileSingleUse,
+      })
+    const failAssetReads = () =>
+      dam.reply((request) =>
+        request.method === 'GET' && dam.routes.one.test(request.url) ? { status: 502 } : undefined
+      )
 
-    await expect(store.updateFromDetail(detail)).resolves.toBeUndefined()
+    // The detail is saved by then. Rows left as they were would send their old values with the next save of the
+    // queue, over what the user has just saved. The detail keeps its switch apart from the asset, and names it.
+    it.each([true, false])(
+      'gives the rows of that asset what the detail saved, the single-use switch (%s) too',
+      async (singleUse) => {
+        const { store, here, other, there } = await copiesInTwoQueues()
+        for (const item of [here, other, there]) item.mainFileSingleUse = !singleUse
+        const untouched = rowState(other)
+        failAssetReads()
 
-    expect([here, there].map(rowState)).toEqual(before)
+        await expect(store.updateFromDetail(heldByTheDetail(!singleUse), undefined, singleUse)).resolves.toBeUndefined()
+
+        for (const item of [here, there]) {
+          expect(item).toMatchObject({
+            keywords: ['keyword-saved'],
+            authors: ['author-saved'],
+            customData: { title: 'saved in the detail' },
+            mainFileSingleUse: singleUse,
+            // What the DAM suggests is not the detail's to say: as the rows had it.
+            authorConflicts: [],
+            status: Uploaded,
+            canEditMetadata: true,
+          })
+        }
+        expect(rowState(other)).toEqual(untouched)
+
+        await bulkUpdateAssetsMetadata(dam.client, endPoints.asset, store.getQueueItems(QUEUE))
+        const [sent] = dam.sentTo('PATCH', dam.routes.bulkMetadata)
+        expect(dam.body(sent)).toMatchObject([
+          {
+            id: 'asset-1',
+            keywords: ['keyword-saved'],
+            authors: ['author-saved'],
+            customData: { title: 'saved in the detail' },
+            mainFileSingleUse: singleUse,
+          },
+          { id: 'asset-2', customData: { title: 'typed in the row' }, mainFileSingleUse: !singleUse },
+        ])
+      }
+    )
+
+    // The detail goes on being typed into, and so does each row.
+    it('gives each row copies of its own, and none of them the lists of the detail', async () => {
+      const { store, here, there } = await copiesInTwoQueues()
+      const detail = heldByTheDetail()
+      detail.metadata.customData.tags = ['saved']
+      failAssetReads()
+
+      await store.updateFromDetail(detail)
+      here.keywords.push('typed-into-the-row')
+      here.authors.push('typed-into-the-row')
+      here.customData.title = 'typed into the row'
+      here.customData.tags.push('typed into the row')
+      detail.keywords.push('typed-into-the-detail')
+      detail.authors.push('typed-into-the-detail')
+      detail.metadata.customData.title = 'typed into the detail'
+      detail.metadata.customData.tags.push('typed into the detail')
+
+      expect(there).toMatchObject({
+        keywords: ['keyword-saved'],
+        authors: ['author-saved'],
+        customData: { title: 'saved in the detail', tags: ['saved'] },
+      })
+      expect(here).toMatchObject({
+        keywords: ['keyword-saved', 'typed-into-the-row'],
+        authors: ['author-saved', 'typed-into-the-row'],
+        customData: { title: 'typed into the row', tags: ['saved', 'typed into the row'] },
+      })
+    })
+
+    // A caller that names no switch: the rows keep theirs.
+    it('leaves the rows their switch when the detail names none', async () => {
+      const { store, here, there } = await copiesInTwoQueues()
+      for (const item of [here, there]) item.mainFileSingleUse = true
+      failAssetReads()
+
+      await store.updateFromDetail(heldByTheDetail(false))
+
+      expect([here, there].map((item) => [item.customData, item.mainFileSingleUse])).toEqual([
+        [{ title: 'saved in the detail' }, true],
+        [{ title: 'saved in the detail' }, true],
+      ])
+    })
   })
 
   it('does not settle a row that still waits for its file', async () => {

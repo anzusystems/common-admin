@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import AssetDetailSidebarActionsWrapper from '@/domains/dam/assetDetail/components/AssetDetailSidebarActionsWrapper.vue'
-import { isNull } from '@/shared/utils/common'
+import { cloneDeep, isNull } from '@/shared/utils/common'
 import { useI18n } from 'vue-i18n'
 import { computed, ref } from 'vue'
 import { useAlerts } from '@/domains/system/composables/alerts'
@@ -53,7 +53,8 @@ const v$ = useVuelidate({ $scope: ADamAssetMetadataValidationScopeSymbol, $stopP
 const { damClient, endPointAsset } = useCommonAdminCoreDamOptions(damConfigName)
 
 const onSave = async () => {
-  if (isNull(asset.value) || saveBlocked.value) return
+  // The spinning button still takes Enter and Space: a save that runs is not sent again.
+  if (isNull(asset.value) || saveBlocked.value || saveButtonLoading.value) return
   saveButtonLoading.value = true
   v$.value.$touch()
   if (v$.value.$invalid) {
@@ -61,10 +62,16 @@ const onSave = async () => {
     saveButtonLoading.value = false
     return
   }
+  // One copy of what is saved, taken before it is sent, and the queue is told by that copy. The form is not locked
+  // while the save runs, and the detail can be closed, or opened on another asset, before the answer: read then,
+  // the rows of the queue got what was typed since as if it were saved, or nothing at all.
+  const saved = cloneDeep(asset.value)
+  const savedSingleUse = mainFileSingleUse.value
+  const tellsQueue = updateUploadStore.value
   try {
-    await updateAssetMetadata(damClient, endPointAsset, asset.value, props.extSystem, mainFileSingleUse.value)
-    if (updateUploadStore.value && !isNull(asset.value)) {
-      await uploadQueueStore.updateFromDetail(asset.value, damConfigName)
+    await updateAssetMetadata(damClient, endPointAsset, saved, props.extSystem, savedSingleUse)
+    if (tellsQueue) {
+      await uploadQueueStore.updateFromDetail(saved, damConfigName, savedSingleUse)
     }
     showRecordWas('updated')
   } catch (error) {

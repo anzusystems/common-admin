@@ -7,17 +7,10 @@ import { isNull, isUndefined } from '@/shared/utils/common'
 import {
   AnzuApiValidationError,
   type AnzuApiValidationResponseData,
-  axiosErrorResponseHasValidationData,
   isAnzuApiValidationError,
   type ValidationError,
 } from '@/shared/error/AnzuApiValidationError'
 import { useAlerts } from '@/domains/system/composables/alerts'
-import { AnzuApiForbiddenError, axiosErrorResponseIsForbidden } from '@/shared/error/AnzuApiForbiddenError'
-import {
-  AnzuApiForbiddenOperationError,
-  axiosErrorResponseHasForbiddenOperationData,
-} from '@/shared/error/AnzuApiForbiddenOperationError'
-import { AnzuFatalError } from '@/shared/error/AnzuFatalError'
 import { SYSTEM_CORE_DAM } from '@/domains/dam/api/damConstants'
 import { useDamConfigState } from '@/domains/dam/config/composables/damConfigState'
 import { useApiFetchList } from '@/domains/api/composables/useApiFetchList'
@@ -308,32 +301,6 @@ export const showMetadataSaveError = (error: unknown, extSystem: IntegerId) => {
   if (!showErrorsDefault(error)) showUnknownError()
 }
 
-const handleMetadataValidationError = (error: any, assetType: DamAssetTypeType, extSystem: IntegerId) => {
-  const { getDamConfigAssetCustomFormElements } = useDamConfigState()
-  const configAssetCustomFormElements = getDamConfigAssetCustomFormElements(extSystem)
-  if (isUndefined(configAssetCustomFormElements)) {
-    throw new Error('Custom form elements must be initialised.')
-  }
-  if (!error || !error.response || !error.response.data) return
-  const data = error.response.data as AnzuApiValidationResponseData
-  const items = [] as ValidationError[]
-  for (const [key, values] of Object.entries(data.fields)) {
-    const field = key.split('.').pop()
-    const found = configAssetCustomFormElements[assetType].find((item) => item.property === field)
-    if (found) {
-      items.push({
-        field: found.name,
-        errors: values,
-      })
-    }
-  }
-  if (items.length) {
-    showApiValidationError(items, -1, true)
-    return
-  }
-  showUnknownError()
-}
-
 // `extSystem` is no longer read here: the caller names the fields of a refusal, through `showMetadataSaveError`.
 export const updateAssetMetadata = async (
   client: () => AxiosInstance,
@@ -355,42 +322,16 @@ export const updateAssetMetadata = async (
   await saveMetadataInBatches(execute, [data], [asset.attributes.assetType])
 }
 
-export const updateAssetAuthors = (
-  client: () => AxiosInstance,
-  endPoint: string,
-  asset: AssetDetailItemDto,
-  extSystem: IntegerId
-) => {
-  return new Promise((resolve, reject) => {
-    const data: Partial<AssetMetadataBulkItem> = {
-      id: asset.id,
-      authors: asset.authors,
-      described: true,
-    }
-    client()
-      .patch(endPoint + '/metadata-bulk-update', JSON.stringify([data]))
-      .then((res) => {
-        if (res.status === HTTP_STATUS_OK) {
-          resolve(res.data)
-        } else {
-          //
-          reject()
-        }
-      })
-      .catch((err) => {
-        if (axiosErrorResponseIsForbidden(err)) {
-          return reject(new AnzuApiForbiddenError(err, err.config?.url))
-        }
-        if (axiosErrorResponseHasValidationData(err)) {
-          handleMetadataValidationError(err, asset.attributes.assetType, extSystem)
-          return reject(new AnzuApiValidationError(err, SYSTEM_CORE_DAM, ENTITY, err))
-        }
-        if (axiosErrorResponseHasForbiddenOperationData(err)) {
-          return reject(new AnzuApiForbiddenOperationError(err, err))
-        }
-        return reject(new AnzuFatalError(err))
-      })
-  })
+// As `updateAssetMetadata`: the caller names the fields of a refusal, through `showMetadataSaveError`.
+export const updateAssetAuthors = async (client: () => AxiosInstance, endPoint: string, asset: AssetDetailItemDto) => {
+  const data: Partial<AssetMetadataBulkItem> = {
+    id: asset.id,
+    authors: asset.authors,
+    described: true,
+  }
+
+  const { execute } = useMetadataBulkCommand<Partial<AssetMetadataBulkItem>>(client, endPoint)
+  await saveMetadataInBatches(execute, [data], [asset.attributes.assetType])
 }
 
 export type IdsGroupedByLicences = Map<IntegerId, DocId[]>

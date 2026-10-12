@@ -617,6 +617,32 @@ describe.each(consumerProfiles)('the image widget and the library of the DAM und
       })
     }
 
+    // The description takes 2 000 characters. Over that "confirm" said only that the form has errors, and the
+    // field showed none: the source beside it shows its own.
+    it('shows under the description of the dialog what "confirm" does not take of it', async () => {
+      inTheDam('asset-9')
+      await mountWithStandIn()
+      await confirmInPicker(picked('asset-9'))
+      const [description, source] = textsIn(imageDialog()!)
+      const errorOf = (field: HTMLTextAreaElement) => {
+        const input = field.closest('.v-input')!
+        return [input.classList.contains('v-input--error'), input.querySelector('.v-messages')?.textContent?.trim()]
+      }
+      expect(errorOf(description)).toEqual([false, ''])
+
+      description.value = 'x'.repeat(2001)
+      description.dispatchEvent(new Event('input', { bubbles: true }))
+      await flushPromises()
+      confirmImage()
+      await flushPromises()
+
+      expect(shownAlerts()).toEqual([['error', alertText('common.alert.fixValidationErrors')]])
+      expect(imageApi.calls).toEqual([])
+      // The messages of the validators go through the instance of the plugin, as the alerts do.
+      expect(errorOf(description)).toEqual([true, alertText('error.jsValidation.maxLength')])
+      expect(errorOf(source)).toEqual([false, ''])
+    })
+
     it('that has no file is not taken: nothing is read and no dialog opens', async () => {
       await mountWithStandIn()
 

@@ -8,6 +8,7 @@ import {
   bulkUpdateAssetsAuthors,
   bulkUpdateAssetsMetadata,
   showMetadataSaveError,
+  updateAssetAuthors,
   updateAssetMetadata,
 } from '@/domains/dam/api/damAssetApi'
 import { useDamConfigStore } from '@/domains/dam/config/store/damConfigStore'
@@ -240,6 +241,71 @@ describe('the save of the metadata of one asset', () => {
   })
 })
 
+// What the dialog of an image saves when the user picks the authors of the DAM in it. The request is as it was
+// before the save went through the helper the other saves share: its method, its path and its body, to the letter.
+describe('the save of the authors of one asset', () => {
+  const asset = () =>
+    damAsset('asset-1', {
+      keywords: ['keyword-1'],
+      authors: ['author-1', 'author-2'],
+      metadata: { customData: { title: 'typed' }, authorSuggestions: {}, keywordSuggestions: {} },
+      mainFileSingleUse: true,
+    })
+  const settled = (save: Promise<unknown>) =>
+    Promise.race([
+      save.then(
+        () => 'resolved',
+        (error: unknown) => error
+      ),
+      new Promise((resolve) => setTimeout(() => resolve('never settled'), 500)),
+    ])
+
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    forgetAlerts()
+    setApiErrorLogger(null)
+  })
+  afterEach(() => setApiErrorLogger(defaultApiErrorLogger))
+
+  it('sends the id and the authors of the asset alone, as a list of one, and marks the asset described', async () => {
+    await updateAssetAuthors(dam.client, ASSET, asset())
+
+    expect(saves().map((request) => `${request.method} ${request.url}`)).toEqual([
+      'PATCH /ugc/v1/asset/metadata-bulk-update',
+    ])
+    expect(saves()[0].data).toBe('[{"id":"asset-1","authors":["author-1","author-2"],"described":true}]')
+  })
+
+  // The save used to say a refusal itself, and the widget said it once more. With no custom form loaded for the
+  // ext system it threw while saying it, and its promise was never settled: "Confirm" of the dialog spun for good.
+  it.each([
+    ['with the custom forms of the ext system loaded', true],
+    ['with no custom form loaded', false],
+  ])('refused by validation, is an error for its caller to say, and says nothing itself: %s', async (_what, loaded) => {
+    if (loaded) {
+      useDamConfigStore().damConfigAssetCustomFormElements.set(4, {
+        [DamAssetType.Image]: [],
+        [DamAssetType.Video]: [],
+        [DamAssetType.Audio]: [],
+        [DamAssetType.Document]: [],
+      })
+    }
+    dam.reply(() => ({
+      status: 422,
+      data: { contextId: 'context', error: 'validation_failed', fields: { '[0].authors': ['error_field_empty'] } },
+    }))
+
+    const failure = await settled(updateAssetAuthors(dam.client, ASSET, asset()))
+
+    expect(failure).toBeInstanceOf(AnzuApiValidationError)
+    expect(shownAlerts()).toEqual([])
+    showMetadataSaveError(failure, 4)
+    expect(shownAlerts()).toHaveLength(1)
+    const [, ...lines] = (shownAlerts()[0]![1] as string).split('\n')
+    expect(lines.map((line) => line.split(': ')[0])).toEqual([alertText('common.damImage.asset.model.authors')])
+  })
+})
+
 // What a failed save is made into: an error of a kind the alert of errors knows, which the dialogs and the detail
 // say as it is. Written down only when nobody planned it: not a request of nobody signed in, of a user who may not,
 // or one the server refused by validation.
@@ -254,6 +320,11 @@ describe.each([
   [
     'the save of the authors of a gallery',
     () => bulkUpdateAssetsAuthors(dam.client, ASSET, [{ id: 'asset-1', authors: ['author-1'] }]),
+    false,
+  ],
+  [
+    'the save of the authors of one asset',
+    () => updateAssetAuthors(dam.client, ASSET, damAsset('asset-1', { authors: ['author-1'] })),
     false,
   ],
 ])('%s that fails', (_name, save: () => Promise<unknown>, readsTheAnswer) => {

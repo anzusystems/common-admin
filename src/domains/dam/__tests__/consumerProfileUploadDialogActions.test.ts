@@ -451,6 +451,37 @@ describe.each(consumerProfiles)('the buttons of the upload dialog under the $nam
     }
   })
 
+  // The button that saves spins and takes no click of the mouse; it still takes Enter and Space. As in the dialog
+  // of one file, a press while the save runs sends nothing more.
+  describe('a button pressed again while its save runs', () => {
+    it.each([
+      ['"save"', () => save(), false],
+      ['"save and apply"', () => saveAndApply()!, true],
+    ])('%s sends one request, and does its work once', async (_name, pressed, applies) => {
+      const held = dam.hold('PATCH', dam.routes.bulkMetadata)
+      const [a] = await pick('a.jpg')
+      await vi.waitFor(() => expect(statuses()).toEqual([Processing]))
+      dam.fileBecomes(a.assetId!, AssetFileProcessStatus.Processed, metadata({ description: 'from the server' }))
+      await asked([Uploaded])
+
+      pressed().click()
+      await vi.waitFor(() => expect(held.waiting).toHaveLength(1))
+      await flushPromises()
+      expect(pressed().classList.contains('v-btn--loading')).toBe(true)
+      pressed().click()
+      pressed().click()
+      await flushPromises()
+      expect(saves()).toHaveLength(1)
+
+      held.release()
+      await vi.waitFor(() => expect(pressed().classList.contains('v-btn--loading')).toBe(false))
+      await flushPromises()
+      expect(saves()).toHaveLength(1)
+      expect(wrapper!.emitted('apply') ?? []).toHaveLength(applies ? 1 : 0)
+      expect(shownAlerts()).toEqual(applies ? [] : [updated])
+    })
+  })
+
   describe('the button that closes it', () => {
     it('asks first while files are being sent; confirmed, it stops them, empties the queue and closes the dialog', async () => {
       const chunks = dam.hold('POST', dam.routes.chunk)

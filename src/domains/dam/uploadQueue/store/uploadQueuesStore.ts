@@ -34,7 +34,7 @@ import {
   type UploadQueueKey,
 } from '@/domains/dam/types/UploadQueue'
 import { AnzuApiResponseCodeError } from '@/shared/error/AnzuApiResponseCodeError'
-import { isArray, isUndefined } from '@/shared/utils/common'
+import { cloneDeep, isArray, isUndefined } from '@/shared/utils/common'
 import { commonT } from '@/plugins/i18n'
 import { defineStore } from 'pinia'
 import { getCurrentScope, ref } from 'vue'
@@ -287,12 +287,21 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
     core.stopItemUpload(queueKey, queueItem)
   }
 
-  /** `configName`: the DAM configuration the detail was saved under. */
-  async function updateFromDetail(asset: AssetDetailItemDto, configName?: string) {
+  /**
+   * `configName`: the DAM configuration the detail was saved under. `mainFileSingleUse`: the switch the detail saved
+   * with the asset, which keeps it apart from the asset it hands over.
+   */
+  async function updateFromDetail(asset: AssetDetailItemDto, configName?: string, mainFileSingleUse?: boolean | null) {
     const { updateNewNames, getAuthorConflicts } = useAssetSuggestions()
+    let dam: ReturnType<typeof useCommonAdminCoreDamOptions>
     try {
-      const { damClient, endPointAsset } = useCommonAdminCoreDamOptions(configName)
-      const assetRes = await fetchAsset(damClient, endPointAsset, asset.id)
+      dam = useCommonAdminCoreDamOptions(configName)
+    } catch (e) {
+      // The application has no configuration of that name: the rows are left alone, in silence, as ever.
+      return
+    }
+    try {
+      const assetRes = await fetchAsset(dam.damClient, dam.endPointAsset, asset.id)
       queues.value.forEach((queue, queueKey) => {
         queue.items.forEach((item) => {
           if (item.assetId === assetRes.id && item.type) {
@@ -314,7 +323,23 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
         fetchCachedKeywords()
       })
     } catch (e) {
-      //
+      // The detail is saved all the same: left as they were, the rows would send their old values with the next save
+      // of the queue, over what the detail has just saved. Each row gets copies of its own, not the lists of the
+      // detail. The suggestions are the server's to say, and stay as the rows have them.
+      queues.value.forEach((queue) => {
+        queue.items.forEach((item) => {
+          if (item.assetId === asset.id && item.type) {
+            item.keywords = [...asset.keywords]
+            item.authors = [...asset.authors]
+            item.customData = cloneDeep(asset.metadata.customData)
+            if (!isUndefined(mainFileSingleUse)) item.mainFileSingleUse = mainFileSingleUse
+            addToCachedKeywords(item.keywords)
+            addToCachedAuthors(item.authors)
+          }
+        })
+      })
+      fetchCachedAuthors()
+      fetchCachedKeywords()
     }
   }
 

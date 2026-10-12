@@ -98,6 +98,8 @@ const onStopConfirm = async () => {
 }
 
 const onSave = async () => {
+  // The spinning button still takes Enter and Space: a save that runs is not sent again.
+  if (saveButtonLoading.value || saveAndCloseButtonLoading.value) return
   const itemsRaw = toRaw(items.value)
   if (itemsRaw.length === 0) return
   saveButtonLoading.value = true
@@ -118,6 +120,7 @@ const onSave = async () => {
 }
 
 const onSaveAndApply = async () => {
+  if (saveButtonLoading.value || saveAndCloseButtonLoading.value) return
   const itemsRaw = toRaw(items.value)
   if (itemsRaw.length === 0) return
   saveAndCloseButtonLoading.value = true

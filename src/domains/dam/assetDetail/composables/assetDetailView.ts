@@ -111,7 +111,9 @@ export function assetDetailViewOfUploadItem(
 ): AssetDetailView | null {
   if (!item) return null
   const done = item.status === UploadQueueItemStatus.Uploaded
-  const read = item.assetId && done && detailAsset ? detailAsset : null
+  // The asset of this row only: the store it is read from is shared, and holds what another dialog or a pick from
+  // the library left in it until the dialog has read its own.
+  const read = item.assetId && done && detailAsset?.id === item.assetId ? detailAsset : null
   const assetType =
     (read ? read.attributes.assetType : item.assetId ? item.assetType : undefined) || DamAssetTypeDefault
   const isImage = assetType === DamAssetType.Image

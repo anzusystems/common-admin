@@ -26,6 +26,8 @@ const PATTERNS: RegExp[] = [
   /\b[a-z]\w*T\??\s*:\s*(['"])([a-z$][\w$]*(?:\.[\w$]+)+)\1\s*([,}\n])/g,
   // template attributes: title-t="k", :title-t="'k'"
   /\s[a-z][\w-]*-t="(')?([a-z$][\w$]*(?:\.[\w$]+)+)\1?"()/g,
+  // a key handed to Vuetify, which translates it through the i18n of the admin: close-label="k"
+  /\sclose-label="(')?([a-z$][\w$]*(?:\.[\w$]+)+)\1?"()/g,
 ]
 
 const isMessage = (leaf: unknown) =>

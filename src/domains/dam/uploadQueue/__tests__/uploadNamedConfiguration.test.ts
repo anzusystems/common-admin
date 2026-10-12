@@ -387,8 +387,9 @@ describe('what a saved detail writes back into the rows of its asset', () => {
 
     await store.updateFromDetail(saved())
 
-    // The default client does not have the asset here: the read fails in silence, as ever.
-    expect(item.customData).toEqual({})
+    // The default client does not have the asset here: the read fails in silence, and the row takes what the
+    // detail saved.
+    expect(item.customData).toEqual({ title: 'saved in the detail' })
     expect(asked(own).slice(3)).toEqual([])
     expect(asked(dam)).toEqual([`GET ${endPoints.asset}/own-asset-1`])
   })

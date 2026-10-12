@@ -330,6 +330,59 @@ describe.each(consumerProfiles)('an upload into the image widget under the $name
       })
     })
 
+    // Finding 81: the dialog "upload" of the menu opens has a dropzone of its own. It took the first file dropped
+    // before the check: one the ext system does not take lost the file dropped with it, and of several nothing said
+    // that only the first was taken.
+    describe.each<[string, Component]>([
+      ['the image widget', ImageWidgetInner],
+      ['the image and media widget', ImageMediaWidgetInner],
+    ])('dropped into the dialog "upload" of the menu of %s opens', (_which, component) => {
+      const droppedIntoTheDialog = async (widget: VueWrapper, ...files: File[]) => {
+        await widget.find(`button[aria-label="${damText('image.button.options')}"]`).trigger('click')
+        await vi.waitFor(() => expect(openMenuItem().length).toBeGreaterThan(0))
+        openMenuItem()
+          .find((entry) => entry.textContent?.trim() === damText('image.button.upload'))!
+          .click()
+        await vi.waitFor(() => expect(fileInputOfDialog()).not.toBeNull())
+        document.body
+          .querySelector('[data-cy="create-panel"] .a-file-dropzone')!
+          .dispatchEvent(new DragEvent('drop', { dataTransfer: carrying(files), bubbles: true, cancelable: true }))
+        await vi.waitFor(() => expect(queue().getQueueItems(QUEUE).length).toBeGreaterThan(0))
+        await flushPromises()
+      }
+      const queued = () =>
+        queue()
+          .getQueueItems(QUEUE)
+          .map((row) => row.displayTitle)
+
+      it('after one the ext system does not take: the one it takes is queued, and the other is named', async () => {
+        dam.hold('POST', dam.routes.chunk)
+        const widget = await mountWidget({}, component)
+
+        await droppedIntoTheDialog(widget, photo('scan.tiff', 'image/tiff'), photo('taken.jpg'))
+
+        expect(shownAlerts()).toEqual([
+          ['warning', `${alertText('common.system.upload.incorrectFormatSize')}:scan.tiff`],
+        ])
+        expect(queued()).toEqual(['taken.jpg'])
+        expect(useUploadQueueDialog().uploadQueueDialog.value).toBe(QUEUE)
+        expect(uploadDialog()).not.toBeNull()
+        expect(fileInputOfDialog()).toBeNull()
+      })
+
+      it('with another: the first is queued alone, and the user is told so once', async () => {
+        dam.hold('POST', dam.routes.chunk)
+        const widget = await mountWidget({}, component)
+
+        await droppedIntoTheDialog(widget, photo('first.jpg'), photo('second.jpg'))
+
+        expect(shownAlerts()).toEqual([['warning', alertText('common.damImage.upload.onlyOneFile')]])
+        expect(queued()).toEqual(['first.jpg'])
+        expect(dam.sentTo('POST', dam.routes.start)).toHaveLength(1)
+        expect(uploadDialog()).not.toBeNull()
+      })
+    })
+
     // Finding 30: the file is turned away with a warning, and that is all. Nothing is queued, and no upload dialog
     // opens over a queue without a row: it used to, and showed a loader until it was closed.
     describe.each<[string, Component]>([

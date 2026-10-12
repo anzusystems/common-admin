@@ -20,7 +20,12 @@ import { computed, inject, onBeforeUnmount, ref, type ShallowRef, toRaw, watch }
 import AssetDetailDialog from '@/domains/dam/assetDetail/components/AssetDetailDialog.vue'
 import { useAssetDetailStore } from '@/domains/dam/assetDetail/store/assetDetailStore'
 import { storeToRefs } from 'pinia'
-import { fetchAsset, fetchAssetByFileId, updateAssetAuthors } from '@/domains/dam/api/damAssetApi'
+import {
+  fetchAsset,
+  fetchAssetByFileId,
+  showMetadataSaveError,
+  updateAssetAuthors,
+} from '@/domains/dam/api/damAssetApi'
 import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
 import UploadQueueDialogSingle from '@/domains/dam/uploadQueue/components/UploadQueueDialogSingle.vue'
 import { useUploadQueueDialog } from '@/domains/dam/uploadQueue/composables/useUploadQueueDialog'
@@ -590,12 +595,13 @@ const onMetadataDialogConfirm = async () => {
           asset.value.authors
         )
         detail.value.texts.source = authorsRes.map((author) => author.name).join(', ')
-        await updateAssetAuthors(
-          damClient,
-          endPointAsset,
-          asset.value,
-          assetSelectStore.requireSelectedSelectConfig().extSystem
-        )
+        try {
+          await updateAssetAuthors(damClient, endPointAsset, asset.value)
+        } catch (e) {
+          // The authors refused by validation are named as the forms name them. The image is not saved.
+          showMetadataSaveError(e, assetSelectStore.requireSelectedSelectConfig().extSystem)
+          return
+        }
         showDamAuthorsInCmsImage.value = false
       }
     }

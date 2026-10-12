@@ -205,8 +205,9 @@ const onFileInput = (files: File[]) => {
   const config = imageWidgetUploadConfig.value
   if (isUndefined(config)) return
   cachedExtSystemId.value = config.extSystem
+  // The queue dialog is opened by `afterLimitDialogAdd`, once files are queued: over the limit none is, until the
+  // user agrees to the first of them.
   limitDialogComponent.value?.check(files)
-  uploadQueueDialog.value = props.queueKey
 }
 
 const onDrop = (files: File[]) => {
@@ -217,7 +218,6 @@ const onDrop = (files: File[]) => {
   if (isUndefined(config)) return
   cachedExtSystemId.value = config.extSystem
   limitDialogComponent.value?.check(files)
-  uploadQueueDialog.value = props.queueKey
 }
 
 const onCopyToLicence = (data: DamImageCopyToLicenceResponse) => {
@@ -259,35 +259,45 @@ const afterLimitDialogAdd = () => {
 }
 
 /**
- * The images of picked assets, without their position. `readUnder`: the licence the assets are in and its ext system,
- * where it is known; otherwise they are read under the licence browsed (finding 74).
+ * The images of picked assets, without their position. Each asset is read under the licence it is in, and its authors
+ * under the ext system of that licence: what was picked outlives a change of the licence browsed, and under another
+ * licence the DAM leaves an asset out of its answer without a word. `readUnder`: the licence all of the assets are in
+ * and its ext system, where the caller knows them.
  */
 const assetSelectConfirmMap = async (
   items: AssetSearchListItemDto[],
   readUnder?: { licence: IntegerId; extSystem: IntegerId }
 ): Promise<ImageStoreItem[]> => {
   const assetSelectStore = useAssetSelectStore()
-  const ids = items.map((item) => item.id)
   const assetMetadataMap = new Map<DocId, { description: string; authorIds: DocId[] }>()
-  const authorIdsToFetch = new Set<DocId>()
   const authorsMap = new Map<DocId, string>()
-  try {
-    const assetDetails = await fetchAssetListByIds(
-      damClient,
-      endPointAsset,
-      ids,
-      readUnder ? readUnder.licence : assetSelectStore.selectedLicenceId
-    )
-    if (customAssetSelectMetadataToImageMap) {
-      assetDetails.forEach((assetDetail) => {
-        const mapped = customAssetSelectMetadataToImageMap(assetDetail)
-        assetMetadataMap.set(assetDetail.id, {
-          description: mapped.description,
-          authorIds: [],
-        })
-        authorsMap.set(assetDetail.id, mapped.source)
-      })
+  const idsByLicence: IdsGroupedByLicences = new Map()
+  items.forEach((item) => {
+    const licence = readUnder ? readUnder.licence : item.licence
+    const group = idsByLicence.get(licence)
+    if (group) {
+      group.push(item.id)
     } else {
+      idsByLicence.set(licence, [item.id])
+    }
+  })
+  // A licence that cannot be read does not keep the others from being read.
+  const failures: unknown[] = []
+  for (const [licence, ids] of idsByLicence) {
+    try {
+      const assetDetails = await fetchAssetListByIds(damClient, endPointAsset, ids, licence)
+      if (customAssetSelectMetadataToImageMap) {
+        assetDetails.forEach((assetDetail) => {
+          const mapped = customAssetSelectMetadataToImageMap(assetDetail)
+          assetMetadataMap.set(assetDetail.id, {
+            description: mapped.description,
+            authorIds: [],
+          })
+          authorsMap.set(assetDetail.id, mapped.source)
+        })
+        continue
+      }
+      const authorIdsToFetch = new Set<DocId>()
       assetDetails.forEach((assetDetail) => {
         assetMetadataMap.set(assetDetail.id, {
           description: isString(assetDetail.metadata.customData?.description)
@@ -295,27 +305,29 @@ const assetSelectConfirmMap = async (
             : '',
           authorIds: assetDetail.authors,
         })
-      })
-      assetMetadataMap.forEach((assetMeta) => {
-        assetMeta.authorIds.forEach((authorId) => {
+        assetDetail.authors.forEach((authorId) => {
           authorIdsToFetch.add(authorId)
         })
       })
       if (authorIdsToFetch.size > 0) {
+        const licenceConfig = assetSelectStore.selectConfig.find((config) => config.licence === licence)
         const authorsRes = await fetchAuthorListByIds(
           damClient,
           endPointAuthor,
-          readUnder ? readUnder.extSystem : assetSelectStore.requireSelectedSelectConfig().extSystem,
+          readUnder ? readUnder.extSystem : (licenceConfig ?? assetSelectStore.requireSelectedSelectConfig()).extSystem,
           [...authorIdsToFetch]
         )
         authorsRes.forEach((author) => {
           authorsMap.set(author.id, author.name)
         })
       }
+    } catch (e) {
+      failures.push(e)
     }
-  } catch (e) {
-    showErrorsDefault(e)
   }
+  // Said once, however many of them failed. A read the DAM refuses comes as the bare error of axios, which the
+  // default says nothing of.
+  if (failures.length > 0 && !showErrorsDefault(failures[0])) showUnknownError()
 
   return items.map((asset) => {
     const authorIds = assetMetadataMap.get(asset.id)?.authorIds || []
@@ -512,7 +524,9 @@ const saveImages = async () => {
       return {
         ...item,
         damAuthors: matchedImage ? matchedImage.damAuthors : item.damAuthors,
-        showDamAuthors: matchedImage ? matchedImage.damAuthors.length === 0 : item.damAuthors.length === 0,
+        // Only a row that offered the authors of the DAM goes on offering them: one whose asset the DAM did not
+        // return has no asset to save them into, and keeps its source.
+        showDamAuthors: matchedImage ? matchedImage.showDamAuthors && matchedImage.damAuthors.length === 0 : false,
         assetId: matchedImage ? matchedImage.assetId : item.assetId,
       }
     }

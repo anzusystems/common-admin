@@ -184,8 +184,12 @@ watch(
   isDone,
   async (newValue) => {
     if (!newValue || !item.value?.assetId) return
+    const assetId = item.value.assetId
     try {
-      const res = await fetchAsset(damClient, endPointAsset, item.value.assetId)
+      const res = await fetchAsset(damClient, endPointAsset, assetId)
+      // Closed meanwhile, the dialog has emptied its queue. The detail store is shared: written now, the asset of
+      // this file would be what the next dialog shows.
+      if (item.value?.assetId !== assetId) return
       assetDetailStore.setAsset(res)
       enableRoiTab.value = true
     } catch (e) {

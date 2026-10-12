@@ -10,6 +10,7 @@ import { answerDamNames, damNameLookups, damNamesAsked } from '@/domains/dam/__t
 import { type DamSocket, stubDamSocket } from '@/domains/dam/__tests__/support/damSocket'
 import {
   createFakeDam,
+  damAssetWithFile,
   damImageFile,
   damImageLinks,
   type FakeDam,
@@ -40,6 +41,7 @@ import { DamAssetStatus, DamAssetType } from '@/domains/dam/types/Asset'
 import { AssetFileFailReason, AssetFileProcessStatus } from '@/domains/dam/types/AssetFile'
 import { UploadQueueItemStatus } from '@/domains/dam/types/UploadQueue'
 import UploadQueueDialogSingle from '@/domains/dam/uploadQueue/components/UploadQueueDialogSingle.vue'
+import UploadQueueDialogSingleSidebar from '@/domains/dam/uploadQueue/components/UploadQueueDialogSingleSidebar.vue'
 import { useUploadQueueDialog } from '@/domains/dam/uploadQueue/composables/useUploadQueueDialog'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
 // Not applied by importing it: the case that needs the style of the library puts it in the page, and takes it out.
@@ -497,6 +499,53 @@ describe.each(consumerProfiles)('the dialog of one uploaded file under the $name
     }
   })
 
+  // The store of the detail is shared with the widgets: an asset picked in the library is left in it, where the
+  // dialog of the image reads its authors. The dialog of the file uploaded next showed that asset as its own: its
+  // "file info" while the file was on its way, and the whole of it once the file was done, until its own was read.
+  describe('over a detail store that holds an asset left by a pick from the library', () => {
+    it('shows the row alone until it has read the asset of its file, and that asset from then on', async () => {
+      useAssetDetailStore(pinia).setAsset(
+        damAssetWithFile('asset-picked', 'file-picked', AssetFileProcessStatus.Processed, {
+          licence,
+          ...metadata({ description: 'of the picked asset' }),
+        })
+      )
+      // The read of the dialog, asked once the row is uploaded; those of the queue come before that.
+      const readsOfTheDialog: Array<() => void> = []
+      dam.reply((request) =>
+        request.method === 'GET' && dam.routes.one.test(request.url) && item()?.status === Uploaded
+          ? new Promise<undefined>((resolve) => readsOfTheDialog.push(() => resolve(undefined)))
+          : undefined
+      )
+      const shown = () => {
+        const { assetId, assetMainFileStatus } = wrapper!.findComponent(UploadQueueDialogSingleSidebar).props()
+        return { assetId, assetMainFileStatus, fileInfoOfTheOther: sidebar().textContent!.includes('file-picked') }
+      }
+      const theRowAlone = { assetId: 'asset-1', assetMainFileStatus: undefined, fileInfoOfTheOther: false }
+
+      await pickOne()
+      expect(shown()).toEqual(theRowAlone)
+
+      dam.fileBecomes('asset-1', AssetFileProcessStatus.Processed, metadata({ description: 'from the server' }))
+      await waits.elapse()
+      await vi.waitFor(() => expect(readsOfTheDialog).toHaveLength(1))
+      await flushPromises()
+      expect(item().status).toBe(Uploaded)
+      expect(shown()).toEqual(theRowAlone)
+
+      readsOfTheDialog[0]()
+      await vi.waitFor(() => expect(useAssetDetailStore(pinia).asset?.id).toBe('asset-1'))
+      await flushPromises()
+      expect(shown()).toEqual({
+        assetId: 'asset-1',
+        assetMainFileStatus: AssetFileProcessStatus.Processed,
+        fileInfoOfTheOther: false,
+      })
+      // admin-cms shows what the DAM knows of the file, now of this one.
+      expect(sidebar().textContent!.includes('file-1')).toBe(isCms)
+    })
+  })
+
   describe('the editor of the region of interest', () => {
     const shown = async () => {
       await uploaded()
@@ -841,6 +890,42 @@ describe.each(consumerProfiles)('the dialog of one uploaded file under the $name
       expect(useUploadQueueDialog().uploadQueueDialog.value).toBeNull()
       expect(saves()).toEqual([])
       expect(wrapper!.emitted('apply')).toBeUndefined()
+    })
+
+    // The dialog reads the asset for its detail once the file is done, and can be closed before the answer. The
+    // store of the detail is shared: written by a dialog that is gone, the asset of its file would be the "file
+    // info" the dialog of the next file shows.
+    it('leaves the detail alone when the asset it asked for comes after it was closed, also under the next dialog', async () => {
+      // The read of the dialog, asked once the row is uploaded; those of the queue come before that.
+      const readsOfTheDialog: Array<() => void> = []
+      dam.reply((request) =>
+        request.method === 'GET' && dam.routes.one.test(request.url) && item()?.status === Uploaded
+          ? new Promise<undefined>((resolve) => readsOfTheDialog.push(() => resolve(undefined)))
+          : undefined
+      )
+      await pickOne()
+      dam.fileBecomes('asset-1', AssetFileProcessStatus.Processed, metadata({ description: 'from the server' }))
+      await waits.elapse()
+      await vi.waitFor(() => expect(readsOfTheDialog).toHaveLength(1))
+      const detail = useAssetDetailStore(pinia)
+      expect(detail.asset).toBeNull()
+
+      button('button-close').click()
+      await flushPromises()
+      expect(queue().getQueueItems(QUEUE)).toEqual([])
+      // As the widget does with the dialog of a queue that is closed, and with the next file picked.
+      wrapper!.unmount()
+      useUploadQueueDialog().uploadQueueDialog.value = QUEUE
+      await pickOne()
+      expect(item().assetId).toBe('asset-2')
+
+      readsOfTheDialog[0]()
+      await waits.settle()
+
+      expect(dam.sentTo('GET', dam.routes.one).map((request) => request.url)).toContain(`${endPoints.asset}/asset-1`)
+      // admin-cms shows what the DAM knows of the file as soon as the detail has an asset.
+      expect(sidebar().textContent).not.toContain('file-1')
+      expect(detail.asset).toBeNull()
     })
   })
 

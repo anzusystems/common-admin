@@ -9,7 +9,7 @@ import {
   consumerProfiles,
   installConsumerProfile,
 } from '@/domains/dam/__tests__/support/consumerProfiles'
-import { answerDamNames, damNameLookups, damNamesAsked } from '@/domains/dam/__tests__/support/damNames'
+import { answerDamNames, DAM_NAMES, damNameLookups, damNamesAsked } from '@/domains/dam/__tests__/support/damNames'
 import { type DamSocket, stubDamSocket } from '@/domains/dam/__tests__/support/damSocket'
 import {
   createFakeDam,
@@ -25,9 +25,11 @@ import {
   shownAlerts,
   signInToDam,
   signOutOfDam,
+  uiText,
 } from '@/domains/dam/__tests__/support/uploadUi'
 import { updateAssetMetadata } from '@/domains/dam/api/damAssetApi'
 import { useAssetDetailStore } from '@/domains/dam/assetDetail/store/assetDetailStore'
+import { useAssetSelectStore } from '@/domains/dam/assetSelect/store/assetSelectStore'
 import AuthorRemoteAutocompleteWithCached from '@/domains/dam/author/components/AuthorRemoteAutocompleteWithCached.vue'
 import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
 import { destroyDamNotifications, initDamNotifications } from '@/domains/dam/composables/damNotifications'
@@ -44,7 +46,7 @@ import { UploadQueueItemStatus } from '@/domains/dam/types/UploadQueue'
 import UploadQueueDialog from '@/domains/dam/uploadQueue/components/UploadQueueDialog.vue'
 import { useUploadQueueDialog } from '@/domains/dam/uploadQueue/composables/useUploadQueueDialog'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
-import type { DocId } from '@/shared/types/common'
+import type { DocId, IntegerId } from '@/shared/types/common'
 
 // The widget of several images (a gallery), under each of the two applications: how it loads the images it
 // has, what an upload adds to them, what a row of it offers, and what its save writes. The real widget with its real
@@ -367,6 +369,219 @@ describe.each(consumerProfiles)('the widget of several images under the $name', 
       expect(queue().getQueueItems(QUEUE)).toMatchObject([{ displayTitle: 'a.jpg', licenceId: licence }])
       expect(useUploadQueueDialog().uploadQueueDialog.value).toBe(QUEUE)
     })
+
+    // The queue takes fifty rows. Over that the user is asked first, and nothing is queued until the answer: the
+    // queue dialog used to open at once all the same, empty, and stayed after "cancel".
+    const tooMany = () => Array.from({ length: 51 }, (_, index) => `photo-${index + 1}.jpg`)
+    const limitQuestion = () => document.body.querySelector<HTMLElement>('.v-overlay--active [data-cy="delete-panel"]')
+    const answerLimit = (text: RegExp) =>
+      Array.from(limitQuestion()!.querySelectorAll<HTMLButtonElement>('.v-card-actions button'))
+        .find((button) => text.test(button.textContent ?? ''))!
+        .click()
+
+    it.each<[string, () => Promise<void>]>([
+      ['picked with the upload button', () => pick(...tooMany())],
+      [
+        'dropped',
+        async () => {
+          widget!.findComponent({ name: 'AFileDropzone' }).vm.$emit('drop', tooMany().map(photo))
+          await flushPromises()
+        },
+      ],
+    ])(
+      'more than the queue takes, %s: the user is asked, and no queue dialog opens, nor after "cancel"',
+      async (_, add) => {
+        await mountWidget()
+
+        await add()
+
+        expect(limitQuestion()!.textContent).toContain(damText('upload.limits.uploadWarning'))
+        nothingIsQueued()
+
+        answerLimit(new RegExp(uiText('common.button.cancel')))
+        await vi.waitFor(() => expect(limitQuestion()).toBeNull())
+        await flushPromises()
+        nothingIsQueued()
+      }
+    )
+
+    it('more than the queue takes, and the user takes the first fifty: they are queued, and the queue dialog opens over them', async () => {
+      dam.hold('POST', dam.routes.chunk)
+      await mountWidget()
+      await pick(...tooMany())
+      expect(useUploadQueueDialog().uploadQueueDialog.value).toBeNull()
+
+      answerLimit(/Add first 50 file/)
+      await vi.waitFor(() => expect(useUploadQueueDialog().uploadQueueDialog.value).toBe(QUEUE))
+      await flushPromises()
+
+      expect(queue().getQueueItems(QUEUE)).toHaveLength(50)
+      expect(queue().getQueueItems(QUEUE).at(-1)).toMatchObject({ displayTitle: 'photo-50.jpg' })
+      expect(queueDialog()).not.toBeNull()
+    })
+  })
+
+  // Picked in the library and taken as they are (nothing is to be copied). What was picked outlives a change of
+  // the licence browsed in the picker, so the assets of one pick can be of several licences: each is read under
+  // its own. Under another licence the DAM leaves an asset out of its answer without a word, and its image came
+  // in with no description, no source and no authors.
+  describe('assets picked in the library, none of them to be copied', () => {
+    const OTHER = 300003
+    const OTHER_EXT_SYSTEM = 7
+    const THIRD = 300005
+    const THIRD_EXT_SYSTEM = 8
+    /** An asset as the list of the picker has it. */
+    const listed = (id: string, of: IntegerId) => ({
+      id,
+      licence: of,
+      mainFile: { id: `file-of-${id}` },
+      mainFileInternal: false,
+    })
+    /** What the DAM has for it: a description, and whoever each application takes for the source. */
+    const inTheDam = (id: string, of: IntegerId, authors: string[]) =>
+      dam.assets.set(
+        id,
+        damAssetWithFile(id, `file-of-${id}`, AssetFileProcessStatus.Processed, {
+          licence: of,
+          authors: isCms ? authors : [],
+          ...metadata({ description: ` of ${id} `, author: ` Blogger of ${id} ` }),
+        })
+      )
+    const offered = (of: IntegerId, ofExtSystem: IntegerId) => ({
+      licence: of,
+      extSystem: ofExtSystem,
+      licenceName: '',
+      extSystemConfig: useDamConfigStore(pinia).damConfigExtSystem.get(extSystem)!,
+    })
+    /** The picker has offered three licences, of three ext systems; the user confirms the pick over the one browsed. */
+    const confirmInPicker = async (browsed: IntegerId, assets: Array<ReturnType<typeof listed>>) => {
+      const mounted = await mountWidget()
+      const picker = useAssetSelectStore(pinia)
+      picker.setSelectConfig([
+        offered(licence, extSystem),
+        offered(OTHER, OTHER_EXT_SYSTEM),
+        offered(THIRD, THIRD_EXT_SYSTEM),
+      ])
+      picker.selectedLicenceId = browsed
+      mounted.findComponent(Picker).vm.$emit('confirm', { type: 'asset', value: assets })
+      await vi.waitFor(() => expect(images()).toHaveLength(assets.length))
+      await flushPromises()
+    }
+    const reads = () => dam.sentTo('GET', dam.routes.byIds).map((request) => request.url)
+    /** The ext system and the ids of each lookup of the names of authors, in order. */
+    const authorLookups = () =>
+      damNameLookups(dam)
+        .map((request) => request.url.match(DAM_NAMES)!)
+        .filter((match) => match[1] === 'author')
+        .map((match) => [Number(match[2]), new URLSearchParams(match[3]).get('id')])
+    const textsOfImages = () => images().map((image) => [image.assetId, image.texts.description, image.texts.source])
+
+    it.each([
+      ['the licence of the widget', licence],
+      ['the other licence', OTHER],
+    ])(
+      'are each read under the licence they are in, and their authors under its ext system, confirmed over %s',
+      async (_which, browsed) => {
+        inTheDam('asset-41', licence, ['author-1'])
+        inTheDam('asset-42', OTHER, ['author-2'])
+        inTheDam('asset-43', OTHER, ['author-2', 'author-3'])
+
+        await confirmInPicker(browsed, [
+          listed('asset-41', licence),
+          listed('asset-42', OTHER),
+          listed('asset-43', OTHER),
+        ])
+
+        expect(reads()).toEqual([
+          `${endPoints.asset}/licence/${licence}/ids/asset-41`,
+          `${endPoints.asset}/licence/${OTHER}/ids/asset-42,asset-43`,
+        ])
+        expect(textsOfImages()).toEqual([
+          ['asset-41', 'of asset-41', isCms ? 'Name of author-1' : 'Blogger of asset-41'],
+          ['asset-42', 'of asset-42', isCms ? 'Name of author-2' : 'Blogger of asset-42'],
+          ['asset-43', 'of asset-43', isCms ? 'Name of author-2, Name of author-3' : 'Blogger of asset-43'],
+        ])
+        expect(images().map((image) => [image.dam.damId, image.dam.licenceId, image.position])).toEqual([
+          ['file-of-asset-41', licence, 1],
+          ['file-of-asset-42', OTHER, 2],
+          ['file-of-asset-43', OTHER, 3],
+        ])
+        // admin-cms: the names of the authors, asked of the ext system of each licence. admin-ugc makes the source
+        // by its own map, and asks for no author.
+        expect(images().map((image) => image.damAuthors)).toEqual(
+          isCms ? [['author-1'], ['author-2'], ['author-2', 'author-3']] : [[], [], []]
+        )
+        expect(authorLookups()).toEqual(
+          isCms
+            ? [
+                [extSystem, 'author-1'],
+                [OTHER_EXT_SYSTEM, 'author-2,author-3'],
+              ]
+            : []
+        )
+        expect(shownAlerts()).toEqual([])
+        expect(toForeignPrefix()).toEqual([])
+      }
+    )
+
+    // As before: one request for the assets, and one for the names of all their authors.
+    it('of the licence browsed alone: are read in one request, and the names of their authors asked for once', async () => {
+      inTheDam('asset-41', licence, ['author-1'])
+      inTheDam('asset-44', licence, ['author-4', 'author-1'])
+
+      await confirmInPicker(licence, [listed('asset-41', licence), listed('asset-44', licence)])
+
+      expect(reads()).toEqual([`${endPoints.asset}/licence/${licence}/ids/asset-41,asset-44`])
+      expect(authorLookups()).toEqual(isCms ? [[extSystem, 'author-1,author-4']] : [])
+      expect(textsOfImages()).toEqual([
+        ['asset-41', 'of asset-41', isCms ? 'Name of author-1' : 'Blogger of asset-41'],
+        ['asset-44', 'of asset-44', isCms ? 'Name of author-4, Name of author-1' : 'Blogger of asset-44'],
+      ])
+    })
+
+    // The images are added all the same, as before: those read keep their texts, the others come without. A read
+    // the DAM refused used to pass without a word. A licence that cannot be read does not keep the others from
+    // being read, and however many of them fail, it is said once.
+    it.each<[string, IntegerId[]]>([
+      ['the first of three licences', [licence]],
+      ['the first and the last of three licences', [licence, THIRD]],
+    ])(
+      'whose read the DAM refuses for %s: says so once, reads the others, and adds every image',
+      async (_which, refused) => {
+        inTheDam('asset-41', licence, ['author-1'])
+        inTheDam('asset-42', OTHER, ['author-2'])
+        inTheDam('asset-45', THIRD, ['author-5'])
+        dam.reply((request) => {
+          const match = request.method === 'GET' ? request.url.match(dam.routes.byIds) : null
+          return match && refused.includes(Number(match[1])) ? { status: 500 } : undefined
+        })
+
+        await confirmInPicker(OTHER, [
+          listed('asset-41', licence),
+          listed('asset-42', OTHER),
+          listed('asset-45', THIRD),
+        ])
+
+        expect(reads()).toEqual([
+          `${endPoints.asset}/licence/${licence}/ids/asset-41`,
+          `${endPoints.asset}/licence/${OTHER}/ids/asset-42`,
+          `${endPoints.asset}/licence/${THIRD}/ids/asset-45`,
+        ])
+        expect(shownAlerts()).toEqual([['error', alertText('common.alert.unknownError')]])
+        const read = (id: string, of: IntegerId, author: string) =>
+          refused.includes(of) ? [id, '', ''] : [id, `of ${id}`, isCms ? `Name of ${author}` : `Blogger of ${id}`]
+        expect(textsOfImages()).toEqual([
+          read('asset-41', licence, 'author-1'),
+          read('asset-42', OTHER, 'author-2'),
+          read('asset-45', THIRD, 'author-5'),
+        ])
+        const lookups = [
+          [OTHER_EXT_SYSTEM, 'author-2'],
+          ...(refused.includes(THIRD) ? [] : [[THIRD_EXT_SYSTEM, 'author-5']]),
+        ]
+        expect(authorLookups()).toEqual(isCms ? lookups : [])
+      }
+    )
   })
 
   describe('"save and apply" of its queue dialog', () => {
@@ -515,6 +730,41 @@ describe.each(consumerProfiles)('the widget of several images under the $name', 
       expect(dam.sentTo('PATCH', dam.routes.bulkMetadata).slice(writesBefore)).toEqual([])
     })
 
+    // The DAM does not return the asset of every image: it was deleted there, or its licence is not the user's.
+    // Such a row has no asset to save authors into and keeps its source. Its first save used to turn the source
+    // into an empty pick of authors, where the application has them, and the source was required no more.
+    it('leaves a row whose asset the DAM did not return with its source, as before the save', async () => {
+      imageApi.has(stored(11, 1))
+      imageApi.has(stored(12, 2))
+      dam.assets.set('asset-11', damAssetWithFile('asset-11', 'file-11', AssetFileProcessStatus.Processed, { licence }))
+      await mountWidget([11, 12])
+      await vi.waitFor(() => expect(images()).toHaveLength(2))
+      await flushPromises()
+      const offered = () => images().map((image) => [image.id, image.assetId, image.showDamAuthors])
+      const sourceOrAuthors = () =>
+        rows().map((row) => [textsOf(row.element), row.findComponent(AuthorRemoteAutocompleteWithCached).exists()])
+      // The first row offers the authors of the DAM, where the application has them; the second has its source.
+      const asLoaded = [
+        [isCms ? ['image 11'] : ['image 11', 'source 11'], isCms],
+        [['image 12', 'source 12'], false],
+      ]
+      expect(offered()).toEqual([
+        [11, 'asset-11', true],
+        [12, undefined, false],
+      ])
+      expect(sourceOrAuthors()).toEqual(asLoaded)
+
+      expect(await save()).toBe(true)
+      await flushPromises()
+
+      expect(offered()).toEqual([
+        [11, 'asset-11', true],
+        [12, undefined, false],
+      ])
+      expect(sourceOrAuthors()).toEqual(asLoaded)
+      expect(dam.sentTo('PATCH', dam.routes.bulkMetadata)).toEqual([])
+    })
+
     if (isCms) {
       // The authors picked in a row are the asset's: they are saved into the DAM, and their names become the
       // source of the image.
@@ -541,6 +791,10 @@ describe.each(consumerProfiles)('the widget of several images under the $name', 
         expect(imagesWrittenBefore).toBe(0)
         const [, sent] = imageApi.calls.at(-1) as ['bulkUpdateImages', ImageAware[]]
         expect(sent.map((image) => image.texts.source)).toEqual(['source 11', 'Name of author-7, Name of author-8'])
+        // The row has its source from here on, and offers the authors of the DAM no more.
+        await flushPromises()
+        expect(images()[1]).toMatchObject({ damAuthors: ['author-7', 'author-8'], showDamAuthors: false })
+        expect(textsOf(rows()[1].element)).toEqual(['image 12', 'Name of author-7, Name of author-8'])
       })
 
       /** Each list of authors written into the asset, in the order the DAM got them. */
@@ -589,8 +843,10 @@ describe.each(consumerProfiles)('the widget of several images under the $name', 
         })
         await vi.waitFor(() => expect(images()).toHaveLength(1))
         await flushPromises()
-        // The asset has an author, but the widget could not read it: the row offers the authors of the DAM.
+        // The asset has an author, but the widget could not read it, and says so: the row offers the authors of
+        // the DAM.
         expect(dam.sentTo('GET', dam.routes.byIds)).toHaveLength(1)
+        expect(shownAlerts()).toEqual([['error', alertText('common.alert.unknownError')]])
         expect(images()[0]).toMatchObject({ assetId: 'asset-31', damAuthors: [], showDamAuthors: true })
 
         expect(await save()).toBe(true)
