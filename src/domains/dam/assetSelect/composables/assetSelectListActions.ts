@@ -3,7 +3,7 @@ import { type AssetSelectListItem, useAssetSelectStore } from '@/domains/dam/ass
 import { storeToRefs } from 'pinia'
 import type { Ref } from 'vue'
 import { ref } from 'vue'
-import { type AssetDetailItemDto, DamAssetType, type DamAssetTypeType } from '@/domains/dam/types/Asset'
+import { DamAssetType, type DamAssetTypeType } from '@/domains/dam/types/Asset'
 import { usePagination } from '@/domains/api/composables/pagination'
 import { useAlerts } from '@/domains/system/composables/alerts'
 import type { DocId, IntegerId } from '@/shared/types/common'
@@ -14,7 +14,7 @@ import { useAssetDetailStore } from '@/domains/dam/assetDetail/store/assetDetail
 import { useDamCachedAuthors } from '@/domains/dam/author/composables/cachedAuthors'
 import { useDamCachedKeywords } from '@/domains/dam/keyword/composables/cachedKeywords'
 import { useExtSystemIdForCached } from '@/domains/dam/composables/extSystemIdForCached'
-import { isUndefined } from '@/shared/utils/common'
+import { isNull } from '@/shared/utils/common'
 import { useDamCachedUsers } from '@/domains/dam/author/composables/cachedUsers'
 import { useSidebar } from '@/domains/dam/assetSelect/composables/assetSelectFilterSidebar'
 import { SORT_BY_SCORE_DATE } from '@/domains/filters/datatable/utils/datatableColumns'
@@ -28,10 +28,7 @@ const detailLoading = ref(false)
 let listController: AbortController | undefined
 let detailRequest = 0
 
-export function useAssetSelectActions(
-  configName = 'default',
-  onDetailLoadedCallback?: (asset: AssetDetailItemDto) => void
-) {
+export function useAssetSelectActions(configName = 'default') {
   const { damClient, endPointAsset, showFileInfoEnabled } = useCommonAdminCoreDamOptions(configName)
 
   const assetSelectStore = useAssetSelectStore()
@@ -53,6 +50,18 @@ export function useAssetSelectActions(
     filterData.inPodcast = null
   }
 
+  /**
+   * The asset the list remembers its active item by is forgotten once the side panel shows no asset and the list has
+   * no item of it: a list read later is to mark no item beside a panel that shows none. Not while a read is on its
+   * way, which may yet show that asset. Asked whenever one of the three may have come true: a list is set, the read
+   * asked for last has ended, a detail has closed with nothing to read.
+   */
+  const forgetAssetNotShown = () => {
+    if (detailLoading.value || !isNull(assetDetailStore.asset)) return
+    if (assetSelectStore.assetListItems.some((item) => item.active)) return
+    assetSelectStore.forgetActiveAsset()
+  }
+
   const fetchAssetListDebounced = useDebounceFn(async () => {
     await fetchAssetList()
   })
@@ -68,6 +77,7 @@ export function useAssetSelectActions(
       const items = await execute(pagination, filterData, filterConfig, { signal: controller.signal })
       if (controller.signal.aborted) return
       assetSelectStore.setList(items)
+      forgetAssetNotShown()
     } catch (error) {
       if (!controller.signal.aborted) showErrorsDefault(error)
     } finally {
@@ -131,12 +141,14 @@ export function useAssetSelectActions(
       if (showFileInfoEnabled) {
         fetchCachedUsers()
       }
-      if (!isUndefined(onDetailLoadedCallback)) onDetailLoadedCallback(asset)
       assetDetailStore.setAsset(asset)
     } catch (e) {
       if (request === detailRequest) showErrorsDefault(e)
     } finally {
-      if (request === detailRequest) detailLoading.value = false
+      if (request === detailRequest) {
+        detailLoading.value = false
+        forgetAssetNotShown()
+      }
     }
   }
 
@@ -148,7 +160,12 @@ export function useAssetSelectActions(
    */
   const readActiveItemAgain = async () => {
     const activeItem = assetSelectStore.assetListItems.find((item) => item.active)
-    if (!activeItem) return
+    if (!activeItem) {
+      // Nothing is read: the detail emptied the side panel as it closed, and the panel stays empty unless the read of
+      // a click is still on its way.
+      forgetAssetNotShown()
+      return
+    }
     detailLoading.value = true
     const request = ++detailRequest
     try {
@@ -159,9 +176,12 @@ export function useAssetSelectActions(
         () => request === detailRequest
       )
     } catch (e) {
-      showErrorsDefault(e)
+      if (request === detailRequest) showErrorsDefault(e)
     } finally {
-      if (request === detailRequest) detailLoading.value = false
+      if (request === detailRequest) {
+        detailLoading.value = false
+        forgetAssetNotShown()
+      }
     }
   }
 
@@ -174,13 +194,18 @@ export function useAssetSelectActions(
     await fetchAssetListDebounced()
   }
 
+  /** A read of the detail that is on its way is given up: its answer is not shown, and nothing loads meanwhile. */
+  const giveUpDetailRead = () => {
+    detailRequest++
+    detailLoading.value = false
+  }
+
   const reset = async () => {
     clearAll(filterData, filterConfig)
     pagination.value.page = 1
     assetSelectStore.reset(true)
-    // A read of the detail that is on its way is given up: its answer would be written into the store emptied here.
-    detailRequest++
-    detailLoading.value = false
+    // Its answer would be written into the store emptied here.
+    giveUpDetailRead()
     assetDetailStore.reset()
   }
 
@@ -214,6 +239,7 @@ export function useAssetSelectActions(
     getSelectedData: assetSelectStore.getSelectedData,
     onItemClick,
     readActiveItemAgain,
+    giveUpDetailRead,
     fetchAssetListDebounced,
     fetchNextPage,
     resetAssetList,

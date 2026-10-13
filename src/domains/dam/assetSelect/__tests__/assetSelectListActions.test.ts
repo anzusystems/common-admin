@@ -137,6 +137,23 @@ describe('useAssetSelectActions races', () => {
     expect(actions.detailLoading.value).toBe(false)
   })
 
+  // The picker with media lists another type: the list and the detail are emptied, the picker stays as it was set up.
+  it('gives the detail read of a click up when asked to: its answer is not shown, and nothing loads meanwhile', async () => {
+    const { actions, store } = setup()
+    await actions.reset()
+    store.setList([asset('A')])
+    const clicked = actions.onItemClick({ assetId: 'A', index: 0 }, 1)
+    expect(actions.detailLoading.value).toBe(true)
+
+    actions.giveUpDetailRead()
+    expect(actions.detailLoading.value).toBe(false)
+    api.detail.get('A').resolve(asset('A'))
+    await clicked
+
+    expect(useAssetDetailStore().asset).toBeNull()
+    expect(actions.detailLoading.value).toBe(false)
+  })
+
   // The asset of the active item is read again once a detail has closed, and a click made since asks for another.
   it.each([
     ['first', true],

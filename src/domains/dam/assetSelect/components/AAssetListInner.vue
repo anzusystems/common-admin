@@ -2,7 +2,7 @@
 import { computed, inject, onUnmounted, provide, ref, watch } from 'vue'
 import { useDisplay } from 'vuetify'
 import { useI18n } from 'vue-i18n'
-import { type AssetDetailItemDto, type DamAssetTypeType } from '@/domains/dam/types/Asset'
+import { type DamAssetTypeType } from '@/domains/dam/types/Asset'
 import { useAssetSelectActions } from '@/domains/dam/assetSelect/composables/assetSelectListActions'
 import AssetSelectListTable from '@/domains/dam/assetSelect/components/AssetSelectListTable.vue'
 import AssetSelectListBar from '@/domains/dam/assetSelect/components/AssetSelectListBar.vue'
@@ -45,14 +45,12 @@ const props = withDefaults(
     inPodcast?: boolean | null
     configName?: string
     skipCurrentUserCheck?: boolean
-    onDetailLoadedCallback?: ((asset: AssetDetailItemDto) => void) | undefined
     variant?: 'default' | 'inline'
   }>(),
   {
     inPodcast: null,
     configName: undefined,
     skipCurrentUserCheck: false,
-    onDetailLoadedCallback: undefined,
     variant: 'default',
   }
 )
@@ -74,8 +72,7 @@ const {
   fetchAssetListDebounced,
   reset,
   resetAssetList,
-  // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-} = useAssetSelectActions(damConfigName, props.onDetailLoadedCallback)
+} = useAssetSelectActions(damConfigName)
 // The ordering in the list bar reads this; without it the dialog would pick up the host page's pagination.
 provide(DatatablePaginationKey, pagination)
 

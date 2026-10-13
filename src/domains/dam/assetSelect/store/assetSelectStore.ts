@@ -29,6 +29,10 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
   const minCount = ref(0)
   const maxCount = ref(0)
   const activeItemIndex = ref<null | number>(null)
+  // The asset of the active item: a list read anew has it at another place, or not at all, and the active item is
+  // found by it. Kept by its place alone, the new list had no active item, and the one that had come to that place
+  // could not be made active by a click.
+  const activeAssetId = ref<null | DocId>(null)
 
   function showLoader() {
     loader.value = true
@@ -64,23 +68,28 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
   }
 
   function setList(items: AssetSearchListItemDto[]) {
-    assetListItems.value = items.map((item) => {
+    const activeIndex = items.findIndex((item) => item.id === activeAssetId.value)
+    assetListItems.value = items.map((item, index) => {
       return {
         asset: item,
         selected: false,
-        active: false,
+        active: index === activeIndex,
       }
     })
+    activeItemIndex.value = activeIndex < 0 ? null : activeIndex
   }
 
   function appendList(items: AssetSearchListItemDto[]) {
-    const assets = items.map((asset) => {
+    // The asset of the active item may come only with a later page of a list read anew.
+    const activeIndex = isNull(activeItemIndex.value) ? items.findIndex((item) => item.id === activeAssetId.value) : -1
+    const assets = items.map((asset, index) => {
       return {
         asset: asset,
         selected: false,
-        active: false,
+        active: index === activeIndex,
       }
     })
+    if (activeIndex >= 0) activeItemIndex.value = assetListItems.value.length + activeIndex
     assetListItems.value = assetListItems.value.concat(assets)
   }
 
@@ -114,9 +123,18 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
     if (!assetListItems.value[index]) return
     assetListItems.value[index].active = true
     activeItemIndex.value = index
+    activeAssetId.value = assetListItems.value[index].asset.id
     if (isNull(oldActiveIndex)) return
     if (!(oldActiveIndex in assetListItems.value)) return
     assetListItems.value[oldActiveIndex]!.active = false
+  }
+
+  /**
+   * For a list whose side panel has lost the asset of the item that was active, while the list had no item of it: a
+   * list read later is to mark no item beside a panel that shows no asset.
+   */
+  function forgetActiveAsset() {
+    activeAssetId.value = null
   }
 
   function unselectAllExcept(ignoreIndex: number) {
@@ -203,6 +221,8 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
 
   function reset(all: boolean) {
     assetListItems.value = []
+    activeItemIndex.value = null
+    activeAssetId.value = null
     loader.value = false
     clearSelected()
     if (!all) return
@@ -211,7 +231,6 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
     singleMode.value = false
     minCount.value = 0
     maxCount.value = 0
-    activeItemIndex.value = null
   }
 
   const selectedSelectConfig = computed(() => {
@@ -246,6 +265,7 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
     loader,
     assetListItems,
     setActiveByIndex,
+    forgetActiveAsset,
     getSelectedData,
     setAssetType,
     setSelectConfig,

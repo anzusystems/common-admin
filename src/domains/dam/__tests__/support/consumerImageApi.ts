@@ -1,5 +1,5 @@
 import type { ConsumerProfile, installConsumerProfile } from '@/domains/dam/__tests__/support/consumerProfiles'
-import { createFakeDam, type FakeDamRequest } from '@/domains/dam/__tests__/support/fakeDam'
+import { createFakeDam, type FakeDamAnswer, type FakeDamRequest } from '@/domains/dam/__tests__/support/fakeDam'
 import { initCommonAdminImageOptions } from '@/domains/dam/imageWidget/composables/commonAdminImageOptions'
 import type { ImageAware, ImageCreateUpdateAware } from '@/domains/dam/types/ImageAware'
 import type { IntegerId } from '@/shared/types/common'
@@ -36,6 +36,13 @@ export function installConsumerImageApi(profile: ConsumerProfile, options: Retur
     images.set(id, stored)
     return stored
   }
+  // The saves of one image a test holds (`holdSaves`): each is recorded as it is asked for, and answered once the test
+  // lets it, as saved or as one that failed.
+  type HeldSave = (failed: boolean) => void
+  let held: HeldSave[] | undefined
+  const whenLet = () => new Promise<boolean>((resolve) => held!.push(resolve))
+  const answerSave = (saved: () => FakeDamAnswer) =>
+    held ? whenLet().then((failed) => (failed ? { status: 500 } : saved())) : saved()
 
   // The CMS backend as the browser sees it: a client that records its requests.
   const server = createFakeDam({ asset: '/not-the-dam/asset', image: '/not-the-dam/image' })
@@ -45,11 +52,11 @@ export function installConsumerImageApi(profile: ConsumerProfile, options: Retur
     const one = path!.match(ONE)
     if (request.method === 'POST' && path === ALL) {
       calls.push(['createImage', body(request)])
-      return { status: 201, data: store(body(request)) }
+      return answerSave(() => ({ status: 201, data: store(body(request)) }))
     }
     if (request.method === 'PUT' && one) {
       calls.push(['updateImage', Number(one[1]), body(request)])
-      return { status: 200, data: store(body(request), Number(one[1])) }
+      return answerSave(() => ({ status: 200, data: store(body(request), Number(one[1])) }))
     }
     if (request.method === 'PUT' && path === ALL) {
       const sent = (body(request) as { images: ImageCreateUpdateAware[] }).images
@@ -93,10 +100,12 @@ export function installConsumerImageApi(profile: ConsumerProfile, options: Retur
                 },
                 createImage: async (_client, data) => {
                   calls.push(['createImage', plain(data)])
+                  if (held && (await whenLet())) throw new Error('the image was not saved')
                   return store(plain(data))
                 },
                 updateImage: async (_client, id, data) => {
                   calls.push(['updateImage', id, plain(data)])
+                  if (held && (await whenLet())) throw new Error('the image was not saved')
                   return store(plain(data), id)
                 },
                 deleteImage: async (_client, id) => {
@@ -129,6 +138,15 @@ export function installConsumerImageApi(profile: ConsumerProfile, options: Retur
     bringsItsOwn,
     /** An image the backend already has. */
     has: (image: ImageAware) => store(image, image.id),
+    /** From now on a create or an update of one image waits until the test lets it answer. */
+    holdSaves: () => {
+      const waiting: HeldSave[] = (held = [])
+      return {
+        waiting,
+        /** Lets every save held so far answer: as saved, or as one that failed. */
+        release: (how: 'saved' | 'failed' = 'saved') => waiting.splice(0).forEach((answer) => answer(how === 'failed')),
+      }
+    },
   }
 }
 

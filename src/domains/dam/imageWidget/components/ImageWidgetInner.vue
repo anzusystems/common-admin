@@ -608,18 +608,29 @@ const onMetadataDialogConfirm = async () => {
   // and with it what its form asks for: the confirm waits for the read, and is then taken again by the form.
   const confirmAgain = () => detailDialogMetadataComponent.value?.confirm()
   if (holdConfirmForDetailAssetRead(metadataDialogSaving.value, confirmAgain)) return
+  // Pressed again while the save of the first press runs (the button of a host is not disabled meanwhile, and Enter
+  // reaches the one of the dialog), it is not taken: the image would be created, or updated, a second time.
+  if (metadataDialogSaving.value) return
   metadataDialogSaving.value = true
   try {
     const authorsAsset = damAuthorsAsset.value
     if (authorsAsset) {
       if (authorsAsset.authors.length > 0) {
+        // Their names become the source of the image once the DAM has taken the authors, and wait aside till then,
+        // with the texts they are for, those of the image the confirm was pressed on: the dialog may show another by
+        // the time the names are read. Written before, they stayed in the source, which the dialog does not show,
+        // after a write the DAM refused, and a confirm with the pick emptied saved them with the image.
+        const texts = detail.value.texts
         const authorsRes = await fetchAuthorListByIds(
           damClient,
           endPointAuthor,
           assetSelectStore.requireSelectedSelectConfig().extSystem,
           authorsAsset.authors
         )
-        detail.value.texts.source = authorsRes.map((author) => author.name).join(', ')
+        // Closed while the names were read, the dialog shows no image: this confirm ends here, with nothing written and
+        // nothing said, as it did when the names were written into the image the dialog showed at this point.
+        if (!isImageCreateUpdateAware(detail.value)) return
+        const source = authorsRes.map((author) => author.name).join(', ')
         try {
           await updateAssetAuthors(damClient, endPointAsset, authorsAsset)
         } catch (e) {
@@ -627,6 +638,7 @@ const onMetadataDialogConfirm = async () => {
           showMetadataSaveError(e, assetSelectStore.requireSelectedSelectConfig().extSystem)
           return
         }
+        texts.source = source
         offerNoDamAuthors()
       }
     }

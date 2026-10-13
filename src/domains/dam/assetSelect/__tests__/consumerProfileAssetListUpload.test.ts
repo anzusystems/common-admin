@@ -510,8 +510,8 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
         )
       const panelLoads = () => !!panel()?.querySelector('.v-progress-circular')
       const panelShowsAnAsset = () => wrapper!.findComponent({ name: 'AssetMetadata' }).exists()
-      /** The list has two assets, neither picked yet; its side panel is open. */
-      const mountWithTwoAssets = async () => {
+      /** The list has two assets, neither picked yet; its side panel is open. `slots`: those of the page, if any. */
+      const mountWithTwoAssets = async (slots: MountOptions['slots'] = {}) => {
         dam.assets.set('asset-50', picked('First in the list'))
         dam.assets.set(
           'asset-51',
@@ -526,7 +526,7 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
             : undefined
         )
         const listedBefore = listRequests().length
-        await mountList(WITH_TILES_AND_DETAIL)
+        await mountList({ ...WITH_TILES_AND_DETAIL, slots })
         await listed(listedBefore + 1)
         useSidebar().openSidebarRight()
         await flushPromises()
@@ -740,6 +740,422 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
 
         expect([detail().dialog, detail().asset]).toEqual([null, null])
         expect(wrapper!.findComponent({ name: 'AssetDetailDialogFrame' }).exists()).toBe(false)
+      })
+
+      // The read after the close said its failure whenever it came, also once a tile clicked since had asked for
+      // another asset: an error beside the asset that was read.
+      it('says nothing of the read after the close that failed, once a tile clicked since has asked for another asset', async () => {
+        await mountWithTwoAssets()
+        await tiles()[0]!.trigger('click')
+        await vi.waitFor(() => expect(detail().asset?.id).toBe('asset-50'))
+        await flushPromises()
+        wrapper!.findComponent({ name: 'AssetMetadata' }).vm.$emit('editInDam')
+        await flushPromises()
+        const afterClose = dam.hold('GET', readOf('asset-50'))
+        const afterClick = dam.hold('GET', readOf('asset-51'))
+
+        closeDetail()
+        await vi.waitFor(() => expect(afterClose.waiting).toHaveLength(1))
+        await tiles()[1]!.trigger('click')
+        await vi.waitFor(() => expect(afterClick.waiting).toHaveLength(1))
+        afterClose.release({ status: 500 })
+        await waits.settle()
+
+        expect(shownAlerts()).toEqual([])
+        expect([detail().asset, panelLoads()]).toEqual([null, true])
+        afterClick.release()
+        await vi.waitFor(() => expect(detail().asset?.id).toBe('asset-51'))
+        await flushPromises()
+        expect([panelLoads(), panelShowsAnAsset()]).toEqual([false, true])
+        expect(shownAlerts()).toEqual([])
+      })
+
+      it('says that the read after the close failed, while no other asset has been asked for since', async () => {
+        await mountWithTwoAssets()
+        await tiles()[0]!.trigger('click')
+        await vi.waitFor(() => expect(detail().asset?.id).toBe('asset-50'))
+        await flushPromises()
+        wrapper!.findComponent({ name: 'AssetMetadata' }).vm.$emit('editInDam')
+        await flushPromises()
+        const afterClose = dam.hold('GET', readOf('asset-50'))
+
+        closeDetail()
+        await vi.waitFor(() => expect(afterClose.waiting).toHaveLength(1))
+        afterClose.release({ status: 500 })
+
+        await vi.waitFor(() => expect(shownAlerts()).toEqual([['error', alertText('common.alert.unknownError')]]))
+        expect([detail().asset, panelLoads(), panelShowsAnAsset()]).toEqual([null, false, false])
+      })
+
+      // The list remembered the place of its active tile, not the asset: read anew (a search, another order, an
+      // upload applied), it marked no tile, and the tile that had come to the remembered place could not be made the
+      // active one by a click, though the side panel showed its asset. "Edit" of the side panel and the close of the
+      // detail then left the panel empty: the read after the close goes by the active tile, and there was none.
+      describe('and the tile of that asset, once the list has been read anew', () => {
+        const ACTIVE = 'asset-list-tiles__item--active'
+        const inTheList = (id: string) =>
+          damAssetWithFile(id, `file-of-${id}`, AssetFileProcessStatus.Processed, {
+            licence,
+            texts: { displayTitle: `Title of ${id}` },
+          })
+        /** The list answers each of its next reads with the next of these, in order. */
+        const nextListsAre = (...lists: string[][]) =>
+          dam.reply((request) => {
+            if (!isListRequest(request)) return undefined
+            const next = lists.shift()
+            return next
+              ? { status: 200, data: { data: next.map((id) => dam.assets.get(id) ?? inTheList(id)), totalCount: 3 } }
+              : undefined
+          })
+        /** The assets of the tiles, and which of the tiles is drawn as the active one. */
+        const tilesDrawn = () =>
+          tiles().map((tile) => [tile.find('[data-cy="asset-tile-title"]').text(), tile.classes(ACTIVE)])
+        const first = ['First in the list', false]
+        const second = ['Second in the list', false]
+        const active = ([title]: Array<string | boolean>) => [title, true]
+        /** The user picks another order in the bar of the list, and the list has its answer. */
+        const sortAnew = async () => {
+          const listedBefore = listRequests().length
+          wrapper!.findComponent({ name: 'AssetSelectListBar' }).vm.$emit('sortByChange', {
+            id: 2,
+            titleT: 'common.system.datatable.ordering.oldest',
+            sortBy: { key: 'createdAt', order: 'asc' },
+          })
+          await listed(listedBefore + 1)
+          await flushPromises()
+        }
+        /** The user submits the filter of the list, and the list has its answer. */
+        const searchAnew = async () => {
+          const listedBefore = listRequests().length
+          wrapper!.findComponent({ name: 'AFilterWrapper' }).vm.$emit('submit')
+          await listed(listedBefore + 1)
+          await flushPromises()
+        }
+        const loadMore = async () => {
+          const listedBefore = listRequests().length
+          wrapper!
+            .findAll('button')
+            .find((button) => button.text() === uiText('common.button.loadMore'))!
+            .element.click()
+          await listed(listedBefore + 1)
+          await flushPromises()
+        }
+        /** The list of two assets, the tile of the first clicked: the side panel shows `asset-50`. */
+        const firstTileClicked = async () => {
+          await mountWithTwoAssets()
+          await tiles()[0]!.trigger('click')
+          await vi.waitFor(() => expect(detail().asset?.id).toBe('asset-50'))
+          await flushPromises()
+          expect(tilesDrawn()).toEqual([active(first), second])
+        }
+
+        it.each<[string, () => Promise<void>]>([
+          ['another order', sortAnew],
+          ['a search', searchAnew],
+        ])(
+          'is the active one at the place it has after %s, and the side panel goes on showing its asset',
+          async (_how, readAnew) => {
+            await firstTileClicked()
+            nextListsAre(['asset-51', 'asset-50'])
+
+            await readAnew()
+
+            expect(tilesDrawn()).toEqual([second, active(first)])
+            expect([detail().asset?.id, panelShowsAnAsset()]).toEqual(['asset-50', true])
+            expect(readsOf('asset-50')).toBe(1)
+          }
+        )
+
+        it('gives way to the tile at the place it had, when that one is clicked', async () => {
+          await firstTileClicked()
+          nextListsAre(['asset-51', 'asset-50'])
+          await sortAnew()
+
+          await tiles()[0]!.trigger('click')
+          await vi.waitFor(() => expect(detail().asset?.id).toBe('asset-51'))
+          await flushPromises()
+
+          expect(tilesDrawn()).toEqual([active(second), first])
+          expect(panelShowsAnAsset()).toBe(true)
+        })
+
+        it('is read into the side panel again when the detail "edit" of the panel opened has closed', async () => {
+          await firstTileClicked()
+          nextListsAre(['asset-51', 'asset-50'])
+          await sortAnew()
+          wrapper!.findComponent({ name: 'AssetMetadata' }).vm.$emit('editInDam')
+          await flushPromises()
+          expect([detail().dialog, detail().asset?.id]).toEqual([QUEUE, 'asset-50'])
+          // As a save of the detail leaves it in the DAM.
+          dam.assets.set('asset-50', picked('Saved in the detail'))
+
+          closeDetail()
+          await vi.waitFor(() => expect(detail().asset?.texts.displayTitle).toBe('Saved in the detail'))
+          await flushPromises()
+
+          expect([detail().dialog, panelLoads(), panelShowsAnAsset()]).toEqual([null, false, true])
+          expect(readsOf('asset-50')).toBe(2)
+          expect(tilesDrawn()).toEqual([second, active(first)])
+          expect(shownAlerts()).toEqual([])
+        })
+
+        // The side panel goes on showing the asset, as it did; no tile is that asset's, so none is the active one.
+        it('is not there when the list no longer has its asset: no tile is the active one, and the one clicked next is', async () => {
+          await firstTileClicked()
+          nextListsAre(['asset-51'])
+
+          await sortAnew()
+          expect(tilesDrawn()).toEqual([second])
+          expect(detail().asset?.id).toBe('asset-50')
+
+          await tiles()[0]!.trigger('click')
+          await vi.waitFor(() => expect(detail().asset?.id).toBe('asset-51'))
+          expect(tilesDrawn()).toEqual([active(second)])
+        })
+
+        it('is the active one again once a further page of the list brings its asset, and stays so through the pages after it', async () => {
+          await firstTileClicked()
+          nextListsAre(['asset-51'], ['asset-50'], ['asset-52'])
+          await sortAnew()
+          expect(tilesDrawn()).toEqual([second])
+
+          await loadMore()
+          expect(tilesDrawn()).toEqual([second, active(first)])
+
+          await loadMore()
+          expect(tilesDrawn()).toEqual([second, active(first), ['Title of asset-52', false]])
+          expect(detail().asset?.id).toBe('asset-50')
+
+          // It is the active one at the place it has in the whole list: a click elsewhere takes the mark from there.
+          await tiles()[0]!.trigger('click')
+          await vi.waitFor(() => expect(detail().asset?.id).toBe('asset-51'))
+          expect(tilesDrawn()).toEqual([active(second), first, ['Title of asset-52', false]])
+        })
+
+        // A further page is no place to look for the asset of a tile that is active already.
+        it('stays where it is when a further page of the list is added below it', async () => {
+          await firstTileClicked()
+          nextListsAre(['asset-52'])
+
+          await loadMore()
+
+          expect(tilesDrawn()).toEqual([active(first), second, ['Title of asset-52', false]])
+        })
+
+        // The side panel goes on showing the asset a list no longer has, and its tile is found by it again.
+        it('is the active one again when a list read later brings its asset back, the side panel having shown it all along', async () => {
+          await firstTileClicked()
+          nextListsAre(['asset-51'], ['asset-51', 'asset-50'])
+          await sortAnew()
+          expect(tilesDrawn()).toEqual([second])
+
+          await searchAnew()
+
+          expect(tilesDrawn()).toEqual([second, active(first)])
+          expect([detail().asset?.id, panelShowsAnAsset()]).toEqual(['asset-50', true])
+        })
+
+        it('stays the active one through a detail opened and closed, and is found again in the list read after', async () => {
+          await firstTileClicked()
+          wrapper!.findComponent({ name: 'AssetMetadata' }).vm.$emit('editInDam')
+          await flushPromises()
+          closeDetail()
+          await vi.waitFor(() => expect(readsOf('asset-50')).toBe(2))
+          await vi.waitFor(() => expect(detail().asset?.id).toBe('asset-50'))
+          nextListsAre(['asset-51', 'asset-50'])
+
+          await sortAnew()
+
+          expect(tilesDrawn()).toEqual([second, active(first)])
+          expect(panelShowsAnAsset()).toBe(true)
+        })
+
+        // Over a list without the asset, "edit" of the panel and the close of the detail leave the panel empty: there
+        // is no tile to read by, as before. The asset the list finds its active tile by outlived that, and a list
+        // that brought it back marked its tile beside a panel that showed no asset.
+        it.each<[string, string[], () => Promise<void>]>([
+          ['a list read later', ['asset-51', 'asset-50'], sortAnew],
+          ['a further page', ['asset-50'], loadMore],
+        ])(
+          'is not the active one when %s brings its asset back, once a detail closed over a list without it has emptied the side panel',
+          async (_how, back, readOn) => {
+            await firstTileClicked()
+            nextListsAre(['asset-51'], back)
+            await sortAnew()
+            expect(tilesDrawn()).toEqual([second])
+            wrapper!.findComponent({ name: 'AssetMetadata' }).vm.$emit('editInDam')
+            await flushPromises()
+            expect([detail().dialog, detail().asset?.id]).toEqual([QUEUE, 'asset-50'])
+
+            closeDetail()
+            await waits.settle()
+            expect([detail().dialog, detail().asset, panelLoads(), panelShowsAnAsset()]).toEqual([
+              null,
+              null,
+              false,
+              false,
+            ])
+            expect(readsOf('asset-50')).toBe(1)
+
+            await readOn()
+            expect(tilesDrawn()).toEqual([second, first])
+            expect([detail().asset, panelShowsAnAsset()]).toEqual([null, false])
+            expect(readsOf('asset-50')).toBe(1)
+
+            // Clicked, it is the active one as any tile is.
+            await tiles()[1]!.trigger('click')
+            await vi.waitFor(() => expect(detail().asset?.id).toBe('asset-50'))
+            expect(tilesDrawn()).toEqual([second, active(first)])
+          }
+        )
+
+        // The detail that closes over a list without the asset may not be the last word on the side panel: a read
+        // begun before may still be on its way. The asset was forgotten at that close all the same, and when the read
+        // of a clicked tile then answered, the panel showed the asset and a list read later did not mark its tile.
+        describe('while a read for the side panel is still on its way when that detail closes', () => {
+          let handed: { onFileInput: (files: File[]) => void }
+          /** The list of two assets on a page with an upload entry of its own. */
+          const mountOnAPageWithUpload = () =>
+            mountWithTwoAssets({
+              'upload-activator': (slotProps: never) => {
+                handed = slotProps
+                return h('button')
+              },
+            })
+          /**
+           * A list read anew that no longer has the first asset; then an upload, and the detail of its row of the queue
+           * opened and closed. A list read after that has the first asset again.
+           */
+          const listWithoutItThenADetailOfTheQueueClosed = async () => {
+            nextListsAre(['asset-51'], ['asset-51', 'asset-50'])
+            await sortAnew()
+            expect(tilesDrawn()).toEqual([second])
+            await oneUploaded((name) => handed.onFileInput([photo(name)]))
+            editAssetOfRow().click()
+            await vi.waitFor(() => expect([detail().dialog, detail().asset?.id]).toEqual([QUEUE, 'asset-1']))
+            await flushPromises()
+            closeDetail()
+            await waits.settle()
+            expect([detail().dialog, detail().asset]).toEqual([null, null])
+          }
+
+          it.each<[string, FakeDamAnswer | undefined, boolean]>([
+            [
+              'answers: the panel shows its asset, and its tile is the active one in a list read later',
+              undefined,
+              true,
+            ],
+            [
+              'fails: the panel stays empty, and no tile is the active one in a list read later',
+              { status: 500 },
+              false,
+            ],
+          ])('the read of a clicked tile, which then %s', async (_how, answer, shown) => {
+            await mountOnAPageWithUpload()
+            const ofTheClick = dam.hold('GET', readOf('asset-50'))
+            await tiles()[0]!.trigger('click')
+            await vi.waitFor(() => expect(ofTheClick.waiting).toHaveLength(1))
+
+            await listWithoutItThenADetailOfTheQueueClosed()
+            expect(panelLoads()).toBe(true)
+            ofTheClick.release(answer)
+            await vi.waitFor(() => expect(panelLoads()).toBe(false))
+            await flushPromises()
+            expect([detail().asset?.id ?? null, panelShowsAnAsset()]).toEqual(
+              shown ? ['asset-50', true] : [null, false]
+            )
+
+            await sortAnew()
+            expect(tilesDrawn()).toEqual(shown ? [second, active(first)] : [second, first])
+            expect(panelShowsAnAsset()).toBe(shown)
+            expect(shownAlerts()).toHaveLength(shown ? 0 : 1)
+          })
+
+          // That read is not taken once a detail has been opened since it began: the panel stays empty.
+          it('the read after an earlier close, whose answer is not taken: no tile is the active one in a list read later', async () => {
+            await mountOnAPageWithUpload()
+            await tiles()[0]!.trigger('click')
+            await vi.waitFor(() => expect(detail().asset?.id).toBe('asset-50'))
+            await flushPromises()
+            wrapper!.findComponent({ name: 'AssetMetadata' }).vm.$emit('editInDam')
+            await flushPromises()
+            const afterTheClose = dam.hold('GET', readOf('asset-50'))
+            closeDetail()
+            await vi.waitFor(() => expect(afterTheClose.waiting).toHaveLength(1))
+
+            await listWithoutItThenADetailOfTheQueueClosed()
+            expect(panelLoads()).toBe(true)
+            afterTheClose.release()
+            await vi.waitFor(() => expect(panelLoads()).toBe(false))
+            await flushPromises()
+            expect([detail().asset, panelShowsAnAsset()]).toEqual([null, false])
+
+            await sortAnew()
+            expect(tilesDrawn()).toEqual([second, first])
+            expect(panelShowsAnAsset()).toBe(false)
+            expect(shownAlerts()).toEqual([])
+          })
+        })
+
+        // An accepted limit of the active tile going by its asset: a tile whose read failed is marked beside a panel
+        // that does not show its asset, as it always was, and is found again in a list read later.
+        it('stays the active one in a list read later when the read of its click failed: the mark is the tile clicked last', async () => {
+          await mountWithTwoAssets()
+          dam.reply((request) =>
+            request.method === 'GET' && readOf('asset-50').test(request.url) ? { status: 500 } : undefined
+          )
+          await tiles()[0]!.trigger('click')
+          await vi.waitFor(() => expect(shownAlerts()).toHaveLength(1))
+          await flushPromises()
+          expect(tilesDrawn()).toEqual([active(first), second])
+          expect([detail().asset, panelLoads()]).toEqual([null, false])
+          nextListsAre(['asset-51', 'asset-50'])
+
+          await sortAnew()
+
+          expect(tilesDrawn()).toEqual([second, active(first)])
+        })
+
+        // That limit ends with the tile: once a list no longer has the asset, the panel shows none and no tile is
+        // marked, as after a read that fails when the list has already lost the asset. Whether the asset was forgotten
+        // depended on which of the two came first, the failure or the list, and a list read later marked its tile
+        // beside the empty panel when the failure came first.
+        it.each<[string, boolean]>([
+          ['the read of its click', false],
+          ['the read after the close of a detail', true],
+        ])(
+          'is not the active one in a list read later when %s failed, and a list without its asset came after that',
+          async (_which, afterAClose) => {
+            await mountWithTwoAssets()
+            const fail = () =>
+              dam.reply((request) =>
+                request.method === 'GET' && readOf('asset-50').test(request.url) ? { status: 500 } : undefined
+              )
+            if (!afterAClose) fail()
+            await tiles()[0]!.trigger('click')
+            if (afterAClose) {
+              await vi.waitFor(() => expect(detail().asset?.id).toBe('asset-50'))
+              await flushPromises()
+              wrapper!.findComponent({ name: 'AssetMetadata' }).vm.$emit('editInDam')
+              await flushPromises()
+              fail()
+              closeDetail()
+            }
+            await vi.waitFor(() => expect(shownAlerts()).toHaveLength(1))
+            await flushPromises()
+            expect(tilesDrawn()).toEqual([active(first), second])
+            expect([detail().asset, panelLoads()]).toEqual([null, false])
+            nextListsAre(['asset-51'], ['asset-51', 'asset-50'])
+
+            await sortAnew()
+            expect(tilesDrawn()).toEqual([second])
+            await sortAnew()
+
+            expect(tilesDrawn()).toEqual([second, first])
+            expect([detail().asset, panelShowsAnAsset()]).toEqual([null, false])
+            expect(shownAlerts()).toHaveLength(1)
+          }
+        )
       })
     })
   }

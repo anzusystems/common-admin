@@ -251,6 +251,53 @@ describe.each(widgets)('the authors of the DAM picked in the dialog of an image 
     nothingIsSaved()
   })
 
+  // The names of the picked authors were written into the source of the image before the DAM was asked to take the
+  // authors. The dialog does not show the source while it offers the authors: after a write the DAM refused the names
+  // stayed there unseen, and "confirm" with the pick emptied saved them as the source of the image, the names of
+  // authors the DAM never took and the user had taken out.
+  it.each<[string, FakeDamAnswer]>([
+    ['forbids them', { status: 403 }],
+    ['refuses them by validation', refusal('[0].authors')],
+    ['answers with 500', { status: 500 }],
+  ])(
+    'are no source of the image while the DAM has not taken them: when it %s, the image saved with the pick emptied has the source it had, none',
+    async (_how, answer) => {
+      answerSaves(answer)
+      const mounted = await authorPicked()
+      await confirmed()
+      nothingIsSaved()
+
+      mounted.findComponent(AuthorRemoteAutocompleteWithCached).vm.$emit('update:modelValue', [])
+      await flushPromises()
+      confirmButton().click()
+      await vi.waitFor(() => expect(mounted.emitted('afterMetadataSaveSuccess')).toHaveLength(1))
+
+      expect(imageApi.calls[0]).toMatchObject([
+        'createImage',
+        { texts: { description: 'a picked image', source: '' }, dam: { damId: 'file-of-asset-9' } },
+      ])
+      // The authors were asked to be saved once, at the first "confirm"; the pick emptied writes nothing.
+      expect(saves()).toHaveLength(1)
+    }
+  )
+
+  it('are saved by the next "confirm" once the DAM takes them after a refusal, and the image with their names as its source', async () => {
+    const takeRefusalAway = answerSaves({ status: 500 })
+    const mounted = await authorPicked()
+    await confirmed()
+    nothingIsSaved()
+
+    takeRefusalAway()
+    confirmButton().click()
+    await vi.waitFor(() => expect(mounted.emitted('afterMetadataSaveSuccess')).toHaveLength(1))
+
+    expect(saves().map((request) => request.data)).toEqual([
+      '[{"id":"asset-9","authors":["author-5"],"described":true}]',
+      '[{"id":"asset-9","authors":["author-5"],"described":true}]',
+    ])
+    expect(imageApi.calls).toMatchObject([['createImage', { texts: { source: 'Name of author-5' } }]])
+  })
+
   it.each<[string, FakeDamAnswer, string]>([
     ['the user may not, when the DAM forbids them', { status: 403 }, 'common.alert.forbiddenError'],
     ['the save failed, when the DAM answers with 500', { status: 500 }, 'common.alert.unknownError'],

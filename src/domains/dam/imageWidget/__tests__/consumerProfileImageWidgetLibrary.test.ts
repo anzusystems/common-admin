@@ -48,7 +48,12 @@ import ImageWidgetInner from '@/domains/dam/imageWidget/components/ImageWidgetIn
 import { useImageMediaWidgetStore } from '@/domains/dam/imageWidget/store/imageMediaWidgetStore'
 import { ImageWidgetUploadConfigKey } from '@/domains/dam/imageWidget/utils/imageWidgetInkectionKeys'
 import type { AssetSelectMetadataToImageMapFn } from '@/domains/dam/imageWidget/utils/metadataToImageMap'
-import { DamAssetType, type DamImageCopyToLicenceResponseItem } from '@/domains/dam/types/Asset'
+import {
+  DamAssetStatus,
+  DamAssetType,
+  type DamAssetTypeType,
+  type DamImageCopyToLicenceResponseItem,
+} from '@/domains/dam/types/Asset'
 import { AssetFileProcessStatus } from '@/domains/dam/types/AssetFile'
 import type { ImageAware } from '@/domains/dam/types/ImageAware'
 import { UploadQueueItemStatus, UploadQueueItemType } from '@/domains/dam/types/UploadQueue'
@@ -285,7 +290,11 @@ describe.each(consumerProfiles)('the image widget and the library of the DAM und
   // model. The one of the image and media widget is given no `skipCurrentUserCheck` by its widget, so only a page with
   // a user of the DAM (admin-cms) gets past the check.
   describe('the asset pickers, as the widgets mount them', () => {
-    const mountPicker = async (component: Component, props: Record<string, unknown> = {}) => {
+    const mountPicker = async (
+      component: Component,
+      props: Record<string, unknown> = {},
+      standIns = ALWAYS_STAND_INS
+    ) => {
       const mounted: VueWrapper = mount(component, {
         attachTo: document.body,
         props: {
@@ -300,7 +309,7 @@ describe.each(consumerProfiles)('the image widget and the library of the DAM und
         } as never,
         global: {
           plugins: [pinia],
-          stubs: Object.fromEntries(ALWAYS_STAND_INS.map((name) => [name, true])),
+          stubs: Object.fromEntries(standIns.map((name) => [name, true])),
         },
       })
       wrapper = mounted
@@ -430,6 +439,133 @@ describe.each(consumerProfiles)('the image widget and the library of the DAM und
           ).toEqual(['asset-9', 'asset-10'])
         }
       )
+
+      // The picker of the image and media widget lists one type at a time. A switch to another type emptied the list
+      // and the side panel, but did not give up what a click on a tile had begun: the read of that asset was written
+      // into the panel when it answered, beside the list of the other type. The place of the active tile was kept too,
+      // so the tile at that place of the new list could not be made the active one. With its real tiles and its real
+      // bar; the pictures and the metadata of the picked asset are stand-ins.
+      describe('the picker of the image and media widget, switched to another type', () => {
+        const tiles = () => Array.from(document.body.querySelectorAll<HTMLElement>('.asset-list-tiles__item'))
+        const tilesDrawn = () =>
+          tiles().map((tile) => [
+            tile.querySelector('[data-cy="asset-tile-title"]')!.textContent!.trim(),
+            tile.classList.contains('asset-list-tiles__item--active'),
+          ])
+        const panel = () => document.body.querySelector<HTMLElement>('.subject-select__sidebar-right')!
+        const panelLoads = () => !!panel().querySelector('.v-progress-circular')
+        const panelShowsAnAsset = () => wrapper!.findComponent({ name: 'AssetMetadata' }).exists()
+        const noAssetPicked = () =>
+          panel().textContent!.includes(uiText('common.assetSelect.meta.info.noAssetSelected'))
+        const ofType = (id: string, assetType: DamAssetTypeType) =>
+          damAssetWithFile(id, `file-of-${id}`, AssetFileProcessStatus.Processed, {
+            licence,
+            texts: { displayTitle: id },
+            attributes: { assetType, assetStatus: DamAssetStatus.WithFile },
+          })
+        /** The picker over one image and one video of the licence, open on the images. */
+        const openOnImages = async () => {
+          signInToDam(extSystem)
+          dam.assets.set('image-1', ofType('image-1', DamAssetType.Image))
+          dam.assets.set('video-1', ofType('video-1', DamAssetType.Video))
+          dam.reply((request) => {
+            if (!isListRequest(request)) return undefined
+            const type = request.url.match(/type\]?=(\w+)/)?.[1]
+            const found = [...dam.assets.values()].filter((asset) => asset.attributes.assetType === type)
+            return { status: 200, data: { data: found, totalCount: found.length } }
+          })
+          const mounted = await mountPicker(AAssetSelectMedia, {}, [
+            'VImg',
+            'AssetImagePreview',
+            'AssetSelectListTable',
+            'AssetMetadata',
+            ...FILTER_INPUTS,
+          ])
+          await open(mounted)
+          await vi.waitFor(() => expect(tilesDrawn()).toEqual([['image-1', false]]))
+          return mounted
+        }
+        const typeButton = (type: 'image' | 'video') =>
+          document.body.querySelector<HTMLButtonElement>(`[data-cy="button-${type}-types"]`)!
+        /** The picker has asked for its list so many times, and has the last answer. */
+        const listed = async (times: number) => {
+          await vi.waitFor(() => expect(listRequests()).toHaveLength(times))
+          await vi.waitFor(() => expect(useAssetSelectStore(pinia).loader).toBe(false))
+          await flushPromises()
+        }
+        /** The user presses the button of a type in the bar, and the list of that type has come. */
+        const switchTo = async (type: 'image' | 'video') => {
+          const listedBefore = listRequests().length
+          typeButton(type).click()
+          await listed(listedBefore + 1)
+        }
+        const readOf = (asset: string) => new RegExp(`^${endPoints.asset}/${asset}$`)
+
+        afterEach(() => useSidebar().closeSidebarRight())
+
+        it('gives up the read of a tile clicked before the switch: the side panel loads nothing, and never shows that asset', async () => {
+          await openOnImages()
+          const read = dam.hold('GET', readOf('image-1'))
+          tiles()[0]!.click()
+          await vi.waitFor(() => expect(read.waiting).toHaveLength(1))
+          expect(panelLoads()).toBe(true)
+
+          const listedBefore = listRequests().length
+          typeButton('video').click()
+          await flushPromises()
+          expect([panelLoads(), noAssetPicked()]).toEqual([false, true])
+          await listed(listedBefore + 1)
+          expect(tilesDrawn()).toEqual([['video-1', false]])
+          read.release()
+          await waits.settle()
+
+          expect([panelLoads(), noAssetPicked(), panelShowsAnAsset()]).toEqual([false, true, false])
+          expect(useAssetDetailStore(pinia).asset).toBeNull()
+          expect(shownAlerts()).toEqual([])
+
+          // Back on the images: the panel shows no asset, so the tile clicked before the switch is not the active one.
+          await switchTo('image')
+          expect(tilesDrawn()).toEqual([['image-1', false]])
+          expect([panelLoads(), noAssetPicked()]).toEqual([false, true])
+        })
+
+        it('says nothing when that read fails after the switch', async () => {
+          await openOnImages()
+          const read = dam.hold('GET', readOf('image-1'))
+          tiles()[0]!.click()
+          await vi.waitFor(() => expect(read.waiting).toHaveLength(1))
+
+          await switchTo('video')
+          read.release({ status: 500 })
+          await waits.settle()
+
+          expect(shownAlerts()).toEqual([])
+          expect([panelLoads(), noAssetPicked()]).toEqual([false, true])
+        })
+
+        it('shows the asset of a tile clicked after the switch, and marks that tile, also at the place of the one clicked before', async () => {
+          await openOnImages()
+          tiles()[0]!.click()
+          await vi.waitFor(() => expect(useAssetDetailStore(pinia).asset?.id).toBe('image-1'))
+          await flushPromises()
+          expect(tilesDrawn()).toEqual([['image-1', true]])
+
+          await switchTo('video')
+          expect(tilesDrawn()).toEqual([['video-1', false]])
+          expect([noAssetPicked(), panelShowsAnAsset()]).toEqual([true, false])
+          tiles()[0]!.click()
+          await vi.waitFor(() => expect(useAssetDetailStore(pinia).asset?.id).toBe('video-1'))
+          await flushPromises()
+
+          expect(tilesDrawn()).toEqual([['video-1', true]])
+          expect(panelShowsAnAsset()).toBe(true)
+
+          // Back on the images: the panel is empty again, so the tile clicked there before is not the active one.
+          await switchTo('image')
+          expect(tilesDrawn()).toEqual([['image-1', false]])
+          expect([noAssetPicked(), panelShowsAnAsset()]).toEqual([true, false])
+        })
+      })
     }
 
     it('the picker of the image and media widget says the licence is not allowed to a page without a user of the DAM, and does not open, at each press', async () => {
@@ -2047,6 +2183,200 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
         })
       })
     }
+
+    // "Confirm" of the dialog, pressed again while the save the first press began is on its way. The button of the
+    // dialog spins but still takes Enter, and the button of a host that draws the form in its own dialog (the embed
+    // dialogs of the two applications, through `metadataConfirm`) is not disabled while the image is saved: every
+    // press went on to save, a new image was created twice, and the host put it into its text twice.
+    describe('whose "confirm" is pressed again while the image is being saved', () => {
+      const SOURCE = isCms ? ['author-3'] : []
+      /** An asset picked into the dialog, which shows its source: its save writes nothing into the DAM. */
+      const pickedWithSource = async (image: number | null = null) => {
+        inTheDam('asset-9', SOURCE)
+        if (!isNull(image)) imageApi.has(stored(image))
+        const widget = await mountWidget(image)
+        await pickInLibrary(widget, 'asset-9')
+        expect(offered(widget)).toBeNull()
+        return widget
+      }
+      /** As a host confirms the form: by the method the widget exposes. */
+      const confirmAsHost = (widget: VueWrapper) =>
+        (widget.vm as unknown as { metadataConfirm: () => void }).metadataConfirm()
+      const spins = () => confirmButton().classList.contains('v-btn--loading')
+
+      it.each<[string, number | null, string]>([
+        ['creates the new image', null, 'createImage'],
+        ['updates the image the widget has', 7, 'updateImage'],
+      ])('%s once', async (_what, image, call) => {
+        const widget = await pickedWithSource(image)
+        const saves = imageApi.holdSaves()
+
+        confirmButton().click()
+        await vi.waitFor(() => expect(saves.waiting).toHaveLength(1))
+        expect(spins()).toBe(true)
+        // By the button of the dialog, and as a host does.
+        confirmButton().click()
+        confirmAsHost(widget)
+        await waits.settle()
+        expect(imagesWritten()).toHaveLength(1)
+
+        saves.release()
+        await vi.waitFor(() => expect(widget.emitted('afterMetadataSaveSuccess')).toHaveLength(1))
+        await waits.settle()
+
+        expect(imagesWritten().map(([name]) => name)).toEqual([call])
+        expect(widget.emitted('afterMetadataSaveSuccess')).toHaveLength(1)
+        expect(imageDialog()).toBeUndefined()
+        expect(shownAlerts().filter(([colour]) => colour === 'error')).toEqual([])
+      })
+
+      // The form is in the page of the host and never closes: two presses of its button are two calls in a row.
+      it('saves once for a host that confirms the form drawn in its page twice', async () => {
+        inTheDam('asset-9', SOURCE)
+        const widget = await mountWidget(null, QUEUE, { expandMetadata: true })
+        widget.findComponent(PickerStandIn).vm.$emit('confirm', { type: 'asset', value: [listed('asset-9')] })
+        await vi.waitFor(() =>
+          expect(useImageMediaWidgetStore(pinia).detail).toMatchObject({ dam: { damId: 'file-of-asset-9' } })
+        )
+        await flushPromises()
+        const saves = imageApi.holdSaves()
+
+        confirmAsHost(widget)
+        await vi.waitFor(() => expect(saves.waiting).toHaveLength(1))
+        confirmAsHost(widget)
+        confirmAsHost(widget)
+        await waits.settle()
+        expect(imagesWritten()).toHaveLength(1)
+
+        saves.release()
+        await vi.waitFor(() => expect(widget.emitted('afterMetadataSaveSuccess')).toHaveLength(1))
+        await waits.settle()
+
+        expect(imagesWritten().map(([name]) => name)).toEqual(['createImage'])
+        expect(widget.emitted('afterMetadataSaveSuccess')).toHaveLength(1)
+      })
+
+      it('is taken again once that save has failed: the dialog stays, and the next press saves the image', async () => {
+        const widget = await pickedWithSource()
+        const saves = imageApi.holdSaves()
+        confirmButton().click()
+        await vi.waitFor(() => expect(saves.waiting).toHaveLength(1))
+
+        saves.release('failed')
+        await vi.waitFor(() => expect(spins()).toBe(false))
+        await waits.settle()
+        expect(widget.emitted('afterMetadataSaveSuccess')).toBeUndefined()
+        expect(imageDialog()).toBeDefined()
+
+        confirmButton().click()
+        await vi.waitFor(() => expect(saves.waiting).toHaveLength(1))
+        saves.release()
+        await vi.waitFor(() => expect(widget.emitted('afterMetadataSaveSuccess')).toHaveLength(1))
+
+        expect(imagesWritten().map(([name]) => name)).toEqual(['createImage', 'createImage'])
+        expect(imageDialog()).toBeUndefined()
+      })
+
+      if (isCms) {
+        // The save begins with the authors picked in the dialog: a second press asked for their names and wrote them
+        // into the asset a second time, and saved a second image after them.
+        it('writes the authors picked in the dialog into their asset once, and saves one image', async () => {
+          const widget = await pickedWithoutAuthors()
+          await pickAuthors(widget, ['author-7'])
+          const writes = dam.hold('PATCH', dam.routes.bulkMetadata)
+
+          confirmButton().click()
+          await vi.waitFor(() => expect(writes.waiting).toHaveLength(1))
+          confirmButton().click()
+          confirmAsHost(widget)
+          await waits.settle()
+          expect(authorsWritten()).toHaveLength(1)
+
+          writes.release()
+          await vi.waitFor(() => expect(widget.emitted('afterMetadataSaveSuccess')).toHaveLength(1))
+          await waits.settle()
+
+          expect(authorsWritten()).toEqual([[['asset-9', ['author-7']]]])
+          expect(imagesWritten()).toMatchObject([['createImage', { texts: { source: 'Name of author-7' } }]])
+          expect(widget.emitted('afterMetadataSaveSuccess')).toHaveLength(1)
+        })
+
+        const NAMES_OF_AUTHOR_7 = /^\/adm\/v1\/author\/ext-system\/\d+\/search\?.*author-7/
+        const author7Named = {
+          status: 200,
+          data: {
+            data: [{ id: 'author-7', name: 'Name of author-7', identifier: '', flags: { reviewed: true } }],
+            totalCount: 1,
+          },
+        }
+
+        // The dialog closed while the names of the picked authors are read, and not opened again: the user has left it,
+        // and nothing more comes of its confirm. The names used to be written into the image right after their read,
+        // which ended the confirm there; kept aside, they let it go on, and the authors were written into the asset.
+        it('ends when its dialog was closed while the names of the picked authors were read: nothing is written or said, and the next "confirm" is taken', async () => {
+          const widget = await pickedWithoutAuthors('asset-9', 7)
+          await pickAuthors(widget, ['author-7'])
+          // What the caches ask of the picked author is asked by now: the read held next is the one of "confirm".
+          await damNamesAsked()
+          const names = dam.hold('GET', NAMES_OF_AUTHOR_7)
+          confirmButton().click()
+          await vi.waitFor(() => expect(names.waiting).toHaveLength(1))
+
+          await closeImageDialog()
+          names.release(author7Named)
+          await damNamesAsked()
+          await waits.settle()
+
+          expect(authorsWritten()).toEqual([])
+          expect(imagesWritten()).toEqual([])
+          expect(widget.emitted('afterMetadataSaveSuccess')).toBeUndefined()
+          expect(shownAlerts()).toEqual([])
+
+          await editImage(widget)
+          expect(spins()).toBe(false)
+          await confirmImage(widget)
+          expect(imagesWritten()).toMatchObject([['updateImage', 7, { texts: { source: 'source 7' } }]])
+          expect(authorsWritten()).toEqual([])
+        })
+
+        // The names of the picked authors become the source of the image once the DAM has taken the authors. They are
+        // for the image the confirm was pressed on: the dialog can be closed while the names are read or the authors
+        // written, and opened again for the image the widget has, whose source is its own.
+        it.each<[string, boolean]>([
+          ['the names of the authors of another are read', true],
+          ['the DAM has taken the authors of another', false],
+        ])(
+          'leaves the source of the image the widget has alone, when its dialog is the one open by the time %s',
+          async (_when, atTheNames) => {
+            const widget = await pickedWithoutAuthors('asset-9', 7)
+            await pickAuthors(widget, ['author-7'])
+            // What the caches ask of the picked author is asked by now: the read held next is the one of "confirm".
+            await damNamesAsked()
+            const held = atTheNames ? dam.hold('GET', NAMES_OF_AUTHOR_7) : dam.hold('PATCH', dam.routes.bulkMetadata)
+            confirmButton().click()
+            await vi.waitFor(() => expect(held.waiting).toHaveLength(1))
+
+            await closeImageDialog()
+            await editImage(widget)
+            expect(texts()).toEqual(['image 7', 'source 7'])
+            held.release(atTheNames ? author7Named : undefined)
+            await vi.waitFor(() => expect(widget.emitted('afterMetadataSaveSuccess')).toHaveLength(1))
+            await damNamesAsked()
+            await waits.settle()
+
+            expect(authorsWritten()).toEqual([[['asset-9', ['author-7']]]])
+            // As the confirm goes on today: the image the dialog shows by then is saved as it is, once, and its dialog
+            // closed.
+            expect(imagesWritten()).toMatchObject([
+              ['updateImage', 7, { texts: { description: 'image 7', source: 'source 7' }, dam: { damId: 'file-7' } }],
+            ])
+            expect(imageDialog()).toBeUndefined()
+            expect(JSON.stringify(imagesWritten())).not.toContain('Name of author-7')
+            expect(JSON.stringify(useImageMediaWidgetStore(pinia).detail ?? {})).not.toContain('Name of author-7')
+          }
+        )
+      }
+    })
 
     // That text is the user's, whatever authors the asset gets. admin-ugc has no authors of the DAM, so its dialog
     // always shows the source; in admin-cms the dialog of an asset picked with its authors does.

@@ -3,7 +3,7 @@ import { computed, onMounted, onUnmounted, provide, ref, shallowRef, watch, with
 import ADialogToolbar from '@/domains/ui/components/ADialogToolbar.vue'
 import { useDisplay } from 'vuetify'
 import { useI18n } from 'vue-i18n'
-import { type AssetDetailItemDto, DamAssetType, type DamAssetTypeType } from '@/domains/dam/types/Asset'
+import { DamAssetType, type DamAssetTypeType } from '@/domains/dam/types/Asset'
 import { useAssetSelectActions } from '@/domains/dam/assetSelect/composables/assetSelectListActions'
 import AssetSelectListTable from '@/domains/dam/assetSelect/components/AssetSelectListTable.vue'
 import AssetSelectListBar from '@/domains/dam/assetSelect/components/AssetSelectListBar.vue'
@@ -42,7 +42,6 @@ const props = withDefaults(
     returnType?: AssetSelectReturnTypeType
     configName?: string
     skipCurrentUserCheck?: boolean
-    onDetailLoadedCallback?: ((asset: AssetDetailItemDto) => void) | undefined
   }>(),
   {
     inPodcast: null,
@@ -50,7 +49,6 @@ const props = withDefaults(
     returnType: AssetSelectReturnType.MainFileId,
     configName: undefined,
     skipCurrentUserCheck: false,
-    onDetailLoadedCallback: undefined,
   }
 )
 
@@ -80,8 +78,7 @@ const {
   detailLoading,
   fetchAssetListDebounced,
   reset,
-  // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-} = useAssetSelectActions(damConfigName, props.onDetailLoadedCallback)
+} = useAssetSelectActions(damConfigName)
 // The ordering in the list bar reads this; without it the dialog would pick up the host page's pagination.
 provide(DatatablePaginationKey, pagination)
 
