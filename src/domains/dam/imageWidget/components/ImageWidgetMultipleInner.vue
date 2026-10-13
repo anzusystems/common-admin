@@ -571,26 +571,45 @@ const saveImages = async () => {
   try {
     const assetUpdateItems: AssetAuthorsItems = []
     const imagesRaw = toRaw(images.value)
-    for (const image of imagesRaw) {
-      if (authorEnabled.value && image.showDamAuthors && image.assetId && image.damAuthors.length > 0) {
-        assetUpdateItems.push({ id: image.assetId, authors: image.damAuthors })
-      }
-      if (authorEnabled.value && image.showDamAuthors && image.damAuthors.length > 0) {
-        const authorsRes = await fetchAuthorListByIds(
-          damClient,
-          endPointAuthor,
-          cachedExtSystemId.value,
-          image.damAuthors
-        )
-        image.texts.source = authorsRes.map((author) => author.name).join(', ')
-      }
+    // The rows that offer the pick of the authors, those of one asset together: the entity may have an image twice,
+    // and a duplicate from the queue is a second row of its asset. Each row on its own, the authors of an asset went
+    // out once per row that had some, the last to stay, and a row with none picked was saved without a source and
+    // went on offering the pick of authors the asset had by then. The asset gets what is picked in any of its rows,
+    // each author once, and each of those rows the authors and their names, once the DAM has taken them.
+    const offering = new Map<DocId, { assetId: DocId | undefined; rows: ImageStoreItem[]; authors: DocId[] }>()
+    if (authorEnabled.value) {
+      images.value.forEach((image) => {
+        if (!image.showDamAuthors) return
+        // A row that offers the pick has its asset; one that had none would be on its own.
+        const of = image.assetId ?? image.key
+        const asset = offering.get(of) ?? { assetId: image.assetId, rows: [], authors: [] }
+        offering.set(of, asset)
+        asset.rows.push(image)
+        image.damAuthors.forEach((author) => {
+          if (!asset.authors.includes(author)) asset.authors.push(author)
+        })
+      })
+    }
+    const named: Array<{ rows: ImageStoreItem[]; authors: DocId[]; source: string }> = []
+    for (const { assetId, rows, authors } of offering.values()) {
+      if (authors.length === 0) continue
+      if (assetId) assetUpdateItems.push({ id: assetId, authors })
+      const authorsRes = await fetchAuthorListByIds(damClient, endPointAuthor, cachedExtSystemId.value, authors)
+      named.push({ rows, authors, source: authorsRes.map((author) => author.name).join(', ') })
     }
     // Turned read-only while the authors loaded: nothing of the user's is written any more.
     if (props.readonly) return true
     if (assetUpdateItems.length) {
       await bulkUpdateAssetsAuthors(damClient, endPointAsset, assetUpdateItems)
     }
-    const resItems = await imageApi.bulkUpdateImages(imageClient, imagesRaw.map(imageFieldsOf))
+    named.forEach(({ rows, authors, source }) => {
+      rows.forEach((row) => {
+        row.damAuthors = [...authors]
+        row.texts.source = source
+      })
+    })
+    const sentRows = [...imagesRaw]
+    const resItems = await imageApi.bulkUpdateImages(imageClient, sentRows.map(imageFieldsOf))
     const ids: IntegerId[] = []
     const items = resItems.map((resItem) => {
       ids.push(resItem.id)
@@ -610,8 +629,11 @@ const saveImages = async () => {
       return true
     }
 
-    const getUpdatedItem = async (item: ImageStoreItem): Promise<ImageStoreItem> => {
-      const matchedImage = imageStore.images.find((storeItem) => storeItem.dam.damId === item.dam.damId)
+    // Each image of the answer takes what its own row had, the rows of one file one by one in the order they were
+    // sent in: found by the file alone, every row of a file took what the first of them had.
+    const getUpdatedItem = (item: ImageStoreItem): ImageStoreItem => {
+      const index = sentRows.findIndex((row) => row.dam.damId === item.dam.damId)
+      const matchedImage = index < 0 ? undefined : sentRows.splice(index, 1)[0]
 
       return {
         ...item,
@@ -623,7 +645,7 @@ const saveImages = async () => {
       }
     }
 
-    const updatedItems = await Promise.all(items.map((item) => getUpdatedItem(item)))
+    const updatedItems = items.map(getUpdatedItem)
     imageStore.setImages(updatedItems)
     // Rows passed explicitly: setImages just replaced their keys, bare commit() would read the
     // not-yet-rerendered prop.

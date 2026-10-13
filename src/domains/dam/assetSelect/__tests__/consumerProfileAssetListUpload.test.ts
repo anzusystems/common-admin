@@ -489,6 +489,49 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
         Array.from(queueDialog()!.querySelectorAll<HTMLButtonElement>('.dam-upload-queue__item button')).find(
           (button) => button.textContent?.trim() === damText('image.button.editAsset')
         )!
+      /** The tiles, the rows of the queue and the dialog of the detail are the real ones. */
+      const WITH_TILES_AND_DETAIL = {
+        real: ['AssetSelectListTiles', 'AssetDetailDialog', 'UploadQueueEditable'],
+        standIns: [
+          'AssetDetailDialogFrame',
+          'AssetImagePreview',
+          'AssetImage',
+          'AssetQueueSelectedSidebar',
+          'AFileDropzone',
+          'AFormRemoteAutocompleteWithCached',
+        ],
+      }
+      const tiles = () => wrapper!.findAll('.asset-list-tiles__item')
+      // The side panel is a column of a wide window, and a dialog of a narrow one.
+      const panel = () =>
+        document.body.querySelector<HTMLElement>('.subject-select__sidebar-right') ??
+        Array.from(document.body.querySelectorAll<HTMLElement>('.v-overlay--active .v-card')).find((card) =>
+          card.textContent?.includes(uiText('common.assetSelect.meta.info.toggle'))
+        )
+      const panelLoads = () => !!panel()?.querySelector('.v-progress-circular')
+      const panelShowsAnAsset = () => wrapper!.findComponent({ name: 'AssetMetadata' }).exists()
+      /** The list has two assets, neither picked yet; its side panel is open. */
+      const mountWithTwoAssets = async () => {
+        dam.assets.set('asset-50', picked('First in the list'))
+        dam.assets.set(
+          'asset-51',
+          damAssetWithFile('asset-51', 'file-51', AssetFileProcessStatus.Processed, {
+            licence,
+            texts: { displayTitle: 'Second in the list' },
+          })
+        )
+        dam.reply((request) =>
+          isListRequest(request)
+            ? { status: 200, data: { data: [dam.assets.get('asset-50'), dam.assets.get('asset-51')], totalCount: 2 } }
+            : undefined
+        )
+        const listedBefore = listRequests().length
+        await mountList(WITH_TILES_AND_DETAIL)
+        await listed(listedBefore + 1)
+        useSidebar().openSidebarRight()
+        await flushPromises()
+        expect(tiles()).toHaveLength(2)
+      }
 
       afterEach(() => useSidebar().closeSidebarRight())
 
@@ -502,15 +545,7 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
         )
         let handed: { onFileInput: (files: File[]) => void }
         await mountList({
-          real: ['AssetSelectListTiles', 'AssetDetailDialog', 'UploadQueueEditable'],
-          standIns: [
-            'AssetDetailDialogFrame',
-            'AssetImagePreview',
-            'AssetImage',
-            'AssetQueueSelectedSidebar',
-            'AFileDropzone',
-            'AFormRemoteAutocompleteWithCached',
-          ],
+          ...WITH_TILES_AND_DETAIL,
           slots: {
             'upload-activator': (slotProps: never) => {
               handed = slotProps
@@ -612,6 +647,100 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
           expect([detail().dialog, readsOf('asset-50')]).toEqual([null, 3])
         }
       )
+
+      // That read and the read of a click on a tile each wrote when it answered, and each turned the loading of the
+      // side panel off. After the detail of one asset was closed and another tile clicked at once, the panel showed
+      // the asset of the detail beside the other tile when its answer came last, and stopped loading at the first.
+      it.each<[string, boolean]>([
+        ['first', true],
+        ['last', false],
+      ])(
+        'shows the asset of a tile clicked since the detail closed, when the answer of the read after the close comes %s',
+        async (_when, closedFirst) => {
+          await mountWithTwoAssets()
+          await tiles()[0]!.trigger('click')
+          await vi.waitFor(() => expect(detail().asset?.id).toBe('asset-50'))
+          await flushPromises()
+          wrapper!.findComponent({ name: 'AssetMetadata' }).vm.$emit('editInDam')
+          await flushPromises()
+          expect([detail().dialog, detail().asset?.id]).toEqual([QUEUE, 'asset-50'])
+          const afterClose = dam.hold('GET', readOf('asset-50'))
+          const afterClick = dam.hold('GET', readOf('asset-51'))
+
+          closeDetail()
+          await vi.waitFor(() => expect(afterClose.waiting).toHaveLength(1))
+          await tiles()[1]!.trigger('click')
+          await vi.waitFor(() => expect(afterClick.waiting).toHaveLength(1))
+          expect([detail().asset, panelLoads()]).toEqual([null, true])
+
+          if (closedFirst) {
+            afterClose.release()
+            await waits.settle()
+            // Not the read asked for last: nothing of it is shown, and the panel goes on loading.
+            expect([detail().asset, panelLoads(), panelShowsAnAsset()]).toEqual([null, true, false])
+            afterClick.release()
+          } else {
+            afterClick.release()
+            await vi.waitFor(() => expect(detail().asset?.id).toBe('asset-51'))
+            await flushPromises()
+            expect([panelLoads(), panelShowsAnAsset()]).toEqual([false, true])
+            afterClose.release()
+          }
+          await vi.waitFor(() => expect(detail().asset?.id).toBe('asset-51'))
+          await waits.settle()
+
+          expect([detail().dialog, detail().asset?.id, panelLoads(), panelShowsAnAsset()]).toEqual([
+            null,
+            'asset-51',
+            false,
+            true,
+          ])
+          expect(useAssetSelectStore(pinia).assetListItems.map((item) => item.active)).toEqual([false, true])
+          expect(shownAlerts()).toEqual([])
+        }
+      )
+
+      // The list empties its selection and the store of the detail when it goes away, and the read of a click may
+      // still be on its way: its answer was written into the store all the same, and the panel of the next list went
+      // on loading until it came.
+      it('gives up the read of a click when the list goes away: mounted again, its side panel loads nothing and shows no asset', async () => {
+        await mountWithTwoAssets()
+        const held = dam.hold('GET', readOf('asset-50'))
+        await tiles()[0]!.trigger('click')
+        await vi.waitFor(() => expect(held.waiting).toHaveLength(1))
+        expect(panelLoads()).toBe(true)
+
+        wrapper!.unmount()
+        await mountWithTwoAssets()
+
+        expect([detail().asset, panelLoads(), panelShowsAnAsset()]).toEqual([null, false, false])
+        held.release()
+        await waits.settle()
+
+        expect([detail().asset, panelLoads(), panelShowsAnAsset()]).toEqual([null, false, false])
+        expect(useAssetSelectStore(pinia).assetListItems.map((item) => item.active)).toEqual([false, false])
+        expect(shownAlerts()).toEqual([])
+      })
+
+      // The store of the detail is the page's. The list that went away with the detail of its side panel open left its
+      // key there, and the list mounted next (the user is back on the page) drew that detail at once, with no asset
+      // in it and nothing to close it by.
+      it('closes the detail of its side panel when it goes away: mounted again, it draws none', async () => {
+        await mountWithTwoAssets()
+        await tiles()[0]!.trigger('click')
+        await vi.waitFor(() => expect(detail().asset?.id).toBe('asset-50'))
+        await flushPromises()
+        wrapper!.findComponent({ name: 'AssetMetadata' }).vm.$emit('editInDam')
+        await flushPromises()
+        expect(wrapper!.findComponent({ name: 'AssetDetailDialogFrame' }).exists()).toBe(true)
+
+        wrapper!.unmount()
+        expect(detail().dialog).toBeNull()
+        await mountWithTwoAssets()
+
+        expect([detail().dialog, detail().asset]).toEqual([null, null])
+        expect(wrapper!.findComponent({ name: 'AssetDetailDialogFrame' }).exists()).toBe(false)
+      })
     })
   }
 

@@ -109,11 +109,17 @@ export function useAssetSelectActions(
     if (!mdAndDown.value) openSidebarRight()
     assetSelectStore.toggleSelectedByIndex(data.index)
     assetSelectStore.setActiveByIndex(data.index)
+    // The ext system the page asks for names under is that of the list the click was made in. Written at the click,
+    // where it is known, not once the read has answered: a pick confirmed before that gives the read up, and the
+    // dialog of the picked image offers the authors of the DAM under whatever ext system was there before.
+    cachedExtSystemId.value = extSystem
     detailLoading.value = true
     const request = ++detailRequest
     try {
       const asset = await fetchAsset(damClient, endPointAsset, data.assetId)
       if (request !== detailRequest) return
+      // Once more for the read that is shown, as before: the value is one for the page, and another widget may have
+      // written its own since the click, when an upload or a copy of its own ended.
       cachedExtSystemId.value = extSystem
       addToCachedAuthors(asset.authors)
       addToCachedKeywords(asset.keywords)
@@ -134,6 +140,31 @@ export function useAssetSelectActions(
     }
   }
 
+  /**
+   * Reads the asset of the active item again, for the side panel of a list whose detail has closed. In one order with
+   * the read of a click: only the latest of the two is written, and only the latest turns the loading of the panel
+   * off. On its own, the answer for the detail just closed came after that of a click made since, and the panel showed
+   * the asset of the detail beside another active item.
+   */
+  const readActiveItemAgain = async () => {
+    const activeItem = assetSelectStore.assetListItems.find((item) => item.active)
+    if (!activeItem) return
+    detailLoading.value = true
+    const request = ++detailRequest
+    try {
+      // Not written over a detail: one of a row of the queue closes by itself when its asset cannot be read, and can be
+      // opened again before this read answers.
+      await assetDetailStore.readBesideDetail(
+        () => fetchAsset(damClient, endPointAsset, activeItem.asset.id),
+        () => request === detailRequest
+      )
+    } catch (e) {
+      showErrorsDefault(e)
+    } finally {
+      if (request === detailRequest) detailLoading.value = false
+    }
+  }
+
   const { clearAll } = useFilterClearHelpers()
 
   const resetAssetList = async () => {
@@ -147,6 +178,9 @@ export function useAssetSelectActions(
     clearAll(filterData, filterConfig)
     pagination.value.page = 1
     assetSelectStore.reset(true)
+    // A read of the detail that is on its way is given up: its answer would be written into the store emptied here.
+    detailRequest++
+    detailLoading.value = false
     assetDetailStore.reset()
   }
 
@@ -179,6 +213,7 @@ export function useAssetSelectActions(
     assetListItems: assetListItems as Ref<Array<AssetSelectListItem>>,
     getSelectedData: assetSelectStore.getSelectedData,
     onItemClick,
+    readActiveItemAgain,
     fetchAssetListDebounced,
     fetchNextPage,
     resetAssetList,

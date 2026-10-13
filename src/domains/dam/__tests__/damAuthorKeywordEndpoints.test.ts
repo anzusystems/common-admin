@@ -8,7 +8,6 @@ import { type DamSocket, stubDamSocket } from '@/domains/dam/__tests__/support/d
 import { createFakeDam, damAsset, type FakeDam } from '@/domains/dam/__tests__/support/fakeDam'
 import { holdLongWaits, type LongWaits } from '@/domains/dam/__tests__/support/longWaits'
 import type { AssetMetadataBulkItem } from '@/domains/dam/api/damAssetApi'
-import { useAssetDetailStore } from '@/domains/dam/assetDetail/store/assetDetailStore'
 import { useAssetSelectStore } from '@/domains/dam/assetSelect/store/assetSelectStore'
 import { createAuthor, fetchAuthorListByIds, useFetchAuthorList } from '@/domains/dam/author/api/authorApi'
 import AuthorCreateButton from '@/domains/dam/author/components/AuthorCreateButton.vue'
@@ -338,7 +337,8 @@ describe('the components that ask for authors and keywords, in a configuration t
         // their names up for the source of the image.
         await pick('asset-without')
         expect(askedForNames()).toEqual([lookup])
-        useAssetDetailStore().asset!.authors = ['author-2']
+        // As the dialog of the image hands the widget what the user picks in it.
+        wrapper!.findComponent(MetadataDialog).vm.$emit('update:damAuthors', ['author-2'])
         wrapper!.findComponent(MetadataDialog).vm.$emit('confirm')
         await flushPromises()
         await flushPromises()

@@ -120,4 +120,104 @@ describe('useAssetSelectActions races', () => {
     await list
     expect(store.loader).toBe(false)
   })
+
+  // The selection is emptied, and with it the detail: a read of the detail still on its way is not the news either.
+  it('gives the detail read of a click up on reset: its answer is not shown, and nothing loads meanwhile', async () => {
+    const { actions, store } = setup()
+    store.setList([asset('A')])
+    const clicked = actions.onItemClick({ assetId: 'A', index: 0 }, 1)
+    expect(actions.detailLoading.value).toBe(true)
+
+    await actions.reset()
+    expect(actions.detailLoading.value).toBe(false)
+    api.detail.get('A').resolve(asset('A'))
+    await clicked
+
+    expect(useAssetDetailStore().asset).toBeNull()
+    expect(actions.detailLoading.value).toBe(false)
+  })
+
+  // The asset of the active item is read again once a detail has closed, and a click made since asks for another.
+  it.each([
+    ['first', true],
+    ['last', false],
+  ])(
+    'shows the detail of the asset clicked after a detail closed, when the read made at that close answers %s',
+    async (_when, closedFirst) => {
+      const { actions, store } = setup()
+      await actions.reset()
+      store.setList([asset('A'), asset('B')])
+      store.setActiveByIndex(0)
+      const afterClose = actions.readActiveItemAgain()
+      const clicked = actions.onItemClick({ assetId: 'B', index: 1 }, 1)
+
+      if (closedFirst) {
+        api.detail.get('A').resolve(asset('A'))
+        await afterClose
+        expect(useAssetDetailStore().asset).toBeNull()
+        expect(actions.detailLoading.value).toBe(true)
+        api.detail.get('B').resolve(asset('B'))
+        await clicked
+      } else {
+        api.detail.get('B').resolve(asset('B'))
+        await clicked
+        expect(actions.detailLoading.value).toBe(false)
+        api.detail.get('A').resolve(asset('A'))
+        await afterClose
+      }
+
+      expect(useAssetDetailStore().asset?.id).toBe('B')
+      expect(actions.detailLoading.value).toBe(false)
+    }
+  )
+
+  // A click whose read is still on its way when a detail closes: the read made at that close is the later ask.
+  it.each([
+    ['first', true],
+    ['last', false],
+  ])(
+    'shows the asset as it was read again once a detail closed, when the answer of a click made before comes %s',
+    async (_when, clickedFirst) => {
+      const { actions, store } = setup()
+      await actions.reset()
+      store.setList([asset('A')])
+      const clicked = actions.onItemClick({ assetId: 'A', index: 0 }, 1)
+      const ofTheClick = api.detail.get('A')
+      const afterClose = actions.readActiveItemAgain()
+      const ofTheClose = api.detail.get('A')
+      const readAgain = { ...asset('A'), keywords: ['read-again'] }
+
+      if (clickedFirst) {
+        ofTheClick.resolve(asset('A'))
+        await clicked
+        expect(useAssetDetailStore().asset).toBeNull()
+        expect(actions.detailLoading.value).toBe(true)
+        ofTheClose.resolve(readAgain)
+        await afterClose
+      } else {
+        ofTheClose.resolve(readAgain)
+        await afterClose
+        ofTheClick.resolve(asset('A'))
+        await clicked
+      }
+
+      expect(useAssetDetailStore().asset?.keywords).toEqual(['read-again'])
+      expect(actions.detailLoading.value).toBe(false)
+    }
+  )
+
+  it('shows the asset read again once a detail has closed, while no click has asked for another since', async () => {
+    const { actions, store } = setup()
+    await actions.reset()
+    store.setList([asset('A')])
+    store.setActiveByIndex(0)
+
+    const afterClose = actions.readActiveItemAgain()
+    expect(actions.detailLoading.value).toBe(true)
+    api.detail.get('A').resolve(asset('A'))
+    await afterClose
+
+    expect(useAssetDetailStore().asset?.id).toBe('A')
+    expect(actions.detailLoading.value).toBe(false)
+  })
 })

@@ -29,7 +29,6 @@ import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAd
 import ADialogToolbar from '@/domains/ui/components/ADialogToolbar.vue'
 import AssetDetailDialog from '@/domains/dam/assetDetail/components/AssetDetailDialog.vue'
 import type { UploadQueueKey } from '@/domains/dam/types/UploadQueue'
-import { fetchAsset } from '@/domains/dam/api/damAssetApi'
 import { ImageWidgetUploadConfigKey } from '@/domains/dam/imageWidget/utils/imageWidgetInkectionKeys'
 import { useDamAcceptTypeAndSizeHelper } from '@/domains/dam/config/composables/acceptTypeAndSizeHelper'
 import { useUploadQueueDialog } from '@/domains/dam/uploadQueue/composables/useUploadQueueDialog'
@@ -71,6 +70,7 @@ const {
   fetchNextPage,
   initStoreContext,
   detailLoading,
+  readActiveItemAgain,
   fetchAssetListDebounced,
   reset,
   resetAssetList,
@@ -79,7 +79,7 @@ const {
 // The ordering in the list bar reads this; without it the dialog would pick up the host page's pagination.
 provide(DatatablePaginationKey, pagination)
 
-const { assetListEnabledFilters, endPointAsset } = useCommonAdminCoreDamOptions(damConfigName)
+const { assetListEnabledFilters } = useCommonAdminCoreDamOptions(damConfigName)
 
 const { loadDamConfigAssetCustomFormElements, getDamConfigAssetCustomFormElements } = useDamConfigState(damClient)
 
@@ -174,20 +174,7 @@ const onOpenEditDialog = () => {
   dialog.value = props.queueKey
 }
 
-const onCloseEditDialog = async () => {
-  const activeItem = assetSelectStore.assetListItems.find((item) => item.active)
-  if (!activeItem) return
-  detailLoading.value = true
-  try {
-    // Not written over a detail: one of a row of the queue closes by itself when its asset cannot be read, and can be
-    // opened again before this read answers.
-    await assetDetailStore.readBesideDetail(() => fetchAsset(damClient, endPointAsset, activeItem.asset.id))
-  } catch (e) {
-    showErrorsDefault(e)
-  } finally {
-    detailLoading.value = false
-  }
-}
+const onCloseEditDialog = () => readActiveItemAgain()
 
 const imageWidgetUploadConfig = inject(ImageWidgetUploadConfigKey, undefined)
 const uploadEnabled = computed(() => isDefined(imageWidgetUploadConfig) && isDefined(imageWidgetUploadConfig.value))

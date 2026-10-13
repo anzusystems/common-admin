@@ -1400,6 +1400,229 @@ describe.each(consumerProfiles)('the widget of several images under the $name', 
         expect(imageApi.calls.map(([call]) => call)).toEqual(['fetchImageListByIds'])
         expect(dam.sentTo('PATCH', dam.routes.bulkMetadata)).toEqual([])
       })
+
+      // The entity may have an image twice, and a file that is a duplicate of an image of the widget comes from the
+      // queue as a second row of its asset. Each row was saved on its own: the authors picked in one went into the
+      // asset, and the other row was saved with the source it had and no word of them; picked in two, the asset got
+      // them twice, the last to stay. And after the save every row of a file took what the first row of that file
+      // had: both rows offered an empty pick again, or a row lost the one it had.
+      describe('over several rows of one asset', () => {
+        /** The entity has these images, each of an asset without authors; a file named for one makes it a row more of that file. */
+        const withImagesOf = async (ids: number[], files: Record<number, string> = {}) => {
+          ids.forEach((id, index) => {
+            const image = stored(id, index + 1)
+            imageApi.has({ ...image, dam: { ...image.dam, damId: files[id] ?? image.dam.damId } })
+            if (files[id]) return
+            dam.assets.set(
+              `asset-${id}`,
+              damAssetWithFile(`asset-${id}`, `file-${id}`, AssetFileProcessStatus.Processed, { licence })
+            )
+          })
+          await mountWidget(ids)
+          await vi.waitFor(() => expect(images()).toHaveLength(ids.length))
+          await damNamesAsked()
+          await flushPromises()
+        }
+        const pickInRow = async (row: number, authors: DocId[]) => {
+          rows()[row].findComponent(AuthorRemoteAutocompleteWithCached).vm.$emit('update:modelValue', authors)
+          await flushPromises()
+        }
+        /** A row has its source, as one whose asset was not read when it was picked. */
+        const hasItsSource = async (row: number) => {
+          images()[row].showDamAuthors = false
+          images()[row].texts.source = 'typed by hand'
+          await flushPromises()
+        }
+        /** How often the names of exactly these authors were asked for. */
+        const namesAskedOf = (ids: string) =>
+          damNameLookups(dam)
+            .map((request) => request.url.match(DAM_NAMES)!)
+            .filter((match) => match[1] === 'author' && new URLSearchParams(match[3]).get('id') === ids).length
+        /** The source each image went to the image API with. */
+        const sourcesSaved = () => {
+          const [, sent] = imageApi.calls.at(-1) as ['bulkUpdateImages', ImageAware[]]
+          return sent.map((image) => [image.id, image.texts.source])
+        }
+        /** Each row as the widget has it: its image, its asset, the authors picked in it, whether it offers them, its source. */
+        const asRows = () =>
+          images().map((image) => [image.id, image.assetId, image.damAuthors, image.showDamAuthors, image.texts.source])
+        const shownInRows = () => rows().map((row) => textsOf(row.element))
+
+        it.each<[string, number]>([
+          ['first', 0],
+          ['second', 1],
+        ])(
+          'writes the authors picked in the %s of two rows of an asset into it once, and names them as the source of both',
+          async (_which, row) => {
+            await withImagesOf([12, 13], { 13: 'file-12' })
+            expect(asRows()).toEqual([
+              [12, 'asset-12', [], true, 'source 12'],
+              [13, 'asset-12', [], true, 'source 13'],
+            ])
+            await pickInRow(row, ['author-7'])
+
+            expect(await save()).toBe(true)
+            await flushPromises()
+
+            expect(metadataWrites()).toEqual([[{ id: 'asset-12', authors: ['author-7'] }]])
+            expect(namesAskedOf('author-7')).toBe(1)
+            expect(sourcesSaved()).toEqual([
+              [12, 'Name of author-7'],
+              [13, 'Name of author-7'],
+            ])
+            // Both rows have their source from here on, and neither offers the authors of the DAM.
+            expect(asRows()).toEqual([
+              [12, 'asset-12', ['author-7'], false, 'Name of author-7'],
+              [13, 'asset-12', ['author-7'], false, 'Name of author-7'],
+            ])
+            expect(offersAuthors()).toEqual([false, false])
+            expect(shownInRows()).toEqual([
+              ['image 12', 'Name of author-7'],
+              ['image 13', 'Name of author-7'],
+            ])
+            // Each row has a list of its own.
+            expect(images()[0].damAuthors).not.toBe(images()[1].damAuthors)
+            expect(shownAlerts().filter(([colour]) => colour === 'error')).toEqual([])
+          }
+        )
+
+        it('gives the asset the authors picked in any of its rows, each once, in the order they come down the rows', async () => {
+          await withImagesOf([12, 13, 14], { 13: 'file-12', 14: 'file-12' })
+          await pickInRow(0, ['author-7', 'author-8'])
+          await pickInRow(2, ['author-8', 'author-9'])
+
+          expect(await save()).toBe(true)
+          await flushPromises()
+
+          const all = ['author-7', 'author-8', 'author-9']
+          const named = 'Name of author-7, Name of author-8, Name of author-9'
+          expect(metadataWrites()).toEqual([[{ id: 'asset-12', authors: all }]])
+          expect(namesAskedOf(all.join(','))).toBe(1)
+          expect(sourcesSaved()).toEqual([
+            [12, named],
+            [13, named],
+            [14, named],
+          ])
+          expect(asRows()).toEqual([
+            [12, 'asset-12', all, false, named],
+            [13, 'asset-12', all, false, named],
+            [14, 'asset-12', all, false, named],
+          ])
+          expect(offersAuthors()).toEqual([false, false, false])
+        })
+
+        it('leaves alone a row of that asset that has its source, and a row of another asset with nothing picked', async () => {
+          await withImagesOf([12, 13, 14, 15], { 13: 'file-12', 15: 'file-12' })
+          await hasItsSource(3)
+          await pickInRow(1, ['author-7'])
+
+          expect(await save()).toBe(true)
+          await flushPromises()
+
+          expect(metadataWrites()).toEqual([[{ id: 'asset-12', authors: ['author-7'] }]])
+          expect(sourcesSaved()).toEqual([
+            [12, 'Name of author-7'],
+            [13, 'Name of author-7'],
+            [14, 'source 14'],
+            [15, 'typed by hand'],
+          ])
+          expect(asRows()).toEqual([
+            [12, 'asset-12', ['author-7'], false, 'Name of author-7'],
+            [13, 'asset-12', ['author-7'], false, 'Name of author-7'],
+            [14, 'asset-14', [], true, 'source 14'],
+            [15, 'asset-12', [], false, 'typed by hand'],
+          ])
+          expect(offersAuthors()).toEqual([false, false, true, false])
+        })
+
+        // The rows take the authors and their names once the DAM has them: refused, each row is as the user left it.
+        it('leaves the rows as they were when the DAM does not take the authors: the pick stays in the row it was made in', async () => {
+          await withImagesOf([12, 13], { 13: 'file-12' })
+          await pickInRow(0, ['author-7'])
+          const before = asRows()
+          dam.reply((request) =>
+            request.method === 'PATCH' && dam.routes.bulkMetadata.test(request.url) ? { status: 403 } : undefined
+          )
+
+          expect(await save()).toBe(false)
+          await flushPromises()
+
+          expect(shownAlerts()).toEqual([['error', alertText('common.alert.forbiddenError')]])
+          expect(asRows()).toEqual(before)
+          expect(
+            rows().map((row) => row.findComponent(AuthorRemoteAutocompleteWithCached).props('modelValue'))
+          ).toEqual([['author-7'], []])
+          expect(imageApi.calls.map(([call]) => call)).toEqual(['fetchImageListByIds'])
+        })
+
+        // Unchanged: an empty list would take away the authors the asset got meanwhile.
+        it('writes nothing into the asset, and asks for no names, while nothing is picked in any of its rows', async () => {
+          await withImagesOf([12, 13], { 13: 'file-12' })
+          const asLoaded = asRows()
+          const lookups = damNameLookups(dam).length
+
+          expect(await save()).toBe(true)
+          await flushPromises()
+
+          expect(metadataWrites()).toEqual([])
+          expect(damNameLookups(dam)).toHaveLength(lookups)
+          expect(sourcesSaved()).toEqual([
+            [12, 'source 12'],
+            [13, 'source 13'],
+          ])
+          expect(asRows()).toEqual(asLoaded)
+          expect(offersAuthors()).toEqual([true, true])
+        })
+
+        // The pick is drawn by the ext system the page asks for names under, which the detail of an asset of another
+        // ext system changes. Where it has no authors of the DAM the rows show their source, and the save goes by that.
+        it('writes no authors, and leaves the rows their sources, once the page draws no pick of the authors', async () => {
+          const WITHOUT_AUTHORS = 7
+          const config = useDamConfigStore(pinia)
+          const own = config.damConfigExtSystem.get(extSystem)!
+          config.damConfigExtSystem.set(WITHOUT_AUTHORS, {
+            ...own,
+            image: { ...own.image!, authors: { enabled: false, required: false } },
+          })
+          await withImagesOf([12, 13], { 13: 'file-12' })
+          await pickInRow(0, ['author-7'])
+          useExtSystemIdForCached().cachedExtSystemId.value = WITHOUT_AUTHORS
+          await flushPromises()
+          expect(offersAuthors()).toEqual([false, false])
+          const lookups = damNameLookups(dam).length
+
+          expect(await save()).toBe(true)
+          await flushPromises()
+
+          expect(metadataWrites()).toEqual([])
+          expect(damNameLookups(dam)).toHaveLength(lookups)
+          expect(sourcesSaved()).toEqual([
+            [12, 'source 12'],
+            [13, 'source 13'],
+          ])
+        })
+
+        it.each<[string, number]>([
+          ['first', 0],
+          ['second', 1],
+        ])(
+          'leaves each row what it had after the save: of two rows of one file the %s has its source, the other offers the authors',
+          async (_which, withSource) => {
+            await withImagesOf([12, 13], { 13: 'file-12' })
+            await hasItsSource(withSource)
+            const before = asRows()
+            const offeredBefore = offersAuthors()
+            expect(offeredBefore).toEqual([withSource === 1, withSource === 0])
+
+            expect(await save()).toBe(true)
+            await flushPromises()
+
+            expect(metadataWrites()).toEqual([])
+            expect(asRows()).toEqual(before)
+            expect(offersAuthors()).toEqual(offeredBefore)
+          }
+        )
+      })
     } else {
       it('writes nothing into the DAM: the application has no authors of the DAM to save', async () => {
         await withTwoImages()

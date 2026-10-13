@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue'
+import { computed, onBeforeUnmount, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
 import { useAssetDetailStore } from '@/domains/dam/assetDetail/store/assetDetailStore'
@@ -49,13 +49,20 @@ const closeDialog = () => {
 // The store closes the detail by itself as well, after a read that failed: the host is told of either close, once.
 // Only a change that takes this detail away is its close. Until its host has drawn again this dialog still sees what
 // follows, the next opening of its host or of another.
-watch(
+const stopTellingHost = watch(
   dialog,
   (_now, before) => {
     if (before === props.queueKey) emit('close', shownAtClose)
   },
   { flush: 'sync' }
 )
+// A host that goes away with its detail open would leave its key in the store, which is the page's: the next host with
+// that key drew the detail at once, over a page that had not asked for it. The detail is closed with its host, and its
+// read on its way given up. That host is not told: it is going away.
+onBeforeUnmount(() => {
+  stopTellingHost()
+  if (dialog.value === props.queueKey) assetDetailStore.close()
+})
 
 const toolbarTitle = computed(() => {
   if (!asset.value) return ''

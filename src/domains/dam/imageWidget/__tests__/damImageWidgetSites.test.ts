@@ -372,8 +372,12 @@ describe.each<[string, Component, Record<string, unknown>]>([
     await pick(widget, props, pickedAs('a'))
 
     expect(imageDialog().props('showDamAuthors')).toBe(true)
-    // As the dialog of the image writes what the user picks: into the asset of the detail.
-    useAssetDetailStore().asset!.authors = ['author-5']
+    // The asset whose authors are offered is the widget's own: none is put into the store of the detail, the page's.
+    expect(useAssetDetailStore().asset).toBeNull()
+    // As the dialog of the image hands the widget what the user picks in it.
+    imageDialog().vm.$emit('update:damAuthors', ['author-5'])
+    await flushPromises()
+    expect(imageDialog().props('damAuthors')).toEqual(['author-5'])
     await confirmImage()
     expect(writesIntoTheAsset()).toEqual([[{ id: 'a', authors: ['author-5'], described: true }]])
   })

@@ -59,6 +59,7 @@ import { copyToLicence } from '@/domains/dam/api/damImageApi'
 import { createDamImage, imageFieldsOf } from '@/domains/dam/imageWidget/utils/damImage'
 import { assetMetadataMayStillChange } from '@/domains/dam/assetDetail/utils/assetMetadataMayStillChange'
 import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
+import { useImageDialogDamAuthors } from '@/domains/dam/imageWidget/composables/imageDialogDamAuthors'
 
 const props = withDefaults(
   defineProps<{
@@ -115,7 +116,6 @@ const emit = defineEmits<{
 const modelValue = defineModel<IntegerIdNullable>({ required: true })
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const damConfigName = useDamConfigName(props.configName)
-const showDamAuthorsInCmsImage = ref(false)
 
 // Collaboration
 const { collabOptions } = useCommonAdminCollabOptions()
@@ -220,6 +220,23 @@ const metadataDialog = ref(false)
 const metadataDialogSaving = ref(false)
 const metadataDialogLoading = ref(false)
 const fileInputDialog = ref(false)
+
+// The authors of the DAM the dialog of the image offers are those of an asset this widget has read itself, for the
+// image that dialog shows, or draws in the page with `expandMetadata`.
+const {
+  damAuthorsAsset,
+  offerDamAuthorsOf,
+  offerNoDamAuthors,
+  pickDamAuthors,
+  onAssetDetailClose,
+  holdConfirmForDetailAssetRead,
+  confirmWaits,
+} = useImageDialogDamAuthors(
+  damConfigName,
+  () =>
+    (metadataDialog.value || props.expandMetadata) && isImageCreateUpdateAware(detail.value) ? detail.value : null,
+  () => props.readonly
+)
 
 const withoutImage = computed(() => {
   return isNull(modelValue.value)
@@ -467,7 +484,7 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
 const pickAsset = async (data: AssetSelectReturnData) => {
   metadataDialogLoading.value = true
   imageMediaWidgetStore.setDetail(null)
-  showDamAuthorsInCmsImage.value = false
+  offerNoDamAuthors()
   let description = ''
   let source = ''
   if (data.type === 'asset') {
@@ -514,8 +531,7 @@ const pickAsset = async (data: AssetSelectReturnData) => {
           // Not while the server may yet fill in its metadata from the file: saving the authors marks the asset
           // described, and the server then fills in nothing.
           if (configExtSystem?.[DamAssetType.Image]?.authors?.enabled && !assetMetadataMayStillChange(assetRes)) {
-            showDamAuthorsInCmsImage.value = true
-            asset.value = assetRes
+            offerDamAuthorsOf(assetRes, data.value[0].mainFile.id)
           }
         }
       }
@@ -540,7 +556,7 @@ const pickAsset = async (data: AssetSelectReturnData) => {
 }
 
 const assetDetailStore = useAssetDetailStore()
-const { dialog: assetDialog, asset } = storeToRefs(assetDetailStore)
+const { dialog: assetDialog } = storeToRefs(assetDetailStore)
 
 const coreDamOptions = useCommonAdminCoreDamOptions(damConfigName)
 const {
@@ -588,25 +604,30 @@ const onMetadataDialogClose = () => {
 const onMetadataDialogConfirm = async () => {
   if (props.readonly) return
   if (!isImageCreateUpdateAware(detail.value)) return
+  // The asset of a detail that has just closed is still being read. What the dialog offers may change by that read,
+  // and with it what its form asks for: the confirm waits for the read, and is then taken again by the form.
+  const confirmAgain = () => detailDialogMetadataComponent.value?.confirm()
+  if (holdConfirmForDetailAssetRead(metadataDialogSaving.value, confirmAgain)) return
   metadataDialogSaving.value = true
   try {
-    if (showDamAuthorsInCmsImage.value && asset.value) {
-      if (asset.value.authors.length > 0) {
+    const authorsAsset = damAuthorsAsset.value
+    if (authorsAsset) {
+      if (authorsAsset.authors.length > 0) {
         const authorsRes = await fetchAuthorListByIds(
           damClient,
           endPointAuthor,
           assetSelectStore.requireSelectedSelectConfig().extSystem,
-          asset.value.authors
+          authorsAsset.authors
         )
         detail.value.texts.source = authorsRes.map((author) => author.name).join(', ')
         try {
-          await updateAssetAuthors(damClient, endPointAsset, asset.value)
+          await updateAssetAuthors(damClient, endPointAsset, authorsAsset)
         } catch (e) {
           // The authors refused by validation are named as the forms name them. The image is not saved.
           showMetadataSaveError(e, assetSelectStore.requireSelectedSelectConfig().extSystem)
           return
         }
-        showDamAuthorsInCmsImage.value = false
+        offerNoDamAuthors()
       }
     }
     const image = imageFieldsOf(detail.value)
@@ -661,6 +682,8 @@ const onAssetUploadConfirm = (items: ImageCreateUpdateAware[]) => {
   if (!isNull(modelValue.value)) {
     items[0].id = modelValue.value
   }
+  // The image of an upload comes with its source: the authors of an asset picked before are not offered with it.
+  offerNoDamAuthors()
   imageMediaWidgetStore.setDetail(items[0])
   metadataDialog.value = true
   if (props.expandMetadata) {
@@ -947,15 +970,17 @@ defineExpose({
       v-if="!readonly"
       ref="detailDialogMetadataComponent"
       v-model="metadataDialog"
-      :show-dam-authors="showDamAuthorsInCmsImage"
+      :show-dam-authors="!!damAuthorsAsset"
+      :dam-authors="damAuthorsAsset?.authors"
       :show-source-enabled="showSourceEnabled"
       :source-label="sourceLabel"
       :edit-asset-label="editAssetLabel"
       :expand="expandMetadata"
-      :saving="metadataDialogSaving"
+      :saving="metadataDialogSaving || confirmWaits"
       :loading="metadataDialogLoading"
       :type="DamAssetType.Image"
       @edit-asset="onEditAsset"
+      @update:dam-authors="pickDamAuthors"
       @confirm="onMetadataDialogConfirm"
       @close="onMetadataDialogClose"
     />
@@ -987,6 +1012,7 @@ defineExpose({
     :queue-key="queueKey"
     :config-name="damConfigName"
     :ext-system="cachedExtSystemId"
+    @close="onAssetDetailClose"
   />
   <UploadQueueDialogSingle
     v-if="uploadQueueDialog === queueKey && imageWidgetUploadConfig"

@@ -22,7 +22,7 @@ import { DamAssetType, type DamAssetTypeType } from '@/domains/dam/types/Asset'
 import type { ImageCreateUpdateAware } from '@/domains/dam/types/ImageAware'
 import ARow from '@/domains/ui/components/ARow.vue'
 import DamAdminAssetLink from '@/domains/dam/components/DamAdminAssetLink.vue'
-import { isNull } from '@/shared/utils/common'
+import { isArray, isNull } from '@/shared/utils/common'
 import { DamMediaType } from '@/domains/dam/types/MediaAware'
 import { createDamImage } from '@/domains/dam/imageWidget/utils/damImage'
 import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
@@ -33,7 +33,10 @@ const props = withDefaults(
     saving: boolean
     loading: boolean
     expand?: boolean
+    /** The authors of the DAM are offered in place of the source: those of the asset the widget holds for the image. */
     showDamAuthors?: boolean
+    /** The authors picked so far, while they are offered. */
+    damAuthors?: DocId[]
     showSourceEnabled?: boolean
     sourceLabel?: string
     editAssetLabel?: string
@@ -41,6 +44,7 @@ const props = withDefaults(
   {
     expand: false,
     showDamAuthors: false,
+    damAuthors: () => [],
     showSourceEnabled: true,
     sourceLabel: undefined,
     editAssetLabel: undefined,
@@ -49,6 +53,7 @@ const props = withDefaults(
 
 const emit = defineEmits<{
   (e: 'editAsset', data: DocId): void
+  (e: 'update:damAuthors', data: DocId[]): void
   (e: 'confirm'): void
   (e: 'close'): void
 }>()
@@ -58,7 +63,7 @@ const { mdAndDown } = useDisplay()
 const imageMediaWidgetStore = useImageMediaWidgetStore()
 const { detail } = storeToRefs(imageMediaWidgetStore)
 const assetDetailStore = useAssetDetailStore()
-const { asset, authorConflicts } = storeToRefs(assetDetailStore)
+const { authorConflicts } = storeToRefs(assetDetailStore)
 const { cachedExtSystemId } = useExtSystemIdForCached()
 
 const type = computed<DamAssetTypeType | null>(() => {
@@ -107,6 +112,11 @@ const onEditAsset = () => {
   emit('editAsset', detail.value.dam.damId)
 }
 
+// The input takes several authors: what it hands over is their list.
+const onDamAuthorsUpdate = (authors: DocId | null | DocId[]) => {
+  emit('update:damAuthors', isArray(authors) ? authors : [])
+}
+
 defineExpose({
   confirm: onConfirm,
 })
@@ -139,14 +149,14 @@ defineExpose({
           />
         </VCol>
       </VRow>
-      <VRow v-if="showDamAuthors && asset">
+      <VRow v-if="showDamAuthors">
         <VCol>
           <ASystemEntityScope
             subject="author"
             system="dam"
           >
             <AuthorRemoteAutocompleteWithCached
-              v-model="asset.authors"
+              :model-value="damAuthors"
               :ext-system="cachedExtSystemId"
               :label="t('common.damImage.asset.model.authors')"
               :author-conflicts="authorConflicts"
@@ -154,6 +164,7 @@ defineExpose({
               clearable
               multiple
               :validation-scope="AImageMetadataValidationScopeSymbol"
+              @update:model-value="onDamAuthorsUpdate"
             />
           </ASystemEntityScope>
         </VCol>
@@ -230,14 +241,14 @@ defineExpose({
               />
             </VCol>
           </VRow>
-          <VRow v-if="showDamAuthors && asset">
+          <VRow v-if="showDamAuthors">
             <VCol>
               <ASystemEntityScope
                 subject="author"
                 system="dam"
               >
                 <AuthorRemoteAutocompleteWithCached
-                  v-model="asset.authors"
+                  :model-value="damAuthors"
                   :ext-system="cachedExtSystemId"
                   :label="t('common.damImage.asset.model.authors')"
                   :author-conflicts="authorConflicts"
@@ -245,6 +256,7 @@ defineExpose({
                   clearable
                   multiple
                   :validation-scope="AImageMetadataValidationScopeSymbol"
+                  @update:model-value="onDamAuthorsUpdate"
                 />
               </ASystemEntityScope>
             </VCol>
