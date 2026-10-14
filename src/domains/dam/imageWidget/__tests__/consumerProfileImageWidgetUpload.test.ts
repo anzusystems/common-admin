@@ -745,10 +745,11 @@ describe.each(consumerProfiles)('an upload into the image widget under the $name
     })
   })
 
-  // Read from the code when the tests were planned, and never run: the queue and the dialog that is open belong
-  // to the page, not to the widget that started them.
+  // The queue belongs to the page, not to the widget that started it, and goes on. The dialog that was open forgets
+  // itself as it goes with the widget: the page kept it named, and a widget mounted with the same key afterwards (in
+  // admin-cms the editor sent out of the article and back) opened it at once.
   describe('a queue whose widget is taken away while the upload dialog is open', () => {
-    it('goes on, and a widget mounted with the same key afterwards shows the dialog and the file again', async () => {
+    it('goes on, and a widget mounted with the same key afterwards does not open its dialog', async () => {
       const chunks = dam.hold('POST', dam.routes.chunk)
       const widget = await mountWidget()
       await pickThroughMenu(widget, [photo()])
@@ -762,18 +763,20 @@ describe.each(consumerProfiles)('an upload into the image widget under the $name
       expect(uploadDialog()).toBeNull()
       expect(queue().getQueueItems(QUEUE)).toMatchObject([{ displayTitle: 'photo.jpg', status: Uploading }])
       expect(signal.aborted).toBe(false)
-      expect(useUploadQueueDialog().uploadQueueDialog.value).toBe(QUEUE)
+      expect(useUploadQueueDialog().uploadQueueDialog.value).toBeNull()
 
       const again = await mountWidget()
-      expect(again.findComponent(UploadQueueDialogSingle).exists()).toBe(true)
-      expect(uploadDialog()!.textContent).toContain(damText('upload.title'))
+      expect(again.findComponent(UploadQueueDialogSingle).exists()).toBe(false)
+      expect(uploadDialog()).toBeNull()
 
-      // The upload ends in the new widget as it would have in the old one.
+      // The upload ends in the queue all the same, which keeps its row.
       chunks.release()
-      await processed(withAnAuthor)
-      await saveAndApply()
-      expect(useImageMediaWidgetStore(pinia).detail).toEqual(handedImage)
-      expect(imageDialog()).toBeDefined()
+      await vi.waitFor(() => expect(item().status).toBe(Processing))
+      dam.fileBecomes('asset-1', AssetFileProcessStatus.Processed, withAnAuthor)
+      await waits.elapse()
+      await vi.waitFor(() => expect(item().status).toBe(Uploaded))
+      expect(queue().getQueueItems(QUEUE)).toMatchObject([{ displayTitle: 'photo.jpg', status: Uploaded }])
+      expect(uploadDialog()).toBeNull()
     })
   })
 })

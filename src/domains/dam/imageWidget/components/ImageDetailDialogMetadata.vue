@@ -40,6 +40,8 @@ const props = withDefaults(
     showSourceEnabled?: boolean
     sourceLabel?: string
     editAssetLabel?: string
+    /** What the dialog is opened for, known before anything loads: its title says it. */
+    type?: DamAssetTypeType
   }>(),
   {
     expand: false,
@@ -48,6 +50,7 @@ const props = withDefaults(
     showSourceEnabled: true,
     sourceLabel: undefined,
     editAssetLabel: undefined,
+    type: undefined,
   }
 )
 
@@ -66,7 +69,7 @@ const assetDetailStore = useAssetDetailStore()
 const { authorConflicts } = storeToRefs(assetDetailStore)
 const { cachedExtSystemId } = useExtSystemIdForCached()
 
-const type = computed<DamAssetTypeType | null>(() => {
+const detailType = computed<DamAssetTypeType | null>(() => {
   if (isMediaAware(detail.value)) {
     return detail.value.damMedia.assetType === DamMediaType.Video ? DamAssetType.Video : DamAssetType.Audio
   } else if (isImageCreateUpdateAware(detail.value)) {
@@ -74,6 +77,9 @@ const type = computed<DamAssetTypeType | null>(() => {
   }
   return null
 })
+// The title says what the dialog edits, the same while it loads, waits and saves. Taken from the detail, which is empty
+// till what the dialog loads for comes, it said "edit medium" over the loading of an image, and changed as it came.
+const titleType = computed(() => props.type ?? detailType.value)
 
 const imageSourceRequired = computed(() => {
   return !props.showDamAuthors
@@ -205,7 +211,9 @@ defineExpose({
   >
     <VCard v-if="modelValue">
       <ADialogToolbar @cancel="onDialogModelUpdate(false)">
-        {{ type === DamAssetType.Image ? t('common.damImage.image.meta.edit') : t('common.damImage.media.meta.edit') }}
+        {{
+          titleType === DamAssetType.Image ? t('common.damImage.image.meta.edit') : t('common.damImage.media.meta.edit')
+        }}
       </ADialogToolbar>
       <VCardText>
         <div

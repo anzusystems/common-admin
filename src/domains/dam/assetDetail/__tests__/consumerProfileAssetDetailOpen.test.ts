@@ -276,8 +276,14 @@ describe.each(consumerProfiles)('the detail of an asset as its hosts open it, un
         await damNamesAsked()
         await flushPromises()
       },
-      // The queue and its dialog are the page's, and are there again: no file is picked a second time.
-      mountAgain: () => mountGallery([]),
+      // The queue is the app's and still holds its row, no file is picked a second time. Its dialog is not opened by the
+      // gallery drawn again (it forgot itself as it went with the gallery before): it is named here again, as nothing
+      // in the page does any longer (a file added to the gallery stops a queue no dialog names first).
+      mountAgain: async () => {
+        await mountGallery([])
+        useUploadQueueDialog().uploadQueueDialog.value = QUEUE
+        await flushPromises()
+      },
       editAsset: () =>
         buttonOf(
           document.body.querySelector<HTMLElement>('.overlay--sidebar .dam-upload-queue__item')!,

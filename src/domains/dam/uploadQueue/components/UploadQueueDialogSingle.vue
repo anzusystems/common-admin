@@ -8,7 +8,10 @@ import AssetDetailDialogFrame from '@/domains/dam/assetDetail/components/AssetDe
 import { assetDetailViewOfUploadItem } from '@/domains/dam/assetDetail/composables/assetDetailView'
 import type { ImageCreateUpdateAware } from '@/domains/dam/types/ImageAware'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
-import { useUploadQueueDialog } from '@/domains/dam/uploadQueue/composables/useUploadQueueDialog'
+import {
+  useUploadQueueDialog,
+  useUploadQueueDialogDrawn,
+} from '@/domains/dam/uploadQueue/composables/useUploadQueueDialog'
 import { type UploadQueueItem, UploadQueueItemStatus } from '@/domains/dam/types/UploadQueue'
 import UploadQueueItemErrorOverlay from '@/domains/dam/uploadQueue/components/UploadQueueItemErrorOverlay.vue'
 import { useAlerts } from '@/domains/system/composables/alerts'
@@ -88,6 +91,8 @@ const onStopConfirm = async () => {
   assetDetailStore.setAsset(null)
   uploadQueueDialog.value = null
 }
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+useUploadQueueDialogDrawn(props.queueKey)
 
 const queueTotalCount = computed(() => {
   return uploadQueuesStore.getQueueTotalCount(props.queueKey)

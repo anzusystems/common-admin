@@ -174,7 +174,7 @@ const onCloseEditDialog = () => readActiveItemAgain()
 const imageWidgetUploadConfig = inject(ImageWidgetUploadConfigKey, undefined)
 const uploadEnabled = computed(() => isDefined(imageWidgetUploadConfig) && isDefined(imageWidgetUploadConfig.value))
 
-const { uploadQueueDialog, uploadQueueDialogSaving } = useUploadQueueDialog()
+const { uploadQueueDialog, uploadQueueDialogSaving, stopQueueLeftBehind } = useUploadQueueDialog()
 const uploadQueuesStore = useUploadQueuesStore()
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
@@ -195,6 +195,7 @@ const onFileInput = (files: File[]) => {
   if (uploadQueueDialogSaving.value === props.queueKey) return
   const config = imageWidgetUploadConfig?.value
   if (!config) return
+  stopQueueLeftBehind(props.queueKey)
   uploadQueuesStore.addByFiles(props.queueKey, config.extSystem, config.licence, files, damConfigName)
   uploadQueueDialog.value = props.queueKey
 }

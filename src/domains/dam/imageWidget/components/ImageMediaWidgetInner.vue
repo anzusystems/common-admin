@@ -8,7 +8,12 @@ import { useImageActions } from '@/domains/dam/imageWidget/composables/imageActi
 import { cloneDeep, isDefined, isNull, isNumber, isString, isUndefined } from '@/shared/utils/common'
 import { useDamConfigState } from '@/domains/dam/config/composables/damConfigState'
 import { useAlerts } from '@/domains/system/composables/alerts'
-import { DamAssetType, type DamAssetTypeType, type DamImageCopyToLicenceResponse } from '@/domains/dam/types/Asset'
+import {
+  type AssetDetailItemDto,
+  DamAssetType,
+  type DamAssetTypeType,
+  type DamImageCopyToLicenceResponse,
+} from '@/domains/dam/types/Asset'
 import { useDamAcceptTypeAndSizeHelper } from '@/domains/dam/config/composables/acceptTypeAndSizeHelper'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
 import type { UploadQueueKey } from '@/domains/dam/types/UploadQueue'
@@ -72,6 +77,12 @@ import { assetMetadataMayStillChange } from '@/domains/dam/assetDetail/utils/ass
 import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 import { useImageDialogDamAuthors } from '@/domains/dam/imageWidget/composables/imageDialogDamAuthors'
 import { lastFieldLockTurn, takeFieldLockTurn } from '@/domains/dam/imageWidget/utils/fieldLockTurns'
+import {
+  holdImage,
+  imageSavedSince,
+  imageSavesOfOthersOver,
+  noteImageSave,
+} from '@/domains/dam/imageWidget/utils/imageSaves'
 
 const props = withDefaults(
   defineProps<{
@@ -237,11 +248,13 @@ const imageOptions = useCommonAdminImageOptions(damConfigName)
 const { imageClient, imageApi } = imageOptions
 const { widgetImageToDamImageUrl, damImageIdToDamImageUrl } = useImageActions(imageOptions)
 const uploadQueuesStore = useUploadQueuesStore()
-const { uploadQueueDialog } = useUploadQueueDialog()
-// Before the immediate watcher below: with expandMetadata it writes the detail while setup runs.
+const { uploadQueueDialog, stopQueueLeftBehind } = useUploadQueueDialog()
+// Before the immediate watcher below: with expandMetadata it writes the detail while setup runs. Not the form an open
+// dialog of another widget shows: a widget drawn late, once its configuration was read, emptied that form.
 const imageMediaWidgetStore = useImageMediaWidgetStore()
-imageMediaWidgetStore.reset()
+imageMediaWidgetStore.resetUnlessShown()
 const { detail } = storeToRefs(imageMediaWidgetStore)
+const thisWidget = Symbol('image media widget')
 
 const resImageMedia = ref<null | ImageCreateUpdateAware | MediaAware>(null)
 const clickMenuOpened = ref(false)
@@ -268,6 +281,14 @@ const {
   () => props.readonly
 )
 
+// What the widget's open dialog, or its form in the page, shows is in the store of the dialog: no other widget empties
+// it meanwhile.
+watch(
+  () => metadataDialog.value || props.expandMetadata,
+  (shows) => imageMediaWidgetStore.setShownBy(thisWidget, shows),
+  { immediate: true, flush: 'sync' }
+)
+
 const hideDropzoneText = computed(() => {
   return !isNull(imageModel.value) || !isNull(mediaModel.value)
 })
@@ -287,7 +308,53 @@ let ownInDialog: typeof detail.value = null
 // What a pick or an upload of this widget has put into the dialog last. The store of the dialog is the page's: what
 // it shows may be what another widget's dialog, opened over this one, shows.
 let pickInDialog: typeof detail.value = null
-const actionEditMeta = () => {
+// What the dialog shows its loading for: a pick whose asset is being read, or "edit metadata" waiting for a save of the
+// image by another widget. Its answer is put into the dialog only while the dialog still loads for it: not once the
+// editor has closed it, nor once the store of the dialog, which is the page's, holds what another dialog shows. The
+// answer of a pick replaced the form of the dialog of another widget, opened meanwhile, and what the editor had typed
+// there was lost. The dialog that loads for it then closes: it shows that form too, and its confirm would save it here.
+let loadingInDialog: symbol | null = null
+const answerTakenFor = (opening: symbol) => {
+  if (disposed || loadingInDialog !== opening) return false
+  if (isNull(detail.value)) return true
+  loadingInDialog = null
+  metadataDialogLoading.value = false
+  metadataDialog.value = false
+  return false
+}
+// How many saves of the image it holds the page had seen answered when the widget read that image.
+let resImageReadAt = 0
+// The marks of the saves of images the widget has on their way.
+const ownImageSaves = new Set<symbol>()
+// The wait of an opening of "edit metadata" for a save of another widget: let go once the dialog closes.
+let cancelSaveWait: (() => void) | null = null
+// What the dialog is opened for: the image or the medium the widget holds, the asset picked, the uploaded image. Its
+// title says it from the start, the same while the dialog loads, waits and saves.
+const dialogType = ref<DamAssetTypeType>(DamAssetType.Image)
+const actionEditMeta = async () => {
+  dialogType.value = type.value ?? DamAssetType.Image
+  const heldId = () => (isImageCreateUpdateAware(resImageMedia.value) ? resImageMedia.value.id : undefined)
+  // Another widget of the page is saving the image (the widget this one was drawn in place of, its save still on its
+  // way): the dialog shows its loading till that save is over.
+  const id = heldId()
+  const othersSaves = isNumber(id) ? imageSavesOfOthersOver(damConfigName, id, ownImageSaves) : null
+  if (othersSaves) {
+    const thisOpening = (loadingInDialog = Symbol('edit'))
+    imageMediaWidgetStore.setDetail(null)
+    metadataDialogLoading.value = true
+    metadataDialog.value = true
+    cancelSaveWait = othersSaves.cancel
+    await othersSaves.over
+    cancelSaveWait = null
+    if (!answerTakenFor(thisOpening)) return
+    loadingInDialog = null
+    metadataDialogLoading.value = false
+  }
+  // Saved by another widget of the page after this one read it: the widget takes the image as that save left it. It
+  // offered the texts it had read, and its confirm saved them back over the saved ones.
+  const savedId = heldId()
+  const saved = isNumber(savedId) ? imageSavedSince(damConfigName, savedId, resImageReadAt) : null
+  if (saved) void reloadImage(saved, null, true)
   imageMediaWidgetStore.setDetail(toRaw(resImageMedia.value))
   ownInDialog = detail.value
   metadataDialog.value = true
@@ -316,6 +383,15 @@ onBeforeUnmount(() => {
     wait.reject(LOCK_WAIT_CANCELLED)
   })
   pendingLockWaits.clear()
+  // What held the lock of the field goes with the widget (its menu, a dialog, the picker, a pick being read, a drop
+  // waiting for the lock), and nothing gave it back: the server keeps a lock till it is released or the editor leaves
+  // the room, and the field stayed locked for the other editors. Given back with what the field has, unless a save or
+  // a delete of the widget is on its way, which gives it back at its end, or the widget drawn in its place has taken a
+  // turn of the lock since.
+  if (!metadataDialogSaving.value && !deletePending.value && !lockTurnTakenSince()) releaseFieldLockLocal()
+  imageMediaWidgetStore.setShownBy(thisWidget, false)
+  holdImage(damConfigName, thisWidget, null)
+  cancelSaveWait?.()
 })
 
 const waitForFieldLockIsReallyAcquired = async () => {
@@ -387,6 +463,7 @@ const onDrop = async (files: File[]) => {
     // The widget holds one image, and its upload dialog shows one file: of several dropped at once the first is
     // uploaded, and the user is told. The others used to be uploaded too, unseen, and left without an image.
     if (files.length > 1) showWarningT('common.damImage.upload.onlyOneFile')
+    stopQueueLeftBehind(props.queueKey)
     uploadQueuesStore.addByFiles(props.queueKey, config.extSystem, config.licence, files.slice(0, 1), damConfigName)
     uploadQueueDialog.value = props.queueKey
   } catch (e) {
@@ -406,6 +483,7 @@ const onCopyToLicence = (data: DamImageCopyToLicenceResponse) => {
   if (!data[0]) return
   const config = imageWidgetUploadConfig.value!
   cachedExtSystemId.value = config.extSystem
+  stopQueueLeftBehind(props.queueKey)
   if (data[0].result === 'copy') {
     uploadQueuesStore.addByCopyToLicence(
       props.queueKey,
@@ -436,6 +514,7 @@ const onFileInput = (files: File[]) => {
   if (files.length === 0) return
   const config = imageWidgetUploadConfig.value!
   cachedExtSystemId.value = config.extSystem
+  stopQueueLeftBehind(props.queueKey)
   uploadQueuesStore.addByFiles(props.queueKey, config.extSystem, config.licence, files, damConfigName)
   uploadQueueDialog.value = props.queueKey
 }
@@ -458,6 +537,7 @@ const reloadImage = async (
   resolvedSrc.value = imagePlaceholderPath
   if ((newImage && isNull(resImageMedia.value)) || (newImage && force)) {
     resImageMedia.value = cloneDeep(newImage)
+    resImageReadAt = holdImage(damConfigName, thisWidget, newImage.id ?? null)
     if (isImageCreateUpdateAware(resImageMedia.value)) {
       if (isNumber(props.damWidth) && isNumber(props.damHeight)) {
         resolvedSrc.value = widgetImageToDamImageUrl(toRaw(resImageMedia.value), props.damWidth, props.damHeight)
@@ -471,8 +551,11 @@ const reloadImage = async (
     return
   }
   if (newImageId) {
+    // Counted as the read is sent: a save answered after that may have taken effect only after the read.
+    const readAt = holdImage(damConfigName, thisWidget, newImageId)
     try {
       resImageMedia.value = await imageApi.fetchImage(imageClient, newImageId)
+      resImageReadAt = readAt
     } catch (error) {
       showErrorsDefault(error)
     }
@@ -492,10 +575,12 @@ const reloadImage = async (
     return
   }
   resImageMedia.value = null
+  holdImage(damConfigName, thisWidget, null)
 }
 
 const reloadMedia = (newMedia: MediaAware | null) => {
   resolvedSrc.value = imagePlaceholderPath
+  holdImage(damConfigName, thisWidget, null)
   if (newMedia) {
     resImageMedia.value = cloneDeep(newMedia)
     if (isMediaAware(resImageMedia.value) && !isNull(resImageMedia.value.damMedia.imageFileId)) {
@@ -522,9 +607,11 @@ const reloadMedia = (newMedia: MediaAware | null) => {
 const reset = (release = true) => {
   resolvedSrc.value = imagePlaceholderPath
   resImageMedia.value = null
+  holdImage(damConfigName, thisWidget, null)
   imageModel.value = null
   mediaModel.value = null
-  imageMediaWidgetStore.reset()
+  // Not the form the open dialog of another widget shows.
+  imageMediaWidgetStore.resetUnlessShown(thisWidget)
   if (release || props.collabStatus === CollabStatus.Inactive) releaseFieldLockWith({ image: null, media: null })
 }
 
@@ -557,40 +644,51 @@ const assetSelectStore = useAssetSelectStore()
 const { getDamConfigExtSystem } = useDamConfigState()
 
 // The picker closes itself as it answers, and the widget's next dialog opens only once the asset is fetched or
-// copied: till then the pick counts as an open dialog, or the close watcher gave the lock up with the old value.
-const assetPickPending = ref(false)
+// copied: till then the pick counts as an open dialog, or the close watcher gave the lock up with the old value. Each
+// pick on its way counts: the end of one whose dialog the editor had closed gave the lock up under a later one.
+const assetPicksPending = ref(0)
 const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
   if (props.readonly) return
-  assetPickPending.value = true
+  const thisPick = (loadingInDialog = Symbol('pick'))
+  assetPicksPending.value++
   try {
-    await pickAsset(data)
+    await pickAsset(data, thisPick)
   } finally {
-    assetPickPending.value = false
+    assetPicksPending.value--
     // Ended early (no main file, the media not loaded), the pick left the dialog loading: the next upload or edit
-    // showed only a spinner. Whatever it loaded is loaded by now.
-    metadataDialogLoading.value = false
+    // showed only a spinner. Whatever it loaded is loaded by now. Unless the dialog loads for what has opened it since.
+    if (loadingInDialog === thisPick) {
+      loadingInDialog = null
+      metadataDialogLoading.value = false
+    }
   }
 }
 
-const pickAsset = async (data: AssetSelectReturnData) => {
+const pickAsset = async (data: AssetSelectReturnData, thisPick: symbol) => {
   if (data.type !== 'asset' || !data.value[0]) return
   metadataDialogLoading.value = true
   imageMediaWidgetStore.setDetail(null)
-  // metadataDialog.value = true
   offerNoDamAuthors()
   let description = ''
   let source = ''
   const selectedAsset = data.value[0]
   if (!selectedAsset.mainFile) return
+  dialogType.value = selectedAsset.attributes.assetType
+  // What the asset is to the widget is known once it is read: the dialog shows its loading till then, and while an
+  // image is copied into the licence of the upload, as that of the image widget does. Nothing was shown, and a dialog
+  // of another widget opened meanwhile was covered by this one.
+  metadataDialog.value = true
   let mediaDataFromDam: DamMediaFromDam | null = null
   try {
     mediaDataFromDam = await fetchAssetAsCmsMedia(damClient, selectedAsset.id)
   } catch (e) {
     showErrorsDefault(e)
   }
-  // The widget is gone: nothing of its pick is put into the store of the dialog, which is the page's.
-  if (disposed) return
-  if (!mediaDataFromDam) return
+  // The widget is gone: nothing of its pick is put into the store of the dialog, which is the page's. Nor when the
+  // dialog no longer loads for this pick.
+  if (!answerTakenFor(thisPick)) return
+  // Nothing to show: the dialog closes.
+  if (!mediaDataFromDam) return void (metadataDialog.value = false)
   if (selectedAsset.attributes.assetType === DamAssetType.Video && assetFileIsVideoFile(selectedAsset.mainFile)) {
     // video
     metadataDialog.value = true
@@ -651,19 +749,28 @@ const pickAsset = async (data: AssetSelectReturnData) => {
       !isUndefined(data.copyToLicence) &&
       selectedAsset.licence !== data.copyToLicence
     ) {
+      let copyRes: DamImageCopyToLicenceResponse | null = null
       try {
-        const copyRes = await copyToLicence(damClient, endPointImage, [
+        copyRes = await copyToLicence(damClient, endPointImage, [
           { asset: data.value[0].id, targetAssetLicence: data.copyToLicence },
         ])
-        onCopyToLicence(copyRes)
       } catch (e) {
         showErrorsDefault(e)
-      } finally {
-        metadataDialogLoading.value = false
       }
+      // A widget that is gone, or a dialog that no longer loads for the pick, opens no upload dialog: the copy of a
+      // widget that is gone went on in the upload dialog of the widget drawn in its place, which asked for the lock of
+      // the field only then.
+      if (!answerTakenFor(thisPick)) return
+      // The upload dialog shows the copy, and takes the place of the dialog of the image.
+      metadataDialogLoading.value = false
+      metadataDialog.value = false
+      if (copyRes) onCopyToLicence(copyRes)
       return
     }
     metadataDialog.value = true
+    // The authors are offered once the pick still has the dialog: the read of a pick the dialog has left offered those
+    // of its asset in the dialog of the pick shown since.
+    let authorsToOffer: AssetDetailItemDto | null = null
     try {
       const assetRes = await fetchAsset(damClient, endPointAsset, selectedAsset.id)
       // As the image widget: the texts are the application's to make of the asset, where it has a mapping of its own.
@@ -688,14 +795,15 @@ const pickAsset = async (data: AssetSelectReturnData) => {
           // Not while the server may yet fill in its metadata from the file: saving the authors marks the asset
           // described, and the server then fills in nothing.
           if (configExtSystem?.[DamAssetType.Image]?.authors?.enabled && !assetMetadataMayStillChange(assetRes)) {
-            offerDamAuthorsOf(assetRes, selectedAsset.mainFile.id)
+            authorsToOffer = assetRes
           }
         }
       }
     } catch (e) {
       showErrorsDefault(e)
     }
-    if (disposed) return
+    if (!answerTakenFor(thisPick)) return
+    if (authorsToOffer) offerDamAuthorsOf(authorsToOffer, selectedAsset.mainFile.id)
     const image = createDamImage(
       {
         fileId: selectedAsset.mainFile.id,
@@ -707,6 +815,9 @@ const pickAsset = async (data: AssetSelectReturnData) => {
     )
     imageMediaWidgetStore.setDetail(image)
     pickInDialog = detail.value
+  } else {
+    // Of no kind the widget takes (an audio in no podcast, a video whose file is no video): nothing to show.
+    metadataDialog.value = false
   }
   metadataDialogLoading.value = false
   if (props.expandMetadata) {
@@ -756,6 +867,12 @@ const onEditAsset = async (assetFileId: DocId) => {
 const onMetadataDialogClose = () => {
   imageMediaWidgetStore.setDetail(null)
   metadataDialog.value = false
+  // What it was loading for is not shown once it is closed: the answer of a pick being read went into the store of the
+  // dialog all the same, over the form of a dialog of another widget opened meanwhile.
+  loadingInDialog = null
+  metadataDialogLoading.value = false
+  // The wait of the opening it was loading for, for a save of another widget, is taken off that save.
+  cancelSaveWait?.()
 }
 
 const tryMediaConfirm = async () => {
@@ -828,8 +945,9 @@ const tryImageConfirm = async () => {
       }
     }
     const image = imageFieldsOf(pressedOn)
+    // An update is noted for the other widgets of the page, also when this one is gone by its answer.
     const res = image.id
-      ? await imageApi.updateImage(imageClient, image.id, image)
+      ? await noteImageSave(damConfigName, image.id, ownImageSaves, imageApi.updateImage(imageClient, image.id, image))
       : await imageApi.createImage(imageClient, image)
     // The widget is gone: nothing of the answer is written. The store of the dialog is the page's, and by now the
     // next widget's: its form was emptied, and then showed the image saved here.
@@ -841,11 +959,15 @@ const tryImageConfirm = async () => {
     // the field, which its own close or confirm gives back. The form `expandMetadata` draws in the page is no such
     // dialog: it shows the image of the widget, the saved one from here on. With the dialog closed meanwhile, what the
     // store of the dialog shows by then is no longer this widget's to empty: it is what another widget's open dialog
-    // shows.
+    // shows. A dialog opened since that still loads for a pick (or for "edit metadata") stays open as well: what it
+    // loads for fills it, with the id saved here. Closed here, it left the widget loading for that pick, whose answer
+    // opened the dialog again, or closed an "edit metadata" opened meanwhile, which showed only the spinner.
     const ownDialogOpen = metadataDialog.value
     const shown = detail.value
     const dialogOfAnotherPick =
-      !props.expandMetadata && ownDialogOpen && !isNull(shown) && shown !== pressedOn && shown !== ownInDialog
+      !props.expandMetadata &&
+      ownDialogOpen &&
+      (isNull(shown) ? !isNull(loadingInDialog) : shown !== pressedOn && shown !== ownInDialog)
     if (!dialogOfAnotherPick) metadataDialog.value = false
     if (!image.id) createdImageId = res.id
     imageModel.value = res.id
@@ -906,13 +1028,18 @@ const onImageMediaDelete = async () => {
     deletePending.value = true
     try {
       await imageApi.deleteImage(imageClient, imageId)
-      reset(!clickMenuOpened.value && !anyWidgetDialogOpened.value)
+      // A widget that is gone writes nothing into the page.
+      if (!disposed) reset(!clickMenuOpened.value && !anyWidgetDialogOpened.value)
     } catch (e) {
       showErrorsDefault(e)
     } finally {
       deletePending.value = false
     }
-    if (!clickMenuOpened.value && !anyWidgetDialogOpened.value) releaseFieldLockLocal()
+    // Gone, the widget gives the lock back with what its field has, as it does at the end of a confirm: unless the
+    // widget drawn in its place has taken a turn of the lock since. The release of the reset freed the lock that one
+    // held, under its open menu.
+    if (disposed ? !lockTurnTakenSince() : !clickMenuOpened.value && !anyWidgetDialogOpened.value)
+      releaseFieldLockLocal()
     return
   }
   reset()
@@ -936,6 +1063,7 @@ const onAssetUploadConfirm = (items: ImageCreateUpdateAware[]) => {
   }
   // The image of an upload comes with its source: the authors of an asset picked before are not offered with it.
   offerNoDamAuthors()
+  dialogType.value = DamAssetType.Image
   imageMediaWidgetStore.setDetail(items[0])
   pickInDialog = detail.value
   metadataDialog.value = true
@@ -969,7 +1097,7 @@ const onOptionsButtonClick = () => {
 
 const anyWidgetDialogOpened = computed(() => {
   return (
-    assetPickPending.value ||
+    assetPicksPending.value > 0 ||
     metadataDialog.value ||
     assetSelectDialog.value ||
     fileInputDialog.value ||
@@ -1265,6 +1393,7 @@ defineExpose({
       :expand="expandMetadata"
       :saving="metadataDialogSaving || confirmWaits"
       :loading="metadataDialogLoading"
+      :type="dialogType"
       @edit-asset="onEditAsset"
       @update:dam-authors="pickDamAuthors"
       @confirm="onMetadataDialogConfirm"

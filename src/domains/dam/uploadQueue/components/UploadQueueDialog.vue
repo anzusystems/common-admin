@@ -1,5 +1,8 @@
 <script lang="ts" setup>
-import { useUploadQueueDialog } from '@/domains/dam/uploadQueue/composables/useUploadQueueDialog'
+import {
+  useUploadQueueDialog,
+  useUploadQueueDialogDrawn,
+} from '@/domains/dam/uploadQueue/composables/useUploadQueueDialog'
 import { useI18n } from 'vue-i18n'
 import UploadQueueEditable from '@/domains/dam/uploadQueue/components/UploadQueueEditable.vue'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
@@ -110,6 +113,8 @@ watch(
 onBeforeUnmount(() => {
   if (uploadQueueDialogSaving.value === props.queueKey) uploadQueueDialogSaving.value = null
 })
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+useUploadQueueDialogDrawn(props.queueKey)
 
 const onStopConfirm = async () => {
   uploadQueuesStore.stopUpload(props.queueKey)

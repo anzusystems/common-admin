@@ -198,7 +198,7 @@ const uploadQueue = computed(() => {
 
 const { cachedExtSystemId } = useExtSystemIdForCached()
 
-const { uploadQueueDialog } = useUploadQueueDialog()
+const { uploadQueueDialog, stopQueueLeftBehind } = useUploadQueueDialog()
 
 const onFileInput = (files: File[]) => {
   if (props.readonly) return
@@ -208,7 +208,8 @@ const onFileInput = (files: File[]) => {
   if (isUndefined(config)) return
   cachedExtSystemId.value = config.extSystem
   // The queue dialog is opened by `afterLimitDialogAdd`, once files are queued: over the limit none is, until the
-  // user agrees to the first of them.
+  // user agrees to the first of them. The rows a queue no dialog names holds are not counted: they go first.
+  stopQueueLeftBehind(props.queueKey)
   limitDialogComponent.value?.check(files)
 }
 
@@ -219,6 +220,7 @@ const onDrop = (files: File[]) => {
   const config = imageWidgetUploadConfig.value
   if (isUndefined(config)) return
   cachedExtSystemId.value = config.extSystem
+  stopQueueLeftBehind(props.queueKey)
   limitDialogComponent.value?.check(files)
 }
 
@@ -228,6 +230,7 @@ const onCopyToLicence = (data: DamImageCopyToLicenceResponse) => {
   const config = imageWidgetUploadConfig.value
   if (isUndefined(config)) return
   cachedExtSystemId.value = config.extSystem
+  stopQueueLeftBehind(props.queueKey)
   let refused = 0
   data.forEach((item) => {
     if (item.result === 'copy') {
