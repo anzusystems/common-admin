@@ -66,6 +66,7 @@ const {
   loader,
   pagination,
   fetchNextPage,
+  fetchNextPageInView,
   initStoreContext,
   detailLoading,
   readActiveItemAgain,
@@ -121,12 +122,6 @@ const onInit = () => {
   reset()
   initStoreContext(selectConfigLocal, props.assetType, props.inPodcast, false, 0, 0)
   fetchAssetListDebounced()
-}
-
-const autoloadOnIntersect = (isIntersecting: boolean) => {
-  if (isIntersecting && pagination.value.hasNextPage === true) {
-    fetchNextPage()
-  }
 }
 
 const { gridView } = useGridView()
@@ -322,7 +317,7 @@ onUnmounted(() => {
         <div class="d-flex w-100 align-center justify-center pa-4">
           <ABtnSecondary
             v-show="pagination.hasNextPage || loader"
-            v-intersect="autoloadOnIntersect"
+            v-intersect="fetchNextPageInView"
             :loading="loader"
             size="small"
             @click="fetchNextPage"

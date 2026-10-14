@@ -60,6 +60,7 @@ import { createDamImage, imageFieldsOf } from '@/domains/dam/imageWidget/utils/d
 import { assetMetadataMayStillChange } from '@/domains/dam/assetDetail/utils/assetMetadataMayStillChange'
 import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 import { useImageDialogDamAuthors } from '@/domains/dam/imageWidget/composables/imageDialogDamAuthors'
+import { lastFieldLockTurn, takeFieldLockTurn } from '@/domains/dam/imageWidget/utils/fieldLockTurns'
 
 const props = withDefaults(
   defineProps<{
@@ -122,14 +123,21 @@ const { collabOptions } = useCommonAdminCollabOptions()
 const { collabReconnecting } = useCollabState()
 
 const releaseFieldLock = ref((_data: CollabFieldData, _options?: Partial<CollabFieldLockOptions>) => {})
+const changeFieldData = ref((_data: CollabFieldData) => {})
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const acquireFieldLock = ref((options?: Partial<CollabFieldLockOptions>) => {})
 const lockedByUserLocal = ref<IntegerIdNullable>(null)
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 if (collabOptions.value.enabled && isDefined(props.collab)) {
-  const { releaseCollabFieldLock, acquireCollabFieldLock, addCollabFieldLockStatusListener, lockedByUser } =
-    useCollabField(props.collab.room, props.collab.field)
+  const {
+    releaseCollabFieldLock,
+    acquireCollabFieldLock,
+    changeCollabFieldData,
+    addCollabFieldLockStatusListener,
+    lockedByUser,
+  } = useCollabField(props.collab.room, props.collab.field)
   releaseFieldLock.value = releaseCollabFieldLock
+  changeFieldData.value = changeCollabFieldData
   acquireFieldLock.value = acquireCollabFieldLock
   watch(
     lockedByUser,
@@ -161,6 +169,14 @@ if (collabOptions.value.enabled && isDefined(props.collab)) {
   })
 }
 const lockedLocal = ref(false)
+// The turn of the lock of the field this widget took last, by a request or a release. Another widget of the same field
+// may have taken one since: the widget drawn in place of this one once it is gone.
+let ownLockTurn = 0
+const takeLockTurn = () => {
+  if (isDefined(props.collab)) ownLockTurn = takeFieldLockTurn(props.collab.room, props.collab.field)
+}
+const lockTurnTakenSince = () =>
+  isDefined(props.collab) && lastFieldLockTurn(props.collab.room, props.collab.field) !== ownLockTurn
 // Asked for once per lock. A drop asks again for a lock not confirmed yet: a refused request left every later drop
 // waiting on a lock never granted. A refusal does not forget the lock either: a timed-out request answers the same,
 // and the server may have granted it, so it is still released. Never asked while a request is out: a second one
@@ -173,6 +189,7 @@ const acquireFieldLockLocal = (again = false) => {
   collabFieldLockReallyLocked.value = false
   lockRequestPending.value = true
   acquireFieldLock.value()
+  takeLockTurn()
   lockedLocal.value = true
 }
 // A lock taken while the room was active is released in an inactive one too: the room turned inactive because the
@@ -180,6 +197,7 @@ const acquireFieldLockLocal = (again = false) => {
 const releaseFieldLockLocal = (value: IntegerIdNullable) => {
   if (lockedLocal.value === false) return
   releaseFieldLock.value(value)
+  takeLockTurn()
   lockedLocal.value = false
 }
 // One release per lock: the server refuses a second one, and its refusal read as the lock still held. An inactive
@@ -187,6 +205,7 @@ const releaseFieldLockLocal = (value: IntegerIdNullable) => {
 const releaseFieldLockWith = (value: IntegerIdNullable) => {
   if (lockedLocal.value === false && props.collabStatus !== CollabStatus.Inactive) return
   releaseFieldLock.value(value)
+  takeLockTurn()
   lockedLocal.value = false
 }
 
@@ -254,6 +273,9 @@ const imageLoaded = computed(() => {
 
 // What "edit metadata" has put into the dialog: a copy of the image of the widget, as it was then.
 let ownImageInDialog: typeof detail.value = null
+// What a pick or an upload of this widget has put into the dialog last. The store of the dialog is the page's: what
+// it shows may be the image of another widget's dialog, opened over this one.
+let pickInDialog: typeof detail.value = null
 const actionEditMeta = () => {
   imageMediaWidgetStore.setDetail(toRaw(resImage.value))
   ownImageInDialog = detail.value
@@ -556,6 +578,7 @@ const pickAsset = async (data: AssetSelectReturnData) => {
       { position: 1, id: isNull(modelValue.value) ? undefined : modelValue.value }
     )
     imageMediaWidgetStore.setDetail(image)
+    pickInDialog = detail.value
     metadataDialogLoading.value = false
     if (props.expandMetadata) {
       forceReloadViewWithExpandMetadata()
@@ -669,28 +692,57 @@ const onMetadataDialogConfirm = async () => {
     // it shows is a copy of the image the widget had before this save, and its confirm would save that image over the
     // one saved here. The dialog of another pick or upload, opened since, stays as it is, with the lock of the field,
     // which its own close or confirm gives back. The form `expandMetadata` draws in the page is no such dialog: it
-    // shows the image of the widget, the saved one from here on.
+    // shows the image of the widget, the saved one from here on. With the dialog closed meanwhile, what the store of
+    // the dialog shows by then is no longer this widget's to empty: it is the image of another widget's open dialog.
+    const ownDialogOpen = metadataDialog.value
     const shown = detail.value
     const dialogOfAnotherPick =
-      !props.expandMetadata && !isNull(shown) && shown !== pressedOn && shown !== ownImageInDialog
+      !props.expandMetadata && ownDialogOpen && !isNull(shown) && shown !== pressedOn && shown !== ownImageInDialog
     if (!dialogOfAnotherPick) metadataDialog.value = false
     if (!image.id) createdImageId = res.id
     modelValue.value = res.id
-    if (!dialogOfAnotherPick) imageMediaWidgetStore.setDetail(null)
+    if (!dialogOfAnotherPick && (ownDialogOpen || props.expandMetadata)) imageMediaWidgetStore.setDetail(null)
+    // That dialog was opened while this image was being created, for a widget that had no image: the image its pick or
+    // upload put there takes the id created here, and its confirm updates this image. It created a second one, and
+    // this one was left unused. Only that image: one another widget has put into the store since is that widget's.
+    if (dialogOfAnotherPick && !image.id && shown === pickInDialog && isImageCreateUpdateAware(shown)) {
+      if (isUndefined(shown.id)) shown.id = res.id
+    }
     // Before the dialog's close is seen, so this release, with the id just assigned, is the one that goes. Alone, the
-    // editor holds no lock, and the value goes to the buffer here or nowhere.
-    if (!dialogOfAnotherPick || props.collabStatus === CollabStatus.Inactive) releaseFieldLockWith(res.id)
+    // editor holds no lock, and the value goes to the buffer here or nowhere. While the menu of the widget or another
+    // of its dialogs (that of another pick, the picker, the upload) holds the field, the lock stays with it, and gives
+    // it back as it closes; the other editors are sent the saved image now. Released here, a picker opened since lost
+    // its lock, and what it put into the field later went to nobody. Not while the dialog of another pick or upload
+    // is open: it sets what the field ends with, also under the id saved here (it is given that id when this was a
+    // create), and the other editors, who read an image again only when its id changes, kept this one.
+    if (props.collabStatus === CollabStatus.Inactive || (!clickMenuOpened.value && !anyWidgetDialogOpened.value)) {
+      releaseFieldLockWith(res.id)
+    } else if (lockedLocal.value && !dialogOfAnotherPick) {
+      changeFieldData.value(res.id)
+    }
     await reload(res, res.id, true)
     emit('afterMetadataSaveSuccess')
   } catch (e) {
     showErrorsDefault(e)
   } finally {
     metadataDialogSaving.value = false
+    // A dialog closed while this confirm ran left the lock of the field to it (see the watchers): given back once it
+    // is over, when nothing else of the widget holds it. Saved, the image went with it above; otherwise the field
+    // keeps the value it had. A widget that is gone gives it back too, with the value its field has: it wrote none
+    // of the answer. The server keeps a lock till it is released or the editor leaves the room, and the field stayed
+    // locked for the other editors. Unless the widget drawn in its place has taken a turn of the lock since: the
+    // release would free the lock that one holds.
+    if (disposed ? !lockTurnTakenSince() : !clickMenuOpened.value && !anyWidgetDialogOpened.value) {
+      releaseFieldLockLocal(modelValue.value)
+    }
   }
 }
 
 // Till the delete is answered, neither the menu's close nor a dialog's gives the lock up: the menu closes on the click,
-// and its release went out with the image still there, the reset's own skipped as for a lock already given back.
+// and its release went out with the image still there, the reset's own skipped as for a lock already given back. Nor
+// while a confirm of the dialog runs: closed before its save answered, the dialog gave the lock back with the image the
+// field had before, and the release of the answer, as for a lock already given back, never sent the saved image to the
+// other editors.
 const deletePending = ref(false)
 const onImageDelete = async () => {
   if (isNull(modelValue.value)) return
@@ -725,6 +777,7 @@ const onAssetUploadConfirm = (items: ImageCreateUpdateAware[]) => {
   // The image of an upload comes with its source: the authors of an asset picked before are not offered with it.
   offerNoDamAuthors()
   imageMediaWidgetStore.setDetail(items[0])
+  pickInDialog = detail.value
   metadataDialog.value = true
   if (props.expandMetadata) {
     forceReloadViewWithExpandMetadata()
@@ -774,7 +827,7 @@ watch(
     if (newValue === oldValue) return
     // Opened: a lock a refused drop left unconfirmed is asked for again, here and not in the click, which also closes.
     if (newValue) return void acquireFieldLockLocal(true)
-    if (anyWidgetDialogOpened.value || deletePending.value) return
+    if (anyWidgetDialogOpened.value || deletePending.value || metadataDialogSaving.value) return
     releaseFieldLockLocal(modelValue.value)
   },
   { immediate: false }
@@ -787,7 +840,7 @@ watch(
     // Opened by a button of `expandOptions`, with no menu to ask for the lock, the dialog asks; opened from the menu,
     // only for a lock not confirmed yet.
     if (newValue) return void acquireFieldLockLocal(true)
-    if (deletePending.value) return
+    if (deletePending.value || metadataDialogSaving.value) return
     releaseFieldLockLocal(modelValue.value)
   },
   { immediate: false }

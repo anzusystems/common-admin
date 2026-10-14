@@ -27,6 +27,10 @@ const detailLoading = ref(false)
 // Shared like the pagination: every asset select part asks through here, and only the last ask counts.
 let listController: AbortController | undefined
 let detailRequest = 0
+// A further page has failed, and "Load more" does not ask for it again by coming into view: a press does, or the button
+// coming into view once more after it has left it. A list that begins anew hides the button till it has its first
+// page (it has no further page, and the failure has ended the loader), and the button out of view clears this.
+let nextPageFailed = false
 
 export function useAssetSelectActions(configName = 'default') {
   const { damClient, endPointAsset, showFileInfoEnabled } = useCommonAdminCoreDamOptions(configName)
@@ -109,6 +113,7 @@ export function useAssetSelectActions(configName = 'default') {
 
   const fetchNextPage = async () => {
     if (assetSelectStore.loader) return
+    nextPageFailed = false
     const page = pagination.value.page
     pagination.value.page = page + 1
     resolveTypeFilter(assetSelectStore.assetType, assetSelectStore.inPodcast)
@@ -125,10 +130,27 @@ export function useAssetSelectActions(configName = 'default') {
       if (controller.signal.aborted) return
       // Not when something has put the page back meanwhile: rolling back would overwrite that.
       if (pagination.value.page === page + 1) pagination.value.page = page
+      nextPageFailed = true
       showErrorsDefault(error)
     } finally {
       if (listController === controller) assetSelectStore.hideLoader()
     }
+  }
+
+  /**
+   * "Load more" asks for the further page by itself as it comes into view. Its directive tells it so again each time
+   * the list draws anew while the button is in view: after a further page that failed it asked again at once, and
+   * again after each failure, with an error each time, until the button was scrolled away. Once a further page has
+   * failed, the button does not ask by itself while it stays in view: a press asks, and so does the button once it has
+   * left the view and comes into it again.
+   */
+  const fetchNextPageInView = (isIntersecting: boolean) => {
+    if (!isIntersecting) {
+      nextPageFailed = false
+      return
+    }
+    if (nextPageFailed || pagination.value.hasNextPage !== true) return
+    fetchNextPage()
   }
 
   const { addToCachedAuthors, fetchCachedAuthors } = useDamCachedAuthors()
@@ -267,6 +289,7 @@ export function useAssetSelectActions(configName = 'default') {
     giveUpDetailRead,
     fetchAssetListDebounced,
     fetchNextPage,
+    fetchNextPageInView,
     resetAssetList,
     reset,
     initStoreContext,

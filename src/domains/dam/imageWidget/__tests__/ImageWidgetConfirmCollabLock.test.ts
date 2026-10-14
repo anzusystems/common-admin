@@ -14,6 +14,7 @@ import { useUploadQueueDialog } from '@/domains/dam/uploadQueue/composables/useU
 
 const released = vi.fn()
 const acquired = vi.fn()
+const changed = vi.fn()
 const saves = vi.hoisted(() => ({ answer: [] as Array<() => void> }))
 
 vi.mock('@/domains/collab/composables/commonAdminCollabOptions', () => ({
@@ -23,6 +24,7 @@ vi.mock('@/domains/collab/composables/collabField', () => ({
   useCollabField: () => ({
     releaseCollabFieldLock: released,
     acquireCollabFieldLock: acquired,
+    changeCollabFieldData: changed,
     addCollabFieldLockStatusListener: () => undefined,
     lockedByUser: ref<number | null>(null),
   }),
@@ -80,6 +82,7 @@ const mountWidget = async (
 ) => {
   released.mockClear()
   acquired.mockClear()
+  changed.mockClear()
   const model = ref<number | null>(7)
   const Parent = defineComponent({
     setup: () => () =>
@@ -151,10 +154,13 @@ describe('the lock of the field of ImageWidgetInner, once the save answers a con
     await openFor(dialog, image)
     expect(acquired).toHaveBeenCalledTimes(1)
     await confirm(dialog)
+    // Closed while the save is on its way, the dialog leaves the lock to the confirm: the dialog opened again finds
+    // it held, and asks for none.
     await close(dialog)
-    expect(givenBackWith()).toEqual([7])
+    expect(givenBackWith()).toEqual([])
     await openFor(dialog, another)
-    expect(acquired).toHaveBeenCalledTimes(2)
+    expect(acquired).toHaveBeenCalledTimes(1)
+    expect(givenBackWith()).toEqual([])
     released.mockClear()
 
     await saveAnswers()
@@ -163,6 +169,8 @@ describe('the lock of the field of ImageWidgetInner, once the save answers a con
     expect(dialog.props('modelValue')).toBe(true)
     expect(useImageMediaWidgetStore().detail).toMatchObject({ texts: { description: 'opened since' } })
     expect(givenBackWith()).toEqual([])
+    // Nor is the saved image sent to the room: that dialog sets what the field ends with, and its release sends it.
+    expect(changed.mock.calls).toEqual([])
 
     await close(dialog)
     expect(givenBackWith()).toEqual([8])

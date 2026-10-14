@@ -73,6 +73,7 @@ const {
   loader,
   pagination,
   fetchNextPage,
+  fetchNextPageInView,
   getSelectedData,
   initStoreContext,
   detailLoading,
@@ -157,12 +158,6 @@ const getCopyToLicenceId = () => {
 const onConfirm = () => {
   emit('confirm', getSelectedData(props.returnType, getCopyToLicenceId()))
   onClose()
-}
-
-const autoloadOnIntersect = (isIntersecting: boolean) => {
-  if (isIntersecting && pagination.value.hasNextPage === true) {
-    fetchNextPage()
-  }
 }
 
 const { gridView } = useGridView()
@@ -310,7 +305,7 @@ defineExpose({
             <div class="d-flex w-100 align-center justify-center pa-4">
               <ABtnSecondary
                 v-show="pagination.hasNextPage || loader"
-                v-intersect="autoloadOnIntersect"
+                v-intersect="fetchNextPageInView"
                 :loading="loader"
                 size="small"
                 @click="fetchNextPage"

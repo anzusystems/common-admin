@@ -17,6 +17,18 @@ withDefaults(
 )
 
 const { t } = useI18n()
+
+// The sign-in page takes the place of the admin's own `/login` in the browser history: left there, Back from the
+// admin after the sign-in showed the sign-in page to a user who is signed in. A press the browser takes for a tab, a
+// window or a download of its own (with Ctrl, Cmd, Shift or Alt, the middle button) goes on as a link does.
+// Without an address the button is no link, and a press does nothing, as before.
+const onLoginClick = (event: MouseEvent) => {
+  const link = event.currentTarget
+  if (!(link instanceof HTMLAnchorElement) || !link.href) return
+  if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return
+  event.preventDefault()
+  window.location.replace(link.href)
+}
 </script>
 
 <template>
@@ -45,6 +57,7 @@ const { t } = useI18n()
           :href="loginUrl()"
           color="primary"
           size="large"
+          @click="onLoginClick"
         >
           {{ t('common.system.login.text') }}
         </VBtn>
