@@ -970,14 +970,14 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
           expect(panelShowsAnAsset()).toBe(true)
         })
 
-        // Over a list without the asset, "edit" of the panel and the close of the detail leave the panel empty: there
-        // is no tile to read by, as before. The asset the list finds its active tile by outlived that, and a list
-        // that brought it back marked its tile beside a panel that showed no asset.
+        // Over a list without the asset, "edit" of the panel and the close of the detail used to leave the panel
+        // empty: the list read by its active tile, and had none. It reads the asset it finds that tile by, so the
+        // panel shows the asset again, and a list that brings it back marks its tile beside it.
         it.each<[string, string[], () => Promise<void>]>([
           ['a list read later', ['asset-51', 'asset-50'], sortAnew],
           ['a further page', ['asset-50'], loadMore],
         ])(
-          'is not the active one when %s brings its asset back, once a detail closed over a list without it has emptied the side panel',
+          'is the active one when %s brings its asset back, the side panel having read that asset again once a detail closed over a list without it',
           async (_how, back, readOn) => {
             await firstTileClicked()
             nextListsAre(['asset-51'], back)
@@ -988,30 +988,22 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
             expect([detail().dialog, detail().asset?.id]).toEqual([QUEUE, 'asset-50'])
 
             closeDetail()
-            await waits.settle()
-            expect([detail().dialog, detail().asset, panelLoads(), panelShowsAnAsset()]).toEqual([
-              null,
-              null,
-              false,
-              false,
-            ])
-            expect(readsOf('asset-50')).toBe(1)
+            await vi.waitFor(() => expect(readsOf('asset-50')).toBe(2))
+            await vi.waitFor(() => expect(detail().asset?.id).toBe('asset-50'))
+            await flushPromises()
+            expect([detail().dialog, panelLoads(), panelShowsAnAsset()]).toEqual([null, false, true])
+            expect(tilesDrawn()).toEqual([second])
 
             await readOn()
-            expect(tilesDrawn()).toEqual([second, first])
-            expect([detail().asset, panelShowsAnAsset()]).toEqual([null, false])
-            expect(readsOf('asset-50')).toBe(1)
-
-            // Clicked, it is the active one as any tile is.
-            await tiles()[1]!.trigger('click')
-            await vi.waitFor(() => expect(detail().asset?.id).toBe('asset-50'))
             expect(tilesDrawn()).toEqual([second, active(first)])
+            expect([detail().asset?.id, panelShowsAnAsset()]).toEqual(['asset-50', true])
+            expect(readsOf('asset-50')).toBe(2)
           }
         )
 
-        // The detail that closes over a list without the asset may not be the last word on the side panel: a read
-        // begun before may still be on its way. The asset was forgotten at that close all the same, and when the read
-        // of a clicked tile then answered, the panel showed the asset and a list read later did not mark its tile.
+        // A detail that closes over a list without the asset while a read for the side panel, begun before, is still
+        // on its way: the close has the asset read again, and that read is the one asked for last. Whatever the reads
+        // answer, the panel and a list read later agree: both show the asset, or neither does.
         describe('while a read for the side panel is still on its way when that detail closes', () => {
           let handed: { onFileInput: (files: File[]) => void }
           /** The list of two assets on a page with an upload entry of its own. */
@@ -1040,17 +1032,9 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
           }
 
           it.each<[string, FakeDamAnswer | undefined, boolean]>([
-            [
-              'answers: the panel shows its asset, and its tile is the active one in a list read later',
-              undefined,
-              true,
-            ],
-            [
-              'fails: the panel stays empty, and no tile is the active one in a list read later',
-              { status: 500 },
-              false,
-            ],
-          ])('the read of a clicked tile, which then %s', async (_how, answer, shown) => {
+            ['answer: the panel shows its asset, and its tile is the active one in a list read later', undefined, true],
+            ['fail: the panel stays empty, and no tile is the active one in a list read later', { status: 500 }, false],
+          ])('the read of a clicked tile, and the read after that close: both then %s', async (_how, answer, shown) => {
             await mountOnAPageWithUpload()
             const ofTheClick = dam.hold('GET', readOf('asset-50'))
             await tiles()[0]!.trigger('click')
@@ -1058,6 +1042,7 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
 
             await listWithoutItThenADetailOfTheQueueClosed()
             expect(panelLoads()).toBe(true)
+            expect(ofTheClick.waiting).toHaveLength(2)
             ofTheClick.release(answer)
             await vi.waitFor(() => expect(panelLoads()).toBe(false))
             await flushPromises()
@@ -1071,8 +1056,9 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
             expect(shownAlerts()).toHaveLength(shown ? 0 : 1)
           })
 
-          // That read is not taken once a detail has been opened since it began: the panel stays empty.
-          it('the read after an earlier close, whose answer is not taken: no tile is the active one in a list read later', async () => {
+          // That read is not taken once a detail has been opened since it began. The close of that detail has the
+          // asset read once more, and it is that answer the panel shows.
+          it('the read after an earlier close, whose answer is not taken: the read after the later close shows the asset, and its tile is the active one in a list read later', async () => {
             await mountOnAPageWithUpload()
             await tiles()[0]!.trigger('click')
             await vi.waitFor(() => expect(detail().asset?.id).toBe('asset-50'))
@@ -1085,14 +1071,19 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
 
             await listWithoutItThenADetailOfTheQueueClosed()
             expect(panelLoads()).toBe(true)
-            afterTheClose.release()
+            expect(afterTheClose.waiting).toHaveLength(2)
+            const [afterTheEarlierClose, afterTheLaterClose] = afterTheClose.waiting
+            afterTheEarlierClose!.release()
+            await waits.settle()
+            expect([detail().asset, panelLoads(), panelShowsAnAsset()]).toEqual([null, true, false])
+            afterTheLaterClose!.release()
             await vi.waitFor(() => expect(panelLoads()).toBe(false))
             await flushPromises()
-            expect([detail().asset, panelShowsAnAsset()]).toEqual([null, false])
+            expect([detail().asset?.id, panelShowsAnAsset()]).toEqual(['asset-50', true])
 
             await sortAnew()
-            expect(tilesDrawn()).toEqual([second, first])
-            expect(panelShowsAnAsset()).toBe(false)
+            expect(tilesDrawn()).toEqual([second, active(first)])
+            expect(panelShowsAnAsset()).toBe(true)
             expect(shownAlerts()).toEqual([])
           })
         })

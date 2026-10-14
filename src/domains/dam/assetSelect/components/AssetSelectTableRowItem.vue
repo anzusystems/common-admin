@@ -41,7 +41,10 @@ const onItemClick = () => {
 <template>
   <tr
     class="a-datatable__row"
-    :class="{ 'a-datatable__row--selected': item.selected }"
+    :class="{
+      'a-datatable__row--selected': item.selected,
+      'asset-list-table__item--active': item.active,
+    }"
     @click.stop.exact="onItemClick"
   >
     <td>
@@ -89,3 +92,11 @@ const onItemClick = () => {
     </td>
   </tr>
 </template>
+
+<style lang="scss">
+// The row of the asset the side panel shows, framed as the active tile is.
+.asset-list-table__item--active {
+  outline: 1px solid blue;
+  outline-offset: -1px;
+}
+</style>

@@ -53,24 +53,46 @@ export function useAssetSelectActions(configName = 'default') {
   /**
    * The asset the list remembers its active item by is forgotten once the side panel shows no asset and the list has
    * no item of it: a list read later is to mark no item beside a panel that shows none. Not while a read is on its
-   * way, which may yet show that asset. Asked whenever one of the three may have come true: a list is set, the read
-   * asked for last has ended, a detail has closed with nothing to read.
+   * way, which may yet show that asset, nor while a detail is open, whose close has that asset read again. Asked
+   * where these may have come true: a list is set, the read asked for last has ended.
    */
   const forgetAssetNotShown = () => {
-    if (detailLoading.value || !isNull(assetDetailStore.asset)) return
+    if (detailLoading.value || !isNull(assetDetailStore.asset) || !isNull(assetDetailStore.dialog)) return
     if (assetSelectStore.assetListItems.some((item) => item.active)) return
     assetSelectStore.forgetActiveAsset()
   }
 
-  const fetchAssetListDebounced = useDebounceFn(async () => {
+  /**
+   * A new list begins: one in another order, of another filter or type, of a list or picker opened again, the list
+   * read anew once an upload is applied. The request of the list left that is on its way is given up: its rows would
+   * come into a list that is being replaced or has been emptied, and its answer would say once more that a further
+   * page follows. The new list is read from its first page, and has no further page until that page has come. "Load
+   * more" is drawn while a further page follows, and asks by itself as it comes into view: over a list that had just
+   * begun it asked for the page after the first before the first had been asked for, and the list was read from its
+   * second page.
+   */
+  const startListAnew = () => {
+    listController?.abort()
+    const hasNextPage = isNull(pagination.value.hasNextPage) ? null : false
+    pagination.value = { ...pagination.value, page: 1, hasNextPage }
+  }
+
+  const readListAfterPause = useDebounceFn(async () => {
     await fetchAssetList()
   })
+
+  /** Every list that is read anew is asked for here: it begins at once, and is read after a pause. */
+  const fetchAssetListDebounced = () => {
+    startListAnew()
+    return readListAfterPause()
+  }
 
   const fetchAssetList = async () => {
     if (assetSelectStore.selectedLicenceId <= 0) return
     resolveTypeFilter(assetSelectStore.assetType, assetSelectStore.inPodcast)
     const { execute } = useFetchAssetList(damClient, endPointAsset, assetSelectStore.selectedLicenceId)
-    listController?.abort()
+    // Once more as the read goes out, whatever was asked for during the pause before it.
+    startListAnew()
     const controller = (listController = new AbortController())
     try {
       assetSelectStore.showLoader()
@@ -101,8 +123,7 @@ export function useAssetSelectActions(configName = 'default') {
       assetSelectStore.appendList(items)
     } catch (error) {
       if (controller.signal.aborted) return
-      // Not when something reset the page meanwhile (a filter submit waits out its debounce before it
-      // aborts this request): rolling back would overwrite that reset.
+      // Not when something has put the page back meanwhile: rolling back would overwrite that.
       if (pagination.value.page === page + 1) pagination.value.page = page
       showErrorsDefault(error)
     } finally {
@@ -126,22 +147,27 @@ export function useAssetSelectActions(configName = 'default') {
     detailLoading.value = true
     const request = ++detailRequest
     try {
-      const asset = await fetchAsset(damClient, endPointAsset, data.assetId)
-      if (request !== detailRequest) return
-      // Once more for the read that is shown, as before: the value is one for the page, and another widget may have
-      // written its own since the click, when an upload or a copy of its own ended.
-      cachedExtSystemId.value = extSystem
-      addToCachedAuthors(asset.authors)
-      addToCachedKeywords(asset.keywords)
-      if (showFileInfoEnabled) {
-        addToCachedUsers(asset.modifiedBy, asset.createdBy)
-      }
-      fetchCachedAuthors()
-      fetchCachedKeywords()
-      if (showFileInfoEnabled) {
-        fetchCachedUsers()
-      }
-      assetDetailStore.setAsset(asset)
+      // Not written over a detail, as the read made once a detail has closed is not: the detail of a row of the queue
+      // may have been opened since the click, and would show this asset in place of its own, and save into it.
+      await assetDetailStore.readBesideDetail(
+        () => fetchAsset(damClient, endPointAsset, data.assetId),
+        () => request === detailRequest,
+        (asset) => {
+          // Once more for the read that is shown, as before: the value is one for the page, and another widget may
+          // have written its own since the click, when an upload or a copy of its own ended.
+          cachedExtSystemId.value = extSystem
+          addToCachedAuthors(asset.authors)
+          addToCachedKeywords(asset.keywords)
+          if (showFileInfoEnabled) {
+            addToCachedUsers(asset.modifiedBy, asset.createdBy)
+          }
+          fetchCachedAuthors()
+          fetchCachedKeywords()
+          if (showFileInfoEnabled) {
+            fetchCachedUsers()
+          }
+        }
+      )
     } catch (e) {
       if (request === detailRequest) showErrorsDefault(e)
     } finally {
@@ -157,22 +183,21 @@ export function useAssetSelectActions(configName = 'default') {
    * the read of a click: only the latest of the two is written, and only the latest turns the loading of the panel
    * off. On its own, the answer for the detail just closed came after that of a click made since, and the panel showed
    * the asset of the detail beside another active item.
+   * The asset is the one the list remembers its active item by, also when the list read last has no item of it: the
+   * panel went on showing that asset, and "edit" of the panel opened its detail. Read by the active item alone, the
+   * panel was left empty once that detail closed, though it was that asset that had just been edited.
    */
   const readActiveItemAgain = async () => {
-    const activeItem = assetSelectStore.assetListItems.find((item) => item.active)
-    if (!activeItem) {
-      // Nothing is read: the detail emptied the side panel as it closed, and the panel stays empty unless the read of
-      // a click is still on its way.
-      forgetAssetNotShown()
-      return
-    }
+    const assetId = assetSelectStore.getActiveAssetId()
+    // Nothing is read: the list remembers no asset, and the side panel the detail emptied as it closed stays empty.
+    if (isNull(assetId)) return
     detailLoading.value = true
     const request = ++detailRequest
     try {
       // Not written over a detail: one of a row of the queue closes by itself when its asset cannot be read, and can be
       // opened again before this read answers.
       await assetDetailStore.readBesideDetail(
-        () => fetchAsset(damClient, endPointAsset, activeItem.asset.id),
+        () => fetchAsset(damClient, endPointAsset, assetId),
         () => request === detailRequest
       )
     } catch (e) {
@@ -190,7 +215,6 @@ export function useAssetSelectActions(configName = 'default') {
   const resetAssetList = async () => {
     clearAll(filterData, filterConfig)
     resolveTypeFilter(assetSelectStore.assetType, assetSelectStore.inPodcast)
-    pagination.value.page = 1
     await fetchAssetListDebounced()
   }
 
@@ -202,7 +226,8 @@ export function useAssetSelectActions(configName = 'default') {
 
   const reset = async () => {
     clearAll(filterData, filterConfig)
-    pagination.value.page = 1
+    // The list opened next begins anew: what this one left of its paging, a further page that follows, is not its.
+    startListAnew()
     assetSelectStore.reset(true)
     // Its answer would be written into the store emptied here.
     giveUpDetailRead()

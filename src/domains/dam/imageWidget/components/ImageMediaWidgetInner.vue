@@ -263,8 +263,11 @@ const imageMediaLoaded = computed(() => {
   return !isNull(resImageMedia.value)
 })
 
+// What "edit metadata" has put into the dialog: a copy of the image or the media of the widget, as it was then.
+let ownInDialog: typeof detail.value = null
 const actionEditMeta = () => {
   imageMediaWidgetStore.setDetail(toRaw(resImageMedia.value))
+  ownInDialog = detail.value
   metadataDialog.value = true
 }
 
@@ -451,6 +454,9 @@ const reloadImage = async (
     } catch (error) {
       showErrorsDefault(error)
     }
+    // The widget is gone: with `expandMetadata` its image would be put into the store of the dialog, which is the
+    // page's, and by now shows the image of the next widget.
+    if (disposed) return
     if (isImageCreateUpdateAware(resImageMedia.value)) {
       if (isNumber(props.damWidth) && isNumber(props.damHeight)) {
         resolvedSrc.value = widgetImageToDamImageUrl(toRaw(resImageMedia.value), props.damWidth, props.damHeight)
@@ -560,6 +566,8 @@ const pickAsset = async (data: AssetSelectReturnData) => {
   } catch (e) {
     showErrorsDefault(e)
   }
+  // The widget is gone: nothing of its pick is put into the store of the dialog, which is the page's.
+  if (disposed) return
   if (!mediaDataFromDam) return
   if (selectedAsset.attributes.assetType === DamAssetType.Video && assetFileIsVideoFile(selectedAsset.mainFile)) {
     // video
@@ -665,6 +673,7 @@ const pickAsset = async (data: AssetSelectReturnData) => {
     } catch (e) {
       showErrorsDefault(e)
     }
+    if (disposed) return
     const image = createDamImage(
       {
         fileId: selectedAsset.mainFile.id,
@@ -728,6 +737,9 @@ const onMetadataDialogClose = () => {
 
 const tryMediaConfirm = async () => {
   if (!isMediaAware(detail.value)) return
+  // Not taken while the save of an image of this widget is on its way, as a second confirm of that image is not: the
+  // answer of that save sets the image, and took away the media confirmed meanwhile. The button spins till then.
+  if (metadataDialogSaving.value) return
   metadataDialogSaving.value = true
   try {
     metadataDialog.value = false
@@ -754,25 +766,30 @@ const tryImageConfirm = async () => {
   // Pressed again while the save of the first press runs (the button of a host is not disabled meanwhile, and Enter
   // reaches the one of the dialog), it is not taken: the image would be created, or updated, a second time.
   if (metadataDialogSaving.value) return
+  // A confirm is for the image it was pressed on. While it waits for an answer the dialog can be closed, and opened
+  // again for another image or for a media, and the widget can go away with its page. Until the image is sent to be
+  // saved, the confirm goes on after each wait only for a widget that is still there, and only while the dialog still
+  // shows that image. It went on with whatever the dialog showed by then: that image was saved without a press, and
+  // its dialog closed, and for a media an image without its fields was sent to be created.
+  const pressedOn = detail.value
+  const confirmIsOver = () => disposed || detail.value !== pressedOn
   metadataDialogSaving.value = true
   try {
     const authorsAsset = damAuthorsAsset.value
     if (authorsAsset) {
       if (authorsAsset.authors.length > 0) {
-        // Their names become the source of the image once the DAM has taken the authors, and wait aside till then,
-        // with the texts they are for, those of the image the confirm was pressed on: the dialog may show another by
-        // the time the names are read. Written before, they stayed in the source, which the dialog does not show,
-        // after a write the DAM refused, and a confirm with the pick emptied saved them with the image.
-        const texts = detail.value.texts
+        // Their names become the source of the image once the DAM has taken the authors, and wait aside till then.
+        // Written before, they stayed in the source, which the dialog does not show, after a write the DAM refused,
+        // and a confirm with the pick emptied saved them with the image.
         const authorsRes = await fetchAuthorListByIds(
           damClient,
           endPointAuthor,
           assetSelectStore.requireSelectedSelectConfig().extSystem,
           authorsAsset.authors
         )
-        // Closed while the names were read, the dialog shows no image: this confirm ends here, with nothing written and
-        // nothing said, as it did when the names were written into the image the dialog showed at this point.
-        if (!isImageCreateUpdateAware(detail.value)) return
+        // Nothing is written and nothing said: the authors are not sent for a dialog the user has left, nor by a
+        // widget that is gone.
+        if (confirmIsOver()) return
         const source = authorsRes.map((author) => author.name).join(', ')
         try {
           await updateAssetAuthors(damClient, endPointAsset, authorsAsset)
@@ -781,21 +798,37 @@ const tryImageConfirm = async () => {
           showMetadataSaveError(e, assetSelectStore.requireSelectedSelectConfig().extSystem)
           return
         }
-        texts.source = source
+        // The DAM has the authors, and the image is not saved.
+        if (confirmIsOver()) return
+        pressedOn.texts.source = source
         offerNoDamAuthors()
       }
     }
-    const image = imageFieldsOf(detail.value)
+    const image = imageFieldsOf(pressedOn)
     const res = image.id
       ? await imageApi.updateImage(imageClient, image.id, image)
       : await imageApi.createImage(imageClient, image)
-    metadataDialog.value = false
+    // The widget is gone: nothing of the answer is written. The store of the dialog is the page's, and by now the
+    // next widget's: its form was emptied, and then showed the image saved here.
+    if (disposed) return
+    // The save went through, and the widget takes its image. The dialog is this confirm's to close while it shows the
+    // image the confirm was pressed on, or none. It is closed as well when "edit metadata" has opened it since: what
+    // it shows is a copy of the image or the media the widget had before this save, and its confirm would put that
+    // over the image saved here. The dialog of another pick or upload, opened since, stays as it is, with the lock of
+    // the field, which its own close or confirm gives back. The form `expandMetadata` draws in the page is no such
+    // dialog: it shows the image of the widget, the saved one from here on.
+    const shown = detail.value
+    const dialogOfAnotherPick = !props.expandMetadata && !isNull(shown) && shown !== pressedOn && shown !== ownInDialog
+    if (!dialogOfAnotherPick) metadataDialog.value = false
     if (!image.id) createdImageId = res.id
     imageModel.value = res.id
     mediaModel.value = null
-    imageMediaWidgetStore.setDetail(null)
-    // Before the dialog's close is seen, so this release, with what was just assigned, is the one that goes.
-    releaseFieldLockWith({ image: res.id, media: null })
+    if (!dialogOfAnotherPick) imageMediaWidgetStore.setDetail(null)
+    // Before the dialog's close is seen, so this release, with what was just assigned, is the one that goes. Alone,
+    // the editor holds no lock, and the value goes to the buffer here or nowhere.
+    if (!dialogOfAnotherPick || props.collabStatus === CollabStatus.Inactive) {
+      releaseFieldLockWith({ image: res.id, media: null })
+    }
     await reloadImage(res, res.id, true)
     emit('afterMetadataSaveSuccess')
   } catch (e) {

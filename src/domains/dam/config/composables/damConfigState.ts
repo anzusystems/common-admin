@@ -146,8 +146,11 @@ export function useDamConfigState(client: undefined | (() => AxiosInstance) = un
           const loadedResponses: CustomDataFormElement[][] = []
           const failedTypes: DamAssetTypeType[] = []
 
+          // A read that answers is loaded, also when it brings no field: an ext system may have none for a type, or
+          // for any, and that is its configuration. Counted as failed, an ext system without a custom field never
+          // had one, and whatever waits for it said it could not be loaded.
           results.forEach((result, index) => {
-            if (result.status === 'fulfilled' && result.value.length > 0) {
+            if (result.status === 'fulfilled') {
               loadedTypes.push(types[index]!)
               loadedResponses.push(result.value)
               return
@@ -155,7 +158,10 @@ export function useDamConfigState(client: undefined | (() => AxiosInstance) = un
             failedTypes.push(types[index]!)
           })
 
-          if (loadedTypes.length === 0 && types.length > 0) {
+          // A read that failed beside reads that answered with no field: nothing tells an ext system without a field
+          // from one whose fields are in the very part that failed. Not loaded, as before.
+          const anyField = loadedResponses.some((fields) => fields.length > 0)
+          if (types.length > 0 && (loadedTypes.length === 0 || (failedTypes.length > 0 && !anyField))) {
             throw new Error('Unable to load asset custom form config. Incorrect response body.')
           }
           setDamConfigAssetCustomFormElements(loadedResponses, extSystemId, loadedTypes)

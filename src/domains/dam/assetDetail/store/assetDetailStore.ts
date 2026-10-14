@@ -76,13 +76,18 @@ export const useAssetDetailStore = defineStore('commonAssetDetailStore', () => {
    * panel. The answer is taken only while no detail is open, and none has been opened since the read began: a detail
    * would show that asset in place of its own, and its save would go into it. The read rejects here as it did.
    * `wanted`: asked once the read has answered, by a host whose reads have an order of their own; an answer that host
-   * no longer wants is not taken either.
+   * no longer wants is not taken either. `beforeShown` runs for the answer that is taken, before the host shows it.
    */
-  async function readBesideDetail(read: () => Promise<AssetDetailItemDto>, wanted?: () => boolean) {
+  async function readBesideDetail(
+    read: () => Promise<AssetDetailItemDto>,
+    wanted?: () => boolean,
+    beforeShown?: (answer: AssetDetailItemDto) => void
+  ) {
     const begun = turn
     const answer = await read()
     if (begun !== turn || !isNull(dialog.value)) return
     if (wanted && !wanted()) return
+    beforeShown?.(answer)
     setAsset(answer)
   }
 

@@ -67,12 +67,15 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
     maxCount.value = value
   }
 
+  // The selection outlives the list it was made in: a list read anew (a search, another order) or a further page may
+  // bring an asset that is selected. Its item says so, as the count does: drawn unselected, a click on it only put
+  // the mark back, and at the full count no click took the asset out.
   function setList(items: AssetSearchListItemDto[]) {
     const activeIndex = items.findIndex((item) => item.id === activeAssetId.value)
     assetListItems.value = items.map((item, index) => {
       return {
         asset: item,
-        selected: false,
+        selected: selectedAssets.value.has(item.id),
         active: index === activeIndex,
       }
     })
@@ -85,7 +88,7 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
     const assets = items.map((asset, index) => {
       return {
         asset: asset,
-        selected: false,
+        selected: selectedAssets.value.has(asset.id),
         active: index === activeIndex,
       }
     })
@@ -135,6 +138,14 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
    */
   function forgetActiveAsset() {
     activeAssetId.value = null
+  }
+
+  /**
+   * The asset the list finds its active item by: that of the active item, or of the one that was active, while the
+   * list read last has no item of it and it has not been forgotten.
+   */
+  function getActiveAssetId() {
+    return activeAssetId.value
   }
 
   function unselectAllExcept(ignoreIndex: number) {
@@ -266,6 +277,7 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
     assetListItems,
     setActiveByIndex,
     forgetActiveAsset,
+    getActiveAssetId,
     getSelectedData,
     setAssetType,
     setSelectConfig,

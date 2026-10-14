@@ -207,6 +207,9 @@ const loadingSidebarRight = computed(() => {
 
 const { showErrorsDefault } = useAlerts()
 const customFormConfigLoading = ref(true)
+// The configuration of the custom fields could not be read: the side panel says so, in place of the form of the
+// asset, which cannot be drawn without it. It used to load without an end.
+const customFormConfigFailed = ref(false)
 
 const sortByChange = (option: DatatableOrderingOption) => {
   pagination.value.sortBy = null
@@ -221,17 +224,19 @@ watch(
   async (newValue) => {
     if (isUndefined(newValue)) return
     customFormConfigLoading.value = true
+    customFormConfigFailed.value = false
     const configAssetCustomFormElements = getDamConfigAssetCustomFormElements(newValue)
     if (isUndefined(configAssetCustomFormElements)) {
       try {
         await loadDamConfigAssetCustomFormElements(newValue)
-        customFormConfigLoading.value = false
       } catch (e) {
         showErrorsDefault(e)
       }
-    } else {
-      customFormConfigLoading.value = false
+      // The answer for an ext system the list has left since says nothing of the one it lists now.
+      if (extId.value !== newValue) return
+      customFormConfigFailed.value = isUndefined(getDamConfigAssetCustomFormElements(newValue))
     }
+    customFormConfigLoading.value = false
   },
   { immediate: true }
 )
@@ -318,7 +323,13 @@ defineExpose({
           </div>
           <div class="subject-select__sidebar-right border-s">
             <div
-              v-if="loadingSidebarRight"
+              v-if="customFormConfigFailed"
+              class="d-flex w-100 align-center justify-center text-body-large"
+            >
+              {{ t('common.damImage.error.loadingConfig') }}
+            </div>
+            <div
+              v-else-if="loadingSidebarRight"
               class="d-flex w-100 align-center justify-center"
             >
               <VProgressCircular indeterminate />

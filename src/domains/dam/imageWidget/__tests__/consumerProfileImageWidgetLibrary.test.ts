@@ -2339,14 +2339,14 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
           expect(authorsWritten()).toEqual([])
         })
 
-        // The names of the picked authors become the source of the image once the DAM has taken the authors. They are
-        // for the image the confirm was pressed on: the dialog can be closed while the names are read or the authors
-        // written, and opened again for the image the widget has, whose source is its own.
+        // A confirm is for the image it was pressed on. The dialog can be closed while the names of the picked authors
+        // are read or the authors written, and opened again for the image the widget has: the confirm ends there. It
+        // went on with the image the dialog showed by then, which was saved without a press, and its dialog closed.
         it.each<[string, boolean]>([
           ['the names of the authors of another are read', true],
           ['the DAM has taken the authors of another', false],
         ])(
-          'leaves the source of the image the widget has alone, when its dialog is the one open by the time %s',
+          'saves nothing of the image the widget has and leaves its dialog open, when that dialog is the one open by the time %s',
           async (_when, atTheNames) => {
             const widget = await pickedWithoutAuthors('asset-9', 7)
             await pickAuthors(widget, ['author-7'])
@@ -2359,20 +2359,27 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
             await closeImageDialog()
             await editImage(widget)
             expect(texts()).toEqual(['image 7', 'source 7'])
+            expect(spins()).toBe(true)
             held.release(atTheNames ? author7Named : undefined)
-            await vi.waitFor(() => expect(widget.emitted('afterMetadataSaveSuccess')).toHaveLength(1))
+            await vi.waitFor(() => expect(spins()).toBe(false))
             await damNamesAsked()
             await waits.settle()
 
-            expect(authorsWritten()).toEqual([[['asset-9', ['author-7']]]])
-            // As the confirm goes on today: the image the dialog shows by then is saved as it is, once, and its dialog
-            // closed.
+            // The authors are sent only by a confirm whose dialog still showed its image once their names were read.
+            expect(authorsWritten()).toEqual(atTheNames ? [] : [[['asset-9', ['author-7']]]])
+            expect(imagesWritten()).toEqual([])
+            expect(widget.emitted('afterMetadataSaveSuccess')).toBeUndefined()
+            expect(texts()).toEqual(['image 7', 'source 7'])
+            expect(offered(widget)).toBeNull()
+            expect(shownAlerts()).toEqual([])
+
+            // The dialog that is open takes a confirm of its own.
+            await confirmImage(widget)
             expect(imagesWritten()).toMatchObject([
               ['updateImage', 7, { texts: { description: 'image 7', source: 'source 7' }, dam: { damId: 'file-7' } }],
             ])
             expect(imageDialog()).toBeUndefined()
             expect(JSON.stringify(imagesWritten())).not.toContain('Name of author-7')
-            expect(JSON.stringify(useImageMediaWidgetStore(pinia).detail ?? {})).not.toContain('Name of author-7')
           }
         )
       }

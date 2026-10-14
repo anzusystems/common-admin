@@ -44,6 +44,11 @@ export function installConsumerImageApi(profile: ConsumerProfile, options: Retur
   const answerSave = (saved: () => FakeDamAnswer) =>
     held ? whenLet().then((failed) => (failed ? { status: 500 } : saved())) : saved()
 
+  // The reads of one image a test holds (`holdReads`): each is recorded as it is asked for, and answered once the test
+  // lets it.
+  let heldReads: Array<() => void> | undefined
+  const whenReadLet = () => new Promise<void>((resolve) => heldReads!.push(resolve))
+
   // The CMS backend as the browser sees it: a client that records its requests.
   const server = createFakeDam({ asset: '/not-the-dam/asset', image: '/not-the-dam/image' })
   const body = (request: FakeDamRequest) => JSON.parse(request.data as string) as never
@@ -65,8 +70,11 @@ export function installConsumerImageApi(profile: ConsumerProfile, options: Retur
     }
     if (request.method === 'GET' && one) {
       calls.push(['fetchImage', Number(one[1])])
-      const found = images.get(Number(one[1]))
-      return found ? { status: 200, data: found } : { status: 404 }
+      const read = (): FakeDamAnswer => {
+        const found = images.get(Number(one[1]))
+        return found ? { status: 200, data: found } : { status: 404 }
+      }
+      return heldReads ? whenReadLet().then<FakeDamAnswer>(read) : read()
     }
     if (request.method === 'GET' && path === ALL) {
       const ids = (new URLSearchParams(query).get('filter_in[id]') ?? '').split(',').filter(Boolean).map(Number)
@@ -96,6 +104,7 @@ export function installConsumerImageApi(profile: ConsumerProfile, options: Retur
               imageApi: {
                 fetchImage: async (_client, id) => {
                   calls.push(['fetchImage', id])
+                  if (heldReads) await whenReadLet()
                   return images.get(id)!
                 },
                 createImage: async (_client, data) => {
@@ -138,6 +147,11 @@ export function installConsumerImageApi(profile: ConsumerProfile, options: Retur
     bringsItsOwn,
     /** An image the backend already has. */
     has: (image: ImageAware) => store(image, image.id),
+    /** From now on a read of one image waits until the test lets it answer: `waiting[n]()`, in the order asked. */
+    holdReads: () => {
+      const waiting: Array<() => void> = (heldReads = [])
+      return { waiting }
+    },
     /** From now on a create or an update of one image waits until the test lets it answer. */
     holdSaves: () => {
       const waiting: HeldSave[] = (held = [])
