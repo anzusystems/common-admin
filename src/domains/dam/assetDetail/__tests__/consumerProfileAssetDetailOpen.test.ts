@@ -106,6 +106,10 @@ interface Host {
   mount: () => Promise<void>
   /** The same page mounted once more, after the first has gone away: as `mount`, where nothing else is named. */
   mountAgain?: () => Promise<void>
+  /** The asset "edit asset" opens the detail of on the page mounted once more: `asset`, where nothing else is named. */
+  assetAgain?: DocId
+  /** What the host reads that asset with: as `read`, where nothing else is named. */
+  readAgain?: () => string
   editAsset: () => HTMLButtonElement
 }
 
@@ -223,6 +227,24 @@ describe.each(consumerProfiles)('the detail of an asset as its hosts open it, un
     useUploadQueuesStore(pinia)
       .getQueueItems(QUEUE)
       .map((item) => item.status)
+  const queueRows = () => document.body.querySelectorAll('.overlay--sidebar .dam-upload-queue__item')
+  /** A file picked in the gallery, uploaded and processed by the DAM: `asset` is made of it. */
+  const uploadThroughGallery = async (asset: DocId) => {
+    const input = (page!.element as Element).querySelector<HTMLInputElement>('input[type="file"]')!
+    const picked = new DataTransfer()
+    picked.items.add(new File([new Uint8Array(3000)], 'a.jpg', { type: 'image/jpeg' }))
+    input.files = picked.files
+    input.dispatchEvent(new Event('change', { bubbles: true }))
+    await vi.waitFor(() => expect(queueStatuses()).toEqual([Processing]))
+    dam.fileBecomes(asset, AssetFileProcessStatus.Processed, {
+      texts: { displayTitle: TITLE },
+      metadata: { customData: { description: 'uploaded' }, authorSuggestions: {}, keywordSuggestions: {} },
+    })
+    await waits.elapse()
+    await vi.waitFor(() => expect(queueStatuses()).toEqual([Uploaded]))
+    await damNamesAsked()
+    await flushPromises()
+  }
 
   const hosts: Host[] = [
     {
@@ -261,29 +283,23 @@ describe.each(consumerProfiles)('the detail of an asset as its hosts open it, un
       read: () => `${endPoints.asset}/asset-1`,
       mount: async () => {
         await mountGallery([])
-        const input = (page!.element as Element).querySelector<HTMLInputElement>('input[type="file"]')!
-        const picked = new DataTransfer()
-        picked.items.add(new File([new Uint8Array(3000)], 'a.jpg', { type: 'image/jpeg' }))
-        input.files = picked.files
-        input.dispatchEvent(new Event('change', { bubbles: true }))
-        await vi.waitFor(() => expect(queueStatuses()).toEqual([Processing]))
-        dam.fileBecomes('asset-1', AssetFileProcessStatus.Processed, {
-          texts: { displayTitle: TITLE },
-          metadata: { customData: { description: 'uploaded' }, authorSuggestions: {}, keywordSuggestions: {} },
-        })
-        await waits.elapse()
-        await vi.waitFor(() => expect(queueStatuses()).toEqual([Uploaded]))
-        await damNamesAsked()
-        await flushPromises()
+        await uploadThroughGallery('asset-1')
       },
-      // The queue is the app's and still holds its row, no file is picked a second time. Its dialog is not opened by the
-      // gallery drawn again (it forgot itself as it went with the gallery before): it is named here again, as nothing
-      // in the page does any longer (a file added to the gallery stops a queue no dialog names first).
+      // The queue is the app's and still holds the row of the first file; the gallery drawn again does not open its
+      // dialog (it forgot itself as it went with the gallery before). The way back to a row is the user's: a new file
+      // uploaded through the gallery, the second the DAM is sent. It stops the queue no dialog names first: in the
+      // dialog it opens, the row of the new file is the only one.
       mountAgain: async () => {
         await mountGallery([])
-        useUploadQueueDialog().uploadQueueDialog.value = QUEUE
-        await flushPromises()
+        expect([queueStatuses(), queueRows().length]).toEqual([[Uploaded], 0])
+        await uploadThroughGallery('asset-2')
+        const assetsOfRows = useUploadQueuesStore(pinia)
+          .getQueueItems(QUEUE)
+          .map((item) => item.assetId)
+        expect([assetsOfRows, queueRows().length]).toEqual([['asset-2'], 1])
       },
+      assetAgain: 'asset-2',
+      readAgain: () => `${endPoints.asset}/asset-2`,
       editAsset: () =>
         buttonOf(
           document.body.querySelector<HTMLElement>('.overlay--sidebar .dam-upload-queue__item')!,
@@ -506,10 +522,12 @@ describe.each(consumerProfiles)('the detail of an asset as its hosts open it, un
       expect([detail().dialog, detail().asset, detail().loading]).toEqual([null, null, false])
       expect(card()).toBeNull()
       expect(reachable(host.editAsset())).toBe(true)
-      // The page goes on: "edit asset" opens the detail as it did.
+      // The page goes on: "edit asset" opens the detail as it did, with one read of the asset it shows now.
+      const before = dam.requests.length
       await press(host.editAsset())
-      await vi.waitFor(() => expect(detail().asset?.id).toBe(host.asset))
+      await vi.waitFor(() => expect(detail().asset?.id).toBe(host.assetAgain ?? host.asset))
       await flushPromises()
+      expect(askedSince(before)).toEqual([`GET ${(host.readAgain ?? host.read)()}`])
       expect(heading()).toContain(TITLE)
       expect(shownAlerts()).toEqual([])
     })
