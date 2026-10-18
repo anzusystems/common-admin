@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { useI18n } from 'vue-i18n'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { DamAssetTypeDefault } from '@/domains/dam/types/Asset'
 import { useAssetDetailStore } from '@/domains/dam/assetDetail/store/assetDetailStore'
 import { storeToRefs } from 'pinia'
@@ -12,11 +12,13 @@ import AuthorRemoteAutocompleteWithCached from '@/domains/dam/author/components/
 import KeywordRemoteAutocompleteWithCached from '@/domains/dam/keyword/components/KeywordRemoteAutocompleteWithCached.vue'
 import { useDamKeywordAssetTypeConfig } from '@/domains/dam/keyword/composables/damKeywordConfig'
 import { useDamAuthorAssetTypeConfig } from '@/domains/dam/author/composables/damAuthorConfig'
-import type { IntegerId } from '@/shared/types/common'
+import type { DocId, IntegerId } from '@/shared/types/common'
 import ABooleanValue from '@/domains/ui/components/ABooleanValue.vue'
 import ARow from '@/domains/ui/components/ARow.vue'
 import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
 import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
+import { useAssetSuggestions } from '@/domains/dam/uploadQueue/composables/assetSuggestions'
+import { useDamCachedAuthors } from '@/domains/dam/author/composables/cachedAuthors'
 
 const props = withDefaults(
   defineProps<{
@@ -43,11 +45,40 @@ const { t } = useI18n()
 const panels = ref(['metadata', 'file'])
 
 const assetDetailStore = useAssetDetailStore()
-const { asset, authorConflicts, metadataAreTouched, mainFileSingleUse } = storeToRefs(assetDetailStore)
+const { asset, metadataAreTouched, mainFileSingleUse } = storeToRefs(assetDetailStore)
 
 const assetType = computed(() => {
   return asset.value?.attributes.assetType || DamAssetTypeDefault
 })
+
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(
+  // eslint-disable-next-line vue/no-ref-object-reactivity-loss
+  assetType.value,
+  props.extSystem
+)
+
+const { getAuthorConflicts } = useAssetSuggestions()
+const { addToCachedAuthors, fetchCachedAuthors } = useDamCachedAuthors()
+
+// The DAM authors of one name read from the file, as the card of a row of the queue offers them: taken from the asset
+// itself, as the field of the store is written by nobody. A side panel, read-only, offers none, nor does a detail
+// without the field of authors, whose asset may still carry suggestions from before the authors were switched off.
+const authorConflicts = computed<DocId[]>(() =>
+  props.readonly || !authorEnabled.value || !asset.value
+    ? []
+    : getAuthorConflicts(asset.value.metadata.authorSuggestions ?? {})
+)
+// Their chips show the names from the cache of the page, as those of the row do: without them a chip spins with none.
+watch(
+  authorConflicts,
+  (conflicts) => {
+    if (conflicts.length === 0) return
+    addToCachedAuthors(conflicts)
+    fetchCachedAuthors()
+  },
+  { immediate: true }
+)
 
 const onAnyMetadataChange = () => {
   metadataAreTouched.value = true
@@ -55,12 +86,6 @@ const onAnyMetadataChange = () => {
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { keywordRequired, keywordEnabled } = useDamKeywordAssetTypeConfig(
-  // eslint-disable-next-line vue/no-ref-object-reactivity-loss
-  assetType.value,
-  props.extSystem
-)
-// eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(
   // eslint-disable-next-line vue/no-ref-object-reactivity-loss
   assetType.value,
   props.extSystem
