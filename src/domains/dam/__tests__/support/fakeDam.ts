@@ -26,6 +26,10 @@ export interface FakeDamRequest {
 
 export interface FakeDamAnswer {
   status: number
+  /**
+   * Goes to the library as JSON carries it (`copyOf`): a reactive value as it is at the answer, without its
+   * `undefined` fields and functions, a `Date` as its text, and one object two entries point to as two.
+   */
   data?: unknown
 }
 
@@ -146,7 +150,9 @@ const settled = (status: number) => status >= 200 && status < 300
 
 /**
  * What goes over the wire is a copy: an answer the library changes leaves the DAM as it was, and so does a body a
- * test changes after sending it. A JSON text is a copy already; a form is copied field by field.
+ * test changes after sending it. A JSON text is a copy already; a form is copied field by field. Anything else is
+ * copied as the wire does, through JSON and back: `structuredClone` refuses a Vue proxy a test may answer with,
+ * and keeps two entries of an answer that point to one object one object, which no answer of the DAM ever is.
  */
 const copyOf = (data: unknown): unknown => {
   if (data === undefined || data === null || typeof data === 'string') return data
@@ -155,7 +161,7 @@ const copyOf = (data: unknown): unknown => {
     data.forEach((value, name) => copy.append(name, value))
     return copy
   }
-  return structuredClone(data)
+  return JSON.parse(JSON.stringify(data)) as unknown
 }
 
 export function createFakeDam(endPoints: FakeDamEndPoints) {
@@ -330,7 +336,10 @@ export function createFakeDam(endPoints: FakeDamEndPoints) {
         release: (given?: FakeDamAnswer) => [...waiting].forEach((held) => held.release(given)),
       }
     },
-    /** The file of an asset, as the DAM reports it from now on. */
+    /**
+     * The file of an asset, as the DAM reports it from now on. Returns it as a read would: a copy. A test changes
+     * the DAM further through `assets`.
+     */
     fileBecomes: (
       id: DocId,
       status: AssetFileProcessStatusType,
@@ -343,7 +352,7 @@ export function createFakeDam(endPoints: FakeDamEndPoints) {
       const next = damAssetWithFile(id, file, status, { licence: current?.licence ?? 1, ...parts }, restOfFile)
       if (failReason && next.mainFile) next.mainFile.fileAttributes.failReason = failReason
       assets.set(id, next)
-      return next
+      return copyOf(next) as AssetDetailItemDto
     },
     routes,
     sentTo,

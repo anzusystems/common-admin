@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { AxiosResponse } from 'axios'
+import { isProxy, reactive } from 'vue'
 import { AssetFileProcessStatus } from '@/domains/dam/types/AssetFile'
 import { createFakeDam, damAssetWithFile, type FakeDam } from './support/fakeDam'
 
@@ -110,5 +111,46 @@ describe('the fake DAM', () => {
     form.set('file', new File(['b'], 'later.jpg'))
 
     expect(dam.chunkOf(dam.requests.at(-1)!)).toBe('picked.jpg')
+  })
+
+  // A rule may answer with what a test keeps reactive. JSON carries what it holds at that moment, as the wire does.
+  it('answers a reactive value of a rule as plain data, as it is at the answer', async () => {
+    const dam = withAsset()
+    const kept = reactive({ authors: ['author-1'] })
+    dam.reply((request) => (request.url === '/adm/v1/asset/kept' ? { status: 200, data: kept } : undefined))
+
+    const { data } = await dam.client().get('/adm/v1/asset/kept')
+    kept.authors.push('author-2')
+
+    expect(isProxy(data)).toBe(false)
+    expect(data).toEqual({ authors: ['author-1'] })
+  })
+
+  // Two entries of an answer are two objects to the library, as two parsed entries are, even where a rule built both
+  // from one asset.
+  it('answers one object that two entries of an answer point to as two', async () => {
+    const dam = withAsset()
+    dam.reply((request) =>
+      request.url === '/adm/v1/asset/twice'
+        ? { status: 200, data: { data: [dam.assets.get('asset-1'), dam.assets.get('asset-1')], totalCount: 2 } }
+        : undefined
+    )
+
+    const { data } = await dam.client().get('/adm/v1/asset/twice')
+
+    expect(data.data[0]).toEqual(data.data[1])
+    expect(data.data[0]).not.toBe(data.data[1])
+  })
+
+  it('hands a test the file it gives an asset as a read would: a copy, which the library may change', () => {
+    const dam = withAsset()
+
+    const given = dam.fileBecomes('asset-1', AssetFileProcessStatus.Stored)
+    const before = structuredClone(dam.assets.get('asset-1'))
+    expect(given).toEqual(before)
+    given.mainFile = null
+    given.authors.push('author-2')
+
+    expect(dam.assets.get('asset-1')).toEqual(before)
   })
 })

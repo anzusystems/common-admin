@@ -372,7 +372,8 @@ describe('a notification whose asset cannot be read', () => {
   it('asset_file_processed for an asset without a main file: the row is as it was', async () => {
     const { item } = await uploadOne()
     const before = rowState(item)
-    dam.fileBecomes('asset-1', AssetFileProcessStatus.Processed, fromTheServer).mainFile = null
+    dam.fileBecomes('asset-1', AssetFileProcessStatus.Processed, fromTheServer)
+    dam.assets.get('asset-1')!.mainFile = null
 
     notify(DamNotificationName.AssetFileProcessed, { asset: 'asset-1', id: 'file-1' })
     await vi.waitFor(() => expect(dam.assetReads().length).toBeGreaterThan(0))

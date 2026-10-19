@@ -458,7 +458,7 @@ describe('the detail of the asset of a row of the widget of several images, once
       }
       return undefined
     })
-  /** "Edit asset" of a row: the detail of its asset is open, over an asset of its own. */
+  /** "Edit asset" of a row: the detail of its asset is open. */
   const editAssetOf = async (row: number) => {
     const asset = images()[row]!.assetId!
     const { editAssetLabel } = useCommonAdminCoreDamOptions()
@@ -468,7 +468,6 @@ describe('the detail of the asset of a row of the widget of several images, once
       .trigger('click')
     await vi.waitFor(() => expect(detail().asset?.id).toBe(asset))
     await flushPromises()
-    dam.assets.set(asset, structuredClone(dam.assets.get(asset)!))
   }
   /** The form of the detail is not drawn here: this is what its save sends, with the authors the user picks in it. */
   const saveInDetail = async (authors: DocId[]) => {

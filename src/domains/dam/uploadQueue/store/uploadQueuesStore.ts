@@ -308,12 +308,15 @@ export const useUploadQueuesStore = defineStore('commonAdminUploadQueuesStore', 
     if (!hasRowOfAsset) return
     try {
       const assetRes = await fetchAsset(dam.damClient, dam.endPointAsset, asset.id)
+      // One answer for the rows of the asset in every queue: each gets copies of its own, or a fill of a custom field in
+      // one queue (it writes into the custom data in place) would change the row of another, and that queue would send
+      // it with its next save.
       queues.value.forEach((queue, queueKey) => {
         queue.items.forEach((item) => {
           if (item.assetId === assetRes.id && item.type) {
-            item.keywords = assetRes.keywords
-            item.authors = assetRes.authors
-            item.customData = assetRes.metadata.customData
+            item.keywords = [...assetRes.keywords]
+            item.authors = [...assetRes.authors]
+            item.customData = cloneDeep(assetRes.metadata.customData)
             // The detail saves it too: left as it was, the next save of the queue would send the old value.
             item.mainFileSingleUse = assetRes.mainFileSingleUse
             updateNewNames(assetRes.metadata.authorSuggestions, queue.suggestions.newAuthorNames)

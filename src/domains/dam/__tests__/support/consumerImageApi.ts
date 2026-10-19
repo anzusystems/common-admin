@@ -16,7 +16,8 @@ export type ImageApiCall =
   | ['fetchImageListByIds', IntegerId[]]
   | ['deleteImage', IntegerId]
 
-// What the widget hands over is reactive: the record keeps it as it was at that moment.
+// What the widget hands over is reactive: the record keeps it as it was at that moment. What a stand-in of admin-ugc
+// hands back is a copy too, as its backend answers: what the widget changes in it stays out of `images`.
 const plain = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
 
 const ONE = /^\/adm\/v1\/image\/(\d+)$/
@@ -105,17 +106,18 @@ export function installConsumerImageApi(profile: ConsumerProfile, options: Retur
                 fetchImage: async (_client, id) => {
                   calls.push(['fetchImage', id])
                   if (heldReads) await whenReadLet()
-                  return images.get(id)!
+                  const found = images.get(id)
+                  return (found && plain(found))!
                 },
                 createImage: async (_client, data) => {
                   calls.push(['createImage', plain(data)])
                   if (held && (await whenLet())) throw new Error('the image was not saved')
-                  return store(plain(data))
+                  return plain(store(plain(data)))
                 },
                 updateImage: async (_client, id, data) => {
                   calls.push(['updateImage', id, plain(data)])
                   if (held && (await whenLet())) throw new Error('the image was not saved')
-                  return store(plain(data), id)
+                  return plain(store(plain(data), id))
                 },
                 deleteImage: async (_client, id) => {
                   calls.push(['deleteImage', id])
@@ -123,11 +125,11 @@ export function installConsumerImageApi(profile: ConsumerProfile, options: Retur
                 },
                 fetchImageListByIds: async (_client, ids) => {
                   calls.push(['fetchImageListByIds', [...ids]])
-                  return ids.map((id) => images.get(id)!).filter(Boolean)
+                  return plain(ids.map((id) => images.get(id)!).filter(Boolean))
                 },
                 bulkUpdateImages: async (_client, items) => {
                   calls.push(['bulkUpdateImages', plain(items)])
-                  return items.map((image) => store(plain(image)))
+                  return plain(items.map((image) => store(plain(image))))
                 },
               },
             }

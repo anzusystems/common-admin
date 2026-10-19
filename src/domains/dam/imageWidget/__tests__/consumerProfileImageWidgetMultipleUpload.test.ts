@@ -1697,15 +1697,12 @@ describe.each(consumerProfiles)('the widget of several images under the $name', 
       const buttons = rows()[row].findAll('button')
       await buttons.find((button) => button.text() === editAssetLabel)!.trigger('click')
     }
-    /** What the DAM has of an asset is its own from here on: what is typed into the detail is not, until it is saved. */
-    const detailHasItsOwn = (asset: DocId) => dam.assets.set(asset, structuredClone(dam.assets.get(asset)!))
     /** "Edit asset" of a row: the detail of its asset is open. */
     const editAssetOf = async (row: number) => {
       const asset = images()[row].assetId!
       await clickEditAsset(row)
       await vi.waitFor(() => expect(detail().asset?.id).toBe(asset))
       await flushPromises()
-      detailHasItsOwn(asset)
     }
     /** The form of the detail is not drawn here: this is what its save sends, with the authors the user picks in it. */
     const saveInDetail = async (authors: DocId[]) => {
@@ -2099,7 +2096,6 @@ describe.each(consumerProfiles)('the widget of several images under the $name', 
           await vi.waitFor(() => expect(detail().asset?.id).toBe('asset-14'))
           await waits.settle()
           expect(detail().asset?.id).toBe('asset-14')
-          detailHasItsOwn('asset-14')
           await saveInDetail(['author-9'])
 
           await closeDetail()
@@ -2201,7 +2197,6 @@ describe.each(consumerProfiles)('the widget of several images under the $name', 
             .click()
           await vi.waitFor(() => expect(detail().asset?.id).toBe('asset-12'))
           await flushPromises()
-          detailHasItsOwn('asset-12')
           damKeepsAuthors()
           await saveInDetail(['author-9'])
           const readBefore = rereadsOf('asset-12').length

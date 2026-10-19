@@ -216,39 +216,49 @@ const singleItemSelectedTitle = computed(() => {
   return undefined
 })
 
-const onSearchUpdate = (query: string) => {
-  if (!filterConfigCurrent.value.multiple && !isFocused.value && query.length === 0) return // vuetify fix
-  if (singleItemSelectedTitle.value === query) return
-  search.value = query
+// The clear of the field empties the search with `null` first: an empty search. A field without focus at that
+// moment read its length and threw.
+const onSearchUpdate = (query: string | null) => {
+  const text = query ?? ''
+  if (!filterConfigCurrent.value.multiple && !isFocused.value && text.length === 0) return // vuetify fix
+  if (singleItemSelectedTitle.value === text) return
+  search.value = text
 }
 
 const { clearOne } = useFilterClearHelpers()
+
+/** The value of the filter its watcher (below) saw last. */
+let watchedValue: unknown
 
 const clearField = () => {
   clearOne(props.name, filterData, filterConfig)
   filterSelected.value.delete(props.name)
 }
 
-const onClickClear = async () => {
-  try {
-    fetchedItems.value = await props.fetchItems(pagination, filterInnerData, filterInnerConfig)
-  } catch (e) {
-    showErrorsDefault(e)
-  }
+// The clear of the field empties the filter in one go, with the model Vuetify has emptied, so the watcher of the
+// filter asks for the list once, for an empty search, and takes only its newest answer. The clear asked again itself,
+// with the search typed before, and wrote that answer whenever it came; a filter of several values was asked a
+// third time, for its default set only after that answer.
+// A filter of one value cleared onto the default it held does not change, and its watcher does nothing: the field
+// and the chips would stay empty while the filter keeps that value. Its item is put back, as the watcher puts one.
+const onClickClear = () => {
   clearField()
+  const value = filterData[props.name]
+  if (!isEmpty(value) && value === watchedValue) loadListItems(value as T[] | T)
 }
 
 watchDebounced(
   search,
-  (newValue, oldValue) => {
-    if (newValue === oldValue) return
-    if (newValue.length > 0 && newValue.length < props.minSearchChars) return
-    if (newValue.length === 0 && props.prefetch === false) {
+  (newValue: string | null, oldValue: string | null) => {
+    const query = newValue ?? ''
+    if (query === (oldValue ?? '')) return
+    if (query.length > 0 && query.length < props.minSearchChars) return
+    if (query.length === 0 && props.prefetch === false) {
       fetchedItems.value = []
       return
     }
     apiRequestCounter.value++
-    apiSearch(newValue, apiRequestCounter.value)
+    apiSearch(query, apiRequestCounter.value)
   },
   { debounce: SEARCH_DEBOUNCE_MS }
 )
@@ -291,14 +301,12 @@ const onSelectedUpdate = (newValue: any) => {
 
 // The close of a chip, where an admin makes the chips closable (`closable-chips`): its value goes out of the filter,
 // as when it is unticked in the list, and a filter of one value is cleared as by the clear of the field (the chip
-// slot draws its value as a chip too). The chip only hid itself, and the value went on filtering. The list is asked
-// for once, by the watcher of the filter: the clear of the field asks again (`onClickClear`), and the two answers
-// could come in either order.
+// slot draws its value as a chip too). The chip only hid itself, and the value went on filtering.
 const onChipCloseClick = (closedItem: ValueObjectOption<T>) => {
   if (!isArray(selected.value)) {
     selected.value = null
     onSelectedUpdate(null)
-    clearField()
+    onClickClear()
     return
   }
   selected.value = (selected.value as ValueObjectOption<T>[]).filter((item) => item.value !== closedItem.value)
@@ -326,6 +334,7 @@ const updateFilterSelected = (
 watch(
   () => filterData[props.name],
   async (newValueFilterData, oldValueFilterData) => {
+    watchedValue = newValueFilterData
     if (newValueFilterData === oldValueFilterData || isBoolean(newValueFilterData)) return
     const newValue = newValueFilterData as ModelValueType
     if (isFirstLoad.value) {

@@ -151,7 +151,8 @@ describe.each(rows)('what a read of the asset applies to %s', (_name, profile, w
     [
       'an asset without a main file',
       () => {
-        const asset = dam.fileBecomes('asset-1', AssetFileProcessStatus.Processed)
+        dam.fileBecomes('asset-1', AssetFileProcessStatus.Processed)
+        const asset = dam.assets.get('asset-1')!
         asset.mainFile = null
         return asset
       },
@@ -159,7 +160,8 @@ describe.each(rows)('what a read of the asset applies to %s', (_name, profile, w
     [
       'a main file without attributes',
       () => {
-        const asset = dam.fileBecomes('asset-1', AssetFileProcessStatus.Processed)
+        dam.fileBecomes('asset-1', AssetFileProcessStatus.Processed)
+        const asset = dam.assets.get('asset-1')!
         delete (asset.mainFile as { fileAttributes?: unknown }).fileAttributes
         return asset
       },

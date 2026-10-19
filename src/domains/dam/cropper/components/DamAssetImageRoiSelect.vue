@@ -11,6 +11,7 @@ import { useDamConfigState } from '@/domains/dam/config/composables/damConfigSta
 import type { DocId, IntegerId } from '@/shared/types/common'
 import { isUndefined } from '@/shared/utils/common'
 import { fetchImageFile } from '@/domains/dam/api/damImageApi'
+import type { AssetFileImage } from '@/domains/dam/types/AssetFile'
 import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 
 const props = withDefaults(
@@ -64,13 +65,41 @@ const readStoredRegion = () => {
 readStoredRegion()
 watch(() => imageRoiStore.roi, readStoredRegion)
 
-const loadImageFile = async (id: DocId) => {
+// Two seconds after a save the file of the region is read again, as the DAM has redrawn it. The read is for that
+// file and only while the store still holds what the save left: the very object of the file (a rotation, another
+// slot or another asset put another), the region saved (admin-dam's change of slot takes the region away at once,
+// before the file of the new slot is read) and the cropper. Otherwise it keeps what it has, and the loader is left to
+// whoever shows the other file. It read the file shown when the two seconds were up, and put its answer in the store
+// whenever it came, over the file of another slot or a rotated one. Of two saves only the read after the latest is
+// put in the store: the read after the first, answering last, brought the file as the DAM had drawn it before.
+interface SavedRegion {
+  save: number
+  file: AssetFileImage
+  regionId: DocId
+}
+let unmounted = false
+let reloadTimer: ReturnType<typeof setTimeout> | undefined
+let savedRegions = 0
+const isStillShown = (saved: SavedRegion) =>
+  !unmounted &&
+  saved.save === savedRegions &&
+  imageRoiStore.imageFile === saved.file &&
+  imageRoiStore.roi?.id === saved.regionId
+
+const reloadSavedFile = async (saved: SavedRegion) => {
+  if (!isStillShown(saved)) return
+  // Decided once the read is back, and kept: the file it puts in the store is a new object, which the check no
+  // longer finds, and the loader is its to hide all the same.
+  let applies = false
   try {
-    imageRoiStore.setImageFile(await fetchImageFile(damClient, endPointImage, id))
+    const file = await fetchImageFile(damClient, endPointImage, saved.file.id)
+    applies = isStillShown(saved)
+    if (applies) imageRoiStore.setImageFile(file)
   } catch (error) {
-    showErrorsDefault(error)
+    applies = isStillShown(saved)
+    if (applies) showErrorsDefault(error)
   } finally {
-    imageRoiStore.hideLoader()
+    if (applies) imageRoiStore.hideLoader()
   }
 }
 
@@ -83,11 +112,9 @@ const saveRoi = async (committed: CropRect) => {
     imageRoiStore.showLoader()
     await updateRoi(damClient, endPointRoi, region.id, region)
     showRecordWas('updated')
-    setTimeout(() => {
-      if (imageRoiStore.imageFile) {
-        loadImageFile(imageRoiStore.imageFile.id)
-      }
-    }, 2000)
+    const saved: SavedRegion = { save: ++savedRegions, file: imageFile, regionId: region.id }
+    clearTimeout(reloadTimer)
+    reloadTimer = setTimeout(() => reloadSavedFile(saved), 2000)
   } catch (error) {
     imageRoiStore.hideLoader()
     showErrorsDefault(error)
@@ -102,6 +129,8 @@ const showCropper = computed(() => {
 })
 
 onUnmounted(() => {
+  unmounted = true
+  clearTimeout(reloadTimer)
   crop.value = null
 })
 </script>
