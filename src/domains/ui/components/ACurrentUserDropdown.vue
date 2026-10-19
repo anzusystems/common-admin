@@ -26,6 +26,7 @@ const logoutDialog = ref(false)
     variant="text"
     icon
     size="small"
+    :aria-label="t('common.system.currentUser.button')"
     :data-cy="dataCy"
   >
     <AAnzuUserAvatar

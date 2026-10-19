@@ -1558,6 +1558,8 @@ export { default as ADamAuthorCachedChip } from '@/domains/dam/author/components
 export { default as ADamAuthorCreateButton } from '@/domains/dam/author/components/AuthorCreateButton.vue'
 export { useDamCachedAuthors } from '@/domains/dam/author/composables/cachedAuthors'
 export { useDamCachedKeywords } from '@/domains/dam/keyword/composables/cachedKeywords'
+// What `ADamAssetImageRoiSelect` shows, for an admin whose own panel of regions fills it.
+export { useImageRoiStore as useDamImageRoiStore } from '@/domains/dam/cropper/store/imageRoiStore'
 export { useExtSystemIdForCached } from '@/domains/dam/composables/extSystemIdForCached'
 export { useDamKeywordAssetTypeConfig } from '@/domains/dam/keyword/composables/damKeywordConfig'
 export { useDamAuthorAssetTypeConfig } from '@/domains/dam/author/composables/damAuthorConfig'

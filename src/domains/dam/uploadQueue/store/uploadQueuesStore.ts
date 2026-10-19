@@ -39,7 +39,7 @@ import { commonT } from '@/plugins/i18n'
 import { defineStore } from 'pinia'
 import { getCurrentScope, ref } from 'vue'
 
-export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () => {
+export const useUploadQueuesStore = defineStore('commonAdminUploadQueuesStore', () => {
   const { addToCachedKeywords, fetchCachedKeywords } = useDamCachedKeywords()
   const { addToCachedAuthors, fetchCachedAuthors } = useDamCachedAuthors()
 

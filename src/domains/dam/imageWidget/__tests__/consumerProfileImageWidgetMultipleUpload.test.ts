@@ -1793,7 +1793,9 @@ describe.each(consumerProfiles)('the widget of several images under the $name', 
     })
 
     if (isCms) {
-      it('gives a row that offers the authors of the DAM the authors the detail saved: named as its source, and offered no more', async () => {
+      // The image of the row has a source of its own, which stays: the row shows it from then on, for the user to
+      // check. An image without one takes the names of the authors (`imageWidgetMultipleAuthorsGivenMeanwhile.test.ts`).
+      it('gives a row that offers the authors of the DAM the authors the detail saved, with the source its image has, and offers them no more', async () => {
         await withTwoImages()
         damKeepsAuthors()
         await editAssetOf(1)
@@ -1814,10 +1816,10 @@ describe.each(consumerProfiles)('the widget of several images under the $name', 
           assetId: 'asset-12',
           damAuthors: ['author-9', 'author-8'],
           showDamAuthors: false,
-          texts: { description: 'image 12', source: 'Name of author-9, Name of author-8' },
+          texts: { description: 'image 12', source: 'source 12' },
         })
         expect(offersAuthors()).toEqual([false, false])
-        expect(textsOf(rows()[1].element)).toEqual(['image 12', 'Name of author-9, Name of author-8'])
+        expect(textsOf(rows()[1].element)).toEqual(['image 12', 'source 12'])
         // The other row is of another asset.
         expect(images()[0]).toMatchObject({ damAuthors: ['author-1'], texts: { source: 'source 11' } })
         expect(shownAlerts()).toEqual([])
@@ -1825,7 +1827,7 @@ describe.each(consumerProfiles)('the widget of several images under the $name', 
         // The save of the widget writes no authors into the asset, and the image with its source.
         expect(await save()).toBe(true)
         expect(authorsWritten()).toEqual([[['asset-12', ['author-9', 'author-8']]]])
-        expect(sourcesSaved()).toEqual(['source 11', 'Name of author-9, Name of author-8'])
+        expect(sourcesSaved()).toEqual(['source 11', 'source 12'])
         expect(dam.assets.get('asset-12')!.authors).toEqual(['author-9', 'author-8'])
       })
 
@@ -1840,13 +1842,14 @@ describe.each(consumerProfiles)('the widget of several images under the $name', 
 
         await closeDetail()
         await taken(1)
-        expect(images()[1]).toMatchObject({ damAuthors: ['author-9'], texts: { source: 'Name of author-9' } })
+        // The image has a source of its own: it stays.
+        expect(images()[1]).toMatchObject({ damAuthors: ['author-9'], texts: { source: 'source 12' } })
         expect(await save()).toBe(true)
 
         // Only the save of the detail has written into the asset.
         expect(authorsWritten()).toEqual([[['asset-12', ['author-9']]]])
         expect(dam.assets.get('asset-12')!.authors).toEqual(['author-9'])
-        expect(sourcesSaved()).toEqual(['source 11', 'Name of author-9'])
+        expect(sourcesSaved()).toEqual(['source 11', 'source 12'])
       })
 
       it('lets "fill empty" of the mass operations write nothing over the authors of the detail', async () => {
@@ -1858,12 +1861,12 @@ describe.each(consumerProfiles)('the widget of several images under the $name', 
         await taken(1)
 
         await fillEmptyAuthors(['author-7'])
-        expect(images()[1]).toMatchObject({ damAuthors: ['author-9'], texts: { source: 'Name of author-9' } })
+        expect(images()[1]).toMatchObject({ damAuthors: ['author-9'], texts: { source: 'source 12' } })
         expect(await save()).toBe(true)
 
         expect(authorsWritten()).toEqual([[['asset-12', ['author-9']]]])
         expect(dam.assets.get('asset-12')!.authors).toEqual(['author-9'])
-        expect(sourcesSaved()).toEqual(['source 11', 'Name of author-9'])
+        expect(sourcesSaved()).toEqual(['source 11', 'source 12'])
       })
 
       // The detail saved something else, or nothing: the asset is as the row knows it.
@@ -1910,10 +1913,11 @@ describe.each(consumerProfiles)('the widget of several images under the $name', 
         await closeDetail()
         await taken(1)
 
+        // Their images have sources of their own, which stay.
         expect(images().map((image) => [image.id, image.damAuthors, image.showDamAuthors, image.texts.source])).toEqual(
           [
-            [12, ['author-9'], false, 'Name of author-9'],
-            [13, ['author-9'], false, 'Name of author-9'],
+            [12, ['author-9'], false, 'source 12'],
+            [13, ['author-9'], false, 'source 13'],
             [14, [], true, 'source 14'],
             [15, [], false, 'typed by hand'],
           ]
@@ -1943,12 +1947,14 @@ describe.each(consumerProfiles)('the widget of several images under the $name', 
         await taken(0)
 
         expect(namesAskedOf('author-9')).toEqual([OTHER_EXT_SYSTEM])
-        expect(images()[0]).toMatchObject({ damAuthors: ['author-9'], texts: { source: 'Name of author-9' } })
+        // The image has a source of its own, which stays.
+        expect(images()[0]).toMatchObject({ damAuthors: ['author-9'], texts: { source: 'source 12' } })
       })
 
-      // The row keeps its pick, and the save of the widget goes on as it did: what is picked in the row is written
-      // into the asset.
-      it.each<[string, () => unknown]>([
+      // The row keeps its pick. The save of the widget reads the asset again before it writes what is picked in the
+      // row: while it cannot, nothing is written; once it can, it finds the authors of the detail, and writes nothing
+      // over them.
+      it.each<[string, () => () => void]>([
         [
           'the asset cannot be read',
           () =>
@@ -1969,7 +1975,7 @@ describe.each(consumerProfiles)('the widget of several images under the $name', 
         await pickInRow(1, ['author-7'])
         await editAssetOf(1)
         await saveInDetail(['author-9'])
-        refuse()
+        const answerAgain = refuse()
 
         await closeDetail()
         await vi.waitFor(() => expect(shownAlerts()).toEqual([['error', alertText('common.alert.unknownError')]]))
@@ -1983,9 +1989,25 @@ describe.each(consumerProfiles)('the widget of several images under the $name', 
         expect(offersAuthors()).toEqual([false, true])
         expect(shownAlerts()).toEqual([['error', alertText('common.alert.unknownError')]])
 
+        expect(await save()).toBe(false)
+        expect(authorsWritten()).toEqual([[['asset-12', ['author-9']]]])
+        expect(imageApi.calls.map(([call]) => call)).toEqual(['fetchImageListByIds'])
+        expect(shownAlerts()).toEqual([
+          ['error', alertText('common.alert.unknownError')],
+          ['error', alertText('common.alert.unknownError')],
+        ])
+
+        answerAgain()
+        expect(await save()).toBe(false)
+        expect(authorsWritten()).toEqual([[['asset-12', ['author-9']]]])
+        expect(images()[1]).toMatchObject({
+          damAuthors: ['author-9'],
+          showDamAuthors: false,
+          texts: { source: 'source 12' },
+        })
         expect(await save()).toBe(true)
-        expect(authorsWritten()).toEqual([[['asset-12', ['author-9']]], [['asset-12', ['author-7']]]])
-        expect(sourcesSaved()).toEqual(['source 11', 'Name of author-7'])
+        expect(authorsWritten()).toEqual([[['asset-12', ['author-9']]]])
+        expect(sourcesSaved()).toEqual(['source 11', 'source 12'])
       })
 
       // The read takes a moment, and the row offers its pick until it lands: a save of the widget in that moment
@@ -2010,7 +2032,8 @@ describe.each(consumerProfiles)('the widget of several images under the $name', 
 
         expect(authorsWritten()).toEqual([[['asset-12', ['author-9']]]])
         expect(dam.assets.get('asset-12')!.authors).toEqual(['author-9'])
-        expect(sourcesSaved()).toEqual(['source 11', 'Name of author-9'])
+        // The image has a source of its own, which stays.
+        expect(sourcesSaved()).toEqual(['source 11', 'source 12'])
       })
 
       // The form of the detail is not locked while its save runs, and the detail can be closed before the DAM answers
@@ -2037,11 +2060,11 @@ describe.each(consumerProfiles)('the widget of several images under the $name', 
         await taken(1)
 
         expect(rereadsOf('asset-12')).toHaveLength(1)
-        expect(images()[1]).toMatchObject({ damAuthors: ['author-9'], texts: { source: 'Name of author-9' } })
+        expect(images()[1]).toMatchObject({ damAuthors: ['author-9'], texts: { source: 'source 12' } })
         expect(detail().saving).toBeNull()
         expect(await save()).toBe(true)
         expect(authorsWritten()).toEqual([[['asset-12', ['author-9']]]])
-        expect(sourcesSaved()).toEqual(['source 11', 'Name of author-9'])
+        expect(sourcesSaved()).toEqual(['source 11', 'source 12'])
       })
 
       // Closed from its loader and opened from another row, the detail has two reads on their way. It shows the asset
@@ -2218,10 +2241,11 @@ describe.each(consumerProfiles)('the widget of several images under the $name', 
         await taken(0)
 
         expect(namesAskedOf('author-9')).toEqual([extSystem])
+        // The image has a source of its own, which stays.
         expect(images()[0]).toMatchObject({
           damAuthors: ['author-9'],
           showDamAuthors: false,
-          texts: { source: 'Name of author-9' },
+          texts: { source: 'source 12' },
         })
       })
 

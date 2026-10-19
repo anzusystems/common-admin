@@ -471,6 +471,7 @@ defineExpose({
     <template #chip="{ props: chipProps, internalItem }">
       <VChip
         :closable="chipProps.closable as boolean"
+        close-label="common.button.remove"
         size="small"
         :text="`${internalItem.title} (${internalItem.raw.subtitle})`"
         :disabled="internalItem.props.disabled"

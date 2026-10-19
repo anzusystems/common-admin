@@ -79,6 +79,7 @@ const clickClose = (name: string, optionValue: number | string) => {
       <VChip
         v-if="canClear(item.name)"
         closable
+        close-label="common.button.remove"
         size="small"
         class="a-selected-filters__chip"
         @click:close.stop="clickClose(item.name, option.value)"

@@ -7,6 +7,7 @@ import { cmsConfiguration, installConsumerProfile } from '@/domains/dam/__tests_
 import { type DamSocket, stubDamSocket } from '@/domains/dam/__tests__/support/damSocket'
 import { createFakeDam, damAsset, type FakeDam } from '@/domains/dam/__tests__/support/fakeDam'
 import { holdLongWaits, type LongWaits } from '@/domains/dam/__tests__/support/longWaits'
+import { forgetAlerts, shownAlerts } from '@/domains/dam/__tests__/support/uploadUi'
 import type { AssetMetadataBulkItem } from '@/domains/dam/api/damAssetApi'
 import { useAssetSelectStore } from '@/domains/dam/assetSelect/store/assetSelectStore'
 import { createAuthor, fetchAuthorListByIds, useFetchAuthorList } from '@/domains/dam/author/api/authorApi'
@@ -266,6 +267,7 @@ describe('the components that ask for authors and keywords, in a configuration t
       dam.reply((request) =>
         request.method === 'GET' && request.url.startsWith('/adm/v1/cms/asset/') ? { status: 200, data: {} } : undefined
       )
+      forgetAlerts()
     })
 
     const mountWidget = (widget: Component, props: Record<string, unknown>) => {
@@ -348,6 +350,18 @@ describe('the components that ask for authors and keywords, in a configuration t
           expect.stringContaining('author-1'),
           expect.stringContaining('author-2'),
         ])
+        // The confirm writes the authors into the asset, after it has looked up their names.
+        expect(dam.sentTo('PATCH', dam.routes.bulkMetadata).map((request) => [request.url, dam.body(request)])).toEqual(
+          [
+            [
+              `${cmsConfiguration.endPoints.asset}/metadata-bulk-update`,
+              [{ id: 'asset-without', authors: ['author-2'], described: true }],
+            ],
+          ]
+        )
+        // No warning that the asset was given authors meanwhile. (The image itself is not saved here: the case has no
+        // image client, and says so as the widget says a failed save.)
+        expect(shownAlerts().filter(([colour]) => colour === 'warning')).toEqual([])
       }
     )
 

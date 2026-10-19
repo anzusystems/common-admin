@@ -104,7 +104,7 @@ if (isUndefined(imageWidgetUploadConfig) || isUndefined(imageWidgetUploadConfig.
 
 const imageOptions = useCommonAdminImageOptions(damConfigName)
 const { imageClient, imageApi } = imageOptions
-const { showErrorsDefault, showValidationError, showErrorT, showUnknownError } = useAlerts()
+const { showErrorsDefault, showValidationError, showErrorT, showWarningT, showUnknownError } = useAlerts()
 const uploadButtonComponent = ref<InstanceType<any> | null>(null)
 
 const { uploadSizes, uploadAccept } = useDamAcceptTypeAndSizeHelper(
@@ -478,6 +478,7 @@ const onAssetUploadConfirm = (items: ImageStoreItem[]) => {
         if (image.assetId !== item.assetId || !image.showDamAuthors) return
         image.damAuthors = [...item.damAuthors]
         image.texts.source = item.texts.source
+        imageStore.forgetSourceOfPick(image)
         image.showDamAuthors = false
       })
     })
@@ -500,13 +501,43 @@ const authorEnabled = computed(() => {
 })
 
 /**
+ * The names of the authors of an asset, in its order, under the ext system of its licence; `pageExtSystem` where its
+ * licence does not tell.
+ */
+const authorNamesOf = async (asset: AssetDetailItemDto, pageExtSystem: IntegerId) => {
+  const extSystem = (await getExtSystemByLicence(asset.licence)) ?? pageExtSystem
+  const authorsRes = await fetchAuthorListByIds(damClient, endPointAuthor, extSystem, asset.authors)
+  const authorNames: string[] = []
+  asset.authors.forEach((authorId) => {
+    const name = authorsRes.find((author) => author.id === authorId)?.name
+    if (!isUndefined(name) && name.trim().length > 0) {
+      authorNames.push(name)
+    }
+  })
+  return authorNames.join(', ')
+}
+
+/**
+ * A row that offers the pick of the authors of the DAM, once its asset turns out to have authors: it takes them, the
+ * pick goes, and the row shows its source from then on. That source takes their names where it is empty, or is what a
+ * pick of authors wrote there ("fill empty" of the mass operations), which the row did not show. A source of the
+ * image's own (stored, given by an upload, typed while the row showed it) stays, to be checked by the user.
+ */
+const takeAuthorsGiven = (row: ImageStoreItem, authors: DocId[], names: string) => {
+  row.damAuthors = [...authors]
+  if (row.texts.source.trim().length === 0 || imageStore.hasSourceOfPick(row)) row.texts.source = names
+  imageStore.forgetSourceOfPick(row)
+  row.showDamAuthors = false
+}
+
+/**
  * The detail may have given authors to an asset whose row offers the pick of them. Left as it was, the row would write
  * what is picked in it over those authors with the save of the widget, and with nothing picked its image would be
  * saved without a source. So the asset is read again, and once it has authors its rows that offer the pick take them
  * over what was picked there, as a row of an asset picked with its authors has them: named in its source, under the
- * ext system of the licence of the asset. A row that has its source is left alone: that text is the user's.
- * `detailSave`: the save of the detail that was on its way when it closed. `pageExtSystem`: the ext system the page
- * asked for names under by then.
+ * ext system of the licence of the asset, but for a source of the image's own (`takeAuthorsGiven`). A row that shows
+ * its source is left alone: that text is the user's. `detailSave`: the save of the detail that was on its way when it
+ * closed. `pageExtSystem`: the ext system the page asked for names under by then.
  */
 const takeAuthorsOfDetailAsset = async (assetId: DocId, detailSave: Promise<void> | null, pageExtSystem: IntegerId) => {
   try {
@@ -514,24 +545,14 @@ const takeAuthorsOfDetailAsset = async (assetId: DocId, detailSave: Promise<void
     await detailSave
     const asset = await fetchAsset(damClient, endPointAsset, assetId)
     if (asset.authors.length === 0) return
-    const extSystem = (await getExtSystemByLicence(asset.licence)) ?? pageExtSystem
-    const authorsRes = await fetchAuthorListByIds(damClient, endPointAuthor, extSystem, asset.authors)
+    const source = await authorNamesOf(asset, pageExtSystem)
     // The widget is gone, or has turned read-only meanwhile: nothing is written.
     if (unmounted || props.readonly) return
-    const authorNames: string[] = []
-    asset.authors.forEach((authorId) => {
-      const name = authorsRes.find((author) => author.id === authorId)?.name
-      if (!isUndefined(name) && name.trim().length > 0) {
-        authorNames.push(name)
-      }
-    })
     images.value.forEach((image) => {
       // By the row's own flag. Whether the page draws the pick goes by an ext system that the detail of another asset,
       // opened meanwhile, may have changed.
       if (image.assetId !== asset.id || !image.showDamAuthors) return
-      image.damAuthors = [...asset.authors]
-      image.texts.source = authorNames.join(', ')
-      image.showDamAuthors = false
+      takeAuthorsGiven(image, asset.authors, source)
     })
   } catch (e) {
     if (!unmounted && !showErrorsDefault(e)) showUnknownError()
@@ -564,8 +585,9 @@ const saveImages = async () => {
     return false
   }
   // The asset of a detail that has just closed is still being read: its rows are not written before they have its
-  // authors.
+  // authors. Gone by then, the widget writes nothing.
   await detailAssetRead
+  if (unmounted) return false
   v$.value.$touch()
   if (v$.value.$invalid) {
     showValidationError()
@@ -600,8 +622,35 @@ const saveImages = async () => {
       const authorsRes = await fetchAuthorListByIds(damClient, endPointAuthor, cachedExtSystemId.value, authors)
       named.push({ rows, authors, source: authorsRes.map((author) => author.name).join(', ') })
     }
-    // Turned read-only while the authors loaded: nothing of the user's is written any more.
+    // Gone while the authors loaded, the widget writes nothing. Turned read-only meanwhile: nothing of the user's is
+    // written any more.
+    if (unmounted) return false
     if (props.readonly) return true
+    // An asset was read when its rows came, and may have been given authors elsewhere since: the write replaces them
+    // with those picked in its rows. Each asset with something picked is read again, right before the write. Once one
+    // has authors nothing is written, of any asset or image: the rows of that asset that offer the pick take them
+    // (`takeAuthorsGiven`), the user is told till they close the message, and saves again.
+    const picked = [...offering.values()].filter(({ assetId, authors }) => !isUndefined(assetId) && authors.length > 0)
+    if (picked.length > 0) {
+      const readAgain = await Promise.all(picked.map(({ assetId }) => fetchAsset(damClient, endPointAsset, assetId!)))
+      // Gone, or turned read-only while the assets were read: nothing of the user's is written any more.
+      if (unmounted || props.readonly) return false
+      const givenMeanwhile = picked
+        .map(({ rows }, index) => ({ rows, asset: readAgain[index]! }))
+        .filter(({ asset }) => asset.authors.length > 0)
+      if (givenMeanwhile.length > 0) {
+        const pageExtSystem = cachedExtSystemId.value
+        const names = await Promise.all(givenMeanwhile.map(({ asset }) => authorNamesOf(asset, pageExtSystem)))
+        if (unmounted || props.readonly) return false
+        givenMeanwhile.forEach(({ rows, asset }, index) => {
+          rows.forEach((row) => {
+            if (row.showDamAuthors) takeAuthorsGiven(row, asset.authors, names[index]!)
+          })
+        })
+        showWarningT('common.damImage.image.meta.galleryAuthorsGivenMeanwhile', -1)
+        return false
+      }
+    }
     if (assetUpdateItems.length) {
       await bulkUpdateAssetsAuthors(damClient, endPointAsset, assetUpdateItems)
     }

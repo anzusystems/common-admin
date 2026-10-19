@@ -59,7 +59,11 @@ import { copyToLicence } from '@/domains/dam/api/damImageApi'
 import { createDamImage, imageFieldsOf } from '@/domains/dam/imageWidget/utils/damImage'
 import { assetMetadataMayStillChange } from '@/domains/dam/assetDetail/utils/assetMetadataMayStillChange'
 import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
-import { useImageDialogDamAuthors } from '@/domains/dam/imageWidget/composables/imageDialogDamAuthors'
+import {
+  giveNamesToEmptySource,
+  type HeldAssetAnew,
+  useImageDialogDamAuthors,
+} from '@/domains/dam/imageWidget/composables/imageDialogDamAuthors'
 import { lastFieldLockTurn, takeFieldLockTurn } from '@/domains/dam/imageWidget/utils/fieldLockTurns'
 import {
   holdImage,
@@ -226,7 +230,7 @@ if (isUndefined(imageWidgetUploadConfig) || isUndefined(imageWidgetUploadConfig.
 
 const { t } = useI18n()
 
-const { showErrorsDefault, showErrorT, showWarningT } = useAlerts()
+const { showErrorsDefault, showErrorT, showWarningT, showUnknownError } = useAlerts()
 
 const imageOptions = useCommonAdminImageOptions(damConfigName)
 const { imageClient, imageApi } = imageOptions
@@ -257,6 +261,9 @@ const {
   pickDamAuthors,
   onAssetDetailClose,
   holdConfirmForDetailAssetRead,
+  readHeldAnew,
+  takeHeldAnew,
+  authorsGivenMeanwhile,
   confirmWaits,
 } = useImageDialogDamAuthors(
   damConfigName,
@@ -293,10 +300,11 @@ let ownImageInDialog: typeof detail.value = null
 // it shows may be the image of another widget's dialog, opened over this one.
 let pickInDialog: typeof detail.value = null
 // What the dialog shows its loading for: a pick whose asset is being read, or "edit metadata" waiting for a save of the
-// image by another widget. Its answer is put into the dialog only while the dialog still loads for it: not once the
-// editor has closed it, nor once the store of the dialog, which is the page's, holds what another dialog shows. The
-// answer of a pick replaced the form of the dialog of another widget, opened meanwhile, and what the editor had typed
-// there was lost. The dialog that loads for it then closes: it shows that form too, and its confirm would save it here.
+// image by another widget, or for a read of the asset the widget holds. Its answer is put into the dialog only while
+// the dialog still loads for it: not once the editor has closed it, nor once the store of the dialog, which is the
+// page's, holds what another dialog shows. The answer of a pick replaced the form of the dialog of another widget,
+// opened meanwhile, and what the editor had typed there was lost. The dialog that loads for it then closes: it shows
+// that form too, and its confirm would save it here.
 let loadingInDialog: symbol | null = null
 const answerTakenFor = (opening: symbol) => {
   if (disposed || loadingInDialog !== opening) return false
@@ -330,12 +338,27 @@ const actionEditMeta = async () => {
     loadingInDialog = null
     metadataDialogLoading.value = false
   }
+  // The widget holds the asset of the image's file, picked without authors: the dialog shows its loading while that
+  // asset is read anew, and what the read finds goes into the dialog with the image.
+  const heldAnew = readHeldAnew(resImage.value?.dam.damId)
+  let anew: HeldAssetAnew | null = null
+  if (heldAnew) {
+    const thisOpening = (loadingInDialog = Symbol('edit'))
+    imageMediaWidgetStore.setDetail(null)
+    metadataDialogLoading.value = true
+    metadataDialog.value = true
+    anew = await heldAnew
+    if (!answerTakenFor(thisOpening)) return
+    loadingInDialog = null
+    metadataDialogLoading.value = false
+  }
   // Saved by another widget of the page after this one read it: the widget takes the image as that save left it. It
   // offered the texts it had read, and its confirm saved them back over the saved ones.
   const savedId = heldId()
   const saved = isNumber(savedId) ? imageSavedSince(damConfigName, savedId, resImageReadAt) : null
   if (saved) void reload(saved, null, true)
   imageMediaWidgetStore.setDetail(toRaw(resImage.value))
+  takeHeldAnew(anew, isImageCreateUpdateAware(detail.value) ? detail.value : null)
   ownImageInDialog = detail.value
   metadataDialog.value = true
 }
@@ -752,11 +775,31 @@ const onMetadataDialogConfirm = async () => {
   // dialog closed.
   const pressedOn = detail.value
   const confirmIsOver = () => disposed || detail.value !== pressedOn
+  // Nor are the authors sent by a widget that has turned read-only meanwhile.
+  const authorsSendIsOver = () => confirmIsOver() || props.readonly
   metadataDialogSaving.value = true
   try {
     const authorsAsset = damAuthorsAsset.value
     if (authorsAsset) {
       if (authorsAsset.authors.length > 0) {
+        // The asset was read at its pick, and may have been given authors elsewhere since: the write replaces them
+        // with those picked here. It is read again first. A read that fails saves nothing. Once it has authors nothing
+        // is written either: the pick goes, an empty source takes their names, the user is told till they close the
+        // message, and the dialog stays.
+        let givenMeanwhile: string | null
+        try {
+          givenMeanwhile = await authorsGivenMeanwhile(authorsAsset)
+        } catch (e) {
+          if (!authorsSendIsOver() && !showErrorsDefault(e)) showUnknownError()
+          return
+        }
+        if (authorsSendIsOver()) return
+        if (!isNull(givenMeanwhile)) {
+          offerNoDamAuthors()
+          giveNamesToEmptySource(pressedOn, givenMeanwhile)
+          showWarningT('common.damImage.image.meta.authorsGivenMeanwhile', -1)
+          return
+        }
         // Their names become the source of the image once the DAM has taken the authors, and wait aside till then.
         // Written before, they stayed in the source, which the dialog does not show, after a write the DAM refused,
         // and a confirm with the pick emptied saved them with the image.
@@ -767,8 +810,8 @@ const onMetadataDialogConfirm = async () => {
           authorsAsset.authors
         )
         // Nothing is written and nothing said: the authors are not sent for a dialog the user has left, nor by a
-        // widget that is gone.
-        if (confirmIsOver()) return
+        // widget that is gone or read-only.
+        if (authorsSendIsOver()) return
         const source = authorsRes.map((author) => author.name).join(', ')
         try {
           await updateAssetAuthors(damClient, endPointAsset, authorsAsset)

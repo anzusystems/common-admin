@@ -11,6 +11,7 @@ import { adminDamUploadPreset } from '@/domains/dam/uploadQueue/presets/uploadPr
 import { createUploadQueueCore } from '@/domains/dam/uploadQueue/core/uploadQueueCore'
 import { fillAuthors, fillCustomDataValue, fillKeywords } from '@/domains/dam/uploadQueue/core/uploadQueueFill'
 import { adminDamImportRun, adminDamQueuePreset } from '@/domains/dam/uploadQueue/presets/queuePresets'
+import { useImageRoiStore } from '@/domains/dam/cropper/store/imageRoiStore'
 
 // Values the admins used to define themselves because the library kept them internal.
 describe('exports the admins redefined', () => {
@@ -161,5 +162,14 @@ describe('the components of the DAM upload', () => {
 
   it('include the key an application provides the suggestions of its queues under', () => {
     expect(lib.UploadQueueSuggestionsKey).toBe(Symbol.for('anzu:UploadQueueSuggestions'))
+  })
+})
+
+// admin-dam fills the store of the region of interest from a panel of its own, beside the library's
+// `ADamAssetImageRoiSelect`: it had to define the store again, under the same id.
+describe('the store of the region of interest', () => {
+  it('is the very store ADamAssetImageRoiSelect reads, exported as useDamImageRoiStore', () => {
+    expect(lib.useDamImageRoiStore).toBe(useImageRoiStore)
+    expect(lib.useDamImageRoiStore.$id).toBe('commonAdminDamImageRoiStore')
   })
 })

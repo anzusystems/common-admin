@@ -19,7 +19,7 @@ export type FakeDamMethod = 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE'
 export interface FakeDamRequest {
   method: FakeDamMethod
   url: string
-  /** As it was handed to axios: a JSON text, a `FormData`, or nothing. */
+  /** A copy of what was handed to axios: a JSON text, a `FormData`, or nothing. */
   data: unknown
   config: AxiosRequestConfig
 }
@@ -144,6 +144,20 @@ const escape = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
 const settled = (status: number) => status >= 200 && status < 300
 
+/**
+ * What goes over the wire is a copy: an answer the library changes leaves the DAM as it was, and so does a body a
+ * test changes after sending it. A JSON text is a copy already; a form is copied field by field.
+ */
+const copyOf = (data: unknown): unknown => {
+  if (data === undefined || data === null || typeof data === 'string') return data
+  if (data instanceof FormData) {
+    const copy = new FormData()
+    data.forEach((value, name) => copy.append(name, value))
+    return copy
+  }
+  return structuredClone(data)
+}
+
 export function createFakeDam(endPoints: FakeDamEndPoints) {
   const requests: FakeDamRequest[] = []
   /** Requests nothing answered: a path the test did not expect the upload to ask for. */
@@ -227,7 +241,7 @@ export function createFakeDam(endPoints: FakeDamEndPoints) {
   }
 
   const respond = (method: FakeDamMethod, url: string, data: unknown, config: AxiosRequestConfig = {}) => {
-    const request: FakeDamRequest = { method, url, data, config }
+    const request: FakeDamRequest = { method, url, data: copyOf(data), config }
     const sent = { ...config, method, url, data }
     const signal = config.signal as AbortSignal | undefined
     const cancelledError = () => new axios.CanceledError(undefined, undefined, sent as never)
@@ -238,8 +252,9 @@ export function createFakeDam(endPoints: FakeDamEndPoints) {
     const cancelled = new Promise<never>((_, reject) => {
       signal?.addEventListener('abort', () => reject(cancelledError()))
     })
+    // Every answer, the DAM's own, a rule's or a held one's, is copied: none hands out an asset the DAM holds.
     const answered = answer(request).then((one) => {
-      const response = { status: one.status, statusText: '', data: one.data, headers: {}, config: sent }
+      const response = { status: one.status, statusText: '', data: copyOf(one.data), headers: {}, config: sent }
       // As axios settles an answer: by the `validateStatus` of the request, where it has one.
       if ((config.validateStatus ?? settled)(one.status)) return response
       throw new axios.AxiosError(

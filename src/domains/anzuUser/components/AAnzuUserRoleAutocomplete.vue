@@ -56,5 +56,13 @@ const { t } = useI18n()
     hide-details
     autocomplete="off"
     data-cy="user-roles"
-  />
+  >
+    <!-- The chip the autocomplete draws itself, with its close named for what it does: it removes the role. -->
+    <template #chip="{ props: chipProps }">
+      <VChip
+        v-bind="chipProps"
+        close-label="common.button.remove"
+      />
+    </template>
+  </VAutocomplete>
 </template>

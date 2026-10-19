@@ -13,7 +13,7 @@ export type AssetDetailTabImageWithRoiType =
   (typeof AssetDetailTabImageWithRoi)[keyof typeof AssetDetailTabImageWithRoi]
 export const AssetDetailTabImageWithRoiDefault = AssetDetailTabImageWithRoi.Info
 
-export const useAssetDetailStore = defineStore('commonAssetDetailStore', () => {
+export const useAssetDetailStore = defineStore('commonAdminAssetDetailStore', () => {
   const asset = ref<AssetDetailItemDto | null>(null)
   const authorConflicts = ref<DocId[]>([])
   const dialog = ref<null | UploadQueueKey>(null)

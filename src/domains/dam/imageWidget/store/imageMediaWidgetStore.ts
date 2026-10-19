@@ -16,7 +16,7 @@ export const isImageCreateUpdateAware = (
   return !('damMedia' in item) && 'texts' in item
 }
 
-export const useImageMediaWidgetStore = defineStore('commonImageMediaWidgetStore', () => {
+export const useImageMediaWidgetStore = defineStore('commonAdminImageMediaWidgetStore', () => {
   const detail = ref<MediaAware | ImageCreateUpdateAware | null>(null)
   // The widgets whose dialog shows the detail: an open image dialog, or the form `expandMetadata` draws in the page.
   const shownBy = new Set<symbol>()

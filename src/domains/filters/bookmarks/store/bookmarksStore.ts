@@ -26,7 +26,7 @@ interface CacheItem<T = UserAdminConfig> {
 const MAX_BOOKMARKS = 3
 export const MAX_BOOKMARK_ITEMS = 8
 
-export const useFilterBookmarkStore = defineStore('filterBookmarkStore', () => {
+export const useFilterBookmarkStore = defineStore('commonAdminFilterBookmarkStore', () => {
   const bookmarks = ref(new Map<string, CacheItem>())
   const error = ref(false)
   // A forced refetch can be asked for again before the first one has answered -- the bookmark

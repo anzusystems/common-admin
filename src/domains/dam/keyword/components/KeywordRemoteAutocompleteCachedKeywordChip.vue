@@ -80,6 +80,7 @@ const { t } = useI18n()
       :size="size"
       :append-icon="displayNewIcon"
       :label="forceRounded ? undefined : true"
+      close-label="common.button.remove"
     >
       {{ displayTitle }}
       <VTooltip

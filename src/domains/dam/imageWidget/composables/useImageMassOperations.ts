@@ -26,6 +26,8 @@ export function useImageMassOperations(configName?: string) {
       const item = items[i]!
       if (forceReplace || isUndefined(item.texts.source) || item.texts.source.length === 0) {
         item.texts.source = value
+        // A text the user gives, not the names of a pick of authors.
+        imageStore.forgetSourceOfPick(item)
       }
     }
   }
@@ -62,6 +64,7 @@ export function useImageMassOperations(configName?: string) {
       if (forceReplace || (noAuthors && (item.showDamAuthors || noSource))) {
         item.damAuthors = value
         item.texts.source = authorNames.join(', ')
+        imageStore.noteSourceOfPick(item)
       }
     }
   }

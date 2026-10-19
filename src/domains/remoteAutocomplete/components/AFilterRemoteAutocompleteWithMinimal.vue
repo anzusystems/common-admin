@@ -410,6 +410,7 @@ watchDebounced(
       >
         <VChip
           v-bind="chipProps"
+          close-label="common.button.remove"
           :text="chipItem.title"
         />
       </slot>

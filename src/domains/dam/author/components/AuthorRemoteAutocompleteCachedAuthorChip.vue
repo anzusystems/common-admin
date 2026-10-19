@@ -96,6 +96,7 @@ const { t } = useI18n()
       :append-icon="displayNewIcon"
       :label="forceRounded ? undefined : true"
       :title="displayReviewed ? t('common.damImage.author.model.flags.reviewed') : undefined"
+      close-label="common.button.remove"
     >
       {{ displayTitle }}
       <VTooltip

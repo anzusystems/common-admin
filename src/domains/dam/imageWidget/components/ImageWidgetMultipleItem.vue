@@ -62,6 +62,12 @@ const onEditAsset = () => {
 const removeItem = () => {
   emit('removeItem', props.index)
 }
+
+// Typed by the user: the source is the user's, no pick's, also where its text is the names a pick wrote there.
+const onSourceTyped = () => {
+  if (isNull(image.value) || isUndefined(image.value)) return
+  imageStore.forgetSourceOfPick(image.value)
+}
 </script>
 
 <template>
@@ -140,6 +146,7 @@ const removeItem = () => {
               :readonly="readonly || undefined"
               :label="sourceLabel"
               :v="v$.image?.texts.source"
+              @update:model-value="onSourceTyped"
             />
           </VCol>
         </VRow>

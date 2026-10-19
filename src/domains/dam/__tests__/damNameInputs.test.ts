@@ -255,7 +255,7 @@ describe.each([
 
     expect(isMarkedNew()).toBe(true)
     expect(asked).toContain(QUEUE)
-    expect(pinia.state.value).not.toHaveProperty('commonUploadQueuesStore')
+    expect(pinia.state.value).not.toHaveProperty('commonAdminUploadQueuesStore')
   })
 
   it('is not marked new where the suggestions the application provides do not name it, whatever the library has', async () => {

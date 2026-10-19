@@ -1098,18 +1098,6 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
     dam.reply((request) =>
       request.method === 'GET' && MEDIA.test(request.url) ? { status: 200, data: {} } : undefined
     )
-    // Each read of an asset is answered with a copy: what the page makes of an answer is not what the DAM has.
-    dam.reply((request) => {
-      if (request.method !== 'GET') return undefined
-      const byFile = request.url.match(dam.routes.byFile)
-      const byId = byFile ? null : request.url.match(dam.routes.one)
-      const found = byFile
-        ? [...dam.assets.values()].find((asset) => asset.mainFile?.id === byFile[1])
-        : byId
-          ? dam.assets.get(byId[1]!)
-          : undefined
-      return found ? { status: 200, data: structuredClone(found) } : undefined
-    })
     // The other licence is of another ext system, configured as the one of the page.
     const config = useDamConfigStore(pinia)
     config.damConfigLicenceExtSystem.set(OTHER, { name: '', extSystem: OTHER_EXT_SYSTEM })
@@ -1608,7 +1596,12 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
           expect(detail().asset).toBeNull()
 
           await pickAuthors(widget, ['author-5'])
-          await confirmImage(widget)
+          // "Confirm" reads the asset again before it writes the authors: a read held as the others.
+          confirmButton().click()
+          await vi.waitFor(() => expect(reads.waiting).toHaveLength(1))
+          reads.answer()
+          await vi.waitFor(() => expect(widget.emitted('afterMetadataSaveSuccess')).toHaveLength(1))
+          await flushPromises()
           expect(authorsWritten()).toEqual([[['asset-9', ['author-5']]]])
           expect(imagesWritten()).toMatchObject([['createImage', { texts: { source: 'Name of author-5' } }]])
         })
@@ -1905,10 +1898,14 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
           // The confirm that waited went with the dialog it was pressed in.
           expect(confirmButton().classList.contains('v-btn--loading')).toBe(false)
 
+          // The dialog opened again loads: it reads the asset anew once the read of the detail has answered.
           held.answer()
-          await vi.waitFor(() => expect(offered(widget)).toBeNull())
+          await vi.waitFor(() => expect(held.waiting).toHaveLength(1))
+          held.answer()
+          await vi.waitFor(() => expect(confirmButton().disabled).toBe(false))
           await damNamesAsked()
           await waits.settle()
+          expect(offered(widget)).toBeNull()
 
           expect(imageDialog()).toBeDefined()
           expect(imagesWritten()).toHaveLength(1)
@@ -1921,14 +1918,22 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
           expect(authorsWritten()).toEqual([[['asset-9', ['author-9']]]])
         })
 
-        it('take a "confirm" pressed anew in the dialog opened again: it waits for the same read, and the image is saved once', async () => {
+        // The dialog opened again loads till the asset is read anew, after the read of the detail: a press is taken
+        // only once it shows the image.
+        it('take a "confirm" pressed anew in the dialog opened again once it has read the asset anew: the image is saved once', async () => {
           const { widget, held } = await confirmWaitedAndDialogOpenedAgain()
 
+          expect(confirmButton().disabled).toBe(true)
           confirmButton().click()
           await waits.settle()
-          expect(confirmButton().classList.contains('v-btn--loading')).toBe(true)
           expect(imagesWritten()).toHaveLength(1)
           held.answer()
+          await vi.waitFor(() => expect(held.waiting).toHaveLength(1))
+          held.answer()
+          await vi.waitFor(() => expect(confirmButton().disabled).toBe(false))
+          await damNamesAsked()
+          expect(imagesWritten()).toHaveLength(1)
+          confirmButton().click()
           await vi.waitFor(() => expect(widget.emitted('afterMetadataSaveSuccess')).toHaveLength(2))
           await waits.settle()
 

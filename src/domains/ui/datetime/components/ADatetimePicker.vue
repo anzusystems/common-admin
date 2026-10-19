@@ -245,6 +245,13 @@ const onTextFieldFocus = () => {
   emit('focus')
 }
 
+// The calendar icon is a button: Enter and Space open and close the calendar as a click does. Its menu takes only the
+// arrows from the keyboard. The keyup of that Enter stays on the icon: the Enter of the field would report it left a
+// second time.
+const togglePicker = () => {
+  pickerOpened.value = !pickerOpened.value
+}
+
 const onTimePickerEnterKeyup = () => {
   pickerOpened.value = false
 }
@@ -312,7 +319,10 @@ const now = () => {
             class="a-datetime-picker__calendar-icon"
             icon="mdi-calendar"
             size="small"
+            :aria-label="t('$vuetify.datePicker.title')"
             v-bind="menuProps"
+            @keydown.enter.space.prevent="togglePicker"
+            @keyup.enter.stop
           />
         </template>
 

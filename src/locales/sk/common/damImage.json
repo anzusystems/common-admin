@@ -10,7 +10,9 @@
       }
     },
     "meta": {
-      "edit": "Upraviť obrázok"
+      "edit": "Upraviť obrázok",
+      "authorsGivenMeanwhile": "Asset medzitým dostal autorov v DAM. Ak obrázok nemal vlastný zdroj, má teraz ich mená; vybraní autori sa neuložili. Skontrolujte a potvrďte znova.",
+      "galleryAuthorsGivenMeanwhile": "Assety niektorých obrázkov medzitým dostali autorov v DAM. Obrázky bez vlastného zdroja majú teraz ich mená; vybraní autori sa neuložili a nič sa neuložilo. Skontrolujte a uložte znova."
     },
     "button": {
       "options": "Upraviť obrázok",

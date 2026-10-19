@@ -10,7 +10,9 @@
       }
     },
     "meta": {
-      "edit": "Edit image"
+      "edit": "Edit image",
+      "authorsGivenMeanwhile": "The asset has been given authors in the Media Library in the meantime. If the image had no source of its own, it now has their names; the authors you picked were not saved. Check and confirm again.",
+      "galleryAuthorsGivenMeanwhile": "The assets of some images have been given authors in the Media Library in the meantime. Images without a source of their own now have their names; the authors you picked were not saved, and nothing was saved. Check and save again."
     },
     "button": {
       "options": "Edit image",

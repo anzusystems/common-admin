@@ -97,12 +97,6 @@ describe.each<[string, Component]>([
           : {},
       }
     })
-    // Each read of an asset is answered with a copy: what the page makes of an answer is not what the DAM has.
-    dam.reply((request) => {
-      const byId = request.method === 'GET' ? request.url.match(dam.routes.one) : null
-      const found = byId ? dam.assets.get(byId[1]!) : undefined
-      return found ? { status: 200, data: structuredClone(found) } : undefined
-    })
     waits = holdLongWaits()
     forgetAlerts()
     signInToDam(extSystem)

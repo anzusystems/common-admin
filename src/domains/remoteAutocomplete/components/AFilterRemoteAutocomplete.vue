@@ -289,6 +289,22 @@ const onSelectedUpdate = (newValue: any) => {
   emit('change')
 }
 
+// The close of a chip, where an admin makes the chips closable (`closable-chips`): its value goes out of the filter,
+// as when it is unticked in the list, and a filter of one value is cleared as by the clear of the field (the chip
+// slot draws its value as a chip too). The chip only hid itself, and the value went on filtering. The list is asked
+// for once, by the watcher of the filter: the clear of the field asks again (`onClickClear`), and the two answers
+// could come in either order.
+const onChipCloseClick = (closedItem: ValueObjectOption<T>) => {
+  if (!isArray(selected.value)) {
+    selected.value = null
+    onSelectedUpdate(null)
+    clearField()
+    return
+  }
+  selected.value = (selected.value as ValueObjectOption<T>[]).filter((item) => item.value !== closedItem.value)
+  onSelectedUpdate(selected.value)
+}
+
 const updateFilterSelected = (
   newValue: ValueObjectOption<string | number> | ValueObjectOption<string | number>[] | null
 ) => {
@@ -368,9 +384,11 @@ watch(
     <template #chip="{ props: chipProps, internalItem }">
       <VChip
         :closable="chipProps.closable as boolean"
+        close-label="common.button.remove"
         size="small"
         :text="`${internalItem.title} (${internalItem.raw.subtitle})`"
         :disabled="internalItem.props.disabled"
+        @click:close="onChipCloseClick(internalItem.raw)"
       >
         {{ internalItem.raw.title }}
         <span

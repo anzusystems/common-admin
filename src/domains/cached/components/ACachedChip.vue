@@ -116,6 +116,7 @@ const onClick = () => {
       :size="size"
       :label="forceRounded ? undefined : true"
       :closable="closable"
+      close-label="common.button.remove"
       @click:close="() => emit('close', id)"
     >
       <slot
@@ -147,6 +148,7 @@ const onClick = () => {
       :append-icon="openInNew ? COMMON_CONFIG.CHIP.ICON.LINK_EXTERNAL : COMMON_CONFIG.CHIP.ICON.LINK"
       :label="forceRounded ? undefined : true"
       :closable="closable"
+      close-label="common.button.remove"
       @click.stop="onClick"
       @click:close="() => emit('close', id)"
     >

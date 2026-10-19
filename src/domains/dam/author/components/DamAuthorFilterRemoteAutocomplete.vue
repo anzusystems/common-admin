@@ -66,6 +66,7 @@ const { t } = useI18n()
       <VChip
         v-if="chipItem"
         v-bind="chipProps"
+        close-label="common.button.remove"
       >
         {{ chipItem.title }}
         <VIcon
