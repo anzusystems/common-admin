@@ -35,7 +35,7 @@
     },
     "./package.json": "./package.json"
   },
-  "version": "1.47.0-beta.dev-1790167636",
+  "version": "2.0.0-rc1",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
@@ -83,7 +83,7 @@
     "@types/node": "^24.19.2",
     "@types/rusha": "^0.8.3",
     "@types/sortablejs": "^1.15.9",
-    "@typescript-eslint/parser": "^8.71.2",
+    "@typescript-eslint/parser": "^8.72.0",
     "@vitejs/plugin-vue": "^6.0.10",
     "@vitest/browser": "^5.0.5",
     "@vitest/browser-playwright": "^5.0.5",
@@ -103,16 +103,16 @@
     "cropperjs2": "npm:cropperjs@2.2.0",
     "dayjs": "1.11.23",
     "eslint": "^10.13.0",
-    "eslint-plugin-oxlint": "1.88.0",
+    "eslint-plugin-oxlint": "1.89.0",
     "eslint-plugin-pinia": "^0.4.2",
     "eslint-plugin-vue": "10.11.1",
     "eslint-plugin-vuetify": "^2.7.3",
     "npm-run-all2": "^9.0.3",
-    "oxfmt": "^0.73.0",
-    "oxlint": "1.88.0",
+    "oxfmt": "^0.74.0",
+    "oxlint": "1.89.0",
     "pinia": "4.1.0",
     "playwright": "^1.64.1",
-    "postcss": "^8.5.30",
+    "postcss": "^8.5.31",
     "postcss-html": "^2.0.0",
     "rusha": "^0.8.14",
     "sass": "1.105.2",
@@ -135,7 +135,7 @@
     "vue-i18n": "11.4.16",
     "vue-router": "5.4.0",
     "vue-tsc": "3.3.13",
-    "vuetify": "4.2.6"
+    "vuetify": "4.3.0"
   },
   "peerDependencies": {
     "@mdi/font": "^7.4.47",
@@ -150,11 +150,11 @@
     "axios": "^1.20.0",
     "dayjs": "^1.11.23",
     "eslint": "^10.13.0",
-    "eslint-plugin-oxlint": "^1.88.0",
+    "eslint-plugin-oxlint": "^1.89.0",
     "eslint-plugin-pinia": "^0.4.2",
     "eslint-plugin-vue": "^10.11.1",
     "eslint-plugin-vuetify": "^2.7.3",
-    "oxlint": "^1.88.0",
+    "oxlint": "^1.89.0",
     "pinia": "^4.1.0",
     "socket.io-client": "^4.8.4",
     "sortablejs": "^1.15.7",
@@ -163,7 +163,7 @@
     "vue": "^3.5.44",
     "vue-i18n": "^11.4.16",
     "vue-router": "^5.4.0",
-    "vuetify": "^4.2.6"
+    "vuetify": "^4.3.0"
   },
   "peerDependenciesMeta": {
     "@sentry/vite-plugin": {
