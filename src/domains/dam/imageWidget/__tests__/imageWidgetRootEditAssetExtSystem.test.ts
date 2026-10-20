@@ -285,6 +285,46 @@ describe.each<[string, Component, Record<string, unknown>]>([
     expect(shownAlerts()).toEqual(failureSaid)
   })
 
+  // Its image fields failing beside its audio fields, the custom fields of that ext system counted as loaded: the detail
+  // drew the image form without its fields, and nothing read them again.
+  it('closes the detail when the image fields of that ext system fail beside its others; the next opening reads them alone', async () => {
+    imageOfLicence(OTHER)
+    await mountWithImageDialog()
+    const fields = structuredClone(useDamConfigStore(pinia).damConfigAssetCustomFormElements.get(extSystem)!.image)
+    const answered = { status: 200, data: { data: fields, totalCount: fields.length } }
+    let imageFields: { status: number; data?: unknown } = { status: 500 }
+    dam.reply((request) => {
+      const form = request.method === 'GET' ? request.url.match(OTHER_FORMS) : null
+      if (form?.[1] === 'image') return imageFields
+      return form?.[1] === 'audio' ? answered : undefined
+    })
+
+    await press(editAsset())
+    await vi.waitFor(() => expect(shownAlerts()).toHaveLength(1))
+    await waits.settle()
+
+    expect(thrown).toEqual([])
+    expect(shownAlerts()).toEqual(failureSaid)
+    expect([detail().dialog, detail().asset, card()]).toEqual([null, null, null])
+
+    imageFields = answered
+    const from = dam.requests.length
+    await press(editAsset())
+    await vi.waitFor(() => expect(detail().asset?.id).toBe('asset-12'))
+    await waits.settle()
+
+    expect(configurationAsked(from)).toEqual([
+      `/adm/v1/asset-custom-form/ext-system/${OTHER_EXT_SYSTEM}/type/image/element`,
+    ])
+    expect(thrown).toEqual([])
+    expect([assetDrawn(), metadataDrawn(), !!card()!.querySelector('[data-cy="custom-field-title"]')]).toEqual([
+      true,
+      true,
+      true,
+    ])
+    expect(shownAlerts()).toEqual(failureSaid)
+  })
+
   it('shows nothing of a configuration that answers after the detail was closed from its loader', async () => {
     imageOfLicence(OTHER)
     await mountWithImageDialog()

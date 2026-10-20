@@ -527,7 +527,7 @@ const onEditAsset = async (assetFileId: DocId) => {
         const shownUnder = (await getExtSystemByLicence(asset.licence)) ?? imageWidgetUploadConfig.value!.extSystem
         // Before the detail shows the asset: it reads the configuration of its ext system as it draws, and threw
         // without it.
-        await loadAssetDetailExtSystem(damClient, shownUnder, damConfigName)
+        await loadAssetDetailExtSystem(damClient, shownUnder, asset.attributes.assetType, damConfigName)
         extSystem = shownUnder
         return asset
       },

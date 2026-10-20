@@ -44,6 +44,9 @@ const configAssetCustomFormElements = getDamConfigAssetCustomFormElements(props.
 if (isUndefined(configAssetCustomFormElements)) {
   throw new Error('Custom form elements must be initialised.')
 }
+// A type whose read failed beside reads that answered is not loaded: the form says so in place of its fields. Thrown,
+// it took the rest of the panel of its host with it.
+const typeNotLoaded = computed(() => isUndefined(getDamConfigAssetCustomFormElements(props.extSystem, props.assetType)))
 
 const elements = computed(() => {
   return configAssetCustomFormElements[props.assetType]
@@ -52,6 +55,12 @@ const elements = computed(() => {
 
 <template>
   <div class="w-100">
+    <div
+      v-if="typeNotLoaded"
+      class="text-error my-2"
+    >
+      {{ t('common.damImage.error.loadingConfig') }}
+    </div>
     <VRow
       v-for="element in elements"
       :key="element.id"

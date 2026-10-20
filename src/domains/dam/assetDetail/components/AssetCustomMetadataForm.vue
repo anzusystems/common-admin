@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { DamAssetTypeType } from '@/domains/dam/types/Asset'
 import { useDamConfigState } from '@/domains/dam/config/composables/damConfigState'
 import ACustomDataForm from '@/domains/customDataForm/components/ACustomDataForm.vue'
@@ -40,6 +41,11 @@ const configAssetCustomFormElements = getDamConfigAssetCustomFormElements(props.
 if (isUndefined(configAssetCustomFormElements)) {
   throw new Error('Custom form elements must be initialised.')
 }
+// A type whose read failed beside reads that answered is not loaded: the form says so in place of its fields and draws
+// the rest, its slots too. Thrown, it took the inputs its host puts into the slots with it.
+const typeNotLoaded = computed(() => isUndefined(getDamConfigAssetCustomFormElements(props.extSystem, props.assetType)))
+
+const { t } = useI18n()
 
 const elements = computed(() => {
   return configAssetCustomFormElements[props.assetType]
@@ -73,6 +79,12 @@ const pinnedCount = computed(() => {
     </template>
     <template #before-pinned>
       <slot name="before-pinned" />
+      <div
+        v-if="typeNotLoaded"
+        class="text-error my-2"
+      >
+        {{ t('common.damImage.error.loadingConfig') }}
+      </div>
     </template>
   </ACustomDataForm>
 </template>

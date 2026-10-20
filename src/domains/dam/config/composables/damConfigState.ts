@@ -23,6 +23,12 @@ import type {
 import { cloneDeep, isNull, isUndefined } from '@/shared/utils/common'
 import type { AxiosInstance } from 'axios'
 
+// The types of asset whose custom fields are not loaded, by the custom fields of an ext system the loader stored: their
+// read failed beside reads that answered. Those stay `[]` there, as the store has always held them, and are read again
+// where they are needed. By the stored object, not by the ext system: one an application writes into the store itself
+// has every type loaded.
+const customFormTypesNotLoaded = new WeakMap<object, ReadonlySet<DamAssetTypeType>>()
+
 /**
  * Loads into and reads from the DAM configuration store of `configName` (`useDamConfigStoreOf`); a name left out is
  * the inherited one in a component's setup, else `default`. Without a client nothing loads. It loads from the
@@ -180,7 +186,7 @@ export function useDamConfigState(client: undefined | (() => AxiosInstance) = un
           if (types.length > 0 && (loadedTypes.length === 0 || (failedTypes.length > 0 && !anyField))) {
             throw new Error('Unable to load asset custom form config. Incorrect response body.')
           }
-          setDamConfigAssetCustomFormElements(loadedResponses, extSystemId, loadedTypes)
+          setDamConfigAssetCustomFormElements(loadedResponses, extSystemId, loadedTypes, failedTypes)
           if (failedTypes.length > 0) {
             onConfigError(new Error(`Unable to load asset custom form config for: ${failedTypes.join(', ')}.`))
           }
@@ -196,10 +202,12 @@ export function useDamConfigState(client: undefined | (() => AxiosInstance) = un
   function setDamConfigAssetCustomFormElements(
     responses: CustomDataFormElement[][],
     extSystemId: IntegerId,
-    types: DamAssetTypeType[]
+    types: DamAssetTypeType[],
+    failedTypes: DamAssetTypeType[] = []
   ) {
     try {
-      const existingConfig = damConfigStore.damConfigAssetCustomFormElements.get(extSystemId) || {
+      const storedConfig = damConfigStore.damConfigAssetCustomFormElements.get(extSystemId)
+      const existingConfig = storedConfig || {
         image: [],
         audio: [],
         video: [],
@@ -211,6 +219,16 @@ export function useDamConfigState(client: undefined | (() => AxiosInstance) = un
       types.forEach((type, index) => {
         config[type] = responses[index]!
       })
+
+      // Not loaded: the types whose read failed now, and those not loaded before that were not read again. A type the
+      // stored object holds loaded is not marked by a read of it that failed: two reads go at once (two widgets of a
+      // page), and the one that failed may answer last.
+      const notLoadedBefore = storedConfig ? customFormTypesNotLoaded.get(storedConfig) : undefined
+      const failedNotLoaded = failedTypes.filter((type) => !storedConfig || !!notLoadedBefore?.has(type))
+      const notLoaded = new Set(
+        [...(notLoadedBefore ?? []), ...failedNotLoaded].filter((type) => !types.includes(type))
+      )
+      if (notLoaded.size > 0) customFormTypesNotLoaded.set(config, notLoaded)
 
       damConfigStore.damConfigAssetCustomFormElements.set(extSystemId, config)
     } catch (err) {
@@ -253,8 +271,15 @@ export function useDamConfigState(client: undefined | (() => AxiosInstance) = un
     return damConfigStore.damConfigExtSystem.get(extSystemId)
   }
 
-  function getDamConfigAssetCustomFormElements(extSystemId: IntegerId) {
-    return damConfigStore.damConfigAssetCustomFormElements.get(extSystemId)
+  /**
+   * The custom fields of the assets of the ext system, by type of asset; `undefined` while they are not loaded. With
+   * `assetType`, `undefined` also while the fields of that type are not: their read failed beside reads that answered,
+   * and the type holds `[]` till it is read again.
+   */
+  function getDamConfigAssetCustomFormElements(extSystemId: IntegerId, assetType?: DamAssetTypeType) {
+    const config = damConfigStore.damConfigAssetCustomFormElements.get(extSystemId)
+    if (config && assetType && customFormTypesNotLoaded.get(config)?.has(assetType)) return undefined
+    return config
   }
 
   async function getOrLoadDamConfigExtSystemByLicences(

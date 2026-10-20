@@ -223,22 +223,27 @@ const sortByChange = (option: DatatableOrderingOption) => {
   fetchAssetListDebounced()
 }
 
+// Also as the type it lists changes: the custom fields of that type need not be loaded.
 watch(
-  extId,
-  async (newValue) => {
+  [extId, assetType],
+  async ([newValue, type]) => {
     if (isUndefined(newValue)) return
     customFormConfigLoading.value = true
     customFormConfigFailed.value = false
-    const configAssetCustomFormElements = getDamConfigAssetCustomFormElements(newValue)
-    if (isUndefined(configAssetCustomFormElements)) {
+    // The custom fields of the type it lists: every type of the ext system where it has none yet, else that type alone
+    // where its read failed before. The types loaded are not read again.
+    if (isUndefined(getDamConfigAssetCustomFormElements(newValue, type))) {
       try {
-        await loadDamConfigAssetCustomFormElements(newValue)
+        await loadDamConfigAssetCustomFormElements(
+          newValue,
+          getDamConfigAssetCustomFormElements(newValue) ? [type] : undefined
+        )
       } catch (e) {
         showErrorsDefault(e)
       }
-      // The answer for an ext system the list has left since says nothing of the one it lists now.
-      if (extId.value !== newValue) return
-      customFormConfigFailed.value = isUndefined(getDamConfigAssetCustomFormElements(newValue))
+      // The answer for an ext system or a type the list has left since says nothing of what it lists now.
+      if (extId.value !== newValue || assetType.value !== type) return
+      customFormConfigFailed.value = isUndefined(getDamConfigAssetCustomFormElements(newValue, type))
     }
     customFormConfigLoading.value = false
   },

@@ -226,16 +226,21 @@ watch(
     if (isUndefined(newValue)) return
     customFormConfigLoading.value = true
     customFormConfigFailed.value = false
-    const configAssetCustomFormElements = getDamConfigAssetCustomFormElements(newValue)
-    if (isUndefined(configAssetCustomFormElements)) {
+    // The custom fields of the type it lists: every type of the ext system where it has none yet, else that type alone
+    // where its read failed before. The types loaded are not read again.
+    const type = props.assetType
+    if (isUndefined(getDamConfigAssetCustomFormElements(newValue, type))) {
       try {
-        await loadDamConfigAssetCustomFormElements(newValue)
+        await loadDamConfigAssetCustomFormElements(
+          newValue,
+          getDamConfigAssetCustomFormElements(newValue) ? [type] : undefined
+        )
       } catch (e) {
         showErrorsDefault(e)
       }
       // The answer for an ext system the list has left since says nothing of the one it lists now.
       if (extId.value !== newValue) return
-      customFormConfigFailed.value = isUndefined(getDamConfigAssetCustomFormElements(newValue))
+      customFormConfigFailed.value = isUndefined(getDamConfigAssetCustomFormElements(newValue, type))
     }
     customFormConfigLoading.value = false
   },

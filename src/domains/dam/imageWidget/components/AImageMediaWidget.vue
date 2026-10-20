@@ -19,6 +19,7 @@ import type { MediaAware } from '@/domains/dam/types/MediaAware'
 import { useI18n } from 'vue-i18n'
 import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 import { useExtSystemIdForCached } from '@/domains/dam/composables/extSystemIdForCached'
+import { DamAssetType } from '@/domains/dam/types/Asset'
 
 const props = withDefaults(
   defineProps<{
@@ -121,15 +122,24 @@ onMounted(async () => {
     promises.push(loadDamPrvConfig())
   }
   promises.push(getOrLoadDamConfigExtSystemByLicences(props.selectLicences))
-  const configAssetCustomFormElements = getDamConfigAssetCustomFormElements(uploadConfig.value.extSystem)
-  if (isUndefined(configAssetCustomFormElements)) {
-    promises.push(loadDamConfigAssetCustomFormElements(uploadConfig.value.extSystem))
+  const { extSystem } = uploadConfig.value
+  // The custom fields of its images: every type of the ext system where it has none yet, else the image type alone
+  // where its read failed before. The types loaded are not read again.
+  if (isUndefined(getDamConfigAssetCustomFormElements(extSystem, DamAssetType.Image))) {
+    promises.push(
+      loadDamConfigAssetCustomFormElements(
+        extSystem,
+        getDamConfigAssetCustomFormElements(extSystem) ? [DamAssetType.Image] : undefined
+      )
+    )
   }
   try {
     await Promise.all(promises)
   } catch (e) {
     status.value = 'error'
   }
+  // The image type whose read failed beside types that answered is not loaded: its form would have no field.
+  if (isUndefined(getDamConfigAssetCustomFormElements(extSystem, DamAssetType.Image))) status.value = 'error'
   if (status.value !== 'error') status.value = 'ready'
 })
 
