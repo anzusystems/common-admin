@@ -55,6 +55,8 @@
     "copyAssetId": "Copy asset ID",
     "stillUploadingOrProcessing": "Asset is still uploading or being processed by server",
     "refreshFailed": "The item's state could not be loaded. Try again.",
+    "assetGone": "The asset no longer exists.",
+    "duplicateOriginalUnread": "The original of the duplicate could not be read.",
     "removeFromQueue": "Remove item from queue?",
     "errorUnableToCopyToLicence": "Error, unable to copy assets to licence"
   },
@@ -204,7 +206,8 @@
     },
     "button": {
       "add": "Add new author",
-      "addConflict": "Add author"
+      "addConflict": "Add author",
+      "addConflictNamed": "Add author {name}"
     },
     "meta": {
       "create": "Creating author"

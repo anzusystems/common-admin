@@ -39,6 +39,7 @@ const color = computed(() => {
   <VChip
     v-if="chip"
     :color="color"
+    close-label="common.button.remove"
     label
     size="small"
   >

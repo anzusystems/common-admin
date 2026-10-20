@@ -1,0 +1,267 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { createPinia, setActivePinia } from 'pinia'
+import { cmsConfiguration, installConsumerProfile } from '@/domains/dam/__tests__/support/consumerProfiles'
+import { answerDamNames, damNamesAsked } from '@/domains/dam/__tests__/support/damNames'
+import {
+  createFakeDam,
+  damAssetWithFile,
+  type FakeDam,
+  type FakeDamAnswer,
+} from '@/domains/dam/__tests__/support/fakeDam'
+import { holdLongWaits, type LongWaits } from '@/domains/dam/__tests__/support/longWaits'
+import {
+  type DamNotification,
+  DamNotificationName,
+  type DamNotificationNameType,
+  useDamNotificationsEventBus,
+} from '@/domains/dam/composables/damNotificationsEventBus'
+import { AssetFileProcessStatus } from '@/domains/dam/types/AssetFile'
+import { UploadQueueItemStatus } from '@/domains/dam/types/UploadQueue'
+import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
+
+// A save in the asset detail of a row of the queue (opened by "edit asset" of the row): the queue reads the asset once
+// more, and its rows of the asset take what that read finds, or what the detail saved when the read fails. What the
+// user typed into the row while the asset was read was replaced as well. And a row that became a row of the asset only
+// while the asset was read, the original of a duplicate, got nothing when no row had the asset before. The real queue;
+// the DAM is a client that records its requests.
+
+const { endPoints, extSystem, licence } = cmsConfiguration
+const QUEUE = 'detail-save-typed'
+
+let dam: FakeDam
+let waits: LongWaits
+
+beforeEach(() => {
+  setActivePinia(createPinia())
+  dam = createFakeDam(endPoints)
+  installConsumerProfile(cmsConfiguration, dam.client)
+  answerDamNames(dam)
+  waits = holdLongWaits()
+})
+afterEach(async () => {
+  useUploadQueuesStore().stopUpload(QUEUE)
+  await damNamesAsked()
+  waits.restore()
+  useDamNotificationsEventBus().reset()
+})
+
+const notify = (name: DamNotificationNameType, data: Record<string, unknown>) =>
+  useDamNotificationsEventBus().emit({ name, data } as unknown as DamNotification)
+
+const saved = {
+  keywords: ['keyword-saved'],
+  authors: ['author-saved'],
+  metadata: {
+    customData: { title: 'saved in the detail', description: 'saved description' },
+    authorSuggestions: {},
+    keywordSuggestions: {},
+  },
+}
+
+/** A copy of the asset in the queue, settled, with its form, as the row of the asset had it before the detail. */
+const rowOfTheAsset = async () => {
+  const store = useUploadQueuesStore()
+  dam.assets.set(
+    'asset-1',
+    damAssetWithFile('asset-1', 'file-1', AssetFileProcessStatus.Processed, {
+      keywords: ['keyword-before'],
+      authors: ['author-before'],
+      metadata: {
+        customData: { title: 'title before', description: 'description before' },
+        authorSuggestions: {},
+        keywordSuggestions: {},
+      },
+    })
+  )
+  await store.addByCopyToLicence(QUEUE, extSystem, licence, ['asset-1'])
+  notify(DamNotificationName.AssetFileCopied, { asset: 'asset-1' })
+  const [row] = store.getQueueItems(QUEUE)
+  await vi.waitFor(() => expect(row!.canEditMetadata).toBe(true))
+  return row!
+}
+const holdReadsOf = (asset: string) => dam.hold('GET', new RegExp(`^${endPoints.asset}/${asset}$`))
+
+describe('a save in the asset detail of a row of the queue', () => {
+  it.each<[string, FakeDamAnswer | undefined]>([
+    ['the read finds', undefined],
+    ['the read fails and the detail saved', { status: 500 }],
+  ])(
+    'keeps what was typed into the row while the asset is read; the fields left as they were take what %s',
+    async (_what, answer) => {
+      const row = await rowOfTheAsset()
+      const detail = dam.fileBecomes('asset-1', AssetFileProcessStatus.Processed, saved)
+      const reads = holdReadsOf('asset-1')
+      const written = useUploadQueuesStore().updateFromDetail(detail)
+      await vi.waitFor(() => expect(reads.waiting).toHaveLength(1))
+
+      row.keywords = ['keyword-typed']
+      row.customData.title = 'title typed'
+      reads.release(answer)
+      await written
+
+      expect(row).toMatchObject({
+        keywords: ['keyword-typed'],
+        authors: ['author-saved'],
+        customData: { title: 'title typed', description: 'saved description' },
+      })
+    }
+  )
+
+  // The file of the row turns out to be a duplicate of the file of the asset while the asset is read: the row becomes
+  // the original of that duplicate, a row of the asset.
+  it('gives a row that becomes a row of the asset while it is read what the read finds', async () => {
+    const store = useUploadQueuesStore()
+    dam.assets.set('asset-1', damAssetWithFile('asset-1', 'file-1', AssetFileProcessStatus.Processed, { licence }))
+    await store.addByCopyToLicence(QUEUE, extSystem, licence, ['asset-2'])
+    const [row] = store.getQueueItems(QUEUE)
+    expect(row!.status).not.toBe(UploadQueueItemStatus.Uploaded)
+    const detail = dam.fileBecomes('asset-1', AssetFileProcessStatus.Processed, saved)
+    const reads = holdReadsOf('asset-1')
+    const written = store.updateFromDetail(detail)
+    await vi.waitFor(() => expect(reads.waiting).toHaveLength(1))
+
+    // As the settlement of a duplicate leaves the row.
+    row!.assetId = 'asset-1'
+    row!.status = UploadQueueItemStatus.Uploaded
+    reads.release()
+    await written
+
+    expect(row).toMatchObject({ keywords: ['keyword-saved'], authors: ['author-saved'] })
+  })
+
+  // Only a row of the licence of the asset can become its row: the DAM finds a duplicate within the licence of a file.
+  it('reads nothing for a row of another licence the server is processing', async () => {
+    const store = useUploadQueuesStore()
+    await store.addByCopyToLicence(QUEUE, extSystem, licence + 1, ['asset-2'])
+    expect(store.getQueueItems(QUEUE)[0]!.status).toBe(UploadQueueItemStatus.Processing)
+    const before = dam.assetReads().length
+    const detail = damAssetWithFile('asset-1', 'file-1', AssetFileProcessStatus.Processed, { licence, ...saved })
+
+    await store.updateFromDetail(detail)
+
+    expect(dam.assetReads()).toHaveLength(before)
+  })
+
+  it('reads nothing when no row has the asset and none is still on its way', async () => {
+    const row = await rowOfTheAsset()
+    const before = dam.assetReads().length
+    const other = damAssetWithFile('asset-9', 'file-9', AssetFileProcessStatus.Processed)
+
+    await useUploadQueuesStore().updateFromDetail(other)
+
+    expect(dam.assetReads()).toHaveLength(before)
+    expect(row.keywords).toEqual(['keyword-before'])
+  })
+})
+
+// The detail of a row saved twice, the second save pressed while the first one is still being written: its read
+// still on its way. The rows end with the values of the later save. The second save kept those of the first, as if the
+// user had typed them, or the first one wrote over the second when its read answered last.
+describe('two saves in the asset detail of a row of the queue, one after the other', () => {
+  const asSaved = (title: string) => ({
+    ...saved,
+    keywords: [`keyword-of-${title}`],
+    metadata: { ...saved.metadata, customData: { title } },
+  })
+  const answer = (title: string) => ({
+    status: 200,
+    data: damAssetWithFile('asset-1', 'file-1', AssetFileProcessStatus.Processed, asSaved(title)),
+  })
+
+  it.each<[string, boolean]>([
+    ['first', true],
+    ['last', false],
+  ])('end with what the later one saved when the read of the earlier one answers %s', async (_when, earlierFirst) => {
+    const row = await rowOfTheAsset()
+    const store = useUploadQueuesStore()
+    const reads = holdReadsOf('asset-1')
+    const firstNote = store.noteRowsOfAsset('asset-1')
+    const first = store.updateFromDetail(
+      dam.fileBecomes('asset-1', AssetFileProcessStatus.Processed, asSaved('first')),
+      undefined,
+      undefined,
+      firstNote
+    )
+    await vi.waitFor(() => expect(reads.waiting).toHaveLength(1))
+    const secondNote = store.noteRowsOfAsset('asset-1')
+    const second = store.updateFromDetail(
+      dam.fileBecomes('asset-1', AssetFileProcessStatus.Processed, asSaved('second')),
+      undefined,
+      undefined,
+      secondNote
+    )
+    await vi.waitFor(() => expect(reads.waiting).toHaveLength(2))
+    const [ofTheFirst, ofTheSecond] = reads.waiting
+
+    if (earlierFirst) {
+      ofTheFirst!.release(answer('first'))
+      await first
+      ofTheSecond!.release(answer('second'))
+      await second
+    } else {
+      ofTheSecond!.release(answer('second'))
+      await second
+      ofTheFirst!.release(answer('first'))
+      await first
+    }
+
+    expect(row).toMatchObject({ keywords: ['keyword-of-second'], customData: { title: 'second' } })
+  })
+
+  // The number of a write is never given twice: a third save numbered as the first, once the second had ended, let the
+  // late read of the first write.
+  it('end with what the latest one saved when a third begins after the second has written, the read of the first still on its way', async () => {
+    const row = await rowOfTheAsset()
+    const store = useUploadQueuesStore()
+    const reads = holdReadsOf('asset-1')
+    const saveOf = (title: string) =>
+      store.updateFromDetail(
+        dam.fileBecomes('asset-1', AssetFileProcessStatus.Processed, asSaved(title)),
+        undefined,
+        undefined,
+        store.noteRowsOfAsset('asset-1')
+      )
+    const first = saveOf('first')
+    await vi.waitFor(() => expect(reads.waiting).toHaveLength(1))
+    const second = saveOf('second')
+    await vi.waitFor(() => expect(reads.waiting).toHaveLength(2))
+    reads.waiting[1]!.release(answer('second'))
+    await second
+    expect(row.keywords).toEqual(['keyword-of-second'])
+
+    const third = saveOf('third')
+    await vi.waitFor(() => expect(reads.waiting).toHaveLength(2))
+    const [ofTheFirst, ofTheThird] = reads.waiting
+    ofTheFirst!.release(answer('first'))
+    await first
+
+    expect(row.keywords).toEqual(['keyword-of-second'])
+    ofTheThird!.release(answer('third'))
+    await third
+    expect(row).toMatchObject({ keywords: ['keyword-of-third'], customData: { title: 'third' } })
+  })
+
+  // The later save is pressed before the earlier one writes, and begins its own write only after it.
+  it('end with what the later one saved when it is pressed before the earlier one writes', async () => {
+    const row = await rowOfTheAsset()
+    const store = useUploadQueuesStore()
+    const firstNote = store.noteRowsOfAsset('asset-1')
+    const secondNote = store.noteRowsOfAsset('asset-1')
+    await store.updateFromDetail(
+      dam.fileBecomes('asset-1', AssetFileProcessStatus.Processed, asSaved('first')),
+      undefined,
+      undefined,
+      firstNote
+    )
+    expect(row).toMatchObject({ keywords: ['keyword-of-first'] })
+
+    await store.updateFromDetail(
+      dam.fileBecomes('asset-1', AssetFileProcessStatus.Processed, asSaved('second')),
+      undefined,
+      undefined,
+      secondNote
+    )
+
+    expect(row).toMatchObject({ keywords: ['keyword-of-second'], customData: { title: 'second' } })
+  })
+})

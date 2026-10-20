@@ -330,17 +330,23 @@ describe.each<[string, Component]>([
     expect(imagesWritten()).toHaveLength(1)
   })
 
-  it('says once that the asset could not be read, and offers the pick as before', async () => {
+  // What the widget holds may be stale by then: the pick of it is not offered till the dialog shows the image anew.
+  it('says once that the asset could not be read, and shows the source in place of the pick', async () => {
     const widget = await savedWithoutAuthors()
     refuseReadsOf('asset-9')
 
     await editImageShown(widget)
 
     expect(shownAlerts()).toEqual([['error', alertText('common.alert.unknownError')]])
-    expect(offered(widget)).toEqual([])
-    expect(texts()).toEqual(['of asset-9'])
+    expect(offered(widget)).toBeNull()
+    expect(texts()).toEqual(['of asset-9', ''])
+    const source = fieldsIn(imageDialog()!)[1]!
+    source.value = 'typed'
+    source.dispatchEvent(new Event('input', { bubbles: true }))
+    await flushPromises()
     await confirmImage(widget)
     expect(authorsWritten()).toEqual([])
+    expect(imagesWritten().at(-1)).toMatchObject(['updateImage', 501, { texts: { source: 'typed' } }])
     expect(shownAlerts()).toHaveLength(1)
   })
 

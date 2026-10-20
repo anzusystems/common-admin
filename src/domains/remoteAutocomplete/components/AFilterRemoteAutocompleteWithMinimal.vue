@@ -152,12 +152,16 @@ const allItems = computed<ValueObjectOption<DocId | IntegerId>[]>(() => {
   })
 })
 
-const loading = ref(false)
+// The requests of the component on their way (items by their ids, a search, a prefetch): its spinner is on while
+// any of them runs, and goes off with the last. Each turned it off as it ended: a read by ids hid the spinner of a
+// search still running, and the reverse.
+const requestsRunning = ref(0)
+const loading = computed(() => requestsRunning.value > 0)
 
 const { showErrorsDefault } = useAlerts()
 
 const apiSearch = async (query: string, requestCounter: number) => {
-  loading.value = true
+  requestsRunning.value++
   filterInnerData[props.filterByField] = query
   try {
     const res = await props.fetchItemsMinimal(pagination, filterInnerData, filterInnerConfig)
@@ -165,7 +169,7 @@ const apiSearch = async (query: string, requestCounter: number) => {
   } catch (e) {
     showErrorsDefault(e)
   } finally {
-    loading.value = false
+    requestsRunning.value--
   }
 }
 
@@ -200,14 +204,14 @@ const autoFetch = async () => {
   clearAutoFetchTimer()
   if (autoFetched.value === true) return
   autoFetched.value = true
-  loading.value = true
+  requestsRunning.value++
   try {
     const res = await props.fetchItemsMinimal(pagination, filterInnerData, filterInnerConfig)
     if (apiRequestCounter.value === 0) fetchedItems.value = res
   } catch (e) {
     showErrorsDefault(e)
   } finally {
-    loading.value = false
+    requestsRunning.value--
   }
 }
 
@@ -231,10 +235,13 @@ const singleItemSelectedTitle = computed(() => {
   return undefined
 })
 
-const onSearchUpdate = (query: string) => {
-  if (!filterConfigCurrent.value.multiple && !isFocused.value && query.length === 0) return // vuetify fix
-  if (singleItemSelectedTitle.value === query) return
-  search.value = query
+// The clear of the field empties the search with `null` first: an empty search. A field without focus at that
+// moment read its length and threw.
+const onSearchUpdate = (query: string | null) => {
+  const text = query ?? ''
+  if (!filterConfigCurrent.value.multiple && !isFocused.value && text.length === 0) return // vuetify fix
+  if (singleItemSelectedTitle.value === text) return
+  search.value = text
 }
 
 const onSelectedUpdate = (newValue: any) => {
@@ -249,13 +256,19 @@ const onSelectedUpdate = (newValue: any) => {
   emit('change')
 }
 
-const onClickClear = async () => {
-  try {
-    fetchedItems.value = await props.fetchItemsMinimal(pagination, filterInnerData, filterInnerConfig)
-  } catch (e) {
-    showErrorsDefault(e)
-  }
+// The clear empties the filter in one go, with the model Vuetify has emptied, and asks for the list once, for an
+// empty search, through the counter of the searches. It asked with the search typed before, outside the counter,
+// wrote that answer whenever it came, and emptied the filter only after it. The list is there now: the auto-fetch
+// of an empty filter is not needed. A filter of one value cleared onto the default it held does not change for its
+// watcher: its value is shown again here.
+const onClickClear = () => {
   clearField()
+  clearAutoFetchTimer()
+  autoFetched.value = true
+  const value = filterData[props.name]
+  if (!isEmptyValue(value) && value === watchedValue) showValue(value as string | number | Array<string | number>)
+  apiRequestCounter.value++
+  apiSearch('', apiRequestCounter.value)
 }
 
 const placeholderComputed = computed(() => {
@@ -291,11 +304,59 @@ const updateFilterSelected = (
   filterSelected.value.set(props.name, [{ title: newValue.title, value: newValue.value }])
 }
 
+const isEmptyValue = (value: unknown) => isNull(value) || isUndefined(value) || (isArray(value) && value.length === 0)
+
+/** The value of the filter its watcher (below) saw last. */
+let watchedValue: unknown
+
+/** Puts a value of the filter into the field and the chips: from the items it has, or read by their ids. */
+const showValue = async (newValue: string | number | Array<string | number>) => {
+  const found = await tryToLoadFromLocalData(newValue)
+  if (found) {
+    selected.value = selectedItemsCache.value.map((item) => ({
+      title: item.title,
+      value: item.value,
+    }))
+    updateFilterSelected(selected.value)
+    return
+  }
+  if (isArray(newValue)) {
+    requestsRunning.value++
+    try {
+      selectedItemsCache.value = await props.fetchItemsMinimalByIds(newValue as Array<IntegerId & DocId>)
+      selected.value = selectedItemsCache.value.map((item) => ({
+        title: item.title,
+        value: item.value,
+      }))
+      updateFilterSelected(selected.value)
+    } catch (e) {
+      showErrorsDefault(e)
+    } finally {
+      requestsRunning.value--
+    }
+    return
+  }
+  requestsRunning.value++
+  try {
+    selectedItemsCache.value = await props.fetchItemsMinimalByIds([newValue as DocId & IntegerId])
+    selected.value = selectedItemsCache.value.map((item) => ({
+      title: item.title,
+      value: item.value,
+    }))[0]
+    updateFilterSelected(selected.value)
+  } catch (e) {
+    showErrorsDefault(e)
+  } finally {
+    requestsRunning.value--
+  }
+}
+
 watch(
   () => filterData[props.name],
   async (newValue, oldValue) => {
+    watchedValue = newValue
     if (newValue === oldValue || isBoolean(newValue)) return
-    if (isNull(newValue) || isUndefined(newValue) || (isArray(newValue) && newValue.length === 0)) {
+    if (isEmptyValue(newValue)) {
       selectedItemsCache.value = []
       if (filterConfigCurrent.value.multiple) {
         selected.value = []
@@ -311,55 +372,19 @@ watch(
       }, 3000)
       return
     }
-    const found = await tryToLoadFromLocalData(newValue)
-    if (found) {
-      selected.value = selectedItemsCache.value.map((item) => ({
-        title: item.title,
-        value: item.value,
-      }))
-      updateFilterSelected(selected.value)
-      return
-    }
-    if (isArray(newValue)) {
-      loading.value = true
-      try {
-        selectedItemsCache.value = await props.fetchItemsMinimalByIds(newValue as Array<IntegerId & DocId>)
-        selected.value = selectedItemsCache.value.map((item) => ({
-          title: item.title,
-          value: item.value,
-        }))
-        updateFilterSelected(selected.value)
-      } catch (e) {
-        showErrorsDefault(e)
-      } finally {
-        loading.value = false
-      }
-      return
-    }
-    loading.value = true
-    try {
-      selectedItemsCache.value = await props.fetchItemsMinimalByIds([newValue as DocId & IntegerId])
-      selected.value = selectedItemsCache.value.map((item) => ({
-        title: item.title,
-        value: item.value,
-      }))[0]
-      updateFilterSelected(selected.value)
-    } catch (e) {
-      showErrorsDefault(e)
-    } finally {
-      loading.value = false
-    }
+    await showValue(newValue as string | number | Array<string | number>)
   },
   { immediate: true }
 )
 
 watchDebounced(
   search,
-  (newValue, oldValue) => {
-    if (newValue.length < props.searchMinChars) return
-    if (newValue !== oldValue) {
+  (newValue: string | null, oldValue: string | null) => {
+    const query = newValue ?? ''
+    if (query.length < props.searchMinChars) return
+    if (query !== (oldValue ?? '')) {
       apiRequestCounter.value++
-      apiSearch(newValue, apiRequestCounter.value)
+      apiSearch(query, apiRequestCounter.value)
     }
   },
   { debounce: 300 }

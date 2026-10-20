@@ -51,7 +51,15 @@ import { fetchAssetListByFileIdsMultipleLicences } from '@/domains/dam/api/damfe
 import { copyToLicence } from '@/domains/dam/api/damImageApi'
 import { createDamImage, imageFieldsOf } from '@/domains/dam/imageWidget/utils/damImage'
 import { useDamConfigState } from '@/domains/dam/config/composables/damConfigState'
+import { useDamConfigStore } from '@/domains/dam/config/store/damConfigStore'
 import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
+import {
+  holdImages,
+  imageSavedSince,
+  imageSavesOfOthersOver,
+  noteImagesSave,
+} from '@/domains/dam/imageWidget/utils/imageSaves'
+import { WAIT_RAN_OUT, withinWaitLimit } from '@/domains/dam/imageWidget/utils/waitLimit'
 
 const props = withDefaults(
   defineProps<{
@@ -136,15 +144,54 @@ watch(
 )
 const { images, maxPosition } = storeToRefs(imageStore)
 
+// The widget among the widgets of the page that save images (`imageSaves.ts`), and the marks of its own saves on
+// their way.
+const thisWidget = Symbol('image widget multiple')
+const ownImageSaves = new Set<symbol>()
+// The wait of the rows for saves of their images by other widgets: let go once the widget goes.
+let cancelSaveWaits: (() => void) | null = null
+
+/**
+ * Once no other widget of the page has a save of any of the images `ids` on its way (the widget this one was drawn in
+ * place of, its save still on its way), or once the wait has run out: then the user is told the request timed out.
+ */
+const savesOfOthersOver = async (ids: IntegerId[]) => {
+  const waits = ids
+    .map((id) => imageSavesOfOthersOver(damConfigName, id, ownImageSaves))
+    .filter((wait) => !isNull(wait))
+  if (waits.length === 0) return
+  cancelSaveWaits = () => waits.forEach((wait) => wait.cancel())
+  const over = await withinWaitLimit(Promise.all(waits.map((wait) => wait.over)))
+  cancelSaveWaits = null
+  if (over !== WAIT_RAN_OUT) return
+  waits.forEach((wait) => wait.cancel())
+  if (!unmounted) showErrorT('error.apiTimedOut.message')
+}
+
+// The load of the images of the entity: rows added while it is on its way (a pick, an upload) wait for it, and come
+// after the images it loads. Added before, the load put its images in their place, and they were gone without a word.
+let imagesLoaded: Promise<void> = Promise.resolve()
+
 const fetchImagesOnLoad = async () => {
   if (props.modelValue.length === 0) {
     return
   }
   try {
     imagesLoading.value = true
-    const imagesRes = (await imageApi.fetchImageListByIds(imageClient, props.modelValue)).sort(
-      (a, b) => (a.position ?? 0) - (b.position ?? 0)
-    )
+    // Counted as the read is sent: a save answered after that may have taken effect only after the read.
+    const readAt = holdImages(damConfigName, thisWidget, props.modelValue)
+    const read = await imageApi.fetchImageListByIds(imageClient, props.modelValue)
+    // The rows come once the saves of these images by other widgets are over, each image as the save answered last
+    // left it when one has answered since the read was sent. Read before such a save took effect, a row had the old
+    // texts, and the save of this widget wrote them back over the saved ones.
+    await savesOfOthersOver(read.map((image) => image.id))
+    if (unmounted) return
+    const imagesRes = read
+      .map((image) => {
+        const saved = imageSavedSince(damConfigName, image.id, readAt.get(image.id) ?? 0)
+        return saved ? { ...image, ...saved, id: image.id, position: saved.position ?? image.position } : image
+      })
+      .sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
     const groupedIds: IdsGroupedByLicences = new Map()
     imagesRes.forEach((image) => {
       const group = groupedIds.get(image.dam.licenceId)
@@ -171,7 +218,8 @@ const fetchImagesOnLoad = async () => {
         return {
           key: generateUUIDv1(),
           ...imageRes,
-          damAuthors: found ? found.authors : [],
+          // Each row its own copy: the rows of one asset (an image twice in the entity) shared the array.
+          damAuthors: found ? [...found.authors] : [],
           showDamAuthors: found ? found.authors.length === 0 : false,
           assetId: found ? found.id : undefined,
         }
@@ -316,10 +364,15 @@ const assetSelectConfirmMap = async (
       })
       if (authorIdsToFetch.size > 0) {
         const licenceConfig = assetSelectStore.selectConfig.find((config) => config.licence === licence)
+        // Under the ext system of the licence, as every name of the authors of the DAM the widgets write; that of
+        // the picker where the licence does not tell.
         const authorsRes = await fetchAuthorListByIds(
           damClient,
           endPointAuthor,
-          readUnder ? readUnder.extSystem : (licenceConfig ?? assetSelectStore.requireSelectedSelectConfig()).extSystem,
+          readUnder
+            ? readUnder.extSystem
+            : ((await getExtSystemByLicence(licence)) ??
+                (licenceConfig ?? assetSelectStore.requireSelectedSelectConfig()).extSystem),
           [...authorIdsToFetch]
         )
         authorsRes.forEach((author) => {
@@ -392,29 +445,43 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
     copyToLicenceEnabled !== false && !isUndefined(data.copyToLicence)
       ? picked.filter((asset) => asset.licence !== data.copyToLicence)
       : []
+  // A widget that is gone by the answer adds nothing: the store of the images is the next widget's by then. Nor one
+  // that has turned read-only meanwhile.
+  const addingIsOver = () => unmounted || props.readonly
   if (toCopy.length === 0) {
-    imageStore.addImages(positioned(await assetSelectConfirmMap(picked)))
+    const images = await assetSelectConfirmMap(picked)
+    await imagesLoaded
+    if (!addingIsOver()) imageStore.addImages(positioned(images))
     return
   }
+  const copying = copyToLicence(
+    damClient,
+    endPointImage,
+    toCopy.map((asset) => ({ asset: asset.id, targetAssetLicence: data.copyToLicence! }))
+  )
+  // Read while the copy runs, under the licence they are in, the one of the upload, and its ext system: not the one
+  // browsed. They are added before the dialog of the queue opens: used before they were read, it put the copies
+  // before them.
+  const asTheyAre = picked.filter((asset) => !toCopy.includes(asset))
+  const config = imageWidgetUploadConfig.value
+  const imagesAsTheyAre =
+    asTheyAre.length === 0
+      ? Promise.resolve([])
+      : assetSelectConfirmMap(
+          asTheyAre,
+          config ? { licence: data.copyToLicence!, extSystem: config.extSystem } : undefined
+        )
+  let copyRes: DamImageCopyToLicenceResponse | null = null
   try {
-    const copyRes = await copyToLicence(
-      damClient,
-      endPointImage,
-      toCopy.map((asset) => ({ asset: asset.id, targetAssetLicence: data.copyToLicence! }))
-    )
-    onCopyToLicence(copyRes)
+    copyRes = await copying
   } catch (e) {
     showErrorsDefault(e)
   }
-  const asTheyAre = picked.filter((asset) => !toCopy.includes(asset))
-  if (asTheyAre.length === 0) return
-  // Read under the licence they are in, the one of the upload, and its ext system: not the one browsed.
-  const config = imageWidgetUploadConfig.value
-  const images = await assetSelectConfirmMap(
-    asTheyAre,
-    config ? { licence: data.copyToLicence!, extSystem: config.extSystem } : undefined
-  )
+  const images = await imagesAsTheyAre
+  await imagesLoaded
+  if (addingIsOver()) return
   imageStore.addImages(positioned(images))
+  if (copyRes) onCopyToLicence(copyRes)
 }
 
 const assetDetailStore = useAssetDetailStore()
@@ -435,12 +502,16 @@ const {
 // Whether the detail was opened by "edit asset" of a row, until it closes. Not so the detail a row of the queue
 // dialog opens, which is drawn here as well: nothing is read when that one closes.
 let detailOfRow = false
-// The read of an asset whose detail has closed: the save of the widget waits for it.
-let detailAssetRead: Promise<void> = Promise.resolve()
+// The reads of assets whose detail has closed, those of one asset in a row, by that asset: the save of the widget waits
+// for them. The reads of another asset do not wait for these: closing the detail of one asset waited for the save of
+// the detail of another one, and the read after it.
+const detailAssetReads = new Map<DocId, Promise<void>>()
 // Such a read may end once the widget is gone, and the images in the store are the next widget's by then.
 let unmounted = false
 onBeforeUnmount(() => {
   unmounted = true
+  holdImages(damConfigName, thisWidget, [])
+  cancelSaveWaits?.()
 })
 
 const onEditAsset = async (assetFileId: DocId) => {
@@ -465,27 +536,41 @@ const onEditAsset = async (assetFileId: DocId) => {
   }
 }
 
-const onAssetUploadConfirm = (items: ImageStoreItem[]) => {
+// An upload applied while the images of the entity load waits for them, its dialog and its queue as they are: once
+// those images are there, its rows come after them and the dialog goes. A widget that is read-only or gone by then
+// leaves the dialog and its queue as a read-only widget does, and nothing of the upload is lost; the dialog went at
+// once, and the rows with it. Applied again while it waits, it is not taken: the rows would come twice.
+let uploadWaitsForLoad = false
+const onAssetUploadConfirm = async (items: ImageStoreItem[]) => {
   if (props.readonly) return
   if (items.length === 0) return
+  if (imagesLoading.value) {
+    if (uploadWaitsForLoad) return
+    uploadWaitsForLoad = true
+    await imagesLoaded
+    uploadWaitsForLoad = false
+    if (unmounted || props.readonly) return
+  }
+  addUploadedRows(items)
+  uploadQueueDialog.value = null
+  uploadQueuesStore.stopUpload(props.queueKey)
+}
+
+const addUploadedRows = (items: ImageStoreItem[]) => {
   // A file that is a duplicate of one the widget has becomes the asset of that image in the queue, and the dialog has
-  // just saved its authors. The rows of that asset that offer the pick take them with their names, as after its detail
-  // has closed: left as they were, what is picked in them would be written over those authors.
+  // just saved its authors. The rows of that asset that offer the pick take them with their names (the source of the
+  // upload), as after its detail has closed: left as they were, what is picked in them would be written over those
+  // authors. Their names go into the source of a row only where it has none of its own, as there; it took them always.
   if (authorEnabled.value) {
     items.forEach((item) => {
       if (isUndefined(item.assetId) || item.damAuthors.length === 0) return
       images.value.forEach((image) => {
         if (image.assetId !== item.assetId || !image.showDamAuthors) return
-        image.damAuthors = [...item.damAuthors]
-        image.texts.source = item.texts.source
-        imageStore.forgetSourceOfPick(image)
-        image.showDamAuthors = false
+        takeAuthorsGiven(image, item.damAuthors, item.texts.source)
       })
     })
   }
   imageStore.addImages(positioned(items))
-  uploadQueueDialog.value = null
-  uploadQueuesStore.stopUpload(props.queueKey)
 }
 
 const actionLibrary = () => {
@@ -495,6 +580,7 @@ const actionLibrary = () => {
 const v$ = useVuelidate({ $scope: AImageMetadataValidationScopeSymbol })
 
 const { getDamConfigExtSystem, getExtSystemByLicence } = useDamConfigState(damClient)
+const damConfigStore = useDamConfigStore()
 
 const authorEnabled = computed(() => {
   return !!getDamConfigExtSystem(cachedExtSystemId.value)?.[DamAssetType.Image]?.authors?.enabled
@@ -570,9 +656,15 @@ const onAssetDetailClose = (shown: AssetDetailItemDto | null) => {
   if (!ofRow || isNull(shown) || props.readonly || !authorEnabled.value) return
   const assetId = shown.id
   if (!images.value.some((image) => image.assetId === assetId && image.showDamAuthors)) return
-  const detailSave = assetDetailStore.saving
+  const detailSave = assetDetailStore.savingOf(assetId)
   const pageExtSystem = cachedExtSystemId.value
-  detailAssetRead = detailAssetRead.then(() => takeAuthorsOfDetailAsset(assetId, detailSave, pageExtSystem))
+  const read = (detailAssetReads.get(assetId) ?? Promise.resolve()).then(() =>
+    takeAuthorsOfDetailAsset(assetId, detailSave, pageExtSystem)
+  )
+  detailAssetReads.set(assetId, read)
+  void read.then(() => {
+    if (detailAssetReads.get(assetId) === read) detailAssetReads.delete(assetId)
+  })
 }
 
 const saveImages = async () => {
@@ -586,7 +678,7 @@ const saveImages = async () => {
   }
   // The asset of a detail that has just closed is still being read: its rows are not written before they have its
   // authors. Gone by then, the widget writes nothing.
-  await detailAssetRead
+  await Promise.all(detailAssetReads.values())
   if (unmounted) return false
   v$.value.$touch()
   if (v$.value.$invalid) {
@@ -615,12 +707,17 @@ const saveImages = async () => {
         })
       })
     }
-    const named: Array<{ rows: ImageStoreItem[]; authors: DocId[]; source: string }> = []
+    const named: Array<{ assetId: DocId | undefined; rows: ImageStoreItem[]; authors: DocId[]; source: string }> = []
     for (const { assetId, rows, authors } of offering.values()) {
       if (authors.length === 0) continue
       if (assetId) assetUpdateItems.push({ id: assetId, authors })
-      const authorsRes = await fetchAuthorListByIds(damClient, endPointAuthor, cachedExtSystemId.value, authors)
-      named.push({ rows, authors, source: authorsRes.map((author) => author.name).join(', ') })
+      // Under the ext system of the licence of the asset of the rows, as the read before the write names authors
+      // given since; that of the page where the page does not know the licence. Not read for it: the rows come of the
+      // entity, of any licence.
+      const extSystem =
+        damConfigStore.damConfigLicenceExtSystem.get(rows[0]!.dam.licenceId)?.extSystem ?? cachedExtSystemId.value
+      const authorsRes = await fetchAuthorListByIds(damClient, endPointAuthor, extSystem, authors)
+      named.push({ assetId, rows, authors, source: authorsRes.map((author) => author.name).join(', ') })
     }
     // Gone while the authors loaded, the widget writes nothing. Turned read-only meanwhile: nothing of the user's is
     // written any more.
@@ -653,15 +750,37 @@ const saveImages = async () => {
     }
     if (assetUpdateItems.length) {
       await bulkUpdateAssetsAuthors(damClient, endPointAsset, assetUpdateItems)
+      // Gone while the authors were written, the widget saves no image: a widget drawn meanwhile, of the same images,
+      // read them before this save, and it was noted only once sent.
+      if (unmounted) return false
     }
-    named.forEach(({ rows, authors, source }) => {
+    // The DAM has the authors of those rows by now, also when the images are not saved: the rows show the source from
+    // here on, as after a save. Left offering the pick, the rows went into the next save as picks, the read before the
+    // write found the authors written here, and that save wrote nothing.
+    named.forEach(({ assetId, rows, authors, source }) => {
       rows.forEach((row) => {
         row.damAuthors = [...authors]
         row.texts.source = source
+        if (isUndefined(assetId)) return
+        row.showDamAuthors = false
+        imageStore.forgetSourceOfPick(row)
       })
     })
     const sentRows = [...imagesRaw]
-    const resItems = await imageApi.bulkUpdateImages(imageClient, sentRows.map(imageFieldsOf))
+    // Noted for the other widgets of the page, image by image, also when this one is gone by its answer.
+    const resItems = await noteImagesSave(
+      damConfigName,
+      sentRows.map((row) => row.id).filter((id) => !isUndefined(id)),
+      ownImageSaves,
+      imageApi.bulkUpdateImages(imageClient, sentRows.map(imageFieldsOf))
+    )
+    // Gone by the answer, the widget writes nothing into the store of the images, which is the next widget's by then.
+    if (unmounted) return true
+    holdImages(
+      damConfigName,
+      thisWidget,
+      resItems.map((resItem) => resItem.id)
+    )
     const ids: IntegerId[] = []
     const items = resItems.map((resItem) => {
       ids.push(resItem.id)
@@ -711,23 +830,29 @@ const saveImages = async () => {
   }
 }
 
+// The images that stay are numbered anew, as after a move: the backend got positions with a gap where one went.
+const removeImage = (index: number) => {
+  imageStore.removeImageByIndex(index)
+  updateAllPositions()
+}
+
 const removeItem = async (index: number) => {
   const image = images.value[index]
   if (!image) return
   if (isUndefined(image.id)) {
-    imageStore.removeImageByIndex(index)
+    removeImage(index)
     return
   }
   if (props.callDeleteApiOnRemove) {
     try {
       await imageApi.deleteImage(imageClient, image.id)
-      imageStore.removeImageByIndex(index)
+      removeImage(index)
     } catch (e) {
       showErrorsDefault(e)
     }
     return
   }
-  imageStore.removeImageByIndex(index)
+  removeImage(index)
 }
 
 const limitDialogComponent = ref<InstanceType<typeof ImageWidgetMultipleLimitDialog> | null>(null)
@@ -769,7 +894,7 @@ defineExpose({
 })
 
 onMounted(() => {
-  fetchImagesOnLoad()
+  imagesLoaded = fetchImagesOnLoad()
 })
 </script>
 

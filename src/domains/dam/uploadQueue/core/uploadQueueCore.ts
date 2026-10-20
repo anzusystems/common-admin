@@ -184,6 +184,9 @@ export function createUploadQueueCore<S extends UploadSide>(preset: UploadQueueP
   }
 
   async function queueItemUploadStart(item: UploadQueueItem, queueKey: UploadQueueKey) {
+    // A row whose run is under way already: one that cannot be sent stays waiting while its hash loads, and the
+    // queue looks again after each file it adds.
+    if (stopHandles.has(item)) return
     let run: UploadRun<S> | undefined
     try {
       // Made here: a set that cannot make the run fails its row as a failed upload does. Thrown past this, it left
@@ -204,10 +207,8 @@ export function createUploadQueueCore<S extends UploadSide>(preset: UploadQueueP
       // Stopped: it is gone from the queue, or the queue goes, and whatever stopped it started the next one. Uploaded:
       // the processed notification beat the answer to the finish request, and its settlement counted the queue.
       if (item.status === UploadQueueItemStatus.Stop || item.status === UploadQueueItemStatus.Uploaded) return
-      // Failed before its request was. By the settlement, which stopped the run and counted the queue: the row keeps
-      // the reason of the server, nothing is written over it and nothing told (Z26). Or by another run of the same
-      // row: one that cannot be sent stays waiting while its hash loads, is started again, and the first of its runs
-      // to fail has marked and counted it.
+      // Failed before its request was, by the settlement, which stopped the run and counted the queue: the row keeps
+      // the reason of the server, nothing is written over it and nothing told (Z26).
       if (item.status === UploadQueueItemStatus.Failed) return
       // Read before anything is written into the row: whether its reason was told already is among the failed rows.
       const failure = onClientFailure?.(queueKey, item, error)

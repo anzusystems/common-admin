@@ -19,6 +19,7 @@ const grantOriginOption = computed(() => getGrantOriginOption(props.grantOrigin)
   <VChip
     v-if="grantOption"
     :color="grantOption.color"
+    close-label="common.button.remove"
     label
     size="small"
   >

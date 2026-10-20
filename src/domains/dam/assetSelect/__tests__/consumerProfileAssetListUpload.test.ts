@@ -1088,9 +1088,9 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
           })
         })
 
-        // An accepted limit of the active tile going by its asset: a tile whose read failed is marked beside a panel
-        // that does not show its asset, as it always was, and is found again in a list read later.
-        it('stays the active one in a list read later when the read of its click failed: the mark is the tile clicked last', async () => {
+        // A tile whose read failed was marked beside a panel that does not show its asset, and found again in a list
+        // read later. The mark is that of the asset the panel shows: none here.
+        it('is not the active one, nor in a list read later, when the read of its click failed', async () => {
           await mountWithTwoAssets()
           dam.reply((request) =>
             request.method === 'GET' && readOf('asset-50').test(request.url) ? { status: 500 } : undefined
@@ -1098,13 +1098,13 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
           await tiles()[0]!.trigger('click')
           await vi.waitFor(() => expect(shownAlerts()).toHaveLength(1))
           await flushPromises()
-          expect(tilesDrawn()).toEqual([active(first), second])
+          expect(tilesDrawn()).toEqual([first, second])
           expect([detail().asset, panelLoads()]).toEqual([null, false])
           nextListsAre(['asset-51', 'asset-50'])
 
           await sortAnew()
 
-          expect(tilesDrawn()).toEqual([second, active(first)])
+          expect(tilesDrawn()).toEqual([second, first])
         })
 
         // That limit ends with the tile: once a list no longer has the asset, the panel shows none and no tile is
@@ -1134,7 +1134,8 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
             }
             await vi.waitFor(() => expect(shownAlerts()).toHaveLength(1))
             await flushPromises()
-            expect(tilesDrawn()).toEqual([active(first), second])
+            // Not marked once the read of the click failed; still marked after the read after a close that failed.
+            expect(tilesDrawn()).toEqual([afterAClose ? active(first) : first, second])
             expect([detail().asset, panelLoads()]).toEqual([null, false])
             nextListsAre(['asset-51'], ['asset-51', 'asset-50'])
 

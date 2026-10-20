@@ -20,6 +20,11 @@ const props = withDefaults(
     size?: string
     containerClass?: undefined | string
     forceReviewed?: undefined | boolean
+    /**
+     * The props of the chip slot of the autocomplete the chip is drawn in: with them, the close of a closable chip
+     * takes its value out of the autocomplete, as Vuetify's own chip does. Without them it only hid the chip.
+     */
+    chipProps?: Record<string, unknown>
   }>(),
   {
     queueId: undefined,
@@ -29,14 +34,25 @@ const props = withDefaults(
     size: 'small',
     containerClass: 'd-inline-flex',
     forceReviewed: undefined,
+    chipProps: undefined,
   }
 )
 
-const { getCachedAuthor } = useDamCachedAuthors()
+const { getCachedAuthor, addToCachedAuthors, fetchCachedAuthors, pinCachedAuthor, unpinCachedAuthor } =
+  useDamCachedAuthors()
 // The application's queues where it provides them, else the library's store, asked for only when a chip needs it.
 const suggestionsOf = inject(UploadQueueSuggestionsKey, null) ?? libraryUploadQueueSuggestions
 
-const { cached, loaded, unresolved } = useCachedItem(() => getCachedAuthor(props.id))
+const { cached, loaded, unresolved } = useCachedItem(() => getCachedAuthor(props.id), {
+  // The name the chip shows stays in the cache while it shows it. A chip given its title shows no name.
+  id: () => (props.title.length > 0 ? null : props.id),
+  pin: pinCachedAuthor,
+  unpin: unpinCachedAuthor,
+  askFor: (id) => {
+    addToCachedAuthors([id])
+    fetchCachedAuthors()
+  },
+})
 
 const displayNewIcon = computed(() => {
   if (!props.queueId || !cached.value) return undefined
@@ -92,6 +108,7 @@ const { t } = useI18n()
     </div>
     <VChip
       v-else
+      v-bind="chipProps"
       :size="size"
       :append-icon="displayNewIcon"
       :label="forceRounded ? undefined : true"

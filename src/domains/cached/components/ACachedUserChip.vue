@@ -23,12 +23,15 @@ const props = withDefaults(
      */
     titleFn?: ((user: CachedItem<any>) => string) | undefined
     disableClick?: boolean
+    /** The name of the close, where Vuetify's defaults make the chip closable: "Remove", unless the admin names it. */
+    closeLabel?: string
   }>(),
   {
     routeName: undefined,
     externalUrlTemplate: undefined,
     titleFn: undefined,
     disableClick: false,
+    closeLabel: 'common.button.remove',
   }
 )
 
@@ -75,6 +78,7 @@ const onClick = () => {
       v-else-if="unresolved"
       class="non-clickable"
       size="small"
+      :close-label="closeLabel"
       data-cy="cached-user-chip-unresolved"
     >
       #{{ id }}
@@ -91,6 +95,7 @@ const onClick = () => {
       :class="clickable ? '' : 'non-clickable'"
       size="small"
       :append-icon="appendIcon"
+      :close-label="closeLabel"
       @click.stop="onClick"
     >
       <AAnzuUserAvatar

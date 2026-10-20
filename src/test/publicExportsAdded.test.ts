@@ -97,6 +97,24 @@ describe('apiErrorStatus', () => {
   })
 })
 
+// For a reader of the upload queue (`readers.failureReported` of a settlement profile): whether `report` hands an
+// error to the logger.
+describe('apiErrorIsReported', () => {
+  it('is true of a failure the logger is handed, and false of a 401, a 403, a timeout, anything unmapped, or anything while reporting is off', () => {
+    expect(lib.apiErrorIsReported(new AnzuApiResponseCodeError(502))).toBe(true)
+    expect(lib.apiErrorIsReported(new AnzuApiResponseCodeError(401))).toBe(false)
+    expect(lib.apiErrorIsReported(new AnzuApiResponseCodeError(403))).toBe(false)
+    expect(lib.apiErrorIsReported(new AnzuApiTimeoutError())).toBe(false)
+    expect(lib.apiErrorIsReported(new Error('network'))).toBe(false)
+    lib.setApiErrorLogger(null)
+    try {
+      expect(lib.apiErrorIsReported(new AnzuApiResponseCodeError(502))).toBe(false)
+    } finally {
+      lib.setApiErrorLogger(lib.defaultApiErrorLogger)
+    }
+  })
+})
+
 // 2.0.0: every exported component starts with `A`, and the injection keys end in `Key`.
 describe('renamed in 2.0.0', () => {
   const renamed = {

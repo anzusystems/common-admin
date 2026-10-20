@@ -207,7 +207,11 @@ const allItems = computed<ValueObjectOption<T>[]>(() => {
   return Array.from(itemsMap.values())
 })
 
-const loadingLocal = ref(false)
+// The requests of the component on their way (items by their ids, a search, a prefetch): its spinner is on while
+// any of them runs, and goes off with the last. Each turned it off as it ended: a read by ids hid the spinner of a
+// search still running, and the reverse.
+const requestsRunning = ref(0)
+const loadingLocal = computed(() => requestsRunning.value > 0)
 const loadingComputed = computed(() => {
   if (loadingLocal.value) return true
   return props.loading
@@ -229,7 +233,7 @@ const updateSelected = (value: T[] | T) => {
 let byIdsCounter = 0
 const loadListItems = async (ids: T[] | T) => {
   const requestId = ++byIdsCounter
-  loadingLocal.value = true
+  requestsRunning.value++
 
   try {
     const idsArray = isArray(ids) ? ids : [ids]
@@ -245,38 +249,35 @@ const loadListItems = async (ids: T[] | T) => {
     showErrorsDefault(e)
     return undefined
   } finally {
-    loadingLocal.value = false
+    requestsRunning.value--
   }
 }
 
 const tryLoadModelValue = async (tryLoadValue: ModelValueType, prefetch = false) => {
   const idsToFetch = isArray(tryLoadValue) ? tryLoadValue : [tryLoadValue]
-  loadingLocal.value = true
-
+  let fetchedData: ValueObjectOption<T>[]
+  requestsRunning.value++
   try {
-    const fetchedData = await props.fetchItemsByIds(idsToFetch as Array<IntegerId & DocId>)
-    if (isArray(fetchedData) && fetchedData.length > 0) {
-      selectedItemsCache.value = fetchedData
-      const value = props.multiple ? fetchedData.map((item) => item.value) : fetchedData[0]!.value
-      modelValue.value = value
-      // tryAutoFetch bails out while loading, so the flag has to drop before asking it to prefetch.
-      loadingLocal.value = false
-      if (prefetch) await tryAutoFetch('force', value)
-      return true
-    }
-    return false
+    fetchedData = await props.fetchItemsByIds(idsToFetch as Array<IntegerId & DocId>)
   } catch (e) {
     showErrorsDefault(e)
     return false
   } finally {
-    loadingLocal.value = false
+    // Over before the prefetch below, which bails out while a request of the component runs.
+    requestsRunning.value--
   }
+  if (!isArray(fetchedData) || fetchedData.length === 0) return false
+  selectedItemsCache.value = fetchedData
+  const value = props.multiple ? fetchedData.map((item) => item.value) : fetchedData[0]!.value
+  modelValue.value = value
+  if (prefetch) await tryAutoFetch('force', value)
+  return true
 }
 
 const { showErrorsDefault } = useAlerts()
 
 const apiSearch = async (query: string, requestCounter: number) => {
-  loadingLocal.value = true
+  requestsRunning.value++
   filterInnerData[filterByFieldProp] = query
   try {
     const res = await props.fetchItems(pagination, filterInnerData, filterInnerConfig)
@@ -284,7 +285,7 @@ const apiSearch = async (query: string, requestCounter: number) => {
   } catch (error) {
     showErrorsDefault(error)
   } finally {
-    loadingLocal.value = false
+    requestsRunning.value--
   }
 }
 
@@ -294,7 +295,7 @@ const tryAutoFetch = async (mode: 'focus' | 'hover' | 'mounted' | 'force', newVa
     if (props.prefetch === false || props.prefetch !== mode || prefetchCompleted.value) return
   }
 
-  loadingLocal.value = true
+  requestsRunning.value++
   try {
     const res = await props.fetchItems(pagination, filterInnerData, filterInnerConfig)
     if (apiRequestCounter.value === 0) {
@@ -312,7 +313,7 @@ const tryAutoFetch = async (mode: 'focus' | 'hover' | 'mounted' | 'force', newVa
   } catch (e) {
     showErrorsDefault(e)
   } finally {
-    loadingLocal.value = false
+    requestsRunning.value--
   }
 }
 
@@ -334,23 +335,22 @@ const singleItemSelectedTitle = computed(() => {
   return undefined
 })
 
-const onSearchUpdate = (query: string) => {
-  if (!props.multiple && !isFocused.value && query.length === 0) return // vuetify fix
-  if (singleItemSelectedTitle.value === query) return
-  search.value = query
+// The clear of the field empties the search with `null` first: an empty search. A field without focus at that
+// moment read its length and threw.
+const onSearchUpdate = (query: string | null) => {
+  const text = query ?? ''
+  if (!props.multiple && !isFocused.value && text.length === 0) return // vuetify fix
+  if (singleItemSelectedTitle.value === text) return
+  search.value = text
 }
 
-const onClickClear = async () => {
-  try {
-    fetchedItems.value = await props.fetchItems(pagination, filterInnerData, filterInnerConfig)
-  } catch (e) {
-    showErrorsDefault(e)
-  }
-  if (props.multiple) {
-    modelValue.value = []
-    return
-  }
-  modelValue.value = null
+// The clear empties the value at once and asks for the list once, for an empty search, through the counter of the
+// searches. It asked with the search typed before, outside the counter, wrote that answer whenever it came, and
+// emptied the value only after it.
+const onClickClear = () => {
+  modelValue.value = props.multiple ? [] : null
+  apiRequestCounter.value++
+  apiSearch('', apiRequestCounter.value)
 }
 
 const onChipCloseClick = (closedItem: ValueObjectOption<T>) => {
@@ -365,16 +365,17 @@ const onChipCloseClick = (closedItem: ValueObjectOption<T>) => {
 
 watchDebounced(
   search,
-  (newValue, oldValue) => {
-    if (newValue === oldValue) return
-    if (newValue.length > 0 && newValue.length < props.minSearchChars) return
-    if (newValue.length === 0 && props.prefetch === false) {
+  (newValue: string | null, oldValue: string | null) => {
+    const query = newValue ?? ''
+    if (query === (oldValue ?? '')) return
+    if (query.length > 0 && query.length < props.minSearchChars) return
+    if (query.length === 0 && props.prefetch === false) {
       fetchedItems.value = []
       return
     }
     apiRequestCounter.value++
-    apiSearch(newValue, apiRequestCounter.value)
-    emit('searchChangeDebounced', newValue)
+    apiSearch(query, apiRequestCounter.value)
+    emit('searchChangeDebounced', query)
   },
   { debounce: SEARCH_DEBOUNCE_MS }
 )

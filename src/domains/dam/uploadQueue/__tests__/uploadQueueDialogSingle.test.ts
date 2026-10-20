@@ -325,8 +325,8 @@ describe('the sidebar of the single-file upload dialog', () => {
   })
 
   // The file is a duplicate whose original cannot be read: the press fails the item. A failed item whose refresh
-  // may still help is offered it, as its row in the queue is (finding 25); the press says nothing of its own failure.
-  it('says nothing when the refresh itself fails the item, and still offers it', async () => {
+  // may still help is offered it, as its row in the queue is (finding 25), and the press says why it could not.
+  it('says why when the refresh itself fails the item, and still offers it', async () => {
     const item = await mountSidebarOfUnfinished()
     fetchAsset.mockImplementation(async () => ({
       ...asset(),
@@ -344,7 +344,7 @@ describe('the sidebar of the single-file upload dialog', () => {
     await flushPromises()
 
     expect(fetchAssetByFileId).toHaveBeenCalledTimes(1)
-    expect(showWarningT).not.toHaveBeenCalled()
+    expect(showWarningT.mock.calls).toEqual([['common.damImage.queueItem.duplicateOriginalUnread']])
     expect(refreshButton().exists()).toBe(true)
   })
 

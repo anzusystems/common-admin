@@ -126,7 +126,7 @@ describe('AFileInput with its dropzone', () => {
     'warning',
     `${commonT('common.system.upload.incorrectFormatSize')}:${names.join(', ')}`,
   ]
-  const onlyOne = ['warning', commonT('common.damImage.upload.onlyOneFile')]
+  const onlyOne = ['warning', commonT('common.system.upload.onlyOneFile')]
   const alerts = () => useAlertsQueue().value.map((alert) => [alert.color, alert.text])
   const emitted = (wrapper: VueWrapper) =>
     (wrapper.emitted('filesInput') ?? []).map(([files]) => (files as File[]).map((file) => file.name))

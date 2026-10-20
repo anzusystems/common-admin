@@ -600,7 +600,12 @@ import type {
   UseApiRequestParams,
   UseApiRequestReturnType,
 } from '@/domains/api/composables/useApiRequest'
-import { apiErrorStatus, defaultApiErrorLogger, setApiErrorLogger } from '@/domains/api/utils/apiErrors'
+import {
+  apiErrorIsReported,
+  apiErrorStatus,
+  defaultApiErrorLogger,
+  setApiErrorLogger,
+} from '@/domains/api/utils/apiErrors'
 import type { ApiErrorContext } from '@/domains/api/utils/apiErrors'
 import type { ApiErrorLogger } from '@/domains/api/utils/apiErrors'
 import { useApiFetchListBatch } from '@/domains/api/composables/useApiFetchListBatch'
@@ -1397,6 +1402,7 @@ export {
   type UseApiFetchListBatchReturnType,
   defaultApiErrorLogger,
   apiErrorStatus,
+  apiErrorIsReported,
   setApiErrorLogger,
   type ApiErrorContext,
   type ApiErrorLogger,

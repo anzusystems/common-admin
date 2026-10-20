@@ -11,6 +11,7 @@ vi.mock('@/domains/dam/uploadQueue/store/uploadQueuesStore', () => ({
     getQueueProcessedCount: () => queue.items.length,
     // "Save and apply" asks about an uploaded row without its form once more: here the read brings none.
     refreshAsset: async () => 'error',
+    isGivenUpMissing: () => false,
   }),
 }))
 vi.mock('@/domains/dam/composables/commonAdminCoreDamOptions', async (importOriginal) => ({

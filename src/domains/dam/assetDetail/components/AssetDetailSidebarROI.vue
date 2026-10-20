@@ -79,6 +79,14 @@ const loadRois = async (forceReloadFile = false) => {
   }
 }
 
+// Not while the cropper beside it saves a region and reads the file the DAM redraws (`cropperBusy`): read before the
+// redraw, the file of the refresh took the place of the cropper's, and both stayed on the old drawing.
+const refreshOffered = computed(() => !imageRoiStore.loader && !imageRoiStore.cropperBusy)
+const refresh = () => {
+  if (!refreshOffered.value) return
+  void loadRois(true)
+}
+
 const afterRotate = async () => {
   await loadRois(true)
 }
@@ -104,20 +112,20 @@ onMounted(async () => {
     :queue-key="queueKey"
   >
     <ABtnTertiary
-      v-if="!imageRoiStore.loader"
+      v-if="refreshOffered"
       class="d-none d-md-flex"
-      @click.stop="loadRois(true)"
+      @click.stop="refresh"
     >
       {{ t('common.damImage.asset.detail.roi.refresh') }}
     </ABtnTertiary>
     <VBtn
-      v-if="!imageRoiStore.loader"
+      v-if="refreshOffered"
       icon
       variant="text"
       size="small"
       class="d-flex d-md-none"
       :title="t('common.damImage.asset.detail.roi.refresh')"
-      @click.stop="loadRois(true)"
+      @click.stop="refresh"
     >
       <VIcon icon="mdi-refresh" />
     </VBtn>

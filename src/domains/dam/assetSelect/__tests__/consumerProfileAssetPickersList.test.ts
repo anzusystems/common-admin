@@ -487,7 +487,7 @@ describe('the list of the asset pickers of admin-cms', () => {
         ['another order is picked', pickAnotherOrder],
         ['a search is submitted', submitSearch],
       ])(
-        'once %s: the button goes at once, a further page of the list left is no longer waited for, and the first page is asked for',
+        'once %s: the button only spins, a further page of the list left is no longer waited for, and the first page is asked for',
         async (_how, begin) => {
           await openWithAFurtherPage(AAssetSelect, image)
           expect(isShown(loadMoreButton())).toBe(true)
@@ -499,9 +499,15 @@ describe('the list of the asset pickers of admin-cms', () => {
 
           begin()
           await flushPromises()
-          // The list left is shown until the new one comes.
+          // The list left is shown until the new one comes. The loader stays on meanwhile: the button spins, and a press
+          // asks for nothing. It went, and the loader with it, till the new list was asked for.
           expect(lists.waiting).toEqual([])
-          expect(isShown(loadMoreButton())).toBe(false)
+          expect([isShown(loadMoreButton()), loadMoreButton().classList.contains('v-btn--loading')]).toEqual([
+            true,
+            true,
+          ])
+          loadMoreButton().click()
+          await flushPromises()
           expect(tilesDrawn()).toEqual(shownBefore)
 
           await vi.waitFor(() => expect(lists.waiting).toHaveLength(1))

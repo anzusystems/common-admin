@@ -170,7 +170,8 @@ describe.each(consumerProfiles)('the save of the detail of an asset under the $n
   })
 
   // The form is not locked while the save runs, and the detail can be closed before the DAM answers. Its host may
-  // read the asset again then: it finds the save that is on its way in the store of the detail, and waits for it.
+  // read the asset again then: it finds the save that is on its way in the store of the detail, under the asset it
+  // saves, and waits for it.
   it.each<[string, FakeDamAnswer | undefined]>([
     ['answers it', undefined],
     ['refuses it', { status: 500 }],
@@ -180,25 +181,28 @@ describe.each(consumerProfiles)('the save of the detail of an asset under the $n
       const held = dam.hold('PATCH', dam.routes.bulkMetadata)
       await openDetail()
       const detail = useAssetDetailStore(pinia)
-      expect(detail.saving).toBeNull()
+      expect(detail.savingOf('asset-1')).toBeNull()
 
       save().click()
       await vi.waitFor(() => expect(held.waiting).toHaveLength(1))
-      const onItsWay = detail.saving
+      const onItsWay = detail.savingOf('asset-1')
       expect(onItsWay).toBeInstanceOf(Promise)
+      // Of that asset only.
+      expect(detail.savingOf('asset-2')).toBeNull()
       // Pressed again while it runs, the button sends nothing: the save on its way is still that one.
       save().click()
       await flushPromises()
-      expect(detail.saving).toBe(onItsWay)
+      expect(held.waiting).toHaveLength(1)
+      expect(detail.savingOf('asset-1')).toBeInstanceOf(Promise)
       // The detail goes, and its save goes on.
       wrapper!.unmount()
       wrapper = undefined
-      expect(detail.saving).toBe(onItsWay)
+      expect(detail.savingOf('asset-1')).toBeInstanceOf(Promise)
 
       held.release(answer)
       await expect(onItsWay).resolves.toBeUndefined()
       await flushPromises()
-      expect(detail.saving).toBeNull()
+      expect(detail.savingOf('asset-1')).toBeNull()
     }
   )
 
@@ -281,25 +285,30 @@ describe.each(consumerProfiles)('the save of the detail of an asset under the $n
 
     // The dialog of a queue turns the telling on when it opens the detail of a row, and nothing turns it off: a
     // detail opened afterwards from elsewhere tells the queue too, of an asset no queue holds a row of. Its save
-    // used to wait for one more read of that asset, with no row to write it into.
-    it.each<[string, string[]]>([
-      ['no queue has a row', []],
-      ['the rows of the queue are of other assets', ['asset-2', 'asset-3']],
-    ])('reads no asset after its save, the telling still on, when %s', async (_what, others) => {
-      const queue = useUploadQueuesStore(pinia)
-      if (others.length > 0) await queue.addByCopyToLicence(ROWS, extSystem, licence, others)
-      const rows = () => queue.getQueueItems(ROWS).map(rowState)
-      const untouched = rows()
-      await openDetail()
-      useAssetDetailStore(pinia).updateUploadStore = true
+    // used to wait for one more read of that asset, with no row to write it into. A row whose file the server is
+    // still processing may turn out to be a duplicate of that asset, and become its row while it is read: then the
+    // asset is read, and a row that has not become its row is left as it was.
+    it.each<[string, string[], number]>([
+      ['no queue has a row', [], 0],
+      ['the rows of the queue are of other assets, being processed', ['asset-2', 'asset-3'], 1],
+    ])(
+      'reads the asset after its save only while a row may become its row, the telling still on, when %s',
+      async (_what, others, reads) => {
+        const queue = useUploadQueuesStore(pinia)
+        if (others.length > 0) await queue.addByCopyToLicence(ROWS, extSystem, licence, others)
+        const rows = () => queue.getQueueItems(ROWS).map(rowState)
+        const untouched = rows()
+        await openDetail()
+        useAssetDetailStore(pinia).updateUploadStore = true
 
-      await saved()
+        await saved()
 
-      expect(saves()).toHaveLength(1)
-      expect(assetReads()).toEqual([])
-      expect(shownAlerts()).toEqual([updated])
-      expect(rows()).toEqual(untouched)
-    })
+        expect(saves()).toHaveLength(1)
+        expect(assetReads()).toEqual(Array(reads).fill(`${endPoints.asset}/asset-1`))
+        expect(shownAlerts()).toEqual([updated])
+        expect(rows()).toEqual(untouched)
+      }
+    )
 
     // The form is not locked while the save runs. What is typed or switched meanwhile is not saved, and is not the
     // rows' either: they would send it with the next save of the queue as if the detail had saved it.
@@ -321,6 +330,25 @@ describe.each(consumerProfiles)('the save of the detail of an asset under the $n
       // What was typed since stays in the form, for the next save.
       expect(detail.asset!.metadata.customData).toEqual({ description: 'typed while the save runs' })
       expect(detail.mainFileSingleUse).toBe(false)
+    })
+
+    // The rows of the queue are not locked while the save of the detail runs: what is typed into a row meanwhile is the
+    // user's, as what is typed while the asset is read afterwards. It was replaced.
+    it('keeps what was typed into the row of its asset while the save runs', async () => {
+      const { row } = await openedFromRow()
+      failAssetReads()
+      const held = await saveOnItsWay()
+
+      row.keywords = ['keyword-typed-meanwhile']
+      row.customData = { title: 'typed meanwhile' }
+      held.release()
+      await vi.waitFor(() => expect(shownAlerts()).toEqual([updated]))
+
+      expect(row).toMatchObject({
+        keywords: ['keyword-typed-meanwhile'],
+        customData: { title: 'typed meanwhile', description: 'from the server' },
+        mainFileSingleUse: true,
+      })
     })
 
     // The store of the detail is shared: by the time the save is answered it can hold another asset.

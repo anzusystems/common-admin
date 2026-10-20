@@ -35,8 +35,8 @@ export interface UploadTrackState {
   /** Failed reads in a row. */
   readFailures: number
   /**
-   * A failed read of the row, or one that found no asset, was let be reported, and no read has brought its asset
-   * since: the next ones are not.
+   * A failed read of the row was written down, or one that found no asset was let be reported, and no read has
+   * brought its asset since: the next ones are not.
    */
   reported: boolean
 }
@@ -74,6 +74,8 @@ export interface UploadSettleMemory {
   reviveWithMetadata: WeakSet<UploadQueueItem>
   /** Failed rows a refresh may still change: given up by the client and asked about, or left without their original. */
   refreshMayHelp: WeakSet<UploadQueueItem>
+  /** Rows failed by the read that was one too many to find no asset, as long as the server settles them by nothing else. */
+  givenUpMissing: WeakSet<UploadQueueItem>
   notices: WeakMap<UploadQueueItem, UploadRowNotice>
   /** One counter for the revisions and the starts of the reads. */
   clock: number
@@ -85,6 +87,7 @@ export const createUploadSettleMemory = (): UploadSettleMemory => ({
   metadataLoaded: new WeakSet(),
   reviveWithMetadata: new WeakSet(),
   refreshMayHelp: new WeakSet(),
+  givenUpMissing: new WeakSet(),
   notices: new WeakMap(),
   clock: 0,
 })
@@ -347,6 +350,7 @@ export function createUploadSettle(
       profile.hooks.afterMetadataLoaded?.(queueKey, row)
     }
     memory.reviveWithMetadata.delete(raw)
+    memory.givenUpMissing.delete(raw)
     notice.slow = false
     syncNotice(row, { clear: true })
     setRefreshMayHelp(queueKey, row, false)
@@ -364,6 +368,7 @@ export function createUploadSettle(
     row.canEditMetadata = false
     dropNotice(row)
     memory.reviveWithMetadata.delete(toRaw(row))
+    memory.givenUpMissing.delete(toRaw(row))
     setRefreshMayHelp(queueKey, row, false)
     untrack(row)
     profile.hooks.onRowFinal(queueKey, row)
@@ -388,6 +393,7 @@ export function createUploadSettle(
       if (!profile.matches(row, target, 'settle')) continue
       const raw = toRaw(row)
       if (row.status === UploadQueueItemStatus.Failed) memory.reviveWithMetadata.add(raw)
+      memory.givenUpMissing.delete(raw)
       row.status = UploadQueueItemStatus.Uploaded
       // A row the client gave up on, which had its metadata by then, gets the form back as the user left it.
       if (!isMarkedDuplicate(row) && memory.metadataLoaded.has(raw)) row.canEditMetadata = true
@@ -437,6 +443,7 @@ export function createUploadSettle(
       clearRowError(row)
       dropNotice(row)
       memory.reviveWithMetadata.delete(toRaw(row))
+      memory.givenUpMissing.delete(toRaw(row))
       marked.push({ row, mark: bump(row) })
       setRefreshMayHelp(queueKey, row, false)
       untrack(row)
@@ -538,6 +545,7 @@ export function createUploadSettle(
       row.canEditMetadata = true
       dropNotice(row)
       memory.reviveWithMetadata.delete(toRaw(row))
+      memory.givenUpMissing.delete(toRaw(row))
       bump(row)
       setRefreshMayHelp(queueKey, row, false)
       untrack(row)
@@ -654,20 +662,35 @@ export function createUploadSettle(
   }
 
   /**
-   * The asset of a tracked row was missing from as many reads as it takes: a row still processing fails, a row
-   * the client gave up on is only left alone.
+   * An uploaded row still without its metadata, which its refresh would load. It is no longer tracked, and the reads
+   * that find no asset are counted for it as for a row that waits.
+   */
+  const awaitsMetadata = (row: UploadQueueItem) =>
+    row.status === UploadQueueItemStatus.Uploaded &&
+    !row.canEditMetadata &&
+    policyOf(row).metadata === 'load' &&
+    !isMarkedDuplicate(row)
+
+  /**
+   * The asset of a row was missing from as many reads as it takes, of a tracked row or of one a refresh may still
+   * help: a row still processing fails, an uploaded row still without its metadata fails with `assetGone`, any
+   * other (a row the client gave up on, one left without the original of its duplicate) is only left alone.
    */
   const giveUpOnMissing = ({ queueKey, row }: Pick<UploadSettleRow, 'queueKey' | 'row'>) => {
     // There is no asset a refresh could read.
     setRefreshMayHelp(queueKey, row, false)
-    if (row.status !== UploadQueueItemStatus.Processing) {
+    const withoutMetadata = awaitsMetadata(row)
+    if (row.status !== UploadQueueItemStatus.Processing && !withoutMetadata) {
       untrack(row)
       return
     }
     row.status = UploadQueueItemStatus.Failed
     row.error.hasError = true
-    row.error.message = profile.messages.assetMissing(row)
+    row.error.message = withoutMetadata
+      ? (profile.messages.assetGone?.(row) ?? profile.messages.assetMissing(row))
+      : profile.messages.assetMissing(row)
     row.canEditMetadata = false
+    memory.givenUpMissing.add(toRaw(row))
     dropNotice(row)
     untrack(row)
     profile.hooks.onRowFinal(queueKey, row)
@@ -693,6 +716,7 @@ export function createUploadSettle(
     settleKnownFailed,
     settleDuplicate,
     settleKnownDuplicate,
+    awaitsMetadata,
     giveUpOnMissing,
   }
 }

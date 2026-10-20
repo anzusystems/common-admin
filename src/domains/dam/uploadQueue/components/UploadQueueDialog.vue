@@ -110,7 +110,10 @@ watch(
   },
   { flush: 'sync' }
 )
+// A save and apply that waits for the rows it reads ends there once the dialog has gone.
+let disposed = false
 onBeforeUnmount(() => {
+  disposed = true
   if (uploadQueueDialogSaving.value === props.queueKey) uploadQueueDialogSaving.value = null
 })
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
@@ -153,7 +156,20 @@ const onSaveAndApply = async () => {
   // nothing is saved or handed over until the button is pressed again. Where none comes, all goes on as it did.
   const withoutForm = itemsRaw.filter(isUploadedWithoutForm)
   if (withoutForm.length > 0) {
+    const shownFor = uploadQueueDialog.value
     await Promise.all(withoutForm.map((item) => uploadQueuesStore.refreshAsset(item.assetId)))
+    // Closed while the rows were read (its queue stopped and emptied with it): nothing is saved or handed over. The
+    // save went out once the read had answered, for a queue the user had left.
+    if (disposed || uploadQueueDialog.value !== shownFor) {
+      saveAndCloseButtonLoading.value = false
+      return
+    }
+    // A row given up meanwhile for its asset gone ("Asset už neexistuje."), by this read as the one too many to miss
+    // it or by another, is not handed over: the user is told why, as by its refresh. Uploaded before the read, the row
+    // was given up by nothing earlier.
+    if (withoutForm.some((item) => uploadQueuesStore.isGivenUpMissing(item))) {
+      showWarningT('common.damImage.queueItem.assetGone')
+    }
     if (withoutForm.some((item) => item.canEditMetadata)) {
       showWarningT('common.damImage.upload.metadataJustLoaded')
       saveAndCloseButtonLoading.value = false

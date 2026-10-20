@@ -2,7 +2,7 @@
 import { computed, inject, onUnmounted, provide, ref, watch } from 'vue'
 import { useDisplay } from 'vuetify'
 import { useI18n } from 'vue-i18n'
-import { type DamAssetTypeType } from '@/domains/dam/types/Asset'
+import { type AssetDetailItemDto, type DamAssetTypeType } from '@/domains/dam/types/Asset'
 import { useAssetSelectActions } from '@/domains/dam/assetSelect/composables/assetSelectListActions'
 import AssetSelectListTable from '@/domains/dam/assetSelect/components/AssetSelectListTable.vue'
 import AssetSelectListBar from '@/domains/dam/assetSelect/components/AssetSelectListBar.vue'
@@ -164,12 +164,23 @@ const sortByChange = (option: DatatableOrderingOption) => {
   fetchAssetListDebounced()
 }
 
+// Whether the open detail is the one "edit" of the side panel opened. The detail of a row of the upload queue is drawn
+// here as well, and its close has the panel read its own asset again.
+let detailOfPanel = false
+
 const onOpenEditDialog = () => {
   if (!asset.value) return
+  detailOfPanel = true
   dialog.value = props.queueKey
 }
 
-const onCloseEditDialog = () => readActiveItemAgain()
+// The panel reads the asset the detail it opened showed, not the one the list remembers: the two differ once a click
+// has been made while the panel showed the asset it opened.
+const onCloseEditDialog = (shown: AssetDetailItemDto | null) => {
+  const ofPanel = detailOfPanel
+  detailOfPanel = false
+  readActiveItemAgain(ofPanel ? (shown?.id ?? null) : null)
+}
 
 const imageWidgetUploadConfig = inject(ImageWidgetUploadConfigKey, undefined)
 const uploadEnabled = computed(() => isDefined(imageWidgetUploadConfig) && isDefined(imageWidgetUploadConfig.value))

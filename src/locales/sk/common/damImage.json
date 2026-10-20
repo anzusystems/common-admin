@@ -55,6 +55,8 @@
     "copyAssetId": "Kopírovať asset ID",
     "stillUploadingOrProcessing": "Asset sa stále nahráva alebo spracováva serverom",
     "refreshFailed": "Stav položky sa nepodarilo načítať. Skúste to znova.",
+    "assetGone": "Asset už neexistuje.",
+    "duplicateOriginalUnread": "Originál duplikátu sa nepodarilo načítať.",
     "removeFromQueue": "Odstrániť z fronty nahrávania?",
     "errorUnableToCopyToLicence": "Chyba, nie je možné kopírovať assety do licencie"
   },
@@ -204,7 +206,8 @@
     },
     "button": {
       "add": "Pridať nového autora",
-      "addConflict": "Pridať autora"
+      "addConflict": "Pridať autora",
+      "addConflictNamed": "Pridať autora {name}"
     },
     "meta": {
       "create": "Vytvorenie autora"

@@ -54,6 +54,7 @@ describe('the fake DAM', () => {
         const read = dam.client().get('/adm/v1/asset/asset-1')
         await Promise.resolve()
         held.release()
+        held.stop()
         return read
       },
       (data) => data,
@@ -83,6 +84,7 @@ describe('the fake DAM', () => {
     answered.authors?.push('author-2')
 
     expect(dam.assets.get('asset-1')).toEqual(before)
+    expect((await dam.client().get('/adm/v1/asset/asset-1')).data).toEqual(before)
   })
 
   it('keeps a body as it was sent: a test that changes it afterwards changes neither the request nor the DAM', async () => {
@@ -152,5 +154,22 @@ describe('the fake DAM', () => {
     given.authors.push('author-2')
 
     expect(dam.assets.get('asset-1')).toEqual(before)
+  })
+
+  // A test lets the requests it holds go and holds no more of them: a read after that is answered at once, one held
+  // before still waits for its release.
+  it('stops holding: a request after the stop is answered at once, one held before still waits', async () => {
+    const dam = withAsset()
+    const held = dam.hold('GET', dam.routes.one)
+    const before = dam.client().get('/adm/v1/asset/asset-1')
+    await Promise.resolve()
+
+    held.stop()
+    const after = await dam.client().get('/adm/v1/asset/asset-1')
+
+    expect(after.status).toBe(200)
+    expect(held.waiting).toHaveLength(1)
+    held.release()
+    expect((await before).status).toBe(200)
   })
 })

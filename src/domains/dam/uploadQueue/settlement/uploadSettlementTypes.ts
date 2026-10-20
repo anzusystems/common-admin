@@ -40,9 +40,10 @@ export interface UploadReadOptions {
    * Whether a failure of this request is to be reported to whoever collects the errors of the application.
    *
    * The poll and the notifications ask again and again for as long as a row waits, so of their requests only
-   * the first that fails in a streak is `true`; a read that answers ends the streak. An asset that does not
-   * exist (404) counts as such a failure: it is `true` once per row at most. A read the user asked for (the
-   * refresh) is always `true`.
+   * the first that fails in a streak is `true`; a read that answers ends the streak. The streak begins with a
+   * failure that was written down (`readers.failureReported`): after one that was not, the next request is
+   * `true` again. An asset that does not exist (404) counts as such a failure: it is `true` once per row at most.
+   * A read the user asked for (the refresh) is always `true`.
    */
   report: boolean
   /**
@@ -79,6 +80,12 @@ export interface UploadSettlementProfile {
     ): Promise<AssetDetailItemDto>
     /** DAM: the original file of a duplicate, by its type. */
     duplicateOriginFile?(originFileId: DocId, assetType: DamAssetTypeType): Promise<AssetFileNullable>
+    /**
+     * Whether a failure of a read that was let report (`report: true`) was written down, by what the read threw:
+     * `apiErrorIsReported` for readers that report through the api error logger. One that was not (a timeout, a
+     * 401, a 403) has told nobody, and the next read is let report again. Without it, every such failure was.
+     */
+    failureReported?(error: unknown): boolean
   }
   caches: {
     addAuthors(ids: DocId[]): void
@@ -90,6 +97,11 @@ export interface UploadSettlementProfile {
     processingTooLong(row: UploadQueueItem): string
     readFailed(row: UploadQueueItem): string
     assetMissing(row: UploadQueueItem): string
+    /**
+     * The text of an uploaded row still without its metadata whose asset was missing from as many reads as it
+     * takes: it fails with it. Without it, `assetMissing`.
+     */
+    assetGone?(row: UploadQueueItem): string
   }
   /**
    * `'load'`: this row may be given its metadata from the notification although it has failed. `undefined`: the
@@ -135,10 +147,10 @@ export interface UploadSettlementEvent {
 
 /**
  * `settled`: the main file is in a final state, or its asset was missing once too often and its rows were given
- * up. `pending`: not yet. `error`, which asking again may mend: the read failed, the asset was not found, or a row
- * is left without the original of its duplicate, which could not be read.
+ * up. `pending`: not yet. And what asking again may mend: `error`, the read failed; `missing`, the asset was not
+ * found; `originalUnread`, a row is left without the original of its duplicate, which could not be read.
  */
-export type UploadRefreshOutcome = 'settled' | 'pending' | 'error'
+export type UploadRefreshOutcome = 'settled' | 'pending' | 'error' | 'missing' | 'originalUnread'
 
 /** What a store uses. */
 export interface UploadSettlement {
@@ -163,6 +175,11 @@ export interface UploadSettlement {
   /** A known failure, without a read. Synchronous. */
   settleKnownFailed(target: UploadSettlementTarget, failReason: AssetFileFailReasonType): void
 
+  /**
+   * The row failed by the read that was one too many to find no asset of it (the poll's, a notification's, a
+   * refresh's), and the server has settled it by nothing else since.
+   */
+  isGivenUpMissing(row: UploadQueueItem): boolean
   hasTracked(): boolean
   dispose(): void
 }

@@ -79,6 +79,7 @@ const asset = (status: string) => ({
 
 const STILL_PROCESSING = 'common.damImage.queueItem.stillUploadingOrProcessing'
 const REFRESH_FAILED = 'common.damImage.queueItem.refreshFailed'
+const ASSET_GONE = 'common.damImage.queueItem.assetGone'
 /** The warnings the user was shown, by their keys. */
 const warned = () => showWarningT.mock.calls.map(([key]) => key as string)
 
@@ -155,18 +156,18 @@ describe('the refresh of an item of the upload queue', () => {
     expect(warned()).toEqual([REFRESH_FAILED])
   })
 
-  it('says the state could not be loaded when the asset is gone as well', async () => {
+  it('says the asset no longer exists when it is gone', async () => {
     fetchAsset.mockRejectedValue(new AnzuApiResponseCodeError(404))
     const item = await processingItem()
 
     await useUploadQueueItemRefresh().refreshItem('asset-1')
 
     expect(item.status).toBe(UploadQueueItemStatus.Processing)
-    expect(warned()).toEqual([REFRESH_FAILED])
+    expect(warned()).toEqual([ASSET_GONE])
   })
 
   // The third read that finds no asset gives the item up: it fails, and has no refresh left to try again with.
-  it('does not say to try again on the press that finds the asset gone for the third time', async () => {
+  it('says nothing on the press that finds the asset gone for the third time', async () => {
     fetchAsset.mockRejectedValue(new AnzuApiResponseCodeError(404))
     const item = await processingItem()
     const { refreshItem } = useUploadQueueItemRefresh()
@@ -174,7 +175,7 @@ describe('the refresh of an item of the upload queue', () => {
     await refreshItem('asset-1')
     await refreshItem('asset-1')
     expect(item.status).toBe(UploadQueueItemStatus.Processing)
-    expect(warned()).toEqual([REFRESH_FAILED, REFRESH_FAILED])
+    expect(warned()).toEqual([ASSET_GONE, ASSET_GONE])
 
     await refreshItem('asset-1')
 
@@ -201,11 +202,12 @@ describe('the upload queue', () => {
     expect(fetchAsset.mock.calls[0]![2]).toBe('asset-1')
   })
 
-  // The queue says which row was pressed: a press that fails that row is not followed by "try again". The row
-  // before it, of another asset, waits on: handed over in its place, it would be told to.
-  it('hands the refresh the row that asked: one the refresh itself fails is not told to try again', async () => {
-    fetchAsset.mockResolvedValue(asset(AssetFileProcessStatus.Duplicate))
-    fetchAssetByFileId.mockRejectedValue(new Error('502 Bad Gateway'))
+  // The queue says which row was pressed: what the press says goes by that row. The server has failed its file, so
+  // no refresh may change it, and a read that fails is not followed by "try again". The row before it, of another
+  // asset, waits on: handed over in its place, it would be told to.
+  it('hands the refresh the row that asked: one whose file the server failed is not told to try again', async () => {
+    fetchAsset.mockReset()
+    fetchAsset.mockRejectedValue(new Error('502 Bad Gateway'))
     wrapper = mount(UploadQueueEditable, {
       props: { queueKey: 'q', extSystem: 1, massOperations: false },
       global: { stubs: { UploadQueueItemEditable: true, AssetQueueSelectedSidebar: true } },
@@ -215,13 +217,18 @@ describe('the upload queue', () => {
     const [before, item] = store.getQueueItems('q')
     await flushPromises()
     expect([before!.assetId, item!.assetId]).toEqual(['asset-0', 'asset-1'])
+    bus.listener!({
+      name: DamNotificationName.AssetFileFailed,
+      data: { asset: 'asset-1', failReason: AssetFileFailReason.InvalidMimeType },
+    })
+    await vi.waitFor(() => expect(item!.status).toBe(UploadQueueItemStatus.Failed))
 
     wrapper.findAllComponents(UploadQueueItemEditable)[1]!.vm.$emit('refreshItem', { index: 1, assetId: 'asset-1' })
-    await vi.waitFor(() => expect(item!.status).toBe(UploadQueueItemStatus.Failed))
+    await vi.waitFor(() => expect(fetchAsset).toHaveBeenCalled())
     await flushPromises()
 
-    expect(fetchAssetByFileId).toHaveBeenCalledTimes(1)
-    expect(before!.status).toBe(UploadQueueItemStatus.Processing)
+    expect(fetchAsset.mock.calls.map((call) => call[2])).toEqual(['asset-1'])
+    expect([before!.status, item!.status]).toEqual([UploadQueueItemStatus.Processing, UploadQueueItemStatus.Failed])
     expect(warned()).toEqual([])
   })
 

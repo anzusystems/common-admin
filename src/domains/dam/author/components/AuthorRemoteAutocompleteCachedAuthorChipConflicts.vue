@@ -22,11 +22,21 @@ const clickClose = () => {
   emit('addAuthor', props.id)
 }
 
-const { getCachedAuthor } = useDamCachedAuthors()
+const { getCachedAuthor, addToCachedAuthors, fetchCachedAuthors, pinCachedAuthor, unpinCachedAuthor } =
+  useDamCachedAuthors()
 
 // As the author chip reads it. An author the server did not return is settled too: it has only its id to show,
 // until a later ask for it finds it.
-const { cached, loaded, unresolved } = useCachedItem(() => getCachedAuthor(props.id))
+const { cached, loaded, unresolved } = useCachedItem(() => getCachedAuthor(props.id), {
+  // The name the chip shows stays in the cache while it shows it.
+  id: () => props.id,
+  pin: pinCachedAuthor,
+  unpin: unpinCachedAuthor,
+  askFor: (id) => {
+    addToCachedAuthors([id])
+    fetchCachedAuthors()
+  },
+})
 
 const displayTitle = computed(() => {
   if (unresolved.value) return '#' + props.id
@@ -37,16 +47,22 @@ const displayTitle = computed(() => {
 })
 
 const { t } = useI18n()
+
+// Named by its author, once the name has come: every "+" of the conflicts was "Add author" alone.
+const addLabel = computed(() =>
+  displayTitle.value.length > 0
+    ? t('common.damImage.author.button.addConflictNamed', { name: displayTitle.value })
+    : t('common.damImage.author.button.addConflict')
+)
 </script>
 
 <template>
-  <!-- The "+" adds the author, and is named so: Vuetify translates the key, as it does its own "close". -->
+  <!-- The "+" adds the author, and is named so, by the author. Drawn here as the chip draws its close: the chip names
+       its close by a key it translates without parameters, and a name could not go into it. The chip is not closable;
+       its close is named all the same, as the rule of the library for chips asks. -->
   <VChip
     size="small"
-    closable
-    close-icon="mdi-plus"
     close-label="common.damImage.author.button.addConflict"
-    @click:close="clickClose"
   >
     {{ displayTitle }}
     <VTooltip
@@ -63,5 +79,17 @@ const { t } = useI18n()
       indeterminate
       class="mx-1"
     />
+    <button
+      class="v-chip__close"
+      type="button"
+      data-testid="close-chip"
+      :aria-label="addLabel"
+      @click.stop.prevent="clickClose"
+    >
+      <VIcon
+        icon="mdi-plus"
+        size="x-small"
+      />
+    </button>
   </VChip>
 </template>

@@ -1,9 +1,10 @@
 import { isUndefined } from '@/shared/utils/common'
 import { useImageStore } from '@/domains/dam/imageWidget/store/imageStore'
-import type { DocId } from '@/shared/types/common'
+import type { DocId, IntegerId } from '@/shared/types/common'
 import { fetchAuthorListByIds } from '@/domains/dam/author/api/authorApi'
 import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
 import { useExtSystemIdForCached } from '@/domains/dam/composables/extSystemIdForCached'
+import { useDamConfigStore } from '@/domains/dam/config/store/damConfigStore'
 
 export function useImageMassOperations(configName?: string) {
   const imageStore = useImageStore()
@@ -34,25 +35,35 @@ export function useImageMassOperations(configName?: string) {
 
   const { damClient, endPointAuthor } = useCommonAdminCoreDamOptions(configName)
   const { cachedExtSystemId } = useExtSystemIdForCached()
+  const damConfigStore = useDamConfigStore()
 
   const replaceEmptyAuthors = async (value: DocId[], forceReplace = false) => {
     if (imageStore.readonly) return
     // No authors picked fill nothing: written all the same, they would only take the source of the rows away.
     if (!forceReplace && value.length === 0) return
-    const authorsMap = new Map<DocId, string>()
-    const authorNames: string[] = []
-    const authorsRes = await fetchAuthorListByIds(damClient, endPointAuthor, cachedExtSystemId.value, [...value])
+    // Their names under the ext system of the licence of the asset of each row, as every name of the authors of the
+    // DAM the widgets write, and under that of the page where the page does not know the licence (not read for it):
+    // one lookup per ext system. The page's went for every row.
+    const pageExtSystem = cachedExtSystemId.value
+    const extSystemOf = new Map<IntegerId, IntegerId>()
+    imageStore.images.forEach((item) => {
+      const licence = item.dam.licenceId
+      extSystemOf.set(licence, damConfigStore.damConfigLicenceExtSystem.get(licence)?.extSystem ?? pageExtSystem)
+    })
+    const namesUnder = new Map<IntegerId, string>()
+    await Promise.all(
+      [...new Set([...extSystemOf.values(), pageExtSystem])].map(async (extSystem) => {
+        const authorsRes = await fetchAuthorListByIds(damClient, endPointAuthor, extSystem, [...value])
+        const authorNames: string[] = []
+        value.forEach((authorId) => {
+          const name = authorsRes.find((author) => author.id === authorId)?.name
+          if (!isUndefined(name) && name.trim().length > 0) authorNames.push(name)
+        })
+        namesUnder.set(extSystem, authorNames.join(', '))
+      })
+    )
     // The widget may have turned read-only while the authors loaded.
     if (imageStore.readonly) return
-    authorsRes.forEach((author) => {
-      authorsMap.set(author.id, author.name)
-    })
-    value.forEach((authorId) => {
-      const name = authorsMap.get(authorId)
-      if (!isUndefined(name) && name.trim().length > 0) {
-        authorNames.push(name)
-      }
-    })
     const items = imageStore.images
     for (let i = 0; i < items.length; i++) {
       const item = items[i]!
@@ -63,7 +74,7 @@ export function useImageMassOperations(configName?: string) {
       // of the picked authors are not written over it.
       if (forceReplace || (noAuthors && (item.showDamAuthors || noSource))) {
         item.damAuthors = value
-        item.texts.source = authorNames.join(', ')
+        item.texts.source = namesUnder.get(extSystemOf.get(item.dam.licenceId) ?? pageExtSystem) ?? ''
         imageStore.noteSourceOfPick(item)
       }
     }

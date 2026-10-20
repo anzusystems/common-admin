@@ -14,7 +14,7 @@ const mapIdToMinimal = (id: DocId): DamKeywordMinimal => {
   return { id: id, name: '' }
 }
 
-const { cache, toFetch, fetch, add, addManual, addManualMinimal, has, get, isLoaded } = defineCached<
+const { cache, toFetch, fetch, add, addManual, addManualMinimal, pin, unpin, has, get, isLoaded } = defineCached<
   DocId,
   DamKeyword,
   DamKeywordMinimal
@@ -31,6 +31,8 @@ export const useDamCachedKeywords = () => {
     addManualMinimalToCachedKeywords: addManualMinimal,
     addToCachedKeywords: add,
     fetchCachedKeywords: fetch,
+    pinCachedKeyword: pin,
+    unpinCachedKeyword: unpin,
     toFetchCachedKeywords: toFetch,
     cachedKeywords: cache,
     hasCachedKeyword: has,

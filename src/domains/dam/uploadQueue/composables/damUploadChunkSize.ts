@@ -19,19 +19,24 @@ export function useDamUploadChunkSize(apiTimeout: number = 30) {
 
     const expectedChunkUploadSpeed = lastChunkSize.value / speed
     if (expectedChunkUploadSpeed > maxUploadTimeThreshold) {
-      lastChunkSize.value = returnFromRange(maxUploadTimeThreshold * speed)
-      chunkSize.value = lastChunkSize.value
-
-      return true
+      return resize(maxUploadTimeThreshold * speed)
     }
     if (expectedChunkUploadSpeed < minUploadTimeThreshold) {
-      lastChunkSize.value = returnFromRange(idealUploadTimeThreshold * speed)
-      chunkSize.value = lastChunkSize.value
-
-      return true
+      return resize(idealUploadTimeThreshold * speed)
     }
 
     return false
+  }
+
+  // Answers whether the size changed: at a bound of the configuration it stays, and the chunk of a retry is not read
+  // from the file again.
+  const resize = (size: number) => {
+    const next = returnFromRange(size)
+    const changed = next !== lastChunkSize.value
+    lastChunkSize.value = next
+    chunkSize.value = next
+
+    return changed
   }
 
   const returnFromRange = (value: number) => {

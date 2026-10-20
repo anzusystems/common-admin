@@ -75,6 +75,9 @@ const isDone = computed(() => {
   return !isNull(item.value) && item.value.status === UploadQueueItemStatus.Uploaded
 })
 
+// The title stays "done", in the colour of an error for a file refused or failed.
+const isFailed = computed(() => item.value?.status === UploadQueueItemStatus.Failed)
+
 const { damClient, endPointAsset, endPointAuthor, customUploadMetadataToImageMap, simpleAssetSidebarEnabled } =
   useCommonAdminCoreDamOptions(damConfigName)
 
@@ -185,21 +188,27 @@ const onSaveAndApply = async () => {
   }
 }
 
+// Read once the file is done, and again once the row has another asset: a row that turns out to be a duplicate becomes
+// the original of that duplicate only after the original asset has been read, and showed no "File info" then.
 watch(
-  isDone,
-  async (newValue) => {
-    if (!newValue || !item.value?.assetId) return
-    const assetId = item.value.assetId
+  [isDone, () => item.value?.assetId],
+  async ([done, assetId]) => {
+    if (!done || !assetId) return
+    // The row it is read for: the queue of a dialog closed meanwhile is emptied, and the next upload of the widget is
+    // a new row of the same queue.
+    const row = item.value
     try {
       const res = await fetchAsset(damClient, endPointAsset, assetId)
       // Closed meanwhile, the dialog has emptied its queue. The detail store is shared: written now, the asset of
-      // this file would be what the next dialog shows.
+      // this file would be what the next dialog shows. Nor the asset of a row that has another one by now.
       if (item.value?.assetId !== assetId) return
       assetDetailStore.setAsset(res)
       enableRoiTab.value = true
     } catch (e) {
-      // Closed meanwhile as well: the error would be shown over whatever the user has gone on to.
-      if (item.value?.assetId !== assetId) return
+      // Closed meanwhile as well: the error would be shown over whatever the user has gone on to, the next upload of
+      // the widget among it. A row that has become the original of a duplicate meanwhile is the same row, and its
+      // failed read is said as any.
+      if (item.value !== row) return
       showErrorsDefault(e)
     }
   },
@@ -228,7 +237,8 @@ onMounted(() => {
       </div>
       <div
         v-else
-        class="text-label-large text-green-darken-3 font-weight-bold"
+        class="text-label-large font-weight-bold"
+        :class="isFailed ? 'text-error' : 'text-green-darken-3'"
       >
         {{ t('common.damImage.upload.titleDone') }}
       </div>

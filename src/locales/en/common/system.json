@@ -60,7 +60,8 @@
     "dropHere": "Upload files"
   },
   "upload": {
-    "incorrectFormatSize": "Invalid format or size"
+    "incorrectFormatSize": "Invalid format or size",
+    "onlyOneFile": "Only one file can be uploaded here; the first one is used."
   },
   "inputSuggestedMax": "{current} / max {max}",
   "notSet": "Not set"

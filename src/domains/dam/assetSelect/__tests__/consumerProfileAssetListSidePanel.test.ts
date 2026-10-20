@@ -357,6 +357,37 @@ describe('the asset list of the asset page of admin-ugc and its side panel', () 
       expect(shownAlerts()).toEqual([failed])
     })
 
+    // A click whose read failed left its tile marked beside the panel, which went on showing the asset before it, and
+    // the detail "edit" of the panel opened showed that asset: closed, it had the asset of the tile clicked read.
+    it('after a click whose read failed: the tile of the asset the panel shows is marked, and that asset is read', async () => {
+      await mountList()
+      await firstTileClicked()
+      dam.reply((request) =>
+        request.method === 'GET' && readOf('asset-51').test(request.url) ? { status: 500 } : undefined
+      )
+      await tiles()[1]!.trigger('click')
+      await vi.waitFor(() => expect(shownAlerts()).toEqual([failed]))
+      await flushPromises()
+      expect([detail().asset?.id, panelShowsAnAsset()]).toEqual(['asset-50', true])
+      expect(tilesDrawn()).toEqual([
+        ['First in the list', true],
+        ['Second in the list', false],
+      ])
+
+      await editInPanel()
+      closeDetail()
+      await vi.waitFor(() => expect(readsOf('asset-50')).toBe(2))
+      await vi.waitFor(() => expect(detail().asset?.id).toBe('asset-50'))
+      await flushPromises()
+
+      expect(readsOf('asset-51')).toBe(1)
+      expect(tilesDrawn()).toEqual([
+        ['First in the list', true],
+        ['Second in the list', false],
+      ])
+      expect(shownAlerts()).toEqual([failed])
+    })
+
     it('but reads nothing when no tile was clicked: the panel stays empty', async () => {
       await mountList()
       await oneUploaded()

@@ -5,7 +5,8 @@ import { cloneDeep } from '@/shared/utils/common'
 // The saves of an image by the image widgets of the page. A widget drawn again elsewhere (the pin of a sidebar widget
 // in admin-cms) is a second widget of the same image, drawn while the save of the widget it replaced may still be on
 // its way: it read the image before that save took effect, and "edit metadata" offered the texts it had read, whose
-// confirm saved them back over the saved ones.
+// confirm saved them back over the saved ones. The widget of several images (a gallery) holds each of its images, and
+// its save is noted for each of them.
 // The note of an image lives while a widget holds the image or a save of it is on its way: the copy may be drawn only
 // once its configuration has been read, and a widget of the image drawn on the article opened again reads the image as
 // well before that save took effect.
@@ -22,8 +23,8 @@ interface SavesOfImage {
   waiting: Array<{ mayGo: () => boolean; go: () => void }>
 }
 const saves = new Map<string, SavesOfImage>()
-/** The image each widget holds, by the key of its note. */
-const held = new Map<symbol, string>()
+/** The images each widget holds, by the keys of their notes. */
+const held = new Map<symbol, Set<string>>()
 
 const keyOf = (config: string, id: IntegerId) => JSON.stringify([config, id])
 
@@ -42,26 +43,36 @@ const dropUnheld = (key: string, of: SavesOfImage) => {
 }
 
 /**
+ * The widget `holder` holds the images `ids`, and no other: as it reads them, takes those it is given, or goes. The
+ * answer is how many saves of each of them have been answered by then, by its id.
+ */
+export const holdImages = (config: string, holder: symbol, ids: IntegerId[]) => {
+  const keys = new Map(ids.map((id) => [id, keyOf(config, id)]))
+  const kept = new Set(keys.values())
+  held.get(holder)?.forEach((key) => {
+    if (kept.has(key)) return
+    const of = saves.get(key)
+    if (!of) return
+    of.holders.delete(holder)
+    dropUnheld(key, of)
+  })
+  if (kept.size === 0) held.delete(holder)
+  else held.set(holder, kept)
+  const answered = new Map<IntegerId, number>()
+  keys.forEach((key, id) => {
+    const of = savesOf(key)
+    of.holders.add(holder)
+    answered.set(id, of.answered)
+  })
+  return answered
+}
+
+/**
  * The widget `holder` holds the image `id`, or none: as it reads the image, takes one it is given, or goes. The answer
  * is how many saves of that image have been answered by then.
  */
-export const holdImage = (config: string, holder: symbol, id: IntegerId | null) => {
-  const key = id === null ? null : keyOf(config, id)
-  const before = held.get(holder)
-  if (before !== undefined && before !== key) {
-    held.delete(holder)
-    const of = saves.get(before)
-    if (of) {
-      of.holders.delete(holder)
-      dropUnheld(before, of)
-    }
-  }
-  if (key === null) return 0
-  const of = savesOf(key)
-  of.holders.add(holder)
-  held.set(holder, key)
-  return of.answered
-}
+export const holdImage = (config: string, holder: symbol, id: IntegerId | null) =>
+  id === null ? (holdImages(config, holder, []), 0) : holdImages(config, holder, [id]).get(id)!
 
 /**
  * The save of the image a widget has sent: the other widgets of the image know it is on its way and, once it is
@@ -93,6 +104,29 @@ export const noteImageSave = async <T extends ImageCreateUpdateAware>(
     })
     dropUnheld(key, of)
   }
+}
+
+/**
+ * The save of several images at once, as the widget of several images saves them: noted for each image `ids` names, as
+ * `noteImageSave` notes one, with that image as the answer has it. An image the answer does not have counts as not
+ * saved.
+ */
+export const noteImagesSave = async <T extends ImageCreateUpdateAware>(
+  config: string,
+  ids: IntegerId[],
+  own: Set<symbol>,
+  save: Promise<T[]>
+) => {
+  ids.forEach((id) => {
+    const one = save.then((saved) => {
+      const image = saved.find((answered) => answered.id === id)
+      if (!image) throw new Error('not in the answer')
+      return image
+    })
+    // Said by the save itself, to its widget.
+    noteImageSave(config, id, own, one).catch(() => undefined)
+  })
+  return save
 }
 
 /**

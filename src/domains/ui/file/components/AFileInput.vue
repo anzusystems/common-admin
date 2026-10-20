@@ -79,7 +79,7 @@ const onDropzoneDrop = (files: File[]) => {
   // One file is taken: the first the check lets through. Taken before the check, the first dropped lost a file
   // the check lets through whenever one it refuses was dropped before it.
   const checked = checkFormatsAndSizes(files)
-  if (checked.length > 1) showWarningT('common.damImage.upload.onlyOneFile')
+  if (checked.length > 1) showWarningT('common.system.upload.onlyOneFile')
   emit('filesInput', checked.slice(0, 1))
 }
 

@@ -68,10 +68,15 @@ watch(() => imageRoiStore.roi, readStoredRegion)
 // Two seconds after a save the file of the region is read again, as the DAM has redrawn it. The read is for that
 // file and only while the store still holds what the save left: the very object of the file (a rotation, another
 // slot or another asset put another), the region saved (admin-dam's change of slot takes the region away at once,
-// before the file of the new slot is read) and the cropper. Otherwise it keeps what it has, and the loader is left to
-// whoever shows the other file. It read the file shown when the two seconds were up, and put its answer in the store
-// whenever it came, over the file of another slot or a rotated one. Of two saves only the read after the latest is
-// put in the store: the read after the first, answering last, brought the file as the DAM had drawn it before.
+// before the file of the new slot is read) and the cropper. Otherwise it keeps what it has. It read the file shown when
+// the two seconds were up, and put its answer in the store whenever it came, over the file of another slot or a
+// rotated one. Of two saves only the read after the latest is put in the store: the read after the first, answering
+// last, brought the file as the DAM had drawn it before.
+// The save and the read after it show a loader of the cropper's own, with the store's: off whatever the read ends
+// with, and never one somebody else turned on in the store. The save turned on the store's, which stayed on over a
+// file shown by a way that does not hide it, and in the store when the cropper went before the read. Beside it the
+// cropper is busy in the store (`cropperBusy`), for the panel of the regions: it offers no refresh meanwhile. After the
+// read the previews of the regions are drawn anew. Gone before its save answered, the cropper waits for no redraw.
 interface SavedRegion {
   save: number
   file: AssetFileImage
@@ -80,6 +85,21 @@ interface SavedRegion {
 let unmounted = false
 let reloadTimer: ReturnType<typeof setTimeout> | undefined
 let savedRegions = 0
+const saving = ref(false)
+const loaderShown = computed(() => imageRoiStore.loader || saving.value)
+const busy = (on: boolean) => {
+  saving.value = on
+  imageRoiStore.setCropperBusy(on)
+}
+// Saves on their way, and whether the read after the latest answered save is still to come: the cropper is busy
+// till neither is left. Two commits before the cropper is hidden make two saves, and the end of the older one, its
+// failure or its read, turned the busy state off while the newer one still waited. A cropper that went cleared it
+// as it went: the store's flag may be another cropper's by now.
+let savesPending = 0
+let readPending = false
+const settleBusy = () => {
+  if (!unmounted) busy(savesPending > 0 || readPending)
+}
 const isStillShown = (saved: SavedRegion) =>
   !unmounted &&
   saved.save === savedRegions &&
@@ -87,19 +107,23 @@ const isStillShown = (saved: SavedRegion) =>
   imageRoiStore.roi?.id === saved.regionId
 
 const reloadSavedFile = async (saved: SavedRegion) => {
-  if (!isStillShown(saved)) return
-  // Decided once the read is back, and kept: the file it puts in the store is a new object, which the check no
-  // longer finds, and the loader is its to hide all the same.
-  let applies = false
   try {
-    const file = await fetchImageFile(damClient, endPointImage, saved.file.id)
-    applies = isStillShown(saved)
-    if (applies) imageRoiStore.setImageFile(file)
-  } catch (error) {
-    applies = isStillShown(saved)
-    if (applies) showErrorsDefault(error)
+    if (!isStillShown(saved)) return
+    try {
+      const file = await fetchImageFile(damClient, endPointImage, saved.file.id)
+      if (isStillShown(saved)) {
+        imageRoiStore.setImageFile(file)
+        imageRoiStore.forceReloadRoiPreviews()
+      }
+    } catch (error) {
+      if (isStillShown(saved)) showErrorsDefault(error)
+    }
   } finally {
-    if (applies) imageRoiStore.hideLoader()
+    // A newer save waits for a read of its own.
+    if (saved.save === savedRegions) {
+      readPending = false
+      settleBusy()
+    }
   }
 }
 
@@ -108,21 +132,26 @@ const saveRoi = async (committed: CropRect) => {
   if (!roi || !imageFile || props.readonly) return
 
   const region = cropToRegion(committed, roi, imageFile.imageAttributes.width, imageFile.imageAttributes.height)
+  savesPending++
+  busy(true)
   try {
-    imageRoiStore.showLoader()
     await updateRoi(damClient, endPointRoi, region.id, region)
     showRecordWas('updated')
+    if (unmounted) return
     const saved: SavedRegion = { save: ++savedRegions, file: imageFile, regionId: region.id }
+    readPending = true
     clearTimeout(reloadTimer)
     reloadTimer = setTimeout(() => reloadSavedFile(saved), 2000)
   } catch (error) {
-    imageRoiStore.hideLoader()
     showErrorsDefault(error)
+  } finally {
+    savesPending--
+    settleBusy()
   }
 }
 
 const showCropper = computed(() => {
-  if (imageRoiStore.imageFile && imageUrl.value.length > 0 && !imageRoiStore.loader) {
+  if (imageRoiStore.imageFile && imageUrl.value.length > 0 && !loaderShown.value) {
     return true
   }
   return false
@@ -131,13 +160,14 @@ const showCropper = computed(() => {
 onUnmounted(() => {
   unmounted = true
   clearTimeout(reloadTimer)
+  imageRoiStore.setCropperBusy(false)
   crop.value = null
 })
 </script>
 
 <template>
   <div
-    v-if="imageRoiStore.loader"
+    v-if="loaderShown"
     class="d-flex w-100 align-center justify-center"
   >
     <VProgressCircular indeterminate />

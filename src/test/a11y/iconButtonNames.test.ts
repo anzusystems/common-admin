@@ -95,7 +95,9 @@ const unnamed = (source: string): number[] => {
 // A closable chip's close button is named by `close-label`, Vuetify's "Close" without one. In the library closing a
 // chip removes a value, and its close says so. A chip in the `#chip` slot of an autocomplete is made closable by the
 // autocomplete (`closable-chips`), and one that draws its chips itself names their close "Close". So is a chip of a
-// component of the library drawn in such a slot: `drawnInChipSlot` holds its whole template to the rule.
+// component of the library drawn in such a slot, and every chip of a component named a chip (`…Chip`): `holdsEveryChip`
+// holds their whole template to the rule. A chip at the root of a template takes the attributes of its caller,
+// `closable` among them, and is held to it too.
 const AUTOCOMPLETES = new Set(['VAutocomplete', 'VSelect', 'VCombobox'])
 const templateOf = (source: string) => {
   const start = source.indexOf('<template')
@@ -106,14 +108,16 @@ const templateOf = (source: string) => {
     offset: source.slice(0, start).split('\n').length - 1,
   }
 }
-const closeUnnamed = (source: string, drawnInChipSlot = false): number[] => {
+const closeUnnamed = (source: string, holdsEveryChip = false): number[] => {
   const template = templateOf(source)
   if (!template) return []
   const lines: number[] = []
+  const roots = new Set(template.nodes.flatMap((node) => (node.type === NodeTypes.ELEMENT ? node.children : [])))
   const visit = (nodes: TemplateChildNode[], inChipSlot: boolean) => {
     for (const node of nodes) {
       if (node.type !== NodeTypes.ELEMENT) continue
-      if (node.tag === 'VChip' && (hasProp(node, 'closable') || inChipSlot) && !hasProp(node, 'close-label')) {
+      const held = hasProp(node, 'closable') || inChipSlot || roots.has(node)
+      if (node.tag === 'VChip' && held && !hasProp(node, 'close-label')) {
         lines.push(node.loc.start.line + template.offset)
       }
       const drawsOwnChips =
@@ -124,7 +128,7 @@ const closeUnnamed = (source: string, drawnInChipSlot = false): number[] => {
       visit(node.children, inChipSlot || (node.tag === 'template' && slotOf(node) === 'chip'))
     }
   }
-  visit(template.nodes, drawnInChipSlot)
+  visit(template.nodes, holdsEveryChip)
   return lines
 }
 // The components a template draws in a `#chip` slot (Vuetify's own, `V…`, aside).
@@ -189,7 +193,13 @@ describe('the close of closable chips', () => {
     expect(closeUnnamed('<template><VChip closable close-label="common.button.remove">a</VChip></template>')).toEqual(
       []
     )
-    expect(closeUnnamed('<template><VChip size="small">a</VChip></template>')).toEqual([])
+    expect(closeUnnamed('<template><div><VChip size="small">a</VChip></div></template>')).toEqual([])
+  })
+
+  it('holds a chip at the root of a template to the rule, also one of two branches, and no chip inside', () => {
+    expect(closeUnnamed('<template><VChip label>a</VChip></template>')).toEqual([1])
+    expect(closeUnnamed('<template><VChip v-if="chip">a</VChip><span v-else>a</span></template>')).toEqual([1])
+    expect(closeUnnamed('<template><div><VChip label>a</VChip></div></template>')).toEqual([])
   })
 
   it('finds the components drawn in a chip slot, and holds every chip of theirs to the rule', () => {
@@ -204,17 +214,15 @@ describe('the close of closable chips', () => {
 
   it('all name what their close does', () => {
     const drawnInChipSlots = new Set(Object.values(sources).flatMap(componentsInChipSlots))
-    const offenders = Object.entries(sources).flatMap(([path, source]) =>
-      closeUnnamed(
-        source,
-        drawnInChipSlots.has(
-          path
-            .split('/')
-            .at(-1)!
-            .replace(/\.vue$/, '')
-        )
-      ).map((line) => `${path.replace('../../', 'src/')}:${line}`)
-    )
+    const offenders = Object.entries(sources).flatMap(([path, source]) => {
+      const component = path
+        .split('/')
+        .at(-1)!
+        .replace(/\.vue$/, '')
+      return closeUnnamed(source, drawnInChipSlots.has(component) || component.endsWith('Chip')).map(
+        (line) => `${path.replace('../../', 'src/')}:${line}`
+      )
+    })
     expect(offenders).toEqual([])
   })
 })

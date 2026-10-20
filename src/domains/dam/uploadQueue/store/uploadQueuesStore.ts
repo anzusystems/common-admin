@@ -1,5 +1,5 @@
 import { requestedUrl } from '@/domains/api/composables/request'
-import { apiErrorStatus, mapApiError, report } from '@/domains/api/utils/apiErrors'
+import { apiErrorIsReported, apiErrorStatus, mapApiError, report } from '@/domains/api/utils/apiErrors'
 import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
 import { ENTITY, fetchAsset, fetchAssetByFileId, fetchAssetListByIds } from '@/domains/dam/api/damAssetApi'
 import { SYSTEM_CORE_DAM } from '@/domains/dam/api/damConstants'
@@ -39,6 +39,88 @@ import { commonT } from '@/plugins/i18n'
 import { defineStore } from 'pinia'
 import { getCurrentScope, ref } from 'vue'
 
+/** The fields of a row the user edits, and the save of a detail writes. */
+export interface EditableFields {
+  keywords: DocId[]
+  authors: DocId[]
+  customData: UploadQueueItem['customData']
+  mainFileSingleUse: boolean | null | undefined
+}
+
+const editableFieldsOf = (item: UploadQueueItem): EditableFields =>
+  cloneDeep({
+    keywords: item.keywords,
+    authors: item.authors,
+    customData: item.customData,
+    mainFileSingleUse: item.mainFileSingleUse,
+  })
+
+const sameValue = (one: unknown, other: unknown) => JSON.stringify(one) === JSON.stringify(other)
+
+/** The rows of an asset as they were at a moment, field by field (`noteRowsOfAsset`). */
+export interface RowsNote {
+  assetId: DocId
+  rows: Map<UploadQueueItem, EditableFields>
+}
+
+/** What a write left as the user had changed it: those fields, and those keys of the custom data. */
+interface KeptByWrite {
+  fields: Set<'keywords' | 'authors' | 'mainFileSingleUse'>
+  customKeys: Set<string>
+}
+
+/**
+ * What the detail saved, into a row of its asset, each copy the row's own: a field the user has changed since `was`
+ * (the row as the save was pressed) keeps what the user gave it, a field of the custom data each on its own. A row
+ * `was` does not know (it became a row of the asset meanwhile) takes all. `mainFileSingleUse` undefined: left as is.
+ * Answers what it kept.
+ */
+const writeUnchanged = (item: UploadQueueItem, was: EditableFields | undefined, saved: EditableFields) => {
+  const kept: KeptByWrite = { fields: new Set(), customKeys: new Set() }
+  const unchanged = (field: 'keywords' | 'authors' | 'mainFileSingleUse') => {
+    if (!was || sameValue(item[field], was[field])) return true
+    kept.fields.add(field)
+    return false
+  }
+  if (unchanged('keywords')) item.keywords = [...saved.keywords]
+  if (unchanged('authors')) item.authors = [...saved.authors]
+  const customData = cloneDeep(saved.customData)
+  if (was && customData) {
+    const now = item.customData ?? {}
+    const then = was.customData ?? {}
+    new Set([...Object.keys(now), ...Object.keys(then)]).forEach((key) => {
+      if (sameValue(now[key], then[key])) return
+      kept.customKeys.add(key)
+      if (key in now) customData[key] = cloneDeep(now[key])
+      else delete customData[key]
+    })
+  }
+  item.customData = customData
+  if (isUndefined(saved.mainFileSingleUse)) kept.fields.add('mainFileSingleUse')
+  else if (unchanged('mainFileSingleUse')) item.mainFileSingleUse = saved.mainFileSingleUse
+  return kept
+}
+
+/**
+ * Another note of the rows, of a save of the same asset still on its way, takes what a write has just put into `item`:
+ * that is no change of the user's, and the later write takes its place. Taken as the user's, the later save kept the
+ * values of the earlier one.
+ */
+const takeWrite = (note: RowsNote, item: UploadQueueItem, kept: KeptByWrite) => {
+  const entry = note.rows.get(item)
+  if (!entry) return
+  if (!kept.fields.has('keywords')) entry.keywords = [...item.keywords]
+  if (!kept.fields.has('authors')) entry.authors = [...item.authors]
+  if (!kept.fields.has('mainFileSingleUse')) entry.mainFileSingleUse = item.mainFileSingleUse
+  const written = item.customData ?? {}
+  const noted = (entry.customData = { ...entry.customData })
+  new Set([...Object.keys(written), ...Object.keys(noted)]).forEach((key) => {
+    if (kept.customKeys.has(key)) return
+    if (key in written) noted[key] = cloneDeep(written[key])
+    else delete noted[key]
+  })
+}
+
 export const useUploadQueuesStore = defineStore('commonAdminUploadQueuesStore', () => {
   const { addToCachedKeywords, fetchCachedKeywords } = useDamCachedKeywords()
   const { addToCachedAuthors, fetchCachedAuthors } = useDamCachedAuthors()
@@ -72,7 +154,8 @@ export const useUploadQueuesStore = defineStore('commonAdminUploadQueuesStore', 
     }
   }
 
-  // The list goes to the client as it is, and reports nothing by itself.
+  // The list goes to the client as it is, and reports nothing by itself. A failure it reports is thrown as it was
+  // reported: the settlement asks it whether it was written down.
   const readAssets = async (licenceId: IntegerId, assetIds: DocId[], options?: UploadReadOptions) => {
     const { damClient, endPointAsset } = damOf(options?.queueKey)
     try {
@@ -89,7 +172,7 @@ export const useUploadQueuesStore = defineStore('commonAdminUploadQueuesStore', 
           url: requestedUrl(damClient, url, {}, failure, answer?.config),
         }
         const error = isArray(failure) ? new AnzuApiResponseCodeError(answer?.status ?? 0) : failure
-        report(mapApiError(error, context), context)
+        throw report(mapApiError(error, context), context)
       }
       throw failure
     }
@@ -110,6 +193,7 @@ export const useUploadQueuesStore = defineStore('commonAdminUploadQueuesStore', 
         const { damClient, endPointAsset } = damOf(options?.queueKey)
         return fetchAssetByFileId(damClient, endPointAsset, originFileId)
       },
+      failureReported: apiErrorIsReported,
     },
     caches: {
       addAuthors: addToCachedAuthors,
@@ -121,6 +205,7 @@ export const useUploadQueuesStore = defineStore('commonAdminUploadQueuesStore', 
       processingTooLong: () => commonT('common.damImage.uploadErrors.processingTooLong'),
       readFailed: () => commonT('common.damImage.uploadErrors.readFailed'),
       assetMissing: () => commonT('common.damImage.uploadErrors.unknownError'),
+      assetGone: () => commonT('common.damImage.queueItem.assetGone'),
     },
     connection: useDamNotificationsConnection(),
   }
@@ -287,11 +372,61 @@ export const useUploadQueuesStore = defineStore('commonAdminUploadQueuesStore', 
     core.stopItemUpload(queueKey, queueItem)
   }
 
+  // The writes of saves of a detail of an asset on their way, counted by the asset: only the latest one writes. Two that
+  // overlapped left the rows with the values of whichever read answered last, and the later save, with the notes of
+  // its own, kept the values of the earlier one as typed meanwhile.
+  const detailWrites = new Map<DocId, number>()
+  // The numbers of those writes, one count for every asset: a number is never given twice, also once the write of an
+  // asset that had it is over. Counted by the asset, the third save after two that had ended took the number of the
+  // first, and the late read of the first wrote while the third was on its way.
+  let lastDetailWrite = 0
+
+  // The notes of the rows of saves of a detail that are on their way: a write takes its place in the others.
+  const openNotes = new Set<RowsNote>()
+
+  /**
+   * The rows of the asset `assetId` as they are, in every queue, field by field: taken as the save of a detail of that
+   * asset is pressed, and handed to `updateFromDetail` once it has been answered, or to `forgetRowsNote` once it has
+   * failed.
+   */
+  function noteRowsOfAsset(assetId: DocId): RowsNote {
+    const rows = new Map<UploadQueueItem, EditableFields>()
+    queues.value.forEach((queue) => {
+      queue.items.forEach((item) => {
+        if (item.assetId === assetId && item.type) rows.set(item, editableFieldsOf(item))
+      })
+    })
+    const note = { assetId, rows }
+    openNotes.add(note)
+    return note
+  }
+
+  /** The save the note was taken for has failed: nothing writes by it. */
+  function forgetRowsNote(note: RowsNote) {
+    openNotes.delete(note)
+  }
+
+  /** `kept`: what the write into `item` left as the user had it; every other note of that asset takes the rest. */
+  const othersTakeWrite = (own: RowsNote, item: UploadQueueItem, kept: KeptByWrite) => {
+    openNotes.forEach((note) => {
+      if (note !== own && note.assetId === own.assetId) takeWrite(note, item, kept)
+    })
+  }
+
   /**
    * `configName`: the DAM configuration the detail was saved under. `mainFileSingleUse`: the switch the detail saved
-   * with the asset, which keeps it apart from the asset it hands over.
+   * with the asset, which keeps it apart from the asset it hands over. `rowsAtSave`: the rows of the asset as the save
+   * was pressed (`noteRowsOfAsset`); as they are now where not given. A field of a row the user has changed since keeps
+   * what the user gave it (a field of the custom data each on its own): only the fields as they were then take what the
+   * detail saved. What was typed into the row meanwhile was replaced. Of two writes of one asset on their way at once,
+   * only the later one writes.
    */
-  async function updateFromDetail(asset: AssetDetailItemDto, configName?: string, mainFileSingleUse?: boolean | null) {
+  async function updateFromDetail(
+    asset: AssetDetailItemDto,
+    configName?: string,
+    mainFileSingleUse?: boolean | null,
+    rowsAtSave?: RowsNote
+  ) {
     const { updateNewNames, getAuthorConflicts } = useAssetSuggestions()
     let dam: ReturnType<typeof useCommonAdminCoreDamOptions>
     try {
@@ -302,23 +437,41 @@ export const useUploadQueuesStore = defineStore('commonAdminUploadQueuesStore', 
     }
     // The detail goes on telling the queue once it was opened from a row, also of an asset no queue holds a row of:
     // there is nothing to write then, and its save would wait for the read in vain.
-    const hasRowOfAsset = Array.from(queues.value.values()).some((queue) =>
-      queue.items.some((item) => item.assetId === asset.id && item.type)
-    )
-    if (!hasRowOfAsset) return
+    const rows = Array.from(queues.value.values()).flatMap((queue) => queue.items)
+    const isRowOfAsset = (item: UploadQueueItem) => item.assetId === asset.id && !!item.type
+    // A row whose file the server is processing may become a row of the asset while it is read: one whose file turns
+    // out to be a duplicate of the file of the asset becomes the original of that duplicate. It gets the write as any
+    // row of the asset: the asset was not read at all while no row had it yet. The DAM finds a duplicate within the
+    // licence of the file only: a row of another licence never becomes a row of the asset.
+    const mayBecomeRowOfAsset = (item: UploadQueueItem) =>
+      !!item.type && item.status === UploadQueueItemStatus.Processing && item.licenceId === asset.licence
+    if (!rows.some(isRowOfAsset) && !rows.some(mayBecomeRowOfAsset)) {
+      if (rowsAtSave) forgetRowsNote(rowsAtSave)
+      return
+    }
+    const note = rowsAtSave ?? noteRowsOfAsset(asset.id)
+    const before = note.rows
+    const turn = ++lastDetailWrite
+    detailWrites.set(asset.id, turn)
+    // A later save of the detail of the asset has begun its write since: that one writes.
+    const isLatest = () => detailWrites.get(asset.id) === turn
     try {
       const assetRes = await fetchAsset(dam.damClient, dam.endPointAsset, asset.id)
+      if (!isLatest()) return
       // One answer for the rows of the asset in every queue: each gets copies of its own, or a fill of a custom field in
       // one queue (it writes into the custom data in place) would change the row of another, and that queue would send
       // it with its next save.
       queues.value.forEach((queue, queueKey) => {
         queue.items.forEach((item) => {
           if (item.assetId === assetRes.id && item.type) {
-            item.keywords = [...assetRes.keywords]
-            item.authors = [...assetRes.authors]
-            item.customData = cloneDeep(assetRes.metadata.customData)
-            // The detail saves it too: left as it was, the next save of the queue would send the old value.
-            item.mainFileSingleUse = assetRes.mainFileSingleUse
+            // The detail saves the switch too: left as it was, the next save of the queue would send the old value.
+            const kept = writeUnchanged(item, before.get(item), {
+              keywords: assetRes.keywords,
+              authors: assetRes.authors,
+              customData: assetRes.metadata.customData,
+              mainFileSingleUse: assetRes.mainFileSingleUse,
+            })
+            othersTakeWrite(note, item, kept)
             updateNewNames(assetRes.metadata.authorSuggestions, queue.suggestions.newAuthorNames)
             updateNewNames(assetRes.metadata.keywordSuggestions, queue.suggestions.newKeywordNames)
             item.authorConflicts = getAuthorConflicts(assetRes.metadata.authorSuggestions)
@@ -332,16 +485,20 @@ export const useUploadQueuesStore = defineStore('commonAdminUploadQueuesStore', 
         fetchCachedKeywords()
       })
     } catch (e) {
+      if (!isLatest()) return
       // The detail is saved all the same: left as they were, the rows would send their old values with the next save
       // of the queue, over what the detail has just saved. Each row gets copies of its own, not the lists of the
       // detail. The suggestions are the server's to say, and stay as the rows have them.
       queues.value.forEach((queue) => {
         queue.items.forEach((item) => {
           if (item.assetId === asset.id && item.type) {
-            item.keywords = [...asset.keywords]
-            item.authors = [...asset.authors]
-            item.customData = cloneDeep(asset.metadata.customData)
-            if (!isUndefined(mainFileSingleUse)) item.mainFileSingleUse = mainFileSingleUse
+            const kept = writeUnchanged(item, before.get(item), {
+              keywords: asset.keywords,
+              authors: asset.authors,
+              customData: asset.metadata.customData,
+              mainFileSingleUse: isUndefined(mainFileSingleUse) ? undefined : mainFileSingleUse,
+            })
+            othersTakeWrite(note, item, kept)
             addToCachedKeywords(item.keywords)
             addToCachedAuthors(item.authors)
           }
@@ -349,6 +506,9 @@ export const useUploadQueuesStore = defineStore('commonAdminUploadQueuesStore', 
       })
       fetchCachedAuthors()
       fetchCachedKeywords()
+    } finally {
+      forgetRowsNote(note)
+      if (isLatest()) detailWrites.delete(asset.id)
     }
   }
 
@@ -368,6 +528,8 @@ export const useUploadQueuesStore = defineStore('commonAdminUploadQueuesStore', 
      * read. A row that failed otherwise has no use for refresh.
      */
     refreshMayHelp: core.refreshMayHelp,
+    /** The row failed because its asset was missing from as many reads as it takes ("Asset už neexistuje."). */
+    isGivenUpMissing: (item: UploadQueueItem) => settlement.isGivenUpMissing(item),
     removeByIndex: core.removeByIndex,
     stopItemUpload,
     getQueueTotalCount: core.getQueueTotalCount,
@@ -375,6 +537,8 @@ export const useUploadQueuesStore = defineStore('commonAdminUploadQueuesStore', 
     stopUpload: core.stopUpload,
     getQueueItemsTypes: core.getQueueItemsTypes,
     updateFromDetail,
+    noteRowsOfAsset,
+    forgetRowsNote,
     forceReloadFileInput: core.forceReloadFileInput,
   }
 })

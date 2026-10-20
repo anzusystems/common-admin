@@ -16,7 +16,7 @@ const mapIdToMinimal = (id: DocId): DamAuthorMinimal => {
   return { id: id, name: '', identifier: '', reviewed: false }
 }
 
-const { cache, toFetch, fetch, add, addManual, addManualMinimal, has, get, isLoaded } = defineCached<
+const { cache, toFetch, fetch, add, addManual, addManualMinimal, pin, unpin, has, get, isLoaded } = defineCached<
   DocId,
   DamAuthor,
   DamAuthorMinimal
@@ -33,6 +33,8 @@ export const useDamCachedAuthors = () => {
     addManualMinimalToCachedAuthors: addManualMinimal,
     addToCachedAuthors: add,
     fetchCachedAuthors: fetch,
+    pinCachedAuthor: pin,
+    unpinCachedAuthor: unpin,
     toFetchCachedAuthors: toFetch,
     cachedAuthors: cache,
     hasCachedAuthor: has,

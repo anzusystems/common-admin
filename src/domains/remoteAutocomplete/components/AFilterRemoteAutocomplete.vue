@@ -126,7 +126,11 @@ const allItems = computed<ValueObjectOption<T>[]>(() => {
   return Array.from(itemsMap.values())
 })
 
-const loading = ref(false)
+// The requests of the component on their way (items by their ids, a search, a prefetch): its spinner is on while
+// any of them runs, and goes off with the last. Each turned it off as it ended: a read by ids hid the spinner of a
+// search still running, and the reverse.
+const requestsRunning = ref(0)
+const loading = computed(() => requestsRunning.value > 0)
 
 let byIdsCounter = 0
 const resetToEmptyState = (value: ModelValueType) => {
@@ -145,7 +149,7 @@ const updateSelected = (value: T[] | T) => {
 
 const loadListItems = async (ids: T[] | T) => {
   const requestId = ++byIdsCounter
-  loading.value = true
+  requestsRunning.value++
 
   try {
     const idsArray = isArray(ids) ? ids : [ids]
@@ -162,14 +166,14 @@ const loadListItems = async (ids: T[] | T) => {
     }
     return selectedItemsCache.value
   } finally {
-    loading.value = false
+    requestsRunning.value--
   }
 }
 
 const { showErrorsDefault } = useAlerts()
 
 const apiSearch = async (query: string, requestCounter: number) => {
-  loading.value = true
+  requestsRunning.value++
   filterInnerData[filterByFieldProp] = query
   try {
     const res = await props.fetchItems(pagination, filterInnerData, filterInnerConfig)
@@ -177,7 +181,7 @@ const apiSearch = async (query: string, requestCounter: number) => {
   } catch (error) {
     showErrorsDefault(error)
   } finally {
-    loading.value = false
+    requestsRunning.value--
   }
 }
 
@@ -186,7 +190,7 @@ const tryAutoFetch = async (mode: 'focus' | 'hover' | 'mounted') => {
   if (loading.value) return
   if (prefetchCompleted.value) return
 
-  loading.value = true
+  requestsRunning.value++
   try {
     const res = await props.fetchItems(pagination, filterInnerData, filterInnerConfig)
     if (apiRequestCounter.value === 0) {
@@ -196,7 +200,7 @@ const tryAutoFetch = async (mode: 'focus' | 'hover' | 'mounted') => {
   } catch (e) {
     showErrorsDefault(e)
   } finally {
-    loading.value = false
+    requestsRunning.value--
   }
 }
 
@@ -241,10 +245,15 @@ const clearField = () => {
 // third time, for its default set only after that answer.
 // A filter of one value cleared onto the default it held does not change, and its watcher does nothing: the field
 // and the chips would stay empty while the filter keeps that value. Its item is put back, as the watcher puts one.
+// A clear that ends on a value (a default of the filter) asks for the list for an empty search here, through the
+// counter: the watcher asks for it only for an empty value, and the list stayed as the search before left it.
 const onClickClear = () => {
   clearField()
   const value = filterData[props.name]
-  if (!isEmpty(value) && value === watchedValue) loadListItems(value as T[] | T)
+  if (isEmpty(value)) return
+  if (value === watchedValue) loadListItems(value as T[] | T)
+  apiRequestCounter.value++
+  apiSearch('', apiRequestCounter.value)
 }
 
 watchDebounced(

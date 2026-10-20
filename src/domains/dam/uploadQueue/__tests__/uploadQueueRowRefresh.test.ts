@@ -35,7 +35,7 @@ const elapse = async () => {
 }
 
 // What the queue tells the row of a failed item: whether the server may still finish its file. The store has it
-// for the rows whose finish request went out (`uploadStatusFallback.test.ts`); here the row is shown by itself.
+// for the rows whose finish request went out (`uploadStatusPolling.test.ts`); here the row is shown by itself.
 const queueSays = reactive<{ refreshMayHelp: boolean | undefined }>({ refreshMayHelp: false })
 
 let wrapper: VueWrapper | undefined

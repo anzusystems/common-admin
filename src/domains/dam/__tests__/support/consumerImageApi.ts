@@ -44,6 +44,9 @@ export function installConsumerImageApi(profile: ConsumerProfile, options: Retur
   const whenLet = () => new Promise<boolean>((resolve) => held!.push(resolve))
   const answerSave = (saved: () => FakeDamAnswer) =>
     held ? whenLet().then((failed) => (failed ? { status: 500 } : saved())) : saved()
+  // The saves of several images at once a test holds (`holdBulkSaves`), as those of one image.
+  let heldBulk: HeldSave[] | undefined
+  const whenBulkLet = () => new Promise<boolean>((resolve) => heldBulk!.push(resolve))
 
   // The reads of one image a test holds (`holdReads`): each is recorded as it is asked for, and answered once the test
   // lets it.
@@ -67,7 +70,8 @@ export function installConsumerImageApi(profile: ConsumerProfile, options: Retur
     if (request.method === 'PUT' && path === ALL) {
       const sent = (body(request) as { images: ImageCreateUpdateAware[] }).images
       calls.push(['bulkUpdateImages', sent])
-      return { status: 200, data: { images: sent.map((image) => store(image)) } }
+      const saved = (): FakeDamAnswer => ({ status: 200, data: { images: sent.map((image) => store(image)) } })
+      return heldBulk ? whenBulkLet().then<FakeDamAnswer>((failed) => (failed ? { status: 500 } : saved())) : saved()
     }
     if (request.method === 'GET' && one) {
       calls.push(['fetchImage', Number(one[1])])
@@ -129,6 +133,7 @@ export function installConsumerImageApi(profile: ConsumerProfile, options: Retur
                 },
                 bulkUpdateImages: async (_client, items) => {
                   calls.push(['bulkUpdateImages', plain(items)])
+                  if (heldBulk && (await whenBulkLet())) throw new Error('the images were not saved')
                   return plain(items.map((image) => store(plain(image))))
                 },
               },
@@ -157,6 +162,15 @@ export function installConsumerImageApi(profile: ConsumerProfile, options: Retur
     /** From now on a create or an update of one image waits until the test lets it answer. */
     holdSaves: () => {
       const waiting: HeldSave[] = (held = [])
+      return {
+        waiting,
+        /** Lets every save held so far answer: as saved, or as one that failed. */
+        release: (how: 'saved' | 'failed' = 'saved') => waiting.splice(0).forEach((answer) => answer(how === 'failed')),
+      }
+    },
+    /** From now on a save of several images at once (the gallery's) waits until the test lets it answer. */
+    holdBulkSaves: () => {
+      const waiting: HeldSave[] = (heldBulk = [])
       return {
         waiting,
         /** Lets every save held so far answer: as saved, or as one that failed. */

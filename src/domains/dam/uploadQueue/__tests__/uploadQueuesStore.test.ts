@@ -468,15 +468,17 @@ describe('an upload removed while it sends', () => {
     const removed = store.getQueueItems('removed')[0]!
     const chunkOfA = removed.latestChunkAbortController!.signal
 
-    // Its chunk request never answers. Taken out, it is stopped with its run and the chunk on the wire, and c starts
-    // in its place at once: the core starts the next row when a row leaves (Z15), not when the cancelled run ends.
+    // Taken out, it is stopped with its run and the chunk on the wire, and c starts in its place at once: the core
+    // starts the next row when a row leaves (Z15), not when the cancelled run ends.
     store.removeByIndex('removed', 0)
     await vi.waitFor(() => expect(release.has('c.jpg')).toBe(true))
+    // Its chunk is answered after all: a run that went on would finish the upload.
+    release.get('a.jpg')!()
     await settle()
 
+    expect(damUploadFinish.mock.calls.map((call) => call[2].key)).not.toContain(removed.key)
     expect(chunkOfA.aborted).toBe(true)
     expect(removed.status).toBe(UploadQueueItemStatus.Stop)
-    expect(damUploadFinish.mock.calls.some((call) => call[2].file?.name === 'a.jpg')).toBe(false)
   })
 })
 
@@ -484,21 +486,33 @@ describe('upload queue parallel limit', () => {
   it('never runs more than two uploads at once', async () => {
     const store = useUploadQueuesStore()
     const files = ['a', 'b', 'c', 'd', 'e', 'f'].map((n) => new File(['x'], `${n}.jpg`, { type: 'image/jpeg' }))
-    const uploading = () => store.getQueueItems('q').filter((i) => i.status === UploadQueueItemStatus.Uploading).length
+    // The rows being sent, by their files.
+    const uploading = () =>
+      store
+        .getQueueItems('q')
+        .filter((i) => i.status === UploadQueueItemStatus.Uploading)
+        .map((i) => i.file!.name)
 
     await store.addByFiles('q', 1, 1, files)
     await vi.waitFor(() => expect(release.size).toBe(2))
-    expect(uploading()).toBe(2)
+    expect(uploading()).toEqual(['a.jpg', 'b.jpg'])
+    const [a] = store.getQueueItems('q')
 
-    // a finishes: one slot frees up, so exactly one more file may start.
+    // a finishes: one slot frees up, so exactly one more file may start, the next one.
     release.get('a.jpg')!()
     await vi.waitFor(() => expect(damUploadFinish).toHaveBeenCalledTimes(1))
     await settle()
+    // The upload finished is a's, and it left the slot.
+    expect(damUploadFinish.mock.calls.map((call) => call[2].key)).toEqual([a!.key])
+    expect(a!.status).toBe(UploadQueueItemStatus.Processing)
     const afterFinish = uploading()
 
     // The DAM notification for a arrives while the others are still sending.
     await store.queueItemProcessed('asset-a.jpg')
     await settle()
-    expect([afterFinish, uploading()]).toEqual([2, 2])
+    expect([afterFinish, uploading()]).toEqual([
+      ['b.jpg', 'c.jpg'],
+      ['b.jpg', 'c.jpg'],
+    ])
   })
 })

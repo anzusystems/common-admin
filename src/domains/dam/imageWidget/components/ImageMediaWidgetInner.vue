@@ -87,6 +87,7 @@ import {
   imageSavesOfOthersOver,
   noteImageSave,
 } from '@/domains/dam/imageWidget/utils/imageSaves'
+import { WAIT_RAN_OUT, withinWaitLimit } from '@/domains/dam/imageWidget/utils/waitLimit'
 
 const props = withDefaults(
   defineProps<{
@@ -279,6 +280,7 @@ const {
   holdConfirmForDetailAssetRead,
   readHeldAnew,
   takeHeldAnew,
+  letGoOnceSavedWithSource,
   authorsGivenMeanwhile,
   confirmWaits,
 } = useImageDialogDamAuthors(
@@ -352,11 +354,20 @@ const actionEditMeta = async () => {
     metadataDialogLoading.value = true
     metadataDialog.value = true
     cancelSaveWait = othersSaves.cancel
-    await othersSaves.over
+    const over = await withinWaitLimit(othersSaves.over)
     cancelSaveWait = null
     if (!answerTakenFor(thisOpening)) return
     loadingInDialog = null
     metadataDialogLoading.value = false
+    // That save has not answered in time: the dialog closes, and the user is told the request timed out. It loaded
+    // till the editor closed it. Shown, what the widget read before that save would go out with the confirm over what
+    // the save may yet write.
+    if (over === WAIT_RAN_OUT) {
+      othersSaves.cancel()
+      metadataDialog.value = false
+      showErrorT('error.apiTimedOut.message')
+      return
+    }
   }
   // The widget holds the asset of the image's file, picked without authors: the dialog shows its loading while that
   // asset is read anew, and what the read finds goes into the dialog with the image. Never for a medium.
@@ -383,6 +394,36 @@ const actionEditMeta = async () => {
   takeHeldAnew(anew, isImageCreateUpdateAware(detail.value) ? detail.value : null)
   ownInDialog = detail.value
   metadataDialog.value = true
+}
+
+// With `expandMetadata` the form of the image is in the page once the image is read, with no "edit metadata" to wait
+// for a save of the image by another widget, or to take what such a save wrote: the form does both, as that opening
+// does. It showed the texts read before that save took effect, and the confirm of its host saved them back over the
+// saved ones. Once the wait runs out the form shows what was read, and the user is told the request timed out.
+const showReadInForm = async () => {
+  const heldId = () => (isImageCreateUpdateAware(resImageMedia.value) ? resImageMedia.value.id : undefined)
+  const id = heldId()
+  const othersSaves = isNumber(id) ? imageSavesOfOthersOver(damConfigName, id, ownImageSaves) : null
+  if (othersSaves) {
+    const thisOpening = (loadingInDialog = Symbol('edit'))
+    imageMediaWidgetStore.setDetail(null)
+    metadataDialogLoading.value = true
+    cancelSaveWait = othersSaves.cancel
+    const over = await withinWaitLimit(othersSaves.over)
+    cancelSaveWait = null
+    if (!answerTakenFor(thisOpening)) return
+    loadingInDialog = null
+    metadataDialogLoading.value = false
+    if (over === WAIT_RAN_OUT) {
+      othersSaves.cancel()
+      showErrorT('error.apiTimedOut.message')
+    }
+    // The widget has been given another image meanwhile: that one is shown.
+    if (heldId() !== id) return
+  }
+  const saved = isNumber(id) ? imageSavedSince(damConfigName, id, resImageReadAt) : null
+  if (saved) return void reloadImage(saved, null, true)
+  imageMediaWidgetStore.setDetail(toRaw(resImageMedia.value))
 }
 
 const actionLibrary = () => {
@@ -593,9 +634,7 @@ const reloadImage = async (
       } else {
         resolvedSrc.value = widgetImageToDamImageUrl(toRaw(resImageMedia.value))
       }
-      if (props.expandMetadata) {
-        imageMediaWidgetStore.setDetail(toRaw(resImageMedia.value))
-      }
+      if (props.expandMetadata) void showReadInForm()
     }
     return
   }
@@ -808,10 +847,12 @@ const pickAsset = async (data: AssetSelectReturnData, thisPick: symbol) => {
           description = assetRes.metadata.customData.description.trim()
         }
         if (assetRes.authors.length > 0) {
+          // Under the ext system of the licence of the asset, as every name of the authors of the DAM the widgets
+          // write; that of the picker where the licence does not tell.
           const authorsRes = await fetchAuthorListByIds(
             damClient,
             endPointAuthor,
-            assetSelectStore.requireSelectedSelectConfig().extSystem,
+            (await getExtSystemByLicence(assetRes.licence)) ?? assetSelectStore.requireSelectedSelectConfig().extSystem,
             assetRes.authors
           )
           source = authorsRes.map((author) => author.name).join(', ')
@@ -941,6 +982,9 @@ const tryImageConfirm = async () => {
   // Nor are the authors sent by a widget that has turned read-only meanwhile.
   const authorsSendIsOver = () => confirmIsOver() || props.readonly
   metadataDialogSaving.value = true
+  // The dialog shows the source of the image of the asset the widget holds, not the pick (a read of it failed): once
+  // saved, the image has a source of its own, and the asset is let go.
+  const letGoHeld = letGoOnceSavedWithSource(pressedOn)
   try {
     const authorsAsset = damAuthorsAsset.value
     if (authorsAsset) {
@@ -966,10 +1010,12 @@ const tryImageConfirm = async () => {
         // Their names become the source of the image once the DAM has taken the authors, and wait aside till then.
         // Written before, they stayed in the source, which the dialog does not show, after a write the DAM refused,
         // and a confirm with the pick emptied saved them with the image.
+        // Under the ext system of the licence of the asset, as the read before the write names authors given since.
         const authorsRes = await fetchAuthorListByIds(
           damClient,
           endPointAuthor,
-          assetSelectStore.requireSelectedSelectConfig().extSystem,
+          (await getExtSystemByLicence(authorsAsset.licence)) ??
+            assetSelectStore.requireSelectedSelectConfig().extSystem,
           authorsAsset.authors
         )
         // Nothing is written and nothing said: the authors are not sent for a dialog the user has left, nor by a
@@ -997,6 +1043,7 @@ const tryImageConfirm = async () => {
     // The widget is gone: nothing of the answer is written. The store of the dialog is the page's, and by now the
     // next widget's: its form was emptied, and then showed the image saved here.
     if (disposed) return
+    letGoHeld()
     // The save went through, and the widget takes its image. The dialog is this confirm's to close while it shows the
     // image the confirm was pressed on, or none. It is closed as well when "edit metadata" has opened it since: what
     // it shows is a copy of the image or the media the widget had before this save, and its confirm would put that
@@ -1194,6 +1241,20 @@ watch(
   },
   { immediate: false }
 )
+
+// Read-only, the widget draws none of its dialogs and menus (`!readonly`): those open close as their cancel does,
+// nothing is saved, and the lock of the field goes back once none holds it. A dialog left open kept the lock for the
+// other editors unseen, and came back by itself once the widget could be edited again. The dialog of a save on its
+// way is left to that save, which closes it and gives the lock back as it ends; one the save leaves open (it failed)
+// closes then. With `expandMetadata` the form is in the page and no dialog is closed: the form of a pick not yet
+// confirmed stays, for its host to confirm once the widget can be edited again. It was emptied, while the widget went
+// on showing the pick.
+watch([() => props.readonly, metadataDialogSaving], ([readonly]) => {
+  if (!readonly) return
+  clickMenuOpened.value = false
+  fileInputDialog.value = false
+  if (metadataDialog.value && !metadataDialogSaving.value && !props.expandMetadata) onMetadataDialogClose()
+})
 
 // A lost connection took this editor's locks on the server: counted still, the lock was never asked for again and the
 // server refused its release. When the room is active again, a menu or dialog still open asks for it anew, as does one

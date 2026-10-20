@@ -68,18 +68,22 @@ const onSave = async () => {
   const saved = cloneDeep(asset.value)
   const savedSingleUse = mainFileSingleUse.value
   const tellsQueue = updateUploadStore.value
+  // The rows of the queue as the save is pressed: what the user types into them while it runs is theirs.
+  const rowsAtSave = tellsQueue ? uploadQueueStore.noteRowsOfAsset(saved.id) : undefined
   try {
     const sent = updateAssetMetadata(damClient, endPointAsset, saved, props.extSystem, savedSingleUse)
     // Kept where the host of the detail finds it: closed before the answer, the detail has its host wait for it.
-    assetDetailStore.setSaving(sent)
+    assetDetailStore.setSaving(saved.id, sent)
     await sent
     if (tellsQueue) {
-      await uploadQueueStore.updateFromDetail(saved, damConfigName, savedSingleUse)
+      await uploadQueueStore.updateFromDetail(saved, damConfigName, savedSingleUse, rowsAtSave)
     }
     showRecordWas('updated')
   } catch (error) {
     showMetadataSaveError(error, props.extSystem)
   } finally {
+    // Once the save has failed, nothing writes by its note; once it has written, the note is let go already.
+    if (rowsAtSave) uploadQueueStore.forgetRowsNote(rowsAtSave)
     saveButtonLoading.value = false
   }
 }

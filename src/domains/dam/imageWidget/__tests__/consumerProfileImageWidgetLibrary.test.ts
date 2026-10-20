@@ -1777,7 +1777,8 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
           expect(texts()).toEqual(['of asset-9', 'Name of author-9'])
         })
 
-        // The dialog keeps its pick, and its "confirm" goes on as it did.
+        // What the widget holds may be stale by then: the dialog shows the source in place of the pick, till it shows
+        // the image anew. It kept offering the pick.
         it.each<[string, () => unknown]>([
           [
             'the asset cannot be read',
@@ -1793,7 +1794,7 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
                 DAM_NAMES.test(request.url) && request.url.includes('author-9') ? { status: 500 } : undefined
               ),
           ],
-        ])('are offered as before, and the failure is said once, when %s', async (_what, refuse) => {
+        ])('give way to the source, and the failure is said once, when %s', async (_what, refuse) => {
           const widget = await pickedWithoutAuthors()
           damKeepsAuthors()
           await pickAuthors(widget, ['author-7'])
@@ -1805,8 +1806,8 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
           await vi.waitFor(() => expect(shownAlerts()).toEqual([['error', alertText('common.alert.unknownError')]]))
           await waits.settle()
 
-          expect(offered(widget)).toEqual(['author-7'])
-          expect(texts()).toEqual(['of asset-9'])
+          expect(offered(widget)).toBeNull()
+          expect(texts()).toEqual(['of asset-9', ''])
           expect(shownAlerts()).toEqual([['error', alertText('common.alert.unknownError')]])
         })
 
@@ -1898,11 +1899,11 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
           // The confirm that waited went with the dialog it was pressed in.
           expect(confirmButton().classList.contains('v-btn--loading')).toBe(false)
 
-          // The dialog opened again loads: it reads the asset anew once the read of the detail has answered.
-          held.answer()
-          await vi.waitFor(() => expect(held.waiting).toHaveLength(1))
+          // The dialog opened again loads till the read of the detail, still on its way, has answered.
           held.answer()
           await vi.waitFor(() => expect(confirmButton().disabled).toBe(false))
+          // The read of the detail serves the dialog opened again: the asset is not read a second time.
+          expect(held.waiting).toEqual([])
           await damNamesAsked()
           await waits.settle()
           expect(offered(widget)).toBeNull()
@@ -1918,8 +1919,8 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
           expect(authorsWritten()).toEqual([[['asset-9', ['author-9']]]])
         })
 
-        // The dialog opened again loads till the asset is read anew, after the read of the detail: a press is taken
-        // only once it shows the image.
+        // The dialog opened again loads till the read of the detail has answered: a press is taken only once it shows
+        // the image.
         it('take a "confirm" pressed anew in the dialog opened again once it has read the asset anew: the image is saved once', async () => {
           const { widget, held } = await confirmWaitedAndDialogOpenedAgain()
 
@@ -1928,9 +1929,9 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
           await waits.settle()
           expect(imagesWritten()).toHaveLength(1)
           held.answer()
-          await vi.waitFor(() => expect(held.waiting).toHaveLength(1))
-          held.answer()
           await vi.waitFor(() => expect(confirmButton().disabled).toBe(false))
+          // The read of the detail serves the dialog opened again: the asset is not read a second time.
+          expect(held.waiting).toEqual([])
           await damNamesAsked()
           expect(imagesWritten()).toHaveLength(1)
           confirmButton().click()
@@ -2015,8 +2016,10 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
         })
 
         // The image was saved without an author, and its dialog offers them again. Closed before the read answers,
-        // the dialog is given nothing, and neither is the image the widget has: its source is typed by hand.
-        it('are written nowhere when the dialog of the image was closed before the asset is read, and are offered no more', async () => {
+        // the dialog is given nothing, and neither is the image the widget has. The widget holds the asset on: opened
+        // again, the dialog reads it anew and gives the empty source their names. It dropped the asset, and the source
+        // was typed by hand.
+        it('are written nowhere when the dialog of the image was closed before the asset is read, and named in the source once it is opened again', async () => {
           const widget = await pickedWithoutAuthors()
           await confirmImage(widget)
           damKeepsAuthors()
@@ -2036,8 +2039,11 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
           expect(imagesWritten()).toHaveLength(1)
           expect(shownAlerts()).toEqual([])
           await editImage(widget)
+          await waits.settle()
+          held.answer()
+          await vi.waitFor(() => expect(texts()).toEqual(['of asset-9', 'Name of author-9']))
           expect(offered(widget)).toBeNull()
-          expect(texts()).toEqual(['of asset-9', ''])
+          expect(imagesWritten()).toHaveLength(1)
         })
 
         // The dialog shows the image the widget has, of another file, by the time the read answers.
@@ -2134,8 +2140,27 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
           }
         )
 
+        // The form in the page (`expandMetadata`) keeps the pick when the widget turns read-only: the names of the
+        // authors the detail gave the asset do not go into it. (A dialog closes as its cancel does, and its image
+        // goes with it.)
         it('are written nowhere when the widget has turned read-only by the time the asset is read', async () => {
-          const widget = await authorsSavedInDetail(['author-9'])
+          inTheDam('asset-9')
+          const widget = await mountWidget(null, QUEUE, { expandMetadata: true })
+          widget
+            .findComponent(PickerStandIn)
+            .vm.$emit('confirm', { type: 'asset', value: [listed('asset-9', licence)] })
+          await vi.waitFor(() =>
+            expect(useImageMediaWidgetStore(pinia).detail).toMatchObject({ dam: { damId: 'file-of-asset-9' } })
+          )
+          await vi.waitFor(() => expect(offered(widget)).toEqual([]))
+          damKeepsAuthors()
+          await widget
+            .findAll('button')
+            .find((button) => button.text() === useCommonAdminCoreDamOptions().editAssetLabel)!
+            .trigger('click')
+          await vi.waitFor(() => expect(detail().asset?.id).toBe('asset-9'))
+          await flushPromises()
+          await saveInDetail(['author-9'])
           const held = holdReadsOf('asset-9')
           await closeDetail(widget)
           await vi.waitFor(() => expect(held.waiting).toHaveLength(1))
@@ -2145,7 +2170,10 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
           await damNamesAsked()
           await waits.settle()
 
-          expect(useImageMediaWidgetStore(pinia).detail).toMatchObject({ texts: { source: '' } })
+          expect(useImageMediaWidgetStore(pinia).detail).toMatchObject({
+            dam: { damId: 'file-of-asset-9' },
+            texts: { source: '' },
+          })
           expect(shownAlerts()).toEqual([])
         })
 

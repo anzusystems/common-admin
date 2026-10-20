@@ -883,7 +883,8 @@ describe.each(consumerProfiles)('the widget of several images under the $name', 
         return sent.map((image) => [image.dam.damId, image.texts.source])
       }
 
-      it('gives the row the widget had the authors the queue saved, named as its source: it offers them no more, and the save of the widget writes none into the asset', async () => {
+      // The row keeps the source its image has (the source rule): the names go to the image of the file only.
+      it('gives the row the widget had the authors the queue saved, its own source kept: it offers them no more, and the save of the widget writes none into the asset', async () => {
         await withTwoImages()
         // What is picked in the row of the widget gives way to what the queue saves, as it does to a save of the detail.
         rows()[1].findComponent(AuthorRemoteAutocompleteWithCached).vm.$emit('update:modelValue', ['author-7'])
@@ -902,13 +903,13 @@ describe.each(consumerProfiles)('the widget of several images under the $name', 
         const names = 'Name of author-9, Name of author-8'
         expect(asRows()).toEqual([
           [11, 'asset-11', ['author-1'], false, 'source 11'],
-          [12, 'asset-12', ['author-9', 'author-8'], false, names],
+          [12, 'asset-12', ['author-9', 'author-8'], false, 'source 12'],
           [undefined, 'asset-12', ['author-9', 'author-8'], false, names],
         ])
         // Each row has a list of its own.
         expect(images()[1].damAuthors).not.toBe(images()[2].damAuthors)
         expect(offersAuthors()).toEqual([false, false, false])
-        expect(textsOf(rows()[1].element)).toEqual(['image 12', names])
+        expect(textsOf(rows()[1].element)).toEqual(['image 12', 'source 12'])
         // The applied image carries the authors and their names: no asset is read for them.
         await waits.settle()
         expect(readsOfAssets()).toBe(readBefore)
@@ -919,13 +920,13 @@ describe.each(consumerProfiles)('the widget of several images under the $name', 
         expect(metadataWrites()).toHaveLength(1)
         expect(sourcesSaved()).toEqual([
           ['file-11', 'source 11'],
-          ['file-12', names],
+          ['file-12', 'source 12'],
           ['file-12', names],
         ])
-        // After the save the two rows of the file are the same but for their image.
+        // After the save the two rows of the file have the same authors, each its image and its source.
         expect(asRows()).toEqual([
           [11, 'asset-11', ['author-1'], false, 'source 11'],
-          [12, 'asset-12', ['author-9', 'author-8'], false, names],
+          [12, 'asset-12', ['author-9', 'author-8'], false, 'source 12'],
           [501, 'asset-12', ['author-9', 'author-8'], false, names],
         ])
         expect(offersAuthors()).toEqual([false, false, false])
@@ -973,8 +974,9 @@ describe.each(consumerProfiles)('the widget of several images under the $name', 
 
         await applied(4)
 
+        // The first keeps the source its image has (the source rule).
         expect(asRows()).toEqual([
-          [12, 'asset-12', ['author-9'], false, 'Name of author-9'],
+          [12, 'asset-12', ['author-9'], false, 'source 12'],
           [13, 'asset-12', [], false, 'typed by hand'],
           [14, 'asset-14', [], true, 'source 14'],
           [undefined, 'asset-12', ['author-9'], false, 'Name of author-9'],
@@ -2058,7 +2060,7 @@ describe.each(consumerProfiles)('the widget of several images under the $name', 
 
         expect(rereadsOf('asset-12')).toHaveLength(1)
         expect(images()[1]).toMatchObject({ damAuthors: ['author-9'], texts: { source: 'source 12' } })
-        expect(detail().saving).toBeNull()
+        expect(detail().savingOf('asset-12')).toBeNull()
         expect(await save()).toBe(true)
         expect(authorsWritten()).toEqual([[['asset-12', ['author-9']]]])
         expect(sourcesSaved()).toEqual(['source 11', 'source 12'])

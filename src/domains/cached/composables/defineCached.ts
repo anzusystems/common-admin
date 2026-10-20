@@ -95,6 +95,10 @@ export function defineCached<
     options.batchSize && options.batchSize >= 1 ? Math.floor(options.batchSize) : FETCH_BY_IDS_BATCH_SIZE
   const cache: Ref<Map<I, CachedItem<M>>> = ref(new Map())
   const toFetch = ref(new Set()) as Ref<Set<I>>
+  // The ids something shows, each with how many show it (`pin`): the cache drops none of them to stay within its
+  // limit, and goes over it while more than that many are shown. Dropped, a name a chip showed turned it into a
+  // spinner till something added the id again.
+  const pinned = new Map<I, number>()
   // Settles, never rejects: a run that failed still hands over what its earlier batches loaded.
   const inFlight = new Set<Promise<{ items: T[]; failures: unknown[] }>>()
   const { logError } = useSentry()
@@ -167,7 +171,8 @@ export function defineCached<
 
   /**
    * Drops only as many oldest terminal entries as the overflow requires; dropping every one
-   * of them would send currently rendered chips back to their loading state.
+   * of them would send currently rendered chips back to their loading state. A pinned entry is
+   * never dropped.
    * Must include `_unresolved`, otherwise repeated failures grow the cache past `maxLimit`.
    */
   const prune = (protectedIds?: Set<I>) => {
@@ -181,7 +186,7 @@ export function defineCached<
     let removed = 0
     for (const [key, value] of cache.value) {
       if (removed >= overflow) break
-      if (protectedIds?.has(key)) continue
+      if (protectedIds?.has(key) || pinned.has(key)) continue
       if (value._loaded || value._unresolved) {
         cache.value.delete(key)
         removed += 1
@@ -220,9 +225,13 @@ export function defineCached<
       const res = await fetchCallback(ids)
       updateMap(res)
       markUnresolved(ids, 'notFound')
+      // Back within the limit once the batch is settled: the ids added and still on their way could not be dropped
+      // till then, and a large add left the cache over its limit for good, also when the batch failed.
+      prune()
       return res
     } catch (error: unknown) {
       markUnresolved(ids, unresolvedReason(error))
+      prune()
       throw error
     }
   }
@@ -319,6 +328,25 @@ export function defineCached<
     return [...own, ...others.flatMap((other) => other.items)]
   }
 
+  /** Something shows the item of `id`: the cache keeps it till as many `unpin` have come. */
+  const pin = (id: I | null | undefined) => {
+    if (!id) return
+    pinned.set(id, (pinned.get(id) ?? 0) + 1)
+  }
+
+  /** What showed the item of `id` no longer does. The cache goes back within its limit once none is left. */
+  const unpin = (id: I | null | undefined) => {
+    if (!id) return
+    const count = pinned.get(id)
+    if (isUndefined(count)) return
+    if (count > 1) {
+      pinned.set(id, count - 1)
+      return
+    }
+    pinned.delete(id)
+    prune()
+  }
+
   const get = (id: I | null | undefined) => {
     if (!id) return undefined
     return cache.value.get(id)
@@ -354,6 +382,8 @@ export function defineCached<
     add,
     addManual,
     addManualMinimal,
+    pin,
+    unpin,
     has,
     get,
     clear,

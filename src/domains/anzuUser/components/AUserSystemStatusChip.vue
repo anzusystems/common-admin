@@ -38,6 +38,7 @@ const appearance = computed(() => APPEARANCE[state.value])
 <template>
   <VChip
     :color="appearance.color"
+    close-label="common.button.remove"
     :prepend-icon="appearance.icon"
     :class="{ 'text-disabled': appearance.muted }"
     :data-cy="`user-system-state-${state}`"

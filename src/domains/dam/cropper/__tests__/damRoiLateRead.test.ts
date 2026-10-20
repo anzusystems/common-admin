@@ -110,26 +110,26 @@ describe('the read of the file after a region is saved', () => {
     expect(store.imageFile).toMatchObject({ id: 'file-a', manipulatedAt: 'before' })
   })
 
-  // The region is saved again while the read after the first save is on its way: the cropper, hidden by the loader of
-  // that save, is back once something else hides the loader (the panel beside it ends its reload of the regions so).
-  // The first read answers last, with the file as the DAM drew it before the second save: the second read's stays.
-  it('keeps the file read after the latest of two saves when the read of the first answers after it', async () => {
-    const answers: Array<(read: AssetFileImage) => void> = []
-    vi.mocked(fetchImageFile).mockImplementation(() => new Promise((resolve) => answers.push(resolve)))
+  // The cropper waits for the read after its save with a loader of its own: something else that hides the loader of
+  // the store meanwhile (the panel beside it ends its reload of the regions so) no longer brings the cropper back, and
+  // no second save starts while the read of the first is on its way. It did, and the read of the first, answering
+  // last, could bring the file as the DAM drew it before the second save.
+  it('stays hidden until the read after its save answers, also when the loader of the store is hidden', async () => {
+    let answer!: (read: AssetFileImage) => void
+    vi.mocked(fetchImageFile).mockImplementation(() => new Promise((resolve) => (answer = resolve)))
     const store = await savedOnA()
-    await vi.waitFor(() => expect(answers).toHaveLength(1), { timeout: 4000 })
+    await vi.waitFor(() => expect(fetchImageFile).toHaveBeenCalledTimes(1), { timeout: 4000 })
     store.hideLoader()
     await flushPromises()
 
-    wrapper!.findComponent(ACropper).vm.$emit('commit', { x: 0.2, y: 0.2, width: 0.4, height: 0.3 })
-    await vi.waitFor(() => expect(answers).toHaveLength(2), { timeout: 4000 })
-    answers[1]!(file('file-a', 'after the second save'))
-    await flushPromises()
-    answers[0]!(file('file-a', 'after the first save'))
+    expect(wrapper!.findComponent(ACropper).exists()).toBe(false)
+    expect(wrapper!.findComponent({ name: 'VProgressCircular' }).exists()).toBe(true)
+    answer(file('file-a', 'redrawn'))
     await flushPromises()
 
-    expect(store.imageFile).toMatchObject({ id: 'file-a', manipulatedAt: 'after the second save' })
-    expect(store.loader).toBe(false)
+    expect(store.imageFile).toMatchObject({ id: 'file-a', manipulatedAt: 'redrawn' })
+    expect(wrapper!.findComponent({ name: 'VProgressCircular' }).exists()).toBe(false)
+    expect(wrapper!.findComponent(ACropper).exists()).toBe(true)
   })
 
   // admin-dam changes the slot so: the region goes and its loader is on at once, the file of the new slot comes once
@@ -161,5 +161,31 @@ describe('the read of the file after a region is saved', () => {
     await flushPromises()
 
     expect(store.imageFile).toMatchObject({ id: 'file-a', manipulatedAt: 'rotated' })
+  })
+
+  // Another file put into the store by a way that does not show the loader: the read after the save is not made, and
+  // the loader of the save goes. It stayed on, over the other file, until something else hid it.
+  it('takes its loader away when another file is shown without a loader of its own', async () => {
+    const store = await savedOnA()
+    store.setImageFile(file('file-b', 'of slot b'))
+
+    await pastTheWait()
+    await flushPromises()
+
+    expect(fetchImageFile).not.toHaveBeenCalled()
+    expect(store.loader).toBe(false)
+    expect(wrapper!.findComponent({ name: 'VProgressCircular' }).exists()).toBe(false)
+  })
+
+  // The loader of the save stayed on in the store, for the next cropper, when this one went before the read.
+  it('leaves no loader on in the store when the cropper goes before the read after its save', async () => {
+    const store = await savedOnA()
+    wrapper!.unmount()
+    wrapper = undefined
+
+    await pastTheWait()
+    await flushPromises()
+
+    expect(store.loader).toBe(false)
   })
 })

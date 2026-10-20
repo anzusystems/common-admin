@@ -13,6 +13,7 @@ const option = computed(() => getJobStatusOption(props.value))
 <template>
   <VChip
     :color="option?.color"
+    close-label="common.button.remove"
     label
     size="small"
   >

@@ -107,13 +107,12 @@ export const apiErrorStatus = (error: unknown): number | undefined => {
 }
 
 /**
- * Reports an error once, after it has been mapped, and hands it back so the caller can throw it.
- *
- * After, not during: an error the helper raised itself -- a body that never arrived, a status it
- * refuses -- is already an `Anzu*` class by the time it reaches the mapping, so a logger placed
- * inside the mapping would never see the two cases it exists for.
+ * Whether `report` hands this error, once mapped, to the logger: not a timeout, a 401 or a 403, nor
+ * anything while reporting is off. For a caller that reports only the first failure of a series: a
+ * failure dropped here has told nobody, and the series begins with the first one that was written.
+ * What the application's own logger does with it is the application's.
  */
-export const report = <E>(error: E, context: ApiErrorContext): E => {
+export const apiErrorIsReported = (error: unknown): boolean => {
   const status = apiErrorStatus(error)
   // Neither of these is an unplanned failure. A 401 is "nobody is logged in", which every admin
   // branches on before sending the user to the login page -- writing it down would mean an "Api
@@ -129,15 +128,26 @@ export const report = <E>(error: E, context: ApiErrorContext): E => {
   // It is the one thing the `status` field above does not leave to the application, and deliberately:
   // an app that wanted its own unauthenticated starts in the log would be asking for noise it cannot
   // act on, while an app that wants 404 or 409 filtered has the field to do it with.
-  if (status === HTTP_STATUS_UNAUTHORIZED || status === HTTP_STATUS_FORBIDDEN) return error
+  if (status === HTTP_STATUS_UNAUTHORIZED || status === HTTP_STATUS_FORBIDDEN) return false
   // The same as a 401, stopped before it went out: the refresh found the session gone.
-  if (isInCauseChain(error, (cause) => cause instanceof SessionExpiredError)) return error
+  if (isInCauseChain(error, (cause) => cause instanceof SessionExpiredError)) return false
 
-  if (logger !== null && LOGGED.some((cls) => error instanceof cls)) {
+  return logger !== null && LOGGED.some((cls) => error instanceof cls)
+}
+
+/**
+ * Reports an error once, after it has been mapped, and hands it back so the caller can throw it.
+ *
+ * After, not during: an error the helper raised itself -- a body that never arrived, a status it
+ * refuses -- is already an `Anzu*` class by the time it reaches the mapping, so a logger placed
+ * inside the mapping would never see the two cases it exists for.
+ */
+export const report = <E>(error: E, context: ApiErrorContext): E => {
+  if (logger !== null && apiErrorIsReported(error)) {
     try {
       // Filled in here rather than by the caller: the status belongs to the failure, and only the
       // mapped error knows it -- the helper that built the context has not looked at the error yet.
-      logger(error as unknown as Error, { ...context, status })
+      logger(error as unknown as Error, { ...context, status: apiErrorStatus(error) })
     } catch {
       // A logger that throws must not replace the failure the caller is waiting for.
     }

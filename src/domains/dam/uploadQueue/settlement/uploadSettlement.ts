@@ -69,6 +69,8 @@ interface PendingNamedRead {
   failures: number
   /** Tries in a row that found no asset. */
   misses: number
+  /** A failure of its tries was written down: the next ones are not reported. */
+  told: boolean
   timer: { handle: unknown } | null
   waiters: Array<() => void>
 }
@@ -91,9 +93,11 @@ export function createUploadSettlement(profile: UploadSettlementProfile): Upload
   // key now.
   const generations = new Map<UploadQueueKey, number>()
   // The poll and the notifications ask for as long as a row waits, and a reader is to report only the first of
-  // their requests that fails: `failing` from a failure that was let be reported until a read answers, and
-  // beside it the `reported` of each tracked row, until a read brings its asset.
+  // their requests that fails and is written down: `failing` from such a failure until a read answers, and beside
+  // it the `reported` of each tracked row, until a read brings its asset. A failure that was not written down (a
+  // timeout, 401, 403, as the readers say) has told nobody, and begins nothing.
   let failing = false
+  const failureReported = (error: unknown) => profile.readers.failureReported?.(error) ?? true
 
   const scheduler = () => uploadSettlementRuntime.scheduler
   // Asked anew after every wait: nothing is written, called or planned for a settlement that was disposed of.
@@ -154,20 +158,23 @@ export function createUploadSettlement(profile: UploadSettlementProfile): Upload
     return true
   }
 
-  // A row left failed without the original of its duplicate is no longer tracked, and a refresh may still help
-  // it. The reads that find no asset are counted for it here, across them all and until one answers: at the
-  // limit there is nothing a refresh could read. Answers as `countMiss` does.
+  // A row left failed without the original of its duplicate, and an uploaded one still without its metadata, are
+  // no longer tracked, and a refresh may still help them. The reads that find no asset are counted for them here,
+  // across them all and until one answers: at the limit there is nothing a refresh could read, and the uploaded
+  // row fails. Answers as `countMiss` does.
   const missesOfLeft = new WeakMap<UploadQueueItem, number>()
+  const countsMissesOfLeft = (row: UploadQueueItem) =>
+    memory.refreshMayHelp.has(toRaw(row)) || settle.awaitsMetadata(row)
   const countMissOfLeft = ({ queueKey, row }: { queueKey: UploadQueueKey; row: UploadQueueItem }) => {
     const raw = toRaw(row)
-    if (!memory.refreshMayHelp.has(raw)) return false
+    if (!countsMissesOfLeft(row)) return false
     const misses = (missesOfLeft.get(raw) ?? 0) + 1
     if (misses < UPLOAD_POLL_MISSING_LIMIT) {
       missesOfLeft.set(raw, misses)
       return false
     }
     missesOfLeft.delete(raw)
-    settle.setRefreshMayHelp(queueKey, row, false)
+    settle.giveUpOnMissing({ queueKey, row })
     return true
   }
 
@@ -365,10 +372,11 @@ export function createUploadSettlement(profile: UploadSettlementProfile): Upload
       const { report } = options[index]!
       if (answer.status === 'rejected') {
         failed++
-        if (report) reportedFailure = true
+        const told = report && failureReported(answer.reason)
+        if (told) reportedFailure = true
         unit.rows.forEach(({ state }) => {
           state.readFailures++
-          if (report) state.reported = true
+          if (told) state.reported = true
         })
         continue
       }
@@ -382,7 +390,7 @@ export function createUploadSettlement(profile: UploadSettlementProfile): Upload
       }
       if (!goesOn()) return
     }
-    // A request that answered ends the streak; one that failed and was let be reported begins it.
+    // A request that answered ends the streak; one that failed and was written down begins it.
     if (failed < units.length) failing = false
     else if (reportedFailure) failing = true
     fetchCaches()
@@ -440,7 +448,16 @@ export function createUploadSettlement(profile: UploadSettlementProfile): Upload
   const scheduleNamed = (assetId: DocId, fileId: DocIdNullable, intent: UploadReadIntent, delayMs: number) => {
     let read = pending.get(assetId)
     if (!read) {
-      read = { assetId, targets: new Map(), dueAt: Infinity, failures: 0, misses: 0, timer: null, waiters: [] }
+      read = {
+        assetId,
+        targets: new Map(),
+        dueAt: Infinity,
+        failures: 0,
+        misses: 0,
+        told: false,
+        timer: null,
+        waiters: [],
+      }
       pending.set(assetId, read)
     }
     mergeTarget(read, fileId, intent)
@@ -469,6 +486,7 @@ export function createUploadSettlement(profile: UploadSettlementProfile): Upload
     read.targets.forEach(({ fileId, intent }) => mergeTarget(waiting, fileId, intent))
     waiting.failures = Math.max(waiting.failures, read.failures)
     waiting.misses = Math.max(waiting.misses, read.misses)
+    waiting.told ||= read.told
   }
 
   const warnAboutRead = (rows: Array<{ row: UploadQueueItem }>) => {
@@ -483,18 +501,23 @@ export function createUploadSettlement(profile: UploadSettlementProfile): Upload
       // The rows it was for have left their queues meanwhile: nothing to ask for.
       const askedFor = concernedRows(read.assetId, read.targets.values())
       if (isDisposed() || !askedFor.length) return
-      // Its first try, when no streak runs and none of its rows has had its trouble reported.
-      const report = !failing && read.failures === 0 && read.misses === 0 && untold(askedFor)
+      // Until one of its tries was written down, when no streak runs and none of its rows has had its trouble
+      // reported.
+      const report = !failing && !read.told && read.misses === 0 && untold(askedFor)
       let asset: AssetDetailItemDto | null
       try {
         asset = await profile.readers.asset(read.assetId, { report, queueKey: askedFor[0]!.queueKey })
-      } catch {
+      } catch (error) {
         if (isDisposed()) return
         // Its rows left while it was on the wire: nobody waits for another try, and it begins no streak.
         const left = concernedRows(read.assetId, read.targets.values())
         if (!left.length) return
         read.failures++
-        if (report) failing = true
+        const told = report && failureReported(error)
+        if (told) {
+          read.told = true
+          failing = true
+        }
         // The count of the read times its tries, and says when a row no tick asks about has waited in vain. A
         // tracked row warns by its own count: ticks fail and succeed for it between the tries of this read.
         const exhausted = read.failures >= UPLOAD_POLL_READ_FAILURE_LIMIT
@@ -503,7 +526,7 @@ export function createUploadSettlement(profile: UploadSettlementProfile): Upload
           const state = settle.trackStateOf(entry.row)
           if (state) {
             state.readFailures++
-            if (report) state.reported = true
+            if (told) state.reported = true
           }
           if (state ? state.readFailures >= UPLOAD_POLL_READ_FAILURE_LIMIT : exhausted) warned.push(entry)
         }
@@ -531,7 +554,8 @@ export function createUploadSettlement(profile: UploadSettlementProfile): Upload
         // Nobody is left to try again for.
         if (!concerned.length) return
         if (read.misses < UPLOAD_POLL_MISSING_LIMIT) retryNamed(read, read.misses)
-        // A row an event has settled is not flipped to failed; it only says its data could not be read.
+        // A row an event has settled is not flipped to failed; it only says its data could not be read. One still
+        // without its metadata has failed by its count above.
         else warnAboutRead(untracked)
         return
       }
@@ -552,8 +576,9 @@ export function createUploadSettlement(profile: UploadSettlementProfile): Upload
   // ---- reads asked for at once
 
   /**
-   * What the one who asked is told of the read. `error` is for what asking again may mend: the read failed, the
-   * asset was not found, or a row is left without the original of its duplicate.
+   * What the one who asked is told of the read. What asking again may mend, by its cause: the read failed
+   * (`error`), the asset was not found (`missing`), or a row is left without the original of its duplicate
+   * (`originalUnread`).
    */
   const readTargetNow = (target: UploadSettlementTarget, intent: UploadReadIntent): Promise<UploadRefreshOutcome> =>
     enqueueRead(async (startedAt) => {
@@ -574,16 +599,16 @@ export function createUploadSettlement(profile: UploadSettlementProfile): Upload
             // Said by this read: the poll does not say it again.
             if (state) state.reported = true
             if (state ? countMiss({ queueKey, row, state }) : countMissOfLeft({ queueKey, row })) givenUp = true
-            else if (state || memory.refreshMayHelp.has(toRaw(row))) askedOn = true
+            else if (state || countsMissesOfLeft(row)) askedOn = true
           }
           // The miss that was one too many has settled its rows, as given up: there is nothing to ask again.
-          return givenUp && !askedOn ? 'settled' : 'error'
+          return givenUp && !askedOn ? 'settled' : 'missing'
         }
         readSucceeded(concerned)
         const leftWithout = await settle.applyAssetRead(asset, target, intent, startedAt)
         if (isDisposed()) return 'error'
         fetchCaches()
-        if (leftWithout) return 'error'
+        if (leftWithout) return 'originalUnread'
         // Otherwise by the state of the main file alone, whichever rows were written.
         return isFinalFileStatus(asset.mainFile?.fileAttributes?.status) ? 'settled' : 'pending'
       } catch {
@@ -761,6 +786,7 @@ export function createUploadSettlement(profile: UploadSettlementProfile): Upload
   }
 
   const hasTracked = () => !isDisposed() && trackedRows().length > 0
+  const isGivenUpMissing = (row: UploadQueueItem) => memory.givenUpMissing.has(toRaw(row))
 
   const dispose = () => {
     disposed = true
@@ -784,6 +810,7 @@ export function createUploadSettlement(profile: UploadSettlementProfile): Upload
     settleKnownProcessed,
     settleKnownDuplicate,
     settleKnownFailed,
+    isGivenUpMissing,
     hasTracked,
     dispose,
   }

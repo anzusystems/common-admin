@@ -105,6 +105,8 @@ const warnings = () =>
     .value.filter((alert) => alert.color === 'warning')
     .map((alert) => alert.text)
 const REFRESH_FAILED = 'common.damImage.queueItem.refreshFailed'
+const ASSET_GONE = 'common.damImage.queueItem.assetGone'
+const ORIGINAL_UNREAD = 'common.damImage.queueItem.duplicateOriginalUnread'
 
 /** One file, sent whole: its row waits for the server, `asset-1` and `file-1`. */
 const sentFile = async (profile: ConsumerProfile) => {
@@ -285,7 +287,7 @@ describe.each(consumerProfiles)('the poll of an upload queue, under the $name', 
     expect(clock.waiting()).toBe(0)
   })
 
-  it('a refresh that misses the asset before that says its state could not be loaded, and the row waits on', async () => {
+  it('a refresh that misses the asset before that says the asset no longer exists, and the row waits on', async () => {
     const item = await sentFile(profile)
     dam.assets.delete('asset-1')
     await clock.advance(5 * SECOND)
@@ -293,7 +295,7 @@ describe.each(consumerProfiles)('the poll of an upload queue, under the $name', 
     await useUploadQueueItemRefresh().refreshItem('asset-1', item)
 
     expect(item.status).toBe(Processing)
-    expect(warnings()).toEqual([commonT(REFRESH_FAILED)])
+    expect(warnings()).toEqual([commonT(ASSET_GONE)])
   })
 
   // "Try again" is said to the one who pressed, about the row pressed. Where that row ended while its refresh
@@ -317,9 +319,10 @@ describe.each(consumerProfiles)('the poll of an upload queue, under the $name', 
       reads.release()
       await pressed
 
-      // Three ticks and the refresh, which was answered that it failed: its read found nothing to give up.
+      // Three ticks and the refresh, which was answered that the asset is missing: its read found nothing to give
+      // up.
       expect(readUrls()).toHaveLength(4)
-      expect(await asked.mock.results[0]!.value).toBe('error')
+      expect(await asked.mock.results[0]!.value).toBe('missing')
       expect(warnings()).toEqual([])
     })
 
@@ -340,7 +343,7 @@ describe.each(consumerProfiles)('the poll of an upload queue, under the $name', 
 
       await useUploadQueueItemRefresh().refreshItem('asset-gone', pressedRow)
 
-      expect(await asked.mock.results[0]!.value).toBe('error')
+      expect(await asked.mock.results[0]!.value).toBe('missing')
       expect([pressedRow.status, other.status]).toEqual([Failed, Processing])
       expect(warnings()).toEqual([])
     })
@@ -1181,8 +1184,8 @@ describe('a duplicate whose origin asset cannot be loaded', () => {
     expect(clock.waiting()).toBe(0)
 
     // Asked while the original still cannot be read, it stays as it is, with its refresh, and the one who asked
-    // is told the refresh could not do it.
-    expect(await store.refreshAsset('asset-1')).toBe('error')
+    // is told why the refresh could not do it.
+    expect(await store.refreshAsset('asset-1')).toBe('originalUnread')
     expect([item.status, store.refreshMayHelp(item)]).toEqual([Failed, true])
 
     originReadable()
@@ -1199,10 +1202,9 @@ describe('a duplicate whose origin asset cannot be loaded', () => {
     expect(store.refreshMayHelp(item)).toBe(false)
   })
 
-  // The press itself, of the refresh a failed row of the queue offers (the single-file dialog offers none on a
-  // failed item): the file is settled, a duplicate, and the row is not, so the one who pressed is told, where the
-  // refresh said nothing and left the row as it was.
-  it('tells the one who pressed refresh that it could not while the original cannot be read, and nothing once it can', async () => {
+  // The press itself, of the refresh a failed row of the queue offers: the file is settled, a duplicate, and the
+  // row is not, so the one who pressed is told, where the refresh said nothing and left the row as it was.
+  it('tells the one who pressed refresh that the original could not be read while it cannot, and nothing once it can', async () => {
     const store = useUploadQueuesStore()
     const item = await sentFile(cmsConfiguration)
     dam.fileBecomes('asset-1', AssetFileProcessStatus.Duplicate, {}, { originAssetFile: 'file-original' })
@@ -1214,10 +1216,10 @@ describe('a duplicate whose origin asset cannot be loaded', () => {
     expect([item.status, store.refreshMayHelp(item), warnings()]).toEqual([Failed, true, []])
     const { refreshItem } = useUploadQueueItemRefresh()
 
-    // Failed before the press and failed after it: the row has not ended by it, and is told to try again.
+    // Failed before the press and after it, with its refresh: the row is told why.
     await refreshItem('asset-1', item)
 
-    expect(warnings()).toEqual([commonT(REFRESH_FAILED)])
+    expect(warnings()).toEqual([commonT(ORIGINAL_UNREAD)])
     expect([item.status, store.refreshMayHelp(item)]).toEqual([Failed, true])
 
     originReadable()
@@ -1229,9 +1231,9 @@ describe('a duplicate whose origin asset cannot be loaded', () => {
   })
 
   // The press that fails the row: no tick has asked yet, the refresh is the read that finds the duplicate. The
-  // row shows that it failed; "try again" is not said about a press that ended it (in the single-file dialog the
-  // refresh is gone with it).
-  it('says nothing to the one whose press of refresh is what fails the row for want of the original', async () => {
+  // row keeps its refresh, which asks for the original again: what is said follows that, not the change of the
+  // state of the row.
+  it('tells the one whose press of refresh is what fails the row for want of the original why, as the row keeps its refresh', async () => {
     const store = useUploadQueuesStore()
     const item = await sentFile(cmsConfiguration)
     dam.fileBecomes('asset-1', AssetFileProcessStatus.Duplicate, {}, { originAssetFile: 'file-original' })
@@ -1240,21 +1242,21 @@ describe('a duplicate whose origin asset cannot be loaded', () => {
 
     await useUploadQueueItemRefresh().refreshItem('asset-1', item)
 
-    expect(await asked.mock.results[0]!.value).toBe('error')
+    expect(await asked.mock.results[0]!.value).toBe('originalUnread')
     expect([item.status, store.refreshMayHelp(item)]).toEqual([Failed, true])
     expect(dam.originReads()).toHaveLength(1)
-    expect(warnings()).toEqual([])
+    expect(warnings()).toEqual([commonT(ORIGINAL_UNREAD)])
   })
 
-  // The same press by a caller that does not say which row was pressed: told as before.
-  it('says the state could not be loaded to a caller that names no row, also when the row failed by it', async () => {
+  // The same press by a caller that does not say which row was pressed: told as well.
+  it('says why to a caller that names no row, also when the row failed by it', async () => {
     const item = await sentFile(cmsConfiguration)
     dam.fileBecomes('asset-1', AssetFileProcessStatus.Duplicate, {}, { originAssetFile: 'file-original' })
 
     await useUploadQueueItemRefresh().refreshItem('asset-1')
 
     expect(item.status).toBe(Failed)
-    expect(warnings()).toEqual([commonT(REFRESH_FAILED)])
+    expect(warnings()).toEqual([commonT(ORIGINAL_UNREAD)])
   })
 
   // A failed row keeps its status when it is taken out of the queue: only its queue tells that it is gone, and

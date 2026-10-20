@@ -22,7 +22,8 @@ interface MeterPoint {
  * How far one upload is, how fast it goes and how long it still takes, from one curve: the bytes of its file sent
  * over time, from the request of its first chunk to the answer to its last. It reports once a second, the first at
  * once, and only once it has a speed and either bytes came since its last report or the answer to a chunk that is
- * whole on its way is awaited; without `report` it reports nothing and asks for no second.
+ * whole on its way is awaited; the whole file once it is out, also without a speed; without `report` it reports
+ * nothing and asks for no second.
  */
 export function useUploadMeter(report: UploadProgressCallback | undefined) {
   let points: MeterPoint[] = []
@@ -37,6 +38,9 @@ export function useUploadMeter(report: UploadProgressCallback | undefined) {
   // second of silence would make the time left hours and the next chunk, sized by the speed, small.
   let moved = false
   let sendingOver = false
+  // The speed last reported: the whole file is reported at it when no speed can be read by then, as when the clock
+  // went back before the answer to the last chunk.
+  let reportedSpeed = 0
   let timer: ReturnType<typeof setTimeout> | undefined
   // The try whose progress counts, and where the curve is once its chunk is whole on its way. A report of a try that
   // has ended comes too late to be on the curve.
@@ -82,11 +86,12 @@ export function useUploadMeter(report: UploadProgressCallback | undefined) {
   const answerAwaited = () => !!current && sent >= current.end
 
   const tick = () => {
-    const bytesPerSecond = speed()
+    const bytesPerSecond = speed() ?? (sendingOver ? reportedSpeed : null)
     if (report && !isNull(bytesPerSecond) && (moved || answerAwaited() || sendingOver)) {
       moved = false
       shown = sendingOver ? 100 : Math.max(shown, Math.min((sent * 100) / fileSize, 100))
-      report(shown, Math.ceil(bytesPerSecond), sendingOver ? 0 : Math.ceil((fileSize - sent) / bytesPerSecond))
+      reportedSpeed = Math.ceil(bytesPerSecond)
+      report(shown, reportedSpeed, sendingOver ? 0 : Math.ceil((fileSize - sent) / bytesPerSecond))
     }
     if (!sendingOver) timer = setTimeout(tick, TICK_MS)
   }

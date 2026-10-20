@@ -250,11 +250,14 @@ const showAdd = computed(() => {
           </template>
         </VListItem>
       </template>
-      <template #chip="{ item: chipSlotItem }">
+      <!-- Only the close of the slot's chip: its other props (`onMousedown`) would keep a press on the chip from
+        opening the list, as it does. -->
+      <template #chip="{ props: chipSlotProps, item: chipSlotItem }">
         <AuthorRemoteAutocompleteCachedAuthorChip
           v-if="chipSlotItem"
           :id="chipSlotItem.value"
           :key="chipSlotItem.value"
+          :chip-props="{ 'onClick:close': chipSlotProps['onClick:close'] }"
           :queue-id="queueId"
           :title="chipSlotItem.title"
           force-rounded

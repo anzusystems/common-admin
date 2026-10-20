@@ -56,6 +56,7 @@ describe('ROI loaders on a failed request', () => {
 
     expect(updateRoi).toHaveBeenCalledTimes(1)
     expect(roiStore.loader).toBe(false)
+    expect(wrapper.findComponent({ name: 'VProgressCircular' }).exists()).toBe(false)
     wrapper.unmount()
   })
 
@@ -75,12 +76,14 @@ describe('ROI loaders on a failed request', () => {
 
     wrapper.findComponent(ACropper).vm.$emit('commit', { x: 0.1, y: 0.1, width: 0.4, height: 0.3 })
     await flushPromises()
-    expect(roiStore.loader).toBe(true)
+    // The loader of the cropper's own save and read: the store's stays as the panel has it.
+    expect(wrapper.findComponent({ name: 'VProgressCircular' }).exists()).toBe(true)
     // The reload waits 2 s after the save.
     await vi.waitFor(() => expect(fetchImageFile).toHaveBeenCalledTimes(1), { timeout: 4000 })
     await flushPromises()
 
     expect(roiStore.loader).toBe(false)
+    expect(wrapper.findComponent({ name: 'VProgressCircular' }).exists()).toBe(false)
     expect(rejections).toEqual([])
     window.removeEventListener('unhandledrejection', onRejection)
     wrapper.unmount()

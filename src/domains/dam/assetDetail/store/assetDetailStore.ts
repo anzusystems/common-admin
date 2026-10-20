@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, shallowRef } from 'vue'
+import { ref } from 'vue'
 import type { AssetDetailItemDto } from '@/domains/dam/types/Asset'
 import type { DocId } from '@/shared/types/common'
 import type { UploadQueueKey } from '@/domains/dam/types/UploadQueue'
@@ -22,9 +22,11 @@ export const useAssetDetailStore = defineStore('commonAdminAssetDetailStore', ()
   const activeTab = ref<AssetDetailTabImageWithRoiType>(AssetDetailTabImageWithRoiDefault)
   const updateUploadStore = ref(false)
   const mainFileSingleUse = ref(false)
-  // The save of the detail that is on its way, until the DAM answers it; it never rejects. The detail can be closed
-  // before that: a host that reads the asset again once the detail has closed waits for the save first.
-  const saving = shallowRef<Promise<void> | null>(null)
+  // The saves of the detail that are on their way, each under the asset it saves, until the DAM answers them; they
+  // never reject. The detail can be closed before that: a host that reads the asset again once the detail has closed
+  // waits for the saves of that asset first. One for the page, it had the closing of the detail of an asset wait for
+  // the save of another one.
+  const saves = new Map<DocId, Promise<void>>()
   // Counts the openings and the closings of the detail: a read is taken while the count is the one it began under.
   let turn = 0
 
@@ -91,15 +93,22 @@ export const useAssetDetailStore = defineStore('commonAdminAssetDetailStore', ()
     setAsset(answer)
   }
 
-  function setSaving(save: Promise<unknown>) {
+  function setSaving(assetId: DocId, save: Promise<unknown>) {
     const answered = save.then(
       () => undefined,
       () => undefined
     )
-    saving.value = answered
-    void answered.then(() => {
-      if (saving.value === answered) saving.value = null
+    const before = saves.get(assetId)
+    const all = before ? Promise.all([before, answered]).then(() => undefined) : answered
+    saves.set(assetId, all)
+    void all.then(() => {
+      if (saves.get(assetId) === all) saves.delete(assetId)
     })
+  }
+
+  /** The saves of the detail of the asset `assetId` on their way, till they are all answered; `null` while none is. */
+  function savingOf(assetId: DocId) {
+    return saves.get(assetId) ?? null
   }
 
   function reset() {
@@ -116,12 +125,12 @@ export const useAssetDetailStore = defineStore('commonAdminAssetDetailStore', ()
     activeTab,
     updateUploadStore,
     mainFileSingleUse,
-    saving,
     setAsset,
     open,
     close,
     readBesideDetail,
     setSaving,
+    savingOf,
     reset,
   }
 })

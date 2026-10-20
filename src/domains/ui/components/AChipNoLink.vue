@@ -23,6 +23,7 @@ const customColorClass = computed(() => {
 <template>
   <VChip
     :color="color as string"
+    close-label="common.button.remove"
     :data-cy="dataCy"
     class="a-chip-no-link"
     :class="customColorClass"

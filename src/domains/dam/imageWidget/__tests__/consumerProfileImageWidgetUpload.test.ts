@@ -376,7 +376,7 @@ describe.each(consumerProfiles)('an upload into the image widget under the $name
 
         await droppedIntoTheDialog(widget, photo('first.jpg'), photo('second.jpg'))
 
-        expect(shownAlerts()).toEqual([['warning', alertText('common.damImage.upload.onlyOneFile')]])
+        expect(shownAlerts()).toEqual([['warning', alertText('common.system.upload.onlyOneFile')]])
         expect(queued()).toEqual(['first.jpg'])
         expect(dam.sentTo('POST', dam.routes.start)).toHaveLength(1)
         expect(uploadDialog()).not.toBeNull()

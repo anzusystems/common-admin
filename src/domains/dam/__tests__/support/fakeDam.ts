@@ -310,7 +310,7 @@ export function createFakeDam(endPoints: FakeDamEndPoints) {
     /** A request of the given kind waits until the test lets it answer: the DAM's own answer unless one is given. */
     hold: (method: FakeDamMethod, route: RegExp) => {
       const waiting: Array<{ request: FakeDamRequest; release: (given?: FakeDamAnswer) => void }> = []
-      rules.unshift((request) => {
+      const holds: FakeDamRule = (request) => {
         if (request.method !== method || !route.test(request.url)) return undefined
         return new Promise<FakeDamAnswer>((resolve) => {
           const held = {
@@ -329,11 +329,17 @@ export function createFakeDam(endPoints: FakeDamEndPoints) {
             if (index >= 0) waiting.splice(index, 1)
           })
         })
-      })
+      }
+      rules.unshift(holds)
       return {
         waiting,
         /** Lets every request held so far answer. */
         release: (given?: FakeDamAnswer) => [...waiting].forEach((held) => held.release(given)),
+        /** Holds no request of the kind from now on; those held so far still wait for `release`. */
+        stop: () => {
+          const index = rules.indexOf(holds)
+          if (index >= 0) rules.splice(index, 1)
+        },
       }
     },
     /**

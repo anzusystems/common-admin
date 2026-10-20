@@ -11,6 +11,11 @@ import { ref } from 'vue'
  * only set a new one (admin-dam draws its previews of the regions anew by `timestampRoiPreviews`).
  * `ADamAssetImageRoiSelect` reads neither: it draws the cropper anew when `imageFile` changes, so after a rotation an
  * admin sets the file read anew (`setImageFile`).
+ * `cropperBusy` is the cropper's own, apart from `loader`, which stays the panel's: on from the save of a region till
+ * no save of it is on its way and the read of the file the DAM redraws two seconds after the latest answered one is
+ * over (applied, dropped or failed), and off when the cropper goes. A panel offers no refresh of the regions while it is on: its read, sent before the redraw, would take
+ * the place of the cropper's. After the cropper's read the previews of the regions are drawn anew
+ * (`forceReloadRoiPreviews()`).
  */
 export const useImageRoiStore = defineStore('commonAdminDamImageRoiStore', () => {
   const imageFile = ref<null | AssetFileImage>(null)
@@ -18,6 +23,7 @@ export const useImageRoiStore = defineStore('commonAdminDamImageRoiStore', () =>
   const roi = ref<null | RegionOfInterest>(null)
   const timestampCropper = ref(Date.now())
   const timestampRoiPreviews = ref(Date.now())
+  const cropperBusy = ref(false)
 
   function setImageFile(newFile: AssetFileImage | null) {
     imageFile.value = newFile
@@ -43,6 +49,10 @@ export const useImageRoiStore = defineStore('commonAdminDamImageRoiStore', () =>
     timestampCropper.value = Date.now()
   }
 
+  function setCropperBusy(busy: boolean) {
+    cropperBusy.value = busy
+  }
+
   function reset() {
     imageFile.value = null
     loader.value = false
@@ -57,12 +67,14 @@ export const useImageRoiStore = defineStore('commonAdminDamImageRoiStore', () =>
     roi,
     timestampCropper,
     timestampRoiPreviews,
+    cropperBusy,
     setImageFile,
     setRoi,
     showLoader,
     hideLoader,
     forceReloadRoiPreviews,
     forceReloadCropper,
+    setCropperBusy,
     reset,
   }
 })

@@ -27,13 +27,32 @@ const detailLoading = ref(false)
 // Shared like the pagination: every asset select part asks through here, and only the last ask counts.
 let listController: AbortController | undefined
 let detailRequest = 0
-// A further page has failed, and "Load more" does not ask for it again by coming into view: a press does, or the button
-// coming into view once more after it has left it. A list that begins anew hides the button till it has its first
-// page (it has no further page, and the failure has ended the loader), and the button out of view clears this.
-let nextPageFailed = false
+// Counts the lists that begin anew: what a list remembers of a further page that failed is that list's alone.
+let listTurn = 0
+
+/**
+ * The scrolling the button of "Load more" is in, where it stands: the nearest element above it that scrolls, else the
+ * page. A layout that changes moves the button without it.
+ */
+const scrolledTo = (button: Element | undefined) => {
+  for (let element = button?.parentElement; element; element = element.parentElement) {
+    const { overflowY } = getComputedStyle(element)
+    if ((overflowY === 'auto' || overflowY === 'scroll') && element.scrollHeight > element.clientHeight) {
+      return element.scrollTop
+    }
+  }
+  return document.scrollingElement?.scrollTop ?? 0
+}
 
 export function useAssetSelectActions(configName = 'default') {
   const { damClient, endPointAsset, showFileInfoEnabled } = useCommonAdminCoreDamOptions(configName)
+  // A further page of the list of this "Load more" has failed (the list of `failedInListTurn`), and the button does not
+  // ask for it again by coming into view: a press does, or the button coming into view once more after the list was
+  // scrolled while it was out of view. It was one for the page, and the button that left the view by a change of the
+  // layout alone (a panel opened beside the list) asked again as it came back.
+  let failedInListTurn: number | null = null
+  // Where the scrolling of the list stood as the button left the view.
+  let scrolledAtLeave: number | null = null
 
   const assetSelectStore = useAssetSelectStore()
   const { selectedCount, selectedAssets, assetListItems, loader } = storeToRefs(assetSelectStore)
@@ -76,7 +95,11 @@ export function useAssetSelectActions(configName = 'default') {
    * second page.
    */
   const startListAnew = () => {
+    // Given up and let go: its end does not turn the loader off, which the new list keeps on till it has been read. Off
+    // for the pause before that read, it let a list without items say there was nothing found.
     listController?.abort()
+    listController = undefined
+    listTurn++
     const hasNextPage = isNull(pagination.value.hasNextPage) ? null : false
     pagination.value = { ...pagination.value, page: 1, hasNextPage }
   }
@@ -92,7 +115,11 @@ export function useAssetSelectActions(configName = 'default') {
   }
 
   const fetchAssetList = async () => {
-    if (assetSelectStore.selectedLicenceId <= 0) return
+    if (assetSelectStore.selectedLicenceId <= 0) {
+      // Nothing is read: the loader of a list given up stays on no longer.
+      if (!listController) assetSelectStore.hideLoader()
+      return
+    }
     resolveTypeFilter(assetSelectStore.assetType, assetSelectStore.inPodcast)
     const { execute } = useFetchAssetList(damClient, endPointAsset, assetSelectStore.selectedLicenceId)
     // Once more as the read goes out, whatever was asked for during the pause before it.
@@ -113,7 +140,7 @@ export function useAssetSelectActions(configName = 'default') {
 
   const fetchNextPage = async () => {
     if (assetSelectStore.loader) return
-    nextPageFailed = false
+    failedInListTurn = null
     const page = pagination.value.page
     pagination.value.page = page + 1
     resolveTypeFilter(assetSelectStore.assetType, assetSelectStore.inPodcast)
@@ -130,7 +157,8 @@ export function useAssetSelectActions(configName = 'default') {
       if (controller.signal.aborted) return
       // Not when something has put the page back meanwhile: rolling back would overwrite that.
       if (pagination.value.page === page + 1) pagination.value.page = page
-      nextPageFailed = true
+      failedInListTurn = listTurn
+      scrolledAtLeave = null
       showErrorsDefault(error)
     } finally {
       if (listController === controller) assetSelectStore.hideLoader()
@@ -141,15 +169,21 @@ export function useAssetSelectActions(configName = 'default') {
    * "Load more" asks for the further page by itself as it comes into view. Its directive tells it so again each time
    * the list draws anew while the button is in view: after a further page that failed it asked again at once, and
    * again after each failure, with an error each time, until the button was scrolled away. Once a further page has
-   * failed, the button does not ask by itself while it stays in view: a press asks, and so does the button once it has
-   * left the view and comes into it again.
+   * failed, the button does not ask by itself while it stays in view: a press asks, and so does the button that comes
+   * into view again once the list was scrolled while it was out of view. A new list asks by itself as before.
    */
-  const fetchNextPageInView = (isIntersecting: boolean) => {
+  const fetchNextPageInView = (isIntersecting: boolean, entries?: IntersectionObserverEntry[]) => {
+    const button = entries?.[0]?.target
     if (!isIntersecting) {
-      nextPageFailed = false
+      scrolledAtLeave = scrolledTo(button)
       return
     }
-    if (nextPageFailed || pagination.value.hasNextPage !== true) return
+    if (failedInListTurn === listTurn) {
+      if (isNull(scrolledAtLeave) || scrolledTo(button) === scrolledAtLeave) return
+      failedInListTurn = null
+    }
+    scrolledAtLeave = null
+    if (pagination.value.hasNextPage !== true) return
     fetchNextPage()
   }
 
@@ -191,7 +225,12 @@ export function useAssetSelectActions(configName = 'default') {
         }
       )
     } catch (e) {
-      if (request === detailRequest) showErrorsDefault(e)
+      if (request === detailRequest) {
+        showErrorsDefault(e)
+        // The item marked is that of the asset the side panel still shows, or none: the item clicked was marked
+        // beside a panel that showed another asset, or none.
+        assetSelectStore.setActiveByAssetId(assetDetailStore.asset?.id ?? null)
+      }
     } finally {
       if (request === detailRequest) {
         detailLoading.value = false
@@ -208,8 +247,11 @@ export function useAssetSelectActions(configName = 'default') {
    * The asset is the one the list remembers its active item by, also when the list read last has no item of it: the
    * panel went on showing that asset, and "edit" of the panel opened its detail. Read by the active item alone, the
    * panel was left empty once that detail closed, though it was that asset that had just been edited.
+   * `shown`: the asset the detail closed showed, when the side panel opened it: that asset is read, and its item is
+   * the active one. The asset the list remembered was read, and it is another one after a read of a click that failed.
    */
-  const readActiveItemAgain = async () => {
+  const readActiveItemAgain = async (shown: DocId | null = null) => {
+    if (!isNull(shown)) assetSelectStore.setActiveByAssetId(shown)
     const assetId = assetSelectStore.getActiveAssetId()
     // Nothing is read: the list remembers no asset, and the side panel the detail emptied as it closed stays empty.
     if (isNull(assetId)) return

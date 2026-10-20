@@ -96,28 +96,35 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
     assetListItems.value = assetListItems.value.concat(assets)
   }
 
+  // An asset the list has twice (two pages returned it) is one asset: a click selects it or takes it out, and every
+  // item of it says so. One item took the click alone: taken out, the asset kept its check on the other item.
   function toggleSelectedByIndex(index: number) {
-    if (!assetListItems.value[index]) return
+    const item = assetListItems.value[index]
+    if (!item) return
 
-    if (!singleMode.value && isSelectedMax.value && !assetListItems.value[index].selected) {
+    if (!singleMode.value && isSelectedMax.value && !item.selected) {
       return
     }
 
-    assetListItems.value[index].selected = !assetListItems.value[index].selected
+    const assetId = item.asset.id
+    const selected = !item.selected
+    assetListItems.value.forEach((one) => {
+      if (one.asset.id === assetId) one.selected = selected
+    })
 
-    if (singleMode.value && assetListItems.value[index].selected) {
-      unselectAllExcept(index)
+    if (singleMode.value && selected) {
+      unselectAllExcept(assetId)
       clearSelected()
-      addToSelected(assetListItems.value[index])
+      addToSelected(item)
       return
     }
 
-    if (!singleMode.value && assetListItems.value[index].selected) {
-      addToSelected(assetListItems.value[index])
+    if (!singleMode.value && selected) {
+      addToSelected(item)
       return
     }
 
-    removeFromSelected(assetListItems.value[index].asset.id)
+    removeFromSelected(assetId)
   }
 
   function setActiveByIndex(index: number) {
@@ -130,6 +137,19 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
     if (isNull(oldActiveIndex)) return
     if (!(oldActiveIndex in assetListItems.value)) return
     assetListItems.value[oldActiveIndex]!.active = false
+  }
+
+  /**
+   * The item of the asset the side panel shows is the active one, and that asset is the one the list finds its active
+   * item by; none for `null`, or for an asset the list has no item of.
+   */
+  function setActiveByAssetId(assetId: DocId | null) {
+    const index = isNull(assetId) ? -1 : assetListItems.value.findIndex((item) => item.asset.id === assetId)
+    assetListItems.value.forEach((item, itemIndex) => {
+      item.active = itemIndex === index
+    })
+    activeItemIndex.value = index < 0 ? null : index
+    activeAssetId.value = assetId
   }
 
   /**
@@ -148,13 +168,10 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
     return activeAssetId.value
   }
 
-  function unselectAllExcept(ignoreIndex: number) {
-    const items = assetListItems.value
-    for (let i = 0; i < items.length; i++) {
-      if (items[i]!.selected && i !== ignoreIndex) {
-        items[i]!.selected = false
-      }
-    }
+  function unselectAllExcept(assetId: DocId) {
+    assetListItems.value.forEach((item) => {
+      if (item.selected && item.asset.id !== assetId) item.selected = false
+    })
   }
 
   function clearSelected() {
@@ -276,6 +293,7 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
     loader,
     assetListItems,
     setActiveByIndex,
+    setActiveByAssetId,
     forgetActiveAsset,
     getActiveAssetId,
     getSelectedData,
