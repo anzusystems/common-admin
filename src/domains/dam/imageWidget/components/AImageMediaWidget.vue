@@ -11,7 +11,7 @@ import { isUndefined } from '@/shared/utils/common'
 import { isImageWidgetUploadConfigAllowed } from '@/domains/dam/config/utils/damFilterUserAllowedUploadConfigs'
 import { type CollabComponentConfig, CollabStatus, type CollabStatusType } from '@/domains/collab/types/Collab'
 import type { DamConfigLicenceExtSystemReturnType } from '@/domains/dam/types/DamConfig'
-import { useDamConfigStore } from '@/domains/dam/config/store/damConfigStore'
+import { useDamConfigStoreOf } from '@/domains/dam/config/store/damConfigStore'
 import ImageMediaWidgetInner from '@/domains/dam/imageWidget/components/ImageMediaWidgetInner.vue'
 import AImageWidgetSimple from '@/domains/dam/imageWidget/components/AImageWidgetSimple.vue'
 import AMediaWidgetSimple from '@/domains/dam/imageWidget/components/AMediaWidgetSimple.vue'
@@ -90,18 +90,18 @@ const {
   getDamConfigAssetCustomFormElements,
   getOrLoadDamConfigExtSystemByLicence,
   getOrLoadDamConfigExtSystemByLicences,
-} = useDamConfigState(damClient)
+} = useDamConfigState(damClient, damConfigName)
 
 const uploadConfig = shallowRef<DamConfigLicenceExtSystemReturnType | undefined>(undefined)
 
 onMounted(async () => {
-  const damConfigStore = useDamConfigStore()
+  const damConfigStore = useDamConfigStoreOf(damConfigName)
   uploadConfig.value = await getOrLoadDamConfigExtSystemByLicence(props.uploadLicence)
   if (isUndefined(uploadConfig.value)) {
     status.value = 'error'
     return
   }
-  if (!isImageWidgetUploadConfigAllowed(uploadConfig.value)) {
+  if (!isImageWidgetUploadConfigAllowed(uploadConfig.value, damConfigName)) {
     uploadAllowed.value = false
     try {
       if (!damConfigStore.initialized.damPrvConfig) await loadDamPrvConfig()

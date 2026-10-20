@@ -140,7 +140,7 @@ const onSave = async () => {
     await bulkUpdateAssetsMetadata(damClient, endPointAsset, itemsRaw)
     showRecordWas('updated')
   } catch (error) {
-    showMetadataSaveError(error, props.extSystem)
+    showMetadataSaveError(error, props.extSystem, damConfigName)
   } finally {
     saveButtonLoading.value = false
   }
@@ -157,7 +157,9 @@ const onSaveAndApply = async () => {
   const withoutForm = itemsRaw.filter(isUploadedWithoutForm)
   if (withoutForm.length > 0) {
     const shownFor = uploadQueueDialog.value
-    await Promise.all(withoutForm.map((item) => uploadQueuesStore.refreshAsset(item.assetId)))
+    await Promise.all(
+      withoutForm.map((item) => uploadQueuesStore.refreshAsset(item.assetId, { queueKey: props.queueKey }))
+    )
     // Closed while the rows were read (its queue stopped and emptied with it): nothing is saved or handed over. The
     // save went out once the read had answered, for a queue the user had left.
     if (disposed || uploadQueueDialog.value !== shownFor) {
@@ -187,7 +189,7 @@ const onSaveAndApply = async () => {
     try {
       res = await bulkUpdateAssetsMetadata(damClient, endPointAsset, itemsRaw)
     } catch (error) {
-      showMetadataSaveError(error, props.extSystem)
+      showMetadataSaveError(error, props.extSystem, damConfigName)
       return
     }
     const uploaded = itemsRaw.filter(isUploaded)

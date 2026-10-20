@@ -164,7 +164,7 @@ const mountWithItem = async (component: Parameters<typeof h>[0], props: Record<s
   })
   // Mounting made the components' pinia the active one.
   const store = useUploadQueuesStore()
-  await store.addByCopyToLicence(QUEUE, EXT_SYSTEM, 1, ['asset-1'])
+  await store.addByCopyToLicence(QUEUE, EXT_SYSTEM, 1, ['asset-1'], 'default')
   await flushPromises()
   return store.getQueueItems(QUEUE)[0]!
 }
@@ -498,7 +498,7 @@ describe('the single-file upload dialog', () => {
           'DamAssetImageRoiSelectLazy',
         ]
       )
-      await useUploadQueuesStore().queueItemDuplicate('asset-1', 'file-original', DamAssetType.Image)
+      await useUploadQueuesStore().queueItemDuplicate('asset-1', 'file-original', DamAssetType.Image, 'default')
       await flushPromises()
       // The dialog renders into the body.
       const notice = () => document.body.querySelector('.text-body-small.text-error')

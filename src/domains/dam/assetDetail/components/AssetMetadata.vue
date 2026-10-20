@@ -55,11 +55,12 @@ const assetType = computed(() => {
 const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(
   // eslint-disable-next-line vue/no-ref-object-reactivity-loss
   assetType.value,
-  props.extSystem
+  props.extSystem,
+  damConfigName
 )
 
 const { getAuthorConflicts } = useAssetSuggestions()
-const { addToCachedAuthors, fetchCachedAuthors } = useDamCachedAuthors()
+const { addToCachedAuthors, fetchCachedAuthors } = useDamCachedAuthors(damConfigName)
 
 // The DAM authors of one name read from the file, as the card of a row of the queue offers them: taken from the asset
 // itself, as the field of the store is written by nobody. A side panel, read-only, offers none, nor does a detail
@@ -69,7 +70,7 @@ const authorConflicts = computed<DocId[]>(() =>
     ? []
     : getAuthorConflicts(asset.value.metadata.authorSuggestions ?? {})
 )
-// Their chips show the names from the cache of the page, as those of the row do: without them a chip spins with none.
+// Their chips show the names from the cache of its configuration, as those of the row do: without them a chip spins with none.
 watch(
   authorConflicts,
   (conflicts) => {
@@ -88,7 +89,8 @@ const onAnyMetadataChange = () => {
 const { keywordRequired, keywordEnabled } = useDamKeywordAssetTypeConfig(
   // eslint-disable-next-line vue/no-ref-object-reactivity-loss
   assetType.value,
-  props.extSystem
+  props.extSystem,
+  damConfigName
 )
 
 const { mainFileSingleUseEnabled, showFileInfoEnabled, editAssetLabel } = useCommonAdminCoreDamOptions(damConfigName)

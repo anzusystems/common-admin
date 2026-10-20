@@ -70,7 +70,7 @@ describe('an empty file of a queue while rusha loads', () => {
     const photo = new File(['content'], 'photo.jpg', { type: 'image/jpeg' })
 
     // The queue looks again once the photo is added: the empty file still waits there for its hash.
-    await store.addByFiles('queue', 1, 1, [empty, photo])
+    await store.addByFiles('queue', 1, 1, [empty, photo], 'default')
     const [emptyRow] = store.getQueueItems('queue')
     expect(emptyRow!.status).toBe(UploadQueueItemStatus.Waiting)
     rushaGate.open()

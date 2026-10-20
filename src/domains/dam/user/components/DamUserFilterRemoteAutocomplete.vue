@@ -22,9 +22,9 @@ const emit = defineEmits<{
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const damConfigName = useDamConfigName(props.configName)
 
-const { damClient } = useCommonAdminCoreDamOptions(damConfigName)
+const { damClient, endPointUser } = useCommonAdminCoreDamOptions(damConfigName)
 
-const { fetchItems, fetchItemsByIds } = useDamUserSelectAction(damClient)
+const { fetchItems, fetchItemsByIds } = useDamUserSelectAction(damClient, endPointUser)
 
 const { filterData, filterConfig } = useDamUserInnerFilter()
 provide(FilterInnerConfigKey, filterConfig)

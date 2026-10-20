@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import type { DocId } from '@/shared/types/common'
 import { useDamCachedAuthors } from '@/domains/dam/author/composables/cachedAuthors'
 import { useCachedItem } from '@/domains/cached/composables/useCachedItem'
+import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 
 const props = withDefaults(
   defineProps<{
@@ -23,7 +24,7 @@ const clickClose = () => {
 }
 
 const { getCachedAuthor, addToCachedAuthors, fetchCachedAuthors, pinCachedAuthor, unpinCachedAuthor } =
-  useDamCachedAuthors()
+  useDamCachedAuthors(useDamConfigName())
 
 // As the author chip reads it. An author the server did not return is settled too: it has only its id to show,
 // until a later ask for it finds it.

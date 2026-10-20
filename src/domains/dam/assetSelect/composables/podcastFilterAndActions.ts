@@ -35,9 +35,9 @@ export function usePodcastInnerFilter() {
   }
 }
 
-export const usePodcastSelectActions = (licenceId: IntegerId, configName = 'default') => {
-  const { damClient } = useCommonAdminCoreDamOptions(configName)
-  const { execute } = useFetchDamPodcastList(damClient, licenceId)
+export const usePodcastSelectActions = (licenceId: IntegerId, configName: string) => {
+  const { damClient, endPointPodcast } = useCommonAdminCoreDamOptions(configName)
+  const { execute } = useFetchDamPodcastList(damClient, licenceId, endPointPodcast)
 
   const fetchItems = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
     const podcasts = await execute(pagination, filterData, filterConfig)
@@ -49,7 +49,7 @@ export const usePodcastSelectActions = (licenceId: IntegerId, configName = 'defa
   }
 
   const fetchItemsByIds = async (ids: DocId[]) => {
-    const podcasts = await fetchDamPodcastListByIds(damClient, licenceId, ids)
+    const podcasts = await fetchDamPodcastListByIds(damClient, licenceId, ids, endPointPodcast)
 
     return podcasts.map((podcast: DamPodcastAware) => ({
       title: podcast.texts.title,

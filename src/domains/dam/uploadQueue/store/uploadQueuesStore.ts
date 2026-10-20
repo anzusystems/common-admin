@@ -34,7 +34,7 @@ import {
   type UploadQueueKey,
 } from '@/domains/dam/types/UploadQueue'
 import { AnzuApiResponseCodeError } from '@/shared/error/AnzuApiResponseCodeError'
-import { cloneDeep, isArray, isUndefined } from '@/shared/utils/common'
+import { cloneDeep, isArray, isString, isUndefined } from '@/shared/utils/common'
 import { commonT } from '@/plugins/i18n'
 import { defineStore } from 'pinia'
 import { getCurrentScope, ref } from 'vue'
@@ -60,8 +60,16 @@ const sameValue = (one: unknown, other: unknown) => JSON.stringify(one) === JSON
 /** The rows of an asset as they were at a moment, field by field (`noteRowsOfAsset`). */
 export interface RowsNote {
   assetId: DocId
+  /** The DAM configuration of the queues the rows are in. */
+  configName: string
   rows: Map<UploadQueueItem, EditableFields>
 }
+
+/**
+ * The rows a settle function of the store is for: those of the queues of the DAM configuration of this name, or of
+ * the configuration of the queue `queueKey`. Required: two DAMs may give one asset id.
+ */
+export type UploadQueueRowsOf = string | { queueKey: UploadQueueKey }
 
 /** What a write left as the user had changed it: those fields, and those keys of the custom data. */
 interface KeptByWrite {
@@ -122,9 +130,6 @@ const takeWrite = (note: RowsNote, item: UploadQueueItem, kept: KeptByWrite) => 
 }
 
 export const useUploadQueuesStore = defineStore('commonAdminUploadQueuesStore', () => {
-  const { addToCachedKeywords, fetchCachedKeywords } = useDamCachedKeywords()
-  const { addToCachedAuthors, fetchCachedAuthors } = useDamCachedAuthors()
-
   const queues = ref<Map<UploadQueueKey, UploadQueue>>(new Map())
 
   const { createDefault } = useUploadQueueItemFactory()
@@ -195,11 +200,14 @@ export const useUploadQueuesStore = defineStore('commonAdminUploadQueuesStore', 
       },
       failureReported: apiErrorIsReported,
     },
+    // Two DAMs may give one asset id: what concerns the rows of a configuration is settled in its queues alone.
+    configOf,
+    // The names of the rows of a queue are of the DAM of its configuration.
     caches: {
-      addAuthors: addToCachedAuthors,
-      addKeywords: addToCachedKeywords,
-      fetchAuthors: fetchCachedAuthors,
-      fetchKeywords: fetchCachedKeywords,
+      addAuthors: (ids, queueKey) => useDamCachedAuthors(configOf(queueKey)).addToCachedAuthors(ids),
+      addKeywords: (ids, queueKey) => useDamCachedKeywords(configOf(queueKey)).addToCachedKeywords(ids),
+      fetchAuthors: (queueKey) => useDamCachedAuthors(configOf(queueKey)).fetchCachedAuthors(),
+      fetchKeywords: (queueKey) => useDamCachedKeywords(configOf(queueKey)).fetchCachedKeywords(),
     },
     messages: {
       processingTooLong: () => commonT('common.damImage.uploadErrors.processingTooLong'),
@@ -207,7 +215,11 @@ export const useUploadQueuesStore = defineStore('commonAdminUploadQueuesStore', 
       assetMissing: () => commonT('common.damImage.uploadErrors.unknownError'),
       assetGone: () => commonT('common.damImage.queueItem.assetGone'),
     },
-    connection: useDamNotificationsConnection(),
+    // The socket of the configuration of the queue: a configuration without one is polled for densely.
+    connection: {
+      isPushAlive: (queueKey) => useDamNotificationsConnection(configOf(queueKey)).isPushAlive(),
+      onChange: useDamNotificationsConnection().onChange,
+    },
   }
 
   // Every row of this store is uploaded through the library's upload service. Made in the scope of the store: a
@@ -234,12 +246,19 @@ export const useUploadQueuesStore = defineStore('commonAdminUploadQueuesStore', 
 
   // Without the file a notification names: the rows are matched by their asset alone, and a read asked for
   // about a file that is not the main one would take the state of that file from the notification unchecked.
-  const toSettlementEvent = (event: DamNotification): UploadSettlementEvent | null => {
+  // `configNames`: the configurations of the socket it came through, whose queues alone it concerns.
+  const toSettlementEvent = (event: DamNotification, configNames: string[]): UploadSettlementEvent | null => {
     switch (event.name) {
       case DamNotificationName.AssetFileProcessed:
-        return { kind: 'processed', assetId: event.data.asset, fileId: null }
+        return { kind: 'processed', assetId: event.data.asset, fileId: null, configNames }
       case DamNotificationName.AssetFileFailed:
-        return { kind: 'failed', assetId: event.data.asset, fileId: null, failReason: event.data.failReason }
+        return {
+          kind: 'failed',
+          assetId: event.data.asset,
+          fileId: null,
+          failReason: event.data.failReason,
+          configNames,
+        }
       case DamNotificationName.AssetFileDuplicate:
         return {
           kind: 'duplicate',
@@ -247,11 +266,12 @@ export const useUploadQueuesStore = defineStore('commonAdminUploadQueuesStore', 
           fileId: null,
           originAssetFile: event.data.originAssetFile,
           assetType: event.data.assetType,
+          configNames,
         }
       case DamNotificationName.AssetMetadataProcessed:
-        return { kind: 'metadata', assetId: event.data.asset, fileId: null }
+        return { kind: 'metadata', assetId: event.data.asset, fileId: null, configNames }
       case DamNotificationName.AssetFileCopied:
-        return { kind: 'copied', assetId: event.data.asset, fileId: null }
+        return { kind: 'copied', assetId: event.data.asset, fileId: null, configNames }
     }
     return null
   }
@@ -263,12 +283,16 @@ export const useUploadQueuesStore = defineStore('commonAdminUploadQueuesStore', 
   function listenToNotifications() {
     if (listening) return
     listening = true
+    // Every socket of the page: an event concerns the rows of the queues of the configurations of its socket.
     const listen = () =>
-      addDamNotificationListener((event) => {
-        const settlementEvent = toSettlementEvent(event)
-        // Not awaited: the read it asks for comes later.
-        if (settlementEvent) void settlement.notify(settlementEvent)
-      })
+      addDamNotificationListener(
+        (event, origin) => {
+          const settlementEvent = toSettlementEvent(event, origin)
+          // Not awaited: the read it asks for comes later.
+          if (settlementEvent) void settlement.notify(settlementEvent)
+        },
+        { all: true }
+      )
     // In the scope of the store, as when the store itself subscribed. The first row is added from a component, and
     // a listener added in the scope of that component would go with it.
     if (storeScope) storeScope.run(listen)
@@ -280,16 +304,17 @@ export const useUploadQueuesStore = defineStore('commonAdminUploadQueuesStore', 
     extSystem: IntegerId,
     assetLicence: IntegerId,
     assets: DocId[],
-    configName = 'default'
+    configName: string
   ) {
-    const { getDamConfigExtSystem } = useDamConfigState()
+    // Thrown here for a configuration the application has not got, before anything is done for it: its DAM
+    // configuration store is not made either.
+    useCommonAdminCoreDamOptions(configName)
+    const { getDamConfigExtSystem } = useDamConfigState(undefined, configName)
 
     const configExtSystem = getDamConfigExtSystem(extSystem)
     if (isUndefined(configExtSystem)) {
       throw new Error('useUploadQueuesStore.addByCopyToLicence: Ext system must be initialised.')
     }
-    // Thrown here for a configuration the application has not got, before anything is done for it.
-    useCommonAdminCoreDamOptions(configName)
     listenToNotifications()
     for (const assetId of assets) {
       const queueItem = createDefault(
@@ -313,16 +338,17 @@ export const useUploadQueuesStore = defineStore('commonAdminUploadQueuesStore', 
     extSystem: IntegerId,
     assetLicence: IntegerId,
     files: File[],
-    configName = 'default'
+    configName: string
   ) {
-    const { getDamConfigExtSystem } = useDamConfigState()
+    // Thrown here for a configuration the application has not got, before anything is done for it: its DAM
+    // configuration store is not made either.
+    useCommonAdminCoreDamOptions(configName)
+    const { getDamConfigExtSystem } = useDamConfigState(undefined, configName)
 
     const configExtSystem = getDamConfigExtSystem(extSystem)
     if (isUndefined(configExtSystem)) {
       throw new Error('useUploadQueuesStore.addByFiles: Ext system must be initialised.')
     }
-    // Thrown here for a configuration the application has not got, before anything is done for it.
-    useCommonAdminCoreDamOptions(configName)
     listenToNotifications()
     for await (const file of files) {
       const type = getAssetTypeByMimeType(damFileTypeFix(file), configExtSystem)
@@ -341,41 +367,51 @@ export const useUploadQueuesStore = defineStore('commonAdminUploadQueuesStore', 
     }
   }
 
-  // The names of before the settlement, kept for their callers until the queues are unified.
+  // The names of before the settlement, kept for their callers until the queues are unified. `of`: whose rows they
+  // settle, read by the client of that configuration.
 
-  function queueItemProcessed(assetId: DocId) {
-    return settlement.notify({ kind: 'processed', assetId, fileId: null })
+  const targetOf = (assetId: DocId, of: UploadQueueRowsOf) => ({
+    assetId,
+    fileId: null,
+    configNames: [isString(of) ? of : configOf(of.queueKey)],
+  })
+
+  function queueItemProcessed(assetId: DocId, of: UploadQueueRowsOf) {
+    return settlement.notify({ kind: 'processed', ...targetOf(assetId, of) })
   }
 
-  function queueItemFullyProcessed(assetId: DocId) {
-    return settlement.settleKnownProcessed({ assetId, fileId: null }, { withMetadata: true })
+  function queueItemFullyProcessed(assetId: DocId, of: UploadQueueRowsOf) {
+    return settlement.settleKnownProcessed(targetOf(assetId, of), { withMetadata: true })
   }
 
   function queueItemDuplicate(
     assetId: DocId,
-    originAssetFile: DocIdNullable = null,
-    assetType: DamAssetTypeType | null = null
+    originAssetFile: DocIdNullable,
+    assetType: DamAssetTypeType | null,
+    of: UploadQueueRowsOf
   ) {
-    return settlement.settleKnownDuplicate({ assetId, fileId: null }, originAssetFile, assetType)
+    return settlement.settleKnownDuplicate(targetOf(assetId, of), originAssetFile, assetType)
   }
 
-  async function queueItemFailed(assetId: DocId, failReason: AssetFileFailReasonType) {
-    settlement.settleKnownFailed({ assetId, fileId: null }, failReason)
+  async function queueItemFailed(assetId: DocId, failReason: AssetFileFailReasonType, of: UploadQueueRowsOf) {
+    settlement.settleKnownFailed(targetOf(assetId, of), failReason)
   }
 
   /** The refresh button of a row: asks what became of the file now, and settles the rows of the asset by it. */
-  function refreshAsset(assetId: DocId): Promise<UploadRefreshOutcome> {
-    return settlement.refreshAsset({ assetId, fileId: null })
+  function refreshAsset(assetId: DocId, of: UploadQueueRowsOf): Promise<UploadRefreshOutcome> {
+    return settlement.refreshAsset(targetOf(assetId, of))
   }
 
   async function stopItemUpload(queueKey: UploadQueueKey, queueItem: UploadQueueItem, _index?: number) {
     core.stopItemUpload(queueKey, queueItem)
   }
 
-  // The writes of saves of a detail of an asset on their way, counted by the asset: only the latest one writes. Two that
-  // overlapped left the rows with the values of whichever read answered last, and the later save, with the notes of
-  // its own, kept the values of the earlier one as typed meanwhile.
-  const detailWrites = new Map<DocId, number>()
+  // The writes of saves of a detail of an asset on their way, counted by the configuration and the asset: only the
+  // latest one writes. Two that overlapped left the rows with the values of whichever read answered last, and the
+  // later save, with the notes of its own, kept the values of the earlier one as typed meanwhile. Two DAMs may give one
+  // asset id: the saves under two configurations are of two assets.
+  const detailWrites = new Map<string, number>()
+  const detailWriteKey = (configName: string, assetId: DocId) => `${configName}\u0000${assetId}`
   // The numbers of those writes, one count for every asset: a number is never given twice, also once the write of an
   // asset that had it is over. Counted by the asset, the third save after two that had ended took the number of the
   // first, and the late read of the first wrote while the third was on its way.
@@ -385,18 +421,19 @@ export const useUploadQueuesStore = defineStore('commonAdminUploadQueuesStore', 
   const openNotes = new Set<RowsNote>()
 
   /**
-   * The rows of the asset `assetId` as they are, in every queue, field by field: taken as the save of a detail of that
-   * asset is pressed, and handed to `updateFromDetail` once it has been answered, or to `forgetRowsNote` once it has
-   * failed.
+   * The rows of the asset `assetId` as they are, in every queue of the DAM configuration `configName`, field by field:
+   * taken as the save of a detail of that asset is pressed, and handed to `updateFromDetail` once it has been
+   * answered, or to `forgetRowsNote` once it has failed.
    */
-  function noteRowsOfAsset(assetId: DocId): RowsNote {
+  function noteRowsOfAsset(assetId: DocId, configName: string): RowsNote {
     const rows = new Map<UploadQueueItem, EditableFields>()
-    queues.value.forEach((queue) => {
+    queues.value.forEach((queue, queueKey) => {
+      if (configOf(queueKey) !== configName) return
       queue.items.forEach((item) => {
         if (item.assetId === assetId && item.type) rows.set(item, editableFieldsOf(item))
       })
     })
-    const note = { assetId, rows }
+    const note = { assetId, configName, rows }
     openNotes.add(note)
     return note
   }
@@ -406,24 +443,29 @@ export const useUploadQueuesStore = defineStore('commonAdminUploadQueuesStore', 
     openNotes.delete(note)
   }
 
-  /** `kept`: what the write into `item` left as the user had it; every other note of that asset takes the rest. */
+  /**
+   * `kept`: what the write into `item` left as the user had it; every other note of that asset, of that configuration,
+   * takes the rest.
+   */
   const othersTakeWrite = (own: RowsNote, item: UploadQueueItem, kept: KeptByWrite) => {
     openNotes.forEach((note) => {
-      if (note !== own && note.assetId === own.assetId) takeWrite(note, item, kept)
+      if (note === own || note.assetId !== own.assetId) return
+      if (note.configName === own.configName) takeWrite(note, item, kept)
     })
   }
 
   /**
-   * `configName`: the DAM configuration the detail was saved under. `mainFileSingleUse`: the switch the detail saved
-   * with the asset, which keeps it apart from the asset it hands over. `rowsAtSave`: the rows of the asset as the save
-   * was pressed (`noteRowsOfAsset`); as they are now where not given. A field of a row the user has changed since keeps
-   * what the user gave it (a field of the custom data each on its own): only the fields as they were then take what the
-   * detail saved. What was typed into the row meanwhile was replaced. Of two writes of one asset on their way at once,
-   * only the later one writes.
+   * `configName`: the DAM configuration the detail was saved under; only the rows of the
+   * queues of that configuration are written, and their names go to its caches. `mainFileSingleUse`: the switch the
+   * detail saved with the asset, which keeps it apart from the asset it hands over. `rowsAtSave`: the rows of the asset
+   * as the save was pressed (`noteRowsOfAsset`); as they are now where not given. A field of a row the user has changed
+   * since keeps what the user gave it (a field of the custom data each on its own): only the fields as they were then
+   * take what the detail saved. What was typed into the row meanwhile was replaced. Of two writes of one asset under
+   * one configuration on their way at once, only the later one writes.
    */
   async function updateFromDetail(
     asset: AssetDetailItemDto,
-    configName?: string,
+    configName: string,
     mainFileSingleUse?: boolean | null,
     rowsAtSave?: RowsNote
   ) {
@@ -435,9 +477,14 @@ export const useUploadQueuesStore = defineStore('commonAdminUploadQueuesStore', 
       // The application has no configuration of that name: the rows are left alone, in silence, as ever.
       return
     }
+    const { addToCachedKeywords, fetchCachedKeywords } = useDamCachedKeywords(configName)
+    const { addToCachedAuthors, fetchCachedAuthors } = useDamCachedAuthors(configName)
+    // The queues of the configuration: another DAM may have an asset of that id.
+    const queuesOfConfig = () =>
+      Array.from(queues.value.entries()).filter(([queueKey]) => configOf(queueKey) === configName)
     // The detail goes on telling the queue once it was opened from a row, also of an asset no queue holds a row of:
     // there is nothing to write then, and its save would wait for the read in vain.
-    const rows = Array.from(queues.value.values()).flatMap((queue) => queue.items)
+    const rows = queuesOfConfig().flatMap(([, queue]) => queue.items)
     const isRowOfAsset = (item: UploadQueueItem) => item.assetId === asset.id && !!item.type
     // A row whose file the server is processing may become a row of the asset while it is read: one whose file turns
     // out to be a duplicate of the file of the asset becomes the original of that duplicate. It gets the write as any
@@ -449,19 +496,20 @@ export const useUploadQueuesStore = defineStore('commonAdminUploadQueuesStore', 
       if (rowsAtSave) forgetRowsNote(rowsAtSave)
       return
     }
-    const note = rowsAtSave ?? noteRowsOfAsset(asset.id)
+    const note = rowsAtSave ?? noteRowsOfAsset(asset.id, configName)
     const before = note.rows
     const turn = ++lastDetailWrite
-    detailWrites.set(asset.id, turn)
-    // A later save of the detail of the asset has begun its write since: that one writes.
-    const isLatest = () => detailWrites.get(asset.id) === turn
+    const writeKey = detailWriteKey(configName, asset.id)
+    detailWrites.set(writeKey, turn)
+    // A later save of the detail of the asset under the configuration has begun its write since: that one writes.
+    const isLatest = () => detailWrites.get(writeKey) === turn
     try {
       const assetRes = await fetchAsset(dam.damClient, dam.endPointAsset, asset.id)
       if (!isLatest()) return
-      // One answer for the rows of the asset in every queue: each gets copies of its own, or a fill of a custom field in
-      // one queue (it writes into the custom data in place) would change the row of another, and that queue would send
-      // it with its next save.
-      queues.value.forEach((queue, queueKey) => {
+      // One answer for the rows of the asset in every queue of the configuration: each gets copies of its own, or a fill
+      // of a custom field in one queue (it writes into the custom data in place) would change the row of another, and
+      // that queue would send it with its next save.
+      queuesOfConfig().forEach(([queueKey, queue]) => {
         queue.items.forEach((item) => {
           if (item.assetId === assetRes.id && item.type) {
             // The detail saves the switch too: left as it was, the next save of the queue would send the old value.
@@ -489,7 +537,7 @@ export const useUploadQueuesStore = defineStore('commonAdminUploadQueuesStore', 
       // The detail is saved all the same: left as they were, the rows would send their old values with the next save
       // of the queue, over what the detail has just saved. Each row gets copies of its own, not the lists of the
       // detail. The suggestions are the server's to say, and stay as the rows have them.
-      queues.value.forEach((queue) => {
+      queuesOfConfig().forEach(([, queue]) => {
         queue.items.forEach((item) => {
           if (item.assetId === asset.id && item.type) {
             const kept = writeUnchanged(item, before.get(item), {
@@ -508,7 +556,7 @@ export const useUploadQueuesStore = defineStore('commonAdminUploadQueuesStore', 
       fetchCachedKeywords()
     } finally {
       forgetRowsNote(note)
-      if (isLatest()) detailWrites.delete(asset.id)
+      if (isLatest()) detailWrites.delete(writeKey)
     }
   }
 

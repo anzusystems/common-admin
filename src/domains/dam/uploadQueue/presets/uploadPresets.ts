@@ -3,10 +3,7 @@ import { commonT } from '@/plugins/i18n'
 import type { DamUploadStartResponse, UploadQueueItem } from '@/domains/dam/types/UploadQueue'
 import type { DocId } from '@/shared/types/common'
 import { damUploadChunk, damUploadFinish, damUploadStart } from '@/domains/dam/api/uploadApi'
-import {
-  useCommonAdminCoreDamOptions,
-  useCommonAdminCoreDamOptionsGlobal,
-} from '@/domains/dam/composables/commonAdminCoreDamOptions'
+import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
 import { withTimeout } from '@/domains/listEditor/utils/listEditorLoader'
 
 const HASH_LOAD_TIMEOUT = 15_000
@@ -56,6 +53,8 @@ interface UploadPresetMembers {
   loadHash(): Promise<UploadHash>
   /** Whether a file of no bytes is started and finished, or refused before anything is asked. */
   emptyFile: 'send' | 'reject'
+  /** The DAM configuration whose prv configuration bounds the chunks, and whose last chunk size the upload starts from. */
+  configName: string
 }
 
 /** How one side uploads. Made only by `libraryUploadPreset()` and `adminDamUploadPreset()`; what it holds is not public. */
@@ -77,14 +76,13 @@ export interface UploadRun<S extends UploadSide = UploadSide> {
 }
 
 /**
- * Not exported from `src/lib.ts`; the default of `useUpload`. The library's API, texts and choices, under the DAM
- * configuration `configName` (`default` when none is named).
+ * Not exported from `src/lib.ts`; the default of `useUpload` (under `default`). The library's API, texts and choices,
+ * under the DAM configuration `configName`.
  */
-export function libraryUploadPreset(configName?: string): UploadPreset<'library'> {
-  const { damClient, endPointImage } = useCommonAdminCoreDamOptions(configName)
-  // A chunk is sized against the timeout the application gives its DAM requests, whatever the configuration. One
-  // that gives none (`null` in a config file too) gets the default of the composable.
-  const { apiTimeout } = useCommonAdminCoreDamOptionsGlobal()
+export function libraryUploadPreset(configName: string): UploadPreset<'library'> {
+  // A chunk is sized against the timeout the application gives the DAM requests of the configuration, else its root
+  // one. One that gives none (`null` in a config file too) gets the default of the composable.
+  const { damClient, endPointImage, apiTimeout } = useCommonAdminCoreDamOptions(configName)
 
   return {
     [uploadSide]: 'library',
@@ -111,6 +109,7 @@ export function libraryUploadPreset(configName?: string): UploadPreset<'library'
           (rusha) => rusha.default.createHash()
         ),
       emptyFile: 'reject',
+      configName,
     },
   }
 }
@@ -134,6 +133,7 @@ export function adminDamUploadPreset(app: {
       apiTimeout: app.apiTimeout,
       loadHash: () => app.loadHash(),
       emptyFile: 'send',
+      configName: 'default',
     },
   }
 }

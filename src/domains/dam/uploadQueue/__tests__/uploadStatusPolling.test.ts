@@ -111,7 +111,7 @@ const ORIGINAL_UNREAD = 'common.damImage.queueItem.duplicateOriginalUnread'
 /** One file, sent whole: its row waits for the server, `asset-1` and `file-1`. */
 const sentFile = async (profile: ConsumerProfile) => {
   const store = useUploadQueuesStore()
-  await store.addByFiles(QUEUE, profile.extSystem, profile.licence, [photo()])
+  await store.addByFiles(QUEUE, profile.extSystem, profile.licence, [photo()], 'default')
   const [item] = store.getQueueItems(QUEUE)
   await vi.waitFor(() => expect(item.status).toBe(Processing))
   await clock.settle()
@@ -149,7 +149,7 @@ describe.each(consumerProfiles)('the poll of an upload queue, under the $name', 
 
   it('asks about every row that waits in one request, by the licence of the rows', async () => {
     const store = useUploadQueuesStore()
-    await store.addByFiles(QUEUE, extSystem, licence, [photo('a.jpg'), photo('b.jpg')])
+    await store.addByFiles(QUEUE, extSystem, licence, [photo('a.jpg'), photo('b.jpg')], 'default')
     const [first, second] = store.getQueueItems(QUEUE)
     await vi.waitFor(() => expect([first.status, second.status]).toEqual([Processing, Processing]))
     await clock.settle()
@@ -277,7 +277,7 @@ describe.each(consumerProfiles)('the poll of an upload queue, under the $name', 
     await clock.advance(10 * SECOND)
     expect([readUrls().length, item.status]).toEqual([2, Processing])
 
-    await useUploadQueueItemRefresh().refreshItem('asset-1', item)
+    await useUploadQueueItemRefresh('default').refreshItem('asset-1', item)
 
     expect(item).toMatchObject({
       status: Failed,
@@ -292,7 +292,7 @@ describe.each(consumerProfiles)('the poll of an upload queue, under the $name', 
     dam.assets.delete('asset-1')
     await clock.advance(5 * SECOND)
 
-    await useUploadQueueItemRefresh().refreshItem('asset-1', item)
+    await useUploadQueueItemRefresh('default').refreshItem('asset-1', item)
 
     expect(item.status).toBe(Processing)
     expect(warnings()).toEqual([commonT(ASSET_GONE)])
@@ -312,7 +312,7 @@ describe.each(consumerProfiles)('the poll of an upload queue, under the $name', 
       expect([reads.waiting.length, item.status]).toEqual([1, Processing])
 
       const asked = vi.spyOn(useUploadQueuesStore(), 'refreshAsset')
-      const pressed = useUploadQueueItemRefresh().refreshItem('asset-1', item)
+      const pressed = useUploadQueueItemRefresh('default').refreshItem('asset-1', item)
       reads.release()
       await vi.waitFor(() => expect(reads.waiting).toHaveLength(1))
       expect(item.status).toBe(Failed)
@@ -333,15 +333,15 @@ describe.each(consumerProfiles)('the poll of an upload queue, under the $name', 
       const store = useUploadQueuesStore()
       // Also when the case fails: a queue left waiting would be asked about under the cases after it.
       onTestFinished(() => store.stopUpload(OTHER))
-      await store.addByCopyToLicence(QUEUE, extSystem, licence, ['asset-gone'])
+      await store.addByCopyToLicence(QUEUE, extSystem, licence, ['asset-gone'], 'default')
       const [pressedRow] = store.getQueueItems(QUEUE)
       await clock.advance(10 * SECOND)
-      await store.addByCopyToLicence(OTHER, extSystem, licence, ['asset-gone'])
+      await store.addByCopyToLicence(OTHER, extSystem, licence, ['asset-gone'], 'default')
       const [other] = store.getQueueItems(OTHER)
       expect([pressedRow.status, other.status]).toEqual([Processing, Processing])
       const asked = vi.spyOn(store, 'refreshAsset')
 
-      await useUploadQueueItemRefresh().refreshItem('asset-gone', pressedRow)
+      await useUploadQueueItemRefresh('default').refreshItem('asset-gone', pressedRow)
 
       expect(await asked.mock.results[0]!.value).toBe('missing')
       expect([pressedRow.status, other.status]).toEqual([Failed, Processing])
@@ -356,7 +356,7 @@ describe.each(consumerProfiles)('the poll of an upload queue, under the $name', 
       const reads = dam.hold('GET', dam.routes.one)
       const asked = vi.spyOn(store, 'refreshAsset')
 
-      const pressed = useUploadQueueItemRefresh().refreshItem('asset-1', item)
+      const pressed = useUploadQueueItemRefresh('default').refreshItem('asset-1', item)
       await vi.waitFor(() => expect(reads.waiting).toHaveLength(1))
       store.removeByIndex(QUEUE, 0)
       expect(item.status).toBe(Stop)
@@ -379,7 +379,7 @@ describe.each(consumerProfiles)('the poll of an upload queue, under the $name', 
       const reads = dam.hold('GET', dam.routes.one)
       const asked = vi.spyOn(store, 'refreshAsset')
 
-      const pressed = useUploadQueueItemRefresh().refreshItem('asset-1', item, QUEUE)
+      const pressed = useUploadQueueItemRefresh('default').refreshItem('asset-1', item, QUEUE)
       await vi.waitFor(() => expect(reads.waiting).toHaveLength(1))
       notify(DamNotificationName.AssetFileDuplicate, {
         asset: 'asset-1',
@@ -400,13 +400,13 @@ describe.each(consumerProfiles)('the poll of an upload queue, under the $name', 
     it('says the state could not be loaded when the row only went on from being sent to waiting', async () => {
       const store = useUploadQueuesStore()
       const chunks = dam.hold('POST', dam.routes.chunk)
-      await store.addByFiles(QUEUE, extSystem, licence, [photo()])
+      await store.addByFiles(QUEUE, extSystem, licence, [photo()], 'default')
       const [item] = store.getQueueItems(QUEUE)
       await vi.waitFor(() => expect(chunks.waiting).toHaveLength(1))
       expect(item.status).toBe(Uploading)
       const reads = dam.hold('GET', dam.routes.one)
 
-      const pressed = useUploadQueueItemRefresh().refreshItem(item.assetId!, item)
+      const pressed = useUploadQueueItemRefresh('default').refreshItem(item.assetId!, item)
       await vi.waitFor(() => expect(reads.waiting).toHaveLength(1))
       chunks.release()
       await vi.waitFor(() => expect(item.status).toBe(Processing))
@@ -470,7 +470,7 @@ describe.each(consumerProfiles)('the poll of an upload queue, under the $name', 
     const finishing = async () => {
       const store = useUploadQueuesStore()
       const finish = dam.hold('PATCH', dam.routes.finish)
-      await store.addByFiles(QUEUE, extSystem, licence, [photo()])
+      await store.addByFiles(QUEUE, extSystem, licence, [photo()], 'default')
       await vi.waitFor(() => expect(finish.waiting).toHaveLength(1))
       const [item] = store.getQueueItems(QUEUE)
       expect(item.status).toBe(Uploading)
@@ -560,7 +560,7 @@ describe.each(consumerProfiles)('the poll of an upload queue, under the $name', 
         request.method === 'PATCH' && dam.routes.finish.test(request.url) ? { status: 502 } : undefined
       )
       const store = useUploadQueuesStore()
-      await store.addByFiles(QUEUE, extSystem, licence, [photo()])
+      await store.addByFiles(QUEUE, extSystem, licence, [photo()], 'default')
       const [item] = store.getQueueItems(QUEUE)
       await vi.waitFor(() => expect(item.status).toBe(Failed))
       await clock.settle()
@@ -591,7 +591,7 @@ describe.each(consumerProfiles)('the poll of an upload queue, under the $name', 
         request.method === 'PATCH' && dam.routes.finish.test(request.url) ? { status: 502 } : undefined
       )
       const store = useUploadQueuesStore()
-      await store.addByFiles(QUEUE, extSystem, licence, [photo()])
+      await store.addByFiles(QUEUE, extSystem, licence, [photo()], 'default')
       const [item] = store.getQueueItems(QUEUE)
       await vi.waitFor(() => expect(item.status).toBe(Failed))
       await clock.settle()
@@ -603,7 +603,7 @@ describe.each(consumerProfiles)('the poll of an upload queue, under the $name', 
     const finishEndsWith = async (end: () => { status: number; data?: unknown }) => {
       dam.reply((request) => (request.method === 'PATCH' && dam.routes.finish.test(request.url) ? end() : undefined))
       const store = useUploadQueuesStore()
-      await store.addByFiles(QUEUE, extSystem, licence, [photo()])
+      await store.addByFiles(QUEUE, extSystem, licence, [photo()], 'default')
       const [item] = store.getQueueItems(QUEUE)
       await vi.waitFor(() => expect(item.status).toBe(Failed))
       await clock.settle()
@@ -724,7 +724,7 @@ describe.each(consumerProfiles)('the poll of an upload queue, under the $name', 
           : undefined
       )
       const store = useUploadQueuesStore()
-      await store.addByFiles(QUEUE, extSystem, licence, [photo()])
+      await store.addByFiles(QUEUE, extSystem, licence, [photo()], 'default')
       const [item] = store.getQueueItems(QUEUE)
       await vi.waitFor(() => expect(item.status).toBe(Failed))
       await clock.settle()
@@ -743,7 +743,7 @@ describe.each(consumerProfiles)('the poll of an upload queue, under the $name', 
         request.method === 'POST' && dam.routes.start.test(request.url) ? { status: 503 } : undefined
       )
       const store = useUploadQueuesStore()
-      await store.addByFiles(QUEUE, extSystem, licence, [photo()])
+      await store.addByFiles(QUEUE, extSystem, licence, [photo()], 'default')
       const [item] = store.getQueueItems(QUEUE)
       await vi.waitFor(() => expect(item.status).toBe(Failed))
       await clock.settle()
@@ -795,7 +795,7 @@ describe.each(consumerProfiles)('what is reported of the reads that fail, under 
 
   it('two rows: the request for both reports its first failure, and no other', async () => {
     const store = useUploadQueuesStore()
-    await store.addByFiles(QUEUE, extSystem, licence, [photo('a.jpg'), photo('b.jpg')])
+    await store.addByFiles(QUEUE, extSystem, licence, [photo('a.jpg'), photo('b.jpg')], 'default')
     const [first, second] = store.getQueueItems(QUEUE)
     await vi.waitFor(() => expect([first.status, second.status]).toEqual([Processing, Processing]))
     await clock.settle()
@@ -832,7 +832,7 @@ describe.each(consumerProfiles)('what is reported of the reads that fail, under 
       } as AxiosInstance
     })
     const store = useUploadQueuesStore()
-    await store.addByFiles(QUEUE, extSystem, licence, [photo('a.jpg'), photo('b.jpg')])
+    await store.addByFiles(QUEUE, extSystem, licence, [photo('a.jpg'), photo('b.jpg')], 'default')
     const [first, second] = store.getQueueItems(QUEUE)
     await vi.waitFor(() => expect([first.status, second.status]).toEqual([Processing, Processing]))
     await clock.settle()
@@ -851,8 +851,8 @@ describe.each(consumerProfiles)('what is reported of the reads that fail, under 
     unreadable(profile)
 
     await clock.advance(5 * SECOND)
-    expect(await store.refreshAsset('asset-1')).toBe('error')
-    expect(await store.refreshAsset('asset-1')).toBe('error')
+    expect(await store.refreshAsset('asset-1', 'default')).toBe('error')
+    expect(await store.refreshAsset('asset-1', 'default')).toBe('error')
     await clock.advance(15 * SECOND)
 
     // The first read of the poll, and the two the user asked for; not the second of the poll.
@@ -926,7 +926,7 @@ describe('the rhythm of the poll, by the notification socket of admin-cms', () =
     const store = useUploadQueuesStore()
     const component = effectScope()
     await component.run(() =>
-      store.addByCopyToLicence(QUEUE, cmsConfiguration.extSystem, cmsConfiguration.licence, ['asset-copy'])
+      store.addByCopyToLicence(QUEUE, cmsConfiguration.extSystem, cmsConfiguration.licence, ['asset-copy'], 'default')
     )
     component.stop()
     await clock.advance(SECOND)
@@ -1007,7 +1007,7 @@ describe('an asset copied to the licence', () => {
 
   const copied = async (asset = 'asset-copy') => {
     const store = useUploadQueuesStore()
-    await store.addByCopyToLicence(QUEUE, extSystem, licence, [asset])
+    await store.addByCopyToLicence(QUEUE, extSystem, licence, [asset], 'default')
     return { store, item: store.getQueueItems(QUEUE).at(-1)! }
   }
   const copyProcessed = () =>
@@ -1036,7 +1036,7 @@ describe('an asset copied to the licence', () => {
     )
     const { store, item } = await copied('asset-there')
 
-    await store.queueItemDuplicate('asset-there', 'file-there', DamAssetType.Image)
+    await store.queueItemDuplicate('asset-there', 'file-there', DamAssetType.Image, 'default')
 
     expect(dam.originReads().map((read) => read.url)).toEqual(['/adm/v1/asset/asset-file/file-there'])
     expect(item).toMatchObject({
@@ -1060,7 +1060,7 @@ describe('an asset copied to the licence', () => {
     ],
     [
       'a save in the asset detail',
-      () => void useUploadQueuesStore().updateFromDetail({ id: 'asset-copy' } as never),
+      () => void useUploadQueuesStore().updateFromDetail({ id: 'asset-copy' } as never, 'default'),
       false,
     ],
   ])('is still asked about after %s', async (_name, loadMetadata, formOpen) => {
@@ -1128,9 +1128,9 @@ describe('a duplicate whose origin asset cannot be loaded', () => {
 
   it('fails the item instead of throwing past the widget, and it is asked about no more', async () => {
     const store = useUploadQueuesStore()
-    await store.addByCopyToLicence(QUEUE, extSystem, licence, ['asset-1'])
+    await store.addByCopyToLicence(QUEUE, extSystem, licence, ['asset-1'], 'default')
 
-    await expect(store.queueItemDuplicate('asset-1', 'file-1', DamAssetType.Image)).resolves.toBeUndefined()
+    await expect(store.queueItemDuplicate('asset-1', 'file-1', DamAssetType.Image, 'default')).resolves.toBeUndefined()
 
     const item = store.getQueueItems(QUEUE)[0]!
     expect(item).toMatchObject({ status: Failed, canEditMetadata: false, error: { hasError: true } })
@@ -1142,13 +1142,13 @@ describe('a duplicate whose origin asset cannot be loaded', () => {
   it('leaves a copy the licence has already with its refresh, which settles the row from its asset', async () => {
     const store = useUploadQueuesStore()
     dam.assets.set('asset-1', damAssetWithFile('asset-1', 'file-1', AssetFileProcessStatus.Processed, fromTheServer))
-    await store.addByCopyToLicence(QUEUE, extSystem, licence, ['asset-1'])
+    await store.addByCopyToLicence(QUEUE, extSystem, licence, ['asset-1'], 'default')
     const [item] = store.getQueueItems(QUEUE)
 
-    await store.queueItemDuplicate('asset-1', 'file-1', DamAssetType.Image)
+    await store.queueItemDuplicate('asset-1', 'file-1', DamAssetType.Image, 'default')
     expect([item.status, store.refreshMayHelp(item)]).toEqual([Failed, true])
 
-    expect(await store.refreshAsset('asset-1')).toBe('settled')
+    expect(await store.refreshAsset('asset-1', 'default')).toBe('settled')
 
     expect(item).toMatchObject({
       status: Uploaded,
@@ -1167,7 +1167,7 @@ describe('a duplicate whose origin asset cannot be loaded', () => {
       request.method === 'PATCH' && dam.routes.finish.test(request.url) ? { status: 502 } : undefined
     )
     const store = useUploadQueuesStore()
-    await store.addByFiles(QUEUE, extSystem, licence, [photo()])
+    await store.addByFiles(QUEUE, extSystem, licence, [photo()], 'default')
     const [item] = store.getQueueItems(QUEUE)
     await vi.waitFor(() => expect(item.status).toBe(Failed))
     await clock.settle()
@@ -1185,11 +1185,11 @@ describe('a duplicate whose origin asset cannot be loaded', () => {
 
     // Asked while the original still cannot be read, it stays as it is, with its refresh, and the one who asked
     // is told why the refresh could not do it.
-    expect(await store.refreshAsset('asset-1')).toBe('originalUnread')
+    expect(await store.refreshAsset('asset-1', 'default')).toBe('originalUnread')
     expect([item.status, store.refreshMayHelp(item)]).toEqual([Failed, true])
 
     originReadable()
-    expect(await store.refreshAsset('asset-1')).toBe('settled')
+    expect(await store.refreshAsset('asset-1', 'default')).toBe('settled')
 
     expect(item).toMatchObject({
       status: Uploaded,
@@ -1214,7 +1214,7 @@ describe('a duplicate whose origin asset cannot be loaded', () => {
     )
     await clock.advance(5 * SECOND)
     expect([item.status, store.refreshMayHelp(item), warnings()]).toEqual([Failed, true, []])
-    const { refreshItem } = useUploadQueueItemRefresh()
+    const { refreshItem } = useUploadQueueItemRefresh('default')
 
     // Failed before the press and after it, with its refresh: the row is told why.
     await refreshItem('asset-1', item)
@@ -1240,7 +1240,7 @@ describe('a duplicate whose origin asset cannot be loaded', () => {
 
     const asked = vi.spyOn(store, 'refreshAsset')
 
-    await useUploadQueueItemRefresh().refreshItem('asset-1', item)
+    await useUploadQueueItemRefresh('default').refreshItem('asset-1', item)
 
     expect(await asked.mock.results[0]!.value).toBe('originalUnread')
     expect([item.status, store.refreshMayHelp(item)]).toEqual([Failed, true])
@@ -1253,7 +1253,7 @@ describe('a duplicate whose origin asset cannot be loaded', () => {
     const item = await sentFile(cmsConfiguration)
     dam.fileBecomes('asset-1', AssetFileProcessStatus.Duplicate, {}, { originAssetFile: 'file-original' })
 
-    await useUploadQueueItemRefresh().refreshItem('asset-1')
+    await useUploadQueueItemRefresh('default').refreshItem('asset-1')
 
     expect(item.status).toBe(Failed)
     expect(warnings()).toEqual([commonT(ORIGINAL_UNREAD)])
@@ -1272,7 +1272,7 @@ describe('a duplicate whose origin asset cannot be loaded', () => {
     expect([item.status, store.refreshMayHelp(item)]).toEqual([Failed, true])
     const reads = dam.hold('GET', dam.routes.one)
 
-    const pressed = useUploadQueueItemRefresh().refreshItem('asset-1', item, QUEUE)
+    const pressed = useUploadQueueItemRefresh('default').refreshItem('asset-1', item, QUEUE)
     await vi.waitFor(() => expect(reads.waiting).toHaveLength(1))
     if (removed) store.removeByIndex(QUEUE, 0)
     reads.release({ status: 502 })
@@ -1294,7 +1294,7 @@ describe('a duplicate whose origin asset cannot be loaded', () => {
     expect([item.status, store.refreshMayHelp(item)]).toEqual([Failed, true])
 
     dam.fileBecomes('asset-1', AssetFileProcessStatus.Failed, {}, { failReason: AssetFileFailReason.InvalidSize })
-    expect(await store.refreshAsset('asset-1')).toBe('settled')
+    expect(await store.refreshAsset('asset-1', 'default')).toBe('settled')
 
     expect(item).toMatchObject({ status: Failed, error: { assetFileFailReason: AssetFileFailReason.InvalidSize } })
     expect(store.refreshMayHelp(item)).toBe(false)
@@ -1302,7 +1302,7 @@ describe('a duplicate whose origin asset cannot be loaded', () => {
 
   it('fails the item when the duplicate notification leads there, with no unhandled rejection', async () => {
     const store = useUploadQueuesStore()
-    await store.addByCopyToLicence(QUEUE, extSystem, licence, ['asset-1'])
+    await store.addByCopyToLicence(QUEUE, extSystem, licence, ['asset-1'], 'default')
 
     notify(DamNotificationName.AssetFileDuplicate, {
       asset: 'asset-1',

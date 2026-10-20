@@ -39,7 +39,7 @@ const cropperShadeColor = 'rgba(241, 244, 246, 0.5)'
 const imageRoiStore = useImageRoiStore()
 
 const { damClient, endPointImage, endPointRoi } = useCommonAdminCoreDamOptions(damConfigName)
-const { getDamConfigExtSystem } = useDamConfigState()
+const { getDamConfigExtSystem } = useDamConfigState(undefined, damConfigName)
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const configExtSystem = getDamConfigExtSystem(props.extSystem)
 

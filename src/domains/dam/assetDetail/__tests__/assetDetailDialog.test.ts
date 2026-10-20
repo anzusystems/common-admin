@@ -508,9 +508,13 @@ describe.each(consumerProfiles)('the detail of an asset under the $name', (profi
       // whatever its file is at, and the detail reads the asset as the DAM has it by then.
       it('has its save off, with the word why, while the file of the row is still processed', async () => {
         const uploads = useUploadQueuesStore(pinia)
-        await uploads.addByFiles(QUEUE, extSystem, licence, [
-          new File([new Uint8Array(3000)], 'photo.jpg', { type: 'image/jpeg' }),
-        ])
+        await uploads.addByFiles(
+          QUEUE,
+          extSystem,
+          licence,
+          [new File([new Uint8Array(3000)], 'photo.jpg', { type: 'image/jpeg' })],
+          'default'
+        )
         const row = () => uploads.getQueueItems(QUEUE)[0]!
         await vi.waitFor(() => expect(row().status).toBe(UploadQueueItemStatus.Processing))
 
@@ -525,9 +529,13 @@ describe.each(consumerProfiles)('the detail of an asset under the $name', (profi
 
       it('writes what it saved back into the row of the queue', async () => {
         const uploads = useUploadQueuesStore(pinia)
-        await uploads.addByFiles(QUEUE, extSystem, licence, [
-          new File([new Uint8Array(3000)], 'photo.jpg', { type: 'image/jpeg' }),
-        ])
+        await uploads.addByFiles(
+          QUEUE,
+          extSystem,
+          licence,
+          [new File([new Uint8Array(3000)], 'photo.jpg', { type: 'image/jpeg' })],
+          'default'
+        )
         const row = () => uploads.getQueueItems(QUEUE)[0]!
         await vi.waitFor(() => expect(row().status).toBe(UploadQueueItemStatus.Processing))
         dam.fileBecomes(row().assetId!, AssetFileProcessStatus.Processed, {

@@ -299,7 +299,7 @@ describe('the save of the authors of one asset', () => {
 
     expect(failure).toBeInstanceOf(AnzuApiValidationError)
     expect(shownAlerts()).toEqual([])
-    showMetadataSaveError(failure, 4)
+    showMetadataSaveError(failure, 4, 'default')
     expect(shownAlerts()).toHaveLength(1)
     const [, ...lines] = (shownAlerts()[0]![1] as string).split('\n')
     expect(lines.map((line) => line.split(': ')[0])).toEqual([alertText('common.damImage.asset.model.authors')])
@@ -459,7 +459,7 @@ describe('a save refused by validation, as the user is told it', () => {
       () => undefined,
       (error: unknown) => error
     )
-    showMetadataSaveError(failure, extSystem)
+    showMetadataSaveError(failure, extSystem, 'default')
 
     expect(saves().map((one) => (dam.body(one) as unknown[]).length)).toEqual([10, 1])
     expect(fieldsSaid()).toEqual({

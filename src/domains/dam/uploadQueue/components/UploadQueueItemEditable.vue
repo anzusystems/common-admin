@@ -25,6 +25,7 @@ import AActionDeleteButton from '@/domains/ui/buttons/action/components/AActionD
 import { SHOW_REFRESH_AFTER_SECONDS } from '@/domains/dam/uploadQueue/composables/uploadQueueItemRefresh'
 import UploadQueueItemErrorOverlay from '@/domains/dam/uploadQueue/components/UploadQueueItemErrorOverlay.vue'
 import type { DamFieldsDisabledAs } from '@/domains/dam/uploadQueue/components/uploadQueueBindings'
+import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 
 const props = withDefaults(
   defineProps<{
@@ -59,6 +60,8 @@ const props = withDefaults(
     hideEditOnDuplicate?: boolean
     /** Whether the row offers refresh, worked out by its host. Without it the row works it out itself. */
     refreshOffered?: boolean | undefined
+    /** The DAM configuration whose rules and forms the row follows; inherited when not given. */
+    configName?: string
   }>(),
   {
     mainFileSingleUseEnabled: true,
@@ -76,6 +79,7 @@ const props = withDefaults(
     hideEditOnDuplicate: false,
     // Declared, or Vue would make an absent boolean `false` and the row would never offer refresh by itself.
     refreshOffered: undefined,
+    configName: undefined,
   }
 )
 
@@ -89,6 +93,8 @@ const emit = defineEmits<{
   (e: 'showDetail', data: DocId): void
   (e: 'refreshItem', data: { index: number; assetId: DocId }): void
 }>()
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const damConfigName = useDamConfigName(props.configName)
 
 defineSlots<{
   /** Over the picture, under the error overlay. */
@@ -216,13 +222,15 @@ const refresh = () => {
 const { keywordRequired, keywordEnabled } = useDamKeywordAssetTypeConfig(
   // eslint-disable-next-line vue/no-ref-object-reactivity-loss
   assetType.value,
-  props.extSystem
+  props.extSystem,
+  damConfigName
 )
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(
   // eslint-disable-next-line vue/no-ref-object-reactivity-loss
   assetType.value,
-  props.extSystem
+  props.extSystem,
+  damConfigName
 )
 
 watch(

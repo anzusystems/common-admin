@@ -62,7 +62,7 @@ afterEach(() => {
 /** The actions of one list, as each list mounts them. */
 const listActions = () => {
   let actions!: ReturnType<typeof useAssetSelectActions>
-  mounted.push(mount(defineComponent({ setup: () => ((actions = useAssetSelectActions()), () => h('div')) })))
+  mounted.push(mount(defineComponent({ setup: () => ((actions = useAssetSelectActions('default')), () => h('div')) })))
   return actions
 }
 const setup = async () => {

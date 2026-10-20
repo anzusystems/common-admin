@@ -64,7 +64,7 @@ describe.each(consumerProfiles)('the title of the dialog of one uploaded file un
   const item = () => useUploadQueuesStore(pinia).getQueueItems(QUEUE)[0]!
   /** A file is picked: the widget queues it and opens the dialog of its queue. */
   const pickOne = async () => {
-    await useUploadQueuesStore(pinia).addByFiles(QUEUE, extSystem, licence, [photo()])
+    await useUploadQueuesStore(pinia).addByFiles(QUEUE, extSystem, licence, [photo()], 'default')
     wrapper = mount(UploadQueueDialogSingle, {
       attachTo: document.body,
       props: {

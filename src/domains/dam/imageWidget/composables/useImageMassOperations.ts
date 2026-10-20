@@ -4,9 +4,9 @@ import type { DocId, IntegerId } from '@/shared/types/common'
 import { fetchAuthorListByIds } from '@/domains/dam/author/api/authorApi'
 import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
 import { useExtSystemIdForCached } from '@/domains/dam/composables/extSystemIdForCached'
-import { useDamConfigStore } from '@/domains/dam/config/store/damConfigStore'
+import { useDamConfigStoreOf } from '@/domains/dam/config/store/damConfigStore'
 
-export function useImageMassOperations(configName?: string) {
+export function useImageMassOperations(configName: string) {
   const imageStore = useImageStore()
 
   const replaceEmptyDescription = (value: string, forceReplace = false) => {
@@ -34,16 +34,16 @@ export function useImageMassOperations(configName?: string) {
   }
 
   const { damClient, endPointAuthor } = useCommonAdminCoreDamOptions(configName)
-  const { cachedExtSystemId } = useExtSystemIdForCached()
-  const damConfigStore = useDamConfigStore()
+  const { cachedExtSystemId } = useExtSystemIdForCached(configName)
+  const damConfigStore = useDamConfigStoreOf(configName)
 
   const replaceEmptyAuthors = async (value: DocId[], forceReplace = false) => {
     if (imageStore.readonly) return
     // No authors picked fill nothing: written all the same, they would only take the source of the rows away.
     if (!forceReplace && value.length === 0) return
     // Their names under the ext system of the licence of the asset of each row, as every name of the authors of the
-    // DAM the widgets write, and under that of the page where the page does not know the licence (not read for it):
-    // one lookup per ext system. The page's went for every row.
+    // DAM the widgets write, and under the one the configuration asks for names under where the page does not know the
+    // licence (not read for it): one lookup per ext system. That one went for every row.
     const pageExtSystem = cachedExtSystemId.value
     const extSystemOf = new Map<IntegerId, IntegerId>()
     imageStore.images.forEach((item) => {

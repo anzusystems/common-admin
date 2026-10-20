@@ -106,9 +106,10 @@ export function createUploadQueueItemRefresh(
 
 /**
  * The refresh of an item of the upload queue: asks what became of its file, and settles the item accordingly.
- * The store asks, with the client of its own configuration: `_configName` only keeps the callers as they are.
+ * The store asks with the client of the configuration of the queue, and settles the rows of its queues: those of the
+ * queue `queueKey` of the refresh, or of the configuration `configName` where none is given.
  */
-export function useUploadQueueItemRefresh(_configName = 'default') {
+export function useUploadQueueItemRefresh(configName: string) {
   const uploadQueuesStore = useUploadQueuesStore()
   const { showWarningT } = useAlerts()
   const refreshing = ref(false)
@@ -120,7 +121,7 @@ export function useUploadQueueItemRefresh(_configName = 'default') {
   const refreshItem = (assetId: DocId, item?: UploadQueueItem, queueKey?: UploadQueueKey) =>
     refreshAndSay(
       refreshing,
-      () => uploadQueuesStore.refreshAsset(assetId),
+      () => uploadQueuesStore.refreshAsset(assetId, isUndefined(queueKey) ? configName : { queueKey }),
       (key) => showWarningT(key),
       item,
       // A removed item keeps its status unless it was still waiting or being sent: that it is gone is read from

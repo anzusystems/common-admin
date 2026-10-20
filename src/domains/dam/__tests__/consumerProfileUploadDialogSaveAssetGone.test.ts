@@ -85,7 +85,7 @@ describe.each(consumerProfiles)('"save and apply" of the upload dialog under the
    * The asset of the second is then gone.
    */
   const secondWithoutItsFormAndGone = async () => {
-    await useUploadQueuesStore(pinia).addByFiles(QUEUE, extSystem, licence, [photo('a.jpg'), photo('b.jpg')])
+    await useUploadQueuesStore(pinia).addByFiles(QUEUE, extSystem, licence, [photo('a.jpg'), photo('b.jpg')], 'default')
     wrapper = mount(UploadQueueDialog, {
       attachTo: document.body,
       props: {
@@ -128,7 +128,7 @@ describe.each(consumerProfiles)('"save and apply" of the upload dialog under the
   it('fails a row its read is the third to find without its asset, hands over the others, and says the asset no longer exists', async () => {
     const { a, b } = await secondWithoutItsFormAndGone()
     // Its refresh, pressed twice: two reads that do not find the asset.
-    const { refreshItem } = useUploadQueueItemRefresh()
+    const { refreshItem } = useUploadQueueItemRefresh('default')
     await refreshItem(b.assetId!, b, QUEUE)
     await refreshItem(b.assetId!, b, QUEUE)
     expect(b.status).toBe(Uploaded)

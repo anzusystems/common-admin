@@ -61,7 +61,7 @@ describe('upload queue while rusha loads', () => {
     const store = useUploadQueuesStore()
     const files = ['a', 'b', 'c'].map((name) => new File(['content'], `${name}.jpg`, { type: 'image/jpeg' }))
 
-    await store.addByFiles('queue', 1, 1, files)
+    await store.addByFiles('queue', 1, 1, files, 'default')
     rushaGate.open()
 
     // Two parallel slots. The third file waits for one: an item leaves "uploading" when damUploadFinish marks it

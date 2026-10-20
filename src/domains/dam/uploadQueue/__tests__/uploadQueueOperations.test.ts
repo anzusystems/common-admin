@@ -70,7 +70,7 @@ const { Waiting, Uploading, Processing, Uploaded, Failed, Stop } = UploadQueueIt
 const twoSendingOneWaiting = async () => {
   const store = useUploadQueuesStore()
   const chunks = dam.hold('POST', dam.routes.chunk)
-  await store.addByFiles(QUEUE, extSystem, licence, photos('a', 'b', 'c'))
+  await store.addByFiles(QUEUE, extSystem, licence, photos('a', 'b', 'c'), 'default')
   await vi.waitFor(() => expect(chunks.waiting).toHaveLength(2))
   expect(statuses()).toEqual([Uploading, Uploading, Waiting])
   return { store, chunks, items: [...store.getQueueItems(QUEUE)] }
@@ -106,7 +106,7 @@ describe('files added to a queue', () => {
   it('are added after the rows the queue already has', async () => {
     const { store } = await twoSendingOneWaiting()
 
-    await store.addByFiles(QUEUE, extSystem, licence, photos('d'))
+    await store.addByFiles(QUEUE, extSystem, licence, photos('d'), 'default')
 
     expect(titles()).toEqual(['a.jpg', 'b.jpg', 'c.jpg', 'd.jpg'])
     expect(statuses()).toEqual([Uploading, Uploading, Waiting, Waiting])
@@ -119,9 +119,9 @@ describe('files added to a queue', () => {
     const store = useUploadQueuesStore()
     dam.hold('POST', dam.routes.chunk)
 
-    await store.addByFiles(QUEUE, extSystem, licence, photos('a', 'a', 'b'))
-    await store.addByFiles(QUEUE, extSystem, licence, photos('a'))
-    await store.addByFiles(OTHER_QUEUE, extSystem, licence, photos('a'))
+    await store.addByFiles(QUEUE, extSystem, licence, photos('a', 'a', 'b'), 'default')
+    await store.addByFiles(QUEUE, extSystem, licence, photos('a'), 'default')
+    await store.addByFiles(OTHER_QUEUE, extSystem, licence, photos('a'), 'default')
 
     expect(titles()).toEqual(['a.jpg', 'a.jpg', 'b.jpg', 'a.jpg'])
     const keys = [...store.getQueueItems(QUEUE), ...store.getQueueItems(OTHER_QUEUE)].map((item) => item.key)
@@ -140,14 +140,20 @@ describe('files added to a queue', () => {
     const store = useUploadQueuesStore()
     dam.hold('POST', dam.routes.chunk)
 
-    await store.addByFiles(QUEUE, extSystem, licence, [
-      file('scan.tiff', 'image/tiff'),
-      file('listed.png', 'image/png'),
-      file('paper.pdf', 'application/pdf'),
-      // A type the ext system knows, and not an image: the library uploads images only.
-      file('song.mp3', 'audio/mpeg'),
-      file('untyped', ''),
-    ])
+    await store.addByFiles(
+      QUEUE,
+      extSystem,
+      licence,
+      [
+        file('scan.tiff', 'image/tiff'),
+        file('listed.png', 'image/png'),
+        file('paper.pdf', 'application/pdf'),
+        // A type the ext system knows, and not an image: the library uploads images only.
+        file('song.mp3', 'audio/mpeg'),
+        file('untyped', ''),
+      ],
+      'default'
+    )
 
     expect(titles()).toEqual(['listed.png'])
     expect(counts()).toEqual({ total: 1, processed: 0 })
@@ -156,7 +162,9 @@ describe('files added to a queue', () => {
   it('are refused when the configuration of the ext system is not loaded', async () => {
     const store = useUploadQueuesStore()
 
-    await expect(store.addByFiles(QUEUE, 999, licence, photos('a'))).rejects.toThrow('Ext system must be initialised')
+    await expect(store.addByFiles(QUEUE, 999, licence, photos('a'), 'default')).rejects.toThrow(
+      'Ext system must be initialised'
+    )
 
     expect(store.getQueue(QUEUE)).toBeNull()
     expect(dam.requests).toEqual([])
@@ -166,8 +174,8 @@ describe('files added to a queue', () => {
     const store = useUploadQueuesStore()
     const chunks = dam.hold('POST', dam.routes.chunk)
 
-    await store.addByFiles(QUEUE, extSystem, licence, photos('a', 'b', 'c'))
-    await store.addByFiles(OTHER_QUEUE, extSystem, licence, photos('x', 'y', 'z'))
+    await store.addByFiles(QUEUE, extSystem, licence, photos('a', 'b', 'c'), 'default')
+    await store.addByFiles(OTHER_QUEUE, extSystem, licence, photos('x', 'y', 'z'), 'default')
     await vi.waitFor(() => expect(chunks.waiting).toHaveLength(4))
 
     expect([titles(QUEUE), titles(OTHER_QUEUE)]).toEqual([
@@ -194,7 +202,7 @@ describe('assets copied to the licence, added to a queue', () => {
   it('become a row each that waits for the server, known by its asset alone', async () => {
     const store = useUploadQueuesStore()
 
-    await store.addByCopyToLicence(QUEUE, extSystem, licence, ['asset-copy-1', 'asset-copy-2'])
+    await store.addByCopyToLicence(QUEUE, extSystem, licence, ['asset-copy-1', 'asset-copy-2'], 'default')
 
     expect(store.getQueueItems(QUEUE)).toMatchObject(
       ['asset-copy-1', 'asset-copy-2'].map((assetId) => ({
@@ -220,8 +228,8 @@ describe('assets copied to the licence, added to a queue', () => {
   it('have a key each, an asset added twice too', async () => {
     const store = useUploadQueuesStore()
 
-    await store.addByCopyToLicence(QUEUE, extSystem, licence, ['asset-copy-1', 'asset-copy-2'])
-    await store.addByCopyToLicence(QUEUE, extSystem, licence, ['asset-copy-1'])
+    await store.addByCopyToLicence(QUEUE, extSystem, licence, ['asset-copy-1', 'asset-copy-2'], 'default')
+    await store.addByCopyToLicence(QUEUE, extSystem, licence, ['asset-copy-1'], 'default')
 
     const items = store.getQueueItems(QUEUE)
     expect(items.map((item) => item.assetId)).toEqual(['asset-copy-1', 'asset-copy-2', 'asset-copy-1'])
@@ -231,7 +239,7 @@ describe('assets copied to the licence, added to a queue', () => {
   it('do not take the place of a file that waits to be sent', async () => {
     const { store } = await twoSendingOneWaiting()
 
-    await store.addByCopyToLicence(QUEUE, extSystem, licence, ['asset-copy-1'])
+    await store.addByCopyToLicence(QUEUE, extSystem, licence, ['asset-copy-1'], 'default')
 
     expect(statuses()).toEqual([Uploading, Uploading, Waiting, Processing])
     expect(starts()).toHaveLength(2)
@@ -240,7 +248,7 @@ describe('assets copied to the licence, added to a queue', () => {
   it('are refused when the configuration of the ext system is not loaded', async () => {
     const store = useUploadQueuesStore()
 
-    await expect(store.addByCopyToLicence(QUEUE, 999, licence, ['asset-copy-1'])).rejects.toThrow(
+    await expect(store.addByCopyToLicence(QUEUE, 999, licence, ['asset-copy-1'], 'default')).rejects.toThrow(
       'Ext system must be initialised'
     )
 
@@ -258,8 +266,8 @@ describe('one asset in two rows of a queue', () => {
   /** The same asset copied to the licence twice: two rows that wait for the server. */
   const copiedTwice = async () => {
     const store = useUploadQueuesStore()
-    await store.addByCopyToLicence(QUEUE, extSystem, licence, ['asset-1'])
-    await store.addByCopyToLicence(QUEUE, extSystem, licence, ['asset-1'])
+    await store.addByCopyToLicence(QUEUE, extSystem, licence, ['asset-1'], 'default')
+    await store.addByCopyToLicence(QUEUE, extSystem, licence, ['asset-1'], 'default')
     const [first, second] = store.getQueueItems(QUEUE)
     expect([first.assetId, second.assetId, first === second]).toEqual(['asset-1', 'asset-1', false])
     return { store, first, second }
@@ -385,7 +393,7 @@ describe('one asset in two rows of a queue', () => {
   // twice, or two pictures the DAM already has as one.
   it('two files that turn out to be one original: both rows become it, and a save in its detail reaches both', async () => {
     const store = useUploadQueuesStore()
-    await store.addByFiles(QUEUE, extSystem, licence, photos('a', 'b'))
+    await store.addByFiles(QUEUE, extSystem, licence, photos('a', 'b'), 'default')
     await vi.waitFor(() => expect(statuses()).toEqual([Processing, Processing]))
     const [first, second] = store.getQueueItems(QUEUE)
     dam.assets.set(
@@ -412,7 +420,7 @@ describe('one asset in two rows of a queue', () => {
     const detail = dam.fileBecomes('asset-original', AssetFileProcessStatus.Processed, {
       metadata: { customData: { title: 'saved in the detail' }, authorSuggestions: {}, keywordSuggestions: {} },
     })
-    await store.updateFromDetail(detail)
+    await store.updateFromDetail(detail, 'default')
 
     expect([first.customData, second.customData]).toEqual([
       { title: 'saved in the detail' },
@@ -513,7 +521,7 @@ describe('a queue stopped', () => {
     store.stopUpload(QUEUE)
     await waits.settle()
 
-    await store.addByFiles(QUEUE, extSystem, licence, photos('d'))
+    await store.addByFiles(QUEUE, extSystem, licence, photos('d'), 'default')
     await vi.waitFor(() => expect(chunks.waiting).toHaveLength(1))
 
     expect(titles()).toEqual(['d.jpg'])
@@ -540,7 +548,7 @@ describe('a row removed from a queue', () => {
   /** Two files sent whole; the first is settled as uploaded, the second still waits for the server. */
   const oneUploadedOneProcessing = async () => {
     const store = useUploadQueuesStore()
-    await store.addByFiles(QUEUE, extSystem, licence, photos('a', 'b'))
+    await store.addByFiles(QUEUE, extSystem, licence, photos('a', 'b'), 'default')
     await vi.waitFor(() => expect(statuses()).toEqual([Processing, Processing]))
     const items = [...store.getQueueItems(QUEUE)]
     dam.fileBecomes(items[0].assetId!, AssetFileProcessStatus.Processed)
@@ -599,8 +607,8 @@ describe('a save in the asset detail', () => {
     const store = useUploadQueuesStore()
     dam.assets.set('asset-1', damAssetWithFile('asset-1', 'file-1', AssetFileProcessStatus.Processed))
     dam.assets.set('asset-2', damAssetWithFile('asset-2', 'file-2', AssetFileProcessStatus.Processed))
-    await store.addByCopyToLicence(QUEUE, extSystem, licence, ['asset-1', 'asset-2'])
-    await store.addByCopyToLicence(OTHER_QUEUE, extSystem, licence, ['asset-1'])
+    await store.addByCopyToLicence(QUEUE, extSystem, licence, ['asset-1', 'asset-2'], 'default')
+    await store.addByCopyToLicence(OTHER_QUEUE, extSystem, licence, ['asset-1'], 'default')
     for (const asset of ['asset-1', 'asset-2']) notify(DamNotificationName.AssetFileCopied, { asset })
     const [here, other] = store.getQueueItems(QUEUE)
     const [there] = store.getQueueItems(OTHER_QUEUE)
@@ -614,7 +622,7 @@ describe('a save in the asset detail', () => {
     const untouched = rowState(other)
     const detail = dam.fileBecomes('asset-1', AssetFileProcessStatus.Processed, saved)
 
-    await store.updateFromDetail(detail)
+    await store.updateFromDetail(detail, 'default')
 
     for (const item of [here, there]) {
       expect(item).toMatchObject({
@@ -641,7 +649,7 @@ describe('a save in the asset detail', () => {
       mainFileSingleUse: singleUse,
     })
 
-    await store.updateFromDetail(detail)
+    await store.updateFromDetail(detail, 'default')
 
     expect([here, there].map((item) => item.mainFileSingleUse)).toEqual([singleUse, singleUse])
     expect(other.mainFileSingleUse).toBe(!singleUse)
@@ -662,7 +670,7 @@ describe('a save in the asset detail', () => {
       keywords: ['keyword-of-the-detail'],
     })
 
-    await store.updateFromDetail(handedOver)
+    await store.updateFromDetail(handedOver, 'default')
 
     expect(here.keywords).toEqual(['keyword-saved'])
   })
@@ -682,7 +690,7 @@ describe('a save in the asset detail', () => {
       if (!unreadable) dam.assets.set('asset-3', detail)
       const asked = dam.requests.length
 
-      await expect(store.updateFromDetail(detail, undefined, true)).resolves.toBeUndefined()
+      await expect(store.updateFromDetail(detail, 'default', true)).resolves.toBeUndefined()
 
       expect(dam.requests.slice(asked)).toEqual([])
       expect([here, other, there].map(rowState)).toEqual(untouched)
@@ -693,7 +701,7 @@ describe('a save in the asset detail', () => {
   it('asks the DAM for nothing when there is no queue at all', async () => {
     const detail = dam.fileBecomes('asset-1', AssetFileProcessStatus.Processed, saved)
 
-    await useUploadQueuesStore().updateFromDetail(detail)
+    await useUploadQueuesStore().updateFromDetail(detail, 'default')
 
     expect(dam.requests).toEqual([])
   })
@@ -703,13 +711,13 @@ describe('a save in the asset detail', () => {
     const store = useUploadQueuesStore()
     dam.assets.set('asset-1', damAssetWithFile('asset-1', 'file-1', AssetFileProcessStatus.Processed))
     dam.assets.set('asset-2', damAssetWithFile('asset-2', 'file-2', AssetFileProcessStatus.Processed))
-    await store.addByCopyToLicence(QUEUE, extSystem, licence, ['asset-2'])
-    await store.addByCopyToLicence(OTHER_QUEUE, extSystem, licence, ['asset-1'])
+    await store.addByCopyToLicence(QUEUE, extSystem, licence, ['asset-2'], 'default')
+    await store.addByCopyToLicence(OTHER_QUEUE, extSystem, licence, ['asset-1'], 'default')
     const [there] = store.getQueueItems(OTHER_QUEUE)
     const reads = dam.assetReads().length
     const detail = dam.fileBecomes('asset-1', AssetFileProcessStatus.Processed, saved)
 
-    await store.updateFromDetail(detail)
+    await store.updateFromDetail(detail, 'default')
 
     expect(
       dam
@@ -742,7 +750,7 @@ describe('a save in the asset detail', () => {
         const untouched = rowState(other)
         failAssetReads()
 
-        await expect(store.updateFromDetail(heldByTheDetail(!singleUse), undefined, singleUse)).resolves.toBeUndefined()
+        await expect(store.updateFromDetail(heldByTheDetail(!singleUse), 'default', singleUse)).resolves.toBeUndefined()
 
         for (const item of [here, there]) {
           expect(item).toMatchObject({
@@ -780,7 +788,7 @@ describe('a save in the asset detail', () => {
       detail.metadata.customData.tags = ['saved']
       failAssetReads()
 
-      await store.updateFromDetail(detail)
+      await store.updateFromDetail(detail, 'default')
       here.keywords.push('typed-into-the-row')
       here.authors.push('typed-into-the-row')
       here.customData.title = 'typed into the row'
@@ -808,7 +816,7 @@ describe('a save in the asset detail', () => {
       for (const item of [here, there]) item.mainFileSingleUse = true
       failAssetReads()
 
-      await store.updateFromDetail(heldByTheDetail(false))
+      await store.updateFromDetail(heldByTheDetail(false), 'default')
 
       expect([here, there].map((item) => [item.customData, item.mainFileSingleUse])).toEqual([
         [{ title: 'saved in the detail' }, true],
@@ -819,11 +827,11 @@ describe('a save in the asset detail', () => {
 
   it('does not settle a row that still waits for its file', async () => {
     const store = useUploadQueuesStore()
-    await store.addByCopyToLicence(QUEUE, extSystem, licence, ['asset-1'])
+    await store.addByCopyToLicence(QUEUE, extSystem, licence, ['asset-1'], 'default')
     const [item] = store.getQueueItems(QUEUE)
     const detail = dam.fileBecomes('asset-1', AssetFileProcessStatus.Processed, saved)
 
-    await store.updateFromDetail(detail)
+    await store.updateFromDetail(detail, 'default')
 
     expect(item).toMatchObject({
       status: Processing,
@@ -841,7 +849,7 @@ describe('the counts of a queue', () => {
   it('take an uploaded and a failed row for done, and every other row for not', async () => {
     const store = useUploadQueuesStore()
     const chunks = dam.hold('POST', dam.routes.chunk)
-    await store.addByFiles(QUEUE, extSystem, licence, photos('a', 'b', 'c', 'd'))
+    await store.addByFiles(QUEUE, extSystem, licence, photos('a', 'b', 'c', 'd'), 'default')
     await vi.waitFor(() => expect(chunks.waiting).toHaveLength(2))
     chunks.release()
     await vi.waitFor(() => expect(statuses()).toEqual([Processing, Processing, Uploading, Uploading]))

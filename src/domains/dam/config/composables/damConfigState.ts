@@ -9,7 +9,9 @@ import {
   fetchExtSystemConfiguration,
   fetchPubConfiguration,
 } from '@/domains/dam/config/api/damConfigApi'
-import { useDamConfigStore } from '@/domains/dam/config/store/damConfigStore'
+import { useDamConfigStoreOf } from '@/domains/dam/config/store/damConfigStore'
+import { checkDamConfigName, inheritedDamConfigName } from '@/domains/dam/composables/damConfigName'
+import { damEndPointsOf } from '@/domains/dam/composables/commonAdminCoreDamOptions'
 import type { IntegerId } from '@/shared/types/common'
 import { DamAssetType, type DamAssetTypeType, type DamDistributionServiceName } from '@/domains/dam/types/Asset'
 import type {
@@ -21,8 +23,19 @@ import type {
 import { cloneDeep, isNull, isUndefined } from '@/shared/utils/common'
 import type { AxiosInstance } from 'axios'
 
-export function useDamConfigState(client: undefined | (() => AxiosInstance) = undefined) {
-  const damConfigStore = useDamConfigStore()
+/**
+ * Loads into and reads from the DAM configuration store of `configName` (`useDamConfigStoreOf`); a name left out is
+ * the inherited one in a component's setup, else `default`. Without a client nothing loads. It loads from the
+ * addresses that configuration sets (`endPointConfiguration`, `endPointPubConfiguration`, `endPointAssetLicence`,
+ * `endPointAssetCustomForm`), the default ones where it sets none or the plugin is not configured yet. Once the plugin
+ * has set the options, a configuration the application has not got throws, as the caches of names do.
+ */
+export function useDamConfigState(client: undefined | (() => AxiosInstance) = undefined, configName?: string) {
+  const name = inheritedDamConfigName(configName)
+  checkDamConfigName(name)
+  const damConfigStore = useDamConfigStoreOf(name)
+  // Read when a request is made.
+  const endPoints = () => damEndPointsOf(name)
 
   function onConfigError(error: Error) {
     console.error(error)
@@ -35,7 +48,7 @@ export function useDamConfigState(client: undefined | (() => AxiosInstance) = un
         reject(false)
         return
       }
-      fetchPubConfiguration(client)
+      fetchPubConfiguration(client, endPoints().endPointPubConfiguration)
         .then((config) => {
           if (Object.keys(config).length < 1) {
             throw new Error('Unable to load pub config. Incorrect response body.')
@@ -65,7 +78,7 @@ export function useDamConfigState(client: undefined | (() => AxiosInstance) = un
         reject(false)
         return
       }
-      fetchConfiguration(client)
+      fetchConfiguration(client, endPoints().endPointConfiguration)
         .then((config) => {
           if (Object.keys(config).length < 1) {
             throw new Error('Unable to load dam prv config. Incorrect response body.')
@@ -98,7 +111,7 @@ export function useDamConfigState(client: undefined | (() => AxiosInstance) = un
         reject(false)
         return
       }
-      fetchExtSystemConfiguration(extSystemId, client)
+      fetchExtSystemConfiguration(extSystemId, client, endPoints().endPointConfiguration)
         .then((config) => {
           if (Object.keys(config).length < 1) {
             throw new Error('Unable to load dam ext system config. Incorrect response body.')
@@ -137,7 +150,10 @@ export function useDamConfigState(client: undefined | (() => AxiosInstance) = un
         reject(false)
         return
       }
-      const promises = types.map((type) => fetchAssetCustomFormElements(client, extSystemId, type))
+      const { endPointAssetCustomForm } = endPoints()
+      const promises = types.map((type) =>
+        fetchAssetCustomFormElements(client, extSystemId, type, endPointAssetCustomForm)
+      )
 
       // allSettled: one unavailable type must not discard the successfully loaded ones.
       Promise.allSettled(promises)
@@ -212,7 +228,7 @@ export function useDamConfigState(client: undefined | (() => AxiosInstance) = un
         resolve(true)
         return
       }
-      fetchDistributionCustomFormElements(client, distributionServiceName)
+      fetchDistributionCustomFormElements(client, distributionServiceName, endPoints().endPointAssetCustomForm)
         .then((res) => {
           damConfigStore.damConfigDistributionCustomFormElements.set(distributionServiceName, res)
           resolve(true)
@@ -273,7 +289,7 @@ export function useDamConfigState(client: undefined | (() => AxiosInstance) = un
 
     if (isUndefined(foundLicenceConfig)) {
       try {
-        const licenceRes = await fetchDamAssetLicence(client, licence)
+        const licenceRes = await fetchDamAssetLicence(client, licence, endPoints().endPointAssetLicence)
         if (isNull(licenceRes.extSystem)) return undefined
 
         foundLicenceConfig = {
@@ -316,7 +332,7 @@ export function useDamConfigState(client: undefined | (() => AxiosInstance) = un
     if (isUndefined(client)) return null
 
     try {
-      const licenceRes = await fetchDamAssetLicence(client, licence)
+      const licenceRes = await fetchDamAssetLicence(client, licence, endPoints().endPointAssetLicence)
       if (isNull(licenceRes.extSystem)) return null
 
       damConfigStore.damConfigLicenceExtSystem.set(licence, {

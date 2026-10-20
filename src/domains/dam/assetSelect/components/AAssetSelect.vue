@@ -83,9 +83,12 @@ const {
 // The ordering in the list bar reads this; without it the dialog would pick up the host page's pagination.
 provide(DatatablePaginationKey, pagination)
 
-const { loadDamConfigAssetCustomFormElements, getDamConfigAssetCustomFormElements } = useDamConfigState(damClient)
+const { loadDamConfigAssetCustomFormElements, getDamConfigAssetCustomFormElements } = useDamConfigState(
+  damClient,
+  damConfigName
+)
 
-const { getOrLoadDamConfigExtSystemByLicences } = useDamConfigState(damClient)
+const { getOrLoadDamConfigExtSystemByLicences } = useDamConfigState(damClient, damConfigName)
 const assetDetailStore = useAssetDetailStore()
 const { asset } = storeToRefs(assetDetailStore)
 const assetSelectStore = useAssetSelectStore()
@@ -102,7 +105,7 @@ const onOpen = () => {
   if (!ready.value) return
   let selectConfigLocal = cloneDeep(selectConfigs.value)
   if (!props.skipCurrentUserCheck) {
-    selectConfigLocal = filterAllowedImageWidgetSelectConfigs(selectConfigs.value)
+    selectConfigLocal = filterAllowedImageWidgetSelectConfigs(selectConfigs.value, damConfigName)
   }
   if (selectConfigLocal.length === 0) {
     showErrorT('common.assetSelect.error.unallowedLicence')

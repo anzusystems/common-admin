@@ -458,7 +458,7 @@ describe('the save of the widget of several images', () => {
   it('reads the asset of a row once its detail closes, while the save of the detail of another asset is on its way', async () => {
     await withImages([11, 12], { 11: '', 12: '' })
     const detail = () => useAssetDetailStore(pinia)
-    const { editAssetLabel } = useCommonAdminCoreDamOptions()
+    const { editAssetLabel } = useCommonAdminCoreDamOptions('default')
     const editAssetOf = async (row: number) => {
       await rows()
         [row]!.findAll('button')

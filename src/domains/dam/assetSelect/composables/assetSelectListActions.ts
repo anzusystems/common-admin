@@ -44,7 +44,7 @@ const scrolledTo = (button: Element | undefined) => {
   return document.scrollingElement?.scrollTop ?? 0
 }
 
-export function useAssetSelectActions(configName = 'default') {
+export function useAssetSelectActions(configName: string) {
   const { damClient, endPointAsset, showFileInfoEnabled } = useCommonAdminCoreDamOptions(configName)
   // A further page of the list of this "Load more" has failed (the list of `failedInListTurn`), and the button does not
   // ask for it again by coming into view: a press does, or the button coming into view once more after the list was
@@ -187,16 +187,16 @@ export function useAssetSelectActions(configName = 'default') {
     fetchNextPage()
   }
 
-  const { addToCachedAuthors, fetchCachedAuthors } = useDamCachedAuthors()
-  const { addToCachedKeywords, fetchCachedKeywords } = useDamCachedKeywords()
-  const { addToCachedUsers, fetchCachedUsers } = useDamCachedUsers()
+  const { addToCachedAuthors, fetchCachedAuthors } = useDamCachedAuthors(configName)
+  const { addToCachedKeywords, fetchCachedKeywords } = useDamCachedKeywords(configName)
+  const { addToCachedUsers, fetchCachedUsers } = useDamCachedUsers(configName)
 
   const onItemClick = async (data: { assetId: DocId; index: number }, extSystem: IntegerId) => {
-    const { cachedExtSystemId } = useExtSystemIdForCached()
+    const { cachedExtSystemId } = useExtSystemIdForCached(configName)
     if (!mdAndDown.value) openSidebarRight()
     assetSelectStore.toggleSelectedByIndex(data.index)
     assetSelectStore.setActiveByIndex(data.index)
-    // The ext system the page asks for names under is that of the list the click was made in. Written at the click,
+    // The ext system the configuration asks for names under is that of the list the click was made in. Written at the click,
     // where it is known, not once the read has answered: a pick confirmed before that gives the read up, and the
     // dialog of the picked image offers the authors of the DAM under whatever ext system was there before.
     cachedExtSystemId.value = extSystem
@@ -209,8 +209,8 @@ export function useAssetSelectActions(configName = 'default') {
         () => fetchAsset(damClient, endPointAsset, data.assetId),
         () => request === detailRequest,
         (asset) => {
-          // Once more for the read that is shown, as before: the value is one for the page, and another widget may
-          // have written its own since the click, when an upload or a copy of its own ended.
+          // Once more for the read that is shown, as before: the value is one for the configuration, and another
+          // widget of it may have written its own since the click, when an upload or a copy of its own ended.
           cachedExtSystemId.value = extSystem
           addToCachedAuthors(asset.authors)
           addToCachedKeywords(asset.keywords)

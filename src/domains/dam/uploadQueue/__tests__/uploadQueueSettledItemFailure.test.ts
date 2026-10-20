@@ -73,7 +73,7 @@ describe('a failed asset fetch on a copied or duplicate item', () => {
       .mockRejectedValueOnce(new Error('502'))
       .mockResolvedValue(asset('asset-1', AssetFileProcessStatus.Processed))
     const store = useUploadQueuesStore()
-    await store.addByCopyToLicence('q', 1, 1, ['asset-1'])
+    await store.addByCopyToLicence('q', 1, 1, ['asset-1'], 'default')
     state.listener!({ name: DamNotificationName.AssetFileCopied, data: { asset: 'asset-1' } })
     await clock.advance(1000)
     const item = store.getQueueItems('q')[0]!
@@ -88,7 +88,7 @@ describe('a failed asset fetch on a copied or duplicate item', () => {
       .mockResolvedValueOnce(asset('asset-1', AssetFileProcessStatus.Processed))
       .mockRejectedValue(new Error('502'))
     const store = useUploadQueuesStore()
-    await store.addByCopyToLicence('q', 1, 1, ['asset-1'])
+    await store.addByCopyToLicence('q', 1, 1, ['asset-1'], 'default')
     const item = store.getQueueItems('q')[0]!
     await clock.advance(5000)
     expect(item.status).toBe(UploadQueueItemStatus.Uploaded)

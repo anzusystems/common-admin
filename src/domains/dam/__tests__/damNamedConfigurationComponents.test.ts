@@ -31,7 +31,9 @@ import { useAuthorSelectActions } from '@/domains/dam/author/composables/authorA
 import { initCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
 import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 import { useDamNotificationsEventBus } from '@/domains/dam/composables/damNotificationsEventBus'
-import { useDamConfigStore } from '@/domains/dam/config/store/damConfigStore'
+import { useDamConfigStore, useDamConfigStoreOf } from '@/domains/dam/config/store/damConfigStore'
+import { seedDamConfigOf } from '@/domains/dam/__tests__/support/namedDamConfig'
+import { useExtSystemIdForCached } from '@/domains/dam/composables/extSystemIdForCached'
 import ImageMediaWidgetInner from '@/domains/dam/imageWidget/components/ImageMediaWidgetInner.vue'
 import ImageWidgetInner from '@/domains/dam/imageWidget/components/ImageWidgetInner.vue'
 import ImageWidgetMultipleInner from '@/domains/dam/imageWidget/components/ImageWidgetMultipleInner.vue'
@@ -54,11 +56,11 @@ import { createFilter, createFilterStore, type MakeFilterOption } from '@/domain
 // own. A component is under `own` when it is given the name, or when it is inside a component that is: each case
 // here runs both ways where the component takes the name. What it asks then goes to the client and the addresses
 // of `own`, and nothing to those of `default`. Nothing of the library is replaced: each configuration has a DAM
-// client that records its requests. The caches of the names of authors, keywords and users are the page's, and ask
-// as the default configuration says whatever a component is under, a second and a half after they are given an id:
-// often during the case after the one that gave it. That wait is held here with the long ones, and let pass only
-// once a case is over: no cache asks anything during a case, each starts with nothing left to ask for, and what
-// each client is said to have been asked is all it was asked.
+// client that records its requests. The caches of the names of authors, keywords and users are one per
+// configuration (`damNamedConfigurationCaches.test.ts`), and ask a second and a half after they are given an id: often
+// during the case after the one that gave it. That wait is held here with the long ones, and let pass only once a case
+// is over: no cache asks anything during a case, each starts with nothing left to ask for, and what each client is said
+// to have been asked is all it was asked.
 
 const { endPoints, extSystem, licence } = cmsConfiguration
 const OWN = { asset: '/own/v2/asset', image: '/own/v2/image' }
@@ -104,6 +106,13 @@ const configure = (ofOwn: Partial<CommonAdminCoreDamConfig> = {}) => {
     },
   })
   initCommonAdminImageOptions({ ...image, configs: { ...image.configs, own: image.configs.default! } })
+  // Its DAM has the configuration of the default one, filled before the components mount, as an application does,
+  // but for its chunks: of half a photo, where `default`'s take a photo whole. An upload under `own` that read the
+  // store of `default` would send each photo in one chunk.
+  seedDamConfigOf('own', pinia).damPrvConfig.settings.imageChunkConfig = { minSize: 1500, maxSize: 1500 }
+  // The ext system its caches of names ask under, as the root of a widget under it writes it (the profile writes that
+  // of `default`).
+  useExtSystemIdForCached('own').cachedExtSystemId.value = extSystem
 }
 
 beforeEach(() => {
@@ -113,7 +122,7 @@ beforeEach(() => {
   own = createFakeDam(OWN)
   answerNames(dam)
   answerNames(own)
-  // The two stand for one core-dam: what is started under `own` has ids of its own.
+  // What is started under `own` has ids of its own: the cases tell its rows by them.
   let started = 0
   own.reply((request) => {
     if (request.method !== 'POST' || !own.routes.start.test(request.url)) return undefined
@@ -150,6 +159,7 @@ const asked = (of: FakeDam) => of.requests.map((request) => `${request.method} $
 const photo = (name: string) => new File([new Uint8Array(3000)], name, { type: 'image/jpeg' })
 const sendingUnderOwn = [
   `POST ${OWN.image}/licence/${licence}`,
+  `POST ${OWN.image}/own-file-1/chunk`,
   `POST ${OWN.image}/own-file-1/chunk`,
   `PATCH ${OWN.image}/own-file-1/uploaded`,
 ]
@@ -522,8 +532,9 @@ describe.each<[string, Component, Record<string, unknown>]>([
     request.method === 'GET' && request.url.startsWith(`${OWN.asset}/licence/${licence}/search?`)
 
   it('reads its licence, lists its assets and reads the one clicked by the client of that configuration', async () => {
-    // The page does not know the licence yet: the select asks for it, at an address no configuration names.
-    useDamConfigStore(pinia).damConfigLicenceExtSystem.delete(licence)
+    // The page does not know the licence under `own` yet: the select asks for it, at an address no configuration
+    // names.
+    useDamConfigStoreOf('own', pinia).damConfigLicenceExtSystem.delete(licence)
     own.reply((request) => {
       if (request.method === 'GET' && request.url === LICENCE) {
         return { status: 200, data: { id: licence, name: 'own', extSystem } }

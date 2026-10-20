@@ -1,12 +1,19 @@
 import { ref } from 'vue'
 import { isNull } from '@/shared/utils/common'
-import { useDamConfigStore } from '@/domains/dam/config/store/damConfigStore'
+import { useDamConfigStoreOf } from '@/domains/dam/config/store/damConfigStore'
+import { inheritedDamConfigName } from '@/domains/dam/composables/damConfigName'
 
-const chunkSize = ref<number | undefined>(undefined)
+// The last size of each DAM configuration: one upload hands it to the next one of its name.
+const chunkSizes = new Map<string, number>()
 
-export function useDamUploadChunkSize(apiTimeout: number = 30) {
-  const damConfigStore = useDamConfigStore()
-  const lastChunkSize = ref(chunkSize.value || damConfigStore.damPrvConfig.settings.imageChunkConfig.minSize)
+/**
+ * The size of the next chunk of an upload under the DAM configuration `configName`, bounded by its prv configuration.
+ * A name left out is the inherited one in a component's setup, else `default`.
+ */
+export function useDamUploadChunkSize(apiTimeout: number = 30, configName?: string) {
+  const name = inheritedDamConfigName(configName)
+  const damConfigStore = useDamConfigStoreOf(name)
+  const lastChunkSize = ref(chunkSizes.get(name) || damConfigStore.damPrvConfig.settings.imageChunkConfig.minSize)
 
   const minUploadTimeThreshold = apiTimeout / 5
   const idealUploadTimeThreshold = apiTimeout / 4
@@ -34,7 +41,7 @@ export function useDamUploadChunkSize(apiTimeout: number = 30) {
     const next = returnFromRange(size)
     const changed = next !== lastChunkSize.value
     lastChunkSize.value = next
-    chunkSize.value = next
+    chunkSizes.set(name, next)
 
     return changed
   }

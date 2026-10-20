@@ -4,27 +4,30 @@ import { SYSTEM_CORE_DAM } from '@/domains/dam/api/damConstants'
 import { useApiFetchList } from '@/domains/api/composables/useApiFetchList'
 import { useApiFetchByIds } from '@/domains/api/composables/useApiFetchByIds'
 import { useApiRequest } from '@/domains/api/composables/useApiRequest'
+import { DAM_END_POINT_USER } from '@/domains/dam/api/damEndPoints'
 
-const END_POINT = '/adm/v1/user'
+const END_POINT = DAM_END_POINT_USER
 export const ENTITY = 'user'
 
-export const fetchDamUserListByIds = (client: () => AxiosInstance, ids: number[]) => {
+/** `endPoint`: the address of the users, as a configuration names it (`endPointUser`); `/adm/v1/user` by default. */
+export const fetchDamUserListByIds = (client: () => AxiosInstance, ids: number[], endPoint: string = END_POINT) => {
   const { execute } = useApiFetchByIds<DamUser>({
     client,
     system: SYSTEM_CORE_DAM,
     entity: ENTITY,
-    urlTemplate: END_POINT,
+    urlTemplate: endPoint,
   })
 
   return execute(ids)
 }
 
-export const useFetchDamUserList = (client: () => AxiosInstance) =>
+/** `endPoint`: as of `fetchDamUserListByIds`. */
+export const useFetchDamUserList = (client: () => AxiosInstance, endPoint: string = END_POINT) =>
   useApiFetchList<DamUser>({
     client,
     system: SYSTEM_CORE_DAM,
     entity: ENTITY,
-    urlTemplate: END_POINT,
+    urlTemplate: endPoint,
   })
 
 export const updateDamUser = (client: () => AxiosInstance, id: number, data: DamUserUpdateDto) => {

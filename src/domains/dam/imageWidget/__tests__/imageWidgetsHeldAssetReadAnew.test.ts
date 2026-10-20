@@ -408,10 +408,10 @@ describe.each<[string, Component]>([
       givenAuthorsElsewhere('asset-9', ['author-9'])
       return undefined
     })
-    buttonOfDialog(useCommonAdminCoreDamOptions().editAssetLabel).click()
+    buttonOfDialog(useCommonAdminCoreDamOptions('default').editAssetLabel).click()
     await vi.waitFor(() => expect(useAssetDetailStore(pinia).asset?.id).toBe('asset-9'))
     await flushPromises()
-    const { damClient, endPointAsset } = useCommonAdminCoreDamOptions()
+    const { damClient, endPointAsset } = useCommonAdminCoreDamOptions('default')
     const asset = useAssetDetailStore(pinia).asset!
     asset.authors = ['author-9']
     await updateAssetMetadata(damClient, endPointAsset, asset, extSystem, useAssetDetailStore(pinia).mainFileSingleUse)

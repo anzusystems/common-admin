@@ -40,7 +40,7 @@ vi.mock('@/domains/dam/composables/commonAdminCoreDamOptions', async (importOrig
 describe('page rollback vs filter submit', () => {
   it('a next page failing inside the debounce window does not undo the filter submit page reset', async () => {
     let actions!: ReturnType<typeof useAssetSelectActions>
-    mount(defineComponent({ setup: () => ((actions = useAssetSelectActions()), () => h('div')) }))
+    mount(defineComponent({ setup: () => ((actions = useAssetSelectActions('default')), () => h('div')) }))
     const store = useAssetSelectStore()
     store.setSelectConfig([{ licence: 1, extSystem: 1, licenceName: '', extSystemConfig: {} as any }])
     store.setAssetType(DamAssetType.Image)

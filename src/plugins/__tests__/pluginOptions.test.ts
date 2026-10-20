@@ -45,7 +45,7 @@ describe('plugin options', () => {
 
   it('image and coreDam composables throw until the plugin is configured', () => {
     expect(() => useCommonAdminImageOptions()).toThrow()
-    expect(() => useCommonAdminCoreDamOptions()).toThrow()
+    expect(() => useCommonAdminCoreDamOptions('default')).toThrow()
     expect(() => useCommonAdminCoreDamOptionsGlobal()).toThrow()
   })
 
@@ -69,7 +69,7 @@ describe('plugin options', () => {
       collab: { enabled: true, socketUrl: 'wss://collab', beforeReconnect: () => Promise.resolve(), io: undefined },
     })
     expect(useCommonAdminImageOptions().previewDomain).toBe('https://img')
-    expect(useCommonAdminCoreDamOptions().endPointImage).toBe('/adm/v1/image')
+    expect(useCommonAdminCoreDamOptions('default').endPointImage).toBe('/adm/v1/image')
     expect(useCommonAdminCoreDamOptionsGlobal().apiTimeout).toBe(7)
     expect(useCommonAdminCollabOptions().collabOptions.value.socketUrl).toBe('wss://collab')
   })

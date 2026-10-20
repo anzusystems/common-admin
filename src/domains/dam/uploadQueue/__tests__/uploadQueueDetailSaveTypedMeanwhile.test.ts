@@ -73,7 +73,7 @@ const rowOfTheAsset = async () => {
       },
     })
   )
-  await store.addByCopyToLicence(QUEUE, extSystem, licence, ['asset-1'])
+  await store.addByCopyToLicence(QUEUE, extSystem, licence, ['asset-1'], 'default')
   notify(DamNotificationName.AssetFileCopied, { asset: 'asset-1' })
   const [row] = store.getQueueItems(QUEUE)
   await vi.waitFor(() => expect(row!.canEditMetadata).toBe(true))
@@ -91,7 +91,7 @@ describe('a save in the asset detail of a row of the queue', () => {
       const row = await rowOfTheAsset()
       const detail = dam.fileBecomes('asset-1', AssetFileProcessStatus.Processed, saved)
       const reads = holdReadsOf('asset-1')
-      const written = useUploadQueuesStore().updateFromDetail(detail)
+      const written = useUploadQueuesStore().updateFromDetail(detail, 'default')
       await vi.waitFor(() => expect(reads.waiting).toHaveLength(1))
 
       row.keywords = ['keyword-typed']
@@ -112,12 +112,12 @@ describe('a save in the asset detail of a row of the queue', () => {
   it('gives a row that becomes a row of the asset while it is read what the read finds', async () => {
     const store = useUploadQueuesStore()
     dam.assets.set('asset-1', damAssetWithFile('asset-1', 'file-1', AssetFileProcessStatus.Processed, { licence }))
-    await store.addByCopyToLicence(QUEUE, extSystem, licence, ['asset-2'])
+    await store.addByCopyToLicence(QUEUE, extSystem, licence, ['asset-2'], 'default')
     const [row] = store.getQueueItems(QUEUE)
     expect(row!.status).not.toBe(UploadQueueItemStatus.Uploaded)
     const detail = dam.fileBecomes('asset-1', AssetFileProcessStatus.Processed, saved)
     const reads = holdReadsOf('asset-1')
-    const written = store.updateFromDetail(detail)
+    const written = store.updateFromDetail(detail, 'default')
     await vi.waitFor(() => expect(reads.waiting).toHaveLength(1))
 
     // As the settlement of a duplicate leaves the row.
@@ -132,12 +132,12 @@ describe('a save in the asset detail of a row of the queue', () => {
   // Only a row of the licence of the asset can become its row: the DAM finds a duplicate within the licence of a file.
   it('reads nothing for a row of another licence the server is processing', async () => {
     const store = useUploadQueuesStore()
-    await store.addByCopyToLicence(QUEUE, extSystem, licence + 1, ['asset-2'])
+    await store.addByCopyToLicence(QUEUE, extSystem, licence + 1, ['asset-2'], 'default')
     expect(store.getQueueItems(QUEUE)[0]!.status).toBe(UploadQueueItemStatus.Processing)
     const before = dam.assetReads().length
     const detail = damAssetWithFile('asset-1', 'file-1', AssetFileProcessStatus.Processed, { licence, ...saved })
 
-    await store.updateFromDetail(detail)
+    await store.updateFromDetail(detail, 'default')
 
     expect(dam.assetReads()).toHaveLength(before)
   })
@@ -147,7 +147,7 @@ describe('a save in the asset detail of a row of the queue', () => {
     const before = dam.assetReads().length
     const other = damAssetWithFile('asset-9', 'file-9', AssetFileProcessStatus.Processed)
 
-    await useUploadQueuesStore().updateFromDetail(other)
+    await useUploadQueuesStore().updateFromDetail(other, 'default')
 
     expect(dam.assetReads()).toHaveLength(before)
     expect(row.keywords).toEqual(['keyword-before'])
@@ -175,18 +175,18 @@ describe('two saves in the asset detail of a row of the queue, one after the oth
     const row = await rowOfTheAsset()
     const store = useUploadQueuesStore()
     const reads = holdReadsOf('asset-1')
-    const firstNote = store.noteRowsOfAsset('asset-1')
+    const firstNote = store.noteRowsOfAsset('asset-1', 'default')
     const first = store.updateFromDetail(
       dam.fileBecomes('asset-1', AssetFileProcessStatus.Processed, asSaved('first')),
-      undefined,
+      'default',
       undefined,
       firstNote
     )
     await vi.waitFor(() => expect(reads.waiting).toHaveLength(1))
-    const secondNote = store.noteRowsOfAsset('asset-1')
+    const secondNote = store.noteRowsOfAsset('asset-1', 'default')
     const second = store.updateFromDetail(
       dam.fileBecomes('asset-1', AssetFileProcessStatus.Processed, asSaved('second')),
-      undefined,
+      'default',
       undefined,
       secondNote
     )
@@ -217,9 +217,9 @@ describe('two saves in the asset detail of a row of the queue, one after the oth
     const saveOf = (title: string) =>
       store.updateFromDetail(
         dam.fileBecomes('asset-1', AssetFileProcessStatus.Processed, asSaved(title)),
+        'default',
         undefined,
-        undefined,
-        store.noteRowsOfAsset('asset-1')
+        store.noteRowsOfAsset('asset-1', 'default')
       )
     const first = saveOf('first')
     await vi.waitFor(() => expect(reads.waiting).toHaveLength(1))
@@ -245,11 +245,11 @@ describe('two saves in the asset detail of a row of the queue, one after the oth
   it('end with what the later one saved when it is pressed before the earlier one writes', async () => {
     const row = await rowOfTheAsset()
     const store = useUploadQueuesStore()
-    const firstNote = store.noteRowsOfAsset('asset-1')
-    const secondNote = store.noteRowsOfAsset('asset-1')
+    const firstNote = store.noteRowsOfAsset('asset-1', 'default')
+    const secondNote = store.noteRowsOfAsset('asset-1', 'default')
     await store.updateFromDetail(
       dam.fileBecomes('asset-1', AssetFileProcessStatus.Processed, asSaved('first')),
-      undefined,
+      'default',
       undefined,
       firstNote
     )
@@ -257,7 +257,7 @@ describe('two saves in the asset detail of a row of the queue, one after the oth
 
     await store.updateFromDetail(
       dam.fileBecomes('asset-1', AssetFileProcessStatus.Processed, asSaved('second')),
-      undefined,
+      'default',
       undefined,
       secondNote
     )

@@ -61,9 +61,13 @@ describe.each(consumerProfiles)('the upload dialog under the $name', (profile) =
   /** A file is picked: the widget queues it and opens the dialog of its queue. */
   const pickOne = async () => {
     const store = useUploadQueuesStore()
-    await store.addByFiles(QUEUE, extSystem, licence, [
-      new File([new Uint8Array(3000)], 'photo.jpg', { type: 'image/jpeg' }),
-    ])
+    await store.addByFiles(
+      QUEUE,
+      extSystem,
+      licence,
+      [new File([new Uint8Array(3000)], 'photo.jpg', { type: 'image/jpeg' })],
+      'default'
+    )
     wrapper = mount(UploadQueueDialog, {
       attachTo: document.body,
       props: {

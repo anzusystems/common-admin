@@ -15,6 +15,8 @@ export function useCommonAdminImageOptions(configName: string = 'default') {
   if (
     isUndefined(imageOptions.value) ||
     isUndefined(imageOptions.value.configs) ||
+    // Only what the application has named: `constructor` and the like, which every object has, name no configuration.
+    !Object.hasOwn(imageOptions.value.configs, configName) ||
     isUndefined(imageOptions.value.configs[configName])
   ) {
     throw new Error("Composable can't be used without properly configured common admin.")

@@ -109,7 +109,7 @@ describe.each(consumerProfiles)('a series of failed reads that begins quietly, u
   /** The files, sent whole: their rows wait for the server, `asset-1` and on. */
   const sentFiles = async (...names: string[]) => {
     const store = useUploadQueuesStore()
-    await store.addByFiles(QUEUE, extSystem, licence, names.map(photo))
+    await store.addByFiles(QUEUE, extSystem, licence, names.map(photo), 'default')
     const items = store.getQueueItems(QUEUE)
     await vi.waitFor(() => expect(items.map((item) => item.status)).toEqual(names.map(() => Processing)))
     await clock.settle()

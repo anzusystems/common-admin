@@ -41,9 +41,13 @@ const use = (profile: ConsumerProfile) => {
 /** A file, sent whole. Its row has the asset and the file the start request answered. */
 const uploadedFile = async (profile: ConsumerProfile) => {
   const store = useUploadQueuesStore()
-  await store.addByFiles(QUEUE, profile.extSystem, profile.licence, [
-    new File([new Uint8Array(3000)], 'photo.jpg', { type: 'image/jpeg' }),
-  ])
+  await store.addByFiles(
+    QUEUE,
+    profile.extSystem,
+    profile.licence,
+    [new File([new Uint8Array(3000)], 'photo.jpg', { type: 'image/jpeg' })],
+    'default'
+  )
   const [item] = store.getQueueItems(QUEUE)
   await vi.waitFor(() => expect(item.status).toBe(UploadQueueItemStatus.Processing))
   return item
@@ -51,7 +55,7 @@ const uploadedFile = async (profile: ConsumerProfile) => {
 /** An asset copied to the licence. Its row has the asset, and no file until it is settled. */
 const copiedAsset = async (profile: ConsumerProfile) => {
   const store = useUploadQueuesStore()
-  await store.addByCopyToLicence(QUEUE, profile.extSystem, profile.licence, ['asset-1'])
+  await store.addByCopyToLicence(QUEUE, profile.extSystem, profile.licence, ['asset-1'], 'default')
   return store.getQueueItems(QUEUE)[0]!
 }
 

@@ -248,12 +248,12 @@ describe.each(consumerProfiles)('the widget of several images under the $name', 
   const offersAuthors = () => rows().map((row) => row.findComponent(AuthorRemoteAutocompleteWithCached).exists())
   /** "Replace everywhere" of the mass operations above the widget: every row gets the authors, named as its source. */
   const replaceAuthorsEverywhere = async (authors: DocId[]) => {
-    await useImageMassOperations().replaceEmptyAuthors(authors, true)
+    await useImageMassOperations('default').replaceEmptyAuthors(authors, true)
     await flushPromises()
   }
   /** "Fill empty" of the same: the rows without authors of the DAM, but for one that shows a source filled in. */
   const fillEmptyAuthors = async (authors: DocId[]) => {
-    await useImageMassOperations().replaceEmptyAuthors(authors)
+    await useImageMassOperations('default').replaceEmptyAuthors(authors)
     await flushPromises()
   }
 
@@ -303,7 +303,7 @@ describe.each(consumerProfiles)('the widget of several images under the $name', 
       expect(textsOf(second.element)).toEqual(isCms ? ['image 12'] : ['image 12', 'source 12'])
       expect(second.findComponent(AuthorRemoteAutocompleteWithCached).exists()).toBe(isCms)
       // admin-ugc names the source its own way and has no "show source" switch.
-      const { sourceLabel } = useCommonAdminCoreDamOptions()
+      const { sourceLabel } = useCommonAdminCoreDamOptions('default')
       expect(first.text()).toContain(sourceLabel)
       expect(first.find('.v-switch').exists()).toBe(isCms)
     })
@@ -1695,7 +1695,7 @@ describe.each(consumerProfiles)('the widget of several images under the $name', 
       return sent.map((image) => image.texts.source)
     }
     const clickEditAsset = async (row: number) => {
-      const { editAssetLabel } = useCommonAdminCoreDamOptions()
+      const { editAssetLabel } = useCommonAdminCoreDamOptions('default')
       const buttons = rows()[row].findAll('button')
       await buttons.find((button) => button.text() === editAssetLabel)!.trigger('click')
     }
@@ -1708,7 +1708,7 @@ describe.each(consumerProfiles)('the widget of several images under the $name', 
     }
     /** The form of the detail is not drawn here: this is what its save sends, with the authors the user picks in it. */
     const saveInDetail = async (authors: DocId[]) => {
-      const { damClient, endPointAsset } = useCommonAdminCoreDamOptions()
+      const { damClient, endPointAsset } = useCommonAdminCoreDamOptions('default')
       detail().asset!.authors = authors
       await updateAssetMetadata(damClient, endPointAsset, detail().asset!, extSystem, detail().mainFileSingleUse)
       await flushPromises()
@@ -2060,7 +2060,7 @@ describe.each(consumerProfiles)('the widget of several images under the $name', 
 
         expect(rereadsOf('asset-12')).toHaveLength(1)
         expect(images()[1]).toMatchObject({ damAuthors: ['author-9'], texts: { source: 'source 12' } })
-        expect(detail().savingOf('asset-12')).toBeNull()
+        expect(detail().savingOf('asset-12', 'default')).toBeNull()
         expect(await save()).toBe(true)
         expect(authorsWritten()).toEqual([[['asset-12', ['author-9']]]])
         expect(sourcesSaved()).toEqual(['source 11', 'source 12'])
@@ -2186,7 +2186,7 @@ describe.each(consumerProfiles)('the widget of several images under the $name', 
           await withTwoImages()
           await before()
           // The queue has a row of the asset of that row: a copy to the licence, which waits for the server.
-          await queue().addByCopyToLicence(QUEUE, extSystem, licence, ['asset-12'])
+          await queue().addByCopyToLicence(QUEUE, extSystem, licence, ['asset-12'], 'default')
           useUploadQueueDialog().uploadQueueDialog.value = QUEUE
           await waits.elapse()
           await vi.waitFor(() => expect(statuses()).toEqual([Uploaded]))

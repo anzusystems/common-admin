@@ -8,6 +8,7 @@ import {
 } from '@/domains/dam/uploadQueue/components/uploadQueueBindings'
 import { isNull, isUndefined } from '@/shared/utils/common'
 import { useCachedItem } from '@/domains/cached/composables/useCachedItem'
+import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 import { useI18n } from 'vue-i18n'
 
 const props = withDefaults(
@@ -37,7 +38,7 @@ const props = withDefaults(
 )
 
 const { getCachedKeyword, addToCachedKeywords, fetchCachedKeywords, pinCachedKeyword, unpinCachedKeyword } =
-  useDamCachedKeywords()
+  useDamCachedKeywords(useDamConfigName())
 // The application's queues where it provides them, else the library's store, asked for only when a chip needs it.
 const suggestionsOf = inject(UploadQueueSuggestionsKey, null) ?? libraryUploadQueueSuggestions
 

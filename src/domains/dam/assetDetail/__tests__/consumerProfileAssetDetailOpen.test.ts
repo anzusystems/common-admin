@@ -256,7 +256,7 @@ describe.each(consumerProfiles)('the detail of an asset as its hosts open it, un
       editAsset: () =>
         buttonOf(
           page!.findAllComponents(ImageWidgetMultipleItem)[0]!.element,
-          useCommonAdminCoreDamOptions().editAssetLabel
+          useCommonAdminCoreDamOptions('default').editAssetLabel
         )!,
     },
     {
@@ -265,7 +265,7 @@ describe.each(consumerProfiles)('the detail of an asset as its hosts open it, un
       asset: 'asset-12',
       read: () => `${endPoints.asset}/asset-file/file-12`,
       mount: () => mountWithImageDialog(ImageWidgetInner, { modelValue: 12, skipCurrentUserCheck: !isCms }),
-      editAsset: () => buttonOf(imageDialog()!, useCommonAdminCoreDamOptions().editAssetLabel)!,
+      editAsset: () => buttonOf(imageDialog()!, useCommonAdminCoreDamOptions('default').editAssetLabel)!,
     },
     {
       name: '"edit asset" of the dialog of the image of the image and media widget',
@@ -273,7 +273,7 @@ describe.each(consumerProfiles)('the detail of an asset as its hosts open it, un
       asset: 'asset-12',
       read: () => `${endPoints.asset}/asset-file/file-12`,
       mount: () => mountWithImageDialog(ImageMediaWidgetInner, { image: 12, media: null }),
-      editAsset: () => buttonOf(imageDialog()!, useCommonAdminCoreDamOptions().editAssetLabel)!,
+      editAsset: () => buttonOf(imageDialog()!, useCommonAdminCoreDamOptions('default').editAssetLabel)!,
     },
     {
       // The row of a file uploaded through the gallery: the first file the DAM is sent is `file-1` of `asset-1`.

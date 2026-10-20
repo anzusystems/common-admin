@@ -49,7 +49,7 @@ describe.each(consumerProfiles)('a file the browser cannot send, under the $name
     const store = useUploadQueuesStore()
     dam.hold('POST', dam.routes.chunk)
     dam.reply((request) => (refused(request) ? { status: 503 } : undefined))
-    await store.addByFiles(QUEUE, extSystem, licence, photos('a', 'b', 'c'))
+    await store.addByFiles(QUEUE, extSystem, licence, photos('a', 'b', 'c'), 'default')
     const [first] = store.getQueueItems(QUEUE)
     await vi.waitFor(() => expect(first.status).toBe(Failed))
     await vi.waitFor(() => expect(starts()).toHaveLength(3))
@@ -94,7 +94,7 @@ describe.each(consumerProfiles)('a file the browser cannot send, under the $name
           ? { status: 201, data }
           : undefined
       )
-      await store.addByFiles(QUEUE, extSystem, licence, photos('a', 'b', 'c'))
+      await store.addByFiles(QUEUE, extSystem, licence, photos('a', 'b', 'c'), 'default')
       const [first] = store.getQueueItems(QUEUE)
       await vi.waitFor(() => expect(first.status).toBe(Failed))
       await vi.waitFor(() => expect(held.waiting).toHaveLength(2))
@@ -135,7 +135,7 @@ describe.each(consumerProfiles)('a file the browser cannot send, under the $name
     dam.hold('POST', dam.routes.chunk)
     const empty = new File([], 'empty.jpg', { type: 'image/jpeg' })
 
-    await store.addByFiles(QUEUE, extSystem, licence, [empty, ...photos('b', 'c', 'd')])
+    await store.addByFiles(QUEUE, extSystem, licence, [empty, ...photos('b', 'c', 'd')], 'default')
     const [first] = store.getQueueItems(QUEUE)
     await vi.waitFor(() => expect(first.status).toBe(Failed))
     await vi.waitFor(() => expect(starts()).toHaveLength(2))

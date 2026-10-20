@@ -152,7 +152,7 @@ describe('a duplicate of an asset of a row, applied by the upload dialog of the 
       'their names, where its source is what "fill empty" wrote',
       '',
       async () => {
-        await useImageMassOperations().replaceEmptyAuthors(['author-5'])
+        await useImageMassOperations('default').replaceEmptyAuthors(['author-5'])
         await flushPromises()
       },
       'Name of author-3',

@@ -64,7 +64,7 @@ const SOON = { timeout: 5000 }
 /** One file, sent whole: the row waits for the server to process it. */
 const uploadOne = async () => {
   const store = useUploadQueuesStore()
-  await store.addByFiles(QUEUE, extSystem, licence, [photo('photo.jpg')])
+  await store.addByFiles(QUEUE, extSystem, licence, [photo('photo.jpg')], 'default')
   const [item] = store.getQueueItems(QUEUE)
   await vi.waitFor(() => expect(item.status).toBe(UploadQueueItemStatus.Processing))
   return { store, item }
@@ -162,7 +162,7 @@ describe('a notification about the asset of a row', () => {
 
   it('asset_file_copied: a copy to the licence is uploaded, with its file, its metadata and its form', async () => {
     const store = useUploadQueuesStore()
-    await store.addByCopyToLicence(QUEUE, extSystem, licence, ['asset-copy'])
+    await store.addByCopyToLicence(QUEUE, extSystem, licence, ['asset-copy'], 'default')
     const [item] = store.getQueueItems(QUEUE)
     dam.assets.set(
       'asset-copy',
@@ -185,7 +185,7 @@ describe('a notification about the asset of a row', () => {
   // the read of the asset says, not what the notification is taken to mean.
   it('asset_file_copied that names another file than the main one: the row is settled by what its asset says', async () => {
     const store = useUploadQueuesStore()
-    await store.addByCopyToLicence(QUEUE, extSystem, licence, ['asset-copy'])
+    await store.addByCopyToLicence(QUEUE, extSystem, licence, ['asset-copy'], 'default')
     const [item] = store.getQueueItems(QUEUE)
     dam.fileBecomes('asset-copy', AssetFileProcessStatus.Failed, fromTheServer, {
       failReason: AssetFileFailReason.InvalidMimeType,
@@ -202,7 +202,7 @@ describe('a notification about the asset of a row', () => {
 
   it('settles the row of that asset and leaves the other rows of the queue alone', async () => {
     const store = useUploadQueuesStore()
-    await store.addByFiles(QUEUE, extSystem, licence, [photo('a.jpg'), photo('b.jpg')])
+    await store.addByFiles(QUEUE, extSystem, licence, [photo('a.jpg'), photo('b.jpg')], 'default')
     const [first, second] = store.getQueueItems(QUEUE)
     await vi.waitFor(() =>
       expect([first.status, second.status]).toEqual([
@@ -223,8 +223,8 @@ describe('a notification about the asset of a row', () => {
   // The same asset copied in two widgets: each has its own queue, and both rows are settled.
   it('settles the rows of that asset in every queue', async () => {
     const store = useUploadQueuesStore()
-    await store.addByCopyToLicence(QUEUE, extSystem, licence, ['asset-copy'])
-    await store.addByCopyToLicence(OTHER_QUEUE, extSystem, licence, ['asset-copy'])
+    await store.addByCopyToLicence(QUEUE, extSystem, licence, ['asset-copy'], 'default')
+    await store.addByCopyToLicence(OTHER_QUEUE, extSystem, licence, ['asset-copy'], 'default')
     const [here] = store.getQueueItems(QUEUE)
     const [there] = store.getQueueItems(OTHER_QUEUE)
     dam.assets.set(
@@ -246,7 +246,7 @@ describe('a notification about the asset of a row', () => {
   it('still reaches the queue once the component that added its first row is gone', async () => {
     const store = useUploadQueuesStore()
     const component = effectScope()
-    await component.run(() => store.addByCopyToLicence(QUEUE, extSystem, licence, ['asset-copy']))
+    await component.run(() => store.addByCopyToLicence(QUEUE, extSystem, licence, ['asset-copy'], 'default'))
     component.stop()
     const [item] = store.getQueueItems(QUEUE)
     dam.assets.set(
@@ -310,7 +310,7 @@ describe('a notification that comes while the row waits to be asked about', () =
   it('asset_metadata_processed while the file is sent: the form opens, and the file is still settled by a read', async () => {
     const store = useUploadQueuesStore()
     const chunks = dam.hold('POST', dam.routes.chunk)
-    await store.addByFiles(QUEUE, extSystem, licence, [photo('photo.jpg')])
+    await store.addByFiles(QUEUE, extSystem, licence, [photo('photo.jpg')], 'default')
     const [item] = store.getQueueItems(QUEUE)
     await vi.waitFor(() => expect(chunks.waiting).toHaveLength(1))
     dam.fileBecomes('asset-1', AssetFileProcessStatus.Uploading, fromTheServer)
@@ -469,7 +469,7 @@ describe('the failed notification', () => {
     const chunks = dam.hold('POST', dam.routes.chunk)
     const statuses = () => store.getQueueItems(QUEUE).map((item) => item.status)
     const onTheirWay = () => chunks.waiting.map((held) => held.request.url).sort()
-    await store.addByFiles(QUEUE, extSystem, licence, [photo('a.jpg'), photo('b.jpg'), photo('c.jpg')])
+    await store.addByFiles(QUEUE, extSystem, licence, [photo('a.jpg'), photo('b.jpg'), photo('c.jpg')], 'default')
     const [first, second, third] = store.getQueueItems(QUEUE)
     const chunkOf = (item: typeof first) => `/adm/v1/image/${item.fileId}/chunk`
     /** The chunks of the file of a row that went out, each by where it begins and how long it is. */

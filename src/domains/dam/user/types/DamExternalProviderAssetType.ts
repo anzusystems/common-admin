@@ -1,9 +1,10 @@
 import { ref } from 'vue'
 import type { ValueObjectOption } from '@/shared/types/ValueObject'
-import { useDamConfigStore } from '@/domains/dam/config/store/damConfigStore'
+import { useDamConfigStoreOf } from '@/domains/dam/config/store/damConfigStore'
 
-export function useDamExternalProviderAssetType() {
-  const damConfigStore = useDamConfigStore()
+/** As `useDamDistributionServiceType`, the external providers of the assets. */
+export function useDamExternalProviderAssetType(configName: string) {
+  const damConfigStore = useDamConfigStoreOf(configName)
   const all = Object.entries(damConfigStore.damPrvConfig.assetExternalProviders).map(
     ([providerName, value]): ValueObjectOption<string> => {
       return {

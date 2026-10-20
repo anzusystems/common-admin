@@ -89,7 +89,8 @@ const alreadyQueued = (count: number) =>
     QUEUE,
     extSystem,
     licence,
-    Array.from({ length: count }, (_, index) => `asset-queued-${index + 1}`)
+    Array.from({ length: count }, (_, index) => `asset-queued-${index + 1}`),
+    'default'
   )
 
 const carrying = (files: File[]) => {

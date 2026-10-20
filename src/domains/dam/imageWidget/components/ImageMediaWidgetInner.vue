@@ -354,7 +354,7 @@ const actionEditMeta = async () => {
     metadataDialogLoading.value = true
     metadataDialog.value = true
     cancelSaveWait = othersSaves.cancel
-    const over = await withinWaitLimit(othersSaves.over)
+    const over = await withinWaitLimit(othersSaves.over, 1, damConfigName)
     cancelSaveWait = null
     if (!answerTakenFor(thisOpening)) return
     loadingInDialog = null
@@ -409,7 +409,7 @@ const showReadInForm = async () => {
     imageMediaWidgetStore.setDetail(null)
     metadataDialogLoading.value = true
     cancelSaveWait = othersSaves.cancel
-    const over = await withinWaitLimit(othersSaves.over)
+    const over = await withinWaitLimit(othersSaves.over, 1, damConfigName)
     cancelSaveWait = null
     if (!answerTakenFor(thisOpening)) return
     loadingInDialog = null
@@ -430,7 +430,7 @@ const actionLibrary = () => {
   assetSelectDialog.value = true
 }
 
-const { cachedExtSystemId } = useExtSystemIdForCached()
+const { cachedExtSystemId } = useExtSystemIdForCached(damConfigName)
 
 // this ref is updating only when the lock was really success or failure using sockets, needed for drop files
 const collabFieldLockReallyLocked = ref(false)
@@ -566,7 +566,7 @@ const onCopyToLicence = (data: DamImageCopyToLicenceResponse) => {
       [data[0].targetAsset],
       damConfigName
     )
-    uploadQueuesStore.queueItemDuplicate(data[0].targetAsset, data[0].targetMainFile, DamAssetType.Image)
+    uploadQueuesStore.queueItemDuplicate(data[0].targetAsset, data[0].targetMainFile, DamAssetType.Image, damConfigName)
   } else {
     showErrorT('common.damImage.queueItem.errorUnableToCopyToLicence')
     return
@@ -705,7 +705,7 @@ watch(
 )
 
 const assetSelectStore = useAssetSelectStore()
-const { getDamConfigExtSystem } = useDamConfigState()
+const { getDamConfigExtSystem } = useDamConfigState(undefined, damConfigName)
 
 // The picker closes itself as it answers, and the widget's next dialog opens only once the asset is fetched or
 // copied: till then the pick counts as an open dialog, or the close watcher gave the lock up with the old value. Each
@@ -744,7 +744,7 @@ const pickAsset = async (data: AssetSelectReturnData, thisPick: symbol) => {
   metadataDialog.value = true
   let mediaDataFromDam: DamMediaFromDam | null = null
   try {
-    mediaDataFromDam = await fetchAssetAsCmsMedia(damClient, selectedAsset.id)
+    mediaDataFromDam = await fetchAssetAsCmsMedia(damClient, selectedAsset.id, endPointCmsAsset)
   } catch (e) {
     showErrorsDefault(e)
   }
@@ -898,6 +898,7 @@ const {
   endPointAsset,
   endPointImage,
   endPointAuthor,
+  endPointCmsAsset,
   copyToLicenceEnabled,
   showSourceEnabled,
   sourceLabel,
@@ -907,7 +908,7 @@ const {
   customAssetSelectMetadataToImageMap,
 } = useCommonAdminCoreDamOptions(damConfigName)
 
-const { getExtSystemByLicence } = useDamConfigState(damClient)
+const { getExtSystemByLicence } = useDamConfigState(damClient, damConfigName)
 
 const onEditAsset = async (assetFileId: DocId) => {
   let extSystem: IntegerId | null = null
@@ -919,8 +920,8 @@ const onEditAsset = async (assetFileId: DocId) => {
         extSystem = await getExtSystemByLicence(assetRes.licence)
         return assetRes
       },
-      // Only for the asset the detail shows: an answer it no longer waits for must not change the ext system the page
-      // asks for names under.
+      // Only for the asset the detail shows: an answer it no longer waits for must not change the ext system its
+      // configuration asks for names under.
       () => {
         if (extSystem) cachedExtSystemId.value = extSystem
       }
@@ -1026,7 +1027,7 @@ const tryImageConfirm = async () => {
           await updateAssetAuthors(damClient, endPointAsset, authorsAsset)
         } catch (e) {
           // The authors refused by validation are named as the forms name them. The image is not saved.
-          showMetadataSaveError(e, assetSelectStore.requireSelectedSelectConfig().extSystem)
+          showMetadataSaveError(e, assetSelectStore.requireSelectedSelectConfig().extSystem, damConfigName)
           return
         }
         // The DAM has the authors, and the image is not saved.

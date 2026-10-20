@@ -115,7 +115,7 @@ describe('the dialog of one uploaded file', () => {
   const row = () => rowsOfQueue()[0]!
   /** A file is picked, and the server has processed it: the row is done, as `asset-1`. */
   const processed = async () => {
-    await queue().addByFiles(QUEUE, extSystem, licence, [photo()])
+    await queue().addByFiles(QUEUE, extSystem, licence, [photo()], 'default')
     await mountDialog()
     await vi.waitFor(() => expect(row().status).toBe(Processing))
     dam.fileBecomes('asset-1', AssetFileProcessStatus.Processed, metadata({ description: 'from the server' }))
@@ -124,7 +124,7 @@ describe('the dialog of one uploaded file', () => {
   }
   /** The file of the row turns out to be a duplicate of `file-original`: the row becomes the original's. */
   const becomesTheOriginal = async () => {
-    await queue().queueItemDuplicate('asset-1', 'file-original', DamAssetType.Image)
+    await queue().queueItemDuplicate('asset-1', 'file-original', DamAssetType.Image, 'default')
     await vi.waitFor(() => expect(row().assetId).toBe('asset-original'))
   }
 
@@ -178,7 +178,7 @@ describe('the dialog of one uploaded file', () => {
     await vi.waitFor(() => expect(answerTheDialog).toBeDefined())
 
     queue().stopUpload(QUEUE)
-    await queue().addByFiles(QUEUE, extSystem, licence, [photo('next.jpg')])
+    await queue().addByFiles(QUEUE, extSystem, licence, [photo('next.jpg')], 'default')
     await flushPromises()
     expect(rowsOfQueue()).toHaveLength(1)
     answerTheDialog!({ status: 500 })
@@ -200,7 +200,7 @@ describe('"save and apply" of the queue dialog', () => {
 
   // With the notifications a file is uploaded before its metadata comes, and the dialog asks about such a row first.
   it('saves nothing and hands nothing over once the dialog is closed while it reads a row uploaded without its form', async () => {
-    await queue().addByFiles(QUEUE, extSystem, licence, [photo('a.jpg'), photo('b.jpg')])
+    await queue().addByFiles(QUEUE, extSystem, licence, [photo('a.jpg'), photo('b.jpg')], 'default')
     wrapper = mount(UploadQueueDialog, {
       attachTo: document.body,
       props: {

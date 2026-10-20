@@ -135,7 +135,7 @@ const onSave = async () => {
     await bulkUpdateAssetsMetadata(damClient, endPointAsset, items.value, mainFileSingleUse.value)
     showRecordWas('updated')
   } catch (error) {
-    showMetadataSaveError(error, props.extSystem)
+    showMetadataSaveError(error, props.extSystem, damConfigName)
   } finally {
     saving.value = null
   }
@@ -152,7 +152,7 @@ const onSaveAndApply = async () => {
         throw new Error('Fatal error updating asset metadata')
       }
     } catch (error) {
-      showMetadataSaveError(error, props.extSystem)
+      showMetadataSaveError(error, props.extSystem, damConfigName)
       return
     }
     showRecordWas('updated')

@@ -1,6 +1,16 @@
 import type { CommonAdminCoreDamConfig, ImageFieldValidationConfig } from '@/AnzuSystemsCommonAdmin'
 import type { AclValue } from '@/domains/auth/types/Permission'
 import { coreDamOptions as commonAdminCoreDamOptions } from '@/plugins/pluginOptions'
+import { SYSTEM_DAM } from '@/domains/dam/api/damConstants'
+import {
+  DAM_END_POINT_ASSET_CUSTOM_FORM,
+  DAM_END_POINT_ASSET_LICENCE,
+  DAM_END_POINT_CMS_ASSET,
+  DAM_END_POINT_CONFIGURATION,
+  DAM_END_POINT_PODCAST,
+  DAM_END_POINT_PUB_CONFIGURATION,
+  DAM_END_POINT_USER,
+} from '@/domains/dam/api/damEndPoints'
 import { isString, isUndefined } from '@/shared/utils/common'
 import { commonT } from '@/plugins/i18n'
 
@@ -34,7 +44,28 @@ const resolveImageRotateAcl = (config: CommonAdminCoreDamConfig): AclValue | nul
   return endPointImage === DEFAULT_END_POINT_IMAGE ? 'dam_image_update' : null
 }
 
-export function useCommonAdminCoreDamOptions(configName: string = 'default') {
+/**
+ * The addresses with a key of the configuration `configName` beyond its five, each its default where it does not set
+ * it. Throws for nothing: without a configured plugin, or without that configuration, all are the defaults, for the
+ * loaders of the DAM configuration an application calls at its start (admin-dam's `useDamConfigState(damClient)`).
+ */
+export function damEndPointsOf(configName: string) {
+  const configs = commonAdminCoreDamOptions.value?.configs
+  const config = configs && Object.hasOwn(configs, configName) ? configs[configName] : undefined
+
+  return {
+    endPointConfiguration: config?.endPointConfiguration || DAM_END_POINT_CONFIGURATION,
+    endPointPubConfiguration: config?.endPointPubConfiguration || DAM_END_POINT_PUB_CONFIGURATION,
+    endPointAssetLicence: config?.endPointAssetLicence || DAM_END_POINT_ASSET_LICENCE,
+    endPointAssetCustomForm: config?.endPointAssetCustomForm || DAM_END_POINT_ASSET_CUSTOM_FORM,
+    endPointUser: config?.endPointUser || DAM_END_POINT_USER,
+    endPointPodcast: config?.endPointPodcast || DAM_END_POINT_PODCAST,
+    endPointCmsAsset: config?.endPointCmsAsset || DAM_END_POINT_CMS_ASSET,
+  }
+}
+
+/** The options of the DAM configuration `configName`. Internal: the name is required, a call cannot fall to `default`. */
+export function useCommonAdminCoreDamOptions(configName: string) {
   if (
     isUndefined(commonAdminCoreDamOptions.value) ||
     isUndefined(commonAdminCoreDamOptions.value.configs) ||
@@ -53,6 +84,13 @@ export function useCommonAdminCoreDamOptions(configName: string = 'default') {
     endPointRoi: commonAdminCoreDamOptions.value.configs[configName].endPointRoi || DEFAULT_END_POINT_ROI,
     endPointAuthor: commonAdminCoreDamOptions.value.configs[configName].endPointAuthor || DEFAULT_END_POINT_AUTHOR,
     endPointKeyword: commonAdminCoreDamOptions.value.configs[configName].endPointKeyword || DEFAULT_END_POINT_KEYWORD,
+    ...damEndPointsOf(configName),
+    // The system whose user decides the licences; `false`: every licence.
+    currentUser: commonAdminCoreDamOptions.value.configs[configName].currentUser ?? SYSTEM_DAM,
+    adminDomain:
+      commonAdminCoreDamOptions.value.configs[configName].adminDomain ?? commonAdminCoreDamOptions.value.adminDomain,
+    apiTimeout:
+      commonAdminCoreDamOptions.value.configs[configName].apiTimeout ?? commonAdminCoreDamOptions.value.apiTimeout,
     roiUpdateAcl: resolveRoiUpdateAcl(commonAdminCoreDamOptions.value.configs[configName]),
     keywordCreateAcl: commonAdminCoreDamOptions.value.configs[configName].keywordCreateAcl,
     authorCreateAcl: commonAdminCoreDamOptions.value.configs[configName].authorCreateAcl,
@@ -102,6 +140,37 @@ export const normalizeDamNotificationOptions = (
   const on = raw?.enabled === true || (isString(raw?.enabled) && raw.enabled.trim().toLowerCase() === 'true')
 
   return { enabled: on && webSocketUrl.length > 0, webSocketUrl }
+}
+
+/** One notification socket of the page, and the DAM configurations it is the socket of. */
+export interface DamNotificationSocketOptions {
+  options: DamNotificationOptions
+  configNames: string[]
+}
+
+/**
+ * The notification sockets of the configurations: one for each distinct service, shared by the configurations that
+ * name it. `default`'s first, also while it is off: its own `notification`, else the root one. Another configuration
+ * has one only with a `notification` of its own that is on.
+ */
+export function damNotificationSockets(): DamNotificationSocketOptions[] {
+  const { notification } = useCommonAdminCoreDamOptionsGlobal()
+  const configs = commonAdminCoreDamOptions.value?.configs ?? {}
+  const ofDefault = isUndefined(configs.default?.notification)
+    ? notification
+    : normalizeDamNotificationOptions(configs.default.notification)
+  const sockets: DamNotificationSocketOptions[] = [{ options: ofDefault, configNames: ['default'] }]
+  for (const [name, config] of Object.entries(configs)) {
+    if (name === 'default' || isUndefined(config?.notification)) continue
+    const options = normalizeDamNotificationOptions(config.notification)
+    if (!options.enabled) continue
+    const shared = sockets.find(
+      (socket) => socket.options.enabled && socket.options.webSocketUrl === options.webSocketUrl
+    )
+    if (shared) shared.configNames.push(name)
+    else sockets.push({ options, configNames: [name] })
+  }
+  return sockets
 }
 
 export function useCommonAdminCoreDamOptionsGlobal() {

@@ -9,6 +9,7 @@ import KeywordRemoteAutocompleteWithCached from '@/domains/dam/keyword/component
 import type { IntegerId } from '@/shared/types/common'
 import type { CustomDataValue } from '@/domains/customDataForm/types/CustomDataForm'
 import { useDamConfigState } from '@/domains/dam/config/composables/damConfigState'
+import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 import type { UploadQueueKey } from '@/domains/dam/types/UploadQueue'
 import {
   type UploadQueueMassOperationsBinding,
@@ -21,9 +22,12 @@ const props = withDefaults(
     extSystem: IntegerId
     /** What the mass operations ask of their host; without it the library's store. */
     operations?: UploadQueueMassOperationsBinding
+    /** The DAM configuration whose rules the operations follow; inherited when not given. */
+    configName?: string
   }>(),
   {
     operations: undefined,
+    configName: undefined,
   }
 )
 
@@ -123,7 +127,8 @@ const assetTypes = computed(() => {
   return operations.assetTypes()
 })
 
-const { getDamConfigExtSystem } = useDamConfigState()
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { getDamConfigExtSystem } = useDamConfigState(undefined, useDamConfigName(props.configName))
 
 const keywordEnabled = computed(() => {
   const config = getDamConfigExtSystem(props.extSystem)

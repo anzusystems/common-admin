@@ -6,8 +6,12 @@ import type { DamDistributionStatusType } from '@/domains/dam/types/DamConfig'
 
 export const damNotificationsEventBusKey: EventBusKey<DamNotification> = Symbol('anzu:damNotificationsEventBusKey')
 
+/**
+ * The notifications of every socket of the page. The payload of an event is the names of the DAM configurations of the
+ * socket it came through; an event without it is taken for one of `default`'s.
+ */
 export function useDamNotificationsEventBus() {
-  return useEventBus<DamNotification>(damNotificationsEventBusKey)
+  return useEventBus<DamNotification, string[]>(damNotificationsEventBusKey)
 }
 
 export const DamNotificationName = {

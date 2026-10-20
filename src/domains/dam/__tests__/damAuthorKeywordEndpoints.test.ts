@@ -4,6 +4,9 @@ import { createPinia, type Pinia, setActivePinia } from 'pinia'
 import { type Component, defineComponent, h, shallowRef } from 'vue'
 import { usePagination } from '@/domains/api/composables/pagination'
 import { cmsConfiguration, installConsumerProfile } from '@/domains/dam/__tests__/support/consumerProfiles'
+import { seedDamConfigOf } from '@/domains/dam/__tests__/support/namedDamConfig'
+import { useExtSystemIdForCached } from '@/domains/dam/composables/extSystemIdForCached'
+import { useDamConfigStoreOf } from '@/domains/dam/config/store/damConfigStore'
 import { type DamSocket, stubDamSocket } from '@/domains/dam/__tests__/support/damSocket'
 import { createFakeDam, damAsset, type FakeDam } from '@/domains/dam/__tests__/support/fakeDam'
 import { holdLongWaits, type LongWaits } from '@/domains/dam/__tests__/support/longWaits'
@@ -79,7 +82,14 @@ const configure = (own: OwnAddresses = {}, named?: string) => {
     ...coreDam,
     configs: named ? { default: usual, [named]: { ...usual, ...own } } : { default: { ...usual, ...own } },
   })
-  if (named) initCommonAdminImageOptions({ ...image, configs: { ...image.configs, [named]: image.configs.default! } })
+  if (named) {
+    initCommonAdminImageOptions({ ...image, configs: { ...image.configs, [named]: image.configs.default! } })
+    // Its DAM has the configuration of the default one: filled before the components mount, as an application does.
+    seedDamConfigOf(named)
+    // The ext system its caches of names ask under, as the root of a widget under it writes it (the profile writes
+    // that of `default`).
+    useExtSystemIdForCached(named).cachedExtSystemId.value = cmsConfiguration.extSystem
+  }
   answerAuthorsAndKeywords()
 }
 
@@ -128,7 +138,7 @@ describe('the addresses of authors and keywords in a DAM configuration', () => {
   it('are /adm/v1/author and /adm/v1/keyword when the application names none', () => {
     configure()
 
-    expect(useCommonAdminCoreDamOptions()).toMatchObject({
+    expect(useCommonAdminCoreDamOptions('default')).toMatchObject({
       endPointAuthor: '/adm/v1/author',
       endPointKeyword: '/adm/v1/keyword',
     })
@@ -140,7 +150,7 @@ describe('the addresses of authors and keywords in a DAM configuration', () => {
   ])("are the application's where it names only %s, and the usual one for the other", (_name, own, author, keyword) => {
     configure(own)
 
-    expect(useCommonAdminCoreDamOptions()).toMatchObject({ endPointAuthor: author, endPointKeyword: keyword })
+    expect(useCommonAdminCoreDamOptions('default')).toMatchObject({ endPointAuthor: author, endPointKeyword: keyword })
   })
 })
 
@@ -154,8 +164,8 @@ describe.each([
   beforeEach(() => configure(own))
 
   it('the inputs that offer authors and keywords: what they find by a text, and what they show by ids', async () => {
-    const authors = useAuthorSelectActions(extSystem)
-    const keywords = useKeywordSelectActions(extSystem)
+    const authors = useAuthorSelectActions(extSystem, 'default')
+    const keywords = useKeywordSelectActions(extSystem, 'default')
 
     await authors.fetchItems(...listArguments())
     await authors.fetchItemsMinimal(...listArguments())
@@ -177,7 +187,7 @@ describe.each([
   })
 
   it('the mass operation of the image widget that fills the authors', async () => {
-    await useImageMassOperations().replaceEmptyAuthors(['author-1'])
+    await useImageMassOperations('default').replaceEmptyAuthors(['author-1'])
 
     expect(asked()).toEqual([`GET ${author}/ext-system/${extSystem}/search`])
   })
@@ -202,15 +212,16 @@ describe.each([
       dam.client,
       extSystem,
       licence,
-      useCommonAdminCoreDamOptions().endPointAuthor
+      useCommonAdminCoreDamOptions('default').endPointAuthor
     )
 
     expect(asked()).toEqual([`GET ${author}/ext-system/${extSystem}/search`])
   })
 
-  // One cache of names for the page, which no component hands a configuration: it asks as the default one says.
+  // The caches of the names of `default`, which a call outside a component's setup with no name gets: they ask as the
+  // default configuration says. Those of another configuration: `damNamedConfigurationCaches.test.ts`.
   it('the caches of the names of authors and keywords', async () => {
-    // The caches are the page's: what an earlier case has cached is not asked for again.
+    // The caches live as long as the page: what an earlier case has cached is not asked for again.
     const suffix = name.replaceAll(' ', '-')
     const { addToCachedAuthors, fetchCachedAuthors } = useDamCachedAuthors()
     const { addToCachedKeywords, fetchCachedKeywords } = useDamCachedKeywords()
@@ -258,8 +269,16 @@ describe('the components that ask for authors and keywords, in a configuration t
       },
     })
 
+    // Its DAM has the licence under another ext system than that of `default`: the names of the authors of its assets
+    // are looked up under that one. A widget that read the store of `default` would look them up under ext system 1.
+    const NAMED_EXT_SYSTEM = 7
+    const namedLookup = `GET ${OWN_AUTHOR}/ext-system/${NAMED_EXT_SYSTEM}/search`
+
     beforeEach(() => {
       configure({ endPointAuthor: OWN_AUTHOR, endPointKeyword: OWN_KEYWORD }, 'own')
+      const ownStore = useDamConfigStoreOf('own')
+      ownStore.damConfigLicenceExtSystem.set(licence, { name: '', extSystem: NAMED_EXT_SYSTEM })
+      ownStore.damConfigExtSystem.set(NAMED_EXT_SYSTEM, ownStore.damConfigExtSystem.get(extSystem)!)
       useAssetSelectStore().setSelectConfig([{ licence, extSystem, licenceName: '', extSystemConfig: {} as never }])
       dam.assets.set('asset-with', damAsset('asset-with', { licence, authors: ['author-1'] }))
       dam.assets.set('asset-without', damAsset('asset-without', { licence }))
@@ -333,19 +352,19 @@ describe('the components that ask for authors and keywords, in a configuration t
         mountWidget(widget, props)
 
         await pick('asset-with')
-        expect(askedForNames()).toEqual([lookup])
+        expect(askedForNames()).toEqual([namedLookup])
 
         // An asset without authors: the dialog of the image offers to add them to the asset, and its save looks
         // their names up for the source of the image.
         await pick('asset-without')
-        expect(askedForNames()).toEqual([lookup])
+        expect(askedForNames()).toEqual([namedLookup])
         // As the dialog of the image hands the widget what the user picks in it.
         wrapper!.findComponent(MetadataDialog).vm.$emit('update:damAuthors', ['author-2'])
         wrapper!.findComponent(MetadataDialog).vm.$emit('confirm')
         await flushPromises()
         await flushPromises()
 
-        expect(askedForNames()).toEqual([lookup, lookup])
+        expect(askedForNames()).toEqual([namedLookup, namedLookup])
         expect(dam.requests.filter((request) => NAMES.test(request.url)).map((request) => request.url)).toEqual([
           expect.stringContaining('author-1'),
           expect.stringContaining('author-2'),
@@ -369,15 +388,15 @@ describe('the components that ask for authors and keywords, in a configuration t
       mountWidget(ImageWidgetMultipleInner, { modelValue: [] })
 
       await pick('asset-with')
-      expect(askedForNames()).toEqual([lookup])
+      expect(askedForNames()).toEqual([namedLookup])
 
       await pick('asset-without')
-      expect(askedForNames()).toEqual([lookup])
+      expect(askedForNames()).toEqual([namedLookup])
       const added = useImageStore().images.find((image) => image.assetId === 'asset-without')!
       added.damAuthors = ['author-2']
       await (wrapper!.vm as unknown as { saveImages: () => Promise<boolean> }).saveImages()
 
-      expect(askedForNames()).toEqual([lookup, lookup])
+      expect(askedForNames()).toEqual([namedLookup, namedLookup])
       expect(dam.requests.filter((request) => NAMES.test(request.url))[1]!.url).toContain('author-2')
     })
   })
@@ -449,9 +468,13 @@ describe('the components that ask for authors and keywords, in a configuration t
     /** A file is picked and sent, and a read finds it processed, with an author. */
     const uploaded = async (mountDialog: () => VueWrapper) => {
       const store = useUploadQueuesStore()
-      await store.addByFiles(QUEUE, extSystem, licence, [
-        new File([new Uint8Array(3000)], 'photo.jpg', { type: 'image/jpeg' }),
-      ])
+      await store.addByFiles(
+        QUEUE,
+        extSystem,
+        licence,
+        [new File([new Uint8Array(3000)], 'photo.jpg', { type: 'image/jpeg' })],
+        'default'
+      )
       wrapper = mountDialog()
       const [item] = store.getQueueItems(QUEUE)
       await vi.waitFor(() => expect(item.status).toBe(UploadQueueItemStatus.Processing))

@@ -120,7 +120,9 @@ const searchChange = (newValue: string) => {
   if (newValue.length > 0) addNewAuthorText.value = removeLastComma(newValue)
 }
 
-const { addManualToCachedAuthors } = useDamCachedAuthors()
+const { addManualToCachedAuthors } = useDamCachedAuthors(damConfigName)
+// The cache of its configuration, which the inner input takes once.
+const useCachedOfName = () => useDamCachedAuthorsForRemoteAutocomplete(damConfigName)
 
 const afterCreate = (author: DamAuthor) => {
   addManualToCachedAuthors(author)
@@ -204,7 +206,7 @@ const showAdd = computed(() => {
       v-model:search="search"
       v-model:loading-local="loadingLocal"
       v-model:fetched-items-minimal="fetchedItemsMinimal"
-      :use-cached="useDamCachedAuthorsForRemoteAutocomplete"
+      :use-cached="useCachedOfName"
       :v="v$"
       :required="requiredComputed"
       :label="label"

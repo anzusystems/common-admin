@@ -95,8 +95,9 @@ export function useUpload(
 ): UploadRun & { stopSpeedCheck(): void } {
   // Made only when none is given: it reads the options of the plugin, which a side with a set of its own need not
   // have.
-  const set = preset ?? libraryUploadPreset()
-  const { requests, messages, apiTimeout, loadHash, emptyFile } = set[uploadPresetMembers]
+  // Without a preset, as `useUpload` is public: the library's, under `default`.
+  const set = preset ?? libraryUploadPreset('default')
+  const { requests, messages, apiTimeout, loadHash, emptyFile, configName } = set[uploadPresetMembers]
   const fileSize = ref(0)
 
   const meter = useUploadMeter(uploadCallback)
@@ -105,7 +106,7 @@ export function useUpload(
   let finishAttempted = false
   // Set by `stop()`; the queue may stop a run by the status of its row instead, and every check reads both.
   let stopRequested = false
-  const { updateChunkSize, lastChunkSize } = useDamUploadChunkSize(apiTimeout ?? undefined)
+  const { updateChunkSize, lastChunkSize } = useDamUploadChunkSize(apiTimeout ?? undefined, configName)
 
   // A call, not an inline comparison: TypeScript keeps a status narrowed across the awaits in between.
   const stopped = () => stopRequested || queueItem.status === UploadQueueItemStatus.Stop

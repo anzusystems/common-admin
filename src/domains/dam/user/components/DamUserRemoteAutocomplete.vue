@@ -20,7 +20,7 @@ const props = withDefaults(
     v?: AFormFieldValidation | null
     /** The DAM config of the plugin options whose client lists the users. */
     configName?: string
-    /** Lists the users through this client instead of the configured one. */
+    /** Lists the users through this client instead of the configured one, at `/adm/v1/user` (not `endPointUser`). */
     client?: (() => AxiosInstance) | undefined
   }>(),
   {
@@ -38,8 +38,12 @@ const modelValue = defineModel<IntegerId | IntegerId[] | null>({ required: true 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const damConfigName = useDamConfigName(props.configName)
 
-const client = props.client ?? useCommonAdminCoreDamOptions(damConfigName).damClient
-const { fetchItems, fetchItemsByIds } = useDamUserSelectAction(client)
+// A client given lists at the fixed address; the configuration's at its `endPointUser`. Read once, as the name.
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { damClient, endPointUser } = props.client
+  ? { damClient: props.client, endPointUser: undefined }
+  : useCommonAdminCoreDamOptions(damConfigName)
+const { fetchItems, fetchItemsByIds } = useDamUserSelectAction(damClient, endPointUser)
 
 const { filterData, filterConfig } = useDamUserInnerFilter()
 provide(FilterInnerConfigKey, filterConfig)

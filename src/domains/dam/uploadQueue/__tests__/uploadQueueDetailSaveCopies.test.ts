@@ -59,14 +59,14 @@ const saved = {
 const savedInTheDetailOfARowInTwoQueues = async () => {
   const store = useUploadQueuesStore()
   dam.assets.set('asset-1', damAssetWithFile('asset-1', 'file-1', AssetFileProcessStatus.Processed))
-  await store.addByCopyToLicence(QUEUE, extSystem, licence, ['asset-1'])
-  await store.addByCopyToLicence(OTHER_QUEUE, extSystem, licence, ['asset-1'])
+  await store.addByCopyToLicence(QUEUE, extSystem, licence, ['asset-1'], 'default')
+  await store.addByCopyToLicence(OTHER_QUEUE, extSystem, licence, ['asset-1'], 'default')
   notify(DamNotificationName.AssetFileCopied, { asset: 'asset-1' })
   const [here] = store.getQueueItems(QUEUE)
   const [there] = store.getQueueItems(OTHER_QUEUE)
   await vi.waitFor(() => expect([here, there].map((item) => item!.canEditMetadata)).toEqual([true, true]))
   const detail = dam.fileBecomes('asset-1', AssetFileProcessStatus.Processed, saved)
-  await store.updateFromDetail(detail)
+  await store.updateFromDetail(detail, 'default')
   expect(there).toMatchObject({
     keywords: saved.keywords,
     authors: saved.authors,

@@ -95,7 +95,7 @@ describe.each(consumerProfiles)('what the refresh of a row says, under the $name
   /** One file, sent whole: its row waits for the server, `asset-1` and `file-1`. */
   const sentFile = async () => {
     const store = useUploadQueuesStore()
-    await store.addByFiles(QUEUE, extSystem, licence, [photo()])
+    await store.addByFiles(QUEUE, extSystem, licence, [photo()], 'default')
     const [item] = store.getQueueItems(QUEUE)
     await vi.waitFor(() => expect(item!.status).toBe(Processing))
     await clock.settle()
@@ -123,7 +123,7 @@ describe.each(consumerProfiles)('what the refresh of a row says, under the $name
       dam.assets.delete('asset-1')
       const asked = vi.spyOn(store, 'refreshAsset')
 
-      await useUploadQueueItemRefresh().refreshItem('asset-1', item, QUEUE)
+      await useUploadQueueItemRefresh('default').refreshItem('asset-1', item, QUEUE)
 
       expect(await asked.mock.results[0]!.value).toBe('missing')
       expect(item.status).toBe(Processing)
@@ -138,7 +138,7 @@ describe.each(consumerProfiles)('what the refresh of a row says, under the $name
       dam.fileBecomes('asset-1', AssetFileProcessStatus.Duplicate, {}, { originAssetFile: 'file-original' })
       const asked = vi.spyOn(store, 'refreshAsset')
 
-      await useUploadQueueItemRefresh().refreshItem('asset-1', item, QUEUE)
+      await useUploadQueueItemRefresh('default').refreshItem('asset-1', item, QUEUE)
 
       expect(await asked.mock.results[0]!.value).toBe('originalUnread')
       expect([item.status, store.refreshMayHelp(item)]).toEqual([Failed, true])
@@ -151,7 +151,7 @@ describe.each(consumerProfiles)('what the refresh of a row says, under the $name
       const store = useUploadQueuesStore()
       const item = await uploadedWithoutMetadata()
       dam.assets.delete('asset-1')
-      const { refreshItem } = useUploadQueueItemRefresh()
+      const { refreshItem } = useUploadQueueItemRefresh('default')
 
       await refreshItem('asset-1', item, QUEUE)
       await refreshItem('asset-1', item, QUEUE)
@@ -195,7 +195,7 @@ describe.each(consumerProfiles)('what the refresh of a row says, under the $name
       expect(store.refreshMayHelp(item)).toBe(false)
       unreadable()
 
-      await useUploadQueueItemRefresh().refreshItem('asset-1', item, QUEUE)
+      await useUploadQueueItemRefresh('default').refreshItem('asset-1', item, QUEUE)
 
       expect(item.status).toBe(Failed)
       expect(warnings()).toEqual([])
@@ -215,7 +215,7 @@ describe.each(consumerProfiles)('what the refresh of a row says, under the $name
         dam.reply((request) => (dam.routes.byFile.test(request.url) ? { status: 502 } : undefined))
         const reads = dam.hold('GET', dam.routes.one)
 
-        const pressed = useUploadQueueItemRefresh().refreshItem('asset-1', item, QUEUE)
+        const pressed = useUploadQueueItemRefresh('default').refreshItem('asset-1', item, QUEUE)
         await vi.waitFor(() => expect(reads.waiting).toHaveLength(1))
         notify(DamNotificationName.AssetFileDuplicate, {
           asset: 'asset-1',
@@ -236,14 +236,14 @@ describe.each(consumerProfiles)('what the refresh of a row says, under the $name
         request.method === 'PATCH' && dam.routes.finish.test(request.url) ? { status: 502 } : undefined
       )
       const store = useUploadQueuesStore()
-      await store.addByFiles(QUEUE, extSystem, licence, [photo()])
+      await store.addByFiles(QUEUE, extSystem, licence, [photo()], 'default')
       const [item] = store.getQueueItems(QUEUE)
       await vi.waitFor(() => expect(item!.status).toBe(Failed))
       await clock.settle()
       expect(store.refreshMayHelp(item!)).toBe(true)
       const reads = dam.hold('GET', dam.routes.one)
 
-      const pressed = useUploadQueueItemRefresh().refreshItem('asset-1', item, QUEUE)
+      const pressed = useUploadQueueItemRefresh('default').refreshItem('asset-1', item, QUEUE)
       await vi.waitFor(() => expect(reads.waiting).toHaveLength(1))
       notify(DamNotificationName.AssetFileFailed, { asset: 'asset-1', failReason })
       await vi.waitFor(() => expect(store.refreshMayHelp(item!)).toBe(false))

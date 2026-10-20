@@ -289,7 +289,7 @@ describe('the widget of several images, of assets of a licence of another ext sy
   it('names the authors of "fill empty" in each row under the ext system of the licence of its asset', async () => {
     await mountGallery([12])
 
-    await useImageMassOperations().replaceEmptyAuthors(['author-5'])
+    await useImageMassOperations('default').replaceEmptyAuthors(['author-5'])
     await flushPromises()
 
     expect(images()[0]!.texts.source).toBe(named('author-5'))
@@ -328,7 +328,7 @@ describe('the widget of several images, of assets of a licence of another ext sy
     await mountGallery([12], UNKNOWN_LICENCE)
     const before = licenceReads().length
 
-    await useImageMassOperations().replaceEmptyAuthors(['author-5'])
+    await useImageMassOperations('default').replaceEmptyAuthors(['author-5'])
     await flushPromises()
 
     expect(licenceReads()).toHaveLength(before)

@@ -5,21 +5,24 @@ import type { CustomDataFormElement } from '@/domains/customDataForm/types/Custo
 
 import { SYSTEM_CORE_DAM } from '@/domains/dam/api/damConstants'
 import { useApiFetchItems } from '@/domains/api/composables/useApiFetchItems'
+import { DAM_END_POINT_ASSET_CUSTOM_FORM } from '@/domains/dam/api/damEndPoints'
 
-const END_POINT = '/adm/v1/asset-custom-form'
 const ENTITY = 'assetCustomForm'
+
+// `endPoint`: the address of the custom forms the caller goes by; the default one where it gives none.
 
 // todo limit set to 100 for now, add load for pagination?
 export const fetchAssetCustomFormElements = (
   damClient: () => AxiosInstance,
   extSystem: IntegerId,
-  assetType: DamAssetTypeType
+  assetType: DamAssetTypeType,
+  endPoint: string = DAM_END_POINT_ASSET_CUSTOM_FORM
 ) => {
   const { execute } = useApiFetchItems<CustomDataFormElement>({
     client: damClient,
     system: SYSTEM_CORE_DAM,
     entity: ENTITY,
-    urlTemplate: END_POINT + '/ext-system/:extSystem/type/:assetType/element?order[position]=asc&limit=100',
+    urlTemplate: endPoint + '/ext-system/:extSystem/type/:assetType/element?order[position]=asc&limit=100',
   })
 
   return execute({ urlParams: { extSystem, assetType } })
@@ -28,13 +31,14 @@ export const fetchAssetCustomFormElements = (
 // todo limit set to 100 for now, add load for pagination?
 export const fetchDistributionCustomFormElements = (
   damClient: () => AxiosInstance,
-  distributionService: DamDistributionServiceName
+  distributionService: DamDistributionServiceName,
+  endPoint: string = DAM_END_POINT_ASSET_CUSTOM_FORM
 ) => {
   const { execute } = useApiFetchItems<CustomDataFormElement>({
     client: damClient,
     system: SYSTEM_CORE_DAM,
     entity: ENTITY,
-    urlTemplate: END_POINT + '/distribution-service/:distributionService/element?order[position]=asc&limit=100',
+    urlTemplate: endPoint + '/distribution-service/:distributionService/element?order[position]=asc&limit=100',
   })
 
   return execute({ urlParams: { distributionService } })

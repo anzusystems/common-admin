@@ -2,10 +2,7 @@
 import { COMMON_CONFIG } from '@/shared/commonConfig'
 import { computed } from 'vue'
 import type { DocIdNullable } from '@/shared/types/common'
-import {
-  useCommonAdminCoreDamOptionsGlobal,
-  useCommonAdminCoreDamOptions,
-} from '@/domains/dam/composables/commonAdminCoreDamOptions'
+import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
 import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 const props = withDefaults(
   defineProps<{
@@ -20,8 +17,8 @@ const props = withDefaults(
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const damConfigName = useDamConfigName(props.configName)
 
-const { adminDomain } = useCommonAdminCoreDamOptionsGlobal()
-const { editAssetLabel } = useCommonAdminCoreDamOptions(damConfigName)
+// The DAM admin of the configuration, else the root one.
+const { adminDomain, editAssetLabel } = useCommonAdminCoreDamOptions(damConfigName)
 
 const href = computed(() => {
   return adminDomain + '/asset/' + props.assetId

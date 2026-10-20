@@ -89,7 +89,7 @@ const v$ = useVuelidate(rules, { modelValueComputed }, { $scope: props.validatio
 
 const { damClient, endPointKeyword, keywordCreateAcl } = useCommonAdminCoreDamOptions(damConfigName)
 const createAllowed = useAclAllowed(keywordCreateAcl ?? undefined)
-const { getDamConfigExtSystem } = useDamConfigState()
+const { getDamConfigExtSystem } = useDamConfigState(undefined, damConfigName)
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const configExtSystem = getDamConfigExtSystem(props.extSystem)
 if (isUndefined(configExtSystem)) {
@@ -109,7 +109,9 @@ const searchChange = (newValue: string) => {
   if (newValue.length > 0) addNewKeywordText.value = removeLastComma(newValue)
 }
 
-const { addManualToCachedKeywords } = useDamCachedKeywords()
+const { addManualToCachedKeywords } = useDamCachedKeywords(damConfigName)
+// The cache of its configuration, which the inner input takes once.
+const useCachedOfName = () => useCachedKeywordsForRemoteAutocomplete(damConfigName)
 
 const afterCreate = (keyword: DamKeyword) => {
   addManualToCachedKeywords(keyword)
@@ -206,7 +208,7 @@ const showAdd = computed(() => {
       v-model:search="search"
       v-model:loading-local="loadingLocal"
       v-model:fetched-items-minimal="fetchedItemsMinimal"
-      :use-cached="useCachedKeywordsForRemoteAutocomplete"
+      :use-cached="useCachedOfName"
       :v="v$"
       :required="requiredComputed"
       :label="label"

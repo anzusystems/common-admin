@@ -1,9 +1,14 @@
 import { ref } from 'vue'
 import type { ValueObjectOption } from '@/shared/types/ValueObject'
-import { useDamConfigStore } from '@/domains/dam/config/store/damConfigStore'
+import { useDamConfigStoreOf } from '@/domains/dam/config/store/damConfigStore'
+import { inheritedDamConfigName } from '@/domains/dam/composables/damConfigName'
 
-export function useDamDistributionServiceType() {
-  const damConfigStore = useDamConfigStore()
+/**
+ * The distribution services of the prv configuration of `configName`: a name left out is the inherited one in a
+ * component's setup, else `default`.
+ */
+export function useDamDistributionServiceType(configName?: string) {
+  const damConfigStore = useDamConfigStoreOf(inheritedDamConfigName(configName))
   const all = Object.entries(damConfigStore.damPrvConfig.distributionServices).map(
     ([serviceName, value]): ValueObjectOption<string> => {
       return {

@@ -141,7 +141,7 @@ describe.each(consumerProfiles)('the dialog of one uploaded file under the $name
   }
   /** A file is picked: the widget queues it and opens the dialog of its queue. The row waits for the server. */
   const pickOne = async () => {
-    await queue().addByFiles(QUEUE, extSystem, licence, [photo()])
+    await queue().addByFiles(QUEUE, extSystem, licence, [photo()], 'default')
     await mountDialog()
     await vi.waitFor(() => expect(item().status).toBe(Processing))
     await flushPromises()
@@ -247,7 +247,7 @@ describe.each(consumerProfiles)('the dialog of one uploaded file under the $name
 
     it('shows the file being sent, then processed, then done, and then its preview', async () => {
       const chunks = dam.hold('POST', dam.routes.chunk)
-      await queue().addByFiles(QUEUE, extSystem, licence, [photo()])
+      await queue().addByFiles(QUEUE, extSystem, licence, [photo()], 'default')
       await mountDialog()
       await vi.waitFor(() => expect(chunks.waiting).toHaveLength(1))
       await flushPromises()
@@ -297,7 +297,7 @@ describe.each(consumerProfiles)('the dialog of one uploaded file under the $name
     // A row of another kind and in another state than the defaults of the picture: the grey box says what the row is.
     it('draws the grey box of the kind and the state of its row', async () => {
       const chunks = dam.hold('POST', dam.routes.chunk)
-      await queue().addByFiles(QUEUE, extSystem, licence, [photo()])
+      await queue().addByFiles(QUEUE, extSystem, licence, [photo()], 'default')
       await mountDialog()
       await vi.waitFor(() => expect(chunks.waiting).toHaveLength(1))
       item().assetType = DamAssetType.Video
@@ -315,7 +315,7 @@ describe.each(consumerProfiles)('the dialog of one uploaded file under the $name
     // picture and then the overlay, so the overlay is drawn over it. How large the box is, is not pinned: the
     // owner has U6 give it a size (finding 64).
     it('draws the error of a refused file in the positioned box of the picture, after the picture', async () => {
-      await queue().addByFiles(QUEUE, extSystem, licence, [photo()])
+      await queue().addByFiles(QUEUE, extSystem, licence, [photo()], 'default')
       await mountDialog(true)
       await vi.waitFor(() => expect(item().status).toBe(Processing))
       dam.fileBecomes(
@@ -344,7 +344,7 @@ describe.each(consumerProfiles)('the dialog of one uploaded file under the $name
       style.textContent = libraryStyle
       document.head.append(style)
       try {
-        await queue().addByFiles(QUEUE, extSystem, licence, [photo()])
+        await queue().addByFiles(QUEUE, extSystem, licence, [photo()], 'default')
         await mountDialog(true)
         await vi.waitFor(() => expect(item().status).toBe(Processing))
         dam.fileBecomes(
@@ -385,7 +385,7 @@ describe.each(consumerProfiles)('the dialog of one uploaded file under the $name
       style.textContent = libraryStyle
       document.head.append(style)
       try {
-        await queue().addByFiles(QUEUE, extSystem, licence, [photo()])
+        await queue().addByFiles(QUEUE, extSystem, licence, [photo()], 'default')
         await mountDialog(true)
         await vi.waitFor(() => expect(item().status).toBe(Processing))
         // A preview asked for in a size other than the one it came out in, and taller than the area.
@@ -854,7 +854,7 @@ describe.each(consumerProfiles)('the dialog of one uploaded file under the $name
 
     it('asks first while the file is being sent; confirmed, it stops the upload, empties the queue and closes the dialog', async () => {
       const chunks = dam.hold('POST', dam.routes.chunk)
-      await queue().addByFiles(QUEUE, extSystem, licence, [photo()])
+      await queue().addByFiles(QUEUE, extSystem, licence, [photo()], 'default')
       await mountDialog()
       await vi.waitFor(() => expect(chunks.waiting).toHaveLength(1))
       await flushPromises()

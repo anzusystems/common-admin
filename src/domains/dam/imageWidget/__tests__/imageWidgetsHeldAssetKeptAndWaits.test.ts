@@ -235,7 +235,7 @@ describe.each<[string, Component]>([
   }
   /** "Edit asset" of the dialog: the detail of the asset of its image is open. */
   const openDetail = async (asset: string) => {
-    buttonOfDialog(useCommonAdminCoreDamOptions().editAssetLabel).click()
+    buttonOfDialog(useCommonAdminCoreDamOptions('default').editAssetLabel).click()
     await vi.waitFor(() => expect(useAssetDetailStore(pinia).asset?.id).toBe(asset))
     await flushPromises()
   }

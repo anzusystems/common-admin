@@ -181,7 +181,7 @@ describe.each(consumerProfiles)('the image widget and the library of the DAM und
     await wrapper!.find(`button[aria-label="${damText('image.button.options')}"]`).trigger('click')
     await vi.waitFor(() => expect(openMenuItems().length).toBeGreaterThan(0))
     openMenuItems()
-      .find((entry) => entry.textContent?.trim() === useCommonAdminCoreDamOptions().addFromDamLabel)!
+      .find((entry) => entry.textContent?.trim() === useCommonAdminCoreDamOptions('default').addFromDamLabel)!
       .click()
     await flushPromises()
   }
@@ -1315,7 +1315,7 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
       await flushPromises()
     }
     /** "Edit asset" of the dialog of the image is pressed. */
-    const pressEditAsset = () => buttonOfDialog(useCommonAdminCoreDamOptions().editAssetLabel).click()
+    const pressEditAsset = () => buttonOfDialog(useCommonAdminCoreDamOptions('default').editAssetLabel).click()
     /** The same, and the detail shows the asset. */
     const editAsset = async (asset: DocId) => {
       pressEditAsset()
@@ -1324,7 +1324,7 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
     }
     /** The form of the detail is not drawn here: this is what its save sends, with the authors the user picks in it. */
     const saveInDetail = async (authors: DocId[]) => {
-      const { damClient, endPointAsset } = useCommonAdminCoreDamOptions()
+      const { damClient, endPointAsset } = useCommonAdminCoreDamOptions('default')
       detail().asset!.authors = authors
       await updateAssetMetadata(damClient, endPointAsset, detail().asset!, extSystem, detail().mainFileSingleUse)
       await flushPromises()
@@ -1560,7 +1560,7 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
           const widget = await mountWidget(null, QUEUE, {}, 'real')
           await widget
             .findAll('.a-image-widget__options button')
-            .find((button) => button.text() === useCommonAdminCoreDamOptions().addFromDamLabel)!
+            .find((button) => button.text() === useCommonAdminCoreDamOptions('default').addFromDamLabel)!
             .trigger('click')
           await vi.waitFor(() => expect(tiles()).toHaveLength(1))
           return widget
@@ -1962,7 +1962,7 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
           damKeepsAuthors()
           await widget
             .findAll('button')
-            .find((button) => button.text() === useCommonAdminCoreDamOptions().editAssetLabel)!
+            .find((button) => button.text() === useCommonAdminCoreDamOptions('default').editAssetLabel)!
             .trigger('click')
           await vi.waitFor(() => expect(detail().asset?.id).toBe('asset-9'))
           await flushPromises()
@@ -2156,7 +2156,7 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
           damKeepsAuthors()
           await widget
             .findAll('button')
-            .find((button) => button.text() === useCommonAdminCoreDamOptions().editAssetLabel)!
+            .find((button) => button.text() === useCommonAdminCoreDamOptions('default').editAssetLabel)!
             .trigger('click')
           await vi.waitFor(() => expect(detail().asset?.id).toBe('asset-9'))
           await flushPromises()

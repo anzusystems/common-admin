@@ -54,7 +54,7 @@ const emit = defineEmits<{
 const damConfigName = useDamConfigName(props.configName)
 
 const { damClient, endPointAuthor } = useCommonAdminCoreDamOptions(damConfigName)
-const { getDamConfigExtSystem } = useDamConfigState()
+const { getDamConfigExtSystem } = useDamConfigState(undefined, damConfigName)
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const configExtSystem = getDamConfigExtSystem(props.extSystem)
 if (isUndefined(configExtSystem)) {

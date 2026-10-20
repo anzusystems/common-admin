@@ -51,7 +51,7 @@ describe('an uploaded file no notification ever announces', () => {
     const store = useUploadQueuesStore()
     const finish = dam.hold('PATCH', dam.routes.finish)
 
-    await store.addByFiles(QUEUE, extSystem, licence, [photo('a.jpg')])
+    await store.addByFiles(QUEUE, extSystem, licence, [photo('a.jpg')], 'default')
     await vi.waitFor(() => expect(finish.waiting).toHaveLength(1))
     const [item] = store.getQueueItems(QUEUE)
     expect(item).toMatchObject({
@@ -106,7 +106,7 @@ describe('an uploaded file no notification ever announces', () => {
 
   it('goes on waiting while its file is not processed yet, and is settled by the read that finds it so', async () => {
     const store = useUploadQueuesStore()
-    await store.addByFiles(QUEUE, extSystem, licence, [photo('a.jpg')])
+    await store.addByFiles(QUEUE, extSystem, licence, [photo('a.jpg')], 'default')
     const [item] = store.getQueueItems(QUEUE)
     await vi.waitFor(() => expect(item.status).toBe(UploadQueueItemStatus.Processing))
 
@@ -139,7 +139,7 @@ describe('an uploaded file no notification ever announces', () => {
     const chunks = dam.hold('POST', dam.routes.chunk)
     const statuses = () => store.getQueueItems(QUEUE).map((item) => item.status)
 
-    await store.addByFiles(QUEUE, extSystem, licence, [photo('a.jpg'), photo('b.jpg'), photo('c.jpg')])
+    await store.addByFiles(QUEUE, extSystem, licence, [photo('a.jpg'), photo('b.jpg'), photo('c.jpg')], 'default')
     await vi.waitFor(() => expect(chunks.waiting).toHaveLength(2))
     expect(statuses()).toEqual([
       UploadQueueItemStatus.Uploading,

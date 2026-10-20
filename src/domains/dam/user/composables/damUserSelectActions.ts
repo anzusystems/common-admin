@@ -7,7 +7,8 @@ import { fetchDamUserListByIds, useFetchDamUserList } from '@/domains/dam/user/a
 import type { Ref } from 'vue'
 import type { FilterConfig, FilterData } from '@/domains/filters/composables/filterFactory'
 
-export const useDamUserSelectAction = (client: () => AxiosInstance) => {
+/** `endPoint`: the address of the users (`endPointUser` of a configuration); `/adm/v1/user` where left out. */
+export const useDamUserSelectAction = (client: () => AxiosInstance, endPoint?: string) => {
   const mapToValueObject = (user: DamUser): ValueObjectOption<IntegerId> => ({
     title: '' === user.person.fullName ? user.email : user.person.fullName,
     value: user.id,
@@ -17,14 +18,14 @@ export const useDamUserSelectAction = (client: () => AxiosInstance) => {
     return users.map((user: DamUser) => mapToValueObject(user))
   }
 
-  const { execute } = useFetchDamUserList(client)
+  const { execute } = useFetchDamUserList(client, endPoint)
 
   const fetchItems = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
     return mapToValueObjects(await execute(pagination, filterData, filterConfig))
   }
 
   const fetchItemsByIds = async (ids: IntegerId[]) => {
-    return mapToValueObjects(await fetchDamUserListByIds(client, ids))
+    return mapToValueObjects(await fetchDamUserListByIds(client, ids, endPoint))
   }
 
   return {

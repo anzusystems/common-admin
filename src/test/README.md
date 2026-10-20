@@ -26,7 +26,8 @@ yarn test:eslint
 ```
 
 `yarn test:run` runs the browser suite (`test:browser`) and then the eslint rule tests (`test:eslint`, in node,
-`vitest.config.node.mts`). `yarn test` and `yarn test:ui` run only the browser suite, in Chromium; there is no
+`vitest.config.node.mts`), among them the guard of the DAM configuration name (`src/test/eslint/damConfigNameGuard.test.ts`),
+which reads the sources with the TypeScript compiler API. `yarn test` and `yarn test:ui` run only the browser suite, in Chromium; there is no
 separate happy-dom mode. Coverage is not configured.
 
 Chromium is installed once with `npx playwright install chromium --with-deps` (see

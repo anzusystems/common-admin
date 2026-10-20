@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { computed, onMounted, ref } from 'vue'
 import AFilterValueObjectOptionsSelect from '@/domains/filters/components/AFilterValueObjectOptionsSelect.vue'
-import { useDamConfigStore } from '@/domains/dam/config/store/damConfigStore'
+import { useDamConfigStoreOf } from '@/domains/dam/config/store/damConfigStore'
 import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
 import { useDamConfigState } from '@/domains/dam/config/composables/damConfigState'
 import { useI18n } from 'vue-i18n'
@@ -24,9 +24,10 @@ const damConfigName = useDamConfigName(props.configName)
 
 const status = ref<'loading' | 'ready' | 'error'>('loading')
 
-const damConfigStore = useDamConfigStore()
+// The name first: a configuration the application has not got throws here, and gets no store.
 const { damClient } = useCommonAdminCoreDamOptions(damConfigName)
-const { loadDamPrvConfig } = useDamConfigState(damClient)
+const damConfigStore = useDamConfigStoreOf(damConfigName)
+const { loadDamPrvConfig } = useDamConfigState(damClient, damConfigName)
 
 const items = computed(() => {
   return Object.entries(damConfigStore.damPrvConfig.distributionServices).map(([key, value]) => {

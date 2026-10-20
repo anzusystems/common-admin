@@ -6,6 +6,7 @@ import { useDamConfigState } from '@/domains/dam/config/composables/damConfigSta
 import ACustomDataFormElement from '@/domains/customDataForm/components/ACustomDataFormElement.vue'
 import { isUndefined } from '@/shared/utils/common'
 import type { IntegerId } from '@/shared/types/common'
+import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 
 const props = withDefaults(
   defineProps<{
@@ -37,7 +38,7 @@ const replaceField = (elementProperty: string, value: any) => {
   emit('replaceField', { assetType: props.assetType, elementProperty, value })
 }
 
-const { getDamConfigAssetCustomFormElements } = useDamConfigState()
+const { getDamConfigAssetCustomFormElements } = useDamConfigState(undefined, useDamConfigName())
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const configAssetCustomFormElements = getDamConfigAssetCustomFormElements(props.extSystem)
 if (isUndefined(configAssetCustomFormElements)) {

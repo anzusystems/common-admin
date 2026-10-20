@@ -79,7 +79,7 @@ const ids = (prefix: string, count: number) => Array.from({ length: count }, (_,
 const pagingAsNew = () => {
   let paging!: ReturnType<typeof useAssetSelectActions>['pagination']
   const probe = mount(
-    defineComponent({ setup: () => ((paging = useAssetSelectActions().pagination), () => h('div')) }),
+    defineComponent({ setup: () => ((paging = useAssetSelectActions('default').pagination), () => h('div')) }),
     { global: { plugins: [pinia] } }
   )
   paging.value = {

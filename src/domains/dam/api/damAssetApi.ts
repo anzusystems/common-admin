@@ -12,6 +12,7 @@ import {
 } from '@/shared/error/AnzuApiValidationError'
 import { useAlerts } from '@/domains/system/composables/alerts'
 import { SYSTEM_CORE_DAM } from '@/domains/dam/api/damConstants'
+import { DAM_END_POINT_CMS_ASSET } from '@/domains/dam/api/damEndPoints'
 import { useDamConfigState } from '@/domains/dam/config/composables/damConfigState'
 import { useApiFetchList } from '@/domains/api/composables/useApiFetchList'
 import { useApiCommand, useApiRequest } from '@/domains/api/composables/useApiRequest'
@@ -19,7 +20,6 @@ import { useApiFetchItems } from '@/domains/api/composables/useApiFetchItems'
 import type { DamMediaFromDam } from '@/domains/dam/types/MediaAware'
 import { commonT } from '@/plugins/i18n'
 
-const END_POINT_CMS_ASSET = '/adm/v1/cms/asset/'
 const BULK_METADATA_LIMIT = 10
 export const ENTITY = 'asset'
 const FETCH_BY_IDS_MAX_LIMIT = 50
@@ -71,13 +71,18 @@ export const fetchAsset = (
   return execute({ urlParams: { id }, report: options.report })
 }
 
-export const fetchAssetAsCmsMedia = <T extends DamMediaFromDam>(client: () => AxiosInstance, id: DocId) => {
+/** `endPoint`: as a configuration names it (`endPointCmsAsset`); `/adm/v1/cms/asset` by default. */
+export const fetchAssetAsCmsMedia = <T extends DamMediaFromDam>(
+  client: () => AxiosInstance,
+  id: DocId,
+  endPoint: string = DAM_END_POINT_CMS_ASSET
+) => {
   const { execute } = useApiRequest<T, null>({
     client,
     method: 'GET',
     system: SYSTEM_CORE_DAM,
     entity: ENTITY,
-    urlTemplate: END_POINT_CMS_ASSET + ':id',
+    urlTemplate: endPoint + '/:id',
   })
 
   return execute({ urlParams: { id } })
@@ -262,7 +267,12 @@ function listItemsToMetadataBulkItems(
 const { showErrorsDefault, showUnknownError, showApiValidationError } = useAlerts()
 
 /** A field of a refused save of metadata, as the forms name it. */
-const metadataFieldName = (key: string, assetTypes: Array<DamAssetTypeType | undefined>, extSystem: IntegerId) => {
+const metadataFieldName = (
+  key: string,
+  assetTypes: Array<DamAssetTypeType | undefined>,
+  extSystem: IntegerId,
+  configName: string
+) => {
   const indexed = key.match(/^\[(\d+)\]\.(.+)$/)
   const path = indexed ? indexed[2]! : key
   if (path === 'keywords') return commonT('common.damImage.asset.model.keywords')
@@ -270,7 +280,7 @@ const metadataFieldName = (key: string, assetTypes: Array<DamAssetTypeType | und
   const property = path.split('.').at(-1)!
   const assetType = indexed ? assetTypes[Number(indexed[1])] : undefined
   if (path.startsWith('customData.') && !isUndefined(assetType)) {
-    const { getDamConfigAssetCustomFormElements } = useDamConfigState()
+    const { getDamConfigAssetCustomFormElements } = useDamConfigState(undefined, configName)
     const found = getDamConfigAssetCustomFormElements(extSystem)?.[assetType].find(
       (element) => element.property === property
     )
@@ -282,13 +292,14 @@ const metadataFieldName = (key: string, assetTypes: Array<DamAssetTypeType | und
 
 /**
  * What a failed save of metadata tells the user, by the kind of the failure: the one place that says it. A refusal
- * by validation names its fields as the forms of `extSystem` do, a field refused for several assets once.
+ * by validation names its fields as the forms of `extSystem` do in the DAM configuration `configName`, a field refused
+ * for several assets once.
  */
-export const showMetadataSaveError = (error: unknown, extSystem: IntegerId) => {
+export const showMetadataSaveError = (error: unknown, extSystem: IntegerId, configName: string) => {
   if (error instanceof AssetMetadataValidationError) {
     const named = new Map<string, Set<string>>()
     for (const { field, errors } of error.requestFields) {
-      const name = metadataFieldName(field, error.assetTypes, extSystem)
+      const name = metadataFieldName(field, error.assetTypes, extSystem, configName)
       named.set(name, new Set([...(named.get(name) ?? []), ...errors]))
     }
     showApiValidationError(

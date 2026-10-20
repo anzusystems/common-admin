@@ -4,27 +4,38 @@ import type { DocId, IntegerId } from '@/shared/types/common'
 import { useApiFetchList } from '@/domains/api/composables/useApiFetchList'
 import { useApiFetchByIds } from '@/domains/api/composables/useApiFetchByIds'
 import type { DamPodcastAware } from '@/domains/dam/assetSelect/composables/podcastFilterAndActions'
+import { DAM_END_POINT_PODCAST } from '@/domains/dam/api/damEndPoints'
 
-const END_POINT = '/adm/v1/podcast/licence/:licenceId'
 const ENTITY = 'podcast'
 
-export const fetchDamPodcastListByIds = (client: () => AxiosInstance, licenceId: IntegerId, ids: DocId[]) => {
+// `endPoint`: the address of the podcasts the caller goes by; the default one where it gives none.
+
+export const fetchDamPodcastListByIds = (
+  client: () => AxiosInstance,
+  licenceId: IntegerId,
+  ids: DocId[],
+  endPoint: string = DAM_END_POINT_PODCAST
+) => {
   const { execute } = useApiFetchByIds<DamPodcastAware>({
     client,
     system: SYSTEM_CORE_DAM,
     entity: ENTITY,
-    urlTemplate: END_POINT,
+    urlTemplate: endPoint + '/licence/:licenceId',
     urlParams: { licenceId },
   })
 
   return execute(ids)
 }
 
-export const useFetchDamPodcastList = (client: () => AxiosInstance, licenceId: IntegerId) =>
+export const useFetchDamPodcastList = (
+  client: () => AxiosInstance,
+  licenceId: IntegerId,
+  endPoint: string = DAM_END_POINT_PODCAST
+) =>
   useApiFetchList<DamPodcastAware>({
     client,
     system: SYSTEM_CORE_DAM,
     entity: ENTITY,
-    urlTemplate: END_POINT,
+    urlTemplate: endPoint + '/licence/:licenceId',
     urlParams: { licenceId },
   })

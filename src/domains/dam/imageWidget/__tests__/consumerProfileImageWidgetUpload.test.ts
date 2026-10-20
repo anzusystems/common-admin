@@ -475,7 +475,7 @@ describe.each(consumerProfiles)('an upload into the image widget under the $name
       expect(useImageMediaWidgetStore(pinia).detail).toEqual(handedImage)
       expect(textsIn(imageDialog()!).map((field) => field.value)).toEqual(['a lead image', source])
       // admin-ugc names the source its own way and has no "show source" switch.
-      const { sourceLabel } = useCommonAdminCoreDamOptions()
+      const { sourceLabel } = useCommonAdminCoreDamOptions('default')
       expect(imageDialog()!.textContent).toContain(sourceLabel)
       expect(imageDialog()!.querySelector('.v-switch') !== null).toBe(isCms)
       // The upload dialog has closed itself and emptied its queue.
@@ -695,7 +695,7 @@ describe.each(consumerProfiles)('an upload into the image widget under the $name
       const widget = await mountWidget(expanded)
 
       expect(buttonsOf(widget).map((button) => button.text())).toEqual([
-        useCommonAdminCoreDamOptions().addFromDamLabel,
+        useCommonAdminCoreDamOptions('default').addFromDamLabel,
         damText('image.button.upload'),
       ])
       expect(widget.find(`button[aria-label="${damText('image.button.options')}"]`).exists()).toBe(false)
@@ -726,7 +726,7 @@ describe.each(consumerProfiles)('an upload into the image widget under the $name
       expect(widget.emitted('afterMetadataSaveSuccess')).toHaveLength(1)
       // The button of the library now offers to replace the image.
       expect(buttonsOf(widget).map((button) => button.text())).toContain(
-        useCommonAdminCoreDamOptions().replaceFromDamLabel
+        useCommonAdminCoreDamOptions('default').replaceFromDamLabel
       )
     })
 

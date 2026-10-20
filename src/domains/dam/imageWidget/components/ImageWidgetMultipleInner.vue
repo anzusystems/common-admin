@@ -51,7 +51,7 @@ import { fetchAssetListByFileIdsMultipleLicences } from '@/domains/dam/api/damfe
 import { copyToLicence } from '@/domains/dam/api/damImageApi'
 import { createDamImage, imageFieldsOf } from '@/domains/dam/imageWidget/utils/damImage'
 import { useDamConfigState } from '@/domains/dam/config/composables/damConfigState'
-import { useDamConfigStore } from '@/domains/dam/config/store/damConfigStore'
+import { useDamConfigStoreOf } from '@/domains/dam/config/store/damConfigStore'
 import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 import {
   holdImages,
@@ -161,7 +161,7 @@ const savesOfOthersOver = async (ids: IntegerId[]) => {
     .filter((wait) => !isNull(wait))
   if (waits.length === 0) return
   cancelSaveWaits = () => waits.forEach((wait) => wait.cancel())
-  const over = await withinWaitLimit(Promise.all(waits.map((wait) => wait.over)))
+  const over = await withinWaitLimit(Promise.all(waits.map((wait) => wait.over)), 1, damConfigName)
   cancelSaveWaits = null
   if (over !== WAIT_RAN_OUT) return
   waits.forEach((wait) => wait.cancel())
@@ -244,7 +244,7 @@ const uploadQueue = computed(() => {
   return uploadQueuesStore.getQueue(props.queueKey)
 })
 
-const { cachedExtSystemId } = useExtSystemIdForCached()
+const { cachedExtSystemId } = useExtSystemIdForCached(damConfigName)
 
 const { uploadQueueDialog, stopQueueLeftBehind } = useUploadQueueDialog()
 
@@ -297,7 +297,7 @@ const onCopyToLicence = (data: DamImageCopyToLicenceResponse) => {
         [item.targetAsset],
         damConfigName
       )
-      uploadQueuesStore.queueItemDuplicate(item.targetAsset, item.targetMainFile, DamAssetType.Image)
+      uploadQueuesStore.queueItemDuplicate(item.targetAsset, item.targetMainFile, DamAssetType.Image, damConfigName)
     } else {
       refused++
     }
@@ -525,8 +525,8 @@ const onEditAsset = async (assetFileId: DocId) => {
         extSystem = await getExtSystemByLicence(asset.licence)
         return asset
       },
-      // Only for the asset the detail shows: an answer it no longer waits for must not change the ext system the page
-      // asks for names under.
+      // Only for the asset the detail shows: an answer it no longer waits for must not change the ext system its
+      // configuration asks for names under.
       () => {
         if (extSystem) cachedExtSystemId.value = extSystem
       }
@@ -579,8 +579,8 @@ const actionLibrary = () => {
 
 const v$ = useVuelidate({ $scope: AImageMetadataValidationScopeSymbol })
 
-const { getDamConfigExtSystem, getExtSystemByLicence } = useDamConfigState(damClient)
-const damConfigStore = useDamConfigStore()
+const { getDamConfigExtSystem, getExtSystemByLicence } = useDamConfigState(damClient, damConfigName)
+const damConfigStore = useDamConfigStoreOf(damConfigName)
 
 const authorEnabled = computed(() => {
   return !!getDamConfigExtSystem(cachedExtSystemId.value)?.[DamAssetType.Image]?.authors?.enabled
@@ -623,7 +623,7 @@ const takeAuthorsGiven = (row: ImageStoreItem, authors: DocId[], names: string) 
  * over what was picked there, as a row of an asset picked with its authors has them: named in its source, under the
  * ext system of the licence of the asset, but for a source of the image's own (`takeAuthorsGiven`). A row that shows
  * its source is left alone: that text is the user's. `detailSave`: the save of the detail that was on its way when it
- * closed. `pageExtSystem`: the ext system the page asked for names under by then.
+ * closed. `pageExtSystem`: the ext system its configuration asked for names under by then.
  */
 const takeAuthorsOfDetailAsset = async (assetId: DocId, detailSave: Promise<void> | null, pageExtSystem: IntegerId) => {
   try {
@@ -648,7 +648,7 @@ const takeAuthorsOfDetailAsset = async (assetId: DocId, detailSave: Promise<void
 /**
  * `shown`: the asset the detail showed; none when it closed from its loader, or by itself after a read that failed.
  * What the read goes by is noted here, before anything is awaited: whether a row of that asset offers the pick, the
- * save of the detail that is on its way, and the ext system of the page.
+ * save of the detail that is on its way, and the ext system its configuration asks for names under.
  */
 const onAssetDetailClose = (shown: AssetDetailItemDto | null) => {
   const ofRow = detailOfRow
@@ -656,7 +656,7 @@ const onAssetDetailClose = (shown: AssetDetailItemDto | null) => {
   if (!ofRow || isNull(shown) || props.readonly || !authorEnabled.value) return
   const assetId = shown.id
   if (!images.value.some((image) => image.assetId === assetId && image.showDamAuthors)) return
-  const detailSave = assetDetailStore.savingOf(assetId)
+  const detailSave = assetDetailStore.savingOf(assetId, damConfigName)
   const pageExtSystem = cachedExtSystemId.value
   const read = (detailAssetReads.get(assetId) ?? Promise.resolve()).then(() =>
     takeAuthorsOfDetailAsset(assetId, detailSave, pageExtSystem)
@@ -712,8 +712,8 @@ const saveImages = async () => {
       if (authors.length === 0) continue
       if (assetId) assetUpdateItems.push({ id: assetId, authors })
       // Under the ext system of the licence of the asset of the rows, as the read before the write names authors
-      // given since; that of the page where the page does not know the licence. Not read for it: the rows come of the
-      // entity, of any licence.
+      // given since; that its configuration asks for names under where the page does not know the licence. Not read
+      // for it: the rows come of the entity, of any licence.
       const extSystem =
         damConfigStore.damConfigLicenceExtSystem.get(rows[0]!.dam.licenceId)?.extSystem ?? cachedExtSystemId.value
       const authorsRes = await fetchAuthorListByIds(damClient, endPointAuthor, extSystem, authors)
@@ -825,7 +825,7 @@ const saveImages = async () => {
     return true
   } catch (e) {
     // The authors refused by validation are named as the forms name them; anything else as before.
-    showMetadataSaveError(e, cachedExtSystemId.value)
+    showMetadataSaveError(e, cachedExtSystemId.value, damConfigName)
     return false
   }
 }

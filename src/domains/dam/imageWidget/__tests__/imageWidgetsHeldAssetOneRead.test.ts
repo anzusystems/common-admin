@@ -176,7 +176,7 @@ describe.each<[string, Component]>([
     await editImage(widget)
     await vi.waitFor(() => expect(loading()).toBe(false))
     await flushPromises()
-    buttonOfDialog(useCommonAdminCoreDamOptions().editAssetLabel).click()
+    buttonOfDialog(useCommonAdminCoreDamOptions('default').editAssetLabel).click()
     await vi.waitFor(() => expect(useAssetDetailStore(pinia).asset?.id).toBe('asset-9'))
     await flushPromises()
     dam.assets.get('asset-9')!.authors = givenInTheDetail

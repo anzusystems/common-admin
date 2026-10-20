@@ -112,13 +112,13 @@ describe('the notifications', () => {
     const store = useUploadQueuesStore()
     expect(bus.listener).toBeUndefined()
 
-    await store.addByCopyToLicence('q', 1, 1, ['asset-1'])
+    await store.addByCopyToLicence('q', 1, 1, ['asset-1'], 'default')
     expect(bus.listener).toBeTypeOf('function')
 
     // Once: a second subscription would answer every notification twice.
     bus.listener = undefined
-    await store.addByCopyToLicence('q', 1, 1, ['asset-2'])
-    await store.addByFiles('q', 1, 1, [new File([], 'empty.jpg', { type: 'image/jpeg' })])
+    await store.addByCopyToLicence('q', 1, 1, ['asset-2'], 'default')
+    await store.addByFiles('q', 1, 1, [new File([], 'empty.jpg', { type: 'image/jpeg' })], 'default')
     expect(bus.listener).toBeUndefined()
   })
 })
@@ -128,7 +128,7 @@ describe('a zero-byte file in the upload queue', () => {
     const store = useUploadQueuesStore()
     const empty = new File([], 'empty.jpg', { type: 'image/jpeg' })
 
-    await store.addByFiles('q', 1, 1, [empty])
+    await store.addByFiles('q', 1, 1, [empty], 'default')
 
     await vi.waitFor(() => expect(store.getQueueItems('q')[0].status).toBe(UploadQueueItemStatus.Failed), {
       timeout: 1000,
@@ -147,7 +147,7 @@ describe('an asset copied to the licence whose detail fails to load', () => {
     fetchAsset.mockRejectedValueOnce(new Error('502 Bad Gateway'))
     fetchAsset.mockImplementation(processedFile)
     const store = useUploadQueuesStore()
-    await store.addByCopyToLicence('q', 1, 1, ['asset-1'])
+    await store.addByCopyToLicence('q', 1, 1, ['asset-1'], 'default')
     const item = store.getQueueItems('q')[0]
     expect(item.status).toBe(UploadQueueItemStatus.Processing)
 
@@ -183,7 +183,7 @@ describe('the metadata of an item in the queue', () => {
   // metadata as well.
   it('keeps what the user typed once its notification had loaded the metadata', async () => {
     const store = useUploadQueuesStore()
-    await store.addByCopyToLicence('q', 1, 1, ['asset-typed', 'asset-waiting'])
+    await store.addByCopyToLicence('q', 1, 1, ['asset-typed', 'asset-waiting'], 'default')
     const [typed, waiting] = store.getQueueItems('q')
     // The metadata notification came while the file was still processing, and the user has typed since.
     typed.canEditMetadata = true
@@ -193,8 +193,8 @@ describe('the metadata of an item in the queue', () => {
     waiting.error.hasError = true
     fetchAsset.mockImplementation(processed)
 
-    await store.queueItemFullyProcessed('asset-typed')
-    await store.queueItemFullyProcessed('asset-waiting')
+    await store.queueItemFullyProcessed('asset-typed', 'default')
+    await store.queueItemFullyProcessed('asset-waiting', 'default')
 
     expect([typed.status, waiting.status]).toEqual([UploadQueueItemStatus.Uploaded, UploadQueueItemStatus.Uploaded])
     expect(typed.customData).toEqual({ title: 'typed' })
@@ -207,7 +207,7 @@ describe('the metadata of an item in the queue', () => {
 
   it('loses the error the fallback gave up with when its processed notification comes after all', async () => {
     const store = useUploadQueuesStore()
-    await store.addByCopyToLicence('q', 1, 1, ['asset-late'])
+    await store.addByCopyToLicence('q', 1, 1, ['asset-late'], 'default')
     const [late] = store.getQueueItems('q')
     late.error.hasError = true
     fetchAsset.mockImplementation(processed)
@@ -221,7 +221,7 @@ describe('the metadata of an item in the queue', () => {
   // The same rule for the notifications themselves: their answers can come in either order.
   it('is given its metadata once, and keeps its switches once it has it', async () => {
     const store = useUploadQueuesStore()
-    await store.addByCopyToLicence('q', 1, 1, ['asset-typed', 'asset-waiting'])
+    await store.addByCopyToLicence('q', 1, 1, ['asset-typed', 'asset-waiting'], 'default')
     const [typed, waiting] = store.getQueueItems('q')
     typed.canEditMetadata = true
     typed.customData = { title: 'typed' }
@@ -243,7 +243,7 @@ describe('the metadata of an item in the queue', () => {
 
   it('stays not editable when it failed, also when its metadata event comes after the failure', async () => {
     const store = useUploadQueuesStore()
-    await store.addByCopyToLicence('q', 1, 1, ['asset-failed'])
+    await store.addByCopyToLicence('q', 1, 1, ['asset-failed'], 'default')
     const [failed] = store.getQueueItems('q')
     failed.status = UploadQueueItemStatus.Failed
     fetchAsset.mockImplementation(processed)
@@ -262,7 +262,7 @@ describe('the metadata of an item in the queue', () => {
     const store = useUploadQueuesStore()
     fetchAsset.mockImplementation(processed)
     damUploadFinish.mockRejectedValueOnce(new Error('the finish request failed'))
-    await store.addByFiles('q', 1, 1, [new File(['x'], 'late.jpg', { type: 'image/jpeg' })])
+    await store.addByFiles('q', 1, 1, [new File(['x'], 'late.jpg', { type: 'image/jpeg' })], 'default')
     await vi.waitFor(() => expect(release.has('late.jpg')).toBe(true))
     const [item] = store.getQueueItems('q')
 
@@ -279,7 +279,7 @@ describe('the metadata of an item in the queue', () => {
     const store = useUploadQueuesStore()
     fetchAsset.mockImplementation(processed)
     damUploadFinish.mockRejectedValueOnce(new Error('the answer to the finish request was lost'))
-    await store.addByFiles('q', 1, 1, [new File(['x'], 'lost.jpg', { type: 'image/jpeg' })])
+    await store.addByFiles('q', 1, 1, [new File(['x'], 'lost.jpg', { type: 'image/jpeg' })], 'default')
     await vi.waitFor(() => expect(release.has('lost.jpg')).toBe(true))
     const [item] = store.getQueueItems('q')
     release.get('lost.jpg')!()
@@ -302,7 +302,7 @@ describe('the metadata of an item in the queue', () => {
     const store = useUploadQueuesStore()
     fetchAsset.mockImplementation(processed)
     damUploadFinish.mockRejectedValueOnce(new Error('the answer to the finish request was lost'))
-    await store.addByFiles('q', 1, 1, [new File(['x'], 'typed.jpg', { type: 'image/jpeg' })])
+    await store.addByFiles('q', 1, 1, [new File(['x'], 'typed.jpg', { type: 'image/jpeg' })], 'default')
     await vi.waitFor(() => expect(release.has('typed.jpg')).toBe(true))
     const [item] = store.getQueueItems('q')
     bus.listener!({ name: DamNotificationName.AssetMetadataProcessed, data: { asset: item.assetId } })
@@ -326,7 +326,7 @@ describe('the metadata of an item in the queue', () => {
   it('keeps what the user typed into a copy whose metadata came before its copied notification', async () => {
     const store = useUploadQueuesStore()
     fetchAsset.mockImplementation(processed)
-    await store.addByCopyToLicence('q', 1, 1, ['asset-typed', 'asset-waiting'])
+    await store.addByCopyToLicence('q', 1, 1, ['asset-typed', 'asset-waiting'], 'default')
     const [typed, waiting] = store.getQueueItems('q')
     bus.listener!({ name: DamNotificationName.AssetMetadataProcessed, data: { asset: 'asset-typed' } })
     await vi.waitFor(() => expect(typed.canEditMetadata).toBe(true))
@@ -351,7 +351,7 @@ describe('the metadata of an item in the queue', () => {
   it.each([
     [
       'the fallback loaded',
-      (store: ReturnType<typeof useUploadQueuesStore>) => store.queueItemFullyProcessed('asset-1'),
+      (store: ReturnType<typeof useUploadQueuesStore>) => store.queueItemFullyProcessed('asset-1', 'default'),
     ],
     [
       'its copy brought',
@@ -369,13 +369,13 @@ describe('the metadata of an item in the queue', () => {
     const store = useUploadQueuesStore()
     fetchAsset.mockImplementation(processed)
     fetchAssetByFileId.mockImplementation(() => processed(null, null, 'asset-1'))
-    await store.addByCopyToLicence('q', 1, 1, ['asset-1'])
+    await store.addByCopyToLicence('q', 1, 1, ['asset-1'], 'default')
     const [item] = store.getQueueItems('q')
     load(store)
     await vi.waitFor(() => expect(item.canEditMetadata).toBe(true))
     item.customData = { title: 'typed' }
 
-    await store.queueItemFailed('asset-1', AssetFileFailReason.Unknown)
+    await store.queueItemFailed('asset-1', AssetFileFailReason.Unknown, 'default')
     expect([item.status, item.canEditMetadata]).toEqual([UploadQueueItemStatus.Failed, false])
     bus.listener!({ name: DamNotificationName.AssetFileProcessed, data: { asset: 'asset-1' } })
     await vi.waitFor(() => expect(item.status).toBe(UploadQueueItemStatus.Uploaded))
@@ -389,7 +389,7 @@ describe('the metadata of an item in the queue', () => {
     const store = useUploadQueuesStore()
     fetchAsset.mockImplementation(processed)
     damUploadFinish.mockRejectedValueOnce(new Error('the answer to the finish request was lost'))
-    await store.addByFiles('q', 1, 1, [new File(['x'], 'settled.jpg', { type: 'image/jpeg' })])
+    await store.addByFiles('q', 1, 1, [new File(['x'], 'settled.jpg', { type: 'image/jpeg' })], 'default')
     await vi.waitFor(() => expect(release.has('settled.jpg')).toBe(true))
     const [item] = store.getQueueItems('q')
     bus.listener!({ name: DamNotificationName.AssetMetadataProcessed, data: { asset: item.assetId } })
@@ -418,7 +418,7 @@ describe('the metadata of an item in the queue', () => {
         new Promise((resolve) => (answerLookup = () => resolve(processed(client, endPoint, id))))
     )
     damUploadFinish.mockRejectedValueOnce(new Error('the answer to the finish request was lost'))
-    await store.addByFiles('q', 1, 1, [new File(['x'], 'race.jpg', { type: 'image/jpeg' })])
+    await store.addByFiles('q', 1, 1, [new File(['x'], 'race.jpg', { type: 'image/jpeg' })], 'default')
     await vi.waitFor(() => expect(release.has('race.jpg')).toBe(true))
     const [item] = store.getQueueItems('q')
 
@@ -435,7 +435,7 @@ describe('the metadata of an item in the queue', () => {
 
   it('stops being editable when the original of a duplicate cannot be read; a copy whose read fails waits on', async () => {
     const store = useUploadQueuesStore()
-    await store.addByCopyToLicence('q', 1, 1, ['asset-duplicate', 'asset-copy'])
+    await store.addByCopyToLicence('q', 1, 1, ['asset-duplicate', 'asset-copy'], 'default')
     const [duplicate, copy] = store.getQueueItems('q')
     duplicate.canEditMetadata = true
     copy.canEditMetadata = true
@@ -463,7 +463,7 @@ describe('an upload removed while it sends', () => {
   it('stops, and the next file takes its slot', async () => {
     const store = useUploadQueuesStore()
     const files = ['a', 'b', 'c'].map((n) => new File(['x'], `${n}.jpg`, { type: 'image/jpeg' }))
-    await store.addByFiles('removed', 1, 1, files)
+    await store.addByFiles('removed', 1, 1, files, 'default')
     await vi.waitFor(() => expect(release.size).toBe(2))
     const removed = store.getQueueItems('removed')[0]!
     const chunkOfA = removed.latestChunkAbortController!.signal
@@ -493,7 +493,7 @@ describe('upload queue parallel limit', () => {
         .filter((i) => i.status === UploadQueueItemStatus.Uploading)
         .map((i) => i.file!.name)
 
-    await store.addByFiles('q', 1, 1, files)
+    await store.addByFiles('q', 1, 1, files, 'default')
     await vi.waitFor(() => expect(release.size).toBe(2))
     expect(uploading()).toEqual(['a.jpg', 'b.jpg'])
     const [a] = store.getQueueItems('q')
@@ -508,7 +508,7 @@ describe('upload queue parallel limit', () => {
     const afterFinish = uploading()
 
     // The DAM notification for a arrives while the others are still sending.
-    await store.queueItemProcessed('asset-a.jpg')
+    await store.queueItemProcessed('asset-a.jpg', 'default')
     await settle()
     expect([afterFinish, uploading()]).toEqual([
       ['b.jpg', 'c.jpg'],

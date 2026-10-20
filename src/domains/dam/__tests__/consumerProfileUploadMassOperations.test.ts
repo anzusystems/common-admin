@@ -61,7 +61,8 @@ describe.each(consumerProfiles)('the mass operations of an upload queue under th
       QUEUE,
       extSystem,
       licence,
-      Array.from({ length: count }, (_, index) => `asset-${index + 1}`)
+      Array.from({ length: count }, (_, index) => `asset-${index + 1}`),
+      'default'
     )
     wrapper = mount(AssetQueueSelectedSidebar, {
       attachTo: document.body,

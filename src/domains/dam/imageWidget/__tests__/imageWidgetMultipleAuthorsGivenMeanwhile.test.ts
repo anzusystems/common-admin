@@ -170,7 +170,7 @@ const pickInRow = async (row: number, authors: DocId[]) => {
 }
 /** "Fill empty" of the mass operations above the widget: the rows without authors of the DAM get these. */
 const fillEmptyAuthors = async (authors: DocId[]) => {
-  await useImageMassOperations().replaceEmptyAuthors(authors)
+  await useImageMassOperations('default').replaceEmptyAuthors(authors)
   await flushPromises()
 }
 const save = () => (widget!.vm as unknown as { saveImages: () => Promise<boolean> }).saveImages()
@@ -309,7 +309,7 @@ describe('the save of the widget of several images, with authors of the DAM pick
     [
       '"replace everywhere" of the source of the mass operations',
       async () => {
-        useImageMassOperations().replaceEmptySource('Name of author-7', true)
+        useImageMassOperations('default').replaceEmptySource('Name of author-7', true)
         await flushPromises()
       },
     ],
@@ -461,7 +461,7 @@ describe('the detail of the asset of a row of the widget of several images, once
   /** "Edit asset" of a row: the detail of its asset is open. */
   const editAssetOf = async (row: number) => {
     const asset = images()[row]!.assetId!
-    const { editAssetLabel } = useCommonAdminCoreDamOptions()
+    const { editAssetLabel } = useCommonAdminCoreDamOptions('default')
     await rows()
       [row]!.findAll('button')
       .find((button) => button.text() === editAssetLabel)!
@@ -471,7 +471,7 @@ describe('the detail of the asset of a row of the widget of several images, once
   }
   /** The form of the detail is not drawn here: this is what its save sends, with the authors the user picks in it. */
   const saveInDetail = async (authors: DocId[]) => {
-    const { damClient, endPointAsset } = useCommonAdminCoreDamOptions()
+    const { damClient, endPointAsset } = useCommonAdminCoreDamOptions('default')
     detail().asset!.authors = authors
     await updateAssetMetadata(damClient, endPointAsset, detail().asset!, extSystem, detail().mainFileSingleUse)
     await flushPromises()

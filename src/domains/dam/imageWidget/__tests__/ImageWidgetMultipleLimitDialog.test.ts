@@ -53,7 +53,8 @@ const pick = async (queued: number, files: File[]) => {
     QUEUE,
     extSystem,
     licence,
-    Array.from({ length: queued }, (_, index) => `asset-queued-${index + 1}`)
+    Array.from({ length: queued }, (_, index) => `asset-queued-${index + 1}`),
+    'default'
   )
   wrapper = mount(ImageWidgetMultipleLimitDialog, {
     attachTo: document.body,

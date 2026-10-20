@@ -70,7 +70,7 @@ describe.each(consumerProfiles)('an upload under the $name', (profile) => {
   /** One file, sent whole: the row waits for the server to process it. */
   const uploadOne = async () => {
     const store = useUploadQueuesStore()
-    await store.addByFiles(QUEUE, extSystem, licence, [photo()])
+    await store.addByFiles(QUEUE, extSystem, licence, [photo()], 'default')
     const [item] = store.getQueueItems(QUEUE)
     await vi.waitFor(() => expect(item.status).toBe(UploadQueueItemStatus.Processing))
     return { store, item }
@@ -208,7 +208,7 @@ describe.each(consumerProfiles)('an upload under the $name', (profile) => {
         request.method === 'PATCH' && dam.routes.finish.test(request.url) ? { status: 502 } : undefined
       )
       const store = useUploadQueuesStore()
-      await store.addByFiles(QUEUE, extSystem, licence, [photo()])
+      await store.addByFiles(QUEUE, extSystem, licence, [photo()], 'default')
       const [item] = store.getQueueItems(QUEUE)
       await vi.waitFor(() => expect(item.status).toBe(UploadQueueItemStatus.Failed))
       return { store, item }

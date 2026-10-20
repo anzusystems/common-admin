@@ -7,6 +7,7 @@ import { ADamAssetMetadataValidationScopeSymbol } from '@/domains/dam/composable
 import type { IntegerId } from '@/shared/types/common'
 import type { ValidationScope } from '@/shared/types/Validation'
 import { isUndefined } from '@/shared/utils/common'
+import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 
 const props = withDefaults(
   defineProps<{
@@ -16,11 +17,14 @@ const props = withDefaults(
     dataCy?: string
     readonly?: boolean
     validationScope?: ValidationScope
+    /** The DAM configuration whose forms it shows; inherited when not given. */
+    configName?: string
   }>(),
   {
     dataCy: undefined,
     readonly: false,
     validationScope: ADamAssetMetadataValidationScopeSymbol,
+    configName: undefined,
   }
 )
 const emit = defineEmits<{
@@ -28,7 +32,9 @@ const emit = defineEmits<{
   (e: 'anyChange'): void
 }>()
 
-const { getDamConfigAssetCustomFormElements, getDamConfigExtSystem } = useDamConfigState()
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const damConfigName = useDamConfigName(props.configName)
+const { getDamConfigAssetCustomFormElements, getDamConfigExtSystem } = useDamConfigState(undefined, damConfigName)
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const configAssetCustomFormElements = getDamConfigAssetCustomFormElements(props.extSystem)
 if (isUndefined(configAssetCustomFormElements)) {

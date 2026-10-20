@@ -9,6 +9,7 @@ import AssetMetadataImageAttributes from '@/domains/dam/assetDetail/components/A
 import { dateTimePretty } from '@/shared/utils/datetime'
 import ACachedUserChip from '@/domains/cached/components/ACachedUserChip.vue'
 import { useDamCachedUsers } from '@/domains/dam/author/composables/cachedUsers'
+import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 
 // The panel "file" of the metadata of the detail of an asset and of the dialog of a single upload. No overflow-wrap
 // of its own: the detail passes `style="overflow-wrap: normal"`, which falls through to its root.
@@ -23,7 +24,7 @@ const { t } = useI18n()
 
 const isTypeImage = computed(() => (props.asset.attributes.assetType || DamAssetTypeDefault) === DamAssetType.Image)
 
-const { getCachedUser } = useDamCachedUsers()
+const { getCachedUser } = useDamCachedUsers(useDamConfigName())
 </script>
 
 <template>

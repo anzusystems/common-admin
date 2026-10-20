@@ -125,7 +125,9 @@ function librarySide(): Side {
   const queues = ref(new Map<UploadQueueKey, UploadQueue>())
   const profile = libProfile(server)
   const core = scope.run(() =>
-    createUploadQueueCore(libraryQueuePreset({ queues, settlement: coreProfile(profile.profile) }))
+    createUploadQueueCore(
+      libraryQueuePreset({ queues, settlement: coreProfile(profile.profile), configOf: () => 'default' })
+    )
   )!
   const chunkOf = (row: UploadQueueItem) =>
     chunks.waiting.find((held) => !!row.fileId && held.request.url.includes(`/${row.fileId}/chunk`))
@@ -373,7 +375,11 @@ describe.each([
       const keys = prefixes.map((prefix) => core.uniqueKey(prefix))
       const another = scope.run(() =>
         createUploadQueueCore(
-          libraryQueuePreset({ queues: ref(new Map()), settlement: coreProfile(libProfile(server).profile) })
+          libraryQueuePreset({
+            queues: ref(new Map()),
+            settlement: coreProfile(libProfile(server).profile),
+            configOf: () => 'default',
+          })
         )
       )!
       keys.push(another.uniqueKey('file'), another.uniqueKey('file'), core.uniqueKey('file'))

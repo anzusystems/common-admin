@@ -49,16 +49,16 @@ export function useLibraryUploadQueueListBinding(
 ): UploadQueueListBinding {
   const uploadQueuesStore = useUploadQueuesStore()
   const { showWarningT } = useAlerts()
-  const { addToCachedKeywords, fetchCachedKeywords } = useDamCachedKeywords()
-  const { addToCachedAuthors, fetchCachedAuthors } = useDamCachedAuthors()
+  const { addToCachedKeywords, fetchCachedKeywords } = useDamCachedKeywords(configName)
+  const { addToCachedAuthors, fetchCachedAuthors } = useDamCachedAuthors(configName)
   const { mainFileSingleUseEnabled } = useCommonAdminCoreDamOptions(configName)
 
   return {
     items: () => uploadQueuesStore.getQueueItems(toValue(queueKey)),
     cancel: (item, index, itemQueueKey) => uploadQueuesStore.stopItemUpload(itemQueueKey, item, index),
     remove: (index) => uploadQueuesStore.removeByIndex(toValue(queueKey), index),
-    // A row offers refresh only with its asset.
-    refresh: (item) => uploadQueuesStore.refreshAsset(item.assetId!),
+    // A row offers refresh only with its asset; the rows of the configuration of its queue are settled by it.
+    refresh: (item) => uploadQueuesStore.refreshAsset(item.assetId!, { queueKey: toValue(queueKey) }),
     refreshMayHelp: (item) => uploadQueuesStore.refreshMayHelp(item),
     warn: (key) => showWarningT(key),
     prime: (items) => {

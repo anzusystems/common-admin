@@ -105,9 +105,13 @@ const theSuggestions = { newAuthorNames: ['New Author'], newKeywordNames: ['new 
 /** A file, sent whole: its row has the asset and the file the start request answered, `asset-1` and `file-1`. */
 const uploadedFile = async (profile: ConsumerProfile) => {
   const store = useUploadQueuesStore()
-  await store.addByFiles(QUEUE, profile.extSystem, profile.licence, [
-    new File([new Uint8Array(3000)], 'photo.jpg', { type: 'image/jpeg' }),
-  ])
+  await store.addByFiles(
+    QUEUE,
+    profile.extSystem,
+    profile.licence,
+    [new File([new Uint8Array(3000)], 'photo.jpg', { type: 'image/jpeg' })],
+    'default'
+  )
   const [item] = store.getQueueItems(QUEUE)
   await vi.waitFor(() => expect(item.status).toBe(UploadQueueItemStatus.Processing))
   return item
@@ -115,7 +119,7 @@ const uploadedFile = async (profile: ConsumerProfile) => {
 /** An asset copied to the licence: its row has the asset `asset-1`, and no file. */
 const copiedAsset = async (profile: ConsumerProfile) => {
   const store = useUploadQueuesStore()
-  await store.addByCopyToLicence(QUEUE, profile.extSystem, profile.licence, ['asset-1'])
+  await store.addByCopyToLicence(QUEUE, profile.extSystem, profile.licence, ['asset-1'], 'default')
   return store.getQueueItems(QUEUE)[0]!
 }
 const processed = () =>
@@ -148,8 +152,16 @@ describe('what a processed asset gives a row, under the CMS configuration', () =
         notify(DamNotificationName.AssetMetadataProcessed, { asset: 'asset-1' })
       },
     ],
-    ['an uploaded file on its refresh', uploadedFile, () => useUploadQueueItemRefresh().refreshItem('asset-1')],
-    ['a copy to the licence on its refresh', copiedAsset, () => useUploadQueueItemRefresh().refreshItem('asset-1')],
+    [
+      'an uploaded file on its refresh',
+      uploadedFile,
+      () => useUploadQueueItemRefresh('default').refreshItem('asset-1'),
+    ],
+    [
+      'a copy to the licence on its refresh',
+      copiedAsset,
+      () => useUploadQueueItemRefresh('default').refreshItem('asset-1'),
+    ],
   ]
   it.each(ways)('%s: the state of the file, its preview, the metadata and the form', async (_name, row, read) => {
     const item = await row(cmsConfiguration)

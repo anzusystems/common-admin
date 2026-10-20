@@ -39,8 +39,8 @@ afterEach(() => useAuthStore().reset())
 
 describe('isImageWidgetUploadConfigAllowed', () => {
   it('refuses when the DAM user is not loaded, like the select configs filter', () => {
-    expect(filterAllowedImageWidgetSelectConfigs([config])).toEqual([])
-    expect(isImageWidgetUploadConfigAllowed(config)).toBe(false)
+    expect(filterAllowedImageWidgetSelectConfigs([config], 'default')).toEqual([])
+    expect(isImageWidgetUploadConfigAllowed(config, 'default')).toBe(false)
   })
 
   it('allows by ext system admin or by licence, refuses otherwise', () => {
@@ -52,17 +52,17 @@ describe('isImageWidgetUploadConfigAllowed', () => {
       resolvedAssetLicences: [] as { id: number }[],
     }
     setDamUser(user)
-    expect(isImageWidgetUploadConfigAllowed(config)).toBe(false)
+    expect(isImageWidgetUploadConfigAllowed(config, 'default')).toBe(false)
     user.resolvedAssetLicences = [{ id: 10 }]
-    expect(isImageWidgetUploadConfigAllowed(config)).toBe(true)
+    expect(isImageWidgetUploadConfigAllowed(config, 'default')).toBe(true)
     setDamUser({ ...user, adminToExtSystems: [1], resolvedAssetLicences: [] })
-    expect(isImageWidgetUploadConfigAllowed(config)).toBe(true)
+    expect(isImageWidgetUploadConfigAllowed(config, 'default')).toBe(true)
   })
 
   it('allows a user of the ext system, as the backend licence voter does', () => {
     setDamUser({ id: 1, roles: [], adminToExtSystems: [], userToExtSystems: [1], resolvedAssetLicences: [] })
-    expect(isImageWidgetUploadConfigAllowed(config)).toBe(true)
-    expect(filterAllowedImageWidgetSelectConfigs([config])).toHaveLength(1)
+    expect(isImageWidgetUploadConfigAllowed(config, 'default')).toBe(true)
+    expect(filterAllowedImageWidgetSelectConfigs([config], 'default')).toHaveLength(1)
   })
 })
 

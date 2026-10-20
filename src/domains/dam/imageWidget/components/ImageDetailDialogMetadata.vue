@@ -67,7 +67,8 @@ const imageMediaWidgetStore = useImageMediaWidgetStore()
 const { detail } = storeToRefs(imageMediaWidgetStore)
 const assetDetailStore = useAssetDetailStore()
 const { authorConflicts } = storeToRefs(assetDetailStore)
-const { cachedExtSystemId } = useExtSystemIdForCached()
+const damConfigName = useDamConfigName()
+const { cachedExtSystemId } = useExtSystemIdForCached(damConfigName)
 
 const detailType = computed<DamAssetTypeType | null>(() => {
   if (isMediaAware(detail.value)) {
@@ -95,7 +96,7 @@ const imageMedia = computed<ImageCreateUpdateAware | undefined>(() => {
   )
 })
 
-const { v$ } = useImageValidation(detail, imageSourceRequired, useDamConfigName())
+const { v$ } = useImageValidation(detail, imageSourceRequired, damConfigName)
 
 const { showValidationError } = useAlerts()
 

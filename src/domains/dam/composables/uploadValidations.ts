@@ -38,7 +38,7 @@ export function buildFieldRules(
 export function useImageValidation(
   image: Ref<ImageCreateUpdateAware | MediaAware | null>,
   sourceRequired: Ref<boolean>,
-  configName?: string
+  configName: string
 ) {
   const { descriptionValidation, sourceValidation } = useCommonAdminCoreDamOptions(configName)
   const validators = useValidate()

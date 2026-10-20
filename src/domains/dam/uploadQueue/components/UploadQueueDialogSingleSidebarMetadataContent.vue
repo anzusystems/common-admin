@@ -60,13 +60,15 @@ const onAnyMetadataChange = () => {
 const { keywordRequired, keywordEnabled } = useDamKeywordAssetTypeConfig(
   // eslint-disable-next-line vue/no-ref-object-reactivity-loss
   assetType.value,
-  props.extSystem
+  props.extSystem,
+  damConfigName
 )
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(
   // eslint-disable-next-line vue/no-ref-object-reactivity-loss
   assetType.value,
-  props.extSystem
+  props.extSystem,
+  damConfigName
 )
 const { mainFileSingleUseEnabled, showFileInfoEnabled } = useCommonAdminCoreDamOptions(damConfigName)
 </script>

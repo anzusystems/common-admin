@@ -94,7 +94,7 @@ const listAnswer = (request: FakeDamRequest) => {
 const pagingAsNew = () => {
   let paging!: ReturnType<typeof useAssetSelectActions>['pagination']
   const probe = mount(
-    defineComponent({ setup: () => ((paging = useAssetSelectActions().pagination), () => h('div')) }),
+    defineComponent({ setup: () => ((paging = useAssetSelectActions('default').pagination), () => h('div')) }),
     { global: { plugins: [pinia] } }
   )
   paging.value = {

@@ -172,7 +172,7 @@ describe('the set of admin-dam', () => {
 
   it('uploads a file of any type to the addresses of the application, and reads no option of the plugin', async () => {
     // A read of the options would throw.
-    expect(() => useCommonAdminCoreDamOptions()).toThrow()
+    expect(() => useCommonAdminCoreDamOptions('default')).toThrow()
     dam = createFakeDam({ asset: ADMIN_DAM_ASSET, image: ADMIN_DAM_END_POINTS[DamAssetType.Video] })
     const item = row(new File([BYTES], 'clip.mp4', { type: 'video/mp4' }), DamAssetType.Video)
     const run = useUpload(item, undefined, adminDamSet())

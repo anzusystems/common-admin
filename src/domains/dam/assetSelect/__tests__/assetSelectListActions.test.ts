@@ -46,7 +46,7 @@ vi.mock('@/domains/dam/keyword/composables/cachedKeywords', () => ({ useDamCache
 const asset = (id: string) => ({ id, authors: [], keywords: [], mainFile: null }) as any
 const setup = () => {
   let actions!: ReturnType<typeof useAssetSelectActions>
-  mount(defineComponent({ setup: () => ((actions = useAssetSelectActions()), () => h('div')) }))
+  mount(defineComponent({ setup: () => ((actions = useAssetSelectActions('default')), () => h('div')) }))
   const store = useAssetSelectStore()
   store.setSelectConfig([{ licence: 1, extSystem: 1, licenceName: '', extSystemConfig: {} as any }])
   store.setAssetType(DamAssetType.Image)

@@ -5,7 +5,7 @@ import { ImageWidgetUploadConfigKey } from '@/domains/dam/imageWidget/utils/imag
 import ImageWidgetMultipleInner from '@/domains/dam/imageWidget/components/ImageWidgetMultipleInner.vue'
 import AImageWidgetMultipleSimple from '@/domains/dam/imageWidget/components/AImageWidgetMultipleSimple.vue'
 import { useDamConfigState } from '@/domains/dam/config/composables/damConfigState'
-import { useDamConfigStore } from '@/domains/dam/config/store/damConfigStore'
+import { useDamConfigStoreOf } from '@/domains/dam/config/store/damConfigStore'
 import type { IntegerId } from '@/shared/types/common'
 import type { DamConfigLicenceExtSystemReturnType } from '@/domains/dam/types/DamConfig'
 import type { UploadQueueKey } from '@/domains/dam/types/UploadQueue'
@@ -59,21 +59,21 @@ const {
   getDamConfigAssetCustomFormElements,
   getOrLoadDamConfigExtSystemByLicence,
   getOrLoadDamConfigExtSystemByLicences,
-} = useDamConfigState(damClient)
+} = useDamConfigState(damClient, damConfigName)
 
 const uploadConfig = shallowRef<DamConfigLicenceExtSystemReturnType | undefined>(undefined)
 
-const { cachedExtSystemId } = useExtSystemIdForCached()
+const { cachedExtSystemId } = useExtSystemIdForCached(damConfigName)
 
 onMounted(async () => {
-  const damConfigStore = useDamConfigStore()
+  const damConfigStore = useDamConfigStoreOf(damConfigName)
   uploadConfig.value = await getOrLoadDamConfigExtSystemByLicence(props.uploadLicence)
   if (isUndefined(uploadConfig.value)) {
     status.value = 'error'
     return
   }
   cachedExtSystemId.value = uploadConfig.value.extSystem
-  if (!isImageWidgetUploadConfigAllowed(uploadConfig.value)) {
+  if (!isImageWidgetUploadConfigAllowed(uploadConfig.value, damConfigName)) {
     uploadAllowed.value = false
     try {
       if (!damConfigStore.initialized.damPrvConfig) await loadDamPrvConfig()

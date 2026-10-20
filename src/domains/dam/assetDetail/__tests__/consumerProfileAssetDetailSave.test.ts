@@ -181,28 +181,28 @@ describe.each(consumerProfiles)('the save of the detail of an asset under the $n
       const held = dam.hold('PATCH', dam.routes.bulkMetadata)
       await openDetail()
       const detail = useAssetDetailStore(pinia)
-      expect(detail.savingOf('asset-1')).toBeNull()
+      expect(detail.savingOf('asset-1', 'default')).toBeNull()
 
       save().click()
       await vi.waitFor(() => expect(held.waiting).toHaveLength(1))
-      const onItsWay = detail.savingOf('asset-1')
+      const onItsWay = detail.savingOf('asset-1', 'default')
       expect(onItsWay).toBeInstanceOf(Promise)
       // Of that asset only.
-      expect(detail.savingOf('asset-2')).toBeNull()
+      expect(detail.savingOf('asset-2', 'default')).toBeNull()
       // Pressed again while it runs, the button sends nothing: the save on its way is still that one.
       save().click()
       await flushPromises()
       expect(held.waiting).toHaveLength(1)
-      expect(detail.savingOf('asset-1')).toBeInstanceOf(Promise)
+      expect(detail.savingOf('asset-1', 'default')).toBeInstanceOf(Promise)
       // The detail goes, and its save goes on.
       wrapper!.unmount()
       wrapper = undefined
-      expect(detail.savingOf('asset-1')).toBeInstanceOf(Promise)
+      expect(detail.savingOf('asset-1', 'default')).toBeInstanceOf(Promise)
 
       held.release(answer)
       await expect(onItsWay).resolves.toBeUndefined()
       await flushPromises()
-      expect(detail.savingOf('asset-1')).toBeNull()
+      expect(detail.savingOf('asset-1', 'default')).toBeNull()
     }
   )
 
@@ -223,7 +223,7 @@ describe.each(consumerProfiles)('the save of the detail of an asset under the $n
     /** The row of the asset, and its detail as the dialog of the queue opens it, the switch turned on in it. */
     const openedFromRow = async () => {
       const queue = useUploadQueuesStore(pinia)
-      await queue.addByCopyToLicence(ROWS, extSystem, licence, ['asset-1'])
+      await queue.addByCopyToLicence(ROWS, extSystem, licence, ['asset-1'], 'default')
       const [row] = queue.getQueueItems(ROWS)
       expect(row).toMatchObject({ assetId: 'asset-1', customData: {}, mainFileSingleUse: null })
       await openDetail()
@@ -295,7 +295,7 @@ describe.each(consumerProfiles)('the save of the detail of an asset under the $n
       'reads the asset after its save only while a row may become its row, the telling still on, when %s',
       async (_what, others, reads) => {
         const queue = useUploadQueuesStore(pinia)
-        if (others.length > 0) await queue.addByCopyToLicence(ROWS, extSystem, licence, others)
+        if (others.length > 0) await queue.addByCopyToLicence(ROWS, extSystem, licence, others, 'default')
         const rows = () => queue.getQueueItems(ROWS).map(rowState)
         const untouched = rows()
         await openDetail()
@@ -354,7 +354,7 @@ describe.each(consumerProfiles)('the save of the detail of an asset under the $n
     // The store of the detail is shared: by the time the save is answered it can hold another asset.
     it('tells the queue of the asset it saved, when the detail holds another one by the time the save is answered', async () => {
       const { queue, detail, row } = await openedFromRow()
-      await queue.addByCopyToLicence(ROWS, extSystem, licence, ['asset-2'])
+      await queue.addByCopyToLicence(ROWS, extSystem, licence, ['asset-2'], 'default')
       const other = queue.getQueueItems(ROWS)[1]!
       failAssetReads()
       const held = await saveOnItsWay()

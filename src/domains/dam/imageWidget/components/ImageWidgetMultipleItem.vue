@@ -42,7 +42,7 @@ const damConfigName = useDamConfigName(props.configName)
 const imageStore = useImageStore()
 const { t } = useI18n()
 
-const { cachedExtSystemId } = useExtSystemIdForCached()
+const { cachedExtSystemId } = useExtSystemIdForCached(damConfigName)
 const authorConflicts = ref<DocId[]>([])
 // `index` comes from the parent's v-for over these same images.
 const image = computed(() => imageStore.images[props.index]!)

@@ -79,7 +79,10 @@ provide(DatatablePaginationKey, pagination)
 
 const { assetListEnabledFilters } = useCommonAdminCoreDamOptions(damConfigName)
 
-const { loadDamConfigAssetCustomFormElements, getDamConfigAssetCustomFormElements } = useDamConfigState(damClient)
+const { loadDamConfigAssetCustomFormElements, getDamConfigAssetCustomFormElements } = useDamConfigState(
+  damClient,
+  damConfigName
+)
 
 const assetDetailStore = useAssetDetailStore()
 const { asset, dialog } = storeToRefs(assetDetailStore)
@@ -112,7 +115,7 @@ const resetFilterAction = () => {
 const onInit = () => {
   let selectConfigLocal = cloneDeep(props.selectConfigs)
   if (!props.skipCurrentUserCheck) {
-    selectConfigLocal = filterAllowedImageWidgetSelectConfigs(props.selectConfigs)
+    selectConfigLocal = filterAllowedImageWidgetSelectConfigs(props.selectConfigs, damConfigName)
   }
   if (selectConfigLocal.length === 0) {
     showErrorT('common.assetSelect.error.unallowedLicence')

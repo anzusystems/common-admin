@@ -99,7 +99,7 @@ describe.each(consumerProfiles)('the buttons of the upload dialog under the $nam
    */
   const mountDialog = (takesFiles = false) => {
     const add = (files: File[]) => {
-      if (files.length > 0) void queue().addByFiles(QUEUE, extSystem, licence, files)
+      if (files.length > 0) void queue().addByFiles(QUEUE, extSystem, licence, files, 'default')
     }
     return mount(UploadQueueDialog, {
       attachTo: document.body,
@@ -128,7 +128,7 @@ describe.each(consumerProfiles)('the buttons of the upload dialog under the $nam
   }
   /** Files are picked: the widget queues them and opens the dialog of its queue. */
   const pick = async (...names: string[]) => {
-    await queue().addByFiles(QUEUE, extSystem, licence, names.map(photo))
+    await queue().addByFiles(QUEUE, extSystem, licence, names.map(photo), 'default')
     wrapper = mountDialog()
     await flushPromises()
     return rowsOfQueue()
@@ -718,7 +718,7 @@ describe.each(consumerProfiles)('the buttons of the upload dialog under the $nam
     }
     /** One uploaded file, in the dialog with its real "+" and dropzone. The file choice the "+" opens is counted. */
     const oneUploaded = async () => {
-      await queue().addByFiles(QUEUE, extSystem, licence, [photo('a.jpg')])
+      await queue().addByFiles(QUEUE, extSystem, licence, [photo('a.jpg')], 'default')
       wrapper = mountDialog(true)
       await flushPromises()
       await vi.waitFor(() => expect(statuses()).toEqual([Processing]))
@@ -829,7 +829,7 @@ describe.each(consumerProfiles)('the buttons of the upload dialog under the $nam
     it('tells its host nothing of a save that a field of a row stops before it is sent', async () => {
       const elements = useDamConfigStore(pinia).damConfigAssetCustomFormElements.get(extSystem)![DamAssetType.Image]
       elements.find((element) => element.property === 'description')!.attributes.required = true
-      await queue().addByFiles(QUEUE, extSystem, licence, [photo('a.jpg')])
+      await queue().addByFiles(QUEUE, extSystem, licence, [photo('a.jpg')], 'default')
       wrapper = mountDialog(true)
       await flushPromises()
       await vi.waitFor(() => expect(statuses()).toEqual([Processing]))

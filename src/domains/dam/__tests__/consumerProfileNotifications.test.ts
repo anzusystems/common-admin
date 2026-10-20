@@ -72,7 +72,7 @@ describe('an upload under the CMS configuration, with the notification socket op
   /** One file, sent whole: the row waits for the server to process it. */
   const uploadOne = async () => {
     const store = useUploadQueuesStore()
-    await store.addByFiles(QUEUE, extSystem, licence, [photo()])
+    await store.addByFiles(QUEUE, extSystem, licence, [photo()], 'default')
     const [item] = store.getQueueItems(QUEUE)
     await vi.waitFor(() => expect(item.status).toBe(UploadQueueItemStatus.Processing))
     return { store, item }
@@ -197,7 +197,7 @@ describe('an upload under the CMS configuration, with the notification socket op
       request.method === 'PATCH' && dam.routes.finish.test(request.url) ? { status: 502 } : undefined
     )
     const store = useUploadQueuesStore()
-    await store.addByFiles(QUEUE, extSystem, licence, [photo()])
+    await store.addByFiles(QUEUE, extSystem, licence, [photo()], 'default')
     const [item] = store.getQueueItems(QUEUE)
     await vi.waitFor(() => expect(item.status).toBe(UploadQueueItemStatus.Failed))
     dam.fileBecomes('asset-1', AssetFileProcessStatus.Processed, fromTheServer)

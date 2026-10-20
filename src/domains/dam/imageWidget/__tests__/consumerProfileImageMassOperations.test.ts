@@ -75,7 +75,7 @@ describe.each(consumerProfiles)('the mass operations of a gallery under the $nam
   const DESCRIPTION = damText('image.model.texts.description')
   const AUTHORS = damText('asset.model.authors')
   /** The source as the application names it: admin-ugc has a word of its own. */
-  const source = () => useCommonAdminCoreDamOptions().sourceLabel
+  const source = () => useCommonAdminCoreDamOptions('default').sourceLabel
   /** The names of the buttons that are icons: each says what it does, a colon, and its field. */
   const names = () =>
     wrapper!

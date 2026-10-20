@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { createPinia, setActivePinia } from 'pinia'
 import { AxiosError, AxiosHeaders } from 'axios'
 // eslint-disable-next-line no-restricted-imports -- this test is about the public entry itself
 import * as lib from '@/lib'
@@ -37,6 +38,14 @@ describe('exports the admins redefined', () => {
     expect(lib.uploadSettlementRuntime.visibility.isVisible).toBeTypeOf('function')
     expect(Object.keys(lib.UPLOAD_POLL_SCHEDULE)).toEqual(['dense', 'sparse'])
     expect(lib.UploadRowRole.MassEdit).toBe('massEdit')
+  })
+
+  // An application whose named DAM client cannot read the DAM configuration fills the store of that name itself.
+  it('include the DAM configuration store of a configuration name', () => {
+    setActivePinia(createPinia())
+    expect(lib.useDamConfigStoreOf()).toBe(lib.useDamConfigStore())
+    expect(lib.useDamConfigStoreOf('default')).toBe(lib.useDamConfigStore())
+    expect(lib.useDamConfigStoreOf('named')).not.toBe(lib.useDamConfigStore())
   })
 })
 

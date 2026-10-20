@@ -15,7 +15,7 @@ const currentExtSystemId = ref(1)
 
 export const useAuthorListActions = () => {
   const { showErrorsDefault } = useAlerts()
-  const { endPointAuthor } = useCommonAdminCoreDamOptions()
+  const { endPointAuthor } = useCommonAdminCoreDamOptions('default')
   const { execute } = useFetchAuthorList(damClient, endPointAuthor, currentExtSystemId.value)
   const listItems = ref<DamAuthor[]>([])
 

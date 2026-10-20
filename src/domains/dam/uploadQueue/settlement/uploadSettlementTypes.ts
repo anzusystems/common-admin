@@ -32,6 +32,11 @@ export interface UploadSettlementTarget {
   assetId: DocId
   /** The file the event or the read speaks of; `null` when the caller does not know it. */
   fileId: DocIdNullable
+  /**
+   * The DAM configurations the target is of: with `configOf` of the profile, a row in a queue of another configuration
+   * is not concerned. Left out or empty: the rows of every queue. Two DAMs may give one asset id.
+   */
+  configNames?: string[]
 }
 
 /** What the settlement says of one request it asks a reader for. A reader that ignores it behaves as before. */
@@ -40,7 +45,8 @@ export interface UploadReadOptions {
    * Whether a failure of this request is to be reported to whoever collects the errors of the application.
    *
    * The poll and the notifications ask again and again for as long as a row waits, so of their requests only
-   * the first that fails in a streak is `true`; a read that answers ends the streak. The streak begins with a
+   * the first that fails in a streak is `true`; a read that answers ends the streak (with `configOf` of the profile,
+   * a streak is of one configuration, and only a read of that configuration ends it). The streak begins with a
    * failure that was written down (`readers.failureReported`): after one that was not, the next request is
    * `true` again. An asset that does not exist (404) counts as such a failure: it is `true` once per row at most.
    * A read the user asked for (the refresh) is always `true`.
@@ -58,6 +64,18 @@ export interface UploadReadOptions {
 export interface UploadSettlementProfile {
   /** A live view of the queues of the store. The settlement keeps no rows, it always asks. */
   queues(): Iterable<[UploadQueueKey, UploadQueue]>
+  /**
+   * The DAM configuration the queue `queueKey` is of. With it, a target or an event that names configurations
+   * concerns only the rows of their queues: the poll of a queue names that of the queue, and every read made for a
+   * target or an event (one a notification asks for, the refresh, a known processed file, the original of a duplicate)
+   * is made once for each configuration it names, by the queue of its first concerned row of that configuration, and
+   * written into its rows alone; a configuration named whose queues have no row of the asset is not read. The reads of
+   * a configuration go one after another, beside those of the others (and those that name none in a lane of their
+   * own), each configuration with its own streak of failures. The caches are told the queue of the rows whose names
+   * they get. Without it, every row of the asset is concerned, all reads go one after another with one streak, and the
+   * caches are called without a queue, as before.
+   */
+  configOf?(queueKey: UploadQueueKey): string
   roleOf(row: UploadQueueItem): UploadRowRoleType
   policyFor(role: UploadRowRoleType): UploadSettlePolicy
   /**
@@ -87,11 +105,18 @@ export interface UploadSettlementProfile {
      */
     failureReported?(error: unknown): boolean
   }
+  /**
+   * `queueKey`: the queue of the rows whose names are added, and the one whose names are to be fetched, given only to
+   * a profile with `configOf`, as the second argument (an `add` of `defineCached`, which takes every argument as an
+   * id, is to be wrapped). Such a profile is asked to fetch, where the fetch was asked for before (after a read,
+   * after a duplicate became its original), for each queue whose rows were given names since its last fetch. A
+   * profile without it is called without a queue, as before.
+   */
   caches: {
-    addAuthors(ids: DocId[]): void
-    addKeywords(ids: DocId[]): void
-    fetchAuthors(): void
-    fetchKeywords(): void
+    addAuthors(ids: DocId[], queueKey?: UploadQueueKey): void
+    addKeywords(ids: DocId[], queueKey?: UploadQueueKey): void
+    fetchAuthors(queueKey?: UploadQueueKey): void
+    fetchKeywords(queueKey?: UploadQueueKey): void
   }
   messages: {
     processingTooLong(row: UploadQueueItem): string
@@ -130,7 +155,12 @@ export interface UploadSettlementProfile {
     onRefreshMayHelp?(queueKey: UploadQueueKey, row: UploadQueueItem, mayHelp: boolean): void
   }
   connection: {
-    isPushAlive(): boolean
+    /**
+     * Whether notifications come for the rows of the queue `queueKey`: its poll is then only a backup. A profile
+     * that keeps one state for all its queues may leave the queue unread.
+     */
+    isPushAlive(queueKey?: UploadQueueKey): boolean
+    /** Called whenever that may have changed, for any queue. */
     onChange(callback: () => void): () => void
   }
 }
@@ -143,6 +173,8 @@ export interface UploadSettlementEvent {
   failReason?: AssetFileFailReasonType
   originAssetFile?: DocIdNullable
   assetType?: DamAssetTypeType | null
+  /** The DAM configurations the event is of, as on `UploadSettlementTarget`. Left out: every queue. */
+  configNames?: string[]
 }
 
 /**
@@ -162,7 +194,11 @@ export interface UploadSettlement {
 
   /** A notification. Resolves after the write (a delayed read included) or after a failed read; never rejects. */
   notify(event: UploadSettlementEvent): Promise<void>
-  /** The manual refresh: a read at once, with the metadata, without a hint. */
+  /**
+   * The manual refresh: a read at once, with the metadata, without a hint. With `configOf` of the profile, a
+   * configuration the target names whose queues have no row of the asset is not read (`settled`); of several, the
+   * outcome first of `error`, `originalUnread`, `missing`, `pending`, `settled` that any of their reads had.
+   */
   refreshAsset(target: UploadSettlementTarget): Promise<UploadRefreshOutcome>
   /** The caller knows the file is processed: a read at once, with the hint `processed`. */
   settleKnownProcessed(target: UploadSettlementTarget, options: { withMetadata: boolean }): Promise<void>

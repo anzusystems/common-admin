@@ -99,7 +99,7 @@ afterEach(() => {
 /** A copy to the licence: an item that is processing, with its asset and nothing else. */
 const processingItem = async () => {
   const store = useUploadQueuesStore()
-  await store.addByCopyToLicence('q', 1, 1, ['asset-1'])
+  await store.addByCopyToLicence('q', 1, 1, ['asset-1'], 'default')
   return store.getQueueItems('q')[0]!
 }
 
@@ -112,7 +112,7 @@ describe('the refresh of an item of the upload queue', () => {
     await vi.waitFor(() => expect(item.status).toBe(UploadQueueItemStatus.Uploaded))
     expect([item.canEditMetadata, item.customData]).toEqual([false, {}])
 
-    const { refreshItem, refreshing } = useUploadQueueItemRefresh()
+    const { refreshItem, refreshing } = useUploadQueueItemRefresh('default')
     const refreshed = refreshItem('asset-1')
     expect(refreshing.value).toBe(true)
     await refreshed
@@ -133,7 +133,7 @@ describe('the refresh of an item of the upload queue', () => {
     fetchAssetByFileId.mockResolvedValue(asset(AssetFileProcessStatus.Processed))
     const item = await processingItem()
 
-    await useUploadQueueItemRefresh().refreshItem('asset-1')
+    await useUploadQueueItemRefresh('default').refreshItem('asset-1')
 
     expect([item.status, item.isDuplicate]).toEqual([status, isDuplicate])
     expect(warned()).toEqual(warnings)
@@ -144,7 +144,7 @@ describe('the refresh of an item of the upload queue', () => {
       .mockRejectedValueOnce(new Error('502 Bad Gateway'))
       .mockResolvedValue(asset(AssetFileProcessStatus.Processed))
     const item = await processingItem()
-    const { refreshItem, refreshing } = useUploadQueueItemRefresh()
+    const { refreshItem, refreshing } = useUploadQueueItemRefresh('default')
 
     await expect(refreshItem('asset-1')).resolves.toBeUndefined()
     expect([refreshing.value, item.status]).toEqual([false, UploadQueueItemStatus.Processing])
@@ -160,7 +160,7 @@ describe('the refresh of an item of the upload queue', () => {
     fetchAsset.mockRejectedValue(new AnzuApiResponseCodeError(404))
     const item = await processingItem()
 
-    await useUploadQueueItemRefresh().refreshItem('asset-1')
+    await useUploadQueueItemRefresh('default').refreshItem('asset-1')
 
     expect(item.status).toBe(UploadQueueItemStatus.Processing)
     expect(warned()).toEqual([ASSET_GONE])
@@ -170,7 +170,7 @@ describe('the refresh of an item of the upload queue', () => {
   it('says nothing on the press that finds the asset gone for the third time', async () => {
     fetchAsset.mockRejectedValue(new AnzuApiResponseCodeError(404))
     const item = await processingItem()
-    const { refreshItem } = useUploadQueueItemRefresh()
+    const { refreshItem } = useUploadQueueItemRefresh('default')
 
     await refreshItem('asset-1')
     await refreshItem('asset-1')
@@ -213,7 +213,7 @@ describe('the upload queue', () => {
       global: { stubs: { UploadQueueItemEditable: true, AssetQueueSelectedSidebar: true } },
     })
     const store = useUploadQueuesStore()
-    await store.addByCopyToLicence('q', 1, 1, ['asset-0', 'asset-1'])
+    await store.addByCopyToLicence('q', 1, 1, ['asset-0', 'asset-1'], 'default')
     const [before, item] = store.getQueueItems('q')
     await flushPromises()
     expect([before!.assetId, item!.assetId]).toEqual(['asset-0', 'asset-1'])
@@ -289,9 +289,11 @@ describe('the warning that the file of a pressed row is not done yet', () => {
   }
   const fromTheList = () =>
     wrapper!.findComponent(UploadQueueItemEditable).vm.$emit('refreshItem', { index: 0, assetId: 'asset-1' })
-  const withTheRow = (item: UploadQueueItem) => void useUploadQueueItemRefresh().refreshItem('asset-1', item, 'q')
-  const withTheRowOnly = (item: UploadQueueItem) => void useUploadQueueItemRefresh().refreshItem('asset-1', item)
-  const withoutTheRow = () => void useUploadQueueItemRefresh().refreshItem('asset-1')
+  const withTheRow = (item: UploadQueueItem) =>
+    void useUploadQueueItemRefresh('default').refreshItem('asset-1', item, 'q')
+  const withTheRowOnly = (item: UploadQueueItem) =>
+    void useUploadQueueItemRefresh('default').refreshItem('asset-1', item)
+  const withoutTheRow = () => void useUploadQueueItemRefresh('default').refreshItem('asset-1')
   const failedByItsNotification = async (item: UploadQueueItem) => {
     bus.listener!({
       name: DamNotificationName.AssetFileFailed,

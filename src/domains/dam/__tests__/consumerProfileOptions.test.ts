@@ -28,17 +28,32 @@ const install = (profile: typeof cmsConfiguration) => {
   return options
 }
 
+/** The addresses with a key that neither application sets: those of before the keys. */
+const fixedAddresses = {
+  endPointConfiguration: '/adm/v1/configuration',
+  endPointPubConfiguration: '/pub/v1/configuration',
+  endPointAssetLicence: '/adm/v1/asset-licence',
+  endPointAssetCustomForm: '/adm/v1/asset-custom-form',
+  endPointUser: '/adm/v1/user',
+  endPointPodcast: '/adm/v1/podcast',
+  endPointCmsAsset: '/adm/v1/cms/asset',
+}
+
 describe('the plugin options of admin-cms', () => {
   it('resolve to the admin endpoints, their grants and every default', () => {
     install(cmsConfiguration)
 
-    expect(useCommonAdminCoreDamOptions()).toEqual({
+    expect(useCommonAdminCoreDamOptions('default')).toEqual({
       damClient,
       endPointAsset: '/adm/v1/asset',
       endPointImage: '/adm/v1/image',
       endPointRoi: '/adm/v1/roi',
       endPointAuthor: '/adm/v1/author',
       endPointKeyword: '/adm/v1/keyword',
+      ...fixedAddresses,
+      currentUser: 'dam',
+      adminDomain: CONSUMER_DAM_ADMIN_DOMAIN,
+      apiTimeout: 30,
       roiUpdateAcl: 'dam_regionOfInterest_update',
       imageRotateAcl: 'dam_image_update',
       mainFileSingleUseEnabled: true,
@@ -88,7 +103,7 @@ describe('the plugin options of admin-ugc', () => {
     const { coreDam } = install(ugcConfiguration)
     const own = coreDam!.configs.default!
 
-    expect(useCommonAdminCoreDamOptions()).toEqual({
+    expect(useCommonAdminCoreDamOptions('default')).toEqual({
       damClient,
       endPointAsset: '/ugc/v1/asset',
       endPointImage: '/ugc/v1/image',
@@ -96,6 +111,10 @@ describe('the plugin options of admin-ugc', () => {
       // Not named by the application, whose ext system has neither authors nor keywords: the defaults.
       endPointAuthor: '/adm/v1/author',
       endPointKeyword: '/adm/v1/keyword',
+      ...fixedAddresses,
+      currentUser: 'dam',
+      adminDomain: CONSUMER_DAM_ADMIN_DOMAIN,
+      apiTimeout: 30,
       // Not the default endpoints, so the grants of the admin API are not asked for.
       roiUpdateAcl: null,
       imageRotateAcl: null,

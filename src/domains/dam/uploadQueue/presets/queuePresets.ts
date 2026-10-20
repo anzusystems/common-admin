@@ -41,11 +41,8 @@ const objectQueues = (queues: Ref<Record<UploadQueueKey, UploadQueue>>): UploadQ
 export function libraryQueuePreset(store: {
   queues: Ref<Map<UploadQueueKey, UploadQueue>>
   settlement: UploadQueueSettlementProfile
-  /**
-   * The DAM configuration the queue was made under, `default` for one the store does not know. Left out, every
-   * queue is under `default`.
-   */
-  configOf?(queueKey: UploadQueueKey): string
+  /** The DAM configuration the queue was made under, `default` for one the store does not know. */
+  configOf(queueKey: UploadQueueKey): string
 }): UploadQueuePreset<'library'> {
   return {
     [uploadSide]: 'library',
@@ -53,7 +50,7 @@ export function libraryQueuePreset(store: {
       queues: mapQueues(store.queues),
       settlement: store.settlement,
       runnerFor: (_item, queueKey) => (item, onProgress) =>
-        useUpload(item, onProgress, libraryUploadPreset(store.configOf?.(queueKey))),
+        useUpload(item, onProgress, libraryUploadPreset(store.configOf(queueKey))),
       refreshable: true,
     },
   }

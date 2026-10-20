@@ -10,7 +10,8 @@ import {
   ICON_TTS,
   LOW_DIMENSION,
 } from '@/domains/dam/assetDetail/utils/assetImageIconsConfig'
-import { useDamConfigStore } from '@/domains/dam/config/store/damConfigStore'
+import { useDamConfigStoreOf } from '@/domains/dam/config/store/damConfigStore'
+import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 
 const props = withDefaults(
   defineProps<{
@@ -19,12 +20,17 @@ const props = withDefaults(
     disableAbsolute?: boolean
     /** The icon of a synthesized audio (TTS); off by default, as the backend says it to every admin. */
     showTts?: boolean
+    /** The DAM configuration whose distribution services name the icons; inherited when not given. */
+    configName?: string
   }>(),
   {
     disableAbsolute: false,
     showTts: false,
+    configName: undefined,
   }
 )
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const damConfigStore = useDamConfigStoreOf(useDamConfigName(props.configName))
 
 const { t } = useI18n()
 
@@ -48,7 +54,6 @@ const checkDimensions = (icons: string[], titles: string[]) => {
 }
 
 const checkDistributions = (icons: string[], titles: string[]) => {
-  const damConfigStore = useDamConfigStore()
   for (const serviceName of props.assetFileProperties.distributesInServices) {
     const service = damConfigStore.damPrvConfig.distributionServices[serviceName]
     const iconPath = service?.iconPath

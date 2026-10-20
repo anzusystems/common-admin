@@ -82,7 +82,7 @@ describe.each(consumerProfiles)('the rows of an upload queue under the $name', (
     await flushPromises()
   }
   const pick = async (...names: string[]) => {
-    await queue().addByFiles(QUEUE, extSystem, licence, names.map(photo))
+    await queue().addByFiles(QUEUE, extSystem, licence, names.map(photo), 'default')
     await flushPromises()
     return queue().getQueueItems(QUEUE)
   }
@@ -176,10 +176,13 @@ describe.each(consumerProfiles)('the rows of an upload queue under the $name', (
       )
       const chunks = dam.hold('POST', dam.routes.chunk)
       await mountList()
-      await queue().addByFiles(QUEUE, extSystem, licence, [
-        new File([new Uint8Array(3001)], 'a.jpg', { type: 'image/jpeg' }),
-        photo('b.jpg'),
-      ])
+      await queue().addByFiles(
+        QUEUE,
+        extSystem,
+        licence,
+        [new File([new Uint8Array(3001)], 'a.jpg', { type: 'image/jpeg' }), photo('b.jpg')],
+        'default'
+      )
       const [failed] = queue().getQueueItems(QUEUE)
       await vi.waitFor(() => expect(failed.status).toBe(UploadQueueItemStatus.Failed))
       await vi.waitFor(() => expect(chunks.waiting).toHaveLength(1))

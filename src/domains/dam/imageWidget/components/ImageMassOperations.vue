@@ -68,9 +68,9 @@ const clearForm = () => {
   }
 }
 
-const { cachedExtSystemId } = useExtSystemIdForCached()
+const { cachedExtSystemId } = useExtSystemIdForCached(damConfigName)
 
-const { getDamConfigExtSystem } = useDamConfigState()
+const { getDamConfigExtSystem } = useDamConfigState(undefined, damConfigName)
 
 const authorEnabled = computed(() => {
   return !!getDamConfigExtSystem(cachedExtSystemId.value)?.[DamAssetType.Image]?.authors?.enabled

@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { cmsConfiguration, installConsumerProfile } from '@/domains/dam/__tests__/support/consumerProfiles'
+import { seedDamConfigOf } from '@/domains/dam/__tests__/support/namedDamConfig'
 import { createFakeDam, damAssetWithFile, type FakeDam } from '@/domains/dam/__tests__/support/fakeDam'
 import { holdLongWaits, type LongWaits } from '@/domains/dam/__tests__/support/longWaits'
 import { defaultApiErrorLogger, setApiErrorLogger } from '@/domains/api/utils/apiErrors'
@@ -19,8 +20,8 @@ import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueu
 // A page with two DAM configurations: `default`, as admin-cms has it, and `own`, with a client and addresses of
 // its own. A queue is under the configuration it was made with: its files are sent there, and its rows are asked
 // about there, by the poll, after a notification, by the refresh and for the original of a duplicate.
-// Nothing of the library is replaced: each configuration has a DAM client that records its requests. The two stand
-// for one core-dam, so what is started under `own` has ids of its own here.
+// Nothing of the library is replaced: each configuration has a DAM client that records its requests. What is started
+// under `own` has ids of its own here, which tell its rows from those of `default`.
 
 const { endPoints, extSystem, licence } = cmsConfiguration
 const OWN = { asset: '/own/v2/asset', image: '/own/v2/image' }
@@ -44,6 +45,10 @@ beforeEach(() => {
       own: { damClient: own.client, endPointAsset: OWN.asset, endPointImage: OWN.image },
     },
   })
+  // Its DAM has the configuration of the default one, filled before anything is added, as an application does, but
+  // for its chunks: of half a photo, where `default`'s take a photo whole. A queue under `own` that read the store of
+  // `default` would send each photo in one chunk.
+  seedDamConfigOf('own').damPrvConfig.settings.imageChunkConfig = { minSize: 1500, maxSize: 1500 }
   let started = 0
   own.reply((request) => {
     if (request.method !== 'POST' || !own.routes.start.test(request.url)) return undefined
@@ -70,13 +75,15 @@ afterEach(() => {
   useDamNotificationsEventBus().reset()
 })
 
+/** A notification of the socket of `own`: those of `default`'s socket concern the queues of `default` alone. */
 const notify = (name: DamNotificationNameType, data: Record<string, unknown>) =>
-  useDamNotificationsEventBus().emit({ name, data } as unknown as DamNotification)
+  useDamNotificationsEventBus().emit({ name, data } as unknown as DamNotification, ['own'])
 const photo = (name: string) => new File([new Uint8Array(3000)], name, { type: 'image/jpeg' })
 /** The method and the path of every request a client was asked, in order. */
 const asked = (of: FakeDam) => of.requests.map((request) => `${request.method} ${request.url}`)
 const sendingUnderOwn = [
   `POST ${OWN.image}/licence/${licence}`,
+  `POST ${OWN.image}/own-file-1/chunk`,
   `POST ${OWN.image}/own-file-1/chunk`,
   `PATCH ${OWN.image}/own-file-1/uploaded`,
 ]
@@ -106,7 +113,7 @@ describe('a queue made under a named DAM configuration', () => {
     await waits.elapse()
     await vi.waitFor(() => expect(item.status).toBe(Uploaded))
 
-    expect(asked(own).slice(3)).toEqual([`GET ${OWN.asset}/own-asset-1`])
+    expect(asked(own).slice(sendingUnderOwn.length)).toEqual([`GET ${OWN.asset}/own-asset-1`])
     expect(asked(dam)).toEqual([])
   })
 
@@ -152,14 +159,14 @@ describe('a queue made under a named DAM configuration', () => {
     })
   })
 
-  it('is read there when a notification names its asset', async () => {
+  it('is read there when a notification of its socket names its asset', async () => {
     const { item } = await uploadedUnderOwn()
     own.fileBecomes('own-asset-1', AssetFileProcessStatus.Processed)
 
     notify(DamNotificationName.AssetFileProcessed, { asset: 'own-asset-1', id: 'own-file-1' })
     await vi.waitFor(() => expect(item.status).toBe(Uploaded))
 
-    expect(asked(own).slice(3)).toEqual([`GET ${OWN.asset}/own-asset-1`])
+    expect(asked(own).slice(sendingUnderOwn.length)).toEqual([`GET ${OWN.asset}/own-asset-1`])
     expect(asked(dam)).toEqual([])
   })
 
@@ -167,10 +174,10 @@ describe('a queue made under a named DAM configuration', () => {
     const { store, item } = await uploadedUnderOwn()
     own.fileBecomes('own-asset-1', AssetFileProcessStatus.Processed)
 
-    expect(await store.refreshAsset('own-asset-1')).toBe('settled')
+    expect(await store.refreshAsset('own-asset-1', { queueKey: QUEUE })).toBe('settled')
 
     expect(item.status).toBe(Uploaded)
-    expect(asked(own).slice(3)).toEqual([`GET ${OWN.asset}/own-asset-1`])
+    expect(asked(own).slice(sendingUnderOwn.length)).toEqual([`GET ${OWN.asset}/own-asset-1`])
     expect(asked(dam)).toEqual([])
   })
 
@@ -185,7 +192,7 @@ describe('a queue made under a named DAM configuration', () => {
     await waits.elapse()
     await vi.waitFor(() => expect(item.status).toBe(Uploaded))
 
-    expect(asked(own).slice(3)).toEqual([
+    expect(asked(own).slice(sendingUnderOwn.length)).toEqual([
       `GET ${OWN.asset}/own-asset-1`,
       `GET ${OWN.asset}/asset-file/own-file-original`,
     ])
@@ -193,7 +200,7 @@ describe('a queue made under a named DAM configuration', () => {
     expect(item).toMatchObject({ isDuplicate: true, assetId: 'own-asset-original', fileId: 'own-file-original' })
   })
 
-  it('has the original of a duplicate a notification names read there', async () => {
+  it('has the original of a duplicate a notification of its socket names read there', async () => {
     const { item } = await uploadedUnderOwn()
     own.assets.set(
       'own-asset-original',
@@ -208,7 +215,7 @@ describe('a queue made under a named DAM configuration', () => {
     })
     await vi.waitFor(() => expect(item.status).toBe(Uploaded))
 
-    expect(asked(own).slice(3)).toEqual([`GET ${OWN.asset}/asset-file/own-file-original`])
+    expect(asked(own).slice(sendingUnderOwn.length)).toEqual([`GET ${OWN.asset}/asset-file/own-file-original`])
     expect(asked(dam)).toEqual([])
     expect(item).toMatchObject({ isDuplicate: true, assetId: 'own-asset-original', fileId: 'own-file-original' })
   })
@@ -232,7 +239,7 @@ describe('a queue made under a named DAM configuration', () => {
   it('leaves a queue of the default configuration beside it where it was', async () => {
     const store = useUploadQueuesStore()
     await store.addByFiles(QUEUE, extSystem, licence, [photo('own.jpg')], 'own')
-    await store.addByFiles(DEFAULT_QUEUE, extSystem, licence, [photo('default.jpg')])
+    await store.addByFiles(DEFAULT_QUEUE, extSystem, licence, [photo('default.jpg')], 'default')
     const [ofOwn] = store.getQueueItems(QUEUE)
     const [ofDefault] = store.getQueueItems(DEFAULT_QUEUE)
     await vi.waitFor(() => expect([ofOwn.status, ofDefault.status]).toEqual([Processing, Processing]))
@@ -251,14 +258,14 @@ describe('a queue made under a named DAM configuration', () => {
     ])
   })
 
-  it('is under the default configuration when none is named', async () => {
+  it('is sent and asked about under the default configuration when that is named', async () => {
     const store = useUploadQueuesStore()
-    await store.addByFiles(QUEUE, extSystem, licence, [photo('photo.jpg')])
+    await store.addByFiles(QUEUE, extSystem, licence, [photo('photo.jpg')], 'default')
     const [item] = store.getQueueItems(QUEUE)
     await vi.waitFor(() => expect(item.status).toBe(Processing))
     dam.fileBecomes('asset-1', AssetFileProcessStatus.Processed)
 
-    expect(await store.refreshAsset('asset-1')).toBe('settled')
+    expect(await store.refreshAsset('asset-1', 'default')).toBe('settled')
 
     expect(asked(dam)).toHaveLength(4)
     expect(asked(own)).toEqual([])
@@ -273,7 +280,7 @@ describe('the configuration of a queue that is added to again', () => {
   it('is the only one its rows are added under: files under another name are refused, and none is added', async () => {
     const { store } = await uploadedUnderOwn()
 
-    await expect(store.addByFiles(QUEUE, extSystem, licence, [photo('second.jpg')])).rejects.toThrow(
+    await expect(store.addByFiles(QUEUE, extSystem, licence, [photo('second.jpg')], 'default')).rejects.toThrow(
       refused('own', 'default')
     )
 
@@ -285,7 +292,7 @@ describe('the configuration of a queue that is added to again', () => {
   it('is the only one its rows are added under: a copy to the licence under another name is refused too', async () => {
     const { store } = await uploadedUnderOwn()
 
-    await expect(store.addByCopyToLicence(QUEUE, extSystem, licence, ['asset-copy'])).rejects.toThrow(
+    await expect(store.addByCopyToLicence(QUEUE, extSystem, licence, ['asset-copy'], 'default')).rejects.toThrow(
       refused('own', 'default')
     )
 
@@ -309,7 +316,7 @@ describe('the configuration of a queue that is added to again', () => {
     store.stopUpload(QUEUE)
     expect(store.getQueueItems(QUEUE)).toEqual([])
 
-    await store.addByFiles(QUEUE, extSystem, licence, [photo('again.jpg')])
+    await store.addByFiles(QUEUE, extSystem, licence, [photo('again.jpg')], 'default')
     const [item] = store.getQueueItems(QUEUE)
     await vi.waitFor(() => expect(item.status).toBe(Processing))
 
@@ -378,20 +385,19 @@ describe('what a saved detail writes back into the rows of its asset', () => {
     await store.updateFromDetail(saved(), 'own')
 
     expect(item.customData).toEqual({ title: 'saved in the detail' })
-    expect(asked(own).slice(3)).toEqual([`GET ${OWN.asset}/own-asset-1`])
+    expect(asked(own).slice(sendingUnderOwn.length)).toEqual([`GET ${OWN.asset}/own-asset-1`])
     expect(asked(dam)).toEqual([])
   })
 
-  it('is read under the default configuration when the detail names none', async () => {
+  it('is of the default configuration when the detail names it, and leaves the rows of another alone', async () => {
     const { store, item } = await uploadedUnderOwn()
 
-    await store.updateFromDetail(saved())
+    await store.updateFromDetail(saved(), 'default')
 
-    // The default client does not have the asset here: the read fails in silence, and the row takes what the
-    // detail saved.
-    expect(item.customData).toEqual({ title: 'saved in the detail' })
-    expect(asked(own).slice(3)).toEqual([])
-    expect(asked(dam)).toEqual([`GET ${endPoints.asset}/own-asset-1`])
+    // No queue of `default` has a row of the asset: nothing is read, and the row under `own` is not written.
+    expect(item.customData).toEqual({})
+    expect(asked(own).slice(sendingUnderOwn.length)).toEqual([])
+    expect(asked(dam)).toEqual([])
   })
 
   // The detail is saved by then: what cannot be read back is left as it is, and nothing is thrown at the detail.
@@ -401,6 +407,6 @@ describe('what a saved detail writes back into the rows of its asset', () => {
     await expect(store.updateFromDetail(saved(), 'unknown')).resolves.toBeUndefined()
 
     expect(item.customData).toEqual({})
-    expect([...asked(own).slice(3), ...asked(dam)]).toEqual([])
+    expect([...asked(own).slice(sendingUnderOwn.length), ...asked(dam)]).toEqual([])
   })
 })

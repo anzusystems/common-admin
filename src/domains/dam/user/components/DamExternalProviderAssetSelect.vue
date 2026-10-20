@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { cloneDeep } from '@/shared/utils/common'
 import { useDamExternalProviderAssetType } from '@/domains/dam/user/types/DamExternalProviderAssetType'
 import type { AxiosInstance } from 'axios'
+import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 
 const props = withDefaults(
   defineProps<{
@@ -11,11 +12,14 @@ const props = withDefaults(
     multiple?: boolean
     label?: string
     dataCy?: string
+    /** The DAM configuration whose prv configuration lists the options; inherited when not given. */
+    configName?: string
   }>(),
   {
     multiple: false,
     label: undefined,
     dataCy: '',
+    configName: undefined,
   }
 )
 
@@ -37,7 +41,8 @@ const onBlur = () => {
   emit('blur', modelValueComputed.value)
 }
 
-const { allExternalProviderAssetTypeOptions } = useDamExternalProviderAssetType()
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { allExternalProviderAssetTypeOptions } = useDamExternalProviderAssetType(useDamConfigName(props.configName))
 </script>
 
 <template>

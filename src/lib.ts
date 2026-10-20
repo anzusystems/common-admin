@@ -400,6 +400,7 @@ import { useDamAcceptTypeAndSizeHelper } from '@/domains/dam/config/composables/
 import { useAssetSuggestions } from '@/domains/dam/uploadQueue/composables/assetSuggestions'
 import {
   destroyDamNotifications,
+  type DamNotificationListenerOptions,
   initDamNotifications,
   useDamNotifications,
 } from '@/domains/dam/composables/damNotifications'
@@ -514,7 +515,7 @@ import { AuthUnavailableError } from '@/shared/error/AuthUnavailableError'
 import { SessionExpiredError } from '@/shared/error/SessionExpiredError'
 import { isInCauseChain } from '@/shared/error/isInCauseChain'
 import { type BreadcrumbItem, type Breadcrumbs, defineBreadcrumbs } from '@/domains/system/composables/breadcrumbs'
-import { useDamConfigStore } from '@/domains/dam/config/store/damConfigStore'
+import { type DamConfigStore, useDamConfigStore, useDamConfigStoreOf } from '@/domains/dam/config/store/damConfigStore'
 import ADamAuthorFilterRemoteAutocomplete from '@/domains/dam/author/components/DamAuthorFilterRemoteAutocomplete.vue'
 import ADamKeywordFilterRemoteAutocomplete from '@/domains/dam/keyword/components/DamKeywordFilterRemoteAutocomplete.vue'
 import ADamUserFilterRemoteAutocomplete from '@/domains/dam/user/components/DamUserFilterRemoteAutocomplete.vue'
@@ -1063,6 +1064,7 @@ export {
   type DamUploadStartResponse,
   type DamNotificationNameType,
   DamNotificationName,
+  type DamNotificationListenerOptions,
   UploadRowRole,
   type UploadRowRoleType,
   type UploadSettlement,
@@ -1279,6 +1281,8 @@ export {
 
   //  STORES
   useDamConfigStore,
+  useDamConfigStoreOf,
+  type DamConfigStore,
   useImageStore,
 
   // OTHER

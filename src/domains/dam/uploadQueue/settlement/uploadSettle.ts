@@ -210,6 +210,62 @@ export function createUploadSettle(
 ) {
   const policyOf = (row: UploadQueueItem) => profile.policyFor(profile.roleOf(row))
 
+  /**
+   * Whether the target concerns the row of the queue `queueKey`: by `matches` of the profile, and only in a queue of a
+   * configuration the target names, where the profile says the configurations of the queues (`configOf`).
+   */
+  const concerns = (
+    queueKey: UploadQueueKey,
+    row: UploadQueueItem,
+    target: UploadSettlementTarget,
+    purpose: 'settle' | 'decorate' | 'metadata'
+  ) =>
+    (!profile.configOf || !target.configNames?.length || target.configNames.includes(profile.configOf(queueKey))) &&
+    profile.matches(row, target, purpose)
+
+  /**
+   * The target once for each configuration it names, where it names several and the profile says the configurations
+   * of its queues: what is read for it is read for each by itself, by a queue of that configuration, and written into
+   * its rows alone. Otherwise the target itself.
+   */
+  const byConfiguration = (target: UploadSettlementTarget): UploadSettlementTarget[] => {
+    const names = profile.configOf ? [...new Set(target.configNames ?? [])] : []
+    return names.length > 1 ? names.map((name) => ({ ...target, configNames: [name] })) : [target]
+  }
+
+  // The queues whose rows were given names since the caches last fetched.
+  const namedQueues = new Set<UploadQueueKey>()
+  /** Where the names of the rows of the queue go: a profile with `configOf` is told the queue, one without as before. */
+  const cachesOf = (
+    queueKey: UploadQueueKey
+  ): Pick<UploadSettlementProfile['caches'], 'addAuthors' | 'addKeywords'> => {
+    namedQueues.add(queueKey)
+    if (!profile.configOf) {
+      return {
+        addAuthors: (ids) => profile.caches.addAuthors(ids),
+        addKeywords: (ids) => profile.caches.addKeywords(ids),
+      }
+    }
+    return {
+      addAuthors: (ids) => profile.caches.addAuthors(ids, queueKey),
+      addKeywords: (ids) => profile.caches.addKeywords(ids, queueKey),
+    }
+  }
+  /** The caches fetch: those of each queue given names since, or once without a queue for a profile without `configOf`. */
+  const fetchNames = () => {
+    const queueKeys = [...namedQueues]
+    namedQueues.clear()
+    if (!profile.configOf) {
+      profile.caches.fetchAuthors()
+      profile.caches.fetchKeywords()
+      return
+    }
+    for (const queueKey of queueKeys) {
+      profile.caches.fetchAuthors(queueKey)
+      profile.caches.fetchKeywords(queueKey)
+    }
+  }
+
   /** The rows of all the queues, as they are now. */
   const rows = (): UploadSettleRow[] => {
     const all: UploadSettleRow[] = []
@@ -322,8 +378,11 @@ export function createUploadSettle(
     notice.text = null
   }
 
-  const loadMetadata = (queue: UploadQueue, row: UploadQueueItem, asset: AssetDetailItemDto) => {
-    mergeLoadedMetadata(queue, row, asset, profile.caches)
+  const loadMetadata = (
+    { queueKey, queue, row }: Pick<UploadSettleRow, 'queueKey' | 'queue' | 'row'>,
+    asset: AssetDetailItemDto
+  ) => {
+    mergeLoadedMetadata(queue, row, asset, cachesOf(queueKey))
     memory.metadataLoaded.add(toRaw(row))
   }
 
@@ -344,7 +403,7 @@ export function createUploadSettle(
     const notice = noticeOf(row)
     if (policyOf(row).metadata === 'load' && !isMarkedDuplicate(row) && (intent.metadata || wasFailed)) {
       // Loaded once, and never into a row whose form is on: it keeps what the user has typed since.
-      if (!row.canEditMetadata && !memory.metadataLoaded.has(raw)) loadMetadata(queue, row, asset)
+      if (!row.canEditMetadata && !memory.metadataLoaded.has(raw)) loadMetadata({ queueKey, queue, row }, asset)
       row.canEditMetadata = true
       notice.readWarning = false
       profile.hooks.afterMetadataLoaded?.(queueKey, row)
@@ -377,7 +436,9 @@ export function createUploadSettle(
   /** A failure the caller knows of, without a read. */
   const settleKnownFailed = (target: UploadSettlementTarget, failReason: AssetFileFailReasonType) => {
     for (const entry of rows()) {
-      if (entry.row.status === UploadQueueItemStatus.Stop || !profile.matches(entry.row, target, 'settle')) continue
+      if (entry.row.status === UploadQueueItemStatus.Stop || !concerns(entry.queueKey, entry.row, target, 'settle')) {
+        continue
+      }
       settleFailed(entry, failReason)
       bump(entry.row)
     }
@@ -390,7 +451,7 @@ export function createUploadSettle(
   const settleProcessedByEvent = (target: UploadSettlementTarget) => {
     for (const { queueKey, row } of rows()) {
       if (row.status === UploadQueueItemStatus.Stop || policyOf(row).settleOn !== 'event') continue
-      if (!profile.matches(row, target, 'settle')) continue
+      if (!concerns(queueKey, row, target, 'settle')) continue
       const raw = toRaw(row)
       if (row.status === UploadQueueItemStatus.Failed) memory.reviveWithMetadata.add(raw)
       memory.givenUpMissing.delete(raw)
@@ -410,7 +471,7 @@ export function createUploadSettle(
   const announceProcessed = (target: UploadSettlementTarget) => {
     for (const { queueKey, row } of rows()) {
       if (row.status === UploadQueueItemStatus.Stop || policyOf(row).settleOn !== 'never') continue
-      if (profile.matches(row, target, 'decorate')) profile.hooks.onProcessedSeen?.(queueKey, row)
+      if (concerns(queueKey, row, target, 'decorate')) profile.hooks.onProcessedSeen?.(queueKey, row)
     }
   }
 
@@ -420,11 +481,11 @@ export function createUploadSettle(
     eligible: (row: UploadQueueItem) => boolean
   ) =>
     rows().filter(
-      ({ row }) =>
+      ({ queueKey, row }) =>
         row.status !== UploadQueueItemStatus.Stop &&
         eligible(row) &&
         policyOf(row).duplicate === policy &&
-        profile.matches(row, target, 'settle')
+        concerns(queueKey, row, target, 'settle')
     )
 
   // The row stays, marked: settled first, completed from the original file afterwards, so the wait for that file
@@ -535,9 +596,10 @@ export function createUploadSettle(
       updateNewNames(authorSuggestions, queue.suggestions.newAuthorNames)
       updateNewNames(original.metadata.keywordSuggestions ?? {}, queue.suggestions.newKeywordNames)
       row.authorConflicts = getAuthorConflicts(authorSuggestions)
-      profile.caches.addKeywords(row.keywords)
-      profile.caches.addAuthors(row.authors)
-      profile.caches.addAuthors(row.authorConflicts)
+      const caches = cachesOf(queueKey)
+      caches.addKeywords(row.keywords)
+      caches.addAuthors(row.authors)
+      caches.addAuthors(row.authorConflicts)
       row.assetId = original.id
       row.mainFileSingleUse = original.mainFileSingleUse
       row.mainFileInternal = original.mainFileInternal
@@ -551,8 +613,7 @@ export function createUploadSettle(
       untrack(row)
       profile.hooks.onRowFinal(queueKey, row)
     }
-    profile.caches.fetchAuthors()
-    profile.caches.fetchKeywords()
+    fetchNames()
     return false
   }
 
@@ -567,10 +628,16 @@ export function createUploadSettle(
     assetType: DamAssetTypeType | null,
     eligible: (row: UploadQueueItem) => boolean = () => true
   ) => {
-    // Both begin at once, not one after the wait of the other: what each notes of its rows is noted now.
+    // Both begin at once, not one after the wait of the other: what each notes of its rows is noted now. The original
+    // is read once for each configuration the target names, by a queue of it.
+    const targets = byConfiguration(target)
     const [, leftWithout] = await Promise.all([
       markDuplicates(target, originFileId, assetType, eligible),
-      becomeOriginals(target, originFileId, assetType, eligible),
+      targets.length === 1
+        ? becomeOriginals(target, originFileId, assetType, eligible)
+        : Promise.all(targets.map((one) => becomeOriginals(one, originFileId, assetType, eligible))).then((left) =>
+            left.some(Boolean)
+          ),
     ])
     return leftWithout
   }
@@ -595,7 +662,7 @@ export function createUploadSettle(
     if (isMarkedDuplicate(row)) return
     // Nor has a row whose file failed, but the one that failed for want of this very metadata.
     if (row.status === UploadQueueItemStatus.Failed && profile.metadataGate?.(queueKey, row) !== 'load') return
-    if (!memory.metadataLoaded.has(toRaw(row))) loadMetadata(queue, row, asset)
+    if (!memory.metadataLoaded.has(toRaw(row))) loadMetadata({ queueKey, queue, row }, asset)
     row.canEditMetadata = true
     noticeOf(row).readWarning = false
     syncNotice(row)
@@ -625,8 +692,8 @@ export function createUploadSettle(
 
       // The state of the file and what completes the row, unless an event has written into the row since this
       // read was sent: the event knows more than this answer.
-      if (!isStale(row, startedAt) && mainFile && profile.matches(row, target, 'decorate')) {
-        const maySettle = profile.matches(row, target, 'settle')
+      if (!isStale(row, startedAt) && mainFile && concerns(queueKey, row, target, 'decorate')) {
+        const maySettle = concerns(queueKey, row, target, 'settle')
         if (status === AssetFileProcessStatus.Processed) {
           if (policyOf(row).settleOn === 'never') {
             decorate(row, asset, mainFile)
@@ -655,7 +722,7 @@ export function createUploadSettle(
       // Into such a row as well: the metadata is no state of the file. It is loaded once, whenever it comes, and a
       // row the event has failed or marked as a duplicate is refused there. Otherwise a `processed` event that
       // overtakes the read of the metadata notification would leave the row uploaded without its form for good.
-      if (intent.early && profile.matches(row, target, 'metadata')) tryLoadMetadata(entry, asset)
+      if (intent.early && concerns(queueKey, row, target, 'metadata')) tryLoadMetadata(entry, asset)
     }
     profile.hooks.onAssetRead?.(asset)
     return leftWithout
@@ -699,6 +766,9 @@ export function createUploadSettle(
   return {
     memory,
     policyOf,
+    concerns,
+    byConfiguration,
+    fetchNames,
     rows,
     isLive,
     bump,

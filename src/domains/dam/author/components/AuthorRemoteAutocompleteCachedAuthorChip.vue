@@ -9,6 +9,7 @@ import { isNull, isUndefined } from '@/shared/utils/common'
 import type { DocId } from '@/shared/types/common'
 import { useI18n } from 'vue-i18n'
 import { useCachedItem } from '@/domains/cached/composables/useCachedItem'
+import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 
 const props = withDefaults(
   defineProps<{
@@ -25,6 +26,8 @@ const props = withDefaults(
      * takes its value out of the autocomplete, as Vuetify's own chip does. Without them it only hid the chip.
      */
     chipProps?: Record<string, unknown>
+    /** The DAM configuration whose names the chip shows; inherited when not given. */
+    configName?: string
   }>(),
   {
     queueId: undefined,
@@ -35,11 +38,13 @@ const props = withDefaults(
     containerClass: 'd-inline-flex',
     forceReviewed: undefined,
     chipProps: undefined,
+    configName: undefined,
   }
 )
 
 const { getCachedAuthor, addToCachedAuthors, fetchCachedAuthors, pinCachedAuthor, unpinCachedAuthor } =
-  useDamCachedAuthors()
+  // eslint-disable-next-line vue/no-setup-props-reactivity-loss
+  useDamCachedAuthors(useDamConfigName(props.configName))
 // The application's queues where it provides them, else the library's store, asked for only when a chip needs it.
 const suggestionsOf = inject(UploadQueueSuggestionsKey, null) ?? libraryUploadQueueSuggestions
 

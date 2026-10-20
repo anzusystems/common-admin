@@ -9,9 +9,9 @@ import type { IntegerId } from '@/shared/types/common'
 import type { Ref } from 'vue'
 import type { FilterConfig, FilterData } from '@/domains/filters/composables/filterFactory'
 
-export const useAuthorSelectActions = (extSystem: IntegerId, configName?: string) => {
+export const useAuthorSelectActions = (extSystem: IntegerId, configName: string) => {
   const { damClient, endPointAuthor } = useCommonAdminCoreDamOptions(configName)
-  const { getDamConfigExtSystem } = useDamConfigState()
+  const { getDamConfigExtSystem } = useDamConfigState(undefined, configName)
 
   const configExtSystem = getDamConfigExtSystem(extSystem)
   if (isUndefined(configExtSystem)) {

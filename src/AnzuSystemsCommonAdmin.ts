@@ -67,12 +67,47 @@ export interface CommonAdminCoreDamConfig {
   endPointRoi?: string
   /**
    * Where the authors of DAM are listed, looked up by id and created; `/adm/v1/author` by default. Read from the
-   * configuration a component runs under, and from `default` by the cache of author names, which has no
-   * configuration of its own to name.
+   * configuration a component runs under, and by the cache of author names of that configuration.
    */
   endPointAuthor?: string
   /** The same for the keywords of DAM; `/adm/v1/keyword` by default. */
   endPointKeyword?: string
+  /**
+   * Where the settings of DAM are read, and the configuration of an ext system (`/ext-system/:extSystem` after it);
+   * `/adm/v1/configuration` by default. Read by the loaders of the DAM configuration of this configuration.
+   */
+  endPointConfiguration?: string
+  /** Where the public configuration of DAM is read (`loadDamPubConfig`); `/pub/v1/configuration` by default. */
+  endPointPubConfiguration?: string
+  /** Where a licence is read by its id, for its ext system; `/adm/v1/asset-licence` by default. */
+  endPointAssetLicence?: string
+  /** Where the custom forms of an ext system and of a distribution service are read; `/adm/v1/asset-custom-form`. */
+  endPointAssetCustomForm?: string
+  /**
+   * Where the users of DAM are listed and looked up by id: the cache of users of this configuration, and the user
+   * inputs and filters under it that are given no client of their own; `/adm/v1/user` by default.
+   */
+  endPointUser?: string
+  /** Where the podcasts of a licence are listed (`/licence/:licenceId` after it); `/adm/v1/podcast` by default. */
+  endPointPodcast?: string
+  /** Where the image and media widget reads a picked asset as a medium of the CMS; `/adm/v1/cms/asset` by default. */
+  endPointCmsAsset?: string
+  /**
+   * The system whose current user decides which licences the image widgets and asset selects under this
+   * configuration may upload into and pick from: `dam` by default. That user is to be a user of DAM, as DAM gives
+   * its current user (`DamCurrentUserDto`); the application loads it itself, as it loads the one of `dam`. A user of
+   * another system allows no licence, and the error is written to the console. `false` allows every licence, as the
+   * `skipCurrentUserCheck` of a component does, and that prop still wins.
+   */
+  currentUser?: string | false
+  /** The DAM admin an asset of this configuration links to; the root `adminDomain` where left out. */
+  adminDomain?: string
+  /**
+   * The time, in seconds, a request of this configuration may take, as its `damClient` times out (the library sets
+   * no timeout on the client): the size of the chunks of its uploads and the wait limit of its widgets go by it. The
+   * root `apiTimeout` where left out.
+   */
+  apiTimeout?: number
   /**
    * The grant a region of interest's save needs, checked before the editor is offered. By default
    * `dam_regionOfInterest_update` for the default `/adm/v1/roi`, and none for another endpoint (the UGC one checks no
@@ -104,6 +139,17 @@ export interface CommonAdminCoreDamConfig {
   customAssetSelectMetadataToImageMap?: AssetSelectMetadataToImageMapFn
   assetListEnabledFilters?: string[]
   simpleAssetSidebar?: boolean
+  /**
+   * The notification service of this configuration, read as the root `notification` of `coreDam` is. Left out,
+   * `default` has the root one and another configuration none: its uploads are then polled for at the rhythm of a
+   * page without the service. Configurations that name one service share its socket: an event of it concerns the rows
+   * of each, a read it asks for is made for each by its own client, and a failure or a duplicate it tells of is
+   * written into the rows of each.
+   */
+  notification?: {
+    enabled?: boolean | string
+    webSocketUrl?: string
+  }
 }
 
 export type CommonAdminCoreDamOptions =

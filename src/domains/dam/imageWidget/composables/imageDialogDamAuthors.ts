@@ -54,8 +54,8 @@ export function useImageDialogDamAuthors(
   readonly: () => boolean
 ) {
   const { damClient, endPointAsset, endPointAuthor } = useCommonAdminCoreDamOptions(configName)
-  const { getExtSystemByLicence } = useDamConfigState(damClient)
-  const { cachedExtSystemId } = useExtSystemIdForCached()
+  const { getExtSystemByLicence } = useDamConfigState(damClient, configName)
+  const { cachedExtSystemId } = useExtSystemIdForCached(configName)
   const assetDetailStore = useAssetDetailStore()
   const { showErrorsDefault, showErrorT, showUnknownError } = useAlerts()
 
@@ -115,7 +115,8 @@ export function useImageDialogDamAuthors(
    * it has authors the pick of them goes, and an empty source of the image the dialog shows takes their names, as the
    * image of an asset picked with its authors has them (a source it has stays); what was picked in the dialog before
    * gives way. Without authors the dialog goes on offering them, over the asset as it was read now. `pageExtSystem`:
-   * the ext system the page asked for names under when the detail closed, for an asset whose licence does not tell.
+   * the ext system its configuration asked for names under when the detail closed, for an asset whose licence does not
+   * tell.
    */
   const takeAuthorsOfDetailAsset = async (
     of: HeldAsset,
@@ -193,7 +194,7 @@ export function useImageDialogDamAuthors(
     if (saving || !isNull(waitingConfirm)) return true
     const waiting = (waitingConfirm = Symbol('confirm'))
     confirmWaits.value = true
-    void withinWaitLimit(read, REQUESTS_OF_A_DETAIL_ASSET_READ).then((answer) => {
+    void withinWaitLimit(read, REQUESTS_OF_A_DETAIL_ASSET_READ, configName).then((answer) => {
       if (waitingConfirm !== waiting) return
       dropWaitingConfirm()
       if (answer === WAIT_RAN_OUT) {
@@ -215,7 +216,7 @@ export function useImageDialogDamAuthors(
     const of = held.value
     if (isNull(shown) || isNull(of) || isNull(imageOfHeld()) || readonly()) return
     const assetId = of.asset.id
-    const detailSave = assetDetailStore.savingOf(assetId)
+    const detailSave = assetDetailStore.savingOf(assetId, configName)
     const pageExtSystem = cachedExtSystemId.value
     const read = (detailAssetReads.get(assetId) ?? Promise.resolve()).then(() =>
       takeAuthorsOfDetailAsset(of, detailSave, pageExtSystem)
