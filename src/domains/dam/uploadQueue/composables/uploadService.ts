@@ -8,6 +8,7 @@ import { type UploadQueueItem, UploadQueueItemStatus } from '@/domains/dam/types
 import { NEW_LINE_MARK } from '@/domains/system/composables/alerts'
 import { isUndefined } from '@/shared/utils/common'
 import { useDamUploadChunkSize } from '@/domains/dam/uploadQueue/composables/damUploadChunkSize'
+import { useDamConfigStoreOf } from '@/domains/dam/config/store/damConfigStore'
 import { useUploadMeter } from '@/domains/dam/uploadQueue/composables/uploadMeter'
 import {
   libraryUploadPreset,
@@ -75,6 +76,13 @@ const sleep = (ms: number) => {
 }
 
 const stoppedError = () => new Error('Upload stopped')
+
+// The bounds of the chunks come with the prv configuration of the DAM configuration, 0 and 0 till it is loaded: a chunk
+// sized by them is of no bytes.
+const chunkBoundsLoaded = (configName: string) => {
+  const { minSize, maxSize } = useDamConfigStoreOf(configName).damPrvConfig.settings.imageChunkConfig
+  return minSize > 0 && maxSize > 0
+}
 
 /** One run for both sides; without a set it is the library's. Public as `useDamUpload`. */
 export function useUpload(
@@ -150,6 +158,8 @@ export function useUpload(
     let attempt = 0
     do {
       attempt++
+      // A chunk of no bytes takes the upload no further: the upload fails at once, without the tries of a chunk.
+      if (chunkFile.size === 0) return Promise.reject(new Error('uploadService: a chunk of no bytes'))
       try {
         await uploadChunk(chunkFile, offset)
         meter.chunkDone(chunkFile.size)
@@ -193,6 +203,10 @@ export function useUpload(
   const stopSpeedCheck = () => meter.stop()
 
   const uploadInit = async () => {
+    // Refused before anything is asked: the DAM is not asked to create an asset no chunk can fill.
+    if (!chunkBoundsLoaded(configName)) {
+      throw new Error(`uploadService: the chunk bounds of the DAM configuration "${configName}" are not loaded`)
+    }
     const sendable = !!queueItem.file && (emptyFile === 'send' || queueItem.file.size > 0)
     // Taken before the first await: the queue starts every item it still sees waiting, and it looks again after
     // each file it adds.

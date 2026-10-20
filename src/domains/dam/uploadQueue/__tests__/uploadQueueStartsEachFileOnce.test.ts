@@ -3,6 +3,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import { ref } from 'vue'
 import { DamAssetType } from '@/domains/dam/types/Asset'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
+import { useDamConfigStore } from '@/domains/dam/config/store/damConfigStore'
 
 // The queue starts every item it still sees waiting, and it looks again after each file it adds. An upload
 // has to leave "waiting" before its first await -- here the wait for rusha, which loads when the first file
@@ -58,6 +59,8 @@ vi.mock('@/domains/dam/uploadQueue/composables/damUploadChunkSize', () => ({
 describe('upload queue while rusha loads', () => {
   it('starts each selected file once', async () => {
     setActivePinia(createPinia())
+    // The bounds of the chunks are loaded, as an upload needs them: the sizing itself is a stand-in here.
+    useDamConfigStore().damPrvConfig.settings.imageChunkConfig = { minSize: 1024, maxSize: 1024 }
     const store = useUploadQueuesStore()
     const files = ['a', 'b', 'c'].map((name) => new File(['content'], `${name}.jpg`, { type: 'image/jpeg' }))
 

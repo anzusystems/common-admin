@@ -1,7 +1,9 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { createPinia, setActivePinia } from 'pinia'
 import { ref } from 'vue'
 import { type UploadQueueItem, UploadQueueItemStatus } from '@/domains/dam/types/UploadQueue'
 import { useUpload } from '@/domains/dam/uploadQueue/composables/uploadService'
+import { useDamConfigStore } from '@/domains/dam/config/store/damConfigStore'
 
 // rusha, which hashes the upload, is imported when a file starts uploading, before its asset is created.
 // Until the first chunk goes out there is no request for Stop to cancel, so the upload has to notice the
@@ -38,6 +40,12 @@ const queueItem = () =>
     error: { hasError: false, message: '' },
     latestChunkAbortController: null,
   }) as unknown as UploadQueueItem
+
+// The bounds of the chunks are loaded, as an upload needs them: the sizing itself is a stand-in here.
+beforeEach(() => {
+  setActivePinia(createPinia())
+  useDamConfigStore().damPrvConfig.settings.imageChunkConfig = { minSize: 1024, maxSize: 1024 }
+})
 
 describe('an upload stopped before its first chunk', () => {
   it('creates no asset when stopped while rusha loads', async () => {

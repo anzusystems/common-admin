@@ -243,7 +243,8 @@ describe('what fills the caches of a named DAM configuration', () => {
     )
     await cachesAsk()
 
-    expect(askedForNames(own)).toEqual([`GET ${OWN_AUTHOR}/ext-system/${EXT_OWN}/search`])
+    // And the users of its panel "file", by the same client.
+    expect(askedForNames(own)).toEqual([`GET ${OWN_AUTHOR}/ext-system/${EXT_OWN}/search`, 'GET /adm/v1/user'])
     expect(askedForNames(dam)).toEqual([])
     expect(useDamCachedAuthors('own').getCachedAuthor('author-conflict-1')?.name).toBe('author-conflict-1 of own')
     expect(useDamCachedAuthors('default').getCachedAuthor('author-conflict-1')).toBeUndefined()

@@ -7,6 +7,7 @@ import { AssetFileFailReason } from '@/domains/dam/types/AssetFile'
 import { type UploadQueueItem, UploadQueueItemStatus } from '@/domains/dam/types/UploadQueue'
 import { DamNotificationName } from '@/domains/dam/composables/damNotificationsEventBus'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
+import { useDamConfigStore } from '@/domains/dam/config/store/damConfigStore'
 import { immediateScheduler } from '@/domains/dam/uploadQueue/settlement/__tests__/support/immediateScheduler'
 import { manualScheduler } from '@/domains/dam/uploadQueue/settlement/__tests__/support/manualScheduler'
 import { uploadSettlementRuntime } from '@/domains/dam/uploadQueue/settlement/uploadSettlementRuntime'
@@ -92,6 +93,8 @@ const settle = () => new Promise((resolve) => setTimeout(resolve, 50))
 const realScheduler = uploadSettlementRuntime.scheduler
 beforeEach(() => {
   setActivePinia(createPinia())
+  // The bounds of the chunks are loaded, as an upload needs them: the sizing itself is a stand-in here.
+  useDamConfigStore().damPrvConfig.settings.imageChunkConfig = { minSize: 1024, maxSize: 1024 }
   uploadSettlementRuntime.scheduler = immediateScheduler()
   release.clear()
   fetchAsset.mockImplementation(assetWithFile)

@@ -428,22 +428,16 @@ describe.each(sides)('under $name', (side) => {
   }
 
   describe('what a chunk request reports to Sentry (Z2)', () => {
-    it('a chunk of no bytes is not sent, and is reported as invalid', async () => {
+    // Its request refused a chunk of no bytes before it went out, and reported it as invalid, after the asset had
+    // been created. The upload is refused before that now.
+    it('a chunk of no bytes is not sent, nor tried: nothing is reported', async () => {
       // As the store is before the DAM configuration is loaded.
       chunkSizeIs(0)
-      // A chunk that did get to the DAM would be refused, so that the upload ends either way.
-      chunkAnswers(() => ({ status: 500 }))
-      const { run } = await started()
 
-      expect(await outcome(run.upload())).toBe('rejected')
+      await expect(side.run(row()).uploadInit()).rejects.toThrow('are not loaded')
 
-      expect(chunksSent()).toBe(0)
-      expect(finishesSent()).toBe(0)
-      expect(sentry.logMessage).toHaveBeenCalledWith(
-        'dam_upload_chunk_validation',
-        'error',
-        expect.objectContaining({ extra: expect.objectContaining({ offset: 0, size: 0 }) })
-      )
+      expect([startsSent(), chunksSent(), finishesSent()]).toEqual([0, 0, 0])
+      expect(sentry.logMessage).not.toHaveBeenCalled()
       expect(sentry.logError).not.toHaveBeenCalled()
     })
 
@@ -547,10 +541,13 @@ describe.each(sides)('under $name', (side) => {
       ],
       [
         'its chunks have no bytes',
-        async (_item, run) => {
-          chunkSizeIs(0)
+        async (item, run) => {
           chunkAnswers(() => ({ status: 500 }))
           await run.uploadInit()
+          // Emptied once the upload started, as an upload is not started without its bounds: at any speed the size of
+          // its chunk is taken back into them, to 0.
+          chunkSizeIs(0)
+          item.progress.speed = 1
         },
       ],
       [

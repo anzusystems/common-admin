@@ -19,6 +19,7 @@ import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAd
 import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 import { useAssetSuggestions } from '@/domains/dam/uploadQueue/composables/assetSuggestions'
 import { useDamCachedAuthors } from '@/domains/dam/author/composables/cachedAuthors'
+import { useDamCachedUsers } from '@/domains/dam/author/composables/cachedUsers'
 
 const props = withDefaults(
   defineProps<{
@@ -94,6 +95,20 @@ const { keywordRequired, keywordEnabled } = useDamKeywordAssetTypeConfig(
 )
 
 const { mainFileSingleUseEnabled, showFileInfoEnabled, editAssetLabel } = useCommonAdminCoreDamOptions(damConfigName)
+
+const { addToCachedUsers, fetchCachedUsers } = useDamCachedUsers(damConfigName)
+// The chips of the panel "file" show who created and who changed the asset by the cache of users of its configuration.
+// A click into a picker fills it for the asset clicked, and only then: the detail of "edit asset" of a widget, or of a
+// row of the queue, showed two chips that spun with none.
+watch(
+  [() => asset.value?.createdBy, () => asset.value?.modifiedBy],
+  ([createdBy, modifiedBy]) => {
+    if (!showFileInfoEnabled || (!createdBy && !modifiedBy)) return
+    addToCachedUsers(createdBy, modifiedBy)
+    fetchCachedUsers()
+  },
+  { immediate: true }
+)
 </script>
 
 <template>

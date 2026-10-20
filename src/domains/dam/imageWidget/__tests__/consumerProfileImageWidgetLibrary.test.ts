@@ -1102,6 +1102,11 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
     const config = useDamConfigStore(pinia)
     config.damConfigLicenceExtSystem.set(OTHER, { name: '', extSystem: OTHER_EXT_SYSTEM })
     config.damConfigExtSystem.set(OTHER_EXT_SYSTEM, config.damConfigExtSystem.get(extSystem)!)
+    // As the picker loads them for the list of a licence: the detail "edit asset" opens draws them.
+    config.damConfigAssetCustomFormElements.set(
+      OTHER_EXT_SYSTEM,
+      config.damConfigAssetCustomFormElements.get(extSystem)!
+    )
     waits = holdLongWaits()
     forgetAlerts()
     if (isCms) signInToDam(extSystem)

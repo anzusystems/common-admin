@@ -19,6 +19,7 @@ import ImageDetailDialogMetadata from '@/domains/dam/imageWidget/components/Imag
 import { computed, inject, onBeforeUnmount, ref, type ShallowRef, toRaw, watch } from 'vue'
 import AssetDetailDialog from '@/domains/dam/assetDetail/components/AssetDetailDialog.vue'
 import { useAssetDetailStore } from '@/domains/dam/assetDetail/store/assetDetailStore'
+import { loadAssetDetailExtSystem } from '@/domains/dam/assetDetail/composables/assetDetailExtSystem'
 import { storeToRefs } from 'pinia'
 import {
   fetchAsset,
@@ -774,7 +775,12 @@ const onEditAsset = async (assetFileId: DocId) => {
       props.queueKey,
       async () => {
         const assetRes = await fetchAssetByFileId(damClient, endPointAsset, assetFileId)
-        extSystem = await getExtSystemByLicence(assetRes.licence)
+        // A licence the client cannot resolve: the ext system of the widget's upload licence, which its root loaded.
+        const shownUnder = (await getExtSystemByLicence(assetRes.licence)) ?? imageWidgetUploadConfig.value!.extSystem
+        // Before the detail shows the asset: it reads the configuration of its ext system as it draws, and threw
+        // without it.
+        await loadAssetDetailExtSystem(damClient, shownUnder, damConfigName)
+        extSystem = shownUnder
         return assetRes
       },
       // Only for the asset the detail shows: an answer it no longer waits for must not change the ext system its

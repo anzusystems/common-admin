@@ -18,6 +18,7 @@ import AMediaWidgetSimple from '@/domains/dam/imageWidget/components/AMediaWidge
 import type { MediaAware } from '@/domains/dam/types/MediaAware'
 import { useI18n } from 'vue-i18n'
 import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
+import { useExtSystemIdForCached } from '@/domains/dam/composables/extSystemIdForCached'
 
 const props = withDefaults(
   defineProps<{
@@ -94,6 +95,8 @@ const {
 
 const uploadConfig = shallowRef<DamConfigLicenceExtSystemReturnType | undefined>(undefined)
 
+const { cachedExtSystemId } = useExtSystemIdForCached(damConfigName)
+
 onMounted(async () => {
   const damConfigStore = useDamConfigStoreOf(damConfigName)
   uploadConfig.value = await getOrLoadDamConfigExtSystemByLicence(props.uploadLicence)
@@ -101,6 +104,8 @@ onMounted(async () => {
     status.value = 'error'
     return
   }
+  // As the gallery's root: the ext system of its upload licence, till a pick, a drop or "edit asset" writes another.
+  cachedExtSystemId.value = uploadConfig.value.extSystem
   if (!isImageWidgetUploadConfigAllowed(uploadConfig.value, damConfigName)) {
     uploadAllowed.value = false
     try {

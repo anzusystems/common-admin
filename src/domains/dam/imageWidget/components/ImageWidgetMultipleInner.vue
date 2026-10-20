@@ -34,6 +34,7 @@ import {
   showMetadataSaveError,
 } from '@/domains/dam/api/damAssetApi'
 import { useAssetDetailStore } from '@/domains/dam/assetDetail/store/assetDetailStore'
+import { loadAssetDetailExtSystem } from '@/domains/dam/assetDetail/composables/assetDetailExtSystem'
 import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
 import type { ImageStoreItem } from '@/domains/dam/types/ImageAware'
 import { generateUUIDv1 } from '@/shared/utils/generator'
@@ -522,7 +523,12 @@ const onEditAsset = async (assetFileId: DocId) => {
       props.queueKey,
       async () => {
         const asset = await fetchAssetByFileId(damClient, endPointAsset, assetFileId)
-        extSystem = await getExtSystemByLicence(asset.licence)
+        // A licence the client cannot resolve: the ext system of the widget's upload licence, which its root loaded.
+        const shownUnder = (await getExtSystemByLicence(asset.licence)) ?? imageWidgetUploadConfig.value!.extSystem
+        // Before the detail shows the asset: it reads the configuration of its ext system as it draws, and threw
+        // without it.
+        await loadAssetDetailExtSystem(damClient, shownUnder, damConfigName)
+        extSystem = shownUnder
         return asset
       },
       // Only for the asset the detail shows: an answer it no longer waits for must not change the ext system its

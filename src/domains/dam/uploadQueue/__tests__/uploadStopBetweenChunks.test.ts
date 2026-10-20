@@ -1,8 +1,10 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { createPinia, setActivePinia } from 'pinia'
 import { ref } from 'vue'
 import axios from 'axios'
 import { type UploadQueueItem, UploadQueueItemStatus } from '@/domains/dam/types/UploadQueue'
 import { uploadStop, useUpload } from '@/domains/dam/uploadQueue/composables/uploadService'
+import { useDamConfigStore } from '@/domains/dam/config/store/damConfigStore'
 
 vi.mock('rusha', () => ({ createHash: () => ({ update: () => undefined, digest: () => 'sha' }) }))
 
@@ -47,6 +49,12 @@ const outcome = (p: Promise<unknown>, ms: number) =>
     ),
     new Promise((r) => setTimeout(() => r('pending'), ms)),
   ])
+
+// The bounds of the chunks are loaded, as an upload needs them: the sizing itself is a stand-in here.
+beforeEach(() => {
+  setActivePinia(createPinia())
+  useDamConfigStore().damPrvConfig.settings.imageChunkConfig = { minSize: 1024, maxSize: 1024 }
+})
 
 describe('Stop on a multi-chunk upload', () => {
   it('sends no further chunk and does not finish when stopped between chunks', async () => {

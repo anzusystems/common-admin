@@ -1935,6 +1935,11 @@ describe.each(consumerProfiles)('the widget of several images under the $name', 
         const config = useDamConfigStore(pinia)
         config.damConfigLicenceExtSystem.set(OTHER, { name: '', extSystem: OTHER_EXT_SYSTEM })
         config.damConfigExtSystem.set(OTHER_EXT_SYSTEM, config.damConfigExtSystem.get(extSystem)!)
+        // As the picker loads them for the list of a licence: the detail "edit asset" opens draws them.
+        config.damConfigAssetCustomFormElements.set(
+          OTHER_EXT_SYSTEM,
+          config.damConfigAssetCustomFormElements.get(extSystem)!
+        )
         await withImages([12], {}, { 12: OTHER })
         damKeepsAuthors()
 
@@ -2224,6 +2229,11 @@ describe.each(consumerProfiles)('the widget of several images under the $name', 
           ...own,
           image: { ...own.image!, authors: { enabled: false, required: false } },
         })
+        // As the picker loads them for the list of a licence: the detail "edit asset" opens draws them.
+        config.damConfigAssetCustomFormElements.set(
+          OTHER_EXT_SYSTEM,
+          config.damConfigAssetCustomFormElements.get(extSystem)!
+        )
         await withImages([12, 13], {}, { 13: OTHER })
         damKeepsAuthors()
         await editAssetOf(0)

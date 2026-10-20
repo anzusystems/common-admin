@@ -4,6 +4,7 @@ import { ref } from 'vue'
 import { DamAssetType } from '@/domains/dam/types/Asset'
 import { UploadQueueItemStatus } from '@/domains/dam/types/UploadQueue'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
+import { useDamConfigStore } from '@/domains/dam/config/store/damConfigStore'
 
 // A file of no bytes is refused under the set of the library, once its hash has loaded. Until then its row stays
 // waiting, and the queue looks again after each file it adds: it is not started a second time meanwhile.
@@ -65,6 +66,8 @@ vi.mock('@/domains/dam/uploadQueue/composables/damUploadChunkSize', () => ({
 describe('an empty file of a queue while rusha loads', () => {
   it('is run once, while the file added after it starts, and fails', async () => {
     setActivePinia(createPinia())
+    // The bounds of the chunks are loaded, as an upload needs them: the sizing itself is a stand-in here.
+    useDamConfigStore().damPrvConfig.settings.imageChunkConfig = { minSize: 1024, maxSize: 1024 }
     const store = useUploadQueuesStore()
     const empty = new File([], 'empty.jpg', { type: 'image/jpeg' })
     const photo = new File(['content'], 'photo.jpg', { type: 'image/jpeg' })
