@@ -14,8 +14,13 @@ afterEach(() => {
   document.body.innerHTML = ''
 })
 
+// With the transitions the page has: Vuetify 4.3 draws the root of a VAlert in its transition, and the stand-in
+// Test Utils draw for it by default took the attributes of the alert, its `data-cy` too.
 const mountHost = () => {
-  wrapper = mount(defineComponent({ setup: () => () => h(VApp, () => h(AAlerts)) }), { attachTo: document.body })
+  wrapper = mount(defineComponent({ setup: () => () => h(VApp, () => h(AAlerts)) }), {
+    attachTo: document.body,
+    global: { stubs: { transition: false } },
+  })
 }
 // A closed snackbar stays in the DOM, hidden: count what is visible.
 const alerts = () => [...document.querySelectorAll<HTMLElement>('.v-alert')].filter((a) => a.checkVisibility())

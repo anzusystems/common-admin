@@ -517,7 +517,9 @@ describe('the widget of several images drawn while the save of another one of th
     widget = undefined
     await mountWidget([11, 12])
     await vi.waitFor(() => expect(imageApi.calls.filter(([call]) => call === 'fetchImageListByIds')).toHaveLength(2))
-    await waits.settle()
+    // The copy waits for that save once its read has answered, at most the 30 s of `apiTimeout`: a pause of real time
+    // was too short for a slower runner, and the wait was not there yet when a case let it run out.
+    await vi.waitFor(() => expect(waits.lengths()).toContain(30_000))
     return { saves, saved }
   }
   const descriptions = () => images().map((image) => image.texts.description)
