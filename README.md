@@ -51,8 +51,10 @@ To take only fixes automatically, use a range that locks the current minor (`~2.
 
 ## Releasing
 
-Releases are made with [release-tools](https://github.com/anzusystems/release-tools) ([guide](https://github.com/anzusystems/release-tools/blob/main/docs/guide.md)), never by hand:
+Releases are made with [release-tools](https://github.com/anzusystems/release-tools) ([guide](https://github.com/anzusystems/release-tools/blob/main/docs/guide.md)):
 
 - `yarn release:start` — starts a release (a branch and a folder of its own) or a hotfix of an older line.
 - `yarn release:publish` — publishes a prerelease (`alpha`, `beta`, `rc`), a dev build or the final. The tag is created by the command, CI checks, builds and publishes to npm, and the final is merged into `main`.
 - `yarn release:cleanup` — deletes old dev builds and tags that never became a release.
+
+A prerelease can also be published by hand: create a GitHub Release marked as pre-release whose tag is the full version (`2.0.0-rc.1`) on a commit whose CI passed and that contains the current `.github/workflows/release-package.yml`. GitHub Actions checks, builds and publishes it under the npm tag `release:publish` would choose. Finals only with `release:publish`.
