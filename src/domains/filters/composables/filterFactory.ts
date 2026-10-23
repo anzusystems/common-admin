@@ -553,7 +553,8 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
 /**
  * Provides the filter (`FilterConfigKey`, `FilterDataKey`) and `pagination` (`DatatablePaginationKey`) to the filter
  * bar and `ADatatablePagination` below this component, and wires the list to them: `getList` is
- * `fetchList(pagination, filterData, filterConfig)` debounced, submit, reset and sort go through `useFilterHelpers`
+ * `fetchList(pagination, filterData, filterConfig)` debounced and resolves once that has (a refresh button can wait for
+ * it), submit, reset and sort go through `useFilterHelpers`
  * (with `filterHelpersOptions`), and on mount the stored filter and the remembered page are restored before the first
  * load.
  *
@@ -573,11 +574,14 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
  * )
  * ```
  */
-export function useDatatableList<F extends readonly MakeFilterOption<string>[] = readonly MakeFilterOption<string>[]>(
+export function useDatatableList<
+  F extends readonly MakeFilterOption<string>[] = readonly MakeFilterOption<string>[],
+  R = unknown,
+>(
   filterData: FilterData<F>,
   filterConfig: FilterConfig<F>,
   pagination: Ref<Pagination>,
-  fetchList: (pagination: Ref<Pagination>, filterData: FilterData<F>, filterConfig: FilterConfig<F>) => unknown,
+  fetchList: (pagination: Ref<Pagination>, filterData: FilterData<F>, filterConfig: FilterConfig<F>) => R,
   filterHelpersOptions: Partial<FilterHelpersMoreOptions> = {}
 ) {
   provide(FilterConfigKey, filterConfig as FilterConfig)
@@ -588,9 +592,7 @@ export function useDatatableList<F extends readonly MakeFilterOption<string>[] =
     filterConfig,
     filterHelpersOptions
   )
-  const getList = useDebounceFn(() => {
-    fetchList(pagination, filterData, filterConfig)
-  })
+  const getList = useDebounceFn(() => fetchList(pagination, filterData, filterConfig))
   const submitFilterAction = () => submitFilter(pagination, getList)
   const resetFilterAction = () => resetFilter(pagination, getList)
   onMounted(() => loadStoredFilters(pagination, getList))

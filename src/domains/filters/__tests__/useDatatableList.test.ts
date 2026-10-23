@@ -28,7 +28,7 @@ afterEach(() => {
   window.location.hash = ''
 })
 
-const mountList = (moreOptions: Record<string, unknown> = {}) => {
+const mountList = (moreOptions: Record<string, unknown> = {}, loaded?: () => Promise<void>) => {
   const fetches: Array<{ name: unknown; page: number }> = []
   const injected: { config?: FilterConfig; data?: FilterData; pagination?: Ref<Pagination> } = {}
   let list: ReturnType<typeof useDatatableList> | undefined
@@ -53,6 +53,7 @@ const mountList = (moreOptions: Record<string, unknown> = {}) => {
         pagination,
         (p, data) => {
           fetches.push({ name: data.name, page: p.value.page })
+          return loaded?.()
         },
         moreOptions
       )
@@ -116,5 +117,26 @@ describe('useDatatableList', () => {
     list.getList()
     await debounced()
     expect(fetches.length).toBe(before + 1)
+  })
+
+  it('resolves getList when the list has loaded, not when the debounce fires', async () => {
+    let finish = () => {}
+    const { list } = mountList(
+      {},
+      () =>
+        new Promise<void>((resolve) => {
+          finish = resolve
+        })
+    )
+    await debounced()
+    let done = false
+    const call = list.getList().then(() => {
+      done = true
+    })
+    await debounced()
+    expect(done).toBe(false)
+    finish()
+    await call
+    expect(done).toBe(true)
   })
 })
