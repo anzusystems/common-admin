@@ -175,7 +175,8 @@ export async function defineAnzuAdminConfig(options, ...extra) {
         'vue/attribute-hyphenation': ['error', 'always'],
         'vue/v-on-event-hyphenation': ['error', 'always'],
         'vue/custom-event-name-casing': ['error', 'camelCase'],
-        'vue/define-emits-declaration': ['error', 'type-based'],
+        // `defineEmits<{ submit: [] }>()`, not the call-signature form `(e: 'submit'): void`.
+        'vue/define-emits-declaration': ['error', 'type-literal'],
         'vue/no-template-target-blank': ['error'],
         'vue/block-order': ['error', { order: [['script', 'template'], 'style'] }],
         'vue/define-macros-order': ['error'],
