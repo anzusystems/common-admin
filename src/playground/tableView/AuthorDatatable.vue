@@ -59,10 +59,6 @@ const sortByChange = () => {
 onMounted(() => {
   getList()
 })
-
-defineExpose({
-  refresh: getList,
-})
 </script>
 
 <template>
