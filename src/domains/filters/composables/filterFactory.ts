@@ -1,6 +1,12 @@
-import { getCurrentInstance, provide, reactive, type Ref, toRaw } from 'vue'
+import { getCurrentInstance, onMounted, provide, reactive, type Ref, toRaw } from 'vue'
+import { useDebounceFn } from '@vueuse/core'
 import { datatablePageKey, useDatatablePageStore } from '@/domains/system/store/datatablePageStore'
-import { DatatablePageStoreKey } from '@/domains/filters/utils/filterInjectionKeys'
+import {
+  DatatablePageStoreKey,
+  DatatablePaginationKey,
+  FilterConfigKey,
+  FilterDataKey,
+} from '@/domains/filters/utils/filterInjectionKeys'
 import {
   cloneDeep,
   isArray,
@@ -276,7 +282,7 @@ export function useFilterClearHelpers<
   }
 }
 
-interface FilterHelpersMoreOptions {
+export interface FilterHelpersMoreOptions {
   storeFiltersLocalStorage: string | boolean // false to disable, string to override store key
   populateUrlParams: boolean
 }
@@ -542,6 +548,53 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
     serializeFilters,
     deserializeFilters,
   }
+}
+
+/**
+ * Provides the filter (`FilterConfigKey`, `FilterDataKey`) and `pagination` (`DatatablePaginationKey`) to the filter
+ * bar and `ADatatablePagination` below this component, and wires the list to them: `getList` is
+ * `fetchList(pagination, filterData, filterConfig)` debounced, submit, reset and sort go through `useFilterHelpers`
+ * (with `filterHelpersOptions`), and on mount the stored filter and the remembered page are restored before the first
+ * load.
+ *
+ * Only for a datatable that is the parent of its filter bar and does exactly this. Write the wiring out when the first
+ * load skips the stored filter, `getList` checks or adds anything, the sort is handled by hand, `fetchList` takes more
+ * than the list's three arguments, or a parent renders the filter bar (the parent provides then).
+ *
+ * ```ts
+ * const { filterData, filterConfig } = useFaqListFilter()
+ * const { fetchList, listItems } = useFaqListActions()
+ * const { pagination } = usePagination(SORT_BY_ID)
+ * const { getList, sortByChange, submitFilterAction, resetFilterAction } = useDatatableList(
+ *   filterData,
+ *   filterConfig,
+ *   pagination,
+ *   fetchList
+ * )
+ * ```
+ */
+export function useDatatableList<F extends readonly MakeFilterOption<string>[] = readonly MakeFilterOption<string>[]>(
+  filterData: FilterData<F>,
+  filterConfig: FilterConfig<F>,
+  pagination: Ref<Pagination>,
+  fetchList: (pagination: Ref<Pagination>, filterData: FilterData<F>, filterConfig: FilterConfig<F>) => unknown,
+  filterHelpersOptions: Partial<FilterHelpersMoreOptions> = {}
+) {
+  provide(FilterConfigKey, filterConfig as FilterConfig)
+  provide(FilterDataKey, filterData as FilterData)
+  provide(DatatablePaginationKey, pagination)
+  const { resetFilter, submitFilter, loadStoredFilters } = useFilterHelpers(
+    filterData,
+    filterConfig,
+    filterHelpersOptions
+  )
+  const getList = useDebounceFn(() => {
+    fetchList(pagination, filterData, filterConfig)
+  })
+  const submitFilterAction = () => submitFilter(pagination, getList)
+  const resetFilterAction = () => resetFilter(pagination, getList)
+  onMounted(() => loadStoredFilters(pagination, getList))
+  return { getList, sortByChange: submitFilterAction, submitFilterAction, resetFilterAction }
 }
 
 export type AllowedFilterValues = number | number[] | string | string[] | null | undefined | boolean
