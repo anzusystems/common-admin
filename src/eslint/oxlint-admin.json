@@ -34,6 +34,9 @@
     "vue/no-lifecycle-after-await": "error",
     "vue/no-watch-after-await": "error",
 
+    // `() => x`, not `() => { return x }`.
+    "arrow-body-style": ["error", "as-needed"],
+
     // Imports: oxfmt sorts the statements (`sortImports` in .oxfmtrc.json); these sort the names
     // inside the braces, merge two imports of one module and keep types in their own `import type`.
     "sort-imports": ["error", { "ignoreDeclarationSort": true }],
