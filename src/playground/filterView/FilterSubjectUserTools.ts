@@ -106,13 +106,8 @@ export function useSubjectUserInnerFilter() {
     { name: 'lastName' as const, variant: 'startsWith', apiName: 'person.lastName', default: null },
   ] satisfies readonly MakeFilterOption[]
 
-  const { filterConfig, filterData } = createFilter(filterFields, createFilterStore(filterFields), {
+  return createFilter(filterFields, createFilterStore(filterFields), {
     system: 'cms',
     subject: 'user',
   })
-
-  return {
-    filterConfig,
-    filterData,
-  }
 }

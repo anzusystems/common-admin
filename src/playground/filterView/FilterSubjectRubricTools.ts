@@ -109,14 +109,9 @@ export function useSubjectRubricInnerFilter() {
     { name: 'linkedList' as const, apiName: 'linkedListId', default: null },
   ] satisfies readonly MakeFilterOption[]
 
-  const { filterConfig, filterData } = createFilter(filterFields, createFilterStore(filterFields), {
+  return createFilter(filterFields, createFilterStore(filterFields), {
     elastic: true,
     system: 'cms',
     subject: 'rubric',
   })
-
-  return {
-    filterConfig,
-    filterData,
-  }
 }

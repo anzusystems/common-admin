@@ -121,13 +121,8 @@ export function useSubjectSiteInnerFilter() {
     { name: 'linkedList' as const, default: null },
   ] satisfies readonly MakeFilterOption[]
 
-  const { filterConfig, filterData } = createFilter(filterFields, createFilterStore(filterFields), {
+  return createFilter(filterFields, createFilterStore(filterFields), {
     system: 'cms',
     subject: 'site',
   })
-
-  return {
-    filterConfig,
-    filterData,
-  }
 }

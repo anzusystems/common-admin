@@ -58,16 +58,11 @@ function useRubricInnerFilter() {
     },
   ] satisfies readonly MakeFilterOption[]
 
-  const { filterConfig, filterData } = createFilter(filterFieldsInner, createFilterStore(filterFieldsInner), {
+  return createFilter(filterFieldsInner, createFilterStore(filterFieldsInner), {
     elastic: true,
     system: 'cms',
     subject: 'poll',
   })
-
-  return {
-    filterConfig,
-    filterData,
-  }
 }
 const { filterData, filterConfig } = useRubricInnerFilter()
 provide(FilterInnerConfigKey, filterConfig)

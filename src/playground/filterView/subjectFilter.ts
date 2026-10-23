@@ -64,16 +64,11 @@ export const filterFields = [
 const listFiltersStore = createFilterStore(filterFields)
 
 export function useSubjectListFilter() {
-  const { filterConfig, filterData } = createFilter(filterFields, listFiltersStore, {
+  return createFilter(filterFields, listFiltersStore, {
     elastic: true,
     system: 'system',
     subject: 'subject',
   })
-
-  return {
-    filterConfig,
-    filterData,
-  }
 }
 
 export type SubjectFilterFields = typeof filterFields

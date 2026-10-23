@@ -128,14 +128,9 @@ export function useSubjectAuthorInnerFilter() {
     { name: 'text' as const, default: null },
   ] satisfies readonly MakeFilterOption[]
 
-  const { filterConfig, filterData } = createFilter(filterFields, createFilterStore(filterFields), {
+  return createFilter(filterFields, createFilterStore(filterFields), {
     elastic: true,
     system: 'cms',
     subject: 'authorKind',
   })
-
-  return {
-    filterConfig,
-    filterData,
-  }
 }

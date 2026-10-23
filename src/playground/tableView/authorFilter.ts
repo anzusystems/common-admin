@@ -11,14 +11,9 @@ export const filterFieldsList = [
 const listFiltersStore = createFilterStore(filterFieldsList)
 
 export function useAuthorListFilter() {
-  const { filterConfig, filterData } = createFilter(filterFieldsList, listFiltersStore, {
+  return createFilter(filterFieldsList, listFiltersStore, {
     elastic: true,
     system: 'coreDam',
     subject: 'author',
   })
-
-  return {
-    filterConfig,
-    filterData,
-  }
 }
