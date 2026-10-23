@@ -185,6 +185,7 @@ import {
   type UseRecordPageOptions,
   type UseRecordPageReturn,
 } from '@/domains/system/composables/recordPage'
+import { defineRecordLoader } from '@/domains/system/composables/recordActions'
 import {
   isNavigationPending,
   trackNavigation,
@@ -867,6 +868,7 @@ export {
   useRecordPage,
   type UseRecordPageOptions,
   type UseRecordPageReturn,
+  defineRecordLoader,
   trackNavigation,
   isNavigationPending,
   usePageNavigation,
