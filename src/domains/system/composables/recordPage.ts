@@ -65,8 +65,9 @@ export interface UseRecordPageOptions {
   loading?: Ref<boolean>
   /**
    * The record's load, run on mount with the page's signal; `false` from it leaves the page (`leave`), `true` and
-   * `undefined` keep it. Leave it out, and write the `onMounted` by hand, when the page acts on the result, loads
-   * in setup, reuses the load as a refresh or makes more requests on mount.
+   * `undefined` keep it. A load the page also calls later (a refresh after a save) is fine:
+   * `load: () => getData()`. Leave it out, and write the `onMounted` by hand, when the page acts on the result
+   * otherwise, loads in setup or makes more requests on mount.
    */
   load?: (signal: AbortSignal) => Promise<boolean | undefined>
 }
