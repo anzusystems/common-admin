@@ -114,7 +114,6 @@ const onConfirm = (items: Array<PollDemo>) => {
         :items="items"
         :items-length="items.length"
         :loading="loading"
-        item-value="id"
         return-object
         :select-strategy="generateDatatableMinMaxSelectStrategy(minCount, maxCount) as any"
         @click:row.stop="onRowClick"
