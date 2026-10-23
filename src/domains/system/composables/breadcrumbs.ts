@@ -1,4 +1,4 @@
-import { type ComputedRef } from 'vue'
+import { computed, type ComputedRef } from 'vue'
 import type { DocId, IntegerId } from '@/shared/types/common'
 
 export interface BreadcrumbItem {
@@ -21,9 +21,17 @@ export const defaultOptions: BreadcrumbOptions = {
   linkLastItem: false,
 }
 
-export function defineBreadcrumbs(items: ComputedRef<Array<BreadcrumbItem>>, options: Partial<BreadcrumbOptions> = {}) {
+/**
+ * The breadcrumbs of a page for `AActionbar`. `items` is a getter, wrapped in a `computed` here: read only when
+ * the actionbar renders and again when what it reads changes, as `computed(() => [...])` written by the page.
+ * A `ComputedRef` the page already has is kept as it is.
+ */
+export function defineBreadcrumbs(
+  items: (() => Array<BreadcrumbItem>) | ComputedRef<Array<BreadcrumbItem>>,
+  options: Partial<BreadcrumbOptions> = {}
+): Breadcrumbs {
   return {
-    items,
+    items: typeof items === 'function' ? computed(items) : items,
     options: {
       ...defaultOptions,
       ...options,

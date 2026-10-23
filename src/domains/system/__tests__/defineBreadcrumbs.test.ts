@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { computed, ref } from 'vue'
+import { computed, isRef, ref } from 'vue'
 import { defaultOptions, defineBreadcrumbs } from '@/domains/system/composables/breadcrumbs'
 
 describe('defineBreadcrumbs', () => {
@@ -13,6 +13,36 @@ describe('defineBreadcrumbs', () => {
     expect(breadcrumbs.items).toBe(items)
     title.value = 'Renamed'
     expect(breadcrumbs.items.value[1].title).toBe('Renamed')
+  })
+
+  it('wraps a getter in a computed that follows what it reads', () => {
+    const title = ref('Article 1')
+    const breadcrumbs = defineBreadcrumbs(() => [
+      { title: 'Articles', routeName: '/(cms)/articles' },
+      { title: title.value, routeName: '/(cms)/articles/[id]', id: 1 },
+    ])
+    expect(isRef(breadcrumbs.items)).toBe(true)
+    expect(breadcrumbs.items.value[1].title).toBe('Article 1')
+    title.value = 'Renamed'
+    expect(breadcrumbs.items.value[1].title).toBe('Renamed')
+  })
+
+  it('reads the getter only when the items are read, and once per change', () => {
+    const id = ref(1)
+    let reads = 0
+    const breadcrumbs = defineBreadcrumbs(() => {
+      reads += 1
+      return [{ title: `Article ${id.value} of ${later}`, routeName: '/(cms)/articles/[id]', id: id.value }]
+    })
+    // Declared after the call: a getter read at once would throw here, as a page's own computed would not.
+    const later = 'the desk'
+    expect(reads).toBe(0)
+    expect(breadcrumbs.items.value[0].title).toBe('Article 1 of the desk')
+    expect(breadcrumbs.items.value[0].id).toBe(1)
+    expect(reads).toBe(1)
+    id.value = 2
+    expect(breadcrumbs.items.value[0].title).toBe('Article 2 of the desk')
+    expect(reads).toBe(2)
   })
 
   it('defaults to an unlinked last item', () => {

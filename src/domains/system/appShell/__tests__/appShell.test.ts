@@ -121,6 +121,27 @@ describe('AActionbar', () => {
     expect(links(root)).toEqual([['Article 5', '/articles?from=5']])
   })
 
+  it('renders a trail given as a getter and follows what the getter reads', async () => {
+    const title = ref('Article 5')
+    const root = await render({
+      breadcrumbs: defineBreadcrumbs(() => [
+        { title: 'Articles', routeName: '/articles' },
+        { title: title.value, routeName: '/articles/[id]', id: 5 },
+      ]),
+    })
+    expect(links(root)).toEqual([
+      ['Articles', '/articles'],
+      ['Article 5', null],
+    ])
+
+    title.value = 'Renamed'
+    await flushPromises()
+    expect(links(root)).toEqual([
+      ['Articles', '/articles'],
+      ['Renamed', null],
+    ])
+  })
+
   it('takes a trail of its own in the breadcrumbs slot', async () => {
     const root = await render({}, { breadcrumbs: () => h('span', { class: 'own-trail' }, 'own') })
 
