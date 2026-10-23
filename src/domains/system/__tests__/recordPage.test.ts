@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent, h, ref, type Ref } from 'vue'
-import { mount, type VueWrapper } from '@vue/test-utils'
+import { flushPromises, mount, type VueWrapper } from '@vue/test-utils'
 import { createMemoryHistory, createRouter, createWebHistory, type Router, type RouterHistory } from 'vue-router'
 import type { AxiosError } from 'axios'
 import {
@@ -214,6 +214,40 @@ describe('useRecordPage', () => {
 
     // eslint-disable-next-line vue/no-ref-object-reactivity-loss -- final read for an assertion
     expect(loading.value).toBe(false)
+  })
+
+  it('runs the load on mount with the page’s signal, and leaves when it answers false', async () => {
+    const router = makeRouter()
+    await router.push('/records')
+    await router.push('/records/7')
+    const signals: AbortSignal[] = []
+    const mounted = mountRecordPage(router, {
+      ...detailOptions(),
+      load: async (signal) => {
+        signals.push(signal)
+        return false
+      },
+    })
+    wrapper = mounted.wrapper
+    await flushPromises()
+    await new Promise((resolve) => setTimeout(resolve, 0))
+
+    expect(signals).toEqual([mounted.api.signal])
+    expect(router.currentRoute.value.fullPath).toBe('/records')
+  })
+
+  it('stays when the load answers true or undefined', async () => {
+    for (const answer of [true, undefined]) {
+      const router = makeRouter()
+      await router.push('/records')
+      await router.push('/records/7')
+      const mounted = mountRecordPage(router, { ...detailOptions(), load: async () => answer })
+      await flushPromises()
+      await new Promise((resolve) => setTimeout(resolve, 0))
+
+      expect(router.currentRoute.value.fullPath).toBe('/records/7')
+      mounted.wrapper.unmount()
+    }
   })
 
   it('stops the record’s request when the page goes', () => {

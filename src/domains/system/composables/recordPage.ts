@@ -1,4 +1,4 @@
-import { onBeforeUnmount, type Ref } from 'vue'
+import { onBeforeUnmount, onMounted, type Ref } from 'vue'
 import { type NavigationFailure, type RouteLocationRaw, type RouteRecordName, type Router, useRouter } from 'vue-router'
 import { useAlerts } from '@/domains/system/composables/alerts'
 import {
@@ -63,6 +63,12 @@ export interface UseRecordPageOptions {
    * next one -- a create form that loads nothing -- must not inherit it.
    */
   loading?: Ref<boolean>
+  /**
+   * The record's load, run on mount with the page's signal; `false` from it leaves the page (`leave`), `true` and
+   * `undefined` keep it. Leave it out, and write the `onMounted` by hand, when the page acts on the result, loads
+   * in setup, reuses the load as a refresh or makes more requests on mount.
+   */
+  load?: (signal: AbortSignal) => Promise<boolean | undefined>
 }
 
 export interface UseRecordPageReturn {
@@ -112,14 +118,17 @@ const settled = (navigation: Promise<NavigationFailure | void | undefined>) =>
  * the load fails.
  *
  * ```ts
- * const { signal, leave } = useRecordPage({ fallbackRouteName: '/x', skipRouteNames: [...], loading: detailLoading })
- * onMounted(async () => {
- *   if ((await fetchData(id, { signal })) === false) await leave()
+ * useRecordPage({
+ *   fallbackRouteName: '/x',
+ *   skipRouteNames: [...],
+ *   loading: detailLoading,
+ *   load: (signal) => fetchData(id, { signal }),
  * })
  * ```
  *
  * `false` from the loader means "leave"; `undefined` is a load that was superseded or stopped on
- * purpose, after which the page stays.
+ * purpose, after which the page stays. A page that does more with the load writes its own `onMounted`
+ * with the returned `signal` and `leave`, see `load`.
  *
  * While the user is navigating to another page (an async guard, a lazy chunk; `trackNavigation`),
  * the page does not leave: the user's navigation decides, and should it fail, the page stays with
@@ -231,6 +240,13 @@ export function useRecordPage(options: UseRecordPageOptions = {}): UseRecordPage
     if (target !== undefined && (await go(target))) return true
     if (!stillHere() || !onPage() || options.fallbackRouteName === undefined) return false
     return go({ name: options.fallbackRouteName, params: options.fallbackRouteParams })
+  }
+
+  const { load } = options
+  if (load) {
+    onMounted(async () => {
+      if ((await load(controller.signal)) === false) await leave()
+    })
   }
 
   return { signal: controller.signal, leave, onPage }
