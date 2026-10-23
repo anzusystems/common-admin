@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ref } from 'vue'
 import type { AxiosError } from 'axios'
-import { defineRecordLoader } from '@/domains/system/composables/recordActions'
+import { defineRecordLoader, defineRecordSave } from '@/domains/system/composables/recordActions'
 import { AnzuApiAxiosError } from '@/shared/error/AnzuApiAxiosError'
 import { AnzuApiCancelledError } from '@/shared/error/AnzuApiCancelledError'
 
@@ -69,5 +69,50 @@ describe('defineRecordLoader', () => {
 
     await fetchData(1, { signal: controller.signal })
     expect(loading).toHaveProperty('value', true)
+  })
+})
+
+describe('defineRecordSave', () => {
+  const validator = (invalid: boolean) => {
+    const touched = { count: 0 }
+    const v$ = ref({ $touch: () => (touched.count += 1), $invalid: invalid })
+    return { v$, touched }
+  }
+
+  it('touches the form, runs the save with its arguments under the flag, and lowers the flag', async () => {
+    const loading = ref(false)
+    const { v$, touched } = validator(false)
+    const calls: Array<[string, boolean]> = []
+    const onUpdate = defineRecordSave(loading, v$, async (close: string) => {
+      calls.push([close, loading.value])
+    })
+
+    await onUpdate('close')
+    expect(touched.count).toBe(1)
+    expect(calls).toEqual([['close', true]])
+    expect(loading).toHaveProperty('value', false)
+    expect(await alerts()).not.toHaveBeenCalled()
+  })
+
+  it('stops with the validation alert when the form is invalid, without saving', async () => {
+    const loading = ref(false)
+    const save = vi.fn(async () => undefined)
+    const onUpdate = defineRecordSave(loading, validator(true).v$, save)
+
+    await onUpdate()
+    expect(save).not.toHaveBeenCalled()
+    expect(await alerts()).toHaveBeenCalledTimes(1)
+    expect(loading).toHaveProperty('value', false)
+  })
+
+  it('shows a failed save and lowers the flag', async () => {
+    const loading = ref(false)
+    const onUpdate = defineRecordSave(loading, validator(false).v$, async () => {
+      throw axiosError(500)
+    })
+
+    await onUpdate()
+    expect(await alerts()).toHaveBeenCalledTimes(1)
+    expect(loading).toHaveProperty('value', false)
   })
 })
