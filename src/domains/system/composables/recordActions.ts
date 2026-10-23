@@ -49,14 +49,13 @@ export const defineRecordLoader =
  * })
  * ```
  */
-export const defineRecordSave =
-  <Args extends unknown[]>(
-    loading: Ref<boolean>,
-    v$: Ref<{ $touch: () => void; $invalid: boolean }>,
-    save: (...args: Args) => Promise<void>
-  ) =>
-  async (...args: Args): Promise<void> => {
-    const { showValidationError, showErrorsDefault } = useAlerts()
+export const defineRecordSave = <Args extends unknown[]>(
+  loading: Ref<boolean>,
+  v$: Ref<{ $touch: () => void; $invalid: boolean }>,
+  save: (...args: Args) => Promise<void>
+) => {
+  const { showValidationError, showErrorsDefault } = useAlerts()
+  return async (...args: Args): Promise<void> => {
     loading.value = true
     try {
       v$.value.$touch()
@@ -71,3 +70,4 @@ export const defineRecordSave =
       loading.value = false
     }
   }
+}
