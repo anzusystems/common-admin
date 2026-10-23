@@ -554,9 +554,9 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
  * Provides the filter (`FilterConfigKey`, `FilterDataKey`) and `pagination` (`DatatablePaginationKey`) to the filter
  * bar and `ADatatablePagination` below this component, and wires the list to them: `getList` is
  * `fetchList(pagination, filterData, filterConfig)` debounced and resolves once that has (a refresh button can wait for
- * it), submit, reset and sort go through `useFilterHelpers`
- * (with `filterHelpersOptions`), and on mount the stored filter and the remembered page are restored before the first
- * load.
+ * it; a call that a newer one replaces within the debounce resolves at once, without a load of its own), submit, reset
+ * and sort go through `useFilterHelpers` (with `filterHelpersOptions`), and on mount the stored filter and the
+ * remembered page are restored before the first load.
  *
  * Only for a datatable that is the parent of its filter bar and does exactly this. Write the wiring out when the first
  * load skips the stored filter, `getList` checks or adds anything, the sort is handled by hand, `fetchList` takes more
