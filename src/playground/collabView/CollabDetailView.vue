@@ -28,9 +28,7 @@ onMounted(() => {
   subscribeCollabRoomInfo()
 })
 
-onBeforeUnmount(() => {
-  unsubscribeCollabRoomInfo()
-})
+onBeforeUnmount(unsubscribeCollabRoomInfo)
 
 addCollabReconnectListener(() => {
   subscribeCollabRoomInfo()
