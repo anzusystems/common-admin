@@ -118,6 +118,17 @@ export default defineConfig({
     isolate: true,
     browser: {
       enabled: true,
+      // Chromium collects the iframes of finished test files lazily: over the whole suite one renderer climbed to
+      // 2.2 GB and the page crashed under a tight memory limit. Before each file (src/test/setup.ts) a full GC runs
+      // when the page holds more than 256 MB of JS heap: about ten per run, no slower, the renderer stays near 1 GB.
+      commands: {
+        async collectGarbageIfLarge(ctx) {
+          const cdp = await ctx.context.newCDPSession(ctx.page)
+          const { usedSize } = await cdp.send('Runtime.getHeapUsage')
+          if (usedSize > 256 * 1024 * 1024) await cdp.send('HeapProfiler.collectGarbage')
+          await cdp.detach()
+        },
+      },
       provider: playwright(),
       instances: [
         {

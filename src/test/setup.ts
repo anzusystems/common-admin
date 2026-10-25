@@ -2,7 +2,8 @@ import { config } from '@vue/test-utils'
 import { createVuetify } from 'vuetify'
 import { createI18n } from 'vue-i18n'
 import { createPinia } from 'pinia'
-import { vi } from 'vitest'
+import { beforeAll, vi } from 'vitest'
+import { commands } from 'vitest/browser'
 // Import Vuetify styles for browser testing
 import 'vuetify/styles'
 // Import Material Design Icons
@@ -37,6 +38,15 @@ const pinia = createPinia()
 
 // Configure Vue Test Utils global plugins
 config.global.plugins = [vuetify, i18n, pinia]
+
+declare module 'vitest/browser' {
+  interface BrowserCommands {
+    collectGarbageIfLarge: () => Promise<void>
+  }
+}
+
+// What the iframes of the files before this one left on the page, collected when it is a lot (vitest.config.mts).
+beforeAll(() => commands.collectGarbageIfLarge())
 
 // Mock window.matchMedia for Vuetify.
 // `(any-pointer: fine)` answers TRUE: the default test environment stands in for a desktop with a
