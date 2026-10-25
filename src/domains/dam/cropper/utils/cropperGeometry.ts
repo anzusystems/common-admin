@@ -4,7 +4,7 @@
  * it, so it has to live somewhere — and here, away from the DOM, it can be tested directly rather
  * than through a mounted component.
  */
-import { getAdjustedSizes } from 'cropperjs2'
+import { getAdjustedSizes } from 'cropperjs'
 
 export interface Size {
   width: number

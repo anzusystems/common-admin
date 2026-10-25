@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { getAdjustedSizes } from 'cropperjs2'
+import { getAdjustedSizes } from 'cropperjs'
 import {
   canvasSizeFor,
   clampRectInside,

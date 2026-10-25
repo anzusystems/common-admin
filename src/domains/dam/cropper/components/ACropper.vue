@@ -9,7 +9,7 @@ import {
   CropperImage,
   CropperSelection,
   CropperShade,
-} from 'cropperjs2'
+} from 'cropperjs'
 import {
   canvasSizeFor,
   clampRectInside,
