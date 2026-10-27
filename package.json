@@ -83,7 +83,7 @@
     "@types/node": "^24.19.2",
     "@types/rusha": "^0.8.3",
     "@types/sortablejs": "^1.15.9",
-    "@typescript-eslint/parser": "^8.72.0",
+    "@typescript-eslint/parser": "^8.72.1",
     "@vitejs/plugin-vue": "^6.0.10",
     "@vitest/browser": "^5.0.5",
     "@vitest/browser-playwright": "^5.0.5",
@@ -105,14 +105,14 @@
     "eslint": "^10.13.0",
     "eslint-plugin-oxlint": "1.89.0",
     "eslint-plugin-pinia": "^0.4.2",
-    "eslint-plugin-vue": "10.11.1",
+    "eslint-plugin-vue": "10.12.0",
     "eslint-plugin-vuetify": "^2.7.3",
     "npm-run-all2": "^9.0.4",
-    "oxfmt": "^0.74.0",
-    "oxlint": "1.89.0",
+    "oxfmt": "^0.75.0",
+    "oxlint": "1.90.0",
     "pinia": "4.1.0",
     "playwright": "^1.64.1",
-    "postcss": "^8.5.31",
+    "postcss": "^8.5.32",
     "postcss-html": "^2.0.0",
     "rusha": "^0.8.14",
     "sass": "1.106.1",
@@ -124,7 +124,7 @@
     "stylelint-config-recommended-vue": "^2.0.0",
     "stylelint-config-standard-scss": "^17.0.0",
     "typescript": "~6.0.3",
-    "unplugin": "3.4.0",
+    "unplugin": "3.5.0",
     "unplugin-dts": "^1.1.2",
     "uuid": "^14.0.3",
     "vite": "8.3.5",
@@ -135,7 +135,7 @@
     "vue-i18n": "11.4.16",
     "vue-router": "5.4.0",
     "vue-tsc": "3.3.13",
-    "vuetify": "4.3.0"
+    "vuetify": "4.3.1"
   },
   "peerDependencies": {
     "@mdi/font": "^7.4.47",
@@ -152,9 +152,9 @@
     "eslint": "^10.13.0",
     "eslint-plugin-oxlint": "^1.89.0",
     "eslint-plugin-pinia": "^0.4.2",
-    "eslint-plugin-vue": "^10.11.1",
+    "eslint-plugin-vue": "^10.12.0",
     "eslint-plugin-vuetify": "^2.7.3",
-    "oxlint": "^1.89.0",
+    "oxlint": "^1.90.0",
     "pinia": "^4.1.0",
     "socket.io-client": "^4.8.4",
     "sortablejs": "^1.15.7",
@@ -163,7 +163,7 @@
     "vue": "^3.5.44",
     "vue-i18n": "^11.4.16",
     "vue-router": "^5.4.0",
-    "vuetify": "^4.3.0"
+    "vuetify": "^4.3.1"
   },
   "peerDependenciesMeta": {
     "@sentry/vite-plugin": {
