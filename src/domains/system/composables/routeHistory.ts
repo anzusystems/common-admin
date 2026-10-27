@@ -17,6 +17,8 @@ export interface RouteHistoryEntry {
 // Module state, so the history is one list per document. A test that fills it has to clear it
 // again (`clearHistory`), or the next test in the file reads what the previous one left behind.
 const history = ref<RouteHistoryEntry[]>([])
+// Bumped by `clearHistory`, so that a Close landing after it leaves the new list alone.
+let historyGeneration = 0
 // Paths a record page left because its record failed, with when; read by `useRecordPage`, which
 // skips them as a destination for a while. Here so that `clearHistory` clears it with the history.
 const leftAfterFailure = new Map<string, number>()
@@ -127,6 +129,7 @@ export function useRouteHistory(): {
 
   const clearHistory = () => {
     history.value = []
+    historyGeneration++
     leftAfterFailure.clear()
   }
 
@@ -151,7 +154,24 @@ export function useRouteHistory(): {
     const route = findRouteBack((entry) => !isCurrent(entry) && !skip.includes(entry.name))
 
     if (route) {
-      return { to: route.fullPath, navigation: router.push(route.fullPath) }
+      const generation = historyGeneration
+      const navigation = router.push(route.fullPath)
+      // Back on `route`, what came after it is behind the user, the route being left included, which
+      // this navigation's `beforeEach` records. Kept, it is the next Close's destination: detail A, a
+      // link to detail B, Close to A, and Close on A went back to B, over and over. Dropped once the
+      // navigation has landed, so one that a guard stops (unsaved changes) or a second click cancels
+      // leaves the history as it was. `Promise.resolve`: a test double's `push` may answer nothing.
+      Promise.resolve(navigation).then(
+        (failure) => {
+          if (failure || generation !== historyGeneration) return
+          // Gone without `clearHistory`, `route` was pushed out at the front (`MAX_HISTORY`) by the
+          // route being left: all that is still here came after it.
+          const at = history.value.indexOf(route)
+          history.value.splice(at === -1 ? 0 : at)
+        },
+        () => undefined
+      )
+      return { to: route.fullPath, navigation }
     }
     if (fallbackRouteName) {
       const fallback = { name: fallbackRouteName, params: fallbackRouteParams }

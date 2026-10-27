@@ -1,5 +1,14 @@
 import { beforeEach, describe, expect, expectTypeOf, it, vi } from 'vitest'
-import type { RouteRecordName } from 'vue-router'
+import { defineComponent } from 'vue'
+import { flushPromises } from '@vue/test-utils'
+import {
+  createMemoryHistory,
+  createRouter,
+  isNavigationFailure,
+  NavigationFailureType,
+  type RouteRecordName,
+  type Router,
+} from 'vue-router'
 import {
   type NavigateBackOptions,
   type RouteHistoryEntry,
@@ -137,6 +146,159 @@ describe('a current route named by a symbol', () => {
     navigateBack(router as never, { skipRouteNames: [], fallbackRouteName: '/records' })
 
     expect(router.push).toHaveBeenCalledWith('/records')
+  })
+})
+
+// The route a Close lands on ends the history: what came after it, the route just left included, is
+// behind the user. Kept, a Close on a record reached by a link to another record went back to that one,
+// and its Close back again, never to the list.
+describe('a Close through the router', () => {
+  const page = defineComponent(() => () => null)
+  // Runs before the history records the route being left, as a leave guard does.
+  let gate = () => true
+
+  const makeRouter = () => {
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        { path: '/records', name: '/records', component: page },
+        { path: '/records/new', name: '/records/new', component: page },
+        { path: '/records/:id', name: '/records/[id]', component: page },
+        { path: '/records/:id/edit', name: '/records/[id]/edit', component: page },
+        { path: '/users/:id', name: '/users/[id]', component: page },
+      ],
+    })
+    router.beforeEach(() => gate())
+    router.beforeEach((_to, from) => {
+      if (from.name) addRoute(from)
+    })
+    return router
+  }
+
+  const close = async (router: Router, options: NavigateBackOptions = {}) => {
+    await navigateBack(router, { fallbackRouteName: '/records', ...options })?.navigation.catch(() => undefined)
+    return router.currentRoute.value.fullPath
+  }
+
+  // A record, and from it a link to another one: a user chip, say.
+  const onLinkedRecord = async () => {
+    const router = makeRouter()
+    await router.push('/records')
+    await router.push('/records/1')
+    await router.push('/users/2')
+    return router
+  }
+
+  beforeEach(() => {
+    gate = () => true
+  })
+
+  it('goes back to the record and from there to the list', async () => {
+    const router = await onLinkedRecord()
+
+    expect(await close(router)).toBe('/records/1')
+    expect(await close(router)).toBe('/records')
+    expect(history.value).toEqual([])
+  })
+
+  describe.each([
+    [
+      'a guard stops before the history records the route',
+      () => {
+        gate = () => false
+        return () => (gate = () => true)
+      },
+    ],
+    ['a guard stops after the history recorded the route', (router: Router) => router.beforeEach(() => false)],
+    [
+      'fails',
+      (router: Router) => {
+        const stopError = router.onError(() => undefined)
+        const stopGuard = router.beforeEach(() => {
+          throw new Error('broken')
+        })
+        return () => {
+          stopGuard()
+          stopError()
+        }
+      },
+    ],
+  ])('when %s', (_, block) => {
+    it('leaves the way back as it was', async () => {
+      const router = await onLinkedRecord()
+      const unblock = block(router)
+      expect(await close(router)).toBe('/users/2')
+      unblock()
+
+      expect(await close(router)).toBe('/records/1')
+      expect(await close(router)).toBe('/records')
+    })
+  })
+
+  it('lands once on a second click while the first Close is under way', async () => {
+    const router = await onLinkedRecord()
+    const releases: (() => void)[] = []
+    const stop = router.beforeEach(() => new Promise<void>((resolve) => releases.push(resolve)))
+    const first = navigateBack(router, { fallbackRouteName: '/records' })
+    const second = navigateBack(router, { fallbackRouteName: '/records' })
+    await flushPromises()
+    releases.forEach((release) => release())
+    expect(isNavigationFailure(await first?.navigation, NavigationFailureType.cancelled)).toBe(true)
+    await second?.navigation
+    stop()
+    expect(router.currentRoute.value.fullPath).toBe('/records/1')
+
+    expect(await close(router)).toBe('/records')
+  })
+
+  it('drops what a full history holds after the route the Close pushed out of it', async () => {
+    // Ten routes are the most it keeps (`MAX_HISTORY`): another record, then ten of one kind, the last
+    // of which the Close leaves. Recording that one pushes the other record out at the front.
+    const router = makeRouter()
+    await router.push('/users/2')
+    for (let id = 1; id <= 10; id++) await router.push(`/records/${id}`)
+    expect(history.value).toHaveLength(10)
+
+    expect(await close(router)).toBe('/users/2')
+    expect(await close(router)).toBe('/records')
+  })
+
+  it('leaves alone a history cleared while the Close is under way', async () => {
+    const router = await onLinkedRecord()
+    let release = () => {}
+    const stop = router.beforeEach(() => new Promise<void>((resolve) => (release = resolve)))
+    const closing = navigateBack(router, { fallbackRouteName: '/records' })
+    await flushPromises()
+    clearHistory()
+    visit('/other', '/other')
+    release()
+    await closing?.navigation
+    stop()
+
+    expect(router.currentRoute.value.fullPath).toBe('/records/1')
+    expect(history.value).toEqual([{ name: '/other', fullPath: '/other' }])
+  })
+
+  it('walks past the names it is told to skip on the way to the list', async () => {
+    const router = makeRouter()
+    await router.push('/records')
+    await router.push('/records/1')
+    await router.push('/records/1/edit')
+    await router.push('/users/2')
+
+    expect(await close(router)).toBe('/records/1/edit')
+    expect(await close(router, { skipRouteNames: ['/records/new'] })).toBe('/records/1')
+    expect(await close(router, { skipRouteNames: ['/records/[id]/edit', '/records/new'] })).toBe('/records')
+  })
+
+  it('falls back on an empty history and keeps what its navigation recorded', async () => {
+    // A tab opened straight on the record.
+    const router = makeRouter()
+    await router.push('/records/1')
+    expect(history.value).toEqual([])
+
+    expect(await close(router)).toBe('/records')
+    expect(history.value).toEqual([{ name: '/records/[id]', fullPath: '/records/1' }])
   })
 })
 
