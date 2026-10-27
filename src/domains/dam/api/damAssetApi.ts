@@ -71,9 +71,7 @@ export const fetchAsset = (
   return execute({ urlParams: { id }, report: options.report })
 }
 
-/**
- * `endPoint`: as configured (`endPointCmsAsset`). Defaults to `/adm/v1/cms/asset`.
- */
+/** `endPoint`: as configured (`endPointCmsAsset`). Defaults to `/adm/v1/cms/asset`. */
 export const fetchAssetAsCmsMedia = <T extends DamMediaFromDam>(
   client: () => AxiosInstance,
   id: DocId,
@@ -240,9 +238,7 @@ const saveMetadataInBatches = async <B, R>(
   return answers
 }
 
-/**
- * Items the bulk save sends: those with an asset whose metadata the user may edit.
- */
+/** Items the bulk save sends: those with an asset whose metadata the user may edit. */
 export const hasMetadataToSave = (item: UploadQueueItem): item is UploadQueueItem & { assetId: DocId } =>
   !isNull(item.assetId) && item.canEditMetadata
 
@@ -270,9 +266,7 @@ function listItemsToMetadataBulkItems(
 
 const { showErrorsDefault, showUnknownError, showApiValidationError } = useAlerts()
 
-/**
- * A field of a refused metadata save, named as the forms name it.
- */
+/** A field of a refused metadata save, named as the forms name it. */
 const metadataFieldName = (
   key: string,
   assetTypes: Array<DamAssetTypeType | undefined>,

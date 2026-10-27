@@ -69,17 +69,11 @@ export const requestedUrl = (
 }
 
 export type Abortable = {
-  /**
-   * Runs one call with a signal of its own, registered so `abort()` can reach it.
-   */
+  /** Runs one call with a signal of its own, registered so `abort()` can reach it. */
   run: <T>(fn: (signal: AbortSignal, generation: number) => Promise<T>, external?: AbortSignal) => Promise<T>
-  /**
-   * Stops every call this instance still has in flight.
-   */
+  /** Stops every call this instance still has in flight. */
   abort: () => void
-  /**
-   * The generation a call starts in; a stale one must not write to state the caller can see.
-   */
+  /** The generation a call starts in; a stale one must not write to state the caller can see. */
   generation: () => number
   loading: Ref<boolean>
 }

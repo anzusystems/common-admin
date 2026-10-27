@@ -12,15 +12,11 @@ import { isNull } from '@/shared/utils/common'
 const props = defineProps<{
   client: AxiosClientFn
   system: string
-  /**
-   * From the route. A log id means nothing without the store it came from.
-   */
+  /** From the route. A log id means nothing without the store it came from. */
   type: LogTypeType
   id: string
   logPaths: LogPaths
-  /**
-   * Where a log that cannot be loaded leaves to when history is empty. The page's Close fallback.
-   */
+  /** Where a log that cannot be loaded leaves to when history is empty. The page's Close fallback. */
   fallbackRouteName?: RouteRecordName
   fallbackRouteParams?: Record<string, any>
 }>()

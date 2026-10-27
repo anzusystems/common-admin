@@ -38,9 +38,7 @@ function topInsertionOffset(ts, code) {
   return offset
 }
 
-/**
- * @param additions {{ from: string, typeOnly: boolean, names: { imported: string, local: string }[] }[]}
- */
+/** @param additions {{ from: string, typeOnly: boolean, names: { imported: string, local: string }[] }[]} */
 export function addImports(ts, code, additions, { js = false } = {}) {
   if (!additions.length) return code
   const sourceFile = ts.createSourceFile('x.ts', code, ts.ScriptTarget.ESNext, true, js ? ts.ScriptKind.JS : ts.ScriptKind.TS)

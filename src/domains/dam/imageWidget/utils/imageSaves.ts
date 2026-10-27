@@ -10,27 +10,17 @@ import { cloneDeep } from '@/shared/utils/common'
 // may mount late, and a reopened article may also read before the save lands.
 interface SavesOfImage {
   holders: Set<symbol>
-  /**
-   * Pending saves, by mark.
-   */
+  /** Pending saves, by mark. */
   onTheirWay: Set<symbol>
-  /**
-   * Number of answered saves.
-   */
+  /** Number of answered saves. */
   answered: number
-  /**
-   * The image as returned by the last answered save.
-   */
+  /** The image as returned by the last answered save. */
   saved: ImageCreateUpdateAware | null
-  /**
-   * Waiters for pending saves to finish; each runs once `mayGo` allows.
-   */
+  /** Waiters for pending saves to finish; each runs once `mayGo` allows. */
   waiting: Array<{ mayGo: () => boolean; go: () => void }>
 }
 const saves = new Map<string, SavesOfImage>()
-/**
- * Images held by each widget, by note key.
- */
+/** Images held by each widget, by note key. */
 const held = new Map<symbol, Set<string>>()
 
 const keyOf = (config: string, id: IntegerId) => JSON.stringify([config, id])
@@ -43,9 +33,7 @@ const savesOf = (key: string) => {
   return of
 }
 
-/**
- * Drops the note once no widget holds the image and no save is pending.
- */
+/** Drops the note once no widget holds the image and no save is pending. */
 const dropUnheld = (key: string, of: SavesOfImage) => {
   if (of.holders.size > 0 || of.onTheirWay.size > 0 || saves.get(key) !== of) return
   saves.delete(key)
@@ -76,9 +64,7 @@ export const holdImages = (config: string, holder: symbol, ids: IntegerId[]) => 
   return answered
 }
 
-/**
- * Single-image form of `holdImages`; `null` holds none. Returns the answered save count of that image.
- */
+/** Single-image form of `holdImages`; `null` holds none. Returns the answered save count of that image. */
 export const holdImage = (config: string, holder: symbol, id: IntegerId | null) =>
   id === null ? (holdImages(config, holder, []), 0) : holdImages(config, holder, [id]).get(id)!
 
@@ -157,9 +143,7 @@ export const imageSavesOfOthersOver = (config: string, id: IntegerId, own: Set<s
   return { over, cancel }
 }
 
-/**
- * The last saved image, if a save was answered after `answeredBefore` answers.
- */
+/** The last saved image, if a save was answered after `answeredBefore` answers. */
 export const imageSavedSince = (config: string, id: IntegerId, answeredBefore: number) => {
   const of = saves.get(keyOf(config, id))
   return !of || !of.saved || of.answered === answeredBefore ? null : cloneDeep(of.saved)

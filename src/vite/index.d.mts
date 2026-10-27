@@ -2,13 +2,9 @@ import type { SentryVitePluginOptions } from '@sentry/vite-plugin'
 import type { Plugin, PluginOption } from 'vite'
 
 export interface AnzuSentryOptions extends Omit<SentryVitePluginOptions, 'project' | 'org'> {
-  /**
-   * Sentry project slug, e.g. `anzu-admin-cms`.
-   */
+  /** Sentry project slug, e.g. `anzu-admin-cms`. */
   project: string
-  /**
-   * Sentry organization slug. Defaults to `petitpress`.
-   */
+  /** Sentry organization slug. Defaults to `petitpress`. */
   org?: string
 }
 
@@ -20,15 +16,11 @@ export interface AnzuSentryOptions extends Omit<SentryVitePluginOptions, 'projec
  */
 export declare function anzuSentry(options: AnzuSentryOptions): PluginOption[]
 
-/**
- * Chains the source maps common-admin publishes into the admin's build (only when it emits maps).
- */
+/** Chains the source maps common-admin publishes into the admin's build (only when it emits maps). */
 export declare function commonAdminSourcemaps(): Plugin
 
 export interface CommonAdminDevWatchOptions {
-  /**
-   * Relative to the admin's root. Defaults to `.common-admin-updated`, which `copy.sh` and `yarn dev:admin` write.
-   */
+  /** Relative to the admin's root. Defaults to `.common-admin-updated`, which `copy.sh` and `yarn dev:admin` write. */
   triggerFile?: string
   /**
    * `false`: common-admin is excluded from pre-bundling and served file by file.

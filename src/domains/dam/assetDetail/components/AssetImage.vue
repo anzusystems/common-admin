@@ -38,9 +38,7 @@ const props = withDefaults(
     hideIcon?: boolean
     showMetaIcons?: boolean
     assetFileProperties?: AssetFileProperties | undefined
-    /**
-     * Passed to the meta icons: shows the synthesized audio (TTS) icon.
-     */
+    /** Passed to the meta icons: shows the synthesized audio (TTS) icon. */
     showTts?: boolean
   }>(),
   {

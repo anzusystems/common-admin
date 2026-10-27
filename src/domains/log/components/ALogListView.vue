@@ -13,37 +13,21 @@ import type { LogPaths, LogTypeType } from '@/domains/log/composables/logType'
 import type { Log } from '@/domains/log/types/Log'
 
 const props = defineProps<{
-  /**
-   * Which backend to ask.
-   */
+  /** Which backend to ask. */
   client: AxiosClientFn
-  /**
-   * Identity for api naming and error reporting. `coreDam`, not `dam`, where they differ.
-   */
+  /** Identity for api naming and error reporting. `coreDam`, not `dam`, where they differ. */
   system: string
-  /**
-   * From the route, never component state: it picks the endpoint and has to survive a filter reset.
-   */
+  /** From the route, never component state: it picks the endpoint and has to survive a filter reset. */
   type: LogTypeType
-  /**
-   * Whole paths per type. Comes from the route-side descriptor, which the guard reads too.
-   */
+  /** Whole paths per type. Comes from the route-side descriptor, which the guard reads too. */
   logPaths: LogPaths
-  /**
-   * Where a row goes. The library cannot know an app's typed route names, so the app maps it.
-   */
+  /** Where a row goes. The library cannot know an app's typed route names, so the app maps it. */
   detailRoute: (log: Log) => RouteLocationRaw
-  /**
-   * Where the app/audit dropdown goes. Same reason.
-   */
+  /** Where the app/audit dropdown goes. Same reason. */
   typeRoute: (type: LogTypeType) => RouteLocationRaw
-  /**
-   * Mandatory time bound, as admin-dam has today. Omitted means no bound at all.
-   */
+  /** Mandatory time bound, as admin-dam has today. Omitted means no bound at all. */
   defaultTimeWindow?: LogTimeWindow | undefined
-  /**
-   * `allowed` for the interval filter. Omitted means the library's full preset list.
-   */
+  /** `allowed` for the interval filter. Omitted means the library's full preset list. */
   allowedTimeIntervals?: TimeIntervalToolsValue[] | undefined
 }>()
 

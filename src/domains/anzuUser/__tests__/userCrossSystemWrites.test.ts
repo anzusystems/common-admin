@@ -65,9 +65,7 @@ const descriptorFor = (request: ReturnType<typeof vi.fn>, endpoints: UserSystemE
     endpoints,
   })
 
-/**
- * The helper serialises the body, so a test reading it has to parse it back.
- */
+/** The helper serialises the body, so a test reading it has to parse it back. */
 const sentBody = (request: ReturnType<typeof vi.fn>, call: number) => JSON.parse(request.mock.calls[call][0].data)
 
 const httpError = (status: number, data: Record<string, unknown> = {}) =>

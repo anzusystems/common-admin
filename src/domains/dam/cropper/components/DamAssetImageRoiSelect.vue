@@ -53,9 +53,7 @@ const imageUrl = computed(() => {
   return ''
 })
 
-/**
- * The stored region in the cropper's format: fractions of the picture.
- */
+/** The stored region in the cropper's format: fractions of the picture. */
 const crop = ref<CropRect | null>(null)
 
 const readStoredRegion = () => {

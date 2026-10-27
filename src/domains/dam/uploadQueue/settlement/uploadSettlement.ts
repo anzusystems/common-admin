@@ -46,60 +46,40 @@ interface TrackedRow {
   queue: UploadQueue
   row: UploadQueueItem
   state: UploadTrackState
-  /**
-   * The asset the row is read by. It changes when a duplicate becomes its original.
-   */
+  /** The asset the row is read by. It changes when a duplicate becomes its original. */
   assetId: DocId
 }
 
-/**
- * One request of a tick, and the tracked rows it asks about.
- */
+/** One request of a tick, and the tracked rows it asks about. */
 interface ReadUnit {
   rows: TrackedRow[]
-  /**
-   * `missing`: the single asset requested alone does not exist. Its reader may report that.
-   */
+  /** `missing`: the single asset requested alone does not exist. Its reader may report that. */
   read(
     options: UploadReadOptions
   ): Promise<{ assets: AssetDetailItemDto[]; missing?: boolean } | { slotFiles: AssetFileNullable[] }>
 }
 
-/**
- * Sequential reads of one DAM, and whether a streak of their failures is being reported.
- */
+/** Sequential reads of one DAM, and whether a streak of their failures is being reported. */
 interface ReadLane {
   chain: Promise<void>
   failing: boolean
 }
 
-/**
- * A read of one asset requested by an event, waiting for its time.
- */
+/** A read of one asset requested by an event, waiting for its time. */
 interface PendingNamedRead {
-  /**
-   * Key in `pending`: the asset and the configuration the read is for.
-   */
+  /** Key in `pending`: the asset and the configuration the read is for. */
   key: string
   assetId: DocId
-  /**
-   * The configuration whose rows the read is for (`configOf` of the profile). All queues when omitted.
-   */
+  /** The configuration whose rows the read is for (`configOf` of the profile). All queues when omitted. */
   configName?: string
   // Keyed by `fileId ?? ''`.
   targets: Map<string, { fileId: DocIdNullable; intent: UploadReadIntent }>
   dueAt: number
-  /**
-   * Consecutive failed tries.
-   */
+  /** Consecutive failed tries. */
   failures: number
-  /**
-   * Consecutive tries that found no asset.
-   */
+  /** Consecutive tries that found no asset. */
   misses: number
-  /**
-   * A failure of these tries was reported. Further ones are not.
-   */
+  /** A failure of these tries was reported. Further ones are not. */
   told: boolean
   timer: { handle: unknown } | null
   waiters: Array<() => void>
@@ -138,9 +118,7 @@ export function createUploadSettlement(profile: UploadSettlementProfile): Upload
     return lane
   }
   const laneOfQueue = (queueKey: UploadQueueKey) => laneOf(profile.configOf?.(queueKey))
-  /**
-   * Only a target that names exactly one configuration gets that configuration's lane.
-   */
+  /** Only a target that names exactly one configuration gets that configuration's lane. */
   const laneOfTarget = (target: UploadSettlementTarget) =>
     laneOf(target.configNames?.length === 1 ? target.configNames[0] : undefined)
   const failureReported = (error: unknown) => profile.readers.failureReported?.(error) ?? true
@@ -193,14 +171,10 @@ export function createUploadSettlement(profile: UploadSettlementProfile): Upload
 
   const fetchCaches = () => settle.fetchNames()
 
-  /**
-   * `undefined` for a profile without `configOf`.
-   */
+  /** `undefined` for a profile without `configOf`. */
   const namesOfQueue = (queueKey: UploadQueueKey) => (profile.configOf ? [profile.configOf(queueKey)] : undefined)
 
-  /**
-   * Returns true when this miss reaches the limit and the row is given up.
-   */
+  /** Returns true when this miss reaches the limit and the row is given up. */
   const countMiss = (tracked: Pick<TrackedRow, 'queueKey' | 'row' | 'state'>) => {
     tracked.state.misses++
     if (tracked.state.misses < UPLOAD_POLL_MISSING_LIMIT) return false
@@ -228,9 +202,7 @@ export function createUploadSettlement(profile: UploadSettlementProfile): Upload
     return true
   }
 
-  /**
-   * Live rows a read of the asset would write into, for any of the targets, limited to the named configurations.
-   */
+  /** Live rows a read of the asset would write into, for any of the targets, limited to the named configurations. */
   const concernedRows = (
     assetId: DocId,
     targets: Iterable<{ fileId: DocIdNullable; intent: Pick<UploadReadIntent, 'early'> }>,
@@ -585,9 +557,7 @@ export function createUploadSettlement(profile: UploadSettlementProfile): Upload
   }
 
   const namesOfRead = (read: PendingNamedRead) => (isUndefined(read.configName) ? undefined : [read.configName])
-  /**
-   * Evaluated anew each time, since rows may have left meanwhile.
-   */
+  /** Evaluated anew each time, since rows may have left meanwhile. */
   const rowsOfRead = (read: PendingNamedRead) => concernedRows(read.assetId, read.targets.values(), namesOfRead(read))
 
   const readNamed = async (read: PendingNamedRead, startedAt: number) => {

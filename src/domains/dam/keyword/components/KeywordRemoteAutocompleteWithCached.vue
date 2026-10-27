@@ -37,13 +37,9 @@ const props = withDefaults(
     clearable?: boolean
     dataCy?: string
     validationScope?: ValidationScope
-    /**
-     * How it looks while disabled: keyword chips (current library behaviour), or the input switched off.
-     */
+    /** How it looks while disabled: keyword chips (current library behaviour), or the input switched off. */
     disabledAs?: DamFieldsDisabledAs
-    /**
-     * DAM configuration to use. Defaults to the parent component's, else `default`.
-     */
+    /** DAM configuration to use. Defaults to the parent component's, else `default`. */
     configName?: string
   }>(),
   {

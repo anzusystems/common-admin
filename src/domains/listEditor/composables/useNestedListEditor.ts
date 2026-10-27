@@ -36,13 +36,9 @@ export interface UseNestedListEditorOptions {
   positionField?: string
   parentField?: string
   positionMultiplier?: number
-  /**
-   * `false` = the position field is not managed: tree ops never write it.
-   */
+  /** `false` = the position field is not managed: tree ops never write it. */
   managedPosition?: boolean
-  /**
-   * Per-action policy, as in the flat controller. Default 'renumber'.
-   */
+  /** Per-action policy, as in the flat controller. Default 'renumber'. */
   positionStrategyFor?: (action: 'add' | 'remove' | 'move') => 'renumber' | 'preserve-values'
   maxDepth: number
   expandedKeys?: Ref<Set<ListEditorKey>>

@@ -5,9 +5,7 @@ import { isUndefined } from '@/shared/utils/common'
 export interface DamImageFile {
   fileId: DocId
   licenceId: IntegerId
-  /**
-   * `mainFileInternal` of the asset; false if unknown.
-   */
+  /** `mainFileInternal` of the asset; false if unknown. */
   internal?: boolean | null
 }
 

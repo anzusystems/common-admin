@@ -63,9 +63,7 @@ export function stubDamSocket() {
       socket.readyState = 1
       socket.onopen?.(new Event('open'))
     },
-    /**
-     * Without `data` the frame carries an empty text, as the server sends it.
-     */
+    /** Without `data` the frame carries an empty text, as the server sends it. */
     deliver: (eventName: DamNotificationNameType | string, data?: unknown, url?: string) => {
       const frame = { eventName, data: data === undefined ? '' : JSON.stringify(data) }
       latest(url).onmessage?.(new MessageEvent('message', { data: JSON.stringify(frame) }))

@@ -15,19 +15,13 @@ import {
 } from '@/domains/dam/types/UploadQueue'
 import type { DocId } from '@/shared/types/common'
 
-/**
- * Exactly what the frame of the asset detail and the single-upload dialog renders.
- */
+/** Exactly what the frame of the asset detail and the single-upload dialog renders. */
 export interface AssetDetailView {
-  /**
-   * Keys the sidebar. Null while an upload has no asset yet, and then the sidebar is not rendered.
-   */
+  /** Keys the sidebar. Null while an upload has no asset yet, and then the sidebar is not rendered. */
   id: DocId | null
   assetType: DamAssetTypeType
   assetStatus: DamAssetStatusType
-  /**
-   * Used for the status props of the sidebars.
-   */
+  /** Used for the status props of the sidebars. */
   mainFile: AssetFile | null
   image: {
     src: string
@@ -39,15 +33,11 @@ export interface AssetDetailView {
     processing: boolean
     waiting: boolean
     done: boolean
-    /**
-     * As on the row (`UploadQueueItem['progress']`), not normalised.
-     */
+    /** As on the row (`UploadQueueItem['progress']`), not normalised. */
     progress?: number | null
     remainingTime?: number | null
   }
-  /**
-   * The left side follows the ROI tab. The sidebars offer that tab through their own props.
-   */
+  /** The left side follows the ROI tab. The sidebars offer that tab through their own props. */
   roiEditorTab: boolean
   simpleMode: boolean
 }
@@ -76,9 +66,7 @@ export const pictureIsPlaceholder = (view: AssetDetailView) =>
   !view.image.waiting &&
   !(view.assetStatus === DamAssetStatus.WithFile && view.image.src)
 
-/**
- * View of an existing asset, without upload state.
- */
+/** View of an existing asset, without upload state. */
 export function assetDetailViewOfAsset(
   asset: AssetDetailItemDto | null,
   simpleAssetSidebarEnabled: boolean

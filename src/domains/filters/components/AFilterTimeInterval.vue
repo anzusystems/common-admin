@@ -170,9 +170,7 @@ const onEditInterval = (clear = false) => {
   dialogCustom.value = true
 }
 
-/**
- * What the control shows is derived from the value, never assumed.
- */
+/** What the control shows is derived from the value, never assumed. */
 const syncDisplayToValue = (newValue: AllowedFilterValues) => {
   if (isArray(newValue) || isBoolean(newValue)) return
   displayFromTo.value = false

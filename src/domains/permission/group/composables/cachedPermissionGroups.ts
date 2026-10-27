@@ -80,9 +80,7 @@ export const useCachedPermissionGroups = (params: CachedPermissionGroupsParams) 
   }
 }
 
-/**
- * Test seam. Registries are module state and would otherwise leak between cases.
- */
+/** Test seam. Registries are module state and would otherwise leak between cases. */
 export const resetCachedPermissionGroupRegistries = () => {
   registries.clear()
 }

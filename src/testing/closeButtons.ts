@@ -8,9 +8,7 @@ export interface DescribeCloseButtonsOptions {
   sources: Record<string, string>
   declaration: string
   routeHistoryBlacklist: readonly string[]
-  /**
-   * How many buttons may compute their fallback, which two checks cannot read.
-   */
+  /** How many buttons may compute their fallback, which two checks cannot read. */
   maxComputedFallbacks?: number
 }
 

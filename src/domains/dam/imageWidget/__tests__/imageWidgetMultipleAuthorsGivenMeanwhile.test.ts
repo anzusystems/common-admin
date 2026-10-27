@@ -441,9 +441,7 @@ describe('the detail of the asset of a row of the widget of several images, once
     await vi.waitFor(() => expect(detail().asset?.id).toBe(asset))
     await flushPromises()
   }
-  /**
-   * The detail form is not drawn here. This sends what its save sends, with the authors the user picks.
-   */
+  /** The detail form is not drawn here. This sends what its save sends, with the authors the user picks. */
   const saveInDetail = async (authors: DocId[]) => {
     const { damClient, endPointAsset } = useCommonAdminCoreDamOptions('default')
     detail().asset!.authors = authors

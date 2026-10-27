@@ -5,13 +5,9 @@ import AAlerts from '@/domains/system/components/AAlerts.vue'
 
 const props = withDefaults(
   defineProps<{
-    /**
-     * The layouts by the name pages give in `definePage({ meta: { layout } })`.
-     */
+    /** The layouts by the name pages give in `definePage({ meta: { layout } })`. */
     layouts: Record<string, Component>
-    /**
-     * Until the first route resolves, and for a route without `meta.layout`.
-     */
+    /** Until the first route resolves, and for a route without `meta.layout`. */
     defaultLayout?: string
   }>(),
   {

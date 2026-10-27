@@ -27,9 +27,7 @@ const props = withDefaults(
      * Without them the close only hides the chip.
      */
     chipProps?: Record<string, unknown>
-    /**
-     * DAM configuration for the names. Inherited when not given.
-     */
+    /** DAM configuration for the names. Inherited when not given. */
     configName?: string
   }>(),
   {

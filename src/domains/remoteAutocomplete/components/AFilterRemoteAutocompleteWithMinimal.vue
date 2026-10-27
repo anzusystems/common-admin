@@ -302,14 +302,10 @@ const updateFilterSelected = (
 
 const isEmptyValue = (value: unknown) => isNull(value) || isUndefined(value) || (isArray(value) && value.length === 0)
 
-/**
- * The value of the filter its watcher (below) saw last.
- */
+/** The value of the filter its watcher (below) saw last. */
 let watchedValue: unknown
 
-/**
- * Puts a value of the filter into the field and the chips: from the items it has, or read by their ids.
- */
+/** Puts a value of the filter into the field and the chips: from the items it has, or read by their ids. */
 const showValue = async (newValue: string | number | Array<string | number>) => {
   const found = await tryToLoadFromLocalData(newValue)
   if (found) {

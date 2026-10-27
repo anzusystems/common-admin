@@ -64,9 +64,7 @@ export const serialize = (internal: dayjs.Dayjs, type: DatetimePickerType): Date
 export const formatDisplay = (internal: dayjs.Dayjs, type: DatetimePickerType) =>
   internal.format(displayFormatFor(type))
 
-/**
- * VDatePicker works with local `Date`s, so a date-mode day travels as its local namesake.
- */
+/** VDatePicker works with local `Date`s, so a date-mode day travels as its local namesake. */
 export const toCalendarDate = (internal: dayjs.Dayjs, type: DatetimePickerType): Date =>
   type === 'date' ? new Date(internal.year(), internal.month(), internal.date()) : internal.toDate()
 
@@ -79,9 +77,7 @@ export const applyCalendarDate = (internal: dayjs.Dayjs, picked: Date, type: Dat
   return internal.set('year', picked.getFullYear()).set('month', picked.getMonth()).set('date', picked.getDate())
 }
 
-/**
- * Today's calendar day from the local clock. For part of the day the UTC day is yesterday or tomorrow.
- */
+/** Today's calendar day from the local clock. For part of the day the UTC day is yesterday or tomorrow. */
 export const todayValue = (type: DatetimePickerType, lastMinuteMoment = false): dayjs.Dayjs => {
   if (type === 'date') {
     const now = new Date()
@@ -90,9 +86,7 @@ export const todayValue = (type: DatetimePickerType, lastMinuteMoment = false): 
   return lastMinuteMoment ? dayjs().second(59).millisecond(999) : dayjs().second(0).millisecond(0)
 }
 
-/**
- * Base for a picker interaction that starts with no value at all.
- */
+/** Base for a picker interaction that starts with no value at all. */
 export const emptyBaseValue = (type: DatetimePickerType, lastMinuteMoment = false): dayjs.Dayjs => {
   if (type === 'date') return todayValue(type)
   return lastMinuteMoment
@@ -100,8 +94,6 @@ export const emptyBaseValue = (type: DatetimePickerType, lastMinuteMoment = fals
     : dayjs().hour(0).minute(0).second(0).millisecond(0)
 }
 
-/**
- * By second, as `lastMinuteMoment` holds ms at 999; by day where the time carries no meaning.
- */
+/** By second, as `lastMinuteMoment` holds ms at 999; by day where the time carries no meaning. */
 export const isSameValue = (value: dayjs.Dayjs, other: dayjs.Dayjs | null, type: DatetimePickerType): boolean =>
   isNull(other) ? false : value.isSame(other, type === 'date' ? 'day' : 'second')

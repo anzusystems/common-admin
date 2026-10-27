@@ -25,9 +25,7 @@ export const useImageMediaWidgetStore = defineStore('commonAdminImageMediaWidget
     detail.value = null
   }
 
-  /**
-   * Empties the detail unless a widget other than `widget` shows it, since its form would be lost.
-   */
+  /** Empties the detail unless a widget other than `widget` shows it, since its form would be lost. */
   function resetUnlessShown(widget?: symbol) {
     if ([...shownBy].some((one) => one !== widget)) return
     detail.value = null

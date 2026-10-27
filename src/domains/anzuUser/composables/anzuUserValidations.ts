@@ -10,14 +10,10 @@ export interface UserMetadataValidationOptions {
    * It applies equally to create and edit.
    */
   required: MaybeRefOrGetter<boolean>
-  /**
-   * Whether the id is a field at all. When it is, and this is a create, it is required.
-   */
+  /** Whether the id is a field at all. When it is, and this is a create, it is required. */
   idInput: MaybeRefOrGetter<boolean>
   isEdit: MaybeRefOrGetter<boolean>
-  /**
-   * Scope key, so an owning form can validate its own fields alongside the app's system fields.
-   */
+  /** Scope key, so an owning form can validate its own fields alongside the app's system fields. */
   scope?: string | symbol | false
 }
 

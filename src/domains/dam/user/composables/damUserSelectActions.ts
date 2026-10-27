@@ -7,9 +7,7 @@ import { fetchDamUserListByIds, useFetchDamUserList } from '@/domains/dam/user/a
 import type { Ref } from 'vue'
 import type { FilterConfig, FilterData } from '@/domains/filters/composables/filterFactory'
 
-/**
- * `endPoint`: the users endpoint (`endPointUser` of a configuration). Defaults to `/adm/v1/user`.
- */
+/** `endPoint`: the users endpoint (`endPointUser` of a configuration). Defaults to `/adm/v1/user`. */
 export const useDamUserSelectAction = (client: () => AxiosInstance, endPoint?: string) => {
   const mapToValueObject = (user: DamUser): ValueObjectOption<IntegerId> => ({
     title: '' === user.person.fullName ? user.email : user.person.fullName,

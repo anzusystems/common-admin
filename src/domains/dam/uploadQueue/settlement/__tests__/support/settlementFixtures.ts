@@ -66,9 +66,7 @@ export const previewOf = (fileId: DocId): AssetFileLink => ({
   type: AssetFileLinkType.Image,
 })
 
-/**
- * Without a status the file has no `fileAttributes` at all, as in some store fixtures.
- */
+/** Without a status the file has no `fileAttributes` at all, as in some store fixtures. */
 export const damFile = (
   id: DocId,
   status?: AssetFileProcessStatusType,

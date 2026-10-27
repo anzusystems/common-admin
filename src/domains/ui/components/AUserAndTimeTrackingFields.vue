@@ -40,9 +40,7 @@ const props = withDefaults(
 )
 
 defineSlots<{
-  /**
-   * The user part of a row, for an admin that draws its own chip.
-   */
+  /** The user part of a row, for an admin that draws its own chip. */
   user?: (props: { id: IntegerId | null; field: 'createdBy' | 'modifiedBy' }) => unknown
 }>()
 

@@ -84,9 +84,7 @@ export const useCachedAnzuUsers = (params: CachedAnzuUsersParams) => {
   }
 }
 
-/**
- * Test seam. Registries are module state and would otherwise leak between cases.
- */
+/** Test seam. Registries are module state and would otherwise leak between cases. */
 export const resetCachedAnzuUserRegistries = () => {
   registries.clear()
 }

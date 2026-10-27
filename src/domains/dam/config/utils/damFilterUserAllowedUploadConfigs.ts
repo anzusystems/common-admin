@@ -6,9 +6,7 @@ import type { DamCurrentUserDto } from '@/domains/dam/types/DamCurrentUser'
 import { SYSTEM_DAM } from '@/domains/dam/api/damConstants'
 import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
 
-/**
- * A current user as DAM returns it. Its licences are decided by it.
- */
+/** A current user as DAM returns it. Its licences are decided by it. */
 const isDamUser = (user: unknown): user is DamCurrentUserDto =>
   isObject(user) &&
   isArray((user as Partial<DamCurrentUserDto>).adminToExtSystems) &&
@@ -39,9 +37,7 @@ const licenceJudgeOf = (configName: string): 'all' | 'none' | DamCurrentUserDto 
   return isSuperAdmin.value ? 'all' : user
 }
 
-/**
- * The licences the current user of the system `currentUser` of the configuration `configName` may pick from.
- */
+/** The licences the current user of the system `currentUser` of the configuration `configName` may pick from. */
 export function filterAllowedImageWidgetSelectConfigs(
   values: DamConfigLicenceExtSystemReturnType[],
   configName: string

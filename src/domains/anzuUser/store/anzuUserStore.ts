@@ -3,9 +3,7 @@ import { ref } from 'vue'
 import { useAnzuUserFactory } from '@/domains/anzuUser/factory/AnzuUserFactory'
 import type { AnzuUser } from '@/shared/types/AnzuUser'
 
-/**
- * The single user the owning form edits. Cross-system pages keep per-system results instead.
- */
+/** The single user the owning form edits. Cross-system pages keep per-system results instead. */
 export const useAnzuUserOneStore = defineStore('commonAdminAnzuUserOneStore', () => {
   const { createAnzuUser } = useAnzuUserFactory()
 

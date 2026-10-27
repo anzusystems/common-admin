@@ -12,9 +12,7 @@ const props = withDefaults(
   defineProps<{
     name: string
     extSystem: IntegerId
-    /**
-     * DAM configuration to use. Defaults to the parent component's, else `default`.
-     */
+    /** DAM configuration to use. Defaults to the parent component's, else `default`. */
     configName?: string
   }>(),
   {

@@ -19,9 +19,7 @@ export type UseApiFetchListParams = {
   client: AxiosClientFn
   system: string
   entity: string
-  /**
-   * i18n scope for field-level validation failures; defaults to `system` / `entity`.
-   */
+  /** i18n scope for field-level validation failures; defaults to `system` / `entity`. */
   validationSystem?: string
   validationEntity?: string
   urlTemplate?: string
@@ -34,9 +32,7 @@ export type FetchListParams = {
   urlTemplate?: string
   urlParams?: UrlParams
   forceElastic?: boolean
-  /**
-   * Stops this one call, leaving the instance's other calls alone.
-   */
+  /** Stops this one call, leaving the instance's other calls alone. */
   signal?: AbortSignal
   /**
    * `false`: a failure of this call is still thrown but not sent to the api error logger.

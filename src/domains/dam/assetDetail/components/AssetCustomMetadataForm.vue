@@ -18,9 +18,7 @@ const props = withDefaults(
     dataCy?: string
     readonly?: boolean
     validationScope?: ValidationScope
-    /**
-     * The DAM configuration whose forms it shows; inherited when not given.
-     */
+    /** The DAM configuration whose forms it shows; inherited when not given. */
     configName?: string
   }>(),
   {

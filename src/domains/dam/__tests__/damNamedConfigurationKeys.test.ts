@@ -62,9 +62,7 @@ const OWN_ADMIN = 'https://own.test'
 const OWN_TIMEOUT = 120
 const EXT = 4
 const LICENCE = 7
-/**
- * Waits from this length are held. The caches wait 1.5 s before they ask.
- */
+/** Waits from this length are held. The caches wait 1.5 s before they ask. */
 const HELD_FROM_MS = 1_200
 
 let pinia: Pinia

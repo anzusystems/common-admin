@@ -2,9 +2,7 @@ import { ref } from 'vue'
 import type { ValueObjectOption } from '@/shared/types/ValueObject'
 import { useDamConfigStoreOf } from '@/domains/dam/config/store/damConfigStore'
 
-/**
- * Like `useDamDistributionServiceType`, for external asset providers.
- */
+/** Like `useDamDistributionServiceType`, for external asset providers. */
 export function useDamExternalProviderAssetType(configName: string) {
   const damConfigStore = useDamConfigStoreOf(configName)
   const all = Object.entries(damConfigStore.damPrvConfig.assetExternalProviders).map(

@@ -27,9 +27,7 @@ const props = defineProps<{
   system: string
   type: LogTypeType
   logPaths: LogPaths
-  /**
-   * Same mapper the view uses. Needed here so the actions cell stays a real link.
-   */
+  /** Same mapper the view uses. Needed here so the actions cell stays a real link. */
   detailRoute: (log: Log) => RouteLocationRaw
 }>()
 

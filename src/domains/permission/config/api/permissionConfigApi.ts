@@ -12,9 +12,7 @@ export interface PermissionConfigApiParams {
    * It is also the storage key downstream, so two systems can be loaded side by side.
    */
   system: string
-  /**
-   * Goes into every `useApiRequest` call; see the per-system entity note in `permissionGroupApi`.
-   */
+  /** Goes into every `useApiRequest` call; see the per-system entity note in `permissionGroupApi`. */
   entity?: string
   endPoint?: string
 }

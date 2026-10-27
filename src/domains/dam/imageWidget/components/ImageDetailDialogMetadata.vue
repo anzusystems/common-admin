@@ -33,20 +33,14 @@ const props = withDefaults(
     saving: boolean
     loading: boolean
     expand?: boolean
-    /**
-     * Offers DAM authors instead of the source. They are the authors of the asset the widget holds for the image.
-     */
+    /** Offers DAM authors instead of the source. They are the authors of the asset the widget holds for the image. */
     showDamAuthors?: boolean
-    /**
-     * Authors picked so far, used while `showDamAuthors` is on.
-     */
+    /** Authors picked so far, used while `showDamAuthors` is on. */
     damAuthors?: DocId[]
     showSourceEnabled?: boolean
     sourceLabel?: string
     editAssetLabel?: string
-    /**
-     * Asset type the dialog is opened for, known before loading. Used for the title.
-     */
+    /** Asset type the dialog is opened for, known before loading. Used for the title. */
     type?: DamAssetTypeType
   }>(),
   {

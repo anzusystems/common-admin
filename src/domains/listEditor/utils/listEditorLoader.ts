@@ -2,9 +2,7 @@ import type { Component } from 'vue'
 
 export const LIST_EDITOR_LOAD_TIMEOUT = 15_000
 
-/**
- * `promise`, or a rejection with `message` once `timeout` ms pass without it settling.
- */
+/** `promise`, or a rejection with `message` once `timeout` ms pass without it settling. */
 export const withTimeout = <T>(promise: Promise<T>, timeout: number, message: string): Promise<T> =>
   new Promise((resolve, reject) => {
     const timer = setTimeout(() => reject(new Error(message)), timeout)

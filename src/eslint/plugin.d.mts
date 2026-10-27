@@ -13,15 +13,11 @@ export interface RecommendedOptions {
   preferApiCommand?: Severity
   preferApiFetchItems?: Severity
   urlParamsMatchTemplate?: Severity
-  /**
-   * @deprecated The rule is gone with the helpers it guarded; the option is ignored.
-   */
+  /** @deprecated The rule is gone with the helpers it guarded; the option is ignored. */
   deprecatedImports?: Severity
 }
 
-/**
- * One flat-config block: the plugin plus the rule severities the options ask for.
- */
+/** One flat-config block: the plugin plus the rule severities the options ask for. */
 export declare function recommended(options?: RecommendedOptions): {
   plugins: Record<string, ESLint.Plugin>
   rules: Linter.RulesRecord
@@ -33,25 +29,15 @@ export interface AnzuAdminEslintOptions {
    * resolves against it.
    */
   root: string | URL
-  /**
-   * Default `.oxlintrc.json`; its enabled rules are switched off in eslint. `false` skips that.
-   */
+  /** Default `.oxlintrc.json`; its enabled rules are switched off in eslint. `false` skips that. */
   oxlintConfig?: string | false
-  /**
-   * Default `src/typed-router.d.ts`, read by `anzu/valid-route-name`.
-   */
+  /** Default `src/typed-router.d.ts`, read by `anzu/valid-route-name`. */
   typedRouter?: string
-  /**
-   * More globally registered components for `vue/no-undef-components` (inhouse: the `GMap*` family).
-   */
+  /** More globally registered components for `vue/no-undef-components` (inhouse: the `GMap*` family). */
   globalComponents?: string[]
-  /**
-   * Added to the ignored paths.
-   */
+  /** Added to the ignored paths. */
   ignores?: string[]
-  /**
-   * Default `'error'`.
-   */
+  /** Default `'error'`. */
   noExplicitAny?: 'error' | 'warn' | 'off'
   anzu?: RecommendedOptions & { validRouteName?: Severity }
   /**
@@ -67,9 +53,7 @@ export interface AnzuAdminEslintOptions {
   }
 }
 
-/**
- * The whole eslint config of an admin; `extra` configs come last.
- */
+/** The whole eslint config of an admin; `extra` configs come last. */
 export declare function defineAnzuAdminConfig(
   options: AnzuAdminEslintOptions,
   ...extra: Linter.Config[]

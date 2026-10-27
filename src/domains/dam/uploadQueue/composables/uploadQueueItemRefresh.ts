@@ -9,9 +9,7 @@ import { isUndefined } from '@/shared/utils/common'
 
 export const SHOW_REFRESH_AFTER_SECONDS = 20
 
-/**
- * Message keys passed to the host's `warn` after a refresh.
- */
+/** Message keys passed to the host's `warn` after a refresh. */
 export const REFRESH_WARNING_KEYS = {
   pendingT: 'common.damImage.queueItem.stillUploadingOrProcessing',
   failedT: 'common.damImage.queueItem.refreshFailed',
@@ -83,9 +81,7 @@ const refreshAndSay = async (
   }
 }
 
-/**
- * Refresh for the rows of a list. The host binding does the request and shows the warnings.
- */
+/** Refresh for the rows of a list. The host binding does the request and shows the warnings. */
 export function createUploadQueueItemRefresh(
   queue: Pick<UploadQueueListBinding, 'items' | 'refresh' | 'refreshMayHelp' | 'warn'>
 ) {

@@ -42,9 +42,7 @@ export function holdLongWaits(from = LONG_WAIT_FROM_MS, options: LongWaitsOption
     if (id === undefined || !held.delete(id)) realClearTimeout(id)
   }) as typeof window.clearTimeout
 
-  /**
-   * Real time, for the promises the code under test settles after an answer.
-   */
+  /** Real time, for the promises the code under test settles after an answer. */
   const settle = (ms = 50) => new Promise<void>((resolve) => realSetTimeout(resolve, ms))
 
   const elapse = async () => {

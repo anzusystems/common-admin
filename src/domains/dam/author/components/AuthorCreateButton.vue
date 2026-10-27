@@ -32,9 +32,7 @@ const props = withDefaults(
     dataCy?: string
     disabled?: boolean | undefined
     validationScope?: ValidationScope
-    /**
-     * DAM configuration to use. Defaults to the parent component's, else `default`.
-     */
+    /** DAM configuration to use. Defaults to the parent component's, else `default`. */
     configName?: string
   }>(),
   {

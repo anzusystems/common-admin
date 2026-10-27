@@ -3,13 +3,9 @@ import type { Component } from 'vue'
 import ACropper from '@/domains/dam/cropper/components/ACropper.vue'
 import { LANDSCAPE_IMAGE, type CropperFixture } from '@/domains/dam/cropper/__tests__/support/cropperImages'
 
-/**
- * Shared harness for `ACropper` (cropper.js v2). The adapter names the selectors of the custom elements.
- */
+/** Shared harness for `ACropper` (cropper.js v2). The adapter names the selectors of the custom elements. */
 
-/**
- * A crop in source pixels. `ACropper` uses fractions of the picture; the harness converts them.
- */
+/** A crop in source pixels. `ACropper` uses fractions of the picture; the harness converts them. */
 export interface CropperData {
   x: number
   y: number
@@ -36,9 +32,7 @@ export interface CropperAdapter {
   nHandle: string
   wHandle: string
   neHandle: string
-  /**
-   * The surface that starts a brand new crop box when dragged.
-   */
+  /** The surface that starts a brand new crop box when dragged. */
   drawSurface: string
   imageBox: string
   cropBox: string
@@ -66,9 +60,7 @@ export interface MountOptions {
   fixture?: CropperFixture
   hostWidth?: number
   props?: Record<string, unknown>
-  /**
-   * Where the host goes. Defaults to the document body; pass a frame to test clipping.
-   */
+  /** Where the host goes. Defaults to the document body; pass a frame to test clipping. */
   parent?: HTMLElement
 }
 

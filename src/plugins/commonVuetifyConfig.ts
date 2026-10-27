@@ -153,13 +153,9 @@ export const useCommonVuetifyConfig = () => {
 }
 
 export interface CreateAnzuVuetifyOptions {
-  /**
-   * The admin's vue-i18n instance, in composition mode: Vuetify's own texts are translated through it.
-   */
+  /** The admin's vue-i18n instance, in composition mode: Vuetify's own texts are translated through it. */
   i18n: I18n<any, any, any, string, false>
-  /**
-   * Merged over the common defaults per component, the way admin-ugc sets `VDataTableServer`.
-   */
+  /** Merged over the common defaults per component, the way admin-ugc sets `VDataTableServer`. */
   defaults?: VuetifyOptions['defaults']
 }
 

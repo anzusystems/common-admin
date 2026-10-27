@@ -4,9 +4,7 @@ import type { IntegerId } from '@/shared/types/common'
 import { useApiRequest } from '@/domains/api/composables/useApiRequest'
 import { DAM_END_POINT_ASSET_LICENCE } from '@/domains/dam/api/damEndPoints'
 
-/**
- * `endPoint`: the caller's licence endpoint. The default one is used when not given.
- */
+/** `endPoint`: the caller's licence endpoint. The default one is used when not given. */
 export const fetchDamAssetLicence = (
   client: () => AxiosInstance,
   id: IntegerId,

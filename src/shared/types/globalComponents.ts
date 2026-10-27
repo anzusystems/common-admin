@@ -16,9 +16,7 @@ export interface CommonAdminGlobalComponents {
   ABtnTertiary: typeof VBtn
   ABtnIcon: typeof VBtn
   AChipNoLink: typeof AChipNoLink
-  /**
-   * Its `permission` takes the values an admin puts in `AclRegistry`.
-   */
+  /** Its `permission` takes the values an admin puts in `AclRegistry`. */
   Acl: typeof Acl
 }
 

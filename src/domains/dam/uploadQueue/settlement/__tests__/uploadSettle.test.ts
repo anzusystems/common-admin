@@ -25,17 +25,11 @@ const QUEUE = 'queue'
 const TARGET = { assetId: 'asset-1', fileId: null }
 const FILE_TARGET = { assetId: 'asset-1', fileId: 'file-1' }
 
-/**
- * A tick, the manual refresh, a `copied` event.
- */
+/** A tick, the manual refresh, a `copied` event. */
 const WITH_METADATA: UploadReadIntent = { hint: null, metadata: true, early: false, seen: true }
-/**
- * A `processed` event.
- */
+/** A `processed` event. */
 const EVENT_ONLY: UploadReadIntent = { hint: 'processed', metadata: false, early: false, seen: true }
-/**
- * A metadata notification.
- */
+/** A metadata notification. */
 const METADATA_EVENT: UploadReadIntent = { hint: null, metadata: true, early: true, seen: false }
 
 const processedAsset = () => damAsset('asset-1', damFile('file-1', AssetFileProcessStatus.Processed))

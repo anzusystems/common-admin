@@ -283,9 +283,7 @@ describe('the names of controls of the library', () => {
     await vi.waitFor(() => expect(host!.querySelectorAll('.v-chip__close')).toHaveLength(1))
     return { outer, selectedValues, fetchItems }
   }
-  /**
-   * Waits past the search debounce so that a request it would start is counted too.
-   */
+  /** Waits past the search debounce so that a request it would start is counted too. */
   const settled = async () => {
     await new Promise((resolve) => setTimeout(resolve, 400))
     await flushPromises()

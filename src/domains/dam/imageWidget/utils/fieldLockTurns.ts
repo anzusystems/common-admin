@@ -7,9 +7,7 @@ const turns = new Map<string, number>()
 
 const keyOf = (room: CollabRoom, field: CollabFieldName) => JSON.stringify([room, field])
 
-/**
- * Takes a new lock turn for the field and returns its number.
- */
+/** Takes a new lock turn for the field and returns its number. */
 export const takeFieldLockTurn = (room: CollabRoom, field: CollabFieldName) => {
   const turn = (turns.get(keyOf(room, field)) ?? 0) + 1
   turns.set(keyOf(room, field), turn)

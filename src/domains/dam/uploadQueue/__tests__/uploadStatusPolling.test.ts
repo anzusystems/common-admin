@@ -94,9 +94,7 @@ const fromTheServer = {
 }
 const notify = (name: DamNotificationNameType, data: Record<string, unknown>) =>
   useDamNotificationsEventBus().emit({ name, data } as unknown as DamNotification)
-/**
- * Real time, for what the upload does after an answer. The queue clock stands still meanwhile.
- */
+/** Real time, for what the upload does after an answer. The queue clock stands still meanwhile. */
 const moment = () => new Promise<void>((resolve) => setTimeout(resolve, 50))
 const readUrls = () => dam.assetReads().map((read) => read.url)
 const warnings = () =>

@@ -45,21 +45,15 @@ export function trackNavigation(router: Router): () => void {
 
 export const isNavigationPending = (router: Router): boolean => states.get(router)?.pending === true
 
-/**
- * Whether the app's router has a navigation of the user's on its way.
- */
+/** Whether the app's router has a navigation of the user's on its way. */
 export const isAppNavigationPending = (): boolean => appRouter !== undefined && isNavigationPending(appRouter)
 
 const pageIdOf = (router: Router) => states.get(router)?.pageId ?? 0
 
 export interface UsePageNavigationReturn {
-  /**
-   * The user is still on this page and not navigating away from it.
-   */
+  /** The user is still on this page and not navigating away from it. */
   onPage: () => boolean
-  /**
-   * Navigates only `onPage()`. Resolves whether it got there.
-   */
+  /** Navigates only `onPage()`. Resolves whether it got there. */
   push: (to: RouteLocationRaw) => Promise<boolean>
   replace: (to: RouteLocationRaw) => Promise<boolean>
 }

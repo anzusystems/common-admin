@@ -18,13 +18,9 @@ const props = withDefaults(
     clearable?: boolean
     dataCy?: string
     v?: AFormFieldValidation | null
-    /**
-     * The DAM configuration whose client lists the users.
-     */
+    /** The DAM configuration whose client lists the users. */
     configName?: string
-    /**
-     * Lists the users through this client instead of the configured one, at `/adm/v1/user` (not `endPointUser`).
-     */
+    /** Lists the users through this client instead of the configured one, at `/adm/v1/user` (not `endPointUser`). */
     client?: (() => AxiosInstance) | undefined
   }>(),
   {

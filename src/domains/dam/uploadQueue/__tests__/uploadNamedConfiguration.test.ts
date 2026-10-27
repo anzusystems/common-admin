@@ -74,9 +74,7 @@ afterEach(() => {
   useDamNotificationsEventBus().reset()
 })
 
-/**
- * Notifications of `default`'s socket concern only the queues of `default`.
- */
+/** Notifications of `default`'s socket concern only the queues of `default`. */
 const notify = (name: DamNotificationNameType, data: Record<string, unknown>) =>
   useDamNotificationsEventBus().emit({ name, data } as unknown as DamNotification, ['own'])
 const photo = (name: string) => new File([new Uint8Array(3000)], name, { type: 'image/jpeg' })

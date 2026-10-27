@@ -51,9 +51,7 @@ export const dateModifyMinutes = (minutes = 0, date: null | Date = null): Date =
   return date
 }
 
-/**
- * Today as a calendar day: UTC midnight of the local date, the shape a `type: 'date'` picker emits.
- */
+/** Today as a calendar day: UTC midnight of the local date, the shape a `type: 'date'` picker emits. */
 export const dateUtcToday = (): DateUTC => {
   const now = new Date()
   return dayjs.utc(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate())).format(FORMAT) + SUFFIX
@@ -108,9 +106,7 @@ export const datePretty = (isoDate: DatetimeUTC | DatetimeUTCNullable | string |
   return dayjs(isoDate).format('DD.MM.YYYY')
 }
 
-/**
- * Counterpart of `datePretty` for calendar-day values: reads the day the API stores, in any timezone.
- */
+/** Counterpart of `datePretty` for calendar-day values: reads the day the API stores, in any timezone. */
 export const dateUtcPretty = (
   isoDate: DatetimeUTC | DatetimeUTCNullable | string | null,
   edgeDateValue = ''

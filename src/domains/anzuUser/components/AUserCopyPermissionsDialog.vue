@@ -20,9 +20,7 @@ const props = defineProps<{
    * fields; systems with none leave this out.
    */
   copySystemFields?: ((target: TUser, source: AnzuUser) => void) | undefined
-  /**
-   * i18n keys listed in the dialog, so the operator sees exactly what will be overwritten.
-   */
+  /** i18n keys listed in the dialog, so the operator sees exactly what will be overwritten. */
   copiedSettingKeys?: string[]
 }>()
 

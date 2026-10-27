@@ -62,9 +62,7 @@ export function usePermissionGroupInnerFilter() {
   return { filterConfig, filterData }
 }
 
-/**
- * Test seam; the list stores are module state.
- */
+/** Test seam; the list stores are module state. */
 export const resetPermissionGroupListFilters = () => {
   listStores.clear()
 }

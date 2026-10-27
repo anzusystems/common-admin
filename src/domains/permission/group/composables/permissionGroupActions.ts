@@ -131,9 +131,7 @@ export const usePermissionGroupActions = (params: PermissionGroupActionsParams) 
   }
 
   const loadingDeletePermissionGroup = ref(false)
-  /**
-   * Resolves true when the row is gone, so the caller can decide where to navigate.
-   */
+  /** Resolves true when the row is gone, so the caller can decide where to navigate. */
   const deletePermissionGroup = async (id: IntegerId): Promise<boolean> => {
     try {
       loadingDeletePermissionGroup.value = true
@@ -182,9 +180,7 @@ export const usePermissionGroupActions = (params: PermissionGroupActionsParams) 
   }
 
   const loadingCreatePermissionGroup = ref(false)
-  /**
-   * Resolves the created row, so the caller can route to its detail; null on failure.
-   */
+  /** Resolves the created row, so the caller can route to its detail; null on failure. */
   const createPermissionGroup = async (): Promise<PermissionGroup | null> => {
     try {
       loadingCreatePermissionGroup.value = true

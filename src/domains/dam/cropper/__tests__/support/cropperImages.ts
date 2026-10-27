@@ -46,9 +46,7 @@ export const LANDSCAPE_IMAGE_URL: CropperFixture = {
   src: '/playground/cropper-landscape.png',
 }
 
-/**
- * The other pictures, also served as files, for the cases that need a query string on the source.
- */
+/** The other pictures, also served as files, for the cases that need a query string on the source. */
 export const PORTRAIT_IMAGE_URL: CropperFixture = {
   naturalWidth: 600,
   naturalHeight: 800,

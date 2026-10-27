@@ -7,9 +7,7 @@ const props = withDefaults(
   defineProps<{
     target: UserSystemManageTarget
     systemLabel: string
-    /**
-     * "Edit" instead of "Manage in X" -- used where the operator is already in that admin.
-     */
+    /** "Edit" instead of "Manage in X" -- used where the operator is already in that admin. */
     internalLabel?: string | undefined
   }>(),
   {
@@ -21,9 +19,7 @@ const { t } = useI18n()
 
 const isExternal = computed(() => props.target.kind === 'external')
 
-/**
- * A missing url means the template is configured but absent. Show the reason instead of a silently disabled button.
- */
+/** A missing url means the template is configured but absent. Show the reason instead of a silently disabled button. */
 const missingUrl = computed(() => props.target.kind === 'external' && props.target.href === null)
 
 const href = computed(() => (props.target.kind === 'external' ? (props.target.href ?? undefined) : undefined))

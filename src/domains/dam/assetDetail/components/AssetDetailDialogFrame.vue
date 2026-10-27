@@ -37,9 +37,7 @@ const emit = defineEmits<{
 defineSlots<{
   title(): unknown
   'toolbar-actions'(): unknown
-  /**
-   * Drawn over the image. When given, image and overlay share a positioned box.
-   */
+  /** Drawn over the image. When given, image and overlay share a positioned box. */
   'image-overlay'?(): unknown
   sidebar(props: { view: AssetDetailView }): unknown
 }>()

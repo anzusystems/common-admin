@@ -18,13 +18,9 @@ const props = withDefaults(
     assetType: DamAssetTypeType
     assetFileProperties: AssetFileProperties
     disableAbsolute?: boolean
-    /**
-     * Shows the synthesized audio (TTS) icon. Off by default because the backend reports it to every admin.
-     */
+    /** Shows the synthesized audio (TTS) icon. Off by default because the backend reports it to every admin. */
     showTts?: boolean
-    /**
-     * DAM configuration whose distribution services name the icons. Inherited when not given.
-     */
+    /** DAM configuration whose distribution services name the icons. Inherited when not given. */
     configName?: string
   }>(),
   {

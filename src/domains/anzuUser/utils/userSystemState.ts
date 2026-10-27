@@ -38,9 +38,7 @@ export interface UserSystemAxes {
 }
 
 export const UserSystemState = {
-  /**
-   * Nothing has been asked yet, or the answer is still on its way.
-   */
+  /** Nothing has been asked yet, or the answer is still on its way. */
   Loading: 'loading',
   Enabled: 'enabled',
   Disabled: 'disabled',
@@ -102,9 +100,7 @@ export const isAuthoritativelyAbsent = (axes: UserSystemAxes): boolean =>
   axes.presence === UserSystemPresence.Absent &&
   axes.access === UserSystemAccess.Ok
 
-/**
- * A system a bulk action may act on: it answered, the account is there, and access was granted.
- */
+/** A system a bulk action may act on: it answered, the account is there, and access was granted. */
 export const isActionable = (axes: UserSystemAxes): boolean =>
   axes.load === UserSystemLoad.Loaded &&
   axes.presence === UserSystemPresence.Present &&

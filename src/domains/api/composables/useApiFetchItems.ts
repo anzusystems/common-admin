@@ -11,18 +11,14 @@ import { mapApiError, report } from '@/domains/api/utils/apiErrors'
 import { createAbortable, hasBody, ownedByHelper, requestedUrl } from '@/domains/api/composables/request'
 import { readArrayBody, readListBody } from '@/domains/api/utils/listBody'
 
-/**
- * Which of the two shapes a list arrives in.
- */
+/** Which of the two shapes a list arrives in. */
 export type ItemsShape = 'envelope' | 'array'
 
 export type UseApiFetchItemsParams = {
   client: AxiosClientFn
   system: string
   entity: string
-  /**
-   * i18n scope for field-level validation failures; defaults to `system` / `entity`.
-   */
+  /** i18n scope for field-level validation failures; defaults to `system` / `entity`. */
   validationSystem?: string
   validationEntity?: string
   /**
@@ -50,13 +46,9 @@ export type UseApiFetchItemsParams = {
 export type FetchItemsParams<B = never> = {
   urlTemplate?: string
   urlParams?: UrlParams
-  /**
-   * `null` omits the body, as everywhere in this family.
-   */
+  /** `null` omits the body, as everywhere in this family. */
   body?: B
-  /**
-   * Stops this one call, leaving the instance's other calls alone.
-   */
+  /** Stops this one call, leaving the instance's other calls alone. */
   signal?: AbortSignal
 }
 

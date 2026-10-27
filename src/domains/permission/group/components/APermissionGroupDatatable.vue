@@ -28,20 +28,14 @@ type DatatableItem = PermissionGroup
 const props = withDefaults(
   defineProps<{
     client: AxiosClientFn
-    /**
-     * Backend identity: keys the filter store and the cache, and reaches every api call.
-     */
+    /** Backend identity: keys the filter store and the cache, and reaches every api call. */
     system: string
     entity?: string | undefined
     endPoint?: string | undefined
-    /**
-     * Where a row and the detail button go. The library cannot know an app's typed route names.
-     */
+    /** Where a row and the detail button go. The library cannot know an app's typed route names. */
     detailRoute: (permissionGroup: PermissionGroup) => RouteLocationRaw
     editRoute: (permissionGroup: PermissionGroup) => RouteLocationRaw
-    /**
-     * Already-evaluated ACL, a boolean rather than an `AclValue`.
-     */
+    /** Already-evaluated ACL, a boolean rather than an `AclValue`. */
     canUpdate?: boolean
   }>(),
   {

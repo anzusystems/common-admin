@@ -29,9 +29,7 @@ import type { AnzuUser, BaseUser } from '@/shared/types/AnzuUser'
 import { cloneDeep, isNull, isUndefined } from '@/shared/utils/common'
 
 const props = defineProps<{
-  /**
-   * Order matters twice: the order of the rows, and the priority when pre-filling.
-   */
+  /** Order matters twice: the order of the rows, and the priority when pre-filling. */
   descriptors: AnyUserSystemDescriptor[]
   refreshHook?: UserSystemRefreshHook | undefined
 }>()
@@ -80,9 +78,7 @@ const differences = computed(() => findMetadataDifferences(records.value))
 
 const foundAnywhere = computed(() => records.value.size > 0)
 
-/**
- * Bulk actions only write where the person was found, so offer them when at least one of those systems is writable.
- */
+/** Bulk actions only write where the person was found, so offer them when at least one of those systems is writable. */
 const anyFoundWritable = computed(() =>
   props.descriptors.some((item) => records.value.has(item.system) && descriptorMayWrite(item, 'update'))
 )
@@ -106,9 +102,7 @@ const canOfferCreateAnywhere = computed(
     props.descriptors.some((item) => item.isEnabled() && descriptorMayWrite(item, 'create'))
 )
 
-/**
- * A conflict is not a state to act from: writes would land on somebody else's account.
- */
+/** A conflict is not a state to act from: writes would land on somebody else's account. */
 const blockedByConflict = computed(() => store.identityConflict !== null)
 
 const labelFor = (descriptor: AnyUserSystemDescriptor) => descriptor.label ?? descriptor.system
@@ -152,9 +146,7 @@ const withRowBusy = async (system: string, run: () => Promise<void>) => {
   }
 }
 
-/**
- * The touched row is read again after every write. Otherwise it keeps showing the old state.
- */
+/** The touched row is read again after every write. Otherwise it keeps showing the old state. */
 const toggleOne = async (descriptor: AnyUserSystemDescriptor, enabled: boolean) => {
   const id = store.resolvedId
   if (isNull(id)) return
@@ -205,9 +197,7 @@ const createFromSource = async (descriptor: AnyUserSystemDescriptor, metadata: B
   })
 }
 
-/**
- * The record the create form is prefilled from: the first configured system that has one.
- */
+/** The record the create form is prefilled from: the first configured system that has one. */
 const prefillSource = computed(() => {
   const first = props.descriptors.find((item) => records.value.has(item.system))
   return isUndefined(first) ? null : (records.value.get(first.system) ?? null)
@@ -228,9 +218,7 @@ const openBulk = (action: BulkActionType) => {
   bulkOpen.value = true
 }
 
-/**
- * Every bulk write passes through here, retries included. A system the descriptor refuses is not written.
- */
+/** Every bulk write passes through here, retries included. A system the descriptor refuses is not written. */
 const writableSystems = (systems: string[]) =>
   systems.filter((system) => {
     const descriptor = props.descriptors.find((item) => item.system === system)
@@ -291,9 +279,7 @@ const createAnywhereChecking = ref(false)
 const createAnywhereConflict = ref<string[]>([])
 const createAnywhereError = ref<string | null>(null)
 
-/**
- * Set when the page goes away, so work that finishes afterwards does not refill it.
- */
+/** Set when the page goes away, so work that finishes afterwards does not refill it. */
 let left = false
 
 const openCreateAnywhere = () => {
@@ -373,9 +359,7 @@ const createAnywhereRequiredMetadata = computed(
   () => props.descriptors.find((item) => item.system === createAnywhereSystem.value)?.requiredMetadata ?? true
 )
 
-/**
- * What is special about an account in the chosen system. For blog and forum it is a public one.
- */
+/** What is special about an account in the chosen system. For blog and forum it is a public one. */
 const createAnywhereNote = computed(
   () => props.descriptors.find((item) => item.system === createAnywhereSystem.value)?.createNote
 )

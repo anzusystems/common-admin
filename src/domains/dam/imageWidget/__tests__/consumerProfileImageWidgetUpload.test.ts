@@ -205,9 +205,7 @@ describe.each(consumerProfiles)('an upload into the image widget under the $name
     flags: { showSource: true, internal: false, overrideInternal: false },
     position: 1,
   }
-  /**
-   * The upload map adds `assetId` and the authors to the image handed to the widget.
-   */
+  /** The upload map adds `assetId` and the authors to the image handed to the widget. */
   const handedImage = { ...savedImage, authorIds: isCms ? ['author-1'] : [], assetId: 'asset-1' }
   const existing: ImageAware = {
     id: 7,

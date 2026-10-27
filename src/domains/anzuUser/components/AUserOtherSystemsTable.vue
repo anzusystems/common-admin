@@ -9,13 +9,9 @@ const props = defineProps<{
   descriptors: AnyUserSystemDescriptor[]
   userId: IntegerId
   readonly?: boolean
-  /**
-   * Whether an account created from here would be switched on. The dialog states it.
-   */
+  /** Whether an account created from here would be switched on. The dialog states it. */
   createEnabled?: boolean
-  /**
-   * What the owning system holds, to prefill the create form.
-   */
+  /** What the owning system holds, to prefill the create form. */
   source?: BaseUser | null
   creatingSystem?: string | null
 }>()

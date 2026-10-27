@@ -14,17 +14,13 @@ import { DAM_DEFAULT_STORE, DAM_NAME_ACCESSORS, DAM_NAME_STORE_METHODS } from '@
 // Calls in templates and `useDamConfigStore()` outside `useDamConfigStoreOf` are not allowed.
 // It does not prove the name is the right one, only that a name is passed, as far as the types say.
 
-/**
- * Where the guard reads; `DAM_GUARD_ROOT` points it at another tree (a check of the guard itself).
- */
+/** Where the guard reads; `DAM_GUARD_ROOT` points it at another tree (a check of the guard itself). */
 const ROOT = process.env.DAM_GUARD_ROOT ?? fileURLToPath(new URL('../../domains/dam', import.meta.url))
 
 const NAME_PRODUCERS = new Set(['useDamConfigName', 'inheritedDamConfigName'])
 const NAME_TYPES = new Set(['UploadQueueRowsOf'])
 
-/**
- * The one nameless call allowed, and why: the store hears a change of any socket, whatever the name.
- */
+/** The one nameless call allowed, and why: the store hears a change of any socket, whatever the name. */
 const SOCKET_CHANGE = {
   file: 'uploadQueue/store/uploadQueuesStore.ts',
   call: 'useDamNotificationsConnection().onChange',

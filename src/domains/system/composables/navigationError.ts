@@ -4,9 +4,7 @@ import { useSentry } from '@/domains/system/composables/sentry'
 import { requestAppReload } from '@/domains/system/systemBar/utils/appReload'
 
 export interface NavigationErrorHandlerOptions {
-  /**
-   * Runs first on every failure, e.g. to drop an admin's navigation-pending overlay.
-   */
+  /** Runs first on every failure, e.g. to drop an admin's navigation-pending overlay. */
   onError?: (error: unknown) => void
   /**
    * The very first navigation failed, so only the start-up loader is on screen. Called once per handler.

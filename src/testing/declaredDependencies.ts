@@ -14,9 +14,7 @@ export interface DescribeDeclaredDependenciesOptions {
    */
   sources: Record<string, string>
   packageJson: PackageJsonDependencies
-  /**
-   * Bare specifier prefixes that name no package: the admin's own aliases (`@/` is built in).
-   */
+  /** Bare specifier prefixes that name no package: the admin's own aliases (`@/` is built in). */
   aliases?: string[]
 }
 
@@ -146,9 +144,7 @@ const NODE_BUILTINS = new Set([
   'zlib',
 ])
 
-/**
- * The package a bare specifier imports from, or `null` for a relative path, an alias or a `scheme:` module.
- */
+/** The package a bare specifier imports from, or `null` for a relative path, an alias or a `scheme:` module. */
 export const packageOfSpecifier = (specifier: string, aliases: string[] = []): string | null => {
   const path = specifier.split('?')[0]!
   if (/^(?:\.|\/|@\/|#|[a-z][a-z0-9+.-]*:)/.test(path)) return null

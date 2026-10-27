@@ -9,13 +9,9 @@ export type ValidationScope = string | number | boolean | symbol | undefined
 export interface AFormFieldValidation {
   $touch: () => void
   $invalid: boolean
-  /**
-   * Joined into the field's error message.
-   */
+  /** Joined into the field's error message. */
   $errors: ReadonlyArray<{ $message: string | Ref<string> }>
-  /**
-   * `system.subject.field`: names the field for collaboration and the remote form fields.
-   */
+  /** `system.subject.field`: names the field for collaboration and the remote form fields. */
   $path: string
   /**
    * A `required` rule stars the label. Its `$params.type` tells it from `requiredIf`.

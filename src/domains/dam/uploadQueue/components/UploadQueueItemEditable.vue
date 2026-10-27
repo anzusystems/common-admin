@@ -46,37 +46,21 @@ const props = withDefaults(
      * The queue knows these rows. A row shown outside a queue has no such state.
      */
     refreshMayHelp?: boolean
-    /**
-     * Statuses in which "cancel" is offered.
-     */
+    /** Statuses in which "cancel" is offered. */
     cancelStatuses?: readonly UploadQueueItemStatusType[]
-    /**
-     * Shows the line "The main file is a duplicate." under the title.
-     */
+    /** Shows the line "The main file is a duplicate." under the title. */
     duplicateNotice?: boolean
-    /**
-     * Keeps the form disabled on a duplicate regardless of its metadata.
-     */
+    /** Keeps the form disabled on a duplicate regardless of its metadata. */
     disableFormOnDuplicate?: boolean
-    /**
-     * The scope the fields of an editable row report to. A non-editable row reports to none.
-     */
+    /** The scope the fields of an editable row report to. A non-editable row reports to none. */
     validationScope?: ValidationScope
-    /**
-     * How keywords and authors look while the row is not editable. Passed to both inputs as `disabledAs`.
-     */
+    /** How keywords and authors look while the row is not editable. Passed to both inputs as `disabledAs`. */
     disabledFieldsAs?: DamFieldsDisabledAs
-    /**
-     * A duplicate gets no edit button: neither the `edit` slot nor its default is rendered.
-     */
+    /** A duplicate gets no edit button: neither the `edit` slot nor its default is rendered. */
     hideEditOnDuplicate?: boolean
-    /**
-     * Whether the row offers refresh, decided by the host. Without it the row decides itself.
-     */
+    /** Whether the row offers refresh, decided by the host. Without it the row decides itself. */
     refreshOffered?: boolean | undefined
-    /**
-     * The DAM configuration whose rules and forms the row follows. Inherited when not given.
-     */
+    /** The DAM configuration whose rules and forms the row follows. Inherited when not given. */
     configName?: string
   }>(),
   {
@@ -113,17 +97,11 @@ const emit = defineEmits<{
 const damConfigName = useDamConfigName(props.configName)
 
 defineSlots<{
-  /**
-   * Rendered over the picture, under the error overlay.
-   */
+  /** Rendered over the picture, under the error overlay. */
   'image-overlay'?(props: { item: UploadQueueItem }): unknown
-  /**
-   * Left of the action line. Default: "Edit in Media Library", disabled without metadata, emits `showDetail`.
-   */
+  /** Left of the action line. Default: "Edit in Media Library", disabled without metadata, emits `showDetail`. */
   edit?(props: { item: UploadQueueItem }): unknown
-  /**
-   * Last in the action line. Default: "Remove from queue" while offered, emits `removeItem`.
-   */
+  /** Last in the action line. Default: "Remove from queue" while offered, emits `removeItem`. */
   remove?(props: { item: UploadQueueItem; index: number; offered: boolean }): unknown
 }>()
 

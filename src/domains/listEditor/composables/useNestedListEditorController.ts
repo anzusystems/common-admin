@@ -105,9 +105,7 @@ export interface NestedListEditorHandle<TItem extends Record<string, any>> {
   getChanges: () => NestedListEditorChanges<TItem>
   /** Adopt the saved tree as the new baseline; backfill keys; clear dirty/submitted. */
   commit: (saved?: NestedTree<TItem>) => void
-  /**
-   * Adopt only these rows as saved (a server-confirmed single-row op); other pending work stays.
-   */
+  /** Adopt only these rows as saved (a server-confirmed single-row op); other pending work stays. */
   acceptRows: (keys: ListEditorKey[]) => void
   /** Discard unsaved edits back to the last committed baseline (or a given tree). */
   reset: (tree?: NestedTree<TItem>) => void
@@ -149,9 +147,7 @@ export type ExposedNestedListEditorHandle<TItem extends Record<string, any>> = S
   NestedListEditorHandle<TItem>
 >
 
-/**
- * What `ANestedSortableListEditor` exposes on top of the controller handle.
- */
+/** What `ANestedSortableListEditor` exposes on top of the controller handle. */
 export interface NestedSortableListEditorExtras {
   /**
    * Runs a tree mutation the server already made (e.g. a row created through a dialog).
@@ -171,9 +167,7 @@ export interface NestedSortableListEditorExtras {
   collapseDetail: (id: ListEditorKey) => void
 }
 
-/**
- * `ANestedSortableListEditor` read through a template ref: the unwrapped handle and its extras.
- */
+/** `ANestedSortableListEditor` read through a template ref: the unwrapped handle and its extras. */
 export type ExposedNestedSortableListEditorHandle<TItem extends Record<string, any>> =
   ExposedNestedListEditorHandle<TItem> & NestedSortableListEditorExtras
 

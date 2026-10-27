@@ -58,9 +58,7 @@ export const writeMetadataField = (user: BaseUser, field: UserMetadataField, val
 
 export interface MetadataDifference {
   field: UserMetadataField
-  /**
-   * System to the value it holds, for every system that answered with a record.
-   */
+  /** System to the value it holds, for every system that answered with a record. */
   values: Map<string, string>
 }
 
@@ -95,9 +93,7 @@ export const pickPrefillSource = (order: string[], records: Map<string, BaseUser
   return null
 }
 
-/**
- * Systems whose stored value differs from the one about to be written. Nothing else is touched.
- */
+/** Systems whose stored value differs from the one about to be written. Nothing else is touched. */
 export const systemsNeedingWrite = (
   target: BaseUser,
   records: Map<string, BaseUser>,

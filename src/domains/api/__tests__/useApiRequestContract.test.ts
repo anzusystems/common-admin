@@ -50,9 +50,7 @@ const buildCommand = (request: ReturnType<typeof vi.fn>) =>
 const answering = (res: unknown) => vi.fn().mockResolvedValue(res)
 const failingWith = (over: Record<string, unknown> = {}) =>
   vi.fn().mockImplementation((config: { url: string }) => Promise.reject(axiosError(over, config.url)))
-/**
- * For a failure that is not axios's: it carries no config, so there is no url to build it from.
- */
+/** For a failure that is not axios's: it carries no config, so there is no url to build it from. */
 const rejecting = (error: unknown) => vi.fn().mockRejectedValue(error)
 
 beforeEach(() => {

@@ -43,9 +43,7 @@ describe('AFileInput once a pick is handled', () => {
     (wrapper.emitted('filesInput') ?? []).map(([files]) => (files as File[]).map((file) => file.name))
   const inputOf = (wrapper: VueWrapper) => wrapper.find('input[type="file"]').element as HTMLInputElement
   const held = (input: HTMLInputElement) => Array.from(input.files ?? []).map((file) => file.name)
-  /**
-   * As the system dialog of a browser: a pick of the very files the input holds changes nothing, and is not told.
-   */
+  /** As the system dialog of a browser: a pick of the very files the input holds changes nothing, and is not told. */
   const pickInBrowser = async (input: HTMLInputElement, ...files: File[]) => {
     if (held(input).join('/') === files.map((file) => file.name).join('/')) return
     await pick(input, ...files)
@@ -136,9 +134,7 @@ describe('AFileInput with its dropzone', () => {
     useAlertsQueue().value = []
   })
 
-  /**
-   * Mounted, and its dropzone listening: it starts to once it is drawn.
-   */
+  /** Mounted, and its dropzone listening: it starts to once it is drawn. */
   const mountWithDropzone = async (multiple = false) => {
     const wrapper = mount(AFileInput, {
       attachTo: document.body,

@@ -229,9 +229,7 @@ const onSearchUpdate = (query: string | null) => {
 
 const { clearOne } = useFilterClearHelpers()
 
-/**
- * The value of the filter its watcher (below) saw last.
- */
+/** The value of the filter its watcher (below) saw last. */
 let watchedValue: unknown
 
 const clearField = () => {

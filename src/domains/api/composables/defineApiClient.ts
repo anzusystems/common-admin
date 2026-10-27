@@ -24,9 +24,7 @@ export interface ApiClientResponseInterceptor {
 }
 
 export interface ApiClientSetup {
-  /**
-   * The instance's defaults; nothing is added to them.
-   */
+  /** The instance's defaults; nothing is added to them. */
   config: CreateAxiosDefaults
   request?: ApiClientRequestInterceptor[]
   response?: ApiClientResponseInterceptor[]
@@ -56,9 +54,7 @@ export function defineApiClient(setup: () => ApiClientSetup): () => AxiosInstanc
   }
 }
 
-/**
- * A `runWhen` that leaves out requests to urls starting with one of `prefixes` (the auth endpoints).
- */
+/** A `runWhen` that leaves out requests to urls starting with one of `prefixes` (the auth endpoints). */
 export const skipUrlPrefixes =
   (...prefixes: string[]) =>
   (config: AxiosRequestConfig): boolean =>

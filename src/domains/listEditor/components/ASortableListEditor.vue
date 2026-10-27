@@ -214,9 +214,7 @@ export interface Props<TItem extends Record<string, any>> {
   loading?: boolean
   error?: string | null
 
-  /**
-   * Heading above the list. A ready translated string, like every text prop here.
-   */
+  /** Heading above the list. A ready translated string, like every text prop here. */
   title?: string | null
 
   /**
@@ -233,13 +231,9 @@ export interface Props<TItem extends Record<string, any>> {
   showEditButton?: boolean
   showAddAfterAction?: boolean
 
-  /**
-   * Label of the add button. A ready translated string; omit it for the library's own wording.
-   */
+  /** Label of the add button. A ready translated string; omit it for the library's own wording. */
   addLabel?: string | null
-  /**
-   * Heading of the empty state. A ready translated string.
-   */
+  /** Heading of the empty state. A ready translated string. */
   emptyTitle?: string | null
 
   disableRowClick?: boolean

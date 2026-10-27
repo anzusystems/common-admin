@@ -7,9 +7,7 @@ import { usePermissionConfigActions } from '@/domains/permission/config/composab
 const props = withDefaults(
   defineProps<{
     client: AxiosClientFn
-    /**
-     * Roles are per backend: they come from that system's `/adm/v1/permissions/config`.
-     */
+    /** Roles are per backend: they come from that system's `/adm/v1/permissions/config`. */
     system: string
     entity?: string | undefined
     endPoint?: string | undefined

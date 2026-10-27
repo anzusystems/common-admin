@@ -13,9 +13,7 @@ import { objectGetValueByPath } from '@/shared/utils/object'
 
 export interface PermissionConfigActionsParams {
   client: AxiosClientFn
-  /**
-   * The system this config belongs to. A parameter, not a global, so a page can show two systems at once.
-   */
+  /** The system this config belongs to. A parameter, not a global, so a page can show two systems at once. */
   system: string
   entity?: string
   endPoint?: string

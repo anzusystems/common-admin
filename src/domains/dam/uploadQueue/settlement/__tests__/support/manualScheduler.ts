@@ -9,9 +9,7 @@ interface ManualTimer {
   callback: () => void
 }
 
-/**
- * A turn of the event loop: every promise the code under test has chained by now is settled after it.
- */
+/** A turn of the event loop: every promise the code under test has chained by now is settled after it. */
 const turn = () =>
   new Promise<void>((resolve) => {
     const channel = new MessageChannel()

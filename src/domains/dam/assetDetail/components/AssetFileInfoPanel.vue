@@ -16,9 +16,7 @@ import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 
 const props = defineProps<{
   asset: AssetDetailItemDto
-  /**
-   * Shows creator and last modifier chips.
-   */
+  /** Shows creator and last modifier chips. */
   showUsers: boolean
 }>()
 

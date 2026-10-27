@@ -46,9 +46,7 @@ export const handleRecordLoadError = (error: unknown, duration = -1): boolean =>
 }
 
 export interface UseRecordPageOptions {
-  /**
-   * Where to go when nothing in the history is a destination: the entity's list.
-   */
+  /** Where to go when nothing in the history is a destination: the entity's list. */
   fallbackRouteName?: RouteRecordName
   fallbackRouteParams?: Record<string, any>
   /**
@@ -72,17 +70,11 @@ export interface UseRecordPageOptions {
 }
 
 export interface UseRecordPageReturn {
-  /**
-   * For the record's get-one: stopped when the page unmounts.
-   */
+  /** For the record's get-one: stopped when the page unmounts. */
   signal: AbortSignal
-  /**
-   * Back to where the user came from, else to the fallback. Resolves whether it got there.
-   */
+  /** Back to where the user came from, else to the fallback. Resolves whether it got there. */
   leave: () => Promise<boolean>
-  /**
-   * The user is still on this page and not navigating away: for a redirect after the load.
-   */
+  /** The user is still on this page and not navigating away: for a redirect after the load. */
   onPage: () => boolean
 }
 

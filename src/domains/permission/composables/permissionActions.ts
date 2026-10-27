@@ -43,9 +43,7 @@ export const usePermissionActions = (params: PermissionActionsParams) => {
     return permissions
   }
 
-  /**
-   * A grant set on the user directly always beats whatever the groups say.
-   */
+  /** A grant set on the user directly always beats whatever the groups say. */
   const resolvePermissions = (user: AnzuUser): Permissions => ({
     ...resolveGroupPermissions(user.permissionGroups),
     ...user.permissions,

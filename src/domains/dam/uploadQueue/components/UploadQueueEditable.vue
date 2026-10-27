@@ -19,17 +19,11 @@ const props = withDefaults(
     massOperations: boolean
     configName?: string
     disableDoneAnimation?: boolean
-    /**
-     * What the list needs from its host. Without it the library store, caches, alerts and options are used.
-     */
+    /** What the list needs from its host. Without it the library store, caches, alerts and options are used. */
     queue?: UploadQueueListBinding
-    /**
-     * Minimum row count at which the mass operations are shown beside the list.
-     */
+    /** Minimum row count at which the mass operations are shown beside the list. */
     massOperationsFrom?: number
-    /**
-     * Arrow keys, PageUp, PageDown, Home and End scroll the list.
-     */
+    /** Arrow keys, PageUp, PageDown, Home and End scroll the list. */
     keyboardScroll?: boolean
   }>(),
   {
@@ -46,9 +40,7 @@ const emit = defineEmits<{
 }>()
 
 defineSlots<{
-  /**
-   * Default: the library row, with its v-models on the item.
-   */
+  /** Default: the library row, with its v-models on the item. */
   item?(props: {
     item: UploadQueueItem
     index: number

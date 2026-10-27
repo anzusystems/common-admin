@@ -51,9 +51,7 @@ const QUEUE = 'queue'
 const OTHER = 'other'
 const { Waiting, Uploading, Processing, Uploaded, Failed, Stop } = UploadQueueItemStatus
 
-/**
- * How a run fails: before or after its finish request went out, or the finish is refused (4xx).
- */
+/** How a run fails: before or after its finish request went out, or the finish is refused (4xx). */
 type Failure = 'beforeFinish' | 'afterFinish' | 'finishRefused'
 
 interface Run {
@@ -86,9 +84,7 @@ const settled = async () => {
   for (let turn = 0; turn < 5; turn++) await clock.settle()
 }
 
-/**
- * The profile of a store without its queues: the core hands the settlement its own.
- */
+/** The profile of a store without its queues: the core hands the settlement its own. */
 const coreProfile = (profile: UploadSettlementProfile): UploadQueueSettlementProfile => {
   const own: Partial<UploadSettlementProfile> = { ...profile }
   delete own.queues

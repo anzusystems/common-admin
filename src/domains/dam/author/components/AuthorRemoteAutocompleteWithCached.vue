@@ -37,13 +37,9 @@ const props = withDefaults(
     authorConflicts?: DocId[]
     dataCy?: string
     validationScope?: ValidationScope
-    /**
-     * How a disabled field looks: author chips (current library behaviour), or the input and its "+" disabled.
-     */
+    /** How a disabled field looks: author chips (current library behaviour), or the input and its "+" disabled. */
     disabledAs?: DamFieldsDisabledAs
-    /**
-     * DAM configuration to use. Defaults to the parent component's, else `default`.
-     */
+    /** DAM configuration to use. Defaults to the parent component's, else `default`. */
     configName?: string
   }>(),
   {

@@ -75,14 +75,10 @@ const damConfigStoreSetup = () => {
   }
 }
 
-/**
- * The DAM configuration store of the configuration `default`.
- */
+/** The DAM configuration store of the configuration `default`. */
 export const useDamConfigStore = defineStore('commonAdminDamConfigStore', damConfigStoreSetup)
 
-/**
- * A DAM configuration store of `default` or another name. Its `$id` is per name.
- */
+/** A DAM configuration store of `default` or another name. Its `$id` is per name. */
 export type DamConfigStore = Omit<ReturnType<typeof useDamConfigStore>, '$id'> & { readonly $id: string }
 
 interface DamConfigStoreHotData {

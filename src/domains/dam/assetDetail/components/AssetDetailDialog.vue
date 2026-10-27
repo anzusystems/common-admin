@@ -24,9 +24,7 @@ const props = withDefaults(
 )
 
 const emit = defineEmits<{
-  /**
-   * `shown`: the asset the detail showed when it closed. Null when closed from its loader or when it showed none.
-   */
+  /** `shown`: the asset the detail showed when it closed. Null when closed from its loader or when it showed none. */
   (e: 'close', shown: AssetDetailItemDto | null): void
 }>()
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss

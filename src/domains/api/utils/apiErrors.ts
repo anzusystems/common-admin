@@ -22,9 +22,7 @@ import { isInCauseChain } from '@/shared/error/isInCauseChain'
 export type ApiErrorContext = {
   system: string
   entity: string
-  /**
-   * The url actually requested, with parameters substituted and query included. Not the template.
-   */
+  /** The url actually requested, with parameters substituted and query included. Not the template. */
   url?: string
   /**
    * The status the backend answered with. Absent for a transport failure.
@@ -54,9 +52,7 @@ export type ApiErrorLogger = (error: Error, context: ApiErrorContext) => void
  */
 export const USER_PROBE_ENTITY = 'anzuUserProbe'
 
-/**
- * Default error reporting. Exported so tests can restore it.
- */
+/** Default error reporting. Exported so tests can restore it. */
 export const defaultApiErrorLogger: ApiErrorLogger = (error, context) => {
   if (context.status === 404 && context.entity === USER_PROBE_ENTITY) return
   console.error('Api error: ' + (context.url ?? ''), error)

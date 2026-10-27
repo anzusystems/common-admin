@@ -13,9 +13,7 @@ export const UploadRowRole = {
 export type UploadRowRoleType = (typeof UploadRowRole)[keyof typeof UploadRowRole]
 
 export interface UploadSettlePolicy {
-  /**
-   * How a tick reads the state of the row's file. `none`: the row is never tracked.
-   */
+  /** How a tick reads the state of the row's file. `none`: the row is never tracked. */
   reader: 'asset' | 'slots' | 'none'
   /**
    * Applies to the `processed` state only.
@@ -26,17 +24,13 @@ export interface UploadSettlePolicy {
    */
   settleOn: 'read' | 'event' | 'never'
   duplicate: 'becomeOriginal' | 'markDuplicate'
-  /**
-   * `load`: the row gets a form, and its metadata is loaded into it.
-   */
+  /** `load`: the row gets a form, and its metadata is loaded into it. */
   metadata: 'load' | 'none'
 }
 
 export interface UploadSettlementTarget {
   assetId: DocId
-  /**
-   * `null` when the caller does not know the file.
-   */
+  /** `null` when the caller does not know the file. */
   fileId: DocIdNullable
   /**
    * DAM configurations of the target. With `configOf`, rows in queues of other configurations are not concerned.
@@ -45,9 +39,7 @@ export interface UploadSettlementTarget {
   configNames?: string[]
 }
 
-/**
- * Per-request options a reader may honour. A reader that ignores them keeps its old behaviour.
- */
+/** Per-request options a reader may honour. A reader that ignores them keeps its old behaviour. */
 export interface UploadReadOptions {
   /**
    * Whether a failure of this request should be reported to the app error collector.
@@ -67,9 +59,7 @@ export interface UploadReadOptions {
 }
 
 export interface UploadSettlementProfile {
-  /**
-   * Live view of the store's queues. The settlement keeps no rows and always asks.
-   */
+  /** Live view of the store's queues. The settlement keeps no rows and always asks. */
   queues(): Iterable<[UploadQueueKey, UploadQueue]>
   /**
    * DAM configuration of the queue. With it, named targets and
@@ -90,17 +80,11 @@ export interface UploadSettlementProfile {
   matches(row: UploadQueueItem, target: UploadSettlementTarget, purpose: 'settle' | 'decorate' | 'metadata'): boolean
 
   readers: {
-    /**
-     * One asset; `null` when it does not exist (404). Throws only when the request fails.
-     */
+    /** One asset; `null` when it does not exist (404). Throws only when the request fails. */
     asset(assetId: DocId, options?: UploadReadOptions): Promise<AssetDetailItemDto | null>
-    /**
-     * Assets of one licence. The missing ones are not in the answer. An answer that is no list throws.
-     */
+    /** Assets of one licence. The missing ones are not in the answer. An answer that is no list throws. */
     assets(licenceId: IntegerId, assetIds: DocId[], options?: UploadReadOptions): Promise<AssetDetailItemDto[]>
-    /**
-     * DAM: the files of all the slots of an asset. An answer that is no list throws.
-     */
+    /** DAM: the files of all the slots of an asset. An answer that is no list throws. */
     slotFiles?(assetId: DocId, options?: UploadReadOptions): Promise<AssetFileNullable[]>
     /**
      * LIB: the asset the original file of a duplicate belongs to. `queueKey`: of the first row that is to become it.
@@ -109,9 +93,7 @@ export interface UploadSettlementProfile {
       originFileId: DocId,
       options?: Pick<UploadReadOptions, 'queueKey'>
     ): Promise<AssetDetailItemDto>
-    /**
-     * DAM: the original file of a duplicate, by its type.
-     */
+    /** DAM: the original file of a duplicate, by its type. */
     duplicateOriginFile?(originFileId: DocId, assetType: DamAssetTypeType): Promise<AssetFileNullable>
     /**
      * Whether a failure of a read with `report: true` was written
@@ -149,17 +131,11 @@ export interface UploadSettlementProfile {
    */
   metadataGate?(queueKey: UploadQueueKey, row: UploadQueueItem): 'load' | undefined
   hooks: {
-    /**
-     * The row has reached a final state: count the queue again and start the next waiting upload.
-     */
+    /** The row has reached a final state: count the queue again and start the next waiting upload. */
     onRowFinal(queueKey: UploadQueueKey, row: UploadQueueItem): void
-    /**
-     * After every asset that was read (DAM: the main file for the open detail).
-     */
+    /** After every asset that was read (DAM: the main file for the open detail). */
     onAssetRead?(asset: AssetDetailItemDto): void
-    /**
-     * A row with `settleOn: 'never'` has learnt its file is processed (an event, a tick or a manual read).
-     */
+    /** A row with `settleOn: 'never'` has learnt its file is processed (an event, a tick or a manual read). */
     onProcessedSeen?(queueKey: UploadQueueKey, row: UploadQueueItem): void
     afterMetadataLoaded?(queueKey: UploadQueueKey, row: UploadQueueItem): void
     /**
@@ -178,9 +154,7 @@ export interface UploadSettlementProfile {
      * only a backup. A profile with one shared state may ignore `queueKey`.
      */
     isPushAlive(queueKey?: UploadQueueKey): boolean
-    /**
-     * Called whenever that may have changed, for any queue.
-     */
+    /** Called whenever that may have changed, for any queue. */
     onChange(callback: () => void): () => void
   }
 }
@@ -188,16 +162,12 @@ export interface UploadSettlementProfile {
 export interface UploadSettlementEvent {
   kind: 'processed' | 'failed' | 'duplicate' | 'metadata' | 'copied'
   assetId: DocId
-  /**
-   * `event.data.id`
-   */
+  /** `event.data.id` */
   fileId: DocIdNullable
   failReason?: AssetFileFailReasonType
   originAssetFile?: DocIdNullable
   assetType?: DamAssetTypeType | null
-  /**
-   * DAM configurations of the event, as on `UploadSettlementTarget`. Omitted: every queue.
-   */
+  /** DAM configurations of the event, as on `UploadSettlementTarget`. Omitted: every queue. */
   configNames?: string[]
 }
 
@@ -209,19 +179,13 @@ export interface UploadSettlementEvent {
 export type UploadRefreshOutcome = 'settled' | 'pending' | 'error' | 'missing' | 'originalUnread'
 
 export interface UploadSettlement {
-  /**
-   * The row starts waiting for the server. Ignored if the row is not in `queueKey`.
-   */
+  /** The row starts waiting for the server. Ignored if the row is not in `queueKey`. */
   track(queueKey: UploadQueueKey, row: UploadQueueItem, options?: { clientFailed?: boolean }): void
   untrack(row: UploadQueueItem): void
-  /**
-   * The queue was cleared: its poller is dropped.
-   */
+  /** The queue was cleared: its poller is dropped. */
   dropQueue(queueKey: UploadQueueKey): void
 
-  /**
-   * A notification. Resolves after the write (a delayed read included) or after a failed read; never rejects.
-   */
+  /** A notification. Resolves after the write (a delayed read included) or after a failed read; never rejects. */
   notify(event: UploadSettlementEvent): Promise<void>
   /**
    * Manual refresh: an immediate read with metadata and no hint.
@@ -229,26 +193,18 @@ export interface UploadSettlement {
    * returns the first of `error`, `originalUnread`, `missing`, `pending`, `settled` any read had.
    */
   refreshAsset(target: UploadSettlementTarget): Promise<UploadRefreshOutcome>
-  /**
-   * The caller knows the file is processed: a read at once, with the hint `processed`.
-   */
+  /** The caller knows the file is processed: a read at once, with the hint `processed`. */
   settleKnownProcessed(target: UploadSettlementTarget, options: { withMetadata: boolean }): Promise<void>
-  /**
-   * Settles a known duplicate without reading the asset: the `duplicate` event, or a copy the licence already has.
-   */
+  /** Settles a known duplicate without reading the asset: the `duplicate` event, or a copy the licence already has. */
   settleKnownDuplicate(
     target: UploadSettlementTarget,
     originFileId: DocIdNullable,
     assetType: DamAssetTypeType | null
   ): Promise<void>
-  /**
-   * A known failure, without a read. Synchronous.
-   */
+  /** A known failure, without a read. Synchronous. */
   settleKnownFailed(target: UploadSettlementTarget, failReason: AssetFileFailReasonType): void
 
-  /**
-   * The row failed because too many reads found no asset, and the server has not settled it otherwise since.
-   */
+  /** The row failed because too many reads found no asset, and the server has not settled it otherwise since. */
   isGivenUpMissing(row: UploadQueueItem): boolean
   hasTracked(): boolean
   dispose(): void

@@ -72,9 +72,7 @@ export function useLogListActions(params: LogActionsParams) {
     }
   }
 
-  /**
-   * Invalidates whatever is in flight, then cancels it. Order matters: the token first.
-   */
+  /** Invalidates whatever is in flight, then cancels it. Order matters: the token first. */
   const cancel = () => {
     generation++
     abort()
@@ -98,9 +96,7 @@ export function useLogDetailActions(params: LogActionsParams) {
   let generation = 0
   const isCurrent = (token: number) => token === generation
 
-  /**
-   * `true` once loaded, `false` when the page should leave, `undefined` when superseded or stopped.
-   */
+  /** `true` once loaded, `false` when the page should leave, `undefined` when superseded or stopped. */
   const fetchData = async (id: string): Promise<boolean | undefined> => {
     const token = ++generation
     detailLoading.value = true

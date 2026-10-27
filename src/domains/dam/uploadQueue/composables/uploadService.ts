@@ -26,9 +26,7 @@ const CHUNK_MAX_RETRY = 4
 const CHUNK_RETRY_INTERVAL = 1000
 const CHUNK_RETRY_MULTIPLY = 3
 
-/**
- * Message for a validation error (422 with `fields`): one line per field, in the side's texts.
- */
+/** Message for a validation error (422 with `fields`): one line per field, in the side's texts. */
 export function uploadValidationMessage(error: unknown, messages: UploadMessages): string {
   if (!axios.isAxiosError(error) || !error.response || !error.response.data) return messages.unknownError()
   const data = error.response.data as Partial<AnzuApiValidationResponseData>
@@ -85,9 +83,7 @@ const chunkBoundsLoaded = (configName: string) => {
   return minSize > 0 && maxSize > 0
 }
 
-/**
- * Run for either side. Without a preset it uses the library's. Public as `useDamUpload`.
- */
+/** Run for either side. Without a preset it uses the library's. Public as `useDamUpload`. */
 export function useUpload(
   queueItem: UploadQueueItem,
   uploadCallback?: UploadProgressCallback,

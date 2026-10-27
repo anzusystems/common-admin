@@ -21,9 +21,7 @@ import { coreDamOptions } from '@/plugins/pluginOptions'
 const EXT = 2
 const NAMES = /^\/(\w+)\/(author|keyword)\/ext-system\/(\d+)\/search$/
 const UNKNOWN = "Composable can't be used without properly configured common admin."
-/**
- * Waits from this length are held. The caches wait 1.5 s before they ask.
- */
+/** Waits from this length are held. The caches wait 1.5 s before they ask. */
 const HELD_FROM_MS = 1_200
 
 let waits: LongWaits

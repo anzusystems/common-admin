@@ -20,13 +20,9 @@ const props = withDefaults(
   defineProps<{
     queueKey: UploadQueueKey
     extSystem: IntegerId
-    /**
-     * What the mass operations need from their host. Without it they use the library store.
-     */
+    /** What the mass operations need from their host. Without it they use the library store. */
     operations?: UploadQueueMassOperationsBinding
-    /**
-     * The DAM configuration whose rules the operations follow. Inherited when not given.
-     */
+    /** The DAM configuration whose rules the operations follow. Inherited when not given. */
     configName?: string
   }>(),
   {

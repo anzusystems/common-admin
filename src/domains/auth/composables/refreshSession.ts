@@ -41,13 +41,9 @@ const httpStatusInCauseChain = (error: unknown): number | undefined => {
  * Any other error means the auth backend is unavailable and never causes a logout.
  */
 export function createRefreshSession(options: {
-  /**
-   * Calls the refresh endpoint; rejects with whatever the api helper throws.
-   */
+  /** Calls the refresh endpoint; rejects with whatever the api helper throws. */
   refresh: () => Promise<unknown>
-  /**
-   * The JWT payload cookie as it is now.
-   */
+  /** The JWT payload cookie as it is now. */
   jwtPayload: () => string | null | undefined
 }): () => Promise<RefreshResult> {
   let inFlight: Promise<RefreshResult> | null = null
@@ -97,13 +93,9 @@ export function createRefreshRequestInterceptor(options: {
   cookies: () => AuthCookieState
   refreshSession: () => Promise<RefreshResult>
   logout: () => void
-  /**
-   * Requests to these urls (the auth endpoints) are never held for a refresh.
-   */
+  /** Requests to these urls (the auth endpoints) are never held for a refresh. */
   skipUrlPrefix: string
-  /**
-   * Also refresh a JWT that exists but is expired. By default only a missing JWT is refreshed.
-   */
+  /** Also refresh a JWT that exists but is expired. By default only a missing JWT is refreshed. */
   jwtExpired?: () => boolean
 }) {
   // Requests waiting on one refresh share its result. Log out once per refresh, not once per request.

@@ -50,9 +50,7 @@ export function defineAuth<TAclValue extends AclValue>(
     return canForAllHelper(acls, subject)
   }
 
-  /**
-   * `can()` and `canForAll()` that never throw -- for templates and route guards. See `canSafeHelper`.
-   */
+  /** `can()` and `canForAll()` that never throw -- for templates and route guards. See `canSafeHelper`. */
   const canSafe = (acl: TAclValue | TAclValue[], subject?: object) => {
     return canSafeHelper(acl, subject)
   }
@@ -282,9 +280,7 @@ export function useAuthHelpers<TAclValue extends AclValue>() {
   }
 }
 
-/**
- * An ACL value carries its system in front of the first underscore: `weather_location_ui`.
- */
+/** An ACL value carries its system in front of the first underscore: `weather_location_ui`. */
 export function getSystemFromAcl(acl: any) {
   const parts = acl.split('_')
 

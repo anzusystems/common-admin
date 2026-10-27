@@ -84,9 +84,7 @@ const dayButton = (day: number) =>
     | HTMLElement
     | undefined
 
-/**
- * [0] is "now", [1] is "confirm".
- */
+/** [0] is "now", [1] is "confirm". */
 const bottomButton = (index: number) =>
   document.querySelectorAll<HTMLElement>('.a-datetime-picker__bottom-button')[index]
 
@@ -94,9 +92,7 @@ const isCalendarOpen = () => document.querySelectorAll('.a-datetime-picker-calen
 
 const nowShown = () => dayjs().format('DD.MM.YYYY HH:mm')
 
-/**
- * The minute can roll between acting and asserting.
- */
+/** The minute can roll between acting and asserting. */
 const nowWindow = (before: string) => [before, nowShown()]
 
 const adjacentDayButton = (day: number) =>
@@ -121,14 +117,10 @@ const UTC_MIDNIGHT_SHAPE = /^\d{4}-\d{2}-\d{2}T00:00:00\.000000Z$/
 
 const todayStored = () => dayjs().format('YYYY-MM-DD') + 'T00:00:00.000000Z'
 
-/**
- * The day can roll between acting and asserting.
- */
+/** The day can roll between acting and asserting. */
 const todayWindow = (before: string) => [before, todayStored()]
 
-/**
- * Opens from the icon inside the field so the field holds focus, which the regression needs.
- */
+/** Opens from the icon inside the field so the field holds focus, which the regression needs. */
 async function openCalendar() {
   textField().focus()
   calendarIcon()!.click()

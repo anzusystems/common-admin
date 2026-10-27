@@ -32,9 +32,7 @@ const props = withDefaults(
     assetMainFileStatus?: AssetFileProcessStatusType | undefined
     assetMainFileFailReason?: AssetFileFailReasonType | undefined
     configName?: string
-    /**
-     * Which of the two metadata save buttons is saving.
-     */
+    /** Which of the two metadata save buttons is saving. */
     saving?: 'save' | 'saveAndApply' | null
   }>(),
   {

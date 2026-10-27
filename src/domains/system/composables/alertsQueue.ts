@@ -21,9 +21,7 @@ export function useAlertsQueue(group = 'alerts'): Ref<AlertMessage[]> {
   return queue
 }
 
-/**
- * `durationMs` below zero keeps the alert until it is closed.
- */
+/** `durationMs` below zero keeps the alert until it is closed. */
 export function pushAlert(type: AlertType, text: string, durationMs: number, group = 'alerts') {
   useAlertsQueue(group).value.push({
     text,

@@ -28,9 +28,7 @@ const OF_DEFAULT = 'scope-of-default'
 const OF_OWN = 'scope-of-own'
 const ASSET = 'a-1'
 const NAMES = /\/(author|keyword)\/ext-system\/\d+\/search$/
-/**
- * Waits from this length are held. The caches wait 1.5 s before they ask.
- */
+/** Waits from this length are held. The caches wait 1.5 s before they ask. */
 const HELD_FROM_MS = 1_200
 const { Processing, Uploaded } = UploadQueueItemStatus
 const { Processed, Uploading } = AssetFileProcessStatus

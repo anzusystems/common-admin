@@ -12,9 +12,7 @@ import { cloneDeep, isNull } from '@/shared/utils/common'
 const props = withDefaults(
   defineProps<{
     systemLabel: string
-    /**
-     * The system's `createNote`: what is special about having an account there.
-     */
+    /** The system's `createNote`: what is special about having an account there. */
     createNote?: string | undefined
     /**
      * Whether the created account will be switched on.
@@ -24,13 +22,9 @@ const props = withDefaults(
     willBeEnabled?: boolean
     loading?: boolean
     disabled?: boolean
-    /**
-     * The target system's `requiredMetadata`: the profile the form validates against.
-     */
+    /** The target system's `requiredMetadata`: the profile the form validates against. */
     requiredMetadata?: boolean
-    /**
-     * The person's id. Always shown and never editable here, because this path is for a person who already exists.
-     */
+    /** The person's id. Always shown and never editable here, because this path is for a person who already exists. */
     userId?: IntegerIdNullable
     /**
      * Known data used to prefill the form. It is not the posted

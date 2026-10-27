@@ -44,9 +44,7 @@ const objectQueues = (queues: Ref<Record<UploadQueueKey, UploadQueue>>): UploadQ
 export function libraryQueuePreset(store: {
   queues: Ref<Map<UploadQueueKey, UploadQueue>>
   settlement: UploadQueueSettlementProfile
-  /**
-   * DAM configuration the queue was created under, `default` for a queue the store does not know.
-   */
+  /** DAM configuration the queue was created under, `default` for a queue the store does not know. */
   configOf(queueKey: UploadQueueKey): string
 }): UploadQueuePreset<'library'> {
   return {
@@ -61,35 +59,21 @@ export function libraryQueuePreset(store: {
   }
 }
 
-/**
- * admin-dam's queue behavior beyond the library. The store passes in its own parts.
- */
+/** admin-dam's queue behavior beyond the library. The store passes in its own parts. */
 export function adminDamQueuePreset(store: {
   queues: Ref<Record<UploadQueueKey, UploadQueue>>
   settlement: UploadQueueSettlementProfile
-  /**
-   * `useUpload` of admin-dam's `uploadService.ts`.
-   */
+  /** `useUpload` of admin-dam's `uploadService.ts`. */
   upload(item: UploadQueueItem, onProgress: UploadProgressCallback): UploadRun<'adminDam'>
-  /**
-   * The run of an `ExternalProviderAsset` row: `adminDamImportRun(externalProviderImport(item).importInit)`.
-   */
+  /** The run of an `ExternalProviderAsset` row: `adminDamImportRun(externalProviderImport(item).importInit)`. */
   importRun(item: UploadQueueItem): UploadRun<'adminDam'>
-  /**
-   * `resolveUploadErrorMessage`.
-   */
+  /** `resolveUploadErrorMessage`. */
   failureMessage(error: unknown): string
-  /**
-   * `showError` of the store's `useAlerts()`: one alert per reason.
-   */
+  /** `showError` of the store's `useAlerts()`: one alert per reason. */
   alert(message: string): void
-  /**
-   * `handedOver.add(toRaw(item))`.
-   */
+  /** `handedOver.add(toRaw(item))`. */
   rowTracked(queueKey: UploadQueueKey, item: UploadQueueItem): void
-  /**
-   * `metadataFailures.delete(metadataFailureKey(queueKey, item))`.
-   */
+  /** `metadataFailures.delete(metadataFailureKey(queueKey, item))`. */
   rowRemoved(queueKey: UploadQueueKey, item: UploadQueueItem): void
 }): UploadQueuePreset<'adminDam'> {
   const queues = objectQueues(store.queues)
@@ -122,9 +106,7 @@ export function adminDamQueuePreset(store: {
   }
 }
 
-/**
- * Run of an import: only its request. `upload` and `stop` do nothing, and `finishAttempted` is always false.
- */
+/** Run of an import: only its request. `upload` and `stop` do nothing, and `finishAttempted` is always false. */
 export function adminDamImportRun(uploadInit: () => Promise<unknown>): UploadRun<'adminDam'> {
   return {
     [uploadSide]: 'adminDam',

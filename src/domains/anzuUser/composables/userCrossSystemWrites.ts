@@ -21,9 +21,7 @@ import { cloneDeep, isNull } from '@/shared/utils/common'
 
 export interface WriteResult {
   outcome: BulkOutcomeType
-  /**
-   * The server's record after the write, when it returned one.
-   */
+  /** The server's record after the write, when it returned one. */
   user?: AnzuUser
   /**
    * Fields whose stored value differed from both the target and what the search saw.
@@ -103,9 +101,7 @@ export const useUserCrossSystemWrites = () => {
     id: IntegerId,
     target: BaseUser,
     fields: readonly UserMetadataField[] = USER_METADATA_FIELDS,
-    /**
-     * What the search showed for this system, to detect a change made in between.
-     */
+    /** What the search showed for this system, to detect a change made in between. */
     seen: BaseUser | null = null
   ): Promise<WriteResult & { changed: boolean }> => {
     const { method, get, url } = resolveMetadataWrite(descriptor)
@@ -155,9 +151,7 @@ export const useUserCrossSystemWrites = () => {
     }
   }
 
-  /**
-   * Reads the source account fresh from the server, not from a store or form.
-   */
+  /** Reads the source account fresh from the server, not from a store or form. */
   const readSourceUser = async (descriptor: AnyUserSystemDescriptor, id: IntegerId): Promise<AnzuUser | null> => {
     const { get } = resolveEnabledWrite(descriptor)
     try {

@@ -34,18 +34,12 @@ import type { CropRect } from '@/domains/dam/cropper/utils/cropperTypes'
 const props = withDefaults(
   defineProps<{
     src?: string
-    /**
-     * The crop as fractions of the image. Null starts from the default box.
-     */
+    /** The crop as fractions of the image. Null starts from the default box. */
     modelValue?: CropRect | null
-    /**
-     * `NaN` (the default) leaves the crop free-form.
-     */
+    /** `NaN` (the default) leaves the crop free-form. */
     aspectRatio?: number
     containerStyle?: { [key: string]: string } | undefined
-    /**
-     * Colour over everything outside the crop. Replaces overriding `.cropper-modal`.
-     */
+    /** Colour over everything outside the crop. Replaces overriding `.cropper-modal`. */
     shadeColor?: string
   }>(),
   {
@@ -59,9 +53,7 @@ const props = withDefaults(
 
 const emit = defineEmits<{
   (event: 'update:modelValue', crop: CropRect): void
-  /**
-   * The user finished a gesture. The crop is worth saving.
-   */
+  /** The user finished a gesture. The crop is worth saving. */
   (event: 'commit', crop: CropRect): void
   (event: 'ready'): void
 }>()
@@ -116,40 +108,24 @@ const loading = ref(true)
 
 let parts: CropperParts | null = null
 let natural: Size = { width: 0, height: 0 }
-/**
- * The action cropper.js is performing, so a clamp knows which edge to hold still.
- */
+/** The action cropper.js is performing, so a clamp knows which edge to hold still. */
 let currentAction: string | null = null
-/**
- * Guards the re-entrant `$change` a clamp performs from being clamped again.
- */
+/** Guards the re-entrant `$change` a clamp performs from being clamped again. */
 let clamping = false
-/**
- * Ignores the half-applied transforms `$center` emits between its move and its scale.
- */
+/** Ignores the half-applied transforms `$center` emits between its move and its scale. */
 let centring = false
-/**
- * Invalidates an in-flight build when `src` changes or the component goes away mid-load.
- */
+/** Invalidates an in-flight build when `src` changes or the component goes away mid-load. */
 let buildToken = 0
-/**
- * The host box the current layout was computed for, not the last one observed.
- */
+/** The host box the current layout was computed for, not the last one observed. */
 let laidOut: Size = { width: 0, height: 0 }
-/**
- * The last emitted crop, so a model written straight back is not treated as new.
- */
+/** The last emitted crop, so a model written straight back is not treated as new. */
 let lastEmitted: CropRect | null = null
-/**
- * Watches ancestors that clip the host. Their height limits the available room.
- */
+/** Watches ancestors that clip the host. Their height limits the available room. */
 let ancestorObserver: ResizeObserver | null = null
 
 const create = <T extends HTMLElement>(name: string): T => document.createElement(name) as T
 
-/**
- * The image box in canvas coordinates. Read from layout so panning and zooming are included.
- */
+/** The image box in canvas coordinates. Read from layout so panning and zooming are included. */
 const imageBounds = (): Rect => {
   if (!parts) return { x: 0, y: 0, width: 0, height: 0 }
   const canvasRect = parts.canvas.getBoundingClientRect()
@@ -228,9 +204,7 @@ const applyModelOrSeed = () => {
   emitCrop()
 }
 
-/**
- * Pulls the selection back inside the image after the image moved.
- */
+/** Pulls the selection back inside the image after the image moved. */
 const refit = () => {
   if (!parts || centring) return
   const current = selectionRect()
@@ -505,9 +479,7 @@ const currentCrop = (): CropRect | null => {
   }
 }
 
-/**
- * Applies a crop given in fractions to the canvas, clamped to the picture.
- */
+/** Applies a crop given in fractions to the canvas, clamped to the picture. */
 const applyCrop = (crop: CropRect) => {
   const bounds = imageBounds()
   if (!parts || bounds.width <= 0 || bounds.height <= 0) return
@@ -547,14 +519,10 @@ const emitCrop = (alsoCommit = false) => {
   if (alsoCommit) emit('commit', crop)
 }
 
-/**
- * The host's room: its width and the height that is actually shown.
- */
+/** The host's room: its width and the height that is actually shown. */
 const hostBox = (host: HTMLElement): Size => ({ width: host.clientWidth, height: visibleHeightOf(host) })
 
-/**
- * Re-fits the image to the new container and keeps the user's crop.
- */
+/** Re-fits the image to the new container and keeps the user's crop. */
 const relayout = () => {
   const host = hostEl.value
   if (!parts || !host) return
@@ -593,9 +561,7 @@ const onHostBoxChanged = () => {
 // - 160px)`, so a shorter window shrinks the frame without changing its width.
 useResizeObserver(hostEl, onHostBoxChanged)
 
-/**
- * A clipping ancestor can change how much it shows without the host box changing.
- */
+/** A clipping ancestor can change how much it shows without the host box changing. */
 const observeAncestors = (host: HTMLElement) => {
   ancestorObserver?.disconnect()
   const ancestors = clippingAncestorsOf(host)

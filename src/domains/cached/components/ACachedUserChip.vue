@@ -13,9 +13,7 @@ import { useCachedItem } from '@/domains/cached/composables/useCachedItem'
 const props = withDefaults(
   defineProps<{
     id: IntegerIdNullable | undefined
-    /**
-     * The admin's cache getter, e.g. `getCachedUser` of its `useCachedUsers()`.
-     */
+    /** The admin's cache getter, e.g. `getCachedUser` of its `useCachedUsers()`. */
     getCachedFn: (id: IntegerIdNullable | undefined) => CachedItem<AnzuUserMinimal> | undefined
     routeName?: string | undefined
     externalUrlTemplate?: string | undefined
@@ -25,9 +23,7 @@ const props = withDefaults(
      */
     titleFn?: ((user: CachedItem<any>) => string) | undefined
     disableClick?: boolean
-    /**
-     * Label of the close button when Vuetify defaults make the chip closable. Defaults to "Remove".
-     */
+    /** Label of the close button when Vuetify defaults make the chip closable. Defaults to "Remove". */
     closeLabel?: string
   }>(),
   {

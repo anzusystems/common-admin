@@ -104,9 +104,7 @@ export function useAssetSelectActions(configName: string) {
     await fetchAssetList()
   })
 
-  /**
-   * Every list reload goes through here: it restarts at once and is read after a debounce.
-   */
+  /** Every list reload goes through here: it restarts at once and is read after a debounce. */
   const fetchAssetListDebounced = () => {
     startListAnew()
     return readListAfterPause()
@@ -277,9 +275,7 @@ export function useAssetSelectActions(configName: string) {
     await fetchAssetListDebounced()
   }
 
-  /**
-   * Drops a pending detail read: its answer is not shown, and loading stops.
-   */
+  /** Drops a pending detail read: its answer is not shown, and loading stops. */
   const giveUpDetailRead = () => {
     detailRequest++
     detailLoading.value = false

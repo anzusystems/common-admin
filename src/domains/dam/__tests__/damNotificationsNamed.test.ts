@@ -39,9 +39,7 @@ const OF_DEFAULT = 'notified-of-default'
 const OF_OWN = 'notified-of-own'
 const ASSET = 'a-1'
 const S = 1000
-/**
- * Waits from this length are held. The caches wait 1.5 s before they ask.
- */
+/** Waits from this length are held. The caches wait 1.5 s before they ask. */
 const HELD_FROM_MS = 1_200
 const { Processing, Uploaded } = UploadQueueItemStatus
 const { Processed, Uploading } = AssetFileProcessStatus

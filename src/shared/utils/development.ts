@@ -13,9 +13,7 @@ export const isDevelopment = (): boolean => {
 
 const warned = new Set<string>()
 
-/**
- * `console.warn` once per key, and only in development.
- */
+/** `console.warn` once per key, and only in development. */
 export const warnOnceInDevelopment = (key: string, ...message: unknown[]): void => {
   if (!isDevelopment() || warned.has(key)) return
   warned.add(key)

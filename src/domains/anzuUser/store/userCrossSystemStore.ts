@@ -11,13 +11,9 @@ export interface UserSystemResult {
 
 export const CrossSystemPhase = {
   Idle: 'idle',
-  /**
-   * First round of an e-mail search: find the person and their id.
-   */
+  /** First round of an e-mail search: find the person and their id. */
   MatchingEmail: 'matchingEmail',
-  /**
-   * Second round: ask every system by that id, to catch the ones holding a different e-mail.
-   */
+  /** Second round: ask every system by that id, to catch the ones holding a different e-mail. */
   VerifyingById: 'verifyingById',
   Done: 'done',
 } as const
@@ -54,9 +50,7 @@ export interface BulkLogEntry {
   detail?: string
 }
 
-/**
- * Kept in a store, not the dialog. The dialog can close while calls run, and the results must survive.
- */
+/** Kept in a store, not the dialog. The dialog can close while calls run, and the results must survive. */
 export const useUserCrossSystemStore = defineStore('commonAdminUserCrossSystemStore', () => {
   const searchTerm = ref('')
   const resolvedId = ref<IntegerIdNullable>(null)
@@ -74,9 +68,7 @@ export const useUserCrossSystemStore = defineStore('commonAdminUserCrossSystemSt
   const bulkSubjectId = ref<IntegerIdNullable>(null)
   const bulkLog = ref<BulkLogEntry[]>([])
 
-  /**
-   * The term was neither an address nor an id, so nothing was asked and there is nothing to show.
-   */
+  /** The term was neither an address nor an id, so nothing was asked and there is nothing to show. */
   const termRejected = ref(false)
 
   function resetResults() {

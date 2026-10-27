@@ -100,9 +100,7 @@ export function buildFilterHash<F extends readonly MakeFilterOption<string>[]>(
   return hash.length === 0 ? hash : '#' + hash
 }
 
-/**
- * Whether `router.push({ hash })` would leave the hash intact — see `buildFilterHash`.
- */
+/** Whether `router.push({ hash })` would leave the hash intact — see `buildFilterHash`. */
 export const isRouterSafeHash = (hash: string): boolean => !hash.includes('%')
 
 const defaultRenderOptions: FilerRenderOptions = {

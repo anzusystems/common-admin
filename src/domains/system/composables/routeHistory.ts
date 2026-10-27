@@ -8,9 +8,7 @@ import type {
 } from 'vue-router'
 import { readonly, type Ref, ref } from 'vue'
 
-/**
- * A visited route, as far as going back to it needs.
- */
+/** A visited route, as far as going back to it needs. */
 export interface RouteHistoryEntry {
   name: RouteRecordNameGeneric
   fullPath: string
@@ -27,9 +25,7 @@ let historyGeneration = 0
 const leftAfterFailure = new Map<string, number>()
 const LEFT_AFTER_FAILURE_MS = 60_000
 
-/**
- * For `useRecordPage` only.
- */
+/** For `useRecordPage` only. */
 export const markLeftAfterFailure = (path: string) => {
   const now = Date.now()
   // Prunes expired entries here too. Otherwise a path is dropped only when it is looked up again.
@@ -37,16 +33,12 @@ export const markLeftAfterFailure = (path: string) => {
   leftAfterFailure.set(path, now)
 }
 
-/**
- * For `useRecordPage` only: the page is there again, so a failure before no longer counts.
- */
+/** For `useRecordPage` only: the page is there again, so a failure before no longer counts. */
 export const forgetLeftAfterFailure = (path: string) => {
   leftAfterFailure.delete(path)
 }
 
-/**
- * For `useRecordPage` only.
- */
+/** For `useRecordPage` only. */
 export const isLeftAfterFailureRecently = (path: string) => {
   const at = leftAfterFailure.get(path)
   if (at === undefined) return false
@@ -62,9 +54,7 @@ const blacklistedRouteNames = ref<RouteRecordName[]>([])
  */
 const MAX_HISTORY = 10
 
-/**
- * Where `navigateBack` goes and its navigation, as `router.push` answers it.
- */
+/** Where `navigateBack` goes and its navigation, as `router.push` answers it. */
 export interface NavigateBackTarget {
   to: RouteLocationRaw
   navigation: Promise<NavigationFailure | void | undefined>
@@ -76,9 +66,7 @@ export interface NavigateBackOptions {
    * The current route is always skipped, so do not list it here.
    */
   skipRouteNames?: RouteRecordName[]
-  /**
-   * Where to go when the walk finds nothing, e.g. a tab opened directly on the record.
-   */
+  /** Where to go when the walk finds nothing, e.g. a tab opened directly on the record. */
   fallbackRouteName?: RouteRecordName
   fallbackRouteParams?: Record<string, any>
 }
@@ -90,9 +78,7 @@ export function useRouteHistory(): {
   // The admin's typed router narrows `RouteRecordName` to its route names: a misspelled one does not compile.
   setBlacklistedRoutes: (routeNames: RouteRecordName[]) => void
   addBlacklistedRoute: (routeName: RouteRecordName) => void
-  /**
-   * Returns the target and its navigation, or `undefined` for a browser history step back.
-   */
+  /** Returns the target and its navigation, or `undefined` for a browser history step back. */
   navigateBack: (router: Router, options?: NavigateBackOptions) => NavigateBackTarget | undefined
 } {
   const addRoute = (route: RouteLocationNormalized) => {
@@ -118,9 +104,7 @@ export function useRouteHistory(): {
     }
   }
 
-  /**
-   * Replaces the whole list, so two callers overwrite each other. Use `addBlacklistedRoute` to add one.
-   */
+  /** Replaces the whole list, so two callers overwrite each other. Use `addBlacklistedRoute` to add one. */
   const setBlacklistedRoutes = (routeNames: RouteRecordName[]) => {
     blacklistedRouteNames.value = routeNames
   }

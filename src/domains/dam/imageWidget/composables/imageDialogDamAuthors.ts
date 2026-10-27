@@ -14,22 +14,16 @@ import { WAIT_RAN_OUT, withinWaitLimit } from '@/domains/dam/imageWidget/utils/w
 
 interface HeldAsset {
   asset: AssetDetailItemDto
-  /**
-   * The file the asset was read for, i.e. the file of the image made from that pick.
-   */
+  /** The file the asset was read for, i.e. the file of the image made from that pick. */
   file: DocId
 }
 
-/**
- * Result of re-reading the held asset: the asset with its author names, or the failure.
- */
+/** Result of re-reading the held asset: the asset with its author names, or the failure. */
 export type HeldAssetAnew =
   | { of: HeldAsset; asset: AssetDetailItemDto; names: string }
   | { of: HeldAsset; failure: unknown }
 
-/**
- * Result of reading a held asset after its detail closed.
- */
+/** Result of reading a held asset after its detail closed. */
 type DetailAssetRead = { of: HeldAsset; asset: AssetDetailItemDto; names: string }
 
 // Sequential requests of a read after a detail closes: the rest of the detail save, the asset,
@@ -70,9 +64,7 @@ export function useImageDialogDamAuthors(
     unmounted = true
   })
 
-  /**
-   * The image the dialog shows, when it is the one the held asset was read for.
-   */
+  /** The image the dialog shows, when it is the one the held asset was read for. */
   const imageOfHeld = () => {
     const image = shownImage()
     return !isNull(held.value) && !isNull(image) && image.dam.damId === held.value.file ? image : null
@@ -305,9 +297,7 @@ export function useImageDialogDamAuthors(
     takeHeldAnew,
     letGoOnceSavedWithSource,
     authorsGivenMeanwhile,
-    /**
-     * A confirm waits for the read of a just-closed detail's asset. Its button spins.
-     */
+    /** A confirm waits for the read of a just-closed detail's asset. Its button spins. */
     confirmWaits,
   }
 }

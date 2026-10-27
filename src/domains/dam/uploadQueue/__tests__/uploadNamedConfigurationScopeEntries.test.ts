@@ -26,9 +26,7 @@ const OWN = { asset: '/own/v2/asset', image: '/own/v2/image' }
 const OF_DEFAULT = 'entries-of-default'
 const OF_OWN = 'entries-of-own'
 const ASSET = 'a-1'
-/**
- * Waits from this length are held. The caches wait 1.5 s before they ask.
- */
+/** Waits from this length are held. The caches wait 1.5 s before they ask. */
 const HELD_FROM_MS = 1_200
 const { Processing, Uploaded } = UploadQueueItemStatus
 const { Processed } = AssetFileProcessStatus

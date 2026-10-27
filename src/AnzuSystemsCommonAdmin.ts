@@ -70,39 +70,27 @@ export interface CommonAdminCoreDamConfig {
    * Used by components under this configuration and by its author name cache.
    */
   endPointAuthor?: string
-  /**
-   * The same for the keywords of DAM; `/adm/v1/keyword` by default.
-   */
+  /** The same for the keywords of DAM; `/adm/v1/keyword` by default. */
   endPointKeyword?: string
   /**
    * Endpoint for DAM settings and, with `/ext-system/:extSystem` appended,
    * an ext system's configuration; `/adm/v1/configuration` by default.
    */
   endPointConfiguration?: string
-  /**
-   * Where the public configuration of DAM is read (`loadDamPubConfig`); `/pub/v1/configuration` by default.
-   */
+  /** Where the public configuration of DAM is read (`loadDamPubConfig`); `/pub/v1/configuration` by default. */
   endPointPubConfiguration?: string
-  /**
-   * Where a licence is read by its id, for its ext system; `/adm/v1/asset-licence` by default.
-   */
+  /** Where a licence is read by its id, for its ext system; `/adm/v1/asset-licence` by default. */
   endPointAssetLicence?: string
-  /**
-   * Where the custom forms of an ext system and of a distribution service are read; `/adm/v1/asset-custom-form`.
-   */
+  /** Where the custom forms of an ext system and of a distribution service are read; `/adm/v1/asset-custom-form`. */
   endPointAssetCustomForm?: string
   /**
    * Endpoint for listing and looking up DAM users; `/adm/v1/user` by default.
    * Used by this configuration's user cache and by user inputs and filters under it that have no client of their own.
    */
   endPointUser?: string
-  /**
-   * Where the podcasts of a licence are listed (`/licence/:licenceId` after it); `/adm/v1/podcast` by default.
-   */
+  /** Where the podcasts of a licence are listed (`/licence/:licenceId` after it); `/adm/v1/podcast` by default. */
   endPointPodcast?: string
-  /**
-   * Where the image and media widget reads a picked asset as a medium of the CMS; `/adm/v1/cms/asset` by default.
-   */
+  /** Where the image and media widget reads a picked asset as a medium of the CMS; `/adm/v1/cms/asset` by default. */
   endPointCmsAsset?: string
   /**
    * The system whose current user decides which licences image widgets and asset
@@ -112,9 +100,7 @@ export interface CommonAdminCoreDamConfig {
    * `false` allows every licence, like a component's `skipCurrentUserCheck`. That prop still wins.
    */
   currentUser?: string | false
-  /**
-   * The DAM admin an asset of this configuration links to; the root `adminDomain` where left out.
-   */
+  /** The DAM admin an asset of this configuration links to; the root `adminDomain` where left out. */
   adminDomain?: string
   /**
    * Request timeout in seconds for this configuration, matching its
@@ -128,17 +114,11 @@ export interface CommonAdminCoreDamConfig {
    * for another endpoint (the UGC one checks no grant). `null` checks none.
    */
   roiUpdateAcl?: AclValue | null
-  /**
-   * The grant an image's rotation needs, as `roiUpdateAcl`: `dam_image_update` for the default `/adm/v1/image`.
-   */
+  /** The grant an image's rotation needs, as `roiUpdateAcl`: `dam_image_update` for the default `/adm/v1/image`. */
   imageRotateAcl?: AclValue | null
-  /**
-   * The grant creating a keyword needs, checked before it is offered (Enter, comma, "+ name"). None by default.
-   */
+  /** The grant creating a keyword needs, checked before it is offered (Enter, comma, "+ name"). None by default. */
   keywordCreateAcl?: AclValue | null
-  /**
-   * The same for an author, also the "+" button.
-   */
+  /** The same for an author, also the "+" button. */
   authorCreateAcl?: AclValue | null
   mainFileSingleUseEnabled?: boolean
   /**
@@ -177,9 +157,7 @@ export type CommonAdminCoreDamOptions =
   | {
       configs: { [key: string]: CommonAdminCoreDamConfig }
       apiTimeout: number
-      /**
-       * @deprecated The state of an upload is always polled for; the value is not read.
-       */
+      /** @deprecated The state of an upload is always polled for; the value is not read. */
       uploadStatusFallback?: boolean
       adminDomain: string
       /**
@@ -196,9 +174,7 @@ export type CommonAdminCollabOptions = {
   enabled: boolean
   socketUrl: string
   beforeReconnect: () => Promise<void>
-  /**
-   * `io` from `socket.io-client`. Passed in, so that only an admin with collaboration depends on the package.
-   */
+  /** `io` from `socket.io-client`. Passed in, so that only an admin with collaboration depends on the package. */
   io: typeof io | undefined
 }
 

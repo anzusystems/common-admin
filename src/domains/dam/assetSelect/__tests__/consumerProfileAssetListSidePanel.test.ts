@@ -102,9 +102,7 @@ const listAnswer = (request: FakeDamRequest) => {
   }
 }
 
-/**
- * The paging of the asset lists is one per page. What an earlier case left in it must not leak into this one.
- */
+/** The paging of the asset lists is one per page. What an earlier case left in it must not leak into this one. */
 const pagingAsNew = () => {
   let paging!: ReturnType<typeof useAssetSelectActions>['pagination']
   const probe = mount(

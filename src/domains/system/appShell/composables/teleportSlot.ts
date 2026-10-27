@@ -11,13 +11,9 @@ import {
 } from 'vue'
 
 export interface TeleportSlot {
-  /**
-   * The element sources teleport into. The last one mounted wins; unmounting it clears the slot.
-   */
+  /** The element sources teleport into. The last one mounted wins; unmounting it clears the slot. */
   Target: Component
-  /**
-   * Teleports its default slot into the mounted target, and renders nothing while none is mounted.
-   */
+  /** Teleports its default slot into the mounted target, and renders nothing while none is mounted. */
   Source: Component
   ready: Readonly<Ref<boolean>>
 }
@@ -57,7 +53,5 @@ export function createTeleportSlot(name: string): TeleportSlot {
   return { Target, Source, ready: computed(() => target.value !== null) }
 }
 
-/**
- * The actionbar in the app bar of an admin's drawer layout.
- */
+/** The actionbar in the app bar of an admin's drawer layout. */
 export const actionbarSlot = createTeleportSlot('AActionbar')

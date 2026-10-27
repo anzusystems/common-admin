@@ -305,9 +305,7 @@ describe.each(consumerProfiles)('the detail of an asset as its hosts open it, un
     expect(loaderDrawn()).toBe(true)
     await press(card()!.querySelector<HTMLButtonElement>(`button[aria-label="${uiText('common.button.close')}"]`)!)
   }
-  /**
-   * Ignores name requests for authors and keywords. Their caches ask in their own time.
-   */
+  /** Ignores name requests for authors and keywords. Their caches ask in their own time. */
   const askedSince = (from: number) =>
     dam.requests
       .slice(from)

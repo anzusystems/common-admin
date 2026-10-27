@@ -64,9 +64,7 @@ export const useAssetDetailStore = defineStore('commonAdminAssetDetailStore', ()
     }
   }
 
-  /**
-   * Closes the detail. A pending read it was opened with is ignored.
-   */
+  /** Closes the detail. A pending read it was opened with is ignored. */
   function close() {
     turn++
     loading.value = false
@@ -95,9 +93,7 @@ export const useAssetDetailStore = defineStore('commonAdminAssetDetailStore', ()
     setAsset(answer)
   }
 
-  /**
-   * Registers a detail save of asset `assetId` under DAM configuration `configName`.
-   */
+  /** Registers a detail save of asset `assetId` under DAM configuration `configName`. */
   function setSaving(assetId: DocId, save: Promise<unknown>, configName: string) {
     const key = saveKey(assetId, configName)
     const answered = save.then(
@@ -112,9 +108,7 @@ export const useAssetDetailStore = defineStore('commonAdminAssetDetailStore', ()
     })
   }
 
-  /**
-   * Resolves when all pending saves of `assetId` under `configName` are answered. `null` when none is pending.
-   */
+  /** Resolves when all pending saves of `assetId` under `configName` are answered. `null` when none is pending. */
   function savingOf(assetId: DocId, configName: string) {
     return saves.get(saveKey(assetId, configName)) ?? null
   }

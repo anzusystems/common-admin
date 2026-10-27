@@ -4,9 +4,7 @@ import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
 import ACropper from '@/domains/dam/cropper/components/ACropper.vue'
 import type { CropRect } from '@/domains/dam/cropper/utils/cropperTypes'
 
-/**
- * The cropper on cropper.js v2 (`ACropper`), with its crop data shown live in source pixels.
- */
+/** The cropper on cropper.js v2 (`ACropper`), with its crop data shown live in source pixels. */
 
 const SOURCES = [
   { title: 'Landscape 800x600', value: '/playground/cropper-landscape.png', width: 800, height: 600 },
@@ -41,9 +39,7 @@ interface Pixels {
   height: number
 }
 
-/**
- * The component speaks fractions of the picture; shown in source pixels.
- */
+/** The component speaks fractions of the picture; shown in source pixels. */
 const data = shallowRef<Pixels | null>(null)
 const crop = ref<CropRect | null>(null)
 

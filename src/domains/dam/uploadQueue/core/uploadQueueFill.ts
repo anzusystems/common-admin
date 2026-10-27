@@ -10,9 +10,7 @@ import { isArray, isNull, isUndefined } from '@/shared/utils/common'
 // Each filled row gets its own list (Z24). A list shared by rows
 // and the source form would change in all of them on any edit.
 
-/**
- * Fills only rows of the field's asset type.
- */
+/** Fills only rows of the field's asset type. */
 export function fillCustomDataValue(
   items: UploadQueueItem[],
   data: { assetType: DamAssetTypeType; elementProperty: string; value: CustomDataValue },
@@ -29,9 +27,7 @@ export function fillCustomDataValue(
   }
 }
 
-/**
- * `accepts`: rows that may take them. Without it, every row.
- */
+/** `accepts`: rows that may take them. Without it, every row. */
 export function fillKeywords(
   items: UploadQueueItem[],
   value: DocId[],
@@ -46,9 +42,7 @@ export function fillKeywords(
   }
 }
 
-/**
- * `accepts`: rows that may take them. Without it, every row.
- */
+/** `accepts`: rows that may take them. Without it, every row. */
 export function fillAuthors(
   items: UploadQueueItem[],
   value: DocId[],

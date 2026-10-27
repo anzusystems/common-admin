@@ -251,9 +251,7 @@ export function defineCached<
     return { items, failures }
   }
 
-  /**
-   * Fetches the queue; settles with what loaded and every batch's failure, never rejects.
-   */
+  /** Fetches the queue; settles with what loaded and every batch's failure, never rejects. */
   const runQueue = async () => {
     if (toFetch.value.size === 0) return { items: [] as T[], failures: [] as unknown[] }
     const ids = Array.from(toFetch.value)
@@ -326,17 +324,13 @@ export function defineCached<
     return [...own, ...others.flatMap((other) => other.items)]
   }
 
-  /**
-   * Marks the item of `id` as shown. The cache keeps it until a matching number of `unpin` calls.
-   */
+  /** Marks the item of `id` as shown. The cache keeps it until a matching number of `unpin` calls. */
   const pin = (id: I | null | undefined) => {
     if (!id) return
     pinned.set(id, (pinned.get(id) ?? 0) + 1)
   }
 
-  /**
-   * Marks the item of `id` as no longer shown. The cache returns within its limit once no pins are left.
-   */
+  /** Marks the item of `id` as no longer shown. The cache returns within its limit once no pins are left. */
   const unpin = (id: I | null | undefined) => {
     if (!id) return
     const count = pinned.get(id)
@@ -370,9 +364,7 @@ export function defineCached<
     return item._loaded
   }
 
-  /**
-   * Terminal counterpart of `isLoaded`: the fetch settled without resolving the item.
-   */
+  /** Terminal counterpart of `isLoaded`: the fetch settled without resolving the item. */
   const isUnresolved = (id: I | null | undefined): boolean => {
     if (!id) return false
     return cache.value.get(id)?._unresolved === true

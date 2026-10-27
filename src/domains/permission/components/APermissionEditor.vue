@@ -16,9 +16,7 @@ import { objectDeletePropertyByPath, objectGetValueByPath, objectSetValueByPath 
 const props = withDefaults(
   defineProps<{
     client: AxiosClientFn
-    /**
-     * Which backend's permission vocabulary to draw. Never a global, see `permissionConfigActions`.
-     */
+    /** Which backend's permission vocabulary to draw. Never a global, see `permissionConfigActions`. */
     system: string
     entity?: string | undefined
     endPoint?: string | undefined
@@ -29,9 +27,7 @@ const props = withDefaults(
      */
     resolvedPermissions?: Permissions | undefined
     roles?: string[]
-    /**
-     * One component for detail and edit (decision 27). Readonly drops the grant column.
-     */
+    /** One component for detail and edit (decision 27). Readonly drops the grant column. */
     readonly?: boolean
   }>(),
   {

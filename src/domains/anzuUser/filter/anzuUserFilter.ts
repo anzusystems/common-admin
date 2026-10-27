@@ -15,9 +15,7 @@ const anzuUserListFields = [
 
 type ListFields = typeof anzuUserListFields
 
-/**
- * One store per system; see the note in `permissionGroupFilter`.
- */
+/** One store per system; see the note in `permissionGroupFilter`. */
 const listStores = new Map<string, FilterData<readonly MakeFilterOption[]>>()
 
 export const anzuUserFilterStorageKey = (system: string) => `commonAnzuUser_${system}`
@@ -71,9 +69,7 @@ export function useAnzuUserEmailLookupFilter() {
   return { filterConfig, filterData }
 }
 
-/**
- * Test seam; the list stores are module state.
- */
+/** Test seam; the list stores are module state. */
 export const resetAnzuUserListFilters = () => {
   listStores.clear()
 }

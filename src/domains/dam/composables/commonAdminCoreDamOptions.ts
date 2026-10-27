@@ -145,9 +145,7 @@ export const normalizeDamNotificationOptions = (
   return { enabled: on && webSocketUrl.length > 0, webSocketUrl }
 }
 
-/**
- * One notification socket of the page and the DAM configurations that use it.
- */
+/** One notification socket of the page and the DAM configurations that use it. */
 export interface DamNotificationSocketOptions {
   options: DamNotificationOptions
   configNames: string[]

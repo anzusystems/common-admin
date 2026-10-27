@@ -139,9 +139,7 @@ export const applyLogTypeVisibility = (filter: LogFilter, type: LogTypeType): vo
   })
 }
 
-/**
- * For tests and for anything that needs a clean slate; nothing in the views calls it.
- */
+/** For tests and for anything that needs a clean slate; nothing in the views calls it. */
 export const resetLogFilterRegistry = (): void => {
   registry.clear()
 }

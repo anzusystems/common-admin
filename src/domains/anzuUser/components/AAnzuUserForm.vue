@@ -29,9 +29,7 @@ const props = withDefaults(
      */
     readonly?: boolean
     isEdit?: boolean
-    /**
-     * From the system's descriptor.
-     */
+    /** From the system's descriptor. */
     requiredMetadata?: boolean
     idInput?: boolean
     randomColor?: boolean

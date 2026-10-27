@@ -35,9 +35,7 @@ const emit = defineEmits<{
   (e: 'reset'): void
 }>()
 
-/**
- * The column set a bookmark restores along with the filter values.
- */
+/** The column set a bookmark restores along with the filter values. */
 const datatableHiddenColumns = defineModel<string[] | undefined>('datatableHiddenColumns', {
   default: undefined,
   required: false,

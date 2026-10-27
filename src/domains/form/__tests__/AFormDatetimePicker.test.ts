@@ -75,9 +75,7 @@ const dayButton = (day: number) =>
     | HTMLElement
     | undefined
 
-/**
- * [0] is "now", [1] is "confirm".
- */
+/** [0] is "now", [1] is "confirm". */
 const bottomButton = (index: number) =>
   document.querySelectorAll<HTMLElement>('.a-datetime-picker__bottom-button')[index]
 

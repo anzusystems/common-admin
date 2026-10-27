@@ -3,9 +3,7 @@ import { useSystemBar } from '@/domains/system/systemBar/composables/systemBar'
 
 const RELOAD_KEY = 'anzu.appReloadAt'
 const RELOAD_COOLDOWN = 30_000
-/**
- * How long a navigation waits for a reload to commit before it is aborted.
- */
+/** How long a navigation waits for a reload to commit before it is aborted. */
 export const RELOAD_VETO_GRACE = 3_000
 
 let reloadRequested = false

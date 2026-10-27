@@ -26,9 +26,7 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
-/**
- * Waits past the search debounce so that a request it would start is counted too.
- */
+/** Waits past the search debounce so that a request it would start is counted too. */
 const settled = async () => {
   await new Promise((resolve) => setTimeout(resolve, 400))
   await flushPromises()
@@ -38,9 +36,7 @@ const mountField = async (value: number | number[], { held = false } = {}) => {
   const innerFields = [{ name: 'name' as const, default: '' }]
   const inner = createFilter(innerFields, createFilterStore(innerFields), { system: 'sys', subject: 'inner' })
   const searches: string[] = []
-  /**
-   * Once `holdByIds` is called, the reads of items by their ids wait: `byIdAnswers[n]()` lets one answer.
-   */
+  /** Once `holdByIds` is called, the reads of items by their ids wait: `byIdAnswers[n]()` lets one answer. */
   let holdingByIds = false
   const byIdAnswers: Array<() => void> = []
   const heldById = () => (holdingByIds ? new Promise<void>((resolve) => byIdAnswers.push(resolve)) : undefined)

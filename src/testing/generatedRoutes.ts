@@ -7,18 +7,12 @@ import { parseTypedRouterDeclaration } from '@/testing/typedRouter'
 const PARAM_SAMPLES = ['1', '00000000-0000-4000-8000-000000000001', '000000000000000000000001']
 
 export interface DescribeGeneratedRoutesOptions {
-  /**
-   * `routes` from `vue-router/auto-routes`.
-   */
+  /** `routes` from `vue-router/auto-routes`. */
   routes: RouteRecordRaw[]
   declaration: string
-  /**
-   * `Object.keys(import.meta.glob('/src/pages/**\/*.vue'))`.
-   */
+  /** `Object.keys(import.meta.glob('/src/pages/**\/*.vue'))`. */
   pageFiles: string[]
-  /**
-   * The catch-all's param, whose route is left out.
-   */
+  /** The catch-all's param, whose route is left out. */
   catchAll?: string
 }
 

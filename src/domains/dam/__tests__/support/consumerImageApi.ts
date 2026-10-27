@@ -24,9 +24,7 @@ const plain = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
 const ONE = /^\/adm\/v1\/image\/(\d+)$/
 const ALL = '/adm/v1/image'
 
-/**
- * Replaces the image part of an installed profile. Call after `installConsumerProfile` with its return value.
- */
+/** Replaces the image part of an installed profile. Call after `installConsumerProfile` with its return value. */
 export function installConsumerImageApi(profile: ConsumerProfile, options: ReturnType<typeof installConsumerProfile>) {
   const calls: ImageApiCall[] = []
   const images = new Map<IntegerId, ImageAware>()
@@ -138,16 +136,12 @@ export function installConsumerImageApi(profile: ConsumerProfile, options: Retur
   return {
     calls,
     images,
-    /**
-     * The requests to the CMS backend: none when the application brings its own functions.
-     */
+    /** The requests to the CMS backend: none when the application brings its own functions. */
     requests: server.requests,
     unanswered: server.unanswered,
     bringsItsOwn,
     has: (image: ImageAware) => store(image, image.id),
-    /**
-     * From now on a read of one image waits until the test lets it answer: `waiting[n]()`, in the order asked.
-     */
+    /** From now on a read of one image waits until the test lets it answer: `waiting[n]()`, in the order asked. */
     holdReads: () => {
       const waiting: Array<() => void> = (heldReads = [])
       return { waiting }

@@ -95,14 +95,10 @@ const mayUpdate = (system: string) => {
 
 const allDiffering = computed(() => (target.value === null ? [] : systemsNeedingWrite(target.value, records.value)))
 
-/**
- * Only systems whose value differs and that may be written.
- */
+/** Only systems whose value differs and that may be written. */
 const differing = computed(() => allDiffering.value.filter(mayUpdate))
 
-/**
- * Differing, but the operator may not write them: listed so the repair does not look complete.
- */
+/** Differing, but the operator may not write them: listed so the repair does not look complete. */
 const differingWithoutRight = computed(() => allDiffering.value.filter((system) => !mayUpdate(system)))
 
 const affected = computed(() => differing.value.filter((system) => selected.value.includes(system)))
@@ -152,9 +148,7 @@ const confirm = async () => {
   emit('confirm', { target: target.value, systems: affected.value })
 }
 
-/**
- * Retries the same value on systems it did not reach, 403 included: rights may have been granted since.
- */
+/** Retries the same value on systems it did not reach, 403 included: rights may have been granted since. */
 const retryFailed = () => {
   if (target.value === null) return
   emit('confirm', { target: target.value, systems: failed.value.map((entry) => entry.system) })

@@ -16,17 +16,11 @@ export interface CreateUserAndTimeTrackingFieldsOptions<U extends AnzuUserMinima
    * A function is read on each render, so the link can follow the current user's permission for that route.
    */
   userRouteName?: string | (() => string | undefined)
-  /**
-   * URL of a user's detail in another admin, with `:id` replaced. Opens in a new tab.
-   */
+  /** URL of a user's detail in another admin, with `:id` replaced. Opens in a new tab. */
   userExternalUrlTemplate?: string
-  /**
-   * The chip's label, for users that carry a better one than `person.fullName`.
-   */
+  /** The chip's label, for users that carry a better one than `person.fullName`. */
   userTitleFn?: (user: CachedItem<U>) => string
-  /**
-   * Component name for devtools / warnings.
-   */
+  /** Component name for devtools / warnings. */
   name?: string
 }
 

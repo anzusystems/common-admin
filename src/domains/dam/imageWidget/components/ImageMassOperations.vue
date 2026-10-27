@@ -19,9 +19,7 @@ import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 
 const props = withDefaults(
   defineProps<{
-    /**
-     * DAM configuration to use. Defaults to the parent component's, else `default`.
-     */
+    /** DAM configuration to use. Defaults to the parent component's, else `default`. */
     configName?: string
   }>(),
   {

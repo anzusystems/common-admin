@@ -63,9 +63,7 @@ export interface UploadQueueItem {
   externalProviderAssetId: AssetExternalProviderIdNullable
   externalProviderName: string | null
   externalProviderMetadata: AssetExternalProviderMetadata
-  /**
-   * Aborts the chunk request in flight (Stop). A new one is created per chunk.
-   */
+  /** Aborts the chunk request in flight (Stop). A new one is created per chunk. */
   latestChunkAbortController: AbortController | null
   chunkSize: number
   currentChunkIndex: number
@@ -87,13 +85,9 @@ export interface UploadQueueItem {
     message: string
     assetFileFailReason: AssetFileFailReasonType
   }
-  /**
-   * @deprecated The queue polls for its rows itself; nothing sets or reads this.
-   */
+  /** @deprecated The queue polls for its rows itself; nothing sets or reads this. */
   notificationFallbackTimer: ReturnType<typeof setTimeout> | undefined
-  /**
-   * @deprecated The queue polls for its rows itself; nothing reads this.
-   */
+  /** @deprecated The queue polls for its rows itself; nothing reads this. */
   notificationFallbackTry: number
   slotName: string | null
   image: undefined | ImageAware // todo check

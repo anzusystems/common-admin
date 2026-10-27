@@ -1,19 +1,13 @@
 import { type ComputedRef, computed, onScopeDispose, watch } from 'vue'
 import type { DocId, IntegerId } from '@/shared/types/common'
 
-/**
- * How a component showing a cached item keeps it pinned and requests it (`useCachedItem`).
- */
+/** How a component showing a cached item keeps it pinned and requests it (`useCachedItem`). */
 export interface CachedItemPinning<I extends DocId | IntegerId> {
-  /**
-   * Id of the shown item. None while the component shows none, e.g. when it has its own title.
-   */
+  /** Id of the shown item. None while the component shows none, e.g. when it has its own title. */
   id: () => I | null | undefined
   pin: (id: I) => void
   unpin: (id: I) => void
-  /**
-   * Adds the id to the cache and fetches it, for an id its page never added.
-   */
+  /** Adds the id to the cache and fetches it, for an id its page never added. */
   askFor: (id: I) => void
 }
 

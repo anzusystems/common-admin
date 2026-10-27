@@ -19,9 +19,7 @@ let singleton: DamNotificationsHandle | undefined = undefined
 let singletonScope: EffectScope | undefined = undefined
 let singletonKey: string | undefined = undefined
 
-/**
- * One socket for the configurations `configNames`. Its events are tagged with those names.
- */
+/** One socket for the configurations `configNames`. Its events are tagged with those names. */
 function createDamSocket({ options: notification, configNames }: DamNotificationSocketOptions) {
   const enabled = notification.enabled
 
@@ -29,9 +27,7 @@ function createDamSocket({ options: notification, configNames }: DamNotification
 
   let warningTimer: ReturnType<typeof setTimeout> | undefined = undefined
 
-  /**
-   * Warns the user once the socket gives up. Only one warning is shown at a time; closing it clears it.
-   */
+  /** Warns the user once the socket gives up. Only one warning is shown at a time; closing it clears it. */
   const warnFailed = () => {
     if (!enabled) return
     const { showWarning } = useAlerts()
@@ -183,17 +179,11 @@ export function destroyDamNotifications() {
   forgetSingleton()
 }
 
-/**
- * Which sockets a DAM notification listener hears.
- */
+/** Which sockets a DAM notification listener hears. */
 export interface DamNotificationListenerOptions {
-  /**
-   * Socket of this DAM configuration. Defaults to `default`.
-   */
+  /** Socket of this DAM configuration. Defaults to `default`. */
   configName?: string
-  /**
-   * Every socket of the page. `configName` is ignored then.
-   */
+  /** Every socket of the page. `configName` is ignored then. */
   all?: boolean
 }
 

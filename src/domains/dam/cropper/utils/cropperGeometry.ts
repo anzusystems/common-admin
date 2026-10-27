@@ -26,9 +26,7 @@ export type AnchorSide = 'start' | 'center' | 'end' | 'fit'
 
 export type Anchor = [AnchorSide, AnchorSide]
 
-/**
- * Anchors per cropper.js action name. Missing actions get a plain "fit" clamp.
- */
+/** Anchors per cropper.js action name. Missing actions get a plain "fit" clamp. */
 export const RESIZE_ANCHORS: Readonly<Record<string, Anchor>> = {
   'n-resize': ['center', 'end'],
   's-resize': ['center', 'start'],
@@ -86,9 +84,7 @@ export const coverAspectRatio = (size: Size, aspectRatio: number): Size =>
     ? getAdjustedSizes({ width: size.width, height: size.height, aspectRatio }, 'cover')
     : { width: size.width, height: size.height }
 
-/**
- * How much room an axis has while the anchored edge stays fixed.
- */
+/** How much room an axis has while the anchored edge stays fixed. */
 const availableAlong = (start: number, length: number, boundsStart: number, boundsLength: number, side: AnchorSide) => {
   const boundsEnd = boundsStart + boundsLength
   if (side === 'start') return Math.max(0, boundsEnd - Math.max(start, boundsStart))
@@ -97,9 +93,7 @@ const availableAlong = (start: number, length: number, boundsStart: number, boun
   return boundsLength
 }
 
-/**
- * Where the axis starts once its length is known and the anchored edge stays fixed.
- */
+/** Where the axis starts once its length is known and the anchored edge stays fixed. */
 const placeAlong = (start: number, length: number, newLength: number, side: AnchorSide) => {
   if (side === 'end') return start + length - newLength
   if (side === 'center') return start + length / 2 - newLength / 2

@@ -27,17 +27,13 @@ type ConsumerPluginOptions = Required<Pick<PluginOptions, 'coreDam' | 'image'>>
 export interface ConsumerProfile {
   name: 'CMS configuration' | 'UGC configuration'
   endPoints: { asset: string; image: string; roi: string }
-  /**
-   * The paths of the other application. Nothing may be requested there.
-   */
+  /** The paths of the other application. Nothing may be requested there. */
   foreignPrefix: string
   notifications: boolean
   extSystem: IntegerId
   licence: IntegerId
   options: (damClient: () => AxiosInstance) => ConsumerPluginOptions
-  /**
-   * The DAM configuration as in `useDamConfigStore` when the upload starts. Needs an active pinia.
-   */
+  /** The DAM configuration as in `useDamConfigStore` when the upload starts. Needs an active pinia. */
   seedDamConfig: () => void
 }
 

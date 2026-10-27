@@ -15,9 +15,7 @@ afterEach(() => {
 
 type Args = Parameters<typeof createDatatableColumnsConfig>
 
-/**
- * Runs the composable inside a component, so its `onMounted` fires.
- */
+/** Runs the composable inside a component, so its `onMounted` fires. */
 const setup = (
   config: Args[0] = [{ key: 'id' }, { key: 'texts.title' }, { key: 'createdAt' }],
   hidden: string[] = [],

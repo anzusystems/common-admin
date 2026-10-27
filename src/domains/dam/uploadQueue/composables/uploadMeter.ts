@@ -12,13 +12,9 @@ const MIN_SPAN_MS = 500
 
 interface MeterPoint {
   at: number
-  /**
-   * File bytes sent by then: the answered chunks plus the sent share of the chunk in flight.
-   */
+  /** File bytes sent by then: the answered chunks plus the sent share of the chunk in flight. */
   sent: number
-  /**
-   * The server answered a chunk at this point.
-   */
+  /** The server answered a chunk at this point. */
   answered: boolean
 }
 
@@ -74,9 +70,7 @@ export function useUploadMeter(report: UploadProgressCallback | undefined) {
     const after = points[next]!
     return before.sent + ((after.sent - before.sent) * (at - before.at)) / (after.at - before.at)
   }
-  /**
-   * Bytes per second over the window up to now, or up to the last answer once the file is out.
-   */
+  /** Bytes per second over the window up to now, or up to the last answer once the file is out. */
   const speed = () => {
     const end = sendingOver ? points.at(-1)?.at : now()
     if (points.length < 2 || end === undefined) return null
@@ -105,16 +99,12 @@ export function useUploadMeter(report: UploadProgressCallback | undefined) {
   }
 
   return {
-    /**
-     * Starts reporting for a file of the given size.
-     */
+    /** Starts reporting for a file of the given size. */
     start(size: number) {
       fileSize = size
       if (report) tick()
     },
-    /**
-     * Call before each chunk request. The curve continues from what the server has, and the try reports into it.
-     */
+    /** Call before each chunk request. The curve continues from what the server has, and the try reports into it. */
     attempt(chunkSize: number) {
       const thisTry = { end: received + chunkSize }
       current = thisTry
@@ -128,9 +118,7 @@ export function useUploadMeter(report: UploadProgressCallback | undefined) {
         mark(received + Math.min(Math.max(onItsWay, 0), chunkSize))
       }
     },
-    /**
-     * The server answered the try's chunk.
-     */
+    /** The server answered the try's chunk. */
     chunkDone(chunkSize: number) {
       current = undefined
       received += chunkSize
@@ -145,9 +133,7 @@ export function useUploadMeter(report: UploadProgressCallback | undefined) {
       points = []
       sent = received
     },
-    /**
-     * The running second reports the whole file, and no further second is scheduled.
-     */
+    /** The running second reports the whole file, and no further second is scheduled. */
     lastChunkSent() {
       sendingOver = true
     },

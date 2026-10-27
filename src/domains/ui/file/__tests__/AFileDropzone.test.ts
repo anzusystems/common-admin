@@ -83,9 +83,7 @@ describe.each([
     const style = getComputedStyle(zone)
     return { display: style.display, outline: style.outlineStyle, background: style.backgroundColor }
   }
-  /**
-   * The colours the dropzone is lit up in: none while it has no outline.
-   */
+  /** The colours the dropzone is lit up in: none while it has no outline. */
   const lit = (zone: HTMLElement) => {
     const style = getComputedStyle(zone)
     return style.outlineStyle === 'dashed' ? { background: style.backgroundColor, outline: style.outlineColor } : null

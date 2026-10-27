@@ -31,18 +31,12 @@ const props = withDefaults(
      * it would invent a colour on open and mark it as a change in every system.
      */
     randomColor?: boolean
-    /**
-     * The system's `metadataNote` -- the same sentence the cross-system dialog shows.
-     */
+    /** The system's `metadataNote` -- the same sentence the cross-system dialog shows. */
     note?: string | undefined
-    /**
-     * i18n namespace for the field labels; the backend identity does not belong here.
-     */
+    /** i18n namespace for the field labels; the backend identity does not belong here. */
     scopeSystem?: string
     scopeSubject?: string
-    /**
-     * Vuelidate scope. Omitted means the page's own collector picks these rules up.
-     */
+    /** Vuelidate scope. Omitted means the page's own collector picks these rules up. */
     validationScope?: string | symbol | false | undefined
   }>(),
   {

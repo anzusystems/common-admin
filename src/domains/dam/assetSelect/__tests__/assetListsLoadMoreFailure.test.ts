@@ -71,9 +71,7 @@ const offsetOf = (request: FakeDamRequest) =>
   Number(new URL(request.url, 'https://dam.test').searchParams.get('offset'))
 const ids = (prefix: string, count: number) => Array.from({ length: count }, (_, index) => `${prefix}-${index + 1}`)
 
-/**
- * The paging of the asset lists is one per page. What an earlier case left in it must not leak into this one.
- */
+/** The paging of the asset lists is one per page. What an earlier case left in it must not leak into this one. */
 const pagingAsNew = () => {
   let paging!: ReturnType<typeof useAssetSelectActions>['pagination']
   const probe = mount(

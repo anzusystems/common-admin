@@ -10,9 +10,7 @@ import { usePermissionGroupOneStore } from '@/domains/permission/group/store/per
 
 defineProps<{
   client: AxiosClientFn
-  /**
-   * Backend identity for the permission config fetch, not the i18n namespace below.
-   */
+  /** Backend identity for the permission config fetch, not the i18n namespace below. */
   system: string
   /**
    * Where the grants editor reads the permission config. Defaults to `GET /adm/v1/permissions/config`.

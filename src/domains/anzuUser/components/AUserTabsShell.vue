@@ -20,9 +20,7 @@ import { OTHER_SYSTEMS_TAB } from '@/domains/anzuUser/utils/userTabs'
 const props = withDefaults(
   defineProps<{
     userId: IntegerId
-    /**
-     * Which tab carries the owning form, i.e. gets the slot.
-     */
+    /** Which tab carries the owning form, i.e. gets the slot. */
     owner: string
     /**
      * The tabs in draw order. This component appends "other systems".
@@ -30,9 +28,7 @@ const props = withDefaults(
      * owns four systems but has two tabs, since the system is part of the path.
      */
     ownedTabs: string[]
-    /**
-     * Every system this admin can reach. The "other systems" tab lists the ones not in a tab.
-     */
+    /** Every system this admin can reach. The "other systems" tab lists the ones not in a tab. */
     descriptors: AnyUserSystemDescriptor[]
     /**
      * After a 401, refresh once and retry.
@@ -61,9 +57,7 @@ const props = withDefaults(
 )
 
 const emit = defineEmits<{
-  /**
-   * After an account was created in another system, so a page can react if it wants to.
-   */
+  /** After an account was created in another system, so a page can react if it wants to. */
   (e: 'created', descriptor: AnyUserSystemDescriptor): void
 }>()
 
@@ -138,9 +132,7 @@ const loadSource = async () => {
   sourceUser.value = await writes.readSourceUser(descriptor, props.userId)
 }
 
-/**
- * Copying a person into another system copies whether they are switched on. Roles stay empty.
- */
+/** Copying a person into another system copies whether they are switched on. Roles stay empty. */
 const createEnabled = computed(() => sourceUser.value?.enabled === true)
 
 const onCreate = async (descriptor: AnyUserSystemDescriptor, metadata: BaseUser) => {

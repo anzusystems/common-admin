@@ -55,9 +55,7 @@ export interface UserSystemProbeResult {
 
 export interface UserSystemProbeParams {
   descriptor: AnyUserSystemDescriptor
-  /**
-   * Usually injected once per page; passing it explicitly is for tests and one-off panels.
-   */
+  /** Usually injected once per page; passing it explicitly is for tests and one-off panels. */
   refreshHook?: UserSystemRefreshHook | undefined
 }
 

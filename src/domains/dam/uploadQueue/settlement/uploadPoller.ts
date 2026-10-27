@@ -8,36 +8,24 @@ import {
 import { uploadSettlementRuntime } from '@/domains/dam/uploadQueue/settlement/uploadSettlementRuntime'
 
 export interface QueuePollerDeps {
-  /**
-   * The age of the youngest tracked row of the queue in ms, or `null` when the queue tracks nothing.
-   */
+  /** The age of the youngest tracked row of the queue in ms, or `null` when the queue tracks nothing. */
   youngestAgeMs(): number | null
   mode(): UploadPollMode
-  /**
-   * One read of all the tracked rows of the queue. A rejection is a failed read.
-   */
+  /** One read of all the tracked rows of the queue. A rejection is a failed read. */
   read(trigger: 'tick' | 'visible'): Promise<void>
 }
 
 export interface QueuePoller {
-  /**
-   * A row started being tracked. The next read happens no later than its first mark.
-   */
+  /** A row started being tracked. The next read happens no later than its first mark. */
   rowAdded(): void
-  /**
-   * The tab is visible again. Read immediately.
-   */
+  /** The tab is visible again. Read immediately. */
   readNow(trigger: 'visible'): void
-  /**
-   * Re-arms the timer after the tab is hidden, the mode changes or the queue stops tracking rows.
-   */
+  /** Re-arms the timer after the tab is hidden, the mode changes or the queue stops tracking rows. */
   reschedule(): void
   stop(): void
 }
 
-/**
- * Tick timer of one queue. What a tick reads is decided by `deps.read`.
- */
+/** Tick timer of one queue. What a tick reads is decided by `deps.read`. */
 export function createQueuePoller(deps: QueuePollerDeps): QueuePoller {
   let nextAt: number | null = null
   let timer: { handle: unknown } | null = null

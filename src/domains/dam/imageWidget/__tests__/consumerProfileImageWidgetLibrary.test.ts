@@ -1048,9 +1048,7 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
 
   let widgets: VueWrapper[] = []
   let detailForm: VueWrapper | undefined
-  /**
-   * Draw failures of a widget with the real picker are collected instead of being thrown into the page.
-   */
+  /** Draw failures of a widget with the real picker are collected instead of being thrown into the page. */
   let failedToDraw: unknown[] = []
 
   beforeEach(() => {
@@ -1176,9 +1174,7 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
     ['the image and media widget', ImageMediaWidgetInner],
   ])('of %s', (_name, component) => {
     const isImageWidget = component === ImageWidgetInner
-    /**
-     * The picker is a stand-in, or the real one with its tiles but without pictures.
-     */
+    /** The picker is a stand-in, or the real one with its tiles but without pictures. */
     const mountWidget = async (
       image: number | null = null,
       key = QUEUE,
@@ -1274,9 +1270,7 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
       await vi.waitFor(() => expect(detail().asset?.id).toBe(asset))
       await flushPromises()
     }
-    /**
-     * The detail form is not drawn here. This sends what its save sends, with the authors the user picks.
-     */
+    /** The detail form is not drawn here. This sends what its save sends, with the authors the user picks. */
     const saveInDetail = async (authors: DocId[]) => {
       const { damClient, endPointAsset } = useCommonAdminCoreDamOptions('default')
       detail().asset!.authors = authors

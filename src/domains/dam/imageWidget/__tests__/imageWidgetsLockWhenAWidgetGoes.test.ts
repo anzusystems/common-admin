@@ -172,9 +172,7 @@ describe.each<[string, Component]>([
   const dialogOf = (wrapper: VueWrapper) => wrapper.findComponent({ name: 'ImageDetailDialogMetadata' })
   const pickerOf = (wrapper: VueWrapper) =>
     wrapper.findComponent({ name: isImageWidget ? 'AAssetSelect' : 'AAssetSelectMedia' })
-  /**
-   * The widget is removed, as when the pin draws its copy in the sidebar.
-   */
+  /** The widget is removed, as when the pin draws its copy in the sidebar. */
   const goes = async (wrapper: VueWrapper) => {
     mounted.splice(mounted.indexOf(wrapper), 1)
     wrapper.unmount()

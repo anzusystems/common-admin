@@ -43,9 +43,7 @@ export const usePermissionConfigStore = defineStore('commonAdminPermissionConfig
     entries.value.set(system, { ...entry, config, initialized: true })
   }
 
-  /**
-   * Drops one system, leaving the others loaded. Used when a system's client is swapped out.
-   */
+  /** Drops one system, leaving the others loaded. Used when a system's client is swapped out. */
   function resetSystem(system: string) {
     entries.value.delete(system)
   }

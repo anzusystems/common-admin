@@ -20,13 +20,9 @@ const props = withDefaults(
      * Manage stays because it only navigates.
      */
     readonly?: boolean
-    /**
-     * Whether the account about to be created would be switched on.
-     */
+    /** Whether the account about to be created would be switched on. */
     createEnabled?: boolean
-    /**
-     * What the owning system holds, to prefill the create form.
-     */
+    /** What the owning system holds, to prefill the create form. */
     source?: BaseUser | null
     creating?: boolean
   }>(),

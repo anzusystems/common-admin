@@ -36,9 +36,7 @@ const OWN_AUTHOR = '/own/v2/author'
 const OWN_KEYWORD = '/own/v2/keyword'
 const EXT_OWN = 2
 const NAMES = /^(.*)\/(author|keyword)\/ext-system\/(\d+)\/search$/
-/**
- * Waits from this length are held. The caches wait 1.5 s before they ask.
- */
+/** Waits from this length are held. The caches wait 1.5 s before they ask. */
 const HELD_FROM_MS = 1_200
 
 let pinia: Pinia

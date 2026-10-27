@@ -27,9 +27,7 @@ export interface AnzuUserActionsParams {
   validationSystem?: string
   validationEntity?: string
   endPoint?: string
-  /**
-   * Vuelidate scope, when the page collects its fields under one of its own.
-   */
+  /** Vuelidate scope, when the page collects its fields under one of its own. */
   validationScope?: string | symbol
 }
 
@@ -38,9 +36,7 @@ export interface AnzuUserActionsParams {
 // A store reset (page teardown, create page mount) also counts as newer.
 let fetchGeneration = 0
 
-/**
- * Per instance, like the other actions composables. The admins' versions kept loading flags at module scope.
- */
+/** Per instance, like the other actions composables. The admins' versions kept loading flags at module scope. */
 export const useAnzuUserActions = (params: AnzuUserActionsParams) => {
   const { client, system, entity = ANZU_USER_ENTITY, endPoint = ANZU_USER_ENDPOINT } = params
 
@@ -202,9 +198,7 @@ export const useAnzuUserActions = (params: AnzuUserActionsParams) => {
 
   return {
     isDirty,
-    /**
-     * Takes the record as it stands as the new baseline; the page calls it after it seeds one.
-     */
+    /** Takes the record as it stands as the new baseline; the page calls it after it seeds one. */
     markPristine: snapshot,
     anzuUserList,
     loadingAnzuUserList,

@@ -110,9 +110,7 @@ const run = () => {
   emit('run', actionable.value)
 }
 
-/**
- * Retries everything that failed, 403 included: the operator may have been granted the right meanwhile.
- */
+/** Retries everything that failed, 403 included: the operator may have been granted the right meanwhile. */
 const retryFailed = () => {
   emit(
     'run',

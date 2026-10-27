@@ -63,9 +63,7 @@ export const useUserCrossSystemSearch = (params: CrossSystemSearchParams) => {
     store.setResult(descriptor.system, { axes: probe.axes.value, user: probe.user.value })
   }
 
-  /**
-   * Results are written as they arrive, never through `Promise.all`: one dead backend must not hold up the rest.
-   */
+  /** Results are written as they arrive, never through `Promise.all`: one dead backend must not hold up the rest. */
   const searchById = async (id: IntegerId) => {
     const token = ++generation
     store.resetResults()
@@ -76,9 +74,7 @@ export const useUserCrossSystemSearch = (params: CrossSystemSearchParams) => {
     store.phase = CrossSystemPhase.Done
   }
 
-  /**
-   * Exact match, `filter_eq[email]`, one row. `startsWith` would match a different person.
-   */
+  /** Exact match, `filter_eq[email]`, one row. `startsWith` would match a different person. */
   const lookupByEmail = async (descriptor: AnyUserSystemDescriptor, email: string): Promise<AnzuUser | null> => {
     if (!descriptor.isEnabled()) return null
     const { filterData, filterConfig } = useAnzuUserEmailLookupFilter()
@@ -179,9 +175,7 @@ export const useUserCrossSystemSearch = (params: CrossSystemSearchParams) => {
     return true
   }
 
-  /**
-   * Re-reads one system after a write so the row shows the new state.
-   */
+  /** Re-reads one system after a write so the row shows the new state. */
   const refreshSystem = async (system: string) => {
     const descriptor = descriptors.find((item) => item.system === system)
     const id = store.resolvedId

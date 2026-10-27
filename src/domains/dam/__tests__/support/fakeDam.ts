@@ -32,9 +32,7 @@ export interface FakeDamAnswer {
   data?: unknown
 }
 
-/**
- * Answers a request, or returns `undefined` to leave it to later rules and the DAM's own answers.
- */
+/** Answers a request, or returns `undefined` to leave it to later rules and the DAM's own answers. */
 export type FakeDamRule = (
   request: FakeDamRequest
 ) => FakeDamAnswer | Promise<FakeDamAnswer> | undefined | Promise<undefined>

@@ -7,9 +7,7 @@ import { effectScope, shallowRef, watch } from 'vue'
 // A `Map`, so names like `constructor` do not hit object properties.
 const pushAlive = shallowRef(new Map<string, boolean>())
 
-/**
- * Only `damNotifications.ts` calls this. Sets whether the socket of `configNames` is open.
- */
+/** Only `damNotifications.ts` calls this. Sets whether the socket of `configNames` is open. */
 export const setDamNotificationsPushAlive = (alive: boolean, configNames: string[]) => {
   if (configNames.every((name) => (pushAlive.value.get(name) ?? false) === alive)) return
   const next = new Map(pushAlive.value)

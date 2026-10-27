@@ -40,13 +40,9 @@ const props = withDefaults(
     endPoint?: string | undefined
     detailRoute: (user: AnzuUser) => RouteLocationRaw
     editRoute: (user: AnzuUser) => RouteLocationRaw
-    /**
-     * Already-evaluated ACL of the owning system.
-     */
+    /** Already-evaluated ACL of the owning system. */
     canUpdate?: boolean
-    /**
-     * The permission-group endpoint, which is not the user one.
-     */
+    /** The permission-group endpoint, which is not the user one. */
     permissionGroupEndPoint?: string
     /**
      * Extra columns the app draws through `#systemColumns`, appended after the shared ones.
@@ -74,9 +70,7 @@ const props = withDefaults(
      */
     filterClient?: (() => AxiosInstance) | undefined
     filterUserId?: IntegerIdNullable | undefined
-    /**
-     * Where the filter files its saved bookmarks.
-     */
+    /** Where the filter files its saved bookmarks. */
     filterStore?: FilterStoreIdentifier | undefined
   }>(),
   {

@@ -39,9 +39,7 @@ import { commonT } from '@/plugins/i18n'
 import { defineStore } from 'pinia'
 import { getCurrentScope, ref } from 'vue'
 
-/**
- * Fields the user edits and a detail save writes.
- */
+/** Fields the user edits and a detail save writes. */
 export interface EditableFields {
   keywords: DocId[]
   authors: DocId[]
@@ -59,14 +57,10 @@ const editableFieldsOf = (item: UploadQueueItem): EditableFields =>
 
 const sameValue = (one: unknown, other: unknown) => JSON.stringify(one) === JSON.stringify(other)
 
-/**
- * Field-by-field snapshot of an asset's rows (`noteRowsOfAsset`).
- */
+/** Field-by-field snapshot of an asset's rows (`noteRowsOfAsset`). */
 export interface RowsNote {
   assetId: DocId
-  /**
-   * DAM configuration of the queues the rows are in.
-   */
+  /** DAM configuration of the queues the rows are in. */
   configName: string
   rows: Map<UploadQueueItem, EditableFields>
 }
@@ -77,9 +71,7 @@ export interface RowsNote {
  */
 export type UploadQueueRowsOf = string | { queueKey: UploadQueueKey }
 
-/**
- * What a write left as the user had changed it: these fields and these custom data keys.
- */
+/** What a write left as the user had changed it: these fields and these custom data keys. */
 interface KeptByWrite {
   fields: Set<'keywords' | 'authors' | 'mainFileSingleUse'>
   customKeys: Set<string>
@@ -404,9 +396,7 @@ export const useUploadQueuesStore = defineStore('commonAdminUploadQueuesStore', 
     settlement.settleKnownFailed(targetOf(assetId, of), failReason)
   }
 
-  /**
-   * Row refresh button: reads the file's current state and settles the asset's rows by it.
-   */
+  /** Row refresh button: reads the file's current state and settles the asset's rows by it. */
   function refreshAsset(assetId: DocId, of: UploadQueueRowsOf): Promise<UploadRefreshOutcome> {
     return settlement.refreshAsset(targetOf(assetId, of))
   }
@@ -446,9 +436,7 @@ export const useUploadQueuesStore = defineStore('commonAdminUploadQueuesStore', 
     return note
   }
 
-  /**
-   * The save for this note failed. Nothing is written from it.
-   */
+  /** The save for this note failed. Nothing is written from it. */
   function forgetRowsNote(note: RowsNote) {
     openNotes.delete(note)
   }
@@ -586,9 +574,7 @@ export const useUploadQueuesStore = defineStore('commonAdminUploadQueuesStore', 
      * up and the server has said nothing final since, or when it is a duplicate whose original could not be read.
      */
     refreshMayHelp: core.refreshMayHelp,
-    /**
-     * The row failed because its asset was missing from enough reads ("Asset už neexistuje.").
-     */
+    /** The row failed because its asset was missing from enough reads ("Asset už neexistuje."). */
     isGivenUpMissing: (item: UploadQueueItem) => settlement.isGivenUpMissing(item),
     removeByIndex: core.removeByIndex,
     stopItemUpload,

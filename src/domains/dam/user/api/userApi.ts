@@ -9,9 +9,7 @@ import { DAM_END_POINT_USER } from '@/domains/dam/api/damEndPoints'
 const END_POINT = DAM_END_POINT_USER
 export const ENTITY = 'user'
 
-/**
- * `endPoint`: the users endpoint from a configuration (`endPointUser`). Defaults to `/adm/v1/user`.
- */
+/** `endPoint`: the users endpoint from a configuration (`endPointUser`). Defaults to `/adm/v1/user`. */
 export const fetchDamUserListByIds = (client: () => AxiosInstance, ids: number[], endPoint: string = END_POINT) => {
   const { execute } = useApiFetchByIds<DamUser>({
     client,
@@ -23,9 +21,7 @@ export const fetchDamUserListByIds = (client: () => AxiosInstance, ids: number[]
   return execute(ids)
 }
 
-/**
- * `endPoint`: as in `fetchDamUserListByIds`.
- */
+/** `endPoint`: as in `fetchDamUserListByIds`. */
 export const useFetchDamUserList = (client: () => AxiosInstance, endPoint: string = END_POINT) =>
   useApiFetchList<DamUser>({
     client,

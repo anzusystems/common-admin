@@ -27,24 +27,16 @@ export interface UploadRunRequests {
   finish(item: UploadQueueItem, sha: string): Promise<unknown>
 }
 
-/**
- * Texts a run writes into its row. Each side has its own.
- */
+/** Texts a run writes into its row. Each side has its own. */
 export interface UploadMessages {
   unknownError(): string
-  /**
-   * Text for a field the server refused, by field name.
-   */
+  /** Text for a field the server refused, by field name. */
   size(): string
   offset(): string
   mimeType(): string
-  /**
-   * Prefix for a refused field that has no text of its own.
-   */
+  /** Prefix for a refused field that has no text of its own. */
   systemError(): string
-  /**
-   * HTTP 400 on the last try of a chunk.
-   */
+  /** HTTP 400 on the last try of a chunk. */
   chunkValidationFailed(): string
 }
 
@@ -58,13 +50,9 @@ interface UploadPresetMembers {
   messages: UploadMessages
   apiTimeout: number | null | undefined
   loadHash(): Promise<UploadHash>
-  /**
-   * Whether an empty file is started and finished, or refused before any request.
-   */
+  /** Whether an empty file is started and finished, or refused before any request. */
   emptyFile: 'send' | 'reject'
-  /**
-   * DAM configuration whose prv configuration bounds the chunks and whose last chunk size the upload starts from.
-   */
+  /** DAM configuration whose prv configuration bounds the chunks and whose last chunk size the upload starts from. */
   configName: string
 }
 
@@ -83,13 +71,9 @@ export interface UploadRun<S extends UploadSide = UploadSide> {
   readonly [uploadSide]: S
   uploadInit(): Promise<unknown>
   upload(): Promise<unknown>
-  /**
-   * Stops the run wherever it is and cancels the chunk in flight.
-   */
+  /** Stops the run wherever it is and cancels the chunk in flight. */
   stop(): void
-  /**
-   * Whether the finish request was sent. The server may complete the file whatever the response.
-   */
+  /** Whether the finish request was sent. The server may complete the file whatever the response. */
   finishAttempted(): boolean
 }
 
@@ -132,25 +116,15 @@ export function libraryUploadPreset(configName: string): UploadPreset<'library'>
   }
 }
 
-/**
- * admin-dam's API, texts and choices. The application passes in its own parts.
- */
+/** admin-dam's API, texts and choices. The application passes in its own parts. */
 export function adminDamUploadPreset(app: {
-  /**
-   * `uploadStart`, `uploadChunk`, `uploadFinish` of `fileApi.ts`: four asset types, admin-dam's addresses.
-   */
+  /** `uploadStart`, `uploadChunk`, `uploadFinish` of `fileApi.ts`: four asset types, admin-dam's addresses. */
   requests: UploadRunRequests
-  /**
-   * `system.uploadErrors.*`. `chunkValidationFailed` uses its `unknownError`, which its store writes today.
-   */
+  /** `system.uploadErrors.*`. `chunkValidationFailed` uses its `unknownError`, which its store writes today. */
   messages: UploadMessages
-  /**
-   * `envConfig.dam.apiTimeout`.
-   */
+  /** `envConfig.dam.apiTimeout`. */
   apiTimeout: number | null | undefined
-  /**
-   * `() => Promise.resolve(rusha.createHash())`: rusha stays a static import of admin-dam.
-   */
+  /** `() => Promise.resolve(rusha.createHash())`: rusha stays a static import of admin-dam. */
   loadHash(): Promise<UploadHash>
 }): UploadPreset<'adminDam'> {
   return {
