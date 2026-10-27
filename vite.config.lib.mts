@@ -12,10 +12,10 @@ const _dirname = path.dirname(fileURLToPath(import.meta.url))
 // `COMMON_ADMIN_DTS=0`: JavaScript and CSS only (`yarn dev:admin`); the declarations take most of the build.
 const withDeclarations = process.env.COMMON_ADMIN_DTS !== '0'
 
-// With one output file per module, @intlify/unplugin-vue-i18n names each locale file
-// `virtual:intlify-i18n-N` in the order it first resolves them, and N ends up in file names and
-// imports. That order follows the build's parallelism, so two builds of one commit differed.
-// Resolving every locale file up front, sorted, fixes it.
+// With one file per module, @intlify/unplugin-vue-i18n names locale files
+// `virtual:intlify-i18n-N` in first-resolve order, and N appears in file names and imports.
+// That order depends on build parallelism, so builds of one commit differed.
+// Resolving all locale files up front, sorted, makes it deterministic.
 const deterministicLocaleIds = (): Plugin => ({
   name: 'anzu:deterministic-locale-ids',
   enforce: 'pre',
@@ -42,9 +42,9 @@ const stylesDeclaration = (): Plugin => ({
   },
 })
 
-// Every stylesheet of the library, SFC blocks included, goes into one cascade layer. Unlayered, the
-// library beat every Vuetify and admin rule whatever the specificity. An admin places the layer in
-// its `@layer` statement (index.html); `ANZU_CSS_LAYER=` (empty) builds the old unlayered CSS.
+// Every library stylesheet, SFC blocks included, goes into one cascade layer.
+// Unlayered, the library beat every Vuetify and admin rule regardless of specificity.
+// An admin places the layer in its `@layer` statement (index.html). `ANZU_CSS_LAYER=` (empty) builds unlayered CSS.
 const cssLayer = process.env.ANZU_CSS_LAYER ?? 'anzu-common'
 const layerStylesheet = (layer: string) => ({
   postcssPlugin: 'anzu:css-layer',
@@ -61,10 +61,10 @@ const layerStylesheet = (layer: string) => ({
   },
 })
 
-// The order the library expects. An admin declares it before any stylesheet (index.html); here it only
-// orders the layers when this stylesheet happens to be the first one to name them.
-// Vuetify's sub-layers follow in the order its main.css declares them, which its component stylesheets
-// would otherwise decide by loading first (`src/testing/appShell.ts`, CSS_SUBLAYER_ORDER).
+// The layer order the library expects. An admin declares it in index.html before
+// any stylesheet; here it only applies when this stylesheet names the layers first.
+// Vuetify's sub-layers follow its main.css order, which its component stylesheets would
+// otherwise decide by loading first (`src/testing/appShell.ts`, CSS_SUBLAYER_ORDER).
 export const CSS_LAYER_ORDER =
   '@layer vuetify-core, vuetify-components, vuetify-overrides, anzu-common, vuetify-utilities, vuetify-final;' +
   '@layer vuetify-core.reset, vuetify-core.base;' +
@@ -122,16 +122,14 @@ export default defineConfig({
         'vitest',
       ],
       output: {
-        // One file per module: a consumer's bundler takes what it imports and leaves the rest,
-        // together with `sideEffects` in package.json. Not in `yarn dev:admin`
-        // (`COMMON_ADMIN_DEV_BUNDLE=1`): an admin's dev server serves the library unbundled there, and
-        // ~800 modules on top of the admin's own push a page reload past what Chrome takes in (measured:
-        // every third reload failed with ERR_INSUFFICIENT_RESOURCES); one bundle and its lazy chunks do not.
+        // One file per module, so a consumer's bundler, with `sideEffects`, takes only what it imports.
+        // Not in `yarn dev:admin` (`COMMON_ADMIN_DEV_BUNDLE=1`): the dev server serves the library unbundled,
+        // and ~800 extra modules made every third reload fail in Chrome with ERR_INSUFFICIENT_RESOURCES.
         preserveModules: process.env.COMMON_ADMIN_DEV_BUNDLE !== '1',
         preserveModulesRoot: 'src',
-        // Bundled dependencies go to `dist/vendor/`: `yarn pack` leaves out every `node_modules`
-        // directory, a nested one too. Only their names are built by hand; the library's own modules
-        // keep `[name]`, which rolldown sanitizes (a Vue block's id carries `?vue&type=…`).
+        // Bundled dependencies go to `dist/vendor/` because `yarn
+        // pack` omits every `node_modules` directory, nested ones too.
+        // Library modules keep `[name]`, which rolldown sanitizes (a Vue block id carries `?vue&type=…`).
         entryFileNames: (chunk) =>
           /[\\/]node_modules[\\/]/.test(chunk.facadeModuleId ?? '')
             ? `${chunk.name.replace(/^(.*\/)?node_modules\//, 'vendor/')}.js`
@@ -152,17 +150,14 @@ export default defineConfig({
     }),
     withDeclarations &&
       dts({
-        // One declaration file per module, next to its JavaScript. The rolled-up file lost the types
-        // vue-tsc names `__VLS_*` (every slot prop read as `any`) and sent go-to-definition into one
-        // 13 000-line file. The entry `dist/common-admin.d.ts` re-exports `./lib`.
+        // One declaration file per module, next to its JavaScript. The rolled-up file lost vue-tsc's
+        // `__VLS_*` types (slot props became `any`) and made go-to-definition land in one 13 000-line file.
+        // The entry `dist/common-admin.d.ts` re-exports `./lib`.
         insertTypesEntry: true,
         tsconfigPath: 'tsconfig.libdts.json',
-        // `VueI18nPlugin` with `runtimeOnly: false` aliases `vue-i18n` to a file inside its dist, and
-        // the declaration step followed that alias: the emitted `.d.ts` imported its types from
-        // `../../vue-i18n/dist/vue-i18n.esm-bundler.js`, which from a consumer's
-        // `node_modules/@anzusystems/common-admin/dist/` resolves to nothing at all. Excluding it here
-        // leaves the specifier as the package name, which is what a consumer can resolve. The
-        // javascript never had the problem -- `vue-i18n` is external, so the bundle imports it by name.
+        // `VueI18nPlugin` with `runtimeOnly: false` aliases `vue-i18n` to a file in its dist. Without this, the
+        // emitted `.d.ts` imported types from a relative path that does not resolve in a consumer's node_modules.
+        // Excluding it keeps the package name as the specifier. The JavaScript is fine because `vue-i18n` is external.
         aliasesExclude: [/^vue-i18n$/],
       }),
     devCopyToAdmins(),

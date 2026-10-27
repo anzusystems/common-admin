@@ -22,11 +22,14 @@ const props = withDefaults(
     containerClass?: undefined | string
     forceReviewed?: undefined | boolean
     /**
-     * The props of the chip slot of the autocomplete the chip is drawn in: with them, the close of a closable chip
-     * takes its value out of the autocomplete, as Vuetify's own chip does. Without them it only hid the chip.
+     * Props of the autocomplete's chip slot. With them, closing a closable chip
+     * removes its value from the autocomplete, as Vuetify's own chip does.
+     * Without them the close only hides the chip.
      */
     chipProps?: Record<string, unknown>
-    /** The DAM configuration whose names the chip shows; inherited when not given. */
+    /**
+     * DAM configuration for the names. Inherited when not given.
+     */
     configName?: string
   }>(),
   {
@@ -45,11 +48,11 @@ const props = withDefaults(
 const { getCachedAuthor, addToCachedAuthors, fetchCachedAuthors, pinCachedAuthor, unpinCachedAuthor } =
   // eslint-disable-next-line vue/no-setup-props-reactivity-loss
   useDamCachedAuthors(useDamConfigName(props.configName))
-// The application's queues where it provides them, else the library's store, asked for only when a chip needs it.
+// Uses the application's queues when provided, else the library's store, created only when a chip needs it.
 const suggestionsOf = inject(UploadQueueSuggestionsKey, null) ?? libraryUploadQueueSuggestions
 
 const { cached, loaded, unresolved } = useCachedItem(() => getCachedAuthor(props.id), {
-  // The name the chip shows stays in the cache while it shows it. A chip given its title shows no name.
+  // Pins the shown name in the cache. A chip given a title shows no cached name.
   id: () => (props.title.length > 0 ? null : props.id),
   pin: pinCachedAuthor,
   unpin: unpinCachedAuthor,

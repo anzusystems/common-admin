@@ -7,11 +7,10 @@ const BARE_IMPORT = /(?:\bfrom\s*|\bimport\s*\(?\s*)['"]([^'"./][^'"]*)['"]/g
 // A package name with an optional subpath: filters out what the pattern above also finds inside strings.
 const PACKAGE_ID = /^(?:@[a-z0-9][\w.-]*\/)?[a-z0-9][\w.-]*(?:\/[\w.-]+)*$/
 
-// `./testing`, which only tests load: its imports (vitest) are nothing the dev server has to bundle.
-// A path relative to `dist`.
+// `./testing` is loaded only by tests. Its imports (vitest) need no dev server bundling.
+// The path is relative to `dist`.
 const isTesting = (file) => /^testing($|\.m?js$|[\\/])/.test(file)
 
-// The other packages one built file imports.
 const bareImports = (code) => {
   const found = new Set()
   for (const [, id] of code.matchAll(BARE_IMPORT)) {
@@ -21,18 +20,17 @@ const bareImports = (code) => {
 }
 
 /**
- * Everything the library's files import from other packages -- `vuetify/components/VMenu`, `dayjs`,
- * `axios`... -- read off the copy in the admin's node_modules. Pre-bundled for them (`pkg > id`) when
- * the library itself is not: a package file importing a dependency that is not pre-bundled gets it
- * raw, as a second copy next to the admin's own pre-bundled one (two Vuetify module instances, each
- * with its own overlay stack), and a CommonJS one not at all. Derived, not listed; an import that
- * appears during a session restarts the server, which derives the list again.
+ * Every package the library's files import, read from the copy in the admin's
+ * node_modules. Pre-bundled for them (`pkg > id`) when the library is not.
+ * A package file importing a non-pre-bundled dependency gets it raw, as a second copy next to
+ * the admin's (two Vuetify instances, two overlay stacks). A CommonJS one does not load at all.
+ * Derived, not listed. A new import during a session restarts the server, which derives the list again.
  */
 const nestedDependencies = (root) => {
   const dist = join(root, 'node_modules', PACKAGE, 'dist')
   const found = new Set()
   if (!existsSync(dist)) return found
-  // `.mjs` too: the dev bundle names its shared chunks so.
+  // Includes `.mjs`: the dev bundle names its shared chunks so.
   const walk = (dir) => {
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
       const full = join(dir, entry.name)
@@ -45,11 +43,11 @@ const nestedDependencies = (root) => {
   return found
 }
 
-// TODO: remove once Vite ships https://github.com/vitejs/vite/pull/23499 (issue vitejs/vite#23493, not fixed in
-// 8.3.1). A restart hands the new server `previousEnvironments: server.environments`, and the new server keeps
-// that in its closure: every restart kept the previous server's environments, module graphs and all, +45-100 MB
-// a restart. The restart gets a copy, emptied once the new server stands; if the restart failed, the server
-// still runs on the copy and it stays.
+// TODO: remove once Vite ships https://github.com/vitejs/vite/pull/23499 (issue vitejs/vite#23493, not fixed in 8.3.1).
+// A restart passes `previousEnvironments: server.environments`, and the new server keeps it
+// in its closure. Each restart leaked the old environments and module graphs, +45-100 MB.
+// The restart gets a copy, emptied once the new server is up. If the
+// restart fails, the server still runs on the copy and it stays.
 const restartReleasingPrevious = async (server, forceOptimize) => {
   const handover = { ...server.environments }
   server.environments = handover
@@ -59,24 +57,14 @@ const restartReleasingPrevious = async (server, forceOptimize) => {
 }
 
 /**
- * Picks up a common-admin that `./copy.sh` or `yarn dev:admin` wrote into the admin's node_modules.
- * Both write `.common-admin-updated` in the admin's root (copy.sh empties it, `yarn dev:admin` lists
- * the files it changed); this plugin watches it.
- *
- * - common-admin pre-bundled (in `optimizeDeps.include`, the default): restarts the server with a
- *   forced re-optimization. A plain full reload is not enough: the browser keeps the old bundle under
- *   an unchanged `?v=`.
- * - `prebundle: false` (common-admin in `optimizeDeps.exclude`): its files are served one by one, so only the ones the
- *   trigger file lists (`yarn dev:admin` writes them there) are invalidated, then the page reloads.
- *   Their responses get `Cache-Control: no-cache` instead of `immutable`, so the browser revalidates
- *   them (a 304 for the unchanged ones) instead of keeping the old ones under the same `?v=`. A changed
- *   file that imports a package the library did not import before restarts the server instead, and so
- *   do copy.sh and the watch's first copy.
- *
- * Does nothing in a build.
- *
- * @param {import('./index.d.mts').CommonAdminDevWatchOptions} [options]
- * @returns {import('vite').Plugin}
+ * Picks up a common-admin that `./copy.sh` or `yarn dev:admin` wrote into the admin's node_modules. Both write
+ * `.common-admin-updated` in the admin's root (copy.sh empties it, `yarn dev:admin` lists changed files).
+ * - Pre-bundled (default): restarts the server with forced re-optimization. A full reload
+ * is not enough because the browser keeps the old bundle under an unchanged `?v=`.
+ * - `prebundle: false`: only files listed in the trigger file are invalidated, then the page reloads.
+ * They get `Cache-Control: no-cache` instead of `immutable`, so the browser revalidates them.
+ * A changed file importing a new package restarts the server instead,
+ * as do copy.sh and the watch's first copy. Does nothing in a build.
  */
 export function commonAdminDevWatch({ triggerFile = '.common-admin-updated', prebundle = true } = {}) {
   // What the optimizer pre-bundles for the library, as this server started with it.
@@ -90,8 +78,8 @@ export function commonAdminDevWatch({ triggerFile = '.common-admin-updated', pre
         config.optimizeDeps.include = config.optimizeDeps.include.filter((id) => id !== PACKAGE)
       }
       known = nestedDependencies(resolve(config.root ?? process.cwd()))
-      // What the admin excludes reaches it raw; pre-bundled for the library as well, it would load twice.
-      // `known` keeps them, so a change importing one is not taken for a new import.
+      // Packages the admin excludes reach it raw. Pre-bundled for the library too, they would load twice.
+      // `known` keeps them, so a change importing one is not treated as a new import.
       const own = config.optimizeDeps?.exclude ?? []
       const include = [...known].filter((id) => !own.some((pkg) => id === pkg || id.startsWith(`${pkg}/`)))
       return {
@@ -118,17 +106,16 @@ export function commonAdminDevWatch({ triggerFile = '.common-admin-updated', pre
       const onTrigger = (file) => {
         if (file !== trigger) return
         const listed = readFileSync(trigger, 'utf8').split('\n').filter(Boolean)
-        // Pre-bundled: the library is inside the optimizer's bundle, whose hash does not see its content,
-        // so only a forced re-optimization picks the new build up.
+        // Pre-bundled: the optimizer's bundle hash ignores the library's
+        // content, so only a forced re-optimization picks up the new build.
         if (!excluded) {
           log('replaced, restarting the server...')
           void restartReleasingPrevious(server, true)
           return
         }
-        // copy.sh (an empty file, and it deletes the optimized deps) or the watch's first copy (`*`):
-        // everything may have changed. Not forced: the library is not in the pre-bundle, and a changed
-        // list of its imports changes the optimizer's hash by itself; forcing would only throw away what
-        // it discovered at runtime and cost a round of reloads.
+        // copy.sh (empty file, deletes optimized deps) or the watch's first copy (`*`): anything may have changed.
+        // Not forced: the library is not pre-bundled, and a changed import list changes the
+        // optimizer hash itself. Forcing would discard runtime discoveries and cost extra reloads.
         if (listed.length === 0 || listed.includes('*')) {
           log('replaced, restarting the server...')
           void restartReleasingPrevious(server)
@@ -136,8 +123,8 @@ export function commonAdminDevWatch({ triggerFile = '.common-admin-updated', pre
         }
         const packageDir = join(root, 'node_modules', PACKAGE)
         const distDir = join(existsSync(packageDir) ? realpathSync(packageDir) : packageDir, 'dist')
-        // A package none of the library's files imported when this server started: it is not pre-bundled,
-        // and Vite does not discover imports made from node_modules. The restart derives the list again.
+        // A package no library file imported at server start is not pre-bundled, and Vite
+        // does not discover imports from node_modules. The restart derives the list again.
         const added = listed
           .filter((changed) => /\.m?js$/.test(changed) && !isTesting(changed) && existsSync(join(distDir, changed)))
           .flatMap((changed) => [...bareImports(readFileSync(join(distDir, changed), 'utf8'))])

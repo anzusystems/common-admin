@@ -7,29 +7,35 @@ import type { UserAndTimeTrackingData, UserAndTimeTrackingUsers } from '@/shared
 
 export interface CreateUserAndTimeTrackingFieldsOptions<U extends AnzuUserMinimal = AnzuUserMinimal> {
   /**
-   * The admin's user cache composable, e.g. its `useCachedUsers`. Invoked inside the component's
-   * setup, once, so the cache resolves in component scope.
+   * The admin's user cache composable, e.g. its `useCachedUsers`.
+   * Called once inside the component's setup, so the cache resolves in component scope.
    */
   useCachedUsers: () => UserAndTimeTrackingUsers<U>
   /**
-   * Named route of a user's detail (e.g. `'/(common)/users/[id]'`); without it the chip is no link. A function is read
-   * on each render, so the link can follow the current user's permission for that route.
+   * Named route of a user's detail, e.g. `'/(common)/users/[id]'`. Without it the chip is not a link.
+   * A function is read on each render, so the link can follow the current user's permission for that route.
    */
   userRouteName?: string | (() => string | undefined)
-  /** A user's detail in another admin, `:id` replaced; opens in a new tab. */
+  /**
+   * URL of a user's detail in another admin, with `:id` replaced. Opens in a new tab.
+   */
   userExternalUrlTemplate?: string
-  /** The chip's label, for users that carry a better one than `person.fullName`. */
+  /**
+   * The chip's label, for users that carry a better one than `person.fullName`.
+   */
   userTitleFn?: (user: CachedItem<U>) => string
-  /** Component name for devtools / warnings. */
+  /**
+   * Component name for devtools / warnings.
+   */
   name?: string
 }
 
 /**
- * Builds an admin's created / modified rows from its user cache and routes, so each admin's
- * `XTrackingFields.vue` is a single factory call over `AUserAndTimeTrackingFields`, as each
- * `CachedXChip.vue` is over `ACachedChip`. `hide-*` and the `user` slot fall through.
+ * Builds an admin's created / modified rows from its user cache and routes.
+ * Each admin's `XTrackingFields.vue` becomes one factory call over
+ * `AUserAndTimeTrackingFields`. `hide-*` props and the `user` slot fall through.
  *
- * Use in an SFC's plain `<script lang="ts">` (not `setup`):
+ * Use in an SFC's plain `<script lang="ts">`, not `setup`:
  * ```ts
  * export default createUserAndTimeTrackingFields({
  *   useCachedUsers,

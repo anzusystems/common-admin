@@ -5,7 +5,7 @@ import { useApiFetchList } from '@/domains/api/composables/useApiFetchList'
 import { useApiFetchByIds } from '@/domains/api/composables/useApiFetchByIds'
 import { useApiRequest } from '@/domains/api/composables/useApiRequest'
 
-// The address of the keywords is the application's to say (`endPointKeyword` of its DAM configuration).
+// The keyword endpoint comes from the application (`endPointKeyword` of its DAM configuration).
 const LIST = '/ext-system/:extSystemId'
 export const ENTITY = 'keyword'
 

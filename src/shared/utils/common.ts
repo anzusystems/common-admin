@@ -72,7 +72,7 @@ const toRawDeep = (value: unknown, seen = new WeakMap<object, unknown>()): unkno
   if (raw === null || typeof raw !== 'object') return raw
   if (seen.has(raw)) return seen.get(raw)
   if (Array.isArray(raw)) {
-    // Sized up front: forEach skips holes, and a sparse array keeps its length as structuredClone keeps it.
+    // Sized up front because forEach skips holes. A sparse array keeps its length, as structuredClone does.
     const out: unknown[] = []
     out.length = raw.length
     seen.set(raw, out)

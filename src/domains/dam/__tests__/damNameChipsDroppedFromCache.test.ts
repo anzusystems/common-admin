@@ -11,11 +11,9 @@ import { useDamCachedAuthors } from '@/domains/dam/author/composables/cachedAuth
 import KeywordRemoteAutocompleteCachedKeywordChip from '@/domains/dam/keyword/components/KeywordRemoteAutocompleteCachedKeywordChip.vue'
 import { useDamCachedKeywords } from '@/domains/dam/keyword/composables/cachedKeywords'
 
-// The caches of the names of the authors and keywords of the DAM keep 1 000 names, and drop the oldest of them to take
-// one more. A chip whose name was dropped spun from then on, till something else added its id again. A name a chip
-// shows is kept: the chip pins it while it shows it, and the cache drops only names nobody shows, going over its
-// limit while more are shown. A chip still asks for a name its page never added. The DAM is a client that records its
-// requests, and names what it is asked for.
+// The name caches keep 1 000 names and drop the oldest. A chip
+// whose name was dropped used to spin until its id was added again.
+// Names shown by a chip are pinned, so the cache drops only names nobody shows and may go over its limit.
 
 let dam: FakeDam
 let chips: VueWrapper | undefined
@@ -48,7 +46,6 @@ describe.each<[string, Component, 'author' | 'keyword']>([
     kind === 'author'
       ? useDamCachedAuthors().addManualToCachedAuthors(author(id, `Known ${id}`))
       : useDamCachedKeywords().addManualToCachedKeywords(keyword(id, `Known ${id}`))
-  /** As a page adds the ids it shows, and has them read. */
   const added = (added: string[]) => {
     if (kind === 'author') {
       useDamCachedAuthors().addToCachedAuthors(added)
@@ -58,7 +55,6 @@ describe.each<[string, Component, 'author' | 'keyword']>([
       useDamCachedKeywords().fetchCachedKeywords()
     }
   }
-  /** The ids of that kind the DAM was asked to name, over all its lookups. */
   const askedFor = () =>
     damNameLookups(dam).flatMap((request) => {
       const match = request.url.match(DAM_NAMES)!
@@ -81,8 +77,8 @@ describe.each<[string, Component, 'author' | 'keyword']>([
   }
   const spinning = () => chips!.findAll('.v-progress-circular').length
 
-  // The names on screen are the oldest in a full cache: each one dropped to take a new id was asked for again, and its
-  // ask dropped the next one shown, till every chip spun and was read again.
+  // The names on screen are the oldest in a full cache. Each one dropped for a new id was asked for again,
+  // and that ask dropped the next shown one, so every chip spun and was read again.
   it('keeps every name it shows when new ids come into a full cache: names nobody shows give way', async () => {
     const shown = ids('shown', 600)
     const others = ids('other', 400)
@@ -140,7 +136,6 @@ describe('the cache of the names of authors, with more names shown than it keeps
     await damNamesAsked()
     await flushPromises()
 
-    // Only the one name the cache did not have was asked for.
     expect(damNameLookups(dam).map((request) => new URLSearchParams(request.url.split('?')[1]).get('id'))).toEqual([
       'shown-1000',
     ])
@@ -154,8 +149,8 @@ describe('the cache of the names of authors, with more names shown than it keeps
   })
 })
 
-// A read of more ids than the cache keeps: the ids on their way cannot be dropped, and the cache went back within its
-// limit only by the next batch that came. A batch that failed left them all, unresolved, over the limit.
+// Ids on their way cannot be dropped, so the cache returned within its limit only with the next batch.
+// A failed batch left all of them unresolved and over the limit.
 describe('the cache of the names of authors, asked for more ids than it keeps', () => {
   it.each<[string, boolean]>([
     ['the DAM names them', false],

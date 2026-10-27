@@ -17,8 +17,8 @@ const mapIdToMinimal = (id: DocId): DamAuthorMinimal => {
   return { id: id, name: '', identifier: '', reviewed: false }
 }
 
-// The cache of the names of the authors of a DAM configuration: it asks with that configuration's client, at its
-// address, under its ext system, as they are when it asks.
+// Author name cache per DAM configuration. It uses that configuration's
+// client, address and ext system as they are at request time.
 const defineCachedAuthors = (configName: string) =>
   defineCached<DocId, DamAuthor, DamAuthorMinimal>(mapFullToMinimal, mapIdToMinimal, (ids) => {
     const { cachedExtSystemId } = useExtSystemIdForCached(configName)
@@ -26,11 +26,11 @@ const defineCachedAuthors = (configName: string) =>
     return fetchAuthorListByIds(damClient, endPointAuthor, cachedExtSystemId.value, ids)
   })
 
-// One cache per configuration name, made when the name is first asked for; that of `default` with the module.
+// One cache per configuration name, created on first use. The `default` one is created with the module.
 const caches = new Map([['default', defineCachedAuthors('default')]])
 const cacheOf = (configName?: string) => {
   const name = inheritedDamConfigName(configName)
-  // On every call: options set again (a test, a hot update) may have left the name out.
+  // Checked on every call: options set again (a test, a hot update) may have removed the name.
   checkDamConfigName(name)
   let cache = caches.get(name)
   if (!cache) {
@@ -41,10 +41,11 @@ const cacheOf = (configName?: string) => {
 }
 
 /**
- * The cache of the names of the authors of the DAM configuration `configName`.
- * A name left out is the inherited one while a component sets up, renders or runs a lifecycle hook (not after an
- * `await` there), else `default`. Once the plugin has set the options, a configuration the application has not got
- * throws on every call and gets no cache; a name asked for before that gets one, and its first request checks it.
+ * Author name cache of the DAM configuration `configName`.
+ * Without a name, uses the inherited one during component setup,
+ * render or a lifecycle hook (not after an `await`), else `default`.
+ * After the plugin sets options, an unknown configuration throws
+ * on every call. Before that, the first request checks it.
  */
 export const useDamCachedAuthors = (configName?: string) => {
   const { cache, toFetch, fetch, add, addManual, addManualMinimal, pin, unpin, has, get, isLoaded } =

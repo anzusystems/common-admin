@@ -1,8 +1,8 @@
 import type { UploadQueueItem } from '@/domains/dam/types/UploadQueue'
 
 /**
- * What a row of the upload queue shows and saves, as plain data: for "nothing about the row changed". Left out is
- * what moves by itself while a file is sent (the progress, the request in flight) and how the queue keeps time.
+ * The state a queue row shows and saves, as plain data, for "nothing about the row changed".
+ * Left out are values that move while a file is sent (progress, request in flight) and the queue's timekeeping.
  */
 export const rowState = (item: UploadQueueItem) =>
   JSON.parse(

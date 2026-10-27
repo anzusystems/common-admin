@@ -9,12 +9,13 @@ import ImageWidgetInner from '@/domains/dam/imageWidget/components/ImageWidgetIn
 import { useImageMediaWidgetStore } from '@/domains/dam/imageWidget/store/imageMediaWidgetStore'
 import { ImageWidgetUploadConfigKey } from '@/domains/dam/imageWidget/utils/imageWidgetInkectionKeys'
 
-// A widget of one image is taken away while the save of its "edit metadata" is on its way, and a copy of it is drawn
-// elsewhere (the pin of a sidebar widget in admin-cms). "Edit metadata" of the copy waits for that save: it loaded
-// till the editor closed it when the save never answered. A copy that draws the form of the image in the page
-// (`expandMetadata`) did not wait at all: it showed the texts it read before the save took effect, and the confirm of
-// its host saved them back over the saved ones. The image backend is a stand-in that keeps the texts saved last; a
-// read answers with what it had when it was sent. The dialog of the image is a stand-in.
+// Guards a regression: a widget is taken away while its "edit metadata" save is on
+// its way, and a copy is drawn elsewhere (the pin of a sidebar widget in admin-cms).
+// "Edit metadata" of the copy waits for that save, and it loaded until the editor closed it if the save never answered.
+// A copy that draws the form in the page (`expandMetadata`) did not wait at all.
+// It showed the texts read before the save took effect, and the host's confirm saved them over the saved ones.
+// The image backend keeps the texts saved last; a read answers with
+// what it had when it was sent. The image dialog is a stand-in.
 
 const server = vi.hoisted(() => ({
   texts: { description: '', source: '' },
@@ -64,7 +65,6 @@ const image = {
   position: 1,
 }
 
-/** The instance of the view of the route the widgets are drawn in: the edit page of the article. */
 const theView = {}
 
 let waits: LongWaits
@@ -87,7 +87,6 @@ describe.each<[string, Component]>([
 ])('a copy of %s drawn while the save of its image is on its way', (_name, component) => {
   const isImageWidget = component === ImageWidgetInner
 
-  /** The widget of the field, which sends the read of its image 7 as it is drawn. */
   const drawWidget = (expandMetadata = false) => {
     const model = ref<number | null>(7)
     const Parent = defineComponent({
@@ -148,7 +147,6 @@ describe.each<[string, Component]>([
     await flushPromises()
     await flushPromises()
   }
-  /** The texts of the image are edited and confirmed in the dialog of the widget, which is closed. */
   const savedAndClosed = async () => {
     const original = drawWidget()
     await flushPromises()
@@ -162,7 +160,6 @@ describe.each<[string, Component]>([
     await flushPromises()
     return original
   }
-  /** The widget is pinned: it goes, and its copy is drawn in the same task, as the pin of admin-cms draws it. */
   const pinned = async (original: Widget, expandMetadata = false) => {
     mounted.splice(mounted.indexOf(original.wrapper), 1)
     original.wrapper.unmount()
@@ -181,7 +178,6 @@ describe.each<[string, Component]>([
 
     expect([isOpen(copy), loads(copy), shown()]).toEqual([false, false, null])
     expect(shownAlerts()).toEqual(timedOutSaid)
-    // The save answers later: nothing opens.
     await saveAnswers()
     expect([isOpen(copy), shown()]).toEqual([false, null])
   })

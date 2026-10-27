@@ -3,17 +3,15 @@ import { isNavigationFailure, NavigationFailureType, type Router } from 'vue-rou
 import type { NavigateBackTarget } from '@/domains/system/composables/routeHistory'
 import { isUndefined } from '@/shared/utils/common'
 
-// The page is remembered per table. A single global slot used to leak across entities: paging
-// list B to page 5, closing any detail and then opening list A reopened A on page 5, because
-// both the stored page and the preserve flag were shared. The flag stays global on purpose —
-// it means "the next list I land on should restore its page" — but the page itself is keyed.
+// The page is stored per table. A single global slot leaked across lists, so list A reopened on the page set in list B.
+// The preserve flag stays global on purpose: it means the next list landed on restores its page.
 const storedPages = ref<Record<string, number>>({})
 const preservePage = ref<boolean>(false)
 
 const UNSCOPED_KEY = '__unscoped'
 
-// One for all close buttons: a newer Close takes over the landing of an older one rather than leaving it to clear the
-// flag the newer one set.
+// Shared by all Close buttons. A newer Close takes over an older one's
+// landing, so the older one cannot clear the flag the newer one set.
 let stopPendingLanding: (() => void) | undefined
 
 export const datatablePageKey = (system?: unknown, subject?: unknown): string =>
@@ -29,18 +27,15 @@ export function useDatatablePageStore() {
   }
 
   /**
-   * The flag for the page the Close's navigation lands on, and only for it: a list there takes the page as it mounts,
-   * after the landing's `afterEach`. The next navigation drops it, and so does the Close's navigation stopped, failing
-   * or cancelled by another one (its own `router.push` answers that), and a landing elsewhere; a second click takes it
-   * over. The navigation that cancelled the Close is one of its own, a link opening the list afresh, even to the very
-   * same address; only one that lands there before the Close's cancel is reported finds the page. Without `closing` (a
-   * step back in the browser's history, which answers nothing) the first landing takes it, and a failure other than a
-   * cancel, or a navigation error, drops it.
-   *
-   * The push's rejection is handled here: an error vue-router reports goes to the app's `onError` as before, but one
-   * it does not (an app's `afterEach` throwing, as for a `RouterLink`) is no longer an unhandled rejection. During a
-   * step back the store listens to `onError` too, so in an app with no listener of its own vue-router no longer logs
-   * that navigation's error to the console.
+   * Sets the flag only for the page the Close's navigation lands on.
+   * A list there reads it on mount, after the landing's `afterEach`.
+   * The flag is dropped by the next navigation, by the Close's navigation failing
+   * or being cancelled, and by a landing elsewhere. A second click takes it over.
+   * Without `closing` (browser step back, which returns nothing) the first
+   * landing takes it, and a non-cancel failure or navigation error drops it.
+   * The push rejection is handled here, so errors vue-router does not report (e.g. an app
+   * `afterEach` throwing) are not unhandled. During a step back the store also listens to `onError`,
+   * so vue-router does not log that error to the console in apps without their own listener.
    */
   const preservePageForLanding = (router: Router, closing?: NavigateBackTarget) => {
     stopPendingLanding?.()

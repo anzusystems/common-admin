@@ -1,7 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import '@/styles/main.scss'
 
-// What the library's own utilities used to do, kept here as the yardstick for their replacements.
 const LEGACY = `
 .legacy-border-t { border-top: 1px solid rgba(var(--v-border-color), var(--v-border-opacity)) !important; }
 .legacy-border-r { border-right: 1px solid rgba(var(--v-border-color), var(--v-border-opacity)) !important; }
@@ -64,7 +63,6 @@ describe('library utility classes', () => {
     expect(unprefixed).toEqual([])
   })
 
-  // On a plain element and on the Vuetify components the admins put them on.
   it.each(['div', 'v-toolbar', 'v-card', 'v-sheet', 'v-tabs'])(
     'the Vuetify border utilities draw what system-border-* drew on %s',
     (component) => {

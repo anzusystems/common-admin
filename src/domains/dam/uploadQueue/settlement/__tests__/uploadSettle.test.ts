@@ -18,18 +18,24 @@ import {
 } from '@/domains/dam/uploadQueue/settlement/__tests__/support/settlementFixtures'
 import { createUploadSettle, type UploadReadIntent } from '@/domains/dam/uploadQueue/settlement/uploadSettle'
 
-// What a read asset or a known state writes into a row. No timers, no settlement around: the writes are called
-// as the settlement calls them, over the profile of the library's store and of the DAM application's.
+// Tests what a read asset or a known state writes into a row.
+// No timers and no settlement around: the writes are called as the settlement calls them, over both store profiles.
 
 const QUEUE = 'queue'
 const TARGET = { assetId: 'asset-1', fileId: null }
 const FILE_TARGET = { assetId: 'asset-1', fileId: 'file-1' }
 
-/** A tick, the manual refresh, a `copied` event. */
+/**
+ * A tick, the manual refresh, a `copied` event.
+ */
 const WITH_METADATA: UploadReadIntent = { hint: null, metadata: true, early: false, seen: true }
-/** A `processed` event. */
+/**
+ * A `processed` event.
+ */
 const EVENT_ONLY: UploadReadIntent = { hint: 'processed', metadata: false, early: false, seen: true }
-/** A metadata notification. */
+/**
+ * A metadata notification.
+ */
 const METADATA_EVENT: UploadReadIntent = { hint: null, metadata: true, early: true, seen: false }
 
 const processedAsset = () => damAsset('asset-1', damFile('file-1', AssetFileProcessStatus.Processed))
@@ -146,7 +152,6 @@ describe('a processed file', () => {
   it('N-S4 a row the client gave up on, which had its metadata by then, gets the form back as the user left it', async () => {
     const { settle, add, read } = lib()
     const row = add(QUEUE, queueRow({ status: UploadQueueItemStatus.Uploading }))
-    // Its metadata notification came while the file was still sent.
     await settle.applyAssetRead(damAsset('asset-1', null), TARGET, METADATA_EVENT, read())
     expect(row).toMatchObject({ canEditMetadata: true, mainFileSingleUse: true, mainFileInternal: true })
     row.keywords = ['typed-keyword']
@@ -180,7 +185,6 @@ describe('a processed file', () => {
 
   it('N-S3 a row whose form is on is given nothing by a processed file, also when its metadata was never loaded here', async () => {
     const { settle, add, calls, read } = lib()
-    // As a store or a test hands it over: the form on, the fields the user's.
     const row = add(
       QUEUE,
       queueRow({ canEditMetadata: true, customData: { title: '' }, mainFileSingleUse: false, mainFileInternal: false })
@@ -219,7 +223,6 @@ describe('a processed file', () => {
 
     settle.settleProcessedByEvent(FILE_TARGET)
 
-    // The one that had its metadata has its form back before anything is read.
     expect(neverLoaded).toMatchObject({
       status: UploadQueueItemStatus.Uploaded,
       canEditMetadata: false,
@@ -365,7 +368,6 @@ describe('a duplicate file, in the library', () => {
       assetId: 'asset-original',
       fileId: 'file-original',
       duplicateAssetId: 'asset-original',
-      // The asset its upload made, which it no longer names.
       uploadedAssetId: 'asset-1',
       assetStatus: DamAssetStatus.WithFile,
       imagePreview: previewOf('file-original'),
@@ -408,7 +410,6 @@ describe('a duplicate file, in the library', () => {
     const row = add(QUEUE, queueRow())
 
     await settle.settleKnownDuplicate(TARGET, 'file-original', DamAssetType.Image)
-    // The row names the original now, and the server finds that one a duplicate as well.
     await settle.settleKnownDuplicate({ assetId: 'asset-original', fileId: null }, 'file-other', DamAssetType.Image)
 
     expect([row.assetId, row.duplicateAssetId, row.uploadedAssetId]).toEqual(['asset-other', 'asset-other', 'asset-1'])
@@ -419,13 +420,11 @@ describe('a duplicate file, in the library', () => {
     const waiting = add(QUEUE, queueRow())
     const uploaded = add(QUEUE, queueRow({ status: UploadQueueItemStatus.Uploaded, canEditMetadata: true }))
 
-    // The server knows no asset of that file: its reader throws.
     await settle.applyAssetRead(duplicate(), TARGET, WITH_METADATA, read())
 
     expect(waiting).toMatchObject({
       status: UploadQueueItemStatus.Failed,
       isDuplicate: false,
-      // No duplicate: its own asset is still where it was.
       assetId: 'asset-1',
       uploadedAssetId: null,
       canEditMetadata: false,
@@ -478,7 +477,6 @@ describe('a duplicate file, in the DAM application', () => {
 
     const settled = settle.settleKnownDuplicate(FILE_TARGET, 'file-original', DamAssetType.Image)
 
-    // Before the original file answers.
     expect(row).toMatchObject({
       status: UploadQueueItemStatus.Uploaded,
       isDuplicate: true,
@@ -646,7 +644,6 @@ describe('the metadata notification', () => {
     const { settle, add, calls, read } = lib()
     const row = add(QUEUE, queueRow({ status: UploadQueueItemStatus.Uploading }))
 
-    // The asset has no main file yet.
     await settle.applyAssetRead(damAsset('asset-1', null), TARGET, METADATA_EVENT, read())
 
     expect(row).toMatchObject({ status: UploadQueueItemStatus.Uploading, fileId: 'file-1', ...loadedMetadata })
@@ -702,12 +699,10 @@ describe('a row whose state a processed file never changes (mass edit)', () => {
 
   it('N-S11 is only completed by a processed file, and told about it: its state stays whatever it is', async () => {
     const { settle, add, calls, read } = dam()
-    // One its batch load left failed, one uploaded: neither state is the file's to change.
     const withFile = add('edit', massEditRow({ status: UploadQueueItemStatus.Failed, canEditMetadata: false }))
     const withoutFile = add('edit', massEditRow({ fileId: null }))
     const untouched = [withFile, withoutFile].map(settledState)
 
-    // A file not processed yet, and no event that says otherwise: nothing to complete the rows with.
     await settle.applyAssetRead(storedAsset(), FILE_TARGET, WITH_METADATA, read())
 
     expect([withFile, withoutFile].map(settledState)).toEqual(untouched)
@@ -719,7 +714,6 @@ describe('a row whose state a processed file never changes (mass edit)', () => {
       expect(row, row.key).toMatchObject({
         assetStatus: DamAssetStatus.WithFile,
         imagePreview: previewOf('file-1'),
-        // The form of a mass edit is the user's: neither its fields nor its switch are the server's to set.
         keywords: ['edited'],
         mainFileSingleUse: false,
       })
@@ -794,7 +788,6 @@ describe('a row whose state a processed file never changes (mass edit)', () => {
       status: UploadQueueItemStatus.Uploaded,
       isDuplicate: true,
       canEditMetadata: false,
-      // The asset the row edits, which is the one the server found the duplicate on.
       uploadedAssetId: 'asset-1',
     })
     expect(withoutFile).toMatchObject({ isDuplicate: false, canEditMetadata: true, uploadedAssetId: null })
@@ -818,7 +811,6 @@ describe('a read asked for about a file that is not the main file of its asset',
       const row = add(QUEUE, slotRow())
       settle.settleProcessedByEvent(OTHER_FILE)
 
-      // The asset says how its main file fared. Of the file the read was asked for it says nothing.
       await settle.applyAssetRead(damAsset('asset-1', mainFile), OTHER_FILE, EVENT_ONLY, read())
 
       expect(row).toMatchObject({
@@ -841,7 +833,6 @@ describe('a read asked for about a file that is not the main file of its asset',
       const row = add(QUEUE, slotRow())
       const before = settledState(row)
 
-      // The refresh of a row whose file is not the main one.
       await settle.applyAssetRead(damAsset('asset-1', mainFile), OTHER_FILE, WITH_METADATA, read())
 
       expect(settledState(row)).toEqual(before)
@@ -916,7 +907,6 @@ describe('a duplicate in the library, while its original is being read', () => {
       isDuplicate: false,
       assetId: 'asset-1',
     })
-    // The failure alone made a row final.
     expect(calls.final).toEqual([failedMeanwhile.key])
   })
 
@@ -928,7 +918,6 @@ describe('a duplicate in the library, while its original is being read', () => {
     server.hold()
 
     const settled = settle.settleKnownDuplicate(TARGET, 'file-original', DamAssetType.Image)
-    // What every write of an event leaves on the row it wrote into.
     settle.bump(writtenMeanwhile)
     server.release()
     await settled
@@ -948,7 +937,6 @@ describe('a duplicate in the library, while its original is being read', () => {
     expect(rows.map((row) => row.assetId)).toEqual(['asset-original', 'asset-original', 'asset-original'])
     expect(answered.server.asked('originAsset')).toHaveLength(1)
 
-    // Not answered: the rows stay rows of the duplicate, and each would ask for itself.
     const unanswered = lib()
     unanswered.add(QUEUE, queueRow())
     unanswered.add(QUEUE, queueRow({ status: UploadQueueItemStatus.Uploaded }))
@@ -973,7 +961,6 @@ describe('a duplicate in the library, while its original is being read', () => {
     expect(row).toMatchObject({ status: UploadQueueItemStatus.Failed, isDuplicate: true, canEditMetadata: false })
     await settle.applyAssetRead(original(), ORIGINAL, EVENT_ONLY, read())
 
-    // It is an editable row like any other: only a row marked as a duplicate has no form to get back.
     expect(row).toMatchObject({
       status: UploadQueueItemStatus.Uploaded,
       isDuplicate: true,

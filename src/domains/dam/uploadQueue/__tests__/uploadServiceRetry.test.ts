@@ -11,10 +11,6 @@ import { useUploadQueueItemFactory } from '@/domains/dam/uploadQueue/factory/Upl
 import { NEW_LINE_MARK } from '@/domains/system/composables/alerts'
 import { commonT } from '@/plugins/i18n'
 
-// A chunk that does not go through: how often it is tried again, what ends the tries, and what the row is told.
-// The real upload service and the real requests against a client that records them. The pause before a chunk is
-// tried again is taken out of real time; its length is recorded.
-
 const { endPoints } = ugcConfiguration
 
 let dam: FakeDam
@@ -44,7 +40,6 @@ const row = () => {
 }
 const chunksSent = () => dam.sentTo('POST', dam.routes.chunk).length
 const finishesSent = () => dam.sentTo('PATCH', dam.routes.finish).length
-/** Every chunk request is answered by what the test says, from the first attempt on. */
 const chunkAnswers = (answer: (attempt: number) => FakeDamAnswer | undefined) => {
   let attempt = 0
   dam.reply((request) =>
@@ -59,7 +54,6 @@ const outcome = (upload: Promise<unknown>) =>
     () => 'resolved',
     () => 'rejected'
   )
-/** What the queue does to a row on Stop. */
 const stop = (item: UploadQueueItem) => {
   item.status = UploadQueueItemStatus.Stop
   if (item.latestChunkAbortController) uploadStop(item.latestChunkAbortController)
@@ -84,7 +78,7 @@ describe('a chunk that does not go through', () => {
     expect(chunksSent()).toBe(4)
     expect(waits.passed).toEqual([1000, 3000, 9000])
     expect(finishesSent()).toBe(0)
-    // Nothing is said in the row: the queue marks it failed, and the row shows its general error.
+    // Nothing is said in the row: the queue marks it failed and the row shows its general error.
     expect(item.error.message).toBe('')
   })
 
@@ -193,11 +187,11 @@ describe('an upload stopped', () => {
   })
 })
 
-// The speed is the bytes of the file sent in the last ten seconds, from the request of its first chunk on, reported
-// once a second; the queue shows it, and sizes the next chunk by it. Axios counts the bytes of each request from zero.
+// The speed is the bytes of the file sent in the last ten seconds,
+// from the first chunk request on, reported once a second.
+// The queue shows it and sizes the next chunk by it. Axios counts the bytes of each request from zero.
 describe('the speed of an upload', () => {
   type Progress = (event: { loaded: number; total: number }) => void
-  /** How far the test has moved the clock on, in ms. The clock stands otherwise: the seconds are the test's. */
   let ahead = 0
   let reports: Array<{ percent: number; speed: number; remaining: number }>
 
@@ -206,7 +200,6 @@ describe('the speed of an upload', () => {
     reports = []
     const start = Date.now()
     vi.spyOn(Date, 'now').mockImplementation(() => start + ahead)
-    // The second between two reports and the pause before a retry are both held, and let pass by the test.
     waits.restore()
     waits = holdLongWaits(1_000)
   })
@@ -214,7 +207,6 @@ describe('the speed of an upload', () => {
     vi.mocked(Date.now).mockRestore()
   })
 
-  /** A file of the given number of bytes. */
   const startedWithReports = async (size: number) => {
     const chunks = dam.hold('POST', dam.routes.chunk)
     const item = row()
@@ -224,7 +216,6 @@ describe('the speed of an upload', () => {
     )
     await uploadInit()
     const uploading = outcome(upload())
-    /** The chunk request on its way, and what axios reports of it. */
     const onItsWay = async () => {
       await vi.waitFor(() => expect(chunks.waiting).toHaveLength(1))
       const [held] = chunks.waiting
@@ -233,10 +224,8 @@ describe('the speed of an upload', () => {
     return { uploading, onItsWay }
   }
   it('is measured anew when a chunk is sent again: the try that failed is not counted, and the share does not go back', async () => {
-    // One chunk of 10 000 bytes.
     const { uploading, onItsWay } = await startedWithReports(10_000)
 
-    // The first try gets most of the chunk out in a second, counted from its request, and fails.
     const first = await onItsWay()
     ahead += 1_000
     first.progress({ loaded: 9_000, total: 10_000 })
@@ -245,12 +234,11 @@ describe('the speed of an upload', () => {
     first.held.release({ status: 503 })
     await vi.waitFor(() => expect(waits.waiting()).toBe(2))
 
-    // The pause before the retry: no speed, so no report, and the row keeps the last.
     ahead += 1_000
     await waits.elapse()
     expect(reports).toHaveLength(1)
 
-    // The retry starts from nothing. Counted from where the first try got to, it would be 7 000 bytes backwards.
+    // The retry starts counting from zero. Counted from where the first try got to, it would be 7 000 bytes backwards.
     const second = await onItsWay()
     ahead += 1_000
     second.progress({ loaded: 2_000, total: 10_000 })
@@ -263,18 +251,16 @@ describe('the speed of an upload', () => {
     expect(await uploading).toBe('resolved')
     await waits.elapse()
 
-    // The whole file in the two seconds of the retry.
     expect(reports.at(-1)).toEqual({ percent: 100, speed: 5_000, remaining: 0 })
     expect(reports).toHaveLength(3)
   })
 
-  // Only a retry starts the measuring anew. The first try of the next chunk goes on from the answer to the chunk
-  // before: the time the server took to answer is counted.
+  // Only a retry restarts the measuring. The first try of the next chunk continues
+  // from the answer to the previous chunk, so the server's answer time is counted.
   it('goes on from the chunk before when the next chunk is sent for the first time', async () => {
     useDamConfigStore().damPrvConfig.settings.imageChunkConfig = { minSize: 10_000, maxSize: 10_000 }
     const { uploading, onItsWay } = await startedWithReports(20_000)
 
-    // The first chunk is out in a second, and answered a second later.
     const first = await onItsWay()
     ahead += 1_000
     first.progress({ loaded: 10_000, total: 10_000 })
@@ -285,8 +271,8 @@ describe('the speed of an upload', () => {
     ahead += 1_000
     second.progress({ loaded: 8_000, total: 10_000 })
     await waits.elapse()
-    // 18 000 bytes in three seconds. Measured anew for the second chunk, it would be 8 000 a second; without the
-    // second of the answer, 9 000.
+    // 18 000 bytes in three seconds. Measured anew for the second chunk it
+    // would be 8 000 a second; without the second of the answer, 9 000.
     expect(reports).toEqual([{ percent: 90, speed: 6_000, remaining: 1 }])
 
     second.held.release()
@@ -295,8 +281,9 @@ describe('the speed of an upload', () => {
   })
 })
 
-// Without both there is nothing to send the chunks to, nor an asset to ask about. The upload used to go on: four
-// "tries" of a chunk with their pauses, thirteen seconds in which no request went out, and then the failure.
+// Without both identifiers there is nothing to send chunks to or to ask about.
+// Regression guard: the upload used to go on with four chunk "tries"
+// and their pauses, 13 seconds without any request, and then failed.
 describe('a start request that answers without an identifier', () => {
   it.each([
     ['the id of the file', { asset: 'asset-1' }],
@@ -311,11 +298,9 @@ describe('a start request that answers without an identifier', () => {
       const item = row()
       const { uploadInit, upload } = useUpload(item)
 
-      // As the queue runs it: the chunks follow a start that went through, and here none does.
       expect(await outcome(uploadInit().then(() => upload()))).toBe('rejected')
 
       expect([item.assetId, item.fileId]).toEqual([null, null])
-      // No pause of a retry was asked for.
       expect(waits.passed).toEqual([])
       expect(chunksSent()).toBe(0)
       expect(finishesSent()).toBe(0)

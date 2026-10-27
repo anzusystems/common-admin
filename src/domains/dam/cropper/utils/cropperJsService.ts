@@ -11,13 +11,9 @@ const roundTo = (value: number, decimals: number) => {
 const clampFraction = (value: number) => Math.min(Math.max(value, 0), 1)
 
 /**
- * A stored region of interest as a crop rectangle, and back.
- *
- * Both are pure arithmetic on the source image's own dimensions — no cropper involved. The region
- * already keeps its size as fractions, and its anchor is a fraction of the source in all but name,
- * so nothing here needs to know how large the picture the cropper happens to be showing is. That
- * used to matter: the conversion went through the displayed image's natural size, which cancelled
- * out of every sum it appeared in and took a rounding correction of its own to patch up.
+ * Converts a stored region of interest to a crop rectangle and back.
+ * Pure arithmetic on the source image dimensions. The region stores its size as fractions
+ * and its anchor is effectively a fraction too, so the displayed image size is not needed.
  */
 export const regionToCrop = (
   regionOfInterest: RegionOfInterest,

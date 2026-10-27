@@ -18,13 +18,8 @@ export interface CachedPermissionGroupsParams {
 type Registry = ReturnType<typeof buildRegistry>
 
 /**
- * One cache per system, not one shared by all of them.
- *
- * Permission group ids are per system -- group 42 in weather and group 42 in blog are different
- * rows -- and the admins' caches were keyed by id alone. That was harmless while an admin only
- * ever talked to one backend, and stops being harmless the moment a cross-system page renders a
- * chip for both: whichever answered first won, and the other system's group was drawn under the
- * wrong title.
+ * One cache per system. Permission group ids are per system: group 42 in weather and in blog are different rows.
+ * A cache keyed by id alone shows the wrong title when a cross-system page renders chips for both.
  */
 const registries = new Map<string, Registry>()
 
@@ -85,7 +80,9 @@ export const useCachedPermissionGroups = (params: CachedPermissionGroupsParams) 
   }
 }
 
-/** Test seam. Registries are module state and would otherwise leak between cases. */
+/**
+ * Test seam. Registries are module state and would otherwise leak between cases.
+ */
 export const resetCachedPermissionGroupRegistries = () => {
   registries.clear()
 }

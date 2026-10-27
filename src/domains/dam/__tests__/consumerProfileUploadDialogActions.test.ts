@@ -28,11 +28,11 @@ import UploadQueueDialog from '@/domains/dam/uploadQueue/components/UploadQueueD
 import { useUploadQueueDialog } from '@/domains/dam/uploadQueue/composables/useUploadQueueDialog'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
 
-// What the buttons of the queue dialog do, under each of the two applications: "save", "save and apply", the
-// button that closes the dialog, the one that shows the mass operations, and "edit asset" of a row. The real
-// dialog with its real rows over the real queue; the DAM is a client that records its requests, and only the long
-// waits are taken out of real time. What the dialog says of an upload while it settles is in
-// `consumerProfileUploadDialog.test.ts`.
+// Covers the buttons of the queue dialog under each application: "save",
+// "save and apply", close, mass operations and "edit asset" of a row.
+// Uses the real dialog, rows and queue. The DAM is a recording
+// client and only the long waits are taken out of real time.
+// What the dialog says while an upload settles is in `consumerProfileUploadDialog.test.ts`.
 
 const QUEUE = 'dialog-actions'
 const { Processing, Uploaded, Failed } = UploadQueueItemStatus
@@ -42,7 +42,6 @@ let dam: FakeDam
 let waits: LongWaits
 let socket: DamSocket
 let wrapper: VueWrapper | undefined
-/** The map of the application from an upload to images, where it brings one: called as the dialog calls it. */
 let mapOfTheApplication: Mock<UploadMetadataToImageMapFn> | undefined
 
 const photo = (name: string) => new File([new Uint8Array(3000)], name, { type: 'image/jpeg' })
@@ -76,7 +75,6 @@ describe.each(consumerProfiles)('the buttons of the upload dialog under the $nam
       initDamNotifications().openConnection()
       socket.accept()
     }
-    // As the widget leaves it when it opens the dialog of its queue.
     useUploadQueueDialog().uploadQueueDialog.value = QUEUE
   })
   afterEach(() => {
@@ -126,7 +124,6 @@ describe.each(consumerProfiles)('the buttons of the upload dialog under the $nam
       },
     })
   }
-  /** Files are picked: the widget queues them and opens the dialog of its queue. */
   const pick = async (...names: string[]) => {
     await queue().addByFiles(QUEUE, extSystem, licence, names.map(photo), 'default')
     wrapper = mountDialog()
@@ -134,7 +131,6 @@ describe.each(consumerProfiles)('the buttons of the upload dialog under the $nam
     return rowsOfQueue()
   }
   const statuses = () => rowsOfQueue().map((item) => item.status)
-  /** Time passes, and the queue asks about the rows that still wait. */
   const asked = async (expected: string[]) => {
     await waits.elapse()
     await vi.waitFor(() => expect(statuses()).toEqual(expected))
@@ -176,7 +172,6 @@ describe.each(consumerProfiles)('the buttons of the upload dialog under the $nam
   const updated = ['success', alertText('common.alert.recordWas.updated')]
   const fixTheForm = ['error', alertText('common.alert.fixValidationErrors')]
   const systemError = ['error', alertText('common.alert.unknownError')]
-  /** The one alert of a refusal by validation: its heading, and the field each of its lines names. */
   const refusalSaid = () => {
     expect(shownAlerts()).toHaveLength(1)
     const [[colour, text]] = shownAlerts() as Array<[string, string]>
@@ -184,13 +179,11 @@ describe.each(consumerProfiles)('the buttons of the upload dialog under the $nam
 
     return { colour, heading, fields: lines.map((line) => line.split(': ')[0]) }
   }
-  /** The DAM answers every save of metadata so; returns what takes it back. */
   const refuseSaves = (answer: FakeDamAnswer) =>
     dam.reply((request) =>
       request.method === 'PATCH' && dam.routes.bulkMetadata.test(request.url) ? answer : undefined
     )
 
-  /** Three files: the first is processed and has its form, the second failed, the third still waits. */
   const oneOfEachKind = async () => {
     refuseChunkOf('b.jpg')
     const [a, b, c] = await pick('a.jpg', 'b.jpg', 'c.jpg')
@@ -206,7 +199,6 @@ describe.each(consumerProfiles)('the buttons of the upload dialog under the $nam
   describe('"save"', () => {
     it('sends the rows whose metadata can be edited, as the user left them, and says the record was updated', async () => {
       const { a } = await oneOfEachKind()
-      // A queue with a row the server still works on is not finished, whatever the other rows are.
       expect(toolbar().textContent).toContain(`${damText('upload.uploading')} 3/3`)
       expect(toolbar().textContent).not.toContain(damText('upload.titleDone'))
       expect(saveAndApply()).toBeUndefined()
@@ -233,7 +225,6 @@ describe.each(consumerProfiles)('the buttons of the upload dialog under the $nam
         customData: { description: 'typed by the user' },
         mainFileSingleUse: !isCms,
       })
-      // "Save" keeps the dialog and its queue as they are, and hands the widget nothing.
       expect(wrapper!.emitted('apply')).toBeUndefined()
       expect(statuses()).toEqual([Uploaded, Failed, Processing])
       expect(useUploadQueueDialog().uploadQueueDialog.value).toBe(QUEUE)
@@ -260,7 +251,6 @@ describe.each(consumerProfiles)('the buttons of the upload dialog under the $nam
       expect(wrapper!.emitted('apply')).toBeUndefined()
       expect([save().disabled, saveAndApply()!.disabled]).toEqual([false, false])
 
-      // Put right, the same button saves.
       const empty = fieldsOf(rows()[0]).filter((field) => field.value === '')
       for (const field of empty) await type(field, 'filled in')
       save().click()
@@ -332,7 +322,6 @@ describe.each(consumerProfiles)('the buttons of the upload dialog under the $nam
   })
 
   describe('"save and apply"', () => {
-    /** Three files: two are processed and have their forms, the third the browser could not finish. */
     const twoUploadedOneFailed = async () => {
       const third = () => rowsOfQueue()[2]
       dam.reply((request) =>
@@ -347,7 +336,6 @@ describe.each(consumerProfiles)('the buttons of the upload dialog under the $nam
       await vi.waitFor(() => expect(statuses()).toEqual([Processing, Processing, Failed]))
       dam.fileBecomes(a.assetId!, AssetFileProcessStatus.Processed, {
         ...metadata({ description: ' first ', author: ' A. Author ' }),
-        // An asset of admin-ugc has no authors of the DAM.
         authors: isCms ? ['author-1', 'author-2'] : [],
       })
       dam.fileBecomes(b.assetId!, AssetFileProcessStatus.Processed, metadata({ description: 'second' }))
@@ -357,11 +345,9 @@ describe.each(consumerProfiles)('the buttons of the upload dialog under the $nam
       return { a, b, c }
     }
 
-    // Finding 31: the images are handed over without a position, and the count of the widget is left alone. The
-    // dialog used to count it on (8 and 9 here), and the widget once more.
+    // Finding 31: the images are handed over without a position and the widget's count is left alone.
     it('saves the rows that can be saved, and hands the widget an image of each uploaded row, for it to place', async () => {
       const { a, b, c } = await twoUploadedOneFailed()
-      // The widget already has seven images.
       useImageStore(pinia).maxPosition = 7
       const lookupsBefore = damNameLookups(dam).length
       const requestsBefore = dam.requests.length
@@ -370,7 +356,6 @@ describe.each(consumerProfiles)('the buttons of the upload dialog under the $nam
       saveAndApply()!.click()
       await vi.waitFor(() => expect(wrapper!.emitted('apply')).toHaveLength(1))
 
-      // Every uploaded row has its form: nothing is asked about first. The save, and the names for the library's map.
       expect(
         dam.requests.slice(requestsBefore).map((request) => `${request.method} ${request.url.split('?')[0]}`)
       ).toEqual([`PATCH ${bulkSave}`, ...(isCms ? [`GET /adm/v1/author/ext-system/${extSystem}/search`] : [])])
@@ -398,15 +383,12 @@ describe.each(consumerProfiles)('the buttons of the upload dialog under the $nam
           showDamAuthors: true,
         },
       ])
-      // The failed row has its asset and its file too, and is no image to hand over.
       expect(images.map((image) => image.assetId)).not.toContain(c.assetId)
       expect(new Set(images.map((image) => image.key)).size).toBe(2)
       expect(images.map((image) => 'position' in image)).toEqual([false, false])
       expect(useImageStore(pinia).maxPosition).toBe(7)
-      // The library's map asks for the names of the authors, once; the map of admin-ugc asks for nothing.
       expect(damNameLookups(dam).length - lookupsBefore).toBe(isCms ? 1 : 0)
       expect(dam.unanswered).toEqual([])
-      // Closing the dialog and emptying its queue is left to the widget.
       expect(statuses()).toEqual([Uploaded, Uploaded, Failed])
       expect(useUploadQueueDialog().uploadQueueDialog.value).toBe(QUEUE)
     })
@@ -418,7 +400,6 @@ describe.each(consumerProfiles)('the buttons of the upload dialog under the $nam
       await vi.waitFor(() => expect(wrapper!.emitted('apply')).toHaveLength(1))
 
       if (!mapOfTheApplication) {
-        // admin-cms brings none: the library's own map made the images.
         expect(isCms).toBe(true)
         return
       }
@@ -434,9 +415,10 @@ describe.each(consumerProfiles)('the buttons of the upload dialog under the $nam
       expect([extSystemHanded, licenceHanded]).toEqual([extSystem, licence])
     })
 
-    // The images are made of what the save answers. An asset it has no answer for is handed over all the same,
-    // without authors, and whether it has any is not known: the widget is told to offer the authors of the DAM only
-    // for an asset the save answered for. What is picked there is written into the asset in place of its authors.
+    // The images are made from what the save answers. An asset without an answer
+    // is still handed over, without authors, and it is unknown whether it has any.
+    // So the widget is told to offer the DAM authors only for assets the save answered
+    // for. The picked author is written into the asset in place of its authors.
     it('has the widget offer the authors of the DAM for no image whose asset the save did not answer for', async () => {
       const { a, b } = await twoUploadedOneFailed()
       dam.reply((request) =>
@@ -450,17 +432,17 @@ describe.each(consumerProfiles)('the buttons of the upload dialog under the $nam
 
       const [images] = wrapper!.emitted('apply')![0] as [ImageStoreItem[]]
       expect(images.map((image) => [image.assetId, image.damAuthors, image.showDamAuthors])).toEqual([
-        // Answered for: as before.
         [a.assetId, isCms ? ['author-1', 'author-2'] : [], !isCms],
         [b.assetId, [], false],
       ])
       expect(images[1]).toMatchObject({ texts: { description: '', source: '' }, dam: { damId: b.fileId } })
     })
 
-    // With the notifications a file is uploaded before its metadata comes, and "save and apply" is offered by then.
-    // The save skips a row without its metadata, so its image was handed over without its texts and its asset stayed
-    // unsaved, without a word. The dialog asks about such a row once more first, as the refresh of the row asks: a
-    // form that comes of it is for the user to see before anything is saved or handed over.
+    // With notifications a file is uploaded before its metadata arrives, and "save and apply" is already offered.
+    // The save skips a row without metadata, so its image was handed
+    // over without texts and its asset stayed unsaved, silently.
+    // The dialog now reads such a row once more first, as the row refresh does.
+    // The user sees any new form before anything is saved or handed over.
     if (profile.notifications) {
       const justLoaded = ['warning', alertText('common.damImage.upload.metadataJustLoaded')]
       const sentIds = () =>
@@ -469,10 +451,6 @@ describe.each(consumerProfiles)('the buttons of the upload dialog under the $nam
       const readsOf = (asset: string | null) =>
         dam.sentTo('GET', dam.routes.one).filter((request) => request.url === `${endPoints.asset}/${asset}`)
 
-      /**
-       * Two files are uploaded: the first has its form, the second is announced as processed and its metadata is
-       * not. The DAM has the metadata of both, an author of the second, and its file as an internal one.
-       */
       const secondWithoutItsForm = async () => {
         const [a, b] = await pick('a.jpg', 'b.jpg')
         await vi.waitFor(() => expect(statuses()).toEqual([Processing, Processing]))
@@ -500,7 +478,6 @@ describe.each(consumerProfiles)('the buttons of the upload dialog under the $nam
         await vi.waitFor(() => expect(spins()).toBe(false))
         await flushPromises()
 
-        // The one read the refresh of that row makes: its asset, by its id.
         expect(
           dam
             .assetReads()
@@ -512,7 +489,6 @@ describe.each(consumerProfiles)('the buttons of the upload dialog under the $nam
           authors: ['author-1'],
           customData: { description: 'second' },
         })
-        // Nothing is saved or handed over, and the dialog stays as it is, for the user to look at the new form.
         expect(saves()).toEqual([])
         expect(wrapper!.emitted('apply')).toBeUndefined()
         expect(statuses()).toEqual([Uploaded, Uploaded])
@@ -524,7 +500,6 @@ describe.each(consumerProfiles)('the buttons of the upload dialog under the $nam
         saveAndApply()!.click()
         await vi.waitFor(() => expect(wrapper!.emitted('apply')).toHaveLength(1))
 
-        // No row is without its form now: nothing more is read, and both are saved in one request.
         expect(dam.assetReads()).toHaveLength(readsBefore + 1)
         expect(sentIds()).toEqual([[a.assetId, b.assetId]])
         const [images] = wrapper!.emitted('apply')![0] as [ImageStoreItem[]]
@@ -541,8 +516,9 @@ describe.each(consumerProfiles)('the buttons of the upload dialog under the $nam
         expect(shownAlerts()).toEqual([justLoaded])
       })
 
-      // As before: the save skips the row, and its image is handed over without texts and authors. Whether its file
-      // is internal the row knows from the read that settled it: the save has no answer to take it from.
+      // The save skips the row and its image is handed over without texts and authors.
+      // The row knows whether its file is internal from the read
+      // that settled it. The save has no answer to take it from.
       it.each<[string, FakeDamAnswer]>([
         ['fails', { status: 500 }],
         ['finds no asset', { status: 404 }],
@@ -603,7 +579,6 @@ describe.each(consumerProfiles)('the buttons of the upload dialog under the $nam
         expect(useUploadQueueDialog().uploadQueueDialogSaving.value).toBeNull()
       })
 
-      // The read comes first: what a form that has just come holds is checked with the rest, on the next press.
       it('reads such a row before it checks the forms: a field to fix is said on the next press', async () => {
         const elements = useDamConfigStore(pinia).damConfigAssetCustomFormElements.get(extSystem)![DamAssetType.Image]
         elements.find((element) => element.property === 'title')!.attributes.required = true
@@ -650,8 +625,7 @@ describe.each(consumerProfiles)('the buttons of the upload dialog under the $nam
       expect(saveAndApply()!.disabled).toBe(false)
     })
 
-    // admin-ugc brings its own map. What it throws after the save is not the save's to say: it is said as it was
-    // before, which for an error of its own is nothing.
+    // admin-ugc brings its own map. An error it throws after the save is not reported as a save error.
     if (!isCms) {
       it('says nothing of the save when the map of the application fails after it', async () => {
         await twoUploadedOneFailed()
@@ -700,23 +674,21 @@ describe.each(consumerProfiles)('the buttons of the upload dialog under the $nam
     })
   })
 
-  // "Save and apply" ends with the host closing the dialog and emptying its queue: a file added while it ran began
-  // to upload and went with the queue, without a word, its asset left in the DAM. While either save runs the dialog
-  // takes no file: its "+" is off, and its dropzone lets a drop pass.
+  // "Save and apply" ends with the host closing the dialog and emptying its queue. A file added while
+  // it ran began uploading and was lost with the queue, silently, leaving its asset in the DAM.
+  // While either save runs, the dialog takes no file: its "+" is off and its dropzone ignores drops.
   describe('files added through the dialog', () => {
     let choicesOpened = 0
 
     const plus = () => toolbar().querySelector<HTMLButtonElement>(`button[aria-label="${damText('upload.add')}"]`)!
     const fileInput = () => toolbar().querySelector<HTMLInputElement>('input[type="file"]')!
     const titles = () => rowsOfQueue().map((row) => row.displayTitle)
-    /** The queue whose dialog says it is saving: what a host reads before it takes a file for that queue. */
     const savingTold = () => useUploadQueueDialog().uploadQueueDialogSaving.value
     const carrying = (names: string[]) => {
       const transfer = new DataTransfer()
       names.forEach((name) => transfer.items.add(photo(name)))
       return transfer
     }
-    /** One uploaded file, in the dialog with its real "+" and dropzone. The file choice the "+" opens is counted. */
     const oneUploaded = async () => {
       await queue().addByFiles(QUEUE, extSystem, licence, [photo('a.jpg')], 'default')
       wrapper = mountDialog(true)
@@ -732,7 +704,6 @@ describe.each(consumerProfiles)('the buttons of the upload dialog under the $nam
         event.preventDefault()
       })
     }
-    /** The choice of the system answers with these files. */
     const choose = async (...names: string[]) => {
       fileInput().files = carrying(names).files
       fileInput().dispatchEvent(new Event('change', { bubbles: true }))
@@ -773,8 +744,8 @@ describe.each(consumerProfiles)('the buttons of the upload dialog under the $nam
       expect(savingTold()).toBeNull()
     })
 
-    // The input under the "+" is hidden, and the dropzone takes the mouse alone: the "+" is the one way to add a file
-    // to the open dialog from the keyboard. Tab used to pass it by.
+    // The input under the "+" is hidden and the dropzone only takes mouse input.
+    // The "+" is the only way to add a file to the open dialog from the keyboard.
     it('are added from the keyboard too: Tab stops at the "+", and Enter and Space open the choice of files', async () => {
       await oneUploaded()
       save().focus()
@@ -784,7 +755,7 @@ describe.each(consumerProfiles)('the buttons of the upload dialog under the $nam
 
       await userEvent.keyboard('{Enter}')
       expect(choicesOpened).toBe(1)
-      // The input takes no second click within a moment of the first.
+      // The input ignores a second click shortly after the first.
       await waits.settle(300)
       await userEvent.keyboard(' ')
       expect(choicesOpened).toBe(2)
@@ -793,7 +764,6 @@ describe.each(consumerProfiles)('the buttons of the upload dialog under the $nam
       await vi.waitFor(() => expect(titles()).toEqual(['a.jpg', 'picked.jpg']))
     })
 
-    // Off, the "+" is no stop of Tab: nor is "save" while "save and apply" runs.
     it('are not offered to the keyboard while a save runs: Tab passes the "+" by', async () => {
       const held = dam.hold('PATCH', dam.routes.bulkMetadata)
       await oneUploaded()
@@ -809,7 +779,6 @@ describe.each(consumerProfiles)('the buttons of the upload dialog under the $nam
       await vi.waitFor(() => expect(saveAndApply()!.classList.contains('v-btn--loading')).toBe(false))
     })
 
-    // The host takes the dialog away when its close button is used, also in the middle of a save.
     it('takes back what it told its host of a save when it goes in the middle of one', async () => {
       const held = dam.hold('PATCH', dam.routes.bulkMetadata)
       await oneUploaded()
@@ -843,7 +812,6 @@ describe.each(consumerProfiles)('the buttons of the upload dialog under the $nam
       expect([savingTold(), plus().disabled]).toEqual([null, false])
     })
 
-    // The dialog stays open after "save", and after a save the DAM refused: files are added to it as before.
     it.each<[string, () => HTMLButtonElement, FakeDamAnswer | undefined]>([
       ['"save" that went through', () => save(), undefined],
       ['"save" the DAM refused', () => save(), { status: 500 }],
@@ -889,7 +857,6 @@ describe.each(consumerProfiles)('the buttons of the upload dialog under the $nam
       expect([queue().getQueueTotalCount(QUEUE), queue().getQueueProcessedCount(QUEUE)]).toEqual([0, 0])
       expect(queue().getQueue(QUEUE)!.fileInputKey).toBeGreaterThan(fileInputKey)
       expect(useUploadQueueDialog().uploadQueueDialog.value).toBeNull()
-      // Nothing more is sent, finished or asked about, however long the page stays open.
       await waits.elapseAll()
       expect(dam.sentTo('POST', dam.routes.start)).toHaveLength(2)
       expect(dam.sentTo('PATCH', dam.routes.finish)).toEqual([])
@@ -950,7 +917,6 @@ describe.each(consumerProfiles)('the buttons of the upload dialog under the $nam
           .slice(readsBefore)
           .map((request) => request.url)
       ).toEqual([`${endPoints.asset}/${a.assetId}`])
-      // The detail is drawn by the widget, for the queue named here; a save in it writes back into the row.
       expect([detail.dialog, detail.updateUploadStore, detail.loading]).toEqual([QUEUE, true, false])
       expect(detail.asset!.metadata.customData).toEqual({ description: 'from the server' })
     })

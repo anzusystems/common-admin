@@ -28,14 +28,20 @@ type DatatableItem = PermissionGroup
 const props = withDefaults(
   defineProps<{
     client: AxiosClientFn
-    /** Backend identity: keys the filter store and the cache, and reaches every api call. */
+    /**
+     * Backend identity: keys the filter store and the cache, and reaches every api call.
+     */
     system: string
     entity?: string | undefined
     endPoint?: string | undefined
-    /** Where a row and the detail button go. The library cannot know an app's typed route names. */
+    /**
+     * Where a row and the detail button go. The library cannot know an app's typed route names.
+     */
     detailRoute: (permissionGroup: PermissionGroup) => RouteLocationRaw
     editRoute: (permissionGroup: PermissionGroup) => RouteLocationRaw
-    /** Already-evaluated ACL. A boolean, not an `AclValue`: see 5.1 of the plan. */
+    /**
+     * Already-evaluated ACL, a boolean rather than an `AclValue`.
+     */
     canUpdate?: boolean
   }>(),
   {
@@ -95,8 +101,7 @@ const getList = useDebounceFn(async () => {
   await fetchPermissionGroupList(pagination, filterData, filterConfig)
 })
 
-// Named here rather than called inline in the template: `pagination` is a ref, and the template
-// would hand these its unwrapped value.
+// Named here, not inline in the template: the template would pass the unwrapped value of the `pagination` ref.
 const submitFilterAction = () => submitFilter(pagination, getList)
 const resetFilterAction = () => resetFilter(pagination, getList)
 
@@ -154,8 +159,10 @@ defineExpose({
         </template>
         <template #item.createdAt="{ item }: { item: DatatableItem }">
           <ADatetime :date-time="item.createdAt" />
-          <!-- The user chip is per app: its cache, its route, its own `_system`. An app without
-               one leaves the slot empty, and then there is no line break either. -->
+          <!--
+            The user chip is per app: its cache, its route, its own `_system`.
+            An app without one leaves the slot empty, and then no line break is rendered.
+          -->
           <template v-if="$slots.createdBy">
             <br />
             <slot
@@ -177,10 +184,7 @@ defineExpose({
         <template #item.actions="{ item }: { item: DatatableItem }">
           <div class="d-flex justify-end">
             <ATableCopyIdButton :id="item.id" />
-            <!--
-              `:to` rather than a click handler, so middle-click and open-in-new-tab work on a list
-              people open several rows from.
-            -->
+            <!-- `:to` rather than a click handler, so middle-click and open-in-new-tab work. -->
             <VBtn
               :to="detailRoute(item)"
               class="ml-1"

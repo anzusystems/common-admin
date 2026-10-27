@@ -18,20 +18,15 @@ import {
 } from '@/domains/dam/cropper/__tests__/support/cropperImages'
 
 /**
- * The behavioural contract both cropper components must satisfy.
- *
- * Everything asserted here is expressed in **natural image pixels**, never in displayed ones. That
- * is deliberate: the two versions lay their canvas out slightly differently (cropper.js v1 measured
- * the container through an inline `<img>`, so a font descender could inflate it by a few pixels and
- * scale a small image up with it), but the crop data a caller reads back must be identical — that
- * data is what gets persisted as a region of interest.
- *
- * The suite runs twice, once per adapter. A failure on only one side means the two have diverged.
+ * The behavioural contract both cropper components must satisfy,
+ * run once per adapter. A failure on one side means they diverged.
+ * Everything is asserted in natural image pixels, not displayed ones. The two versions lay out the canvas
+ * slightly differently (v1 measured through an inline `<img>`, so a font descender could scale a small image
+ * up), but the crop data read back must be identical because it is persisted as the region of interest.
  */
 
 const AR_16_9 = 16 / 9
 
-/** The crop both versions start with: `autoCropArea` of the aspect-fitted image, centred on it. */
 const expectedInitialCrop = (naturalWidth: number, naturalHeight: number, aspectRatio: number, coverage = 0.8) => {
   let width = naturalWidth
   let height = naturalHeight
@@ -217,8 +212,8 @@ const describeAdapter = (adapter: CropperAdapter) => {
         cropper.destroy()
       })
 
-      // Only one dimension is named, so the crop that comes back has to be re-proportioned — and the
-      // proportion cannot be honoured by growing the other side past the image.
+      // Only one dimension is named, so the returned crop must be re-proportioned.
+      // The ratio cannot be honoured by growing the other side past the image.
       it('keeps a crop inside the image when setData names only a height', async () => {
         const cropper = await mountCropper({ adapter, props: { aspectRatio: AR_16_9 } })
         await cropper.api.setData({ height: LANDSCAPE_IMAGE.naturalHeight })
@@ -243,9 +238,9 @@ const describeAdapter = (adapter: CropperAdapter) => {
         cropper.destroy()
       })
 
-      // `viewMode: 0` is cropper.js v1's default and reads like "no restriction", but v1 still
-      // clamped the crop box to its container, and the container was the fitted image. Neither
-      // component lets a crop escape sideways, whatever the option says.
+      // `viewMode: 0` is the cropper.js v1 default and reads like "no restriction", but
+      // v1 still clamped the crop box to its container, which was the fitted image.
+      // Neither component lets a crop escape sideways, whatever the option says.
       it('keeps the crop on the image even when viewMode is 0', async () => {
         const cropper = await mountCropper({ adapter, props: { viewMode: 0 } })
         await cropper.api.setData({ x: -100, y: 40, width: 320, height: 180 })
@@ -376,11 +371,10 @@ const describeAdapter = (adapter: CropperAdapter) => {
         cropper.destroy()
       })
 
-      // A corner grip grows away from the opposite corner, so a locked ratio can demand room on a
-      // side that has none. Neither version fudges the ratio to grow anyway; they simply stop.
+      // A corner grip grows away from the opposite corner, so a locked ratio can need room on a side that has none.
+      // Neither version bends the ratio to grow anyway; they stop.
       it('refuses to grow a corner that has nowhere to go', async () => {
         const cropper = await mountCropper({ adapter, props: { aspectRatio: AR_16_9 } })
-        // Flush with the top edge: growing the north-east corner needs room above it.
         await cropper.api.setData({ x: 0, y: 0, width: 640, height: 360 })
         await nextFrame()
         const before = cropper.api.getData()
@@ -407,7 +401,6 @@ const describeAdapter = (adapter: CropperAdapter) => {
         await drag(grip, from, { x: from.x + 60 * scale, y: from.y - 34 * scale }, 6)
 
         const after = cropper.api.getData()
-        // The south-west corner is the pivot, so the left edge and the bottom edge stay put.
         expect(after.x).toBeCloseTo(80, 0)
         expect(after.y + after.height).toBeCloseTo(390, 0)
         expect(after.width).toBeGreaterThan(480)
@@ -431,9 +424,9 @@ const describeAdapter = (adapter: CropperAdapter) => {
     })
 
     describe('dragging a grip past the opposite edge', () => {
-      // cropper.js reverses the action when a grip crosses over — a west drag becomes an east one.
-      // Both versions pivot on the edge the grip crossed and then stop at the image border; the
-      // numbers below are what each of them independently produces.
+      // cropper.js reverses the action when a grip crosses over (a west drag becomes an east one).
+      // Both versions pivot on the crossed edge and stop at the image
+      // border. The numbers below are what each produces independently.
       it('pivots on the crossed edge and stops at the border, free-form', async () => {
         const cropper = await mountCropper({ adapter, props: { aspectRatio: NaN } })
         await cropper.api.setData({ x: 600, y: 150, width: 150, height: 150 })
@@ -478,8 +471,8 @@ const describeAdapter = (adapter: CropperAdapter) => {
         const from = { x: rect.left + 20, y: rect.top + 20 }
         await drag(surface, from, { x: from.x + 120, y: from.y + 120 })
         const after = cropper.api.getData()
-        // The two versions seed a fresh box differently (v1 starts from a minimum-size box, v2 from
-        // the dragged distance), so only the properties a user would notice are pinned down here.
+        // The two versions seed a fresh box differently (v1 from a minimum-size box, v2
+        // from the dragged distance), so only properties a user would notice are pinned.
         expect(after.width).toBeGreaterThan(10)
         expect(after.width).toBeLessThan(before.width - 10)
         expect(after.width / after.height).toBeCloseTo(AR_16_9, 1)
@@ -524,8 +517,8 @@ const describeAdapter = (adapter: CropperAdapter) => {
         cropper.destroy()
       })
 
-      // cropper.js v1 zoomed on a pinch by default, and did so independently of the wheel option —
-      // which the DAM turns off. A tablet user pinching the picture has to keep getting that.
+      // cropper.js v1 zoomed on pinch by default, independently of the wheel option, which the DAM turns off.
+      // A tablet user pinching the picture must keep getting that.
       it('zooms the picture on a two-finger pinch, even with zoomOnWheel off', async () => {
         const cropper = await mountCropper({ adapter, props: { zoomOnWheel: false } })
         const before = cropper.api.displaySize().width
@@ -571,9 +564,9 @@ const describeAdapter = (adapter: CropperAdapter) => {
     })
 
     describe('a host that clips it', () => {
-      // `DamAssetImageRoiSelect` gives the cropper `overflow: hidden` and a viewport-based
-      // `max-height`. A tall picture has to be scaled down to fit what the host will show, not run
-      // off the bottom of it — the part below the fold cannot be scrolled to or dragged back.
+      // `DamAssetImageRoiSelect` gives the cropper `overflow: hidden` and a viewport-based `max-height`.
+      // A tall picture must be scaled down to fit what the host shows.
+      // The part below the fold cannot be scrolled to or dragged back.
       const clipped = { overflow: 'hidden', maxHeight: '300px' }
 
       it('scales a tall picture down to the height the host allows', async () => {

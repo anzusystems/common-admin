@@ -527,7 +527,7 @@ describe('useNestedListEditorController', () => {
   })
 })
 
-// Immediate mode: the backend has already deleted the row (and does not renumber its siblings).
+// Immediate mode: the backend has already deleted the row and does not renumber its siblings.
 describe('useNestedListEditorController reset after an immediate delete', () => {
   const ids = (nodes: NestedTreeNode<Row>[]): unknown[] =>
     nodes.map((n) => (n.children?.length ? [n.data.id, ids(n.children)] : n.data.id))

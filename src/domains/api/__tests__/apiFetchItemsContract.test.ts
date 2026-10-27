@@ -7,10 +7,9 @@ import { AnzuApiResponseCodeError } from '@/shared/error/AnzuApiResponseCodeErro
 import { AnzuApiCancelledError } from '@/shared/error/AnzuApiCancelledError'
 import { AnzuFatalError } from '@/shared/error/AnzuFatalError'
 
-// The helper for the calls that were reaching for `useApiRequest<ApiResponseList<T[]>>`: a list
-// whose query the call site wrote itself. What it has to add over that is the list-body check --
-// those call sites read `.data` off whatever came back, so a malformed answer handed them
-// `undefined` typed as an array, which is the failure the whole family exists to end.
+// Helper for call sites that used `useApiRequest<ApiResponseList<T[]>>` with their own query.
+// It adds a list-body check. Those call sites read `.data` from whatever
+// came back, so a malformed answer gave them `undefined` typed as an array.
 
 const setup = (request: ReturnType<typeof vi.fn>, over: Record<string, unknown> = {}) =>
   useApiFetchItems<{ id: number }>({
@@ -48,8 +47,6 @@ describe('a list whose query the caller wrote', () => {
     await expect(execute()).resolves.toStrictEqual([{ id: 1 }, { id: 2 }])
   })
 
-  // An infinite envelope is the other shape these call sites receive, and the items are what they
-  // wanted from it either way.
   it('reads an infinite envelope the same way', async () => {
     const { execute } = setup(answering({ status: 200, data: { data: [{ id: 3 }], hasNextPage: true } }))
 
@@ -65,8 +62,6 @@ describe('a list whose query the caller wrote', () => {
     expect(request.mock.calls[0][0].url).toBe('/article/7/routes?limit=10')
   })
 
-  // The substitution is the path's, not the query's, and this is the helper where someone would
-  // expect otherwise. Pinned so the doc comment above `urlTemplate` cannot drift from it.
   it('substitutes into the path and leaves the query as written', async () => {
     const request = answering({ status: 200, data: { data: [], totalCount: 0 } })
     const { execute } = setup(request, { urlTemplate: '/article/:id/routes?locale=:locale' })
@@ -82,7 +77,6 @@ describe('a list whose query the caller wrote', () => {
     await expect(execute()).resolves.toStrictEqual([])
   })
 
-  // The reason this helper exists rather than another `useApiRequest` generic.
   it('refuses a body that is not a list, rather than handing back undefined', async () => {
     const { execute } = setup(answering({ status: 200, data: { totalCount: 1 } }))
 
@@ -139,7 +133,6 @@ describe('stopping a fetch of items', () => {
     expect(seen?.aborted).toBe(true)
   })
 
-  // `cancelPrevious` has to behave the way it does everywhere else in the family.
   it('supersedes the earlier call when asked to', async () => {
     const signals: AbortSignal[] = []
     const request = vi.fn().mockImplementation((config: { signal: AbortSignal }) => {
@@ -175,8 +168,6 @@ describe('stopping a fetch of items', () => {
   })
 })
 
-// The caller says which of the two shapes a list arrives in, and the reader refuses the other. The
-// point is not tidiness: a shape that is merely assumed is the hole this helper was built to close.
 describe('the shape the caller declared', () => {
   it('takes a bare array when that is what was declared', async () => {
     const request = answering({ status: 200, data: [{ id: 1 }, { id: 2 }] })
@@ -192,8 +183,8 @@ describe('the shape the caller declared', () => {
     await expect(execute()).rejects.toThrow(/Expected an array body/)
   })
 
-  // owl answers 202 with a problem document when an aggregation has not caught up. It is a valid
-  // status, so it reaches the reader -- and before this, its object was handed back as an array.
+  // owl answers 202 with a problem document when an aggregation has not caught up.
+  // 202 is a valid status, so it reaches the reader. Its object used to be returned as an array.
   it('names a 202 that answers with something other than the list', async () => {
     const request = answering({ status: 202, data: { type: 'about:blank', title: 'not processed yet' } })
     const { execute } = setup(request, { shape: 'array' })
@@ -208,7 +199,6 @@ describe('the shape the caller declared', () => {
     await expect(execute()).resolves.toEqual([])
   })
 
-  // The other direction, which is what makes the default safe to have.
   it('refuses a bare array where the envelope was left to default', async () => {
     const request = answering({ status: 200, data: [{ id: 1 }] })
     const { execute } = setup(request)
@@ -256,8 +246,8 @@ describe('the method and the body', () => {
     expect(request.mock.calls[0][0]).not.toHaveProperty('data')
   })
 
-  // The guard exists because `method` defaults to GET: a caller who wrote a body and forgot the
-  // method would otherwise send a GET without its filter and nothing downstream would notice.
+  // `method` defaults to GET. A caller who wrote a body and forgot the method
+  // would send a GET without its filter, and nothing downstream would notice.
   it('refuses a body on a GET, before anything is sent', async () => {
     const logged = vi.fn()
     setApiErrorLogger(logged)
@@ -270,7 +260,6 @@ describe('the method and the body', () => {
     expect(logged.mock.calls[0][1].url).toBeUndefined()
   })
 
-  // Now that the helper sends the method, a caller must not be able to reach it through `options`.
   it('keeps the method and the body out of a caller options object', async () => {
     const request = answering({ status: 200, data: { data: [], totalCount: 0 } })
     const { execute } = setup(request, { options: { method: 'DELETE', data: 'x' } as never })
@@ -281,8 +270,8 @@ describe('the method and the body', () => {
     expect(request.mock.calls[0][0]).not.toHaveProperty('data')
   })
 
-  // `url` is recorded last for this reason: a body that will not serialise is a request that never
-  // happened, and the report must not name a url nobody was ever asked for.
+  // `url` is recorded last. A body that will not serialise means
+  // no request happened, so the report must not name a url.
   it('reports a body that will not serialise without naming a url', async () => {
     const logged = vi.fn()
     setApiErrorLogger(logged)
@@ -298,17 +287,17 @@ describe('the method and the body', () => {
   })
 })
 
-// Checked by `lint:tsc:test`, not by running: the guarantee is that a body cannot be passed until
-// the caller has declared its type, which is what keeps every existing call site compiling untouched.
+// Checked by `lint:tsc:test`, not at runtime.
+// A body cannot be passed until the caller declares its type. This keeps existing call sites compiling unchanged.
 describe('what the types allow', () => {
   const client = () => ({ request: vi.fn() }) as unknown as AxiosInstance
 
   it('refuses a body until one is declared', () => {
     const { execute } = useApiFetchItems<{ id: number }>({ client, system: 'test', entity: 'test' })
 
-    // @ts-expect-error `B` defaults to `never`, so there is no body to pass
-    // Awaited, not fired and forgotten: with no url template it rejects, and an unhandled rejection
-    // is reported against whichever test happens to be running when it lands.
+    // @ts-expect-error `B` defaults to `never`, so there is no body to pass.
+    // The call is caught because without a url template it rejects. An unhandled
+    // rejection is reported against whichever test is running when it lands.
     void execute({ body: {} }).catch(() => {})
 
     expect(execute).toBeTypeOf('function')

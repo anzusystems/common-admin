@@ -79,8 +79,8 @@ const loadRois = async (forceReloadFile = false) => {
   }
 }
 
-// Not while the cropper beside it saves a region and reads the file the DAM redraws (`cropperBusy`): read before the
-// redraw, the file of the refresh took the place of the cropper's, and both stayed on the old drawing.
+// Hidden while the cropper saves a region and reloads the redrawn file (`cropperBusy`).
+// A refresh read before the redraw replaced the cropper's file, and both showed the old image.
 const refreshOffered = computed(() => !imageRoiStore.loader && !imageRoiStore.cropperBusy)
 const refresh = () => {
   if (!refreshOffered.value) return

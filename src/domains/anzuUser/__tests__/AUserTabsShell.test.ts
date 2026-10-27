@@ -10,9 +10,9 @@ import {
 } from '@/domains/anzuUser/composables/userSystemDescriptor'
 import { OTHER_SYSTEMS_TAB } from '@/domains/anzuUser/utils/userTabs'
 
-// The tab bar takes its tabs as a prop rather than deriving them from the descriptor array: the
-// list depends on the route, not on what the admin owns. admin-inhouse owns four systems and has
-// two tabs, because the system is part of the path.
+// The tab bar takes its tabs as a prop instead of deriving them from the descriptor array.
+// The list depends on the route, not on what the admin owns. admin-inhouse
+// owns four systems and has two tabs, because the system is part of the path.
 
 const record = (over: Record<string, unknown> = {}) => ({
   id: 42,
@@ -112,17 +112,17 @@ describe('AUserTabsShell', () => {
   })
 
   it('costs no foreign call until a tab is opened', async () => {
-    // Lazy by construction: `VWindowItem` renders its content on first activation, which is why
-    // the plan dropped the pseudo-tab that would have asked for all eight up front.
+    // Lazy by construction: `VWindowItem` renders its content on first activation.
+    // The plan dropped the pseudo-tab that would have loaded all eight up front.
     const { request } = await mountShell()
 
     expect(request).not.toHaveBeenCalled()
   })
 
   it('writes the open tab into the url with replace, so Back leaves the page', async () => {
-    // Navigated first, then spied, then mounted: the write under test is the one the shell makes
-    // when it settles on a tab, and here it settles on the owning one because the link named a tab
-    // that no longer exists.
+    // Order matters: navigate, then spy, then mount.
+    // The write under test is the one the shell makes when it settles on a tab. Here
+    // it settles on the owning tab because the link named a tab that no longer exists.
     await router.replace('/users/42?tab=elections')
     const replace = vi.spyOn(router, 'replace')
     const push = vi.spyOn(router, 'push')
@@ -168,9 +168,8 @@ describe('AUserTabsShell', () => {
   })
 
   it('creates the account the panel offers, copying the owner record as the server holds it', async () => {
-    // The whole reason the shell owns this: the panel that offers Create is here, and the page
-    // would only be passing the call through. Until it did, the button opened a dialog whose
-    // Confirm did nothing at all.
+    // The shell owns this because the panel that offers Create is here, and the page would only pass the call through.
+    // Before this, the button opened a dialog whose Confirm did nothing.
     const owner = vi.fn().mockResolvedValue({ status: 200, data: record({ enabled: true }) })
     const absent = vi
       .fn()
@@ -204,8 +203,8 @@ describe('AUserTabsShell', () => {
     create.click()
     await flushPromises()
 
-    // Copying a person into another system copies whether they are switched on, so the dialog has
-    // to say a working account is coming into being -- in blog and forum that means a public one.
+    // Copying a person into another system copies whether they are enabled.
+    // The dialog has to say a working account is created. In blog and forum that means a public one.
     expect(document.body.textContent).toContain('The account is created ready to use.')
 
     const confirm = document.querySelector('[data-cy="user-system-create-confirm"]') as HTMLElement
@@ -224,9 +223,9 @@ describe('AUserTabsShell', () => {
   })
 
   it('will not post a record the target would refuse, and asks for the missing fields instead', async () => {
-    // The plan's own example: a person known only in blog, where `person` is filled for nobody,
-    // copied into a system whose profile requires it. A silent copy leaves an account the target's
-    // own edit form then refuses to save, which is what the form in this dialog exists to prevent.
+    // A person known only in blog, where `person` is not filled, is copied into a system whose profile requires it.
+    // A silent copy leaves an account that the target's own edit form refuses to save.
+    // The form in this dialog exists to prevent that.
     const owner = vi.fn().mockResolvedValue({
       status: 200,
       data: record({ person: { firstName: '', lastName: '', fullName: '' } }),
@@ -264,7 +263,6 @@ describe('AUserTabsShell', () => {
     await flushPromises()
 
     expect(absent.mock.calls.some((call) => call[0].method?.toUpperCase() === 'POST')).toBe(false)
-    // And the dialog is still open, with the form to fill in.
     expect(document.querySelector('[data-cy="user-system-create-confirm"]')).not.toBeNull()
   })
 

@@ -40,13 +40,12 @@ import UploadQueueDialog from '@/domains/dam/uploadQueue/components/UploadQueueD
 import { useUploadQueueDialog } from '@/domains/dam/uploadQueue/composables/useUploadQueueDialog'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
 
-// The list of assets with an upload of its own (the asset page of admin-ugc), under each of the two applications:
-// where it lists from and who may see it, how it offers the upload, what the "save and apply" of its queue dialog
-// does, and which filters it has. The real list with its real filter and its real queue dialog over the real queue;
-// the DAM is a client that records its requests, and only the long waits are taken out of real time. Not mounted for
-// real: the bar, the tiles and the table of the list, the metadata of the picked asset, the asset detail, the rows
-// inside the queue dialog, and the inputs of the filter (each is named by a stand-in). The cases of the side panel
-// and the detail mount the tiles, the rows and the dialog of the detail for real.
+// Covers the list with its own upload (admin-ugc asset page)
+// under both applications: where it lists from, who may see it,
+// how the upload is offered, what "save and apply" does, and which filters it has.
+// The list, filter and queue dialog are real. The DAM is a recording client.
+// Stand-ins: bar, tiles, table, picked asset metadata, asset detail, queue rows, filter inputs.
+// The side panel and detail tests mount tiles, rows and the detail dialog for real.
 
 const QUEUE = 'asset-page'
 const FILTER_INPUTS = [
@@ -108,13 +107,10 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
     extSystemConfig: useDamConfigStore(pinia).damConfigExtSystem.get(extSystem)!,
   })
   interface MountOptions {
-    /** The page hands the list its upload configuration (admin-ugc does, for its asset page). */
     upload?: boolean
     props?: Record<string, unknown>
     slots?: Record<string, (props: never) => unknown>
-    /** Mounted for real, of what a stand-in names otherwise. */
     real?: string[]
-    /** Named by a stand-in as well: what the parts mounted for real would draw. */
     standIns?: string[]
   }
   const mountList = async ({ upload = true, props = {}, slots = {}, real = [], standIns = [] }: MountOptions = {}) => {
@@ -124,7 +120,6 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
         assetType: DamAssetType.Image,
         queueKey: QUEUE,
         selectConfigs: [uploadConfig()],
-        // admin-ugc has no user of the DAM, and says so; admin-cms has one.
         skipCurrentUserCheck: !isCms,
         ...props,
       },
@@ -150,7 +145,6 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
     })
     await flushPromises()
   }
-  /** The list has asked for its assets and has its answer. */
   const listed = async (times = 1) => {
     await vi.waitFor(() => expect(listRequests()).toHaveLength(times))
     await vi.waitFor(() => expect(useAssetSelectStore(pinia).loader).toBe(false))
@@ -176,8 +170,8 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
       expect(useAssetSelectStore(pinia).selectedLicenceId).toBe(licence)
     })
 
-    // admin-ugc has no user of the DAM: its pages say so with `skip-current-user-check`. Left out, the list is
-    // for nobody.
+    // admin-ugc has no DAM user, so its pages pass
+    // `skip-current-user-check`. Without it the list is empty for everyone.
     it('are asked for only by a user of the DAM the licence is allowed to, unless the page says to skip the check', async () => {
       await mountList({ props: { skipCurrentUserCheck: false } })
       await waits.settle(400)
@@ -217,7 +211,6 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
         'image/gif': 20971520,
         'image/avif': 20971520,
       })
-      // The page's own activator is in place of the button of the list.
       expect(wrapper!.findAll('button').map((button) => button.text())).not.toContain(uiText('common.button.upload'))
 
       handed!.onFileInput([photo('a.jpg'), photo('b.jpg')])
@@ -244,7 +237,7 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
       await listed()
 
       expect(wrapper!.findAll('button').map((button) => button.text())).toContain(uiText('common.button.upload'))
-      // The list has several roots: its file input is beside the first of them.
+      // The list has several root elements, so its file input is next to the first of them.
       const input = (wrapper!.element as Element).parentElement!.querySelector<HTMLInputElement>('input[type="file"]')!
       expect(input.accept).toBe('image/jpeg,image/png,image/webp,image/gif,image/avif')
       const dataTransfer = new DataTransfer()
@@ -277,7 +270,6 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
       expect(queueDialog()).toBeNull()
     })
 
-    // A list a page shows without an upload configuration (the picker inside a widget has its own upload).
     it('is not offered, and no queue dialog is drawn, when the page hands the list no upload configuration', async () => {
       if (isCms) signInToDam(extSystem)
       let slotDrawn = false
@@ -295,7 +287,6 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
       expect(slotDrawn).toBe(false)
       expect(wrapper!.findAll('button').map((button) => button.text())).not.toContain(uiText('common.button.upload'))
 
-      // Also when a queue of that key has its dialog open elsewhere.
       useUploadQueueDialog().uploadQueueDialog.value = QUEUE
       await flushPromises()
       expect(wrapper!.findComponent(UploadQueueDialog).exists()).toBe(false)
@@ -339,10 +330,11 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
     })
   })
 
-  // The page has an entry of its own to the queue, which the list hands it through the slot: the asset page of
-  // admin-ugc draws its button with it, and a dropzone over the whole window, which lies above the queue dialog.
-  // A file handed over that way while the dialog saved was queued, began to upload, and went with the queue when
-  // "save and apply" ended, its asset left in the DAM. The list takes none for as long as the dialog saves.
+  // The page can have its own entry to the queue, handed over through the slot.
+  // The admin-ugc asset page draws a button and a window-wide dropzone that lies above the queue dialog.
+  // A file handed over while the dialog saved was queued, began uploading, and
+  // left with the queue when "save and apply" ended, leaving its asset in the DAM.
+  // The list therefore takes no files while the dialog saves.
   describe('a file the page hands over while the queue dialog saves', () => {
     const { Processing, Uploaded } = UploadQueueItemStatus
     const rows = () => queue().getQueueItems(QUEUE)
@@ -353,7 +345,6 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
       Array.from(queueDialog()!.querySelectorAll<HTMLButtonElement>('.v-toolbar button')).find((button) =>
         button.querySelector('.mdi-content-save')
       )!
-    /** The last file queued is uploaded, and the server has processed it. */
     const uploaded = async () => {
       const last = () => rows().at(-1)
       await vi.waitFor(() => expect(last()?.status).toBe(Processing))
@@ -364,7 +355,6 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
       await vi.waitFor(() => expect(last()!.status).toBe(Uploaded))
       await flushPromises()
     }
-    /** The list on a page with an entry of its own, one file uploaded through it. Returns that entry. */
     const oneUploaded = async () => {
       if (isCms) signInToDam(extSystem)
       let handed: { onFileInput: (files: File[]) => void }
@@ -394,7 +384,6 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
       expect(titles()).toEqual(['a.jpg'])
       expect(uploadsStarted()).toBe(1)
 
-      // The save ends as before: the dialog closes, the queue is emptied, and nothing of the late file is left.
       held.release()
       await listed(2)
       await flushPromises()
@@ -424,8 +413,9 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
       }
     )
 
-    // The close button empties the queue and takes the dialog away, also in the middle of a save. What the dialog
-    // told of its save goes with it: that save may end only after the next dialog has begun a save of its own.
+    // The close button empties the queue and removes the dialog, also during a save.
+    // The save result of the closed dialog must be dropped, because
+    // it can end after the next dialog has started its own save.
     it('is queued again once the dialog was closed in the middle of its save, whose end changes nothing', async () => {
       const handOver = await oneUploaded()
       const held = dam.hold('PATCH', dam.routes.bulkMetadata)
@@ -442,7 +432,6 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
       await uploaded()
       expect(titles()).toEqual(['next.jpg'])
 
-      // The dialog of the next file saves, and the save of the closed one ends meanwhile.
       save().click()
       await vi.waitFor(() => expect(held.waiting).toHaveLength(2))
       saveOfTheClosedDialog!.release()
@@ -456,7 +445,6 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
       await vi.waitFor(() => expect(saving()).toBeNull())
     })
 
-    // The dialog of another widget on the page, over a queue of its own, holds this list back from nothing.
     it('is queued while the dialog of another queue saves', async () => {
       const handOver = await oneUploaded()
 
@@ -467,12 +455,11 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
     })
   })
 
-  // The side panel of the list shows the asset picked by a click, and the detail of an asset shows the asset of the
-  // same store, one for the page. When a detail closes the list reads the asset of its side panel again. Since a
-  // detail of a row of the queue closes by itself when its asset cannot be read, that read can still be on its way
-  // when "edit asset" of the row is pressed again: written whenever it answered, the asset of the side panel was what
-  // the detail of the row showed, and what its save wrote into. The asset page of admin-ugc is where the list has
-  // an upload.
+  // The side panel shows the asset picked by a click, and the asset detail uses the same page-wide store.
+  // A closing detail makes the list re-read the panel asset.
+  // A queue row detail closes by itself when its asset cannot be read, so
+  // that re-read can still be pending when "edit asset" is pressed again.
+  // Written whenever it answered, the panel asset replaced the row asset in the detail, and the row save wrote into it.
   if (!isCms) {
     describe('the asset of its side panel, read again when a detail has closed', () => {
       const { Processing, Uploaded } = UploadQueueItemStatus
@@ -489,7 +476,6 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
         Array.from(queueDialog()!.querySelectorAll<HTMLButtonElement>('.dam-upload-queue__item button')).find(
           (button) => button.textContent?.trim() === damText('image.button.editAsset')
         )!
-      /** The tiles, the rows of the queue and the dialog of the detail are the real ones. */
       const WITH_TILES_AND_DETAIL = {
         real: ['AssetSelectListTiles', 'AssetDetailDialog', 'UploadQueueEditable'],
         standIns: [
@@ -510,7 +496,6 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
         )
       const panelLoads = () => !!panel()?.querySelector('.v-progress-circular')
       const panelShowsAnAsset = () => wrapper!.findComponent({ name: 'AssetMetadata' }).exists()
-      /** The list has two assets, neither picked yet; its side panel is open. `slots`: those of the page, if any. */
       const mountWithTwoAssets = async (slots: MountOptions['slots'] = {}) => {
         dam.assets.set('asset-50', picked('First in the list'))
         dam.assets.set(
@@ -535,7 +520,6 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
 
       afterEach(() => useSidebar().closeSidebarRight())
 
-      /** The list has one asset, which the user picks by a click: its side panel shows it. Returns the page's entry. */
       const mountWithPickedAsset = async () => {
         dam.assets.set('asset-50', picked('Picked in the list'))
         dam.reply((request) =>
@@ -560,7 +544,6 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
         expect(readsOf('asset-50')).toBe(1)
         return (name: string) => handed.onFileInput([photo(name)])
       }
-      /** A file is uploaded through the page's entry: its row of the queue is `asset-1`, with its form. */
       const oneUploaded = async (handOver: (name: string) => void) => {
         handOver('a.jpg')
         const row = () => queue().getQueueItems(QUEUE)[0]
@@ -574,17 +557,14 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
         await flushPromises()
       }
 
-      // The path that did not change: one read of the picked asset, and the side panel shows what it answers with.
       it('shows the picked asset as it is by then, once the detail opened from the side panel is closed by its button', async () => {
         await mountWithPickedAsset()
-        // The side panel is a column of a wide window, and a dialog of a narrow one, which its button opens.
         useSidebar().openSidebarRight()
         await flushPromises()
 
         wrapper!.findComponent({ name: 'AssetMetadata' }).vm.$emit('editInDam')
         await flushPromises()
         expect([detail().dialog, detail().asset?.id]).toEqual([QUEUE, 'asset-50'])
-        // As a save of the detail leaves it in the DAM.
         dam.assets.set('asset-50', picked('Saved in the detail'))
         const before = dam.requests.length
 
@@ -611,7 +591,6 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
           )
           const panel = dam.hold('GET', readOf('asset-50'))
 
-          // The asset of the row cannot be read: its detail closes by itself, and the list reads its side panel again.
           editAssetOfRow().click()
           await vi.waitFor(() => expect(shownAlerts()).toHaveLength(1))
           await vi.waitFor(() => expect(panel.waiting).toHaveLength(1))
@@ -639,7 +618,6 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
           expect([detail().dialog, detail().asset?.id, detail().loading]).toEqual([QUEUE, 'asset-1', false])
           expect(shownAlerts()).toHaveLength(1)
 
-          // Closed by its button, the detail has the list read its side panel again: it shows the picked asset.
           closeDetail()
           await vi.waitFor(() => expect(panel.waiting).toHaveLength(1))
           panel.release()
@@ -648,9 +626,11 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
         }
       )
 
-      // That read and the read of a click on a tile each wrote when it answered, and each turned the loading of the
-      // side panel off. After the detail of one asset was closed and another tile clicked at once, the panel showed
-      // the asset of the detail beside the other tile when its answer came last, and stopped loading at the first.
+      // The re-read after a close and the read of a tile click each
+      // wrote on answer and each turned the panel loading off.
+      // After closing one asset detail and clicking another tile at once, the panel
+      // showed the detail asset beside the other tile if its answer came last,
+      // and stopped loading at the first answer.
       it.each<[string, boolean]>([
         ['first', true],
         ['last', false],
@@ -676,7 +656,6 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
           if (closedFirst) {
             afterClose.release()
             await waits.settle()
-            // Not the read asked for last: nothing of it is shown, and the panel goes on loading.
             expect([detail().asset, panelLoads(), panelShowsAnAsset()]).toEqual([null, true, false])
             afterClick.release()
           } else {
@@ -700,9 +679,9 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
         }
       )
 
-      // The list empties its selection and the store of the detail when it goes away, and the read of a click may
-      // still be on its way: its answer was written into the store all the same, and the panel of the next list went
-      // on loading until it came.
+      // The list empties its selection and the detail store when
+      // it goes away, but a tile click read may still be pending.
+      // Its answer was written into the store anyway, and the panel of the next list kept loading until it came.
       it('gives up the read of a click when the list goes away: mounted again, its side panel loads nothing and shows no asset', async () => {
         await mountWithTwoAssets()
         const held = dam.hold('GET', readOf('asset-50'))
@@ -722,9 +701,9 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
         expect(shownAlerts()).toEqual([])
       })
 
-      // The store of the detail is the page's. The list that went away with the detail of its side panel open left its
-      // key there, and the list mounted next (the user is back on the page) drew that detail at once, with no asset
-      // in it and nothing to close it by.
+      // The detail store is shared by the page. A list that went
+      // away with its side panel detail open left its key there.
+      // The next list (user back on the page) drew that detail at once, with no asset and no way to close it.
       it('closes the detail of its side panel when it goes away: mounted again, it draws none', async () => {
         await mountWithTwoAssets()
         await tiles()[0]!.trigger('click')
@@ -742,8 +721,8 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
         expect(wrapper!.findComponent({ name: 'AssetDetailDialogFrame' }).exists()).toBe(false)
       })
 
-      // The read after the close said its failure whenever it came, also once a tile clicked since had asked for
-      // another asset: an error beside the asset that was read.
+      // The read after the close reported its failure whenever it came,
+      // also after a tile clicked since had asked for another asset, which showed an error next to the wrong asset.
       it('says nothing of the read after the close that failed, once a tile clicked since has asked for another asset', async () => {
         await mountWithTwoAssets()
         await tiles()[0]!.trigger('click')
@@ -787,10 +766,11 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
         expect([detail().asset, panelLoads(), panelShowsAnAsset()]).toEqual([null, false, false])
       })
 
-      // The list remembered the place of its active tile, not the asset: read anew (a search, another order, an
-      // upload applied), it marked no tile, and the tile that had come to the remembered place could not be made the
-      // active one by a click, though the side panel showed its asset. "Edit" of the side panel and the close of the
-      // detail then left the panel empty: the read after the close goes by the active tile, and there was none.
+      // The list remembered the place of its active tile, not the asset.
+      // Read anew (search, order, applied upload), it marked no tile, and the tile now at
+      // that place could not become active by a click, though the panel showed its asset.
+      // "Edit" and closing the detail then left the panel empty,
+      // because the read after the close goes by the active tile.
       describe('and the tile of that asset, once the list has been read anew', () => {
         const ACTIVE = 'asset-list-tiles__item--active'
         const inTheList = (id: string) =>
@@ -798,7 +778,6 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
             licence,
             texts: { displayTitle: `Title of ${id}` },
           })
-        /** The list answers each of its next reads with the next of these, in order. */
         const nextListsAre = (...lists: string[][]) =>
           dam.reply((request) => {
             if (!isListRequest(request)) return undefined
@@ -807,13 +786,11 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
               ? { status: 200, data: { data: next.map((id) => dam.assets.get(id) ?? inTheList(id)), totalCount: 3 } }
               : undefined
           })
-        /** The assets of the tiles, and which of the tiles is drawn as the active one. */
         const tilesDrawn = () =>
           tiles().map((tile) => [tile.find('[data-cy="asset-tile-title"]').text(), tile.classes(ACTIVE)])
         const first = ['First in the list', false]
         const second = ['Second in the list', false]
         const active = ([title]: Array<string | boolean>) => [title, true]
-        /** The user picks another order in the bar of the list, and the list has its answer. */
         const sortAnew = async () => {
           const listedBefore = listRequests().length
           wrapper!.findComponent({ name: 'AssetSelectListBar' }).vm.$emit('sortByChange', {
@@ -824,7 +801,6 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
           await listed(listedBefore + 1)
           await flushPromises()
         }
-        /** The user submits the filter of the list, and the list has its answer. */
         const searchAnew = async () => {
           const listedBefore = listRequests().length
           wrapper!.findComponent({ name: 'AFilterWrapper' }).vm.$emit('submit')
@@ -840,7 +816,6 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
           await listed(listedBefore + 1)
           await flushPromises()
         }
-        /** The list of two assets, the tile of the first clicked: the side panel shows `asset-50`. */
         const firstTileClicked = async () => {
           await mountWithTwoAssets()
           await tiles()[0]!.trigger('click')
@@ -886,7 +861,6 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
           wrapper!.findComponent({ name: 'AssetMetadata' }).vm.$emit('editInDam')
           await flushPromises()
           expect([detail().dialog, detail().asset?.id]).toEqual([QUEUE, 'asset-50'])
-          // As a save of the detail leaves it in the DAM.
           dam.assets.set('asset-50', picked('Saved in the detail'))
 
           closeDetail()
@@ -899,7 +873,6 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
           expect(shownAlerts()).toEqual([])
         })
 
-        // The side panel goes on showing the asset, as it did; no tile is that asset's, so none is the active one.
         it('is not there when the list no longer has its asset: no tile is the active one, and the one clicked next is', async () => {
           await firstTileClicked()
           nextListsAre(['asset-51'])
@@ -926,13 +899,11 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
           expect(tilesDrawn()).toEqual([second, active(first), ['Title of asset-52', false]])
           expect(detail().asset?.id).toBe('asset-50')
 
-          // It is the active one at the place it has in the whole list: a click elsewhere takes the mark from there.
           await tiles()[0]!.trigger('click')
           await vi.waitFor(() => expect(detail().asset?.id).toBe('asset-51'))
           expect(tilesDrawn()).toEqual([active(second), first, ['Title of asset-52', false]])
         })
 
-        // A further page is no place to look for the asset of a tile that is active already.
         it('stays where it is when a further page of the list is added below it', async () => {
           await firstTileClicked()
           nextListsAre(['asset-52'])
@@ -942,7 +913,6 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
           expect(tilesDrawn()).toEqual([active(first), second, ['Title of asset-52', false]])
         })
 
-        // The side panel goes on showing the asset a list no longer has, and its tile is found by it again.
         it('is the active one again when a list read later brings its asset back, the side panel having shown it all along', async () => {
           await firstTileClicked()
           nextListsAre(['asset-51'], ['asset-51', 'asset-50'])
@@ -970,9 +940,10 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
           expect(panelShowsAnAsset()).toBe(true)
         })
 
-        // Over a list without the asset, "edit" of the panel and the close of the detail used to leave the panel
-        // empty: the list read by its active tile, and had none. It reads the asset it finds that tile by, so the
-        // panel shows the asset again, and a list that brings it back marks its tile beside it.
+        // Over a list without the asset, "edit" of the panel and closing the detail used
+        // to leave the panel empty, because the list read by its active tile and had none.
+        // It now reads the asset by which the tile is found, so the panel
+        // shows the asset again and a list that brings it back marks its tile.
         it.each<[string, string[], () => Promise<void>]>([
           ['a list read later', ['asset-51', 'asset-50'], sortAnew],
           ['a further page', ['asset-50'], loadMore],
@@ -1001,12 +972,11 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
           }
         )
 
-        // A detail that closes over a list without the asset while a read for the side panel, begun before, is still
-        // on its way: the close has the asset read again, and that read is the one asked for last. Whatever the reads
-        // answer, the panel and a list read later agree: both show the asset, or neither does.
+        // A detail closes over a list without the asset while an earlier read for the side panel is still pending.
+        // The close reads the asset again, and that read is the latest one.
+        // Whatever the reads answer, the panel and a later list agree: both show the asset or neither does.
         describe('while a read for the side panel is still on its way when that detail closes', () => {
           let handed: { onFileInput: (files: File[]) => void }
-          /** The list of two assets on a page with an upload entry of its own. */
           const mountOnAPageWithUpload = () =>
             mountWithTwoAssets({
               'upload-activator': (slotProps: never) => {
@@ -1014,10 +984,6 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
                 return h('button')
               },
             })
-          /**
-           * A list read anew that no longer has the first asset; then an upload, and the detail of its row of the queue
-           * opened and closed. A list read after that has the first asset again.
-           */
           const listWithoutItThenADetailOfTheQueueClosed = async () => {
             nextListsAre(['asset-51'], ['asset-51', 'asset-50'])
             await sortAnew()
@@ -1056,8 +1022,8 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
             expect(shownAlerts()).toHaveLength(shown ? 0 : 1)
           })
 
-          // That read is not taken once a detail has been opened since it began. The close of that detail has the
-          // asset read once more, and it is that answer the panel shows.
+          // The earlier read is ignored once a detail has been opened since it began.
+          // The close of that detail reads the asset again, and the panel shows that answer.
           it('the read after an earlier close, whose answer is not taken: the read after the later close shows the asset, and its tile is the active one in a list read later', async () => {
             await mountOnAPageWithUpload()
             await tiles()[0]!.trigger('click')
@@ -1088,8 +1054,9 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
           })
         })
 
-        // A tile whose read failed was marked beside a panel that does not show its asset, and found again in a list
-        // read later. The mark is that of the asset the panel shows: none here.
+        // A tile whose read failed was marked beside a panel that does
+        // not show its asset, and was found again in a later list.
+        // The mark must follow the asset the panel shows, which is none here.
         it('is not the active one, nor in a list read later, when the read of its click failed', async () => {
           await mountWithTwoAssets()
           dam.reply((request) =>
@@ -1107,10 +1074,9 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
           expect(tilesDrawn()).toEqual([second, first])
         })
 
-        // That limit ends with the tile: once a list no longer has the asset, the panel shows none and no tile is
-        // marked, as after a read that fails when the list has already lost the asset. Whether the asset was forgotten
-        // depended on which of the two came first, the failure or the list, and a list read later marked its tile
-        // beside the empty panel when the failure came first.
+        // The mark ends with the tile: once a list no longer has the asset, the panel shows none and no tile is marked.
+        // Whether the asset was forgotten depended on which came first, the failure or the list.
+        // When the failure came first, a later list marked its tile beside the empty panel.
         it.each<[string, boolean]>([
           ['the read of its click', false],
           ['the read after the close of a detail', true],
@@ -1134,7 +1100,6 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
             }
             await vi.waitFor(() => expect(shownAlerts()).toHaveLength(1))
             await flushPromises()
-            // Not marked once the read of the click failed; still marked after the read after a close that failed.
             expect(tilesDrawn()).toEqual([afterAClose ? active(first) : first, second])
             expect([detail().asset, panelLoads()]).toEqual([null, false])
             nextListsAre(['asset-51'], ['asset-51', 'asset-50'])
@@ -1153,7 +1118,6 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
   }
 
   describe('its filter', () => {
-    // admin-ugc names the two filters its users get; admin-cms names none and gets them all.
     it('has the inputs the application asks for: all of them, or the ones it names', async () => {
       if (isCms) signInToDam(extSystem)
       await mountList()

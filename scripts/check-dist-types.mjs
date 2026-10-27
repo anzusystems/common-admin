@@ -1,7 +1,7 @@
-// Type-checks the published declarations the way a consumer without `skipLibCheck` would, and fails on
-// any error inside dist/. Errors in dependencies' own declarations (Vuetify, vueuse) are not ours and
-// are only counted. The rolled-up declarations this replaced had 80 errors nobody saw, because every
-// admin sets `skipLibCheck` -- and each one turned a slot prop into `any`.
+// Type-checks the published declarations as a consumer without
+// `skipLibCheck` would, and fails on any error inside dist/.
+// Errors in dependencies' own declarations (Vuetify, vueuse) are only counted.
+// Every admin sets `skipLibCheck`, so such errors go unseen. Each one can turn a slot prop into `any`.
 // Usage: node scripts/check-dist-types.mjs [distDir]   (after `yarn build`)
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'

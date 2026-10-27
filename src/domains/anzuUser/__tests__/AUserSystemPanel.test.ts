@@ -9,9 +9,9 @@ import {
   type AnyUserSystemDescriptor,
 } from '@/domains/anzuUser/composables/userSystemDescriptor'
 
-// The panel is a cross-system surface: no current user is loaded for that backend, so `can()` would
-// throw and `<Acl>` would silently render nothing. Every button here is decided by the probe's
-// answer, which is why the answer has to be classified exactly.
+// The panel is a cross-system surface. No current user is loaded for
+// that backend, so `can()` would throw and `<Acl>` would render nothing.
+// Every button is decided by the probe's answer, so the answer has to be classified exactly.
 
 const record = (over: Record<string, unknown> = {}) => ({
   id: 42,
@@ -100,8 +100,8 @@ describe('AUserSystemPanel', () => {
     expect(absent.find('[data-cy="user-system-create"]').exists()).toBe(true)
     absent.unmount()
 
-    // 403 is "you cannot read this", not "nobody is here" -- and an AnzuUser cannot be deleted, so
-    // a duplicate identity created on that guess could never be taken back.
+    // 403 means "you cannot read this", not "nobody is here".
+    // An AnzuUser cannot be deleted, so a duplicate identity created on that guess cannot be taken back.
     const forbidden = await mountPanel(vi.fn().mockRejectedValue(httpError(403)))
     expect(forbidden.find('[data-cy="user-system-create"]').exists()).toBe(false)
     expect(forbidden.find('[data-cy="user-system-state-forbidden"]').exists()).toBe(true)
@@ -112,8 +112,8 @@ describe('AUserSystemPanel', () => {
   })
 
   it('never offers Create on a viewing page', async () => {
-    // A write action on a read-only screen would be the first in the fleet. Manage stays: it only
-    // leads somewhere.
+    // A write action on a read-only screen would be the first in the fleet.
+    // Manage stays because it only leads somewhere.
     const wrapper = await mountPanel(vi.fn().mockRejectedValue(httpError(404)), { readonly: true })
 
     expect(wrapper.find('[data-cy="user-system-create"]').exists()).toBe(false)

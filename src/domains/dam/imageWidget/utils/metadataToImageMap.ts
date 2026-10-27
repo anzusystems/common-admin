@@ -82,7 +82,7 @@ export async function mapUploadMetadataToImages(
         {
           fileId: queueItem.fileId as DocId,
           licenceId,
-          // Of an asset the save did not answer for: as its row has it, from the read of the asset.
+          // For an asset not in the save answer, use its row value from the asset read.
           internal: (assetMetadataMap.get(queueItem.assetId!) ?? queueItem).mainFileInternal,
         },
         { description: description ?? '', source: authorNames.join(', ') }

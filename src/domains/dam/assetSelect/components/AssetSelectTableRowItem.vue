@@ -94,7 +94,7 @@ const onItemClick = () => {
 </template>
 
 <style lang="scss">
-// The row of the asset the side panel shows, framed as the active tile is.
+// Row of the asset shown in the side panel, outlined like the active tile.
 .asset-list-table__item--active {
   outline: 1px solid blue;
   outline-offset: -1px;

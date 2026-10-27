@@ -41,50 +41,38 @@ import {
 import { uploadSettlementRuntime } from '@/domains/dam/uploadQueue/settlement/uploadSettlementRuntime'
 import type { UploadSettlementProfile } from '@/domains/dam/uploadQueue/settlement/uploadSettlementTypes'
 
-// The core of an upload queue under each of its two sets, as each store hands it in. The library's runs every row
-// by the library's upload, so its runs send to a fake DAM that records them and holds every chunk until the test
-// lets it go. admin-dam's store hands in its own runs; here they are runs the test drives. The settlement of both
-// asks the readers of its profile, a fake server, and its time is the manual scheduler's. Ids are taken from the
-// rows, never from the order the runs started in.
+// Tests the core under each store's set of runs.
+// The library's runs upload to a fake DAM that holds every chunk until
+// the test releases it. admin-dam's runs are driven by the test.
+// Time is the manual scheduler's. Ids are taken from the rows, never from the order the runs started in.
 
 const S = 1000
 const QUEUE = 'queue'
 const OTHER = 'other'
 const { Waiting, Uploading, Processing, Uploaded, Failed, Stop } = UploadQueueItemStatus
 
-/** How a run fails: before its finish request went out, or after; then answered with an error, or refused (4xx). */
+/**
+ * How a run fails: before or after its finish request went out, or the finish is refused (4xx).
+ */
 type Failure = 'beforeFinish' | 'afterFinish' | 'finishRefused'
 
-/** The run of one row, as the test drives it. */
 interface Run {
-  /** The file is all sent and its finish answered. */
   succeed(): Promise<void>
-  /** The run fails; admin-dam's store makes `text` of what it failed with. */
   fail(how: Failure, text?: string): Promise<void>
-  /** The run was told to stop. */
   stopped(): boolean
-  /** The request of the chunk on its way was cancelled. */
   cancelled(): boolean
-  /** admin-dam: the run reports how far it is, as the service reports it to the callback it was handed. */
   report(progress: number, speed: number, estimate: number): void
 }
 
-/** A store with the core of one side. */
 interface Side {
   core: UploadQueueCore
-  /** A row of a file, added as the store adds it: keyed by the core, made, and handed to `addRow`. */
   add(queueKey: UploadQueueKey, type?: UploadQueueItemTypeType): UploadQueueItem
-  /** The run of a row, once it has started. */
   run(row: UploadQueueItem): Promise<Run>
-  /** admin-dam's store: what its hooks were told, `queue/key` each, and the alerts it showed. */
   tracked: string[]
   removed: string[]
   alerts: Array<{ text: string; row: { status: string; message: string } }>
-  /** admin-dam's store: what it was asked the text of, and how the failed row was then. */
   asked: Array<{ text: string; row: { status: string; message: string; hasError: boolean } }>
-  /** admin-dam's store: which runner each row was given, `upload/key` or `import/key`. */
   runners: string[]
-  /** What the settlement told the hook of the profile of a refresh: `+key` when one may help, `-key` when not. */
   refreshTold: string[]
   end(): void
 }
@@ -94,12 +82,13 @@ let server: FakeDamServer
 let scope: EffectScope
 const realScheduler = uploadSettlementRuntime.scheduler
 
-/** What the code under test does after an answer: a few turns of the event loop, the time standing. */
 const settled = async () => {
   for (let turn = 0; turn < 5; turn++) await clock.settle()
 }
 
-/** The profile of a store, without its queues: the core hands the settlement its own. */
+/**
+ * The profile of a store without its queues: the core hands the settlement its own.
+ */
 const coreProfile = (profile: UploadSettlementProfile): UploadQueueSettlementProfile => {
   const own: Partial<UploadSettlementProfile> = { ...profile }
   delete own.queues
@@ -112,7 +101,6 @@ const fileRow = (key: string, type: UploadQueueItemTypeType, licence: number) =>
   return item
 }
 
-/** The library's store: its rows sent by the library's upload to a DAM whose chunks wait for the test. */
 function librarySide(): Side {
   const dam = createFakeDam(cmsConfiguration.endPoints)
   installConsumerProfile(cmsConfiguration, dam.client)
@@ -151,11 +139,12 @@ function librarySide(): Side {
           await settled()
         },
         fail: async (how) => {
-          // A run that was stopped has failed by itself: its chunk was cancelled.
+          // A stopped run fails by itself because its chunk was cancelled.
           if (!signal.aborted) {
             if (how === 'beforeFinish') {
-              // Every try of the chunk is answered with an error that is no refusal: the upload gives up before its
-              // finish request. The pauses between the tries are let pass at once.
+              // Every try of the chunk gets an error that is not a
+              // refusal, so the upload gives up before its finish request.
+              // The pauses between tries pass at once.
               const pauses = holdLongWaits(10_000, { passFrom: 1_000 })
               try {
                 for (let attempt = 1; attempt <= 4; attempt++) {
@@ -198,12 +187,10 @@ interface DrivenRun {
   onProgress?: UploadProgressCallback
 }
 
-/** admin-dam's store: its runs are the test's, and it records what its hooks are told. */
 function adminDamSide(): Side {
   const queues = ref<Record<UploadQueueKey, UploadQueue>>({})
   const runs = new Map<UploadQueueItem, DrivenRun>()
   let started = 0
-  /** The row whose run failed last: the store's text and alert are about it. */
   let failing: UploadQueueItem | null = null
   const side = {
     tracked: [] as string[],
@@ -221,7 +208,6 @@ function adminDamSide(): Side {
     runs.set(toRaw(item), run)
     return { run, done }
   }
-  // As the service: the row is being sent from its start on, and the start gives it its asset and its file.
   const begin = (item: UploadQueueItem) => {
     item.status = Uploading
     started++
@@ -280,7 +266,6 @@ function adminDamSide(): Side {
       const run = runs.get(toRaw(row))!
       return {
         succeed: async () => {
-          // As the answer to the finish request: a row still being sent waits for the server from then on.
           if (row.status === Uploading) row.status = Processing
           run.resolve()
           await settled()
@@ -331,11 +316,8 @@ describe.each([
   })
 
   const statuses = (rows: UploadQueueItem[]) => rows.map((row) => row.status)
-  /** How many times the settlement asked the server about the asset of the row. */
   const asked = (row: UploadQueueItem) => server.requests.filter((request) => request.ids.includes(row.assetId!)).length
-  /** The time of the first tick of the poll. */
   const poll = () => clock.advance(5 * S)
-  /** The server reports the file of the row processed, and the settlement has written it. */
   const settleByServer = async (row: UploadQueueItem) => {
     server.fileBecomes(row.assetId!, AssetFileProcessStatus.Processed, {}, { licence: row.licenceId })
     const done = core.settlement.notify({ kind: 'processed', assetId: row.assetId!, fileId: row.fileId })
@@ -343,7 +325,6 @@ describe.each([
     await done
     expect(row.status).toBe(Uploaded)
   }
-  /** The server reports the file of the row failed. */
   const failByServer = async (row: UploadQueueItem) => {
     await core.settlement.notify({
       kind: 'failed',
@@ -369,7 +350,7 @@ describe.each([
       expect(statuses(others)).toEqual([Uploading, Uploading])
     })
 
-    // One count for the page: the core of another store gives no key this one has given.
+    // One count per page: the core of another store never gives a key this one has given.
     it('give each row a key of its own, from the prefix it is asked with, also beside another core', () => {
       const prefixes = ['file', 'file', 'asset']
       const keys = prefixes.map((prefix) => core.uniqueKey(prefix))
@@ -398,7 +379,7 @@ describe.each([
       expect(core.getQueueItems('nowhere')).toEqual([])
     })
 
-    // The key of a queue's file input makes the input new: a cleared queue is one on from whatever it was.
+    // The key of a queue's file input makes the input new, so a cleared queue is one key on.
     it('are made empty by clearing, also one that was not there, their file input one key on', () => {
       expect(core.getQueueFileInputKey('nowhere')).toBe(-1)
       core.clearQueue('nowhere')
@@ -415,7 +396,6 @@ describe.each([
 
   describe('a run', () => {
     if (library) {
-      // The library has no import: every row is sent by its upload, to its own address.
       it('sends every row by the upload of the library', async () => {
         const rows = [side.add(QUEUE), side.add(QUEUE, UploadQueueItemType.ExternalProviderAsset)]
 
@@ -452,7 +432,6 @@ describe.each([
       expect(side.tracked).toEqual(library ? [] : [`${QUEUE}/${row.key}`])
     })
 
-    // The settlement tells the core of a row it has settled, and the core counts the queue anew.
     it('counts a row the server settles once its file is sent', async () => {
       const row = side.add(QUEUE)
       await (await side.run(row)).succeed()
@@ -480,7 +459,6 @@ describe.each([
     it('marks a row failed, takes its form away, counts it and starts the next row', async () => {
       const rows = [side.add(QUEUE), side.add(QUEUE), side.add(QUEUE)]
       const run = await side.run(rows[0]!)
-      // Its metadata came while its file was being sent.
       rows[0]!.canEditMetadata = true
 
       await run.fail('beforeFinish')
@@ -491,7 +469,6 @@ describe.each([
     })
 
     if (library) {
-      // The library has no text of its own for a failed run: the row keeps what the upload wrote, and no alert.
       it('writes no text into a failed row', async () => {
         const row = side.add(QUEUE)
 
@@ -500,7 +477,6 @@ describe.each([
         expect(row.error).toMatchObject({ hasError: true, message: '' })
       })
     } else {
-      // The store's text is read before the core writes anything, and the alert is shown once the row is marked.
       it('asks the store for the text before it marks the row, and alerts after', async () => {
         const row = side.add(QUEUE)
 
@@ -531,7 +507,7 @@ describe.each([
       })
     }
 
-    // The server may complete the file of a run whose finish request went out, whatever became of the answer.
+    // The server may complete the file of a run whose finish request went out, whatever happened to the answer.
     it('has a row asked about whose run failed after its finish request went out; only the library offers a refresh', async () => {
       const row = side.add(QUEUE)
 
@@ -559,8 +535,9 @@ describe.each([
       expect(side.tracked).toEqual([])
     })
 
-    // The server has said its last word about that file (Z26): the run is stopped with its chunk, and whatever it
-    // fails with afterwards is not written over the reason of the server, nor told, nor is the row asked about.
+    // The server has said its last word about the file (Z26). The run is stopped with its chunk.
+    // What the run fails with afterwards is not written over the
+    // server's reason and not told, and the row is not asked about.
     it('stops the run of a row the server failed while its file was being sent, and leaves the row as the server left it', async () => {
       const rows = [side.add(QUEUE), side.add(QUEUE), side.add(QUEUE)]
       const run = await side.run(rows[0]!)
@@ -587,7 +564,6 @@ describe.each([
       expect(side.alerts).toEqual([])
     })
 
-    // A row the server fails after its file was sent has no run to stop.
     it('fails a row that waits for the server by the word of the server, with nothing to stop', async () => {
       const row = side.add(QUEUE)
       const run = await side.run(row)
@@ -662,8 +638,6 @@ describe.each([
       expect(core.getQueueItems(QUEUE)).toEqual([rows[0], rows[1]])
     })
 
-    // A failed row the server may still finish is asked about: taken out, the settlement lets it go, and says a
-    // refresh can no longer help it.
     it('by its position: a failed row the server may still finish is let go by the settlement', async () => {
       const row = side.add(QUEUE)
       await (await side.run(row)).fail('afterFinish')
@@ -698,7 +672,7 @@ describe.each([
       expect(core.getQueueItems(QUEUE)).toEqual([])
     })
 
-    // A row the server settled while its file was still being sent: its run is stopped all the same (Z17).
+    // The server settled the row while its file was still being sent. Its run is stopped all the same (Z17).
     it('by its position: a settled row whose run still sends is stopped with its run', async () => {
       const row = side.add(QUEUE)
       const run = await side.run(row)
@@ -721,7 +695,6 @@ describe.each([
       expect(core.getQueue('nowhere')).toBeNull()
     })
 
-    // A row of another queue: nothing takes it out of the queue named, and the settlement lets it go all the same.
     it('by itself: a row that is not in the queue named is stopped and let go by the settlement', async () => {
       side.add(QUEUE)
       const row = side.add(OTHER)
@@ -773,7 +746,6 @@ describe.each([
         [true, true],
       ])
       expect(core.getQueueItems(QUEUE)).toEqual([])
-      // Cleared, and the file input made new.
       expect(core.getQueueFileInputKey(QUEUE)).toBe(key + 2)
       expect(side.removed).toEqual(library ? [] : rows.map((row) => `${QUEUE}/${row.key}`))
     })
@@ -782,7 +754,6 @@ describe.each([
       const rows = [side.add(QUEUE), side.add(QUEUE), side.add(QUEUE)]
       await (await side.run(rows[1]!)).succeed()
       await settleByServer(rows[1]!)
-      // The third row starts in the place the second left, and the server settles it while its file is still sent.
       const stillSending = await side.run(rows[2]!)
       await settleByServer(rows[2]!)
       const run = await side.run(rows[0]!)
@@ -800,9 +771,9 @@ describe.each([
   })
 })
 
-// The set of a store makes the run of a row, and may not be able to: the library's reads the DAM configuration of
-// the queue, which the application may not have. Thrown past the core, that left the row waiting, started again
-// and throwing again with every row after it.
+// A store's set may be unable to make a run. The library's reads the
+// queue's DAM configuration, which the application may not have.
+// Thrown past the core, that left the row waiting, started again and throwing again with every row after it.
 describe('a row whose run cannot be made', () => {
   beforeEach(() => {
     setActivePinia(createPinia())

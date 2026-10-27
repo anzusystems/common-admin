@@ -1,16 +1,14 @@
 #!/usr/bin/env node
 /**
  * Compares the CSS of two builds of an admin, for a change that only reorders imports.
- *
  *   node scripts/codemods/explicit-imports/css-order.mjs /path/to/admin dist-before dist-after
- *
- * Scoped-style ids (`data-v-…`) hash the file content, so they differ; they are compared as one
- * placeholder. The stylesheets index.html links count as one sequence, the startup CSS, whichever
- * chunks hold them; every lazily loaded CSS file has to keep the same rules. Where two rules swapped places, the swap
- * is reported when it can decide the cascade: the same `@media`/`@layer` context, a property of
- * the same family (`margin` and `margin-top` count as one), an equal specificity and the same box (not
- * `::before` against `::after`, not `img` against `div`). Those are
- * listed for a review; the exit code is 1 when rules differ, 2 when swaps need a review.
+ * Scoped-style ids (`data-v-…`) hash the file content, so they are compared as one placeholder.
+ * The stylesheets linked from index.html count as one sequence, the startup CSS,
+ * whichever chunks hold them. Every lazily loaded CSS file has to keep the same rules.
+ * A swap of two rules is reported when it can decide the cascade: same `@media`/`@layer`
+ * context, same property family (`margin` and `margin-top` count as one), equal specificity
+ * and the same box (not `::before` against `::after`, not `img` against `div`).
+ * Exit code 1 when rules differ, 2 when swaps need a review.
  */
 import { readdirSync, readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'

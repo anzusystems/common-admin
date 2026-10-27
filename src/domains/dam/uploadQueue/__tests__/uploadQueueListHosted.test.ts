@@ -28,13 +28,12 @@ import { useUploadQueueItemFactory } from '@/domains/dam/uploadQueue/factory/Upl
 import type { UploadRefreshOutcome } from '@/domains/dam/uploadQueue/settlement/uploadSettlementTypes'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
 
-// The list of a queue and its mass operations over what their host binds (admin-dam's): its rows, its sidebar, its
-// refresh, its alerts. While a case says so, the library's store, its name caches, its plugin options and its alerts
-// fail when anything asks for them: a list with its own binding is to ask for none of them.
+// Hosted list and mass operations run over the host's binding (admin-dam's).
+// While a case arms `singletons`, the library's store, name caches, plugin options and alerts throw when used.
+// A list with its own binding must not use any of them.
 
 const { singletons, unless } = vi.hoisted(() => {
   const singletons = { armed: false }
-  /** The original, as long as no case has armed the singletons. */
   const unless = <T>(name: string, original: T): T =>
     ((...args: never[]) => {
       if (singletons.armed) throw new Error(`the library's ${name} was asked for`)
@@ -91,7 +90,6 @@ const row = (key: string, status: UploadQueueItemStatusType = UploadQueueItemSta
   return item as UploadQueueItem
 }
 
-/** The binding of a host: rows of its own, and a record of what the list asks of it. */
 const hostBinding = (rows: UploadQueueItem[], answer: UploadRefreshOutcome = 'settled') => {
   const asked: unknown[][] = []
   const items = ref(rows)
@@ -213,15 +211,14 @@ describe('the list of a queue with the binding of its host', () => {
   })
 })
 
-// A key typed into a field of a row moves its caret or its value: the list stays and the key is the browser's. So is
-// a key pressed in the open menu of a field, which moves through that menu, also in the dialog the list is in. Pressed
-// anywhere else, also on a switch or a button, which do nothing with these keys, in the dialog the list is in, and in
-// another overlay that is no menu, as a snackbar, they scroll the list as they always have.
+// Keys typed in a row field belong to the browser (caret or value moves), and the list does not scroll.
+// Keys in an open field menu move through that menu, also inside a dialog.
+// Elsewhere they scroll the list as before: on a switch, a button,
+// in a dialog, or in a non-menu overlay such as a snackbar.
 describe('the keys that scroll a list', () => {
   const KEYS = ['ArrowDown', 'ArrowUp', 'PageDown', 'PageUp', 'Home', 'End']
   const FROM = 600
 
-  /** One tall row with a field of each kind, inputs that leave these keys alone, and a text. */
   const rowWithFields = (more: VNode[] = []) =>
     h('div', { style: 'height: 3000px; width: 100%' }, [
       h('input', { class: 'field-input' }),
@@ -235,7 +232,6 @@ describe('the keys that scroll a list', () => {
       h('span', { class: 'no-field' }, 'text'),
       ...more,
     ])
-  /** The list in the document, 300 px high. */
   const heightOf300 = async () => {
     await vi.waitFor(() => expect(document.querySelector('.asset-queue-editable .overflow-y-auto')).not.toBeNull())
     const container = document.querySelector<HTMLElement>('.asset-queue-editable .overflow-y-auto')!
@@ -247,7 +243,6 @@ describe('the keys that scroll a list', () => {
     await mountList({ queue: binding }, { item: () => rowWithFields(more), sidebar: () => h('div') })
     return heightOf300()
   }
-  /** The same list in a dialog, as the queue dialogs of admin-cms and admin-ugc have it. */
   const mountInDialog = async (more: VNode[] = []) => {
     const { binding } = hostBinding([row('a')])
     const list = () =>
@@ -268,13 +263,11 @@ describe('the keys that scroll a list', () => {
     h(VMenu, { modelValue: true, activator: 'parent' }, () =>
       h(VList, () => [h(VListItem, { class: 'menu-item', title: 'one', link: true })])
     )
-  /** The keys pressed on the item of the open menu, and where the list was after each. */
   const pressedInMenu = async (container: HTMLElement) => {
     await vi.waitFor(() => expect(document.querySelector('.v-menu .menu-item')).not.toBeNull())
-    // Whether a key is the browser's is the menu's to say: its list takes the arrows, Home and End itself.
+    // The menu decides whether a key is the browser's: its list handles the arrows, Home and End itself.
     return pressAll(container, '.v-menu .menu-item').map(([key, , scrolled]) => [key, scrolled])
   }
-  /** Each key pressed on what the selector finds in the document, with the list scrolled to `FROM` before it. */
   const pressAll = (container: HTMLElement, target: string) =>
     KEYS.map((key) => {
       container.scrollTop = FROM
@@ -344,8 +337,6 @@ describe('the keys that scroll a list', () => {
   })
 })
 
-// ZK6: a row no longer in the list is not asked about at all, and one taken out while it was asked about is not
-// told to try again.
 describe('the refresh of a row of a bound list', () => {
   it('does not ask about a row that is no longer in the list', async () => {
     const { binding, asked } = hostBinding([row('a')], 'error')
@@ -405,7 +396,6 @@ describe('the mass operations of a queue with the binding of its host', () => {
   const typePanelTitles = () => panelTitles().filter((title) => title !== damText('asset.massOperations.general'))
   const button = (text: string) => wrapper!.findAll('button').find((one) => one.text() === damText(text))!
 
-  // ZK7: a panel of each asset type in the queue, as admin-dam has them.
   it('have a panel of the custom fields of each asset type the host has rows of', async () => {
     await mountSidebar(
       hostOperations([DamAssetType.Image, DamAssetType.Video, DamAssetType.Audio, DamAssetType.Document]).operations
@@ -436,7 +426,6 @@ describe('the mass operations of a queue with the binding of its host', () => {
     wrapper!.findComponent(KeywordRemoteAutocompleteWithCached).vm.$emit('update:modelValue', ['keyword-1'])
     await flushPromises()
 
-    // The buttons beside one field, then the two under all of them.
     form.vm.$emit('fillEmptyField', { assetType: DamAssetType.Image, elementProperty: 'title', value: 'typed' })
     form.vm.$emit('replaceField', { assetType: DamAssetType.Image, elementProperty: 'title', value: 'typed' })
     await button('asset.massOperations.fillAllEmpty').trigger('click')
@@ -454,16 +443,13 @@ describe('the mass operations of a queue with the binding of its host', () => {
     ])
   })
 
-  // The panels of the other types (ZK7) fill and replace the custom fields of their own type.
   it.each([DamAssetType.Video, DamAssetType.Audio, DamAssetType.Document])(
     'fill and replace a custom field of %s through the host, under its own type',
     async (type) => {
       const { operations, asked } = hostOperations([type])
       await mountSidebar(operations)
-      // ZK7: the only panel of a type is the one of the type in the queue.
       expect(typePanelTitles()).toEqual([damText(`asset.assetType.${type}`)])
       const form = wrapper!.findComponent(AssetCustomMetadataFormMassOperations)
-      // The buttons beside one field send the type the form is given.
       expect(form.props('assetType')).toBe(type)
       form.vm.$emit('update:modelValue', { title: 'typed' })
       await flushPromises()
@@ -482,14 +468,12 @@ describe('the mass operations of a queue with the binding of its host', () => {
     }
   )
 
-  // ZK8: "clear" clears the picked keywords and authors also while their inputs are not there.
   it('clear the picked keywords also while no row has keywords on, so they are gone once one has', async () => {
     const { operations, assetTypes } = hostOperations([DamAssetType.Image])
     await mountSidebar(operations)
     wrapper!.findComponent(KeywordRemoteAutocompleteWithCached).vm.$emit('update:modelValue', ['keyword-1'])
     await flushPromises()
 
-    // No asset type of the queue has keywords on: the input is gone.
     assetTypes.value = [DamAssetType.Document]
     await flushPromises()
     expect(wrapper!.findComponent(KeywordRemoteAutocompleteWithCached).exists()).toBe(false)
@@ -501,8 +485,6 @@ describe('the mass operations of a queue with the binding of its host', () => {
   })
 })
 
-// Without a binding of their host the list and its mass operations follow a change of their queue key: the rows, their
-// removal, the panels and the fills. A cancel goes to the queue in the row's event, as before step 5.
 describe('the list and the mass operations of the library, without a binding', () => {
   const queued = (queueKey: string, rows: UploadQueueItem[]) => {
     const store = useUploadQueuesStore(pinia)

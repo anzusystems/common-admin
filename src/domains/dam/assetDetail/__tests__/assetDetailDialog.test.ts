@@ -45,14 +45,13 @@ import { UploadQueueItemStatus } from '@/domains/dam/types/UploadQueue'
 import type { DamUser } from '@/domains/dam/user/types/DamUser'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
 
-// The detail of an asset a widget opens, under each of the two applications: its heading, its close button, its
-// sidebar toggle, what is on its left (the picture of the asset or the editor of the region of interest, and who may
-// edit that), its tabs, what it says of the state of the asset and its file, the panel of the file, its save button
-// (also for a detail opened from the queue of an upload), and what it does when the asset changes under it. The real
-// dialog with its real sidebar over the real store of the detail, opened as a widget opens it; the DAM is a client
-// that records its requests, and only the long waits of an upload are taken out of real time. Not mounted for real:
-// the picture (it would ask the image server), the editor of the region of interest (the cropper) and the regions
-// under the form (they ask the DAM), and the inputs that ask the DAM for names to offer.
+// The asset detail a widget opens, under both applications: heading, close button, sidebar toggle, left
+// side (picture or region of interest editor, and who may edit it), tabs, asset and file state, file
+// panel, save button (also for a detail opened from an upload queue), and reaction to the asset changing.
+// Uses the real dialog, sidebar and store, opened as a widget opens it. The
+// DAM is a recording client, and only the long upload waits leave real time.
+// Stubbed: the picture (it would ask the image server), the cropper editor, the regions
+// under the form (they ask the DAM), and the inputs that ask the DAM for names.
 
 const QUEUE = 'asset-detail'
 const TITLE = 'Harbour at dawn'
@@ -61,7 +60,6 @@ const COLOUR = '#3a6b8c'
 let pinia: Pinia
 let dam: FakeDam
 let wrapper: VueWrapper | undefined
-/** How many times the dialog said it closed. */
 let closed = 0
 
 const people = [
@@ -79,13 +77,11 @@ const imageAttributes: AssetFileImage['imageAttributes'] = {
   animated: false,
 }
 
-/** The links of a file, its picture of a detail in another size than the one it was asked for. */
 const linksOf = (file: string) => {
   const links = damImageLinks(file)
   return Object.assign(links, { image_detail: { ...links.image_detail!, requestedWidth: 1280, requestedHeight: 720 } })
 }
 
-/** An image as the DAM answers it: processed, with the picture of its detail and its dominant colour. */
 const image = (parts: Partial<AssetDetailItemDto> = {}, fileParts: Partial<AssetFileImage> = {}, number = 1) =>
   damAssetWithFile(
     `asset-${number}`,
@@ -95,14 +91,12 @@ const image = (parts: Partial<AssetDetailItemDto> = {}, fileParts: Partial<Asset
     { links: linksOf(`file-${number}`), imageAttributes, ...fileParts }
   )
 
-/** An asset of another kind: its main file has no picture of a detail. */
 const other = (assetType: DamAssetTypeType, number = 1) =>
   damAssetWithFile(`asset-${number}`, `file-${number}`, AssetFileProcessStatus.Processed, {
     texts: { displayTitle: TITLE },
     attributes: { assetType, assetStatus: DamAssetStatus.WithFile },
   })
 
-/** The asset with its main file in the given state. */
 const fileIn = (status: AssetFileProcessStatusType, failReason: AssetFileFailReasonType = AssetFileFailReason.None) => {
   const asset = image()
   asset.mainFile!.fileAttributes = { ...asset.mainFile!.fileAttributes, status, failReason }
@@ -128,7 +122,6 @@ describe.each(consumerProfiles)('the detail of an asset under the $name', (profi
   })
 
   const detail = () => useAssetDetailStore(pinia)
-  /** The detail is open, as a widget opens it: the dialog is there while the store names the queue of the widget. */
   const open = async (asset: AssetDetailItemDto | null) => {
     detail().dialog = QUEUE
     detail().setAsset(asset)
@@ -237,15 +230,14 @@ describe.each(consumerProfiles)('the detail of an asset under the $name', (profi
 
   describe('on its left', () => {
     if (isCms) {
-      // admin-cms: the sidebar of the DAM, with its two tabs. The tab of the region of interest puts its editor in
-      // place of the picture, and its regions in place of the form.
       it('shows the picture of the detail of an image, until the tab of the region of interest puts the editor there', async () => {
         await open(image())
 
         expect(tabs()).toEqual([true, true])
         expect(roiEditor().exists()).toBe(false)
         expect(leftPane()!.querySelector('asset-image-stub')).not.toBeNull()
-        // In the size the picture came out in, not the one it was asked for (the dialog of an upload takes that).
+        // The detail uses the size the picture came out in, not the requested size.
+        // The upload dialog uses the requested size.
         expect(picture().props()).toMatchObject({
           src: 'https://image.test/file-1/detail.jpg',
           width: 1600,
@@ -280,8 +272,6 @@ describe.each(consumerProfiles)('the detail of an asset under the $name', (profi
         expect(picture().props()).toMatchObject(shown)
       })
     } else {
-      // admin-ugc asks for the simple sidebar: no tabs, the editor in place of the picture at once, and its regions
-      // under the form.
       it('has the editor of the region of interest of an image at once, and no tabs', async () => {
         await open(image())
 
@@ -293,8 +283,8 @@ describe.each(consumerProfiles)('the detail of an asset under the $name', (profi
       })
     }
 
-    // Unlike the dialog of an upload, the detail draws no state of an upload and no ratio of its own (design 1.10,
-    // JS8). An image under admin-ugc has the editor there, a video the picture.
+    // Unlike the upload dialog, the detail draws no upload states and no ratio of its own (design 1.10, JS8).
+    // Under admin-ugc an image has the editor there, a video has the picture.
     const pictured = () => (isCms ? image() : other(DamAssetType.Video))
 
     it('draws the picture without the states of an upload, without a ratio of its own and not covering its box', async () => {
@@ -311,8 +301,8 @@ describe.each(consumerProfiles)('the detail of an asset under the $name', (profi
       })
     })
 
-    // Nothing overlays the picture of the detail, so nothing stands between it and the whole of its left side: it is
-    // a flex item of that area, and a wide picture shrinks to it (design 1.10, JS9; 2.8, the frame).
+    // Nothing overlays the picture, so it is a direct flex item of the left side.
+    // A wide picture shrinks to fit (design 1.10, JS9; 2.8, the frame).
     it('puts the picture straight into the whole of its left side', async () => {
       await open(pictured())
 
@@ -324,7 +314,6 @@ describe.each(consumerProfiles)('the detail of an asset under the $name', (profi
       expect([side.width, side.height].every((size) => size > 0)).toBe(true)
     })
 
-    // Only an image has the tab of the region of interest, and the simple sidebar is only for an image.
     it.each([DamAssetType.Video, DamAssetType.Audio, DamAssetType.Document])(
       'shows a placeholder of 356 by 200 on grey for an asset of the kind %s, with no tab of the region of interest',
       async (assetType) => {
@@ -342,9 +331,8 @@ describe.each(consumerProfiles)('the detail of an asset under the $name', (profi
       }
     )
 
-    // The tab is the one the store of the detail holds, and opening a detail does not set it. Left on the region of
-    // interest by the image opened before, it does not stay there for an asset of another kind: its tabs have no such
-    // tab, and they choose the first.
+    // Opening a detail does not set the tab in the store.
+    // A left-over ROI tab must not stay for a non-image asset: its tabs have no such tab and choose the first.
     it('shows the picture of a video, also when the tab of the region of interest was left open', async () => {
       detail().activeTab = AssetDetailTabImageWithRoi.ROI
       await open(other(DamAssetType.Video))
@@ -357,8 +345,7 @@ describe.each(consumerProfiles)('the detail of an asset under the $name', (profi
     })
 
     if (isCms) {
-      // Opening a detail leaves the tab as it was (the dialog of an upload sets the info tab): an image opened while
-      // the region of interest is the tab left open has its editor at once.
+      // Opening a detail leaves the tab as it was. The upload dialog sets the info tab instead.
       it('opens an image on the tab of the region of interest when that tab was left open: the editor, and no form', async () => {
         detail().activeTab = AssetDetailTabImageWithRoi.ROI
         await open(image())
@@ -371,8 +358,8 @@ describe.each(consumerProfiles)('the detail of an asset under the $name', (profi
       })
     }
 
-    // The sidebar is drawn anew for each asset (its key is the id of the asset): its tabs choose the first again when
-    // the new asset has no tab of the region of interest.
+    // The sidebar is keyed by the asset id, so it is drawn anew for each asset.
+    // Its tabs choose the first again when the new asset has no ROI tab.
     it('shows the video and its form when the asset changes to a video while the region of interest is shown', async () => {
       await open(image())
       if (isCms) await showRegionTab()
@@ -402,13 +389,8 @@ describe.each(consumerProfiles)('the detail of an asset under the $name', (profi
     expect(metadata().classList.contains('v-expansion-panel--active')).toBe(true)
   })
 
-  // The save of the form is the button the sidebar places under it.
   describe('its save button', () => {
     const save = () => sidebar().querySelector<HTMLButtonElement>('[data-cy="button-save"]')!
-    /**
-     * Saves, and answers when the DAM has had the request on its way for a while: whether the button turned
-     * meanwhile. `received` is what the DAM does with the request before it answers.
-     */
     const savedWhileTurning = async (received: (request: FakeDamRequest) => void = () => undefined) => {
       const held = dam.hold('PATCH', dam.routes.bulkMetadata)
       save().click()
@@ -434,11 +416,10 @@ describe.each(consumerProfiles)('the detail of an asset under the $name', (profi
       expect(shownAlerts()).toEqual([['success', alertText('common.alert.recordWas.updated')]])
     })
 
-    // Finding 49 (F-C): the server may yet fill in the metadata of such an asset from its file, and a save from here
-    // would write over that and mark the asset described. The detail is not read again by itself.
+    // Finding 49 (F-C): the server may still fill in the metadata of such an asset from its file.
+    // A save from here would overwrite that and mark the asset described. The detail is not re-read by itself.
     describe('of an asset whose file the server has not processed yet', () => {
       const blocked = () => sidebar().querySelector<HTMLElement>('[data-cy="save-blocked"]')
-      /** The save of the sidebar, called as its button calls it. */
       const saveOfTheSidebar = async () => {
         const setup = (
           wrapper!.findComponent(AssetDetailSidebarMetadata).vm as unknown as {
@@ -460,14 +441,13 @@ describe.each(consumerProfiles)('the detail of an asset under the $name', (profi
 
           expect(save().disabled).toBe(true)
           expect(blocked()?.textContent?.trim()).toBe(damText('queueItem.stillUploadingOrProcessing'))
-          // A save asked for past the button, which is off, is not sent either.
           await saveOfTheSidebar()
           expect(saves()).toEqual([])
           expect(shownAlerts()).toEqual([])
         }
       )
 
-      // The save itself, as its button calls it: here to see that it is the save that holds back, not only the button.
+      // Calls the save directly to show that the save itself holds back, not only the button.
       it('is sent when asked for past its button, for an asset whose file is processed', async () => {
         await open(image())
 
@@ -490,8 +470,6 @@ describe.each(consumerProfiles)('the detail of an asset under the $name', (profi
       })
     })
 
-    // The dialog of the queue of an upload opens the detail of one of its rows, and has what the detail saves read
-    // back from the DAM into the row (`updateUploadStore`).
     describe('of a detail opened from the queue of an upload', () => {
       let waits: LongWaits
 
@@ -504,8 +482,8 @@ describe.each(consumerProfiles)('the detail of an asset under the $name', (profi
         waits.restore()
       })
 
-      // Finding 49 (F-C) holds here too: a row has its form and "edit asset" from the notification of its metadata,
-      // whatever its file is at, and the detail reads the asset as the DAM has it by then.
+      // Finding 49 (F-C) holds here too: a row has its form and "edit asset" from the metadata notification,
+      // whatever its file state, and the detail reads the asset as the DAM has it by then.
       it('has its save off, with the word why, while the file of the row is still processed', async () => {
         const uploads = useUploadQueuesStore(pinia)
         await uploads.addByFiles(
@@ -545,7 +523,6 @@ describe.each(consumerProfiles)('the detail of an asset under the $name', (profi
         await vi.waitFor(() => expect(row().status).toBe(UploadQueueItemStatus.Uploaded))
         expect(row().customData).toMatchObject({ description: 'from the server' })
 
-        // As the dialog of the queue opens it: the asset of the row, read from the DAM.
         detail().updateUploadStore = true
         await open(structuredClone(dam.assets.get(row().assetId!)!))
         const description = allInDialog<HTMLInputElement | HTMLTextAreaElement>('input[type="text"], textarea').find(
@@ -555,7 +532,6 @@ describe.each(consumerProfiles)('the detail of an asset under the $name', (profi
         description.dispatchEvent(new Event('input', { bubbles: true }))
         await flushPromises()
 
-        // The DAM keeps what the save sends.
         const kept = await savedWhileTurning((request) => {
           const [sent] = dam.body(request) as Array<{ id: string; customData: Record<string, unknown> }>
           dam.assets.get(sent!.id)!.metadata.customData = sent!.customData
@@ -581,8 +557,8 @@ describe.each(consumerProfiles)('the detail of an asset under the $name', (profi
     }
 
     if (isCms) {
-      // The endpoint of admin-cms (`/adm/v1/roi`) saves a region only for a user with the grant; without it the
-      // editor only shows the image.
+      // The admin-cms endpoint (`/adm/v1/roi`) saves a region only for a user with the grant.
+      // Without it the editor only shows the image.
       it.each([
         [
           'can be edited by a user of the DAM who may update regions of interest',
@@ -600,7 +576,7 @@ describe.each(consumerProfiles)('the detail of an asset under the $name', (profi
         expect((await shown()).props('readonly')).toBe(true)
       })
     } else {
-      // The endpoint of admin-ugc (`/ugc/v1/roi`) asks for no grant, and the application has no user of the DAM.
+      // The admin-ugc endpoint (`/ugc/v1/roi`) needs no grant, and the application has no DAM user.
       it('can be edited with no user of the DAM at all', async () => {
         expect((await shown()).props('readonly')).toBe(false)
       })
@@ -611,7 +587,6 @@ describe.each(consumerProfiles)('the detail of an asset under the $name', (profi
     })
   })
 
-  // Above the content of the sidebar: what the DAM says of the main file, or else of the asset.
   it.each<[string, AssetDetailItemDto, string[]]>([
     ['nothing of a processed file of an asset with its file', image(), []],
     [
@@ -624,7 +599,7 @@ describe.each(consumerProfiles)('the detail of an asset under the $name', (profi
       fileIn(AssetFileProcessStatus.Failed, AssetFileFailReason.InvalidMimeType),
       ['asset.detail.info.status.failed', 'asset.assetFileFailReason.invalidMimeType'],
     ],
-    // Finding 62: as the row of the queue, no chip for the reason that is none.
+    // Finding 62: as in the queue row, no chip when there is no reason.
     [
       'that processing the main file failed, and no reason where the DAM names none',
       fileIn(AssetFileProcessStatus.Failed, AssetFileFailReason.None),
@@ -650,7 +625,6 @@ describe.each(consumerProfiles)('the detail of an asset under the $name', (profi
   })
 
   if (isCms) {
-    // As the list of assets leaves them: the users of the DAM it has read.
     it('has the panel of the file, with the users who created and changed the asset', async () => {
       const { addManualToCachedUsers } = useDamCachedUsers()
       people.forEach(({ id, fullName }) =>
@@ -671,7 +645,7 @@ describe.each(consumerProfiles)('the detail of an asset under the $name', (profi
       expect(chips.map((chip) => chip.text())).toEqual(people.map(({ fullName }) => expect.stringContaining(fullName)))
     })
 
-    // The card breaks a long word anywhere; the panel of the file of the detail only between words (design 1.10, JS29).
+    // The card breaks a long word anywhere. The file panel of the detail breaks only between words (design 1.10, JS29).
     it('breaks the texts of the panel of the file only between words, unlike those of the metadata', async () => {
       await open(image())
 

@@ -39,7 +39,7 @@ const { t } = useI18n()
   >
     <VAlert type="error">
       {{ t('common.damImage.asset.detail.info.status.failed') }}
-      <!-- As the row of the queue: no chip for the reason that is none. -->
+      <!-- Like the queue row: no chip for the `None` reason. -->
       <div v-if="assetMainFileFailReason && assetMainFileFailReason !== AssetFileFailReason.None">
         <br />
         <AssetFileFailReasonChip :reason="assetMainFileFailReason" />

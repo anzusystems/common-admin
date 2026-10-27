@@ -9,8 +9,8 @@ import { useRouteHistory } from '@/domains/system/composables/routeHistory'
 
 vi.mock('@/domains/system/composables/alertsQueue', () => ({ pushAlert: vi.fn() }))
 
-// A log that cannot be loaded -- removed, or an address that names no log -- used to leave an empty
-// card. The view now leaves the way a record page does: back to the list, the page's Close fallback.
+// A log that cannot be loaded (removed, or an address that names no log) used to leave an empty card.
+// The view now leaves like a record page: back to the list, the page's Close fallback.
 
 let status = 404
 const request = vi.fn(() =>

@@ -1,8 +1,8 @@
 import { vi } from 'vitest'
 import type { DamNotificationNameType } from '@/domains/dam/composables/damNotificationsEventBus'
 
-// The notification server as the browser sees it: the global `WebSocket`. A frame is `{ eventName, data }` with
-// `data` a JSON text, as `composables/damNotifications.ts` reads it.
+// The notification server as the browser sees it: the global `WebSocket`.
+// A frame is `{ eventName, data }` with `data` a JSON text, as `composables/damNotifications.ts` reads it.
 
 export interface FakeSocket {
   url: string
@@ -50,7 +50,6 @@ export function stubDamSocket() {
     }
   )
 
-  /** The socket last opened, or the one last opened at `url`. */
   const latest = (url?: string) => {
     const socket = url === undefined ? sockets.at(-1) : [...sockets].reverse().find((one) => one.url === url)
     if (!socket) throw new Error(`No WebSocket was opened${url === undefined ? '' : ' at ' + url}.`)
@@ -58,23 +57,19 @@ export function stubDamSocket() {
   }
 
   return {
-    /** Every socket the code under test constructed, each with its address. */
     sockets,
-    /** The server accepts the connection: of the socket last opened, or of the one at `url`. */
     accept: (url?: string) => {
       const socket = latest(url)
       socket.readyState = 1
       socket.onopen?.(new Event('open'))
     },
     /**
-     * A frame of the notification server, on the socket last opened or on the one at `url`. Without `data` the frame
-     * carries an empty text, as the server sends it.
+     * Without `data` the frame carries an empty text, as the server sends it.
      */
     deliver: (eventName: DamNotificationNameType | string, data?: unknown, url?: string) => {
       const frame = { eventName, data: data === undefined ? '' : JSON.stringify(data) }
       latest(url).onmessage?.(new MessageEvent('message', { data: JSON.stringify(frame) }))
     },
-    /** The server closes the socket at `url`. */
     drop: (url: string) => {
       const socket = latest(url)
       socket.readyState = 3

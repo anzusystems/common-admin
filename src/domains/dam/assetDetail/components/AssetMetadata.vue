@@ -63,15 +63,15 @@ const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(
 const { getAuthorConflicts } = useAssetSuggestions()
 const { addToCachedAuthors, fetchCachedAuthors } = useDamCachedAuthors(damConfigName)
 
-// The DAM authors of one name read from the file, as the card of a row of the queue offers them: taken from the asset
-// itself, as the field of the store is written by nobody. A side panel, read-only, offers none, nor does a detail
-// without the field of authors, whose asset may still carry suggestions from before the authors were switched off.
+// DAM author suggestions for names read from the file, as the queue row card offers them.
+// Taken from the asset itself, because nothing writes the store field.
+// None in a read-only side panel, or when the authors field is disabled. Such an asset may still carry old suggestions.
 const authorConflicts = computed<DocId[]>(() =>
   props.readonly || !authorEnabled.value || !asset.value
     ? []
     : getAuthorConflicts(asset.value.metadata.authorSuggestions ?? {})
 )
-// Their chips show the names from the cache of its configuration, as those of the row do: without them a chip spins with none.
+// The chips show names from the configuration's cache, as the row's do. Without it a chip spins forever.
 watch(
   authorConflicts,
   (conflicts) => {
@@ -97,9 +97,9 @@ const { keywordRequired, keywordEnabled } = useDamKeywordAssetTypeConfig(
 const { mainFileSingleUseEnabled, showFileInfoEnabled, editAssetLabel } = useCommonAdminCoreDamOptions(damConfigName)
 
 const { addToCachedUsers, fetchCachedUsers } = useDamCachedUsers(damConfigName)
-// The chips of the panel "file" show who created and who changed the asset by the cache of users of its configuration.
-// A click into a picker fills it for the asset clicked, and only then: the detail of "edit asset" of a widget, or of a
-// row of the queue, showed two chips that spun with none.
+// The "file" panel chips show creator and modifier from the configuration's user cache.
+// A picker click fills it only for the clicked asset.
+// The "edit asset" detail of a widget or a queue row showed two chips spinning forever.
 watch(
   [() => asset.value?.createdBy, () => asset.value?.modifiedBy],
   ([createdBy, modifiedBy]) => {
@@ -215,7 +215,7 @@ watch(
         </AssetCustomMetadataForm>
       </VExpansionPanelText>
     </VExpansionPanel>
-    <!-- The detail breaks its texts only between words, unlike the card it is in (design 1.10, JS29). -->
+    <!-- The detail wraps text only between words, unlike its card (design 1.10, JS29). -->
     <AssetFileInfoPanel
       v-if="showFileInfoEnabled"
       :asset="asset"

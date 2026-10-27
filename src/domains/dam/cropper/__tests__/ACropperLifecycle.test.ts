@@ -10,11 +10,9 @@ import {
 } from '@/domains/dam/cropper/__tests__/support/cropperImages'
 
 /**
- * How `ACropper` copes with its inputs changing underneath it, and with being torn down.
- *
- * `ACropperjs` never reacted to a new `src` at all — hosts worked around that by keying the
- * component so Vue would throw the old one away (`DamAssetImageRoiSelect` still does). `ACropper`
- * rebuilds itself instead, so these are the cases that keying used to hide.
+ * How `ACropper` copes with changing inputs and with teardown.
+ * `ACropperjs` never reacted to a new `src`. Hosts keyed the component so Vue recreated it (`DamAssetImageRoiSelect`
+ * still does). `ACropper` rebuilds itself, so these cases were previously hidden by the keying.
  */
 
 const AR_16_9 = 16 / 9
@@ -59,7 +57,7 @@ describe('ACropper lifecycle', () => {
     await waitForCalls(cropper.readyCalls, 2)
     await nextFrame()
 
-    // Measured as fractions: the default box is a tenth in from the side whatever the picture is,
+    // Measured as fractions: the default box is a tenth in from the side whatever the picture,
     // and the harness's pixel conversion still knows only the file it was mounted with.
     const crop = cropper.api.getCrop()
     expect(crop.x).toBeCloseTo(0.1, 2)
@@ -94,8 +92,9 @@ describe('ACropper lifecycle', () => {
     cropper.destroy()
   })
 
-  // A prop changed in the same tick as `src` reaches a component that is mid-rebuild, where the
-  // watchers have no elements to write to yet. The rebuild has to finish with the current values.
+  // A prop changed in the same tick as `src` reaches a component that is
+  // mid-rebuild, where the watchers have no elements to write to yet.
+  // The rebuild must finish with the current values.
   it('honours an aspect ratio changed in the same breath as the source', async () => {
     const cropper = await mountCropper({ adapter: V2_ADAPTER, props: { aspectRatio: AR_16_9 } })
     await cropper.wrapper.setProps({ src: WIDE_IMAGE.src, aspectRatio: 1 })
@@ -150,7 +149,6 @@ describe('ACropper lifecycle', () => {
 
     await wait(500)
     expect(ready).not.toHaveBeenCalled()
-    // The spinner clears rather than sitting there for ever.
     expect(host.querySelector('.v-progress-circular')).toBeNull()
     expect(host.querySelector('cropper-canvas')).toBeNull()
 
@@ -191,9 +189,8 @@ describe('ACropper lifecycle', () => {
     cropper.destroy()
   })
 
-  // cropper.js v1 answered this one differently: it clamped the size and then fell back to the crop
-  // box's *previous* position, discarding the one it was handed. Keeping the requested position is
-  // the more predictable of the two, and nothing in the admin asks for a crop bigger than the image.
+  // cropper.js v1 clamped the size and then fell back to the previous crop box position, discarding the requested one.
+  // Keeping the requested position is more predictable, and nothing in the admin asks for a crop bigger than the image.
   it('honours the position it was given when the crop asked for is larger than the image', async () => {
     const cropper = await mountCropper({ adapter: V2_ADAPTER, props: { aspectRatio: AR_16_9 } })
     await cropper.api.setData({ x: 200, y: 200, width: 320, height: 180 })

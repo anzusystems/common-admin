@@ -11,16 +11,12 @@ import { AnzuApiTimeoutError } from '@/shared/error/AnzuApiTimeoutError'
 import { AnzuApiValidationError } from '@/shared/error/AnzuApiValidationError'
 import { AnzuFatalError } from '@/shared/error/AnzuFatalError'
 
-// What a caller can observe, pinned so a change to it has to be a decision.
-//
-// The fixtures answer `data: ''` for a body-less response, because that is what axios delivers: its
-// adapter hands back `responseText`, and the JSON transform only runs on a truthy string, so a 204
-// and an empty 200 both arrive as `''`. Fixtures built with `data: undefined` -- the shape these
-// tests used to assert against -- describe a response axios cannot produce, which is how the empty
-// string went unnoticed as the one value every 204 carries.
+// Fixtures answer `data: ''` for a body-less response, as axios does: its adapter returns `responseText`
+// and the JSON transform runs only on a truthy string. So a 204 and an empty 200 both arrive as `''`.
+// Fixtures with `data: undefined` describe a response axios cannot produce.
 
-// The url it was called with, the way an axios failure carries it: the report renders the config
-// axios kept, so a hard-coded one would have it describe a request that never happened.
+// The error carries the url it was called with, like an axios failure. The report renders
+// the kept config, so a hard-coded url would describe a request that never happened.
 const axiosError = (over: Record<string, unknown> = {}, url = '/test') =>
   Object.assign(new Error('request failed'), { isAxiosError: true, config: { url } }, over)
 const buildApi = (request: ReturnType<typeof vi.fn>) =>
@@ -54,7 +50,9 @@ const buildCommand = (request: ReturnType<typeof vi.fn>) =>
 const answering = (res: unknown) => vi.fn().mockResolvedValue(res)
 const failingWith = (over: Record<string, unknown> = {}) =>
   vi.fn().mockImplementation((config: { url: string }) => Promise.reject(axiosError(over, config.url)))
-/** For a failure that is not axios's: it carries no config, so there is no url to build it from. */
+/**
+ * For a failure that is not axios's: it carries no config, so there is no url to build it from.
+ */
 const rejecting = (error: unknown) => vi.fn().mockRejectedValue(error)
 
 beforeEach(() => {
@@ -68,11 +66,9 @@ afterEach(() => {
   setApiErrorLogger(defaultApiErrorLogger)
 })
 
-// Nothing is requested until axios is handed the config, and until then there is no url to report.
-// `url` used to be recorded before the body was serialised and before the client was asked for, so a
-// body that cannot be serialised was described as a request to an endpoint that was never called.
-// An empty template is a call whose url is the client root -- a real case, and the one place the
-// family distinguishes "" from "no url at all". Nothing pinned it.
+// Nothing is requested until axios gets the config, so there is no url to report before
+// that. A body that cannot be serialised must not be described as a request to an endpoint.
+// An empty template is a call to the client root. It is the one place the family distinguishes "" from "no url".
 describe('a call whose url is the client root', () => {
   it('asks for the empty url rather than substituting into it', async () => {
     const request = vi.fn().mockResolvedValue({ status: 200, data: { id: 1 } })
@@ -137,8 +133,8 @@ describe('what useApiRequest answers with', () => {
     await expect(execute()).resolves.toStrictEqual({ id: 7 })
   })
 
-  // The bug this replaces: a truthiness test read each of these as an absent body and failed the
-  // request. They are values, and axios parses them as values.
+  // A truthiness test read these values as an absent body and failed
+  // the request. They are real values and axios parses them as such.
   it.each([
     ['zero', 0],
     ['false', false],
@@ -148,8 +144,8 @@ describe('what useApiRequest answers with', () => {
     await expect(execute()).resolves.toBe(body)
   })
 
-  // Declared a body, did not get one: the endpoint broke its contract, and answering `undefined`
-  // typed as the entity is how that reached callers as a crash somewhere else entirely.
+  // The endpoint declared a body and sent none, which breaks its contract.
+  // Returning `undefined` typed as the entity would surface as a crash elsewhere.
   it('fails a no-content response when a body was declared', async () => {
     const { execute } = buildApi(answering({ status: 204, data: '' }))
 
@@ -162,8 +158,7 @@ describe('what useApiRequest answers with', () => {
     await expect(execute()).rejects.toBeInstanceOf(AnzuApiResponseCodeError)
   })
 
-  // A 202 may carry a body -- it says work was accepted, not that there is nothing to say. Deciding
-  // it by status alone would turn a body-carrying 202 into an error.
+  // A 202 may carry a body. Deciding by status alone would turn a body-carrying 202 into an error.
   it('returns the body of an accepted response', async () => {
     const { execute } = buildApi(answering({ status: 202, data: { queued: true } }))
 
@@ -176,8 +171,8 @@ describe('what useApiRequest answers with', () => {
     await expect(execute()).rejects.toBeInstanceOf(AnzuApiResponseCodeError)
   })
 
-  // `null` is distinguishable from `''` at runtime, but nothing can carry it in the type: `R`
-  // excludes it so a command site cannot declare itself as returning one. So it is absence.
+  // `null` is distinguishable from `''` at runtime, but the type
+  // cannot carry it: `R` excludes it. So `null` counts as absence.
   it('treats a null body as no body', async () => {
     const { execute } = buildApi(answering({ status: 200, data: null }))
 
@@ -285,8 +280,8 @@ describe('what the helpers throw', () => {
   })
 })
 
-// A caller that repeats one request on a timer reports its first failure and says of the rest that it has: a
-// poll that asks through an outage would otherwise write the same failure down at every try.
+// A caller that repeats a request on a timer reports its first failure and marks the rest
+// as reported. Otherwise a poll through an outage logs the same failure on every try.
 describe('a call that asks not to be reported', () => {
   it('throws the same failure, and the logger does not hear of it', async () => {
     const logged = vi.fn()
@@ -316,7 +311,6 @@ describe('a call that asks not to be reported', () => {
     setApiErrorLogger(logged)
 
     await expect(buildCommand(failingWith({ response: { status: 500 } })).execute({ report: false })).rejects.toThrow()
-    // An answer without the body the call declared.
     await expect(buildApi(answering({ status: 200, data: '' })).execute({ report: false })).rejects.toBeInstanceOf(
       AnzuApiResponseCodeError
     )
@@ -341,8 +335,8 @@ describe('what the helpers send', () => {
     expect(request.mock.calls[0][0].data).toBe(JSON.stringify({ title: 'a' }))
   })
 
-  // The trap the fleet hit migrating: the helper this replaces defaulted a create body to `{}`, so a
-  // call that passed nothing still sent it. Nothing is sent now unless the caller says so.
+  // The replaced helper defaulted a create body to `{}`, so a call that passed
+  // nothing still sent a body. Now nothing is sent unless the caller says so.
   it('sends no body when the call omits one', async () => {
     const request = answering({ status: 200, data: { ok: true } })
     const { execute } = buildApi(request)

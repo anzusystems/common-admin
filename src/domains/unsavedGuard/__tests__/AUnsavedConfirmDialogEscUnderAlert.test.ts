@@ -8,9 +8,9 @@ import { useAlerts } from '@/domains/system/composables/alerts'
 import { useAlertsQueue } from '@/domains/system/composables/alertsQueue'
 import AUnsavedConfirmDialog from '@/domains/unsavedGuard/components/AUnsavedConfirmDialog.vue'
 
-// Esc on the question about unsaved changes is "stay". An alert raised after the question had opened (the failure of
-// a save, a notification) kept Esc from reaching it while the alert was shown: the question stayed, and only its
-// buttons answered it.
+// Esc on the unsaved-changes question means "stay".
+// An alert raised after the question opened (a failed save, a notification)
+// kept Esc from reaching it, so only its buttons could answer.
 
 let wrapper: VueWrapper | null = null
 afterEach(() => {

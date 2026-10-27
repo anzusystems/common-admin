@@ -1,10 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 
-// `useApiRequest`, which is what `fetchCurrentUser` goes through: a failure there arrives as the
-// error it actually was -- `AnzuApiAxiosError`, `AnzuApiTimeoutError`, `AnzuApiForbiddenError` --
-// rather than flattened into one `AnzuFatalError`, and a caller passing `throwOnError` is asking
-// for exactly that distinction.
+// `fetchCurrentUser` goes through `useApiRequest`. A failure arrives as the original error (`AnzuApiAxiosError`,
+// `AnzuApiTimeoutError`, `AnzuApiForbiddenError`), not flattened into one `AnzuFatalError`.
+// A caller passing `throwOnError` asks for exactly that distinction.
 const execute = vi.fn()
 const useApiRequest = vi.fn(() => ({ execute: (...args: unknown[]) => execute(...args) }))
 vi.mock('@/domains/api/composables/useApiRequest', () => ({ useApiRequest }))
@@ -68,8 +67,8 @@ describe('fetchCurrentUser throwOnError', () => {
   })
 
   it('asks for the endpoint it was given', async () => {
-    // The old helper took the url and params as positional arguments; `useApiRequest` takes them
-    // per call. Swapped or dropped, every admin would fetch the wrong user -- or none.
+    // `useApiRequest` takes the url and params per call.
+    // If they are swapped or dropped, every admin fetches the wrong user or none.
     execute.mockResolvedValue({ id: 7, roles: [], permissions: {} })
     const { useCurrentUser } = defineAuth('cms')
     const { fetchCurrentUser } = useCurrentUser('cms')
@@ -79,11 +78,9 @@ describe('fetchCurrentUser throwOnError', () => {
     expect(execute).toHaveBeenCalledWith({ urlTemplate: '/adm/v1/user/current', urlParams: { id: 3 } })
   })
 
-  // This call runs before anyone has logged in, so its 401 is the ordinary answer rather than a
-  // failure -- every admin branches on it and sends the user to the login page. It used to ask for
-  // silence per instance; the previous version of this test then asserted only that it no longer
-  // asks, which the type already forbids and which pins nothing. What has to hold is that the
-  // failure is not written down.
+  // This call runs before anyone has logged in, so its 401 is the ordinary answer, not a failure.
+  // Every admin branches on it and sends the user to the login page.
+  // The failure must not be logged.
   it('does not write down the 401 that an unauthenticated start answers with', async () => {
     const logged = vi.fn()
     setApiErrorLogger(logged)
@@ -96,9 +93,9 @@ describe('fetchCurrentUser throwOnError', () => {
     expect(logged).not.toHaveBeenCalled()
   })
 
-  // 403 too, and by status rather than by class: a rejected 403 is an `AnzuApiForbiddenError`, which
-  // is outside `LOGGED` anyway, but `options.validateStatus` lets one arrive fulfilled, and then it
-  // is an `AnzuApiResponseCodeError` -- inside it. The policy has to hold on both paths.
+  // Checked by status, not by class. A rejected 403 is an `AnzuApiForbiddenError`, which is outside `LOGGED`.
+  // With `options.validateStatus` a 403 can arrive fulfilled as an `AnzuApiResponseCodeError`, which is inside it.
+  // The policy must hold on both paths.
   it('does not write down a forbidden answer that arrived as a fulfilled response', async () => {
     const logged = vi.fn()
     setApiErrorLogger(logged)
@@ -108,8 +105,6 @@ describe('fetchCurrentUser throwOnError', () => {
     expect(logged).not.toHaveBeenCalled()
   })
 
-  // And the statuses that are failures still reach the logger, with the status beside them so an
-  // application can decide for itself what it considers expected.
   it('still writes down the statuses that are failures, and says which', async () => {
     const logged = vi.fn()
     setApiErrorLogger(logged)

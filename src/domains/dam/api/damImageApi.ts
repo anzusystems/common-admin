@@ -15,8 +15,8 @@ import { mapApiError, report } from '@/domains/api/utils/apiErrors'
 
 const CHUNK_UPLOAD_TIMEOUT = 420
 
-// `optionalBody` for the same reason as `fetchImage`: the callers here read the result as "no file"
-// rather than as a failure, and normalising to `null` keeps their `isNull` guards honest.
+// `optionalBody` for the same reason as `fetchImage`: callers treat the result as "no file", not a failure.
+// Normalising to `null` keeps their `isNull` guards correct.
 export const fetchImageFile = async (client: () => AxiosInstance, endPoint: string, id: DocId) => {
   const { execute } = useApiRequest<AssetFileImage, null>({
     client,
@@ -291,8 +291,8 @@ export const copyToLicence = async (
         client()
           .patch(url, JSON.stringify(chunk))
           .then((res) => {
-            // A success that is not "ok" carries no list of what was copied: a request that failed, not an
-            // empty answer whose assets would be left out without a word.
+            // A non-200 success carries no list of copied assets. Treat it
+            // as a failure, not an empty answer that silently drops assets.
             if (res.status !== HTTP_STATUS_OK) throw new AnzuApiResponseCodeError(res.status)
             return res.data
           })
@@ -301,9 +301,9 @@ export const copyToLicence = async (
 
     return responses.flat()
   } catch (error) {
-    // The class the widgets' error alert knows, where the bare error of axios passed it by without a word; a
-    // request that was stopped becomes the one it keeps quiet about. Handed to the api error logger as every
-    // other request of the family is.
+    // Map to the error class the widgets' error alert understands; it ignored the raw axios error.
+    // An aborted request maps to the class the alert stays quiet about.
+    // Reported to the api error logger like every other request of this family.
     const context = { system: SYSTEM_CORE_DAM, entity: 'asset', url: requestedUrl(client, url, {}, error) }
     return Promise.reject(report(mapApiError(error, context), context))
   }

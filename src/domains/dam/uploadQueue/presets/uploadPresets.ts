@@ -9,12 +9,11 @@ import { withTimeout } from '@/domains/listEditor/utils/listEditorLoader'
 const HASH_LOAD_TIMEOUT = 15_000
 
 export type UploadSide = 'library' | 'adminDam'
-// Not exported from the library: only its own functions put them on a set or a run. Nothing reads the side at
-// runtime; a set holds its members under the other one.
+// Not exported from the library, so only its own functions set them.
+// Nothing reads the side at runtime. A preset holds its members under the other symbol.
 export const uploadSide = Symbol('uploadSide')
 export const uploadPresetMembers = Symbol('uploadPresetMembers')
 
-/** What a run asks the server. */
 export interface UploadRunRequests {
   start(item: UploadQueueItem): Promise<DamUploadStartResponse>
   chunk(
@@ -28,16 +27,24 @@ export interface UploadRunRequests {
   finish(item: UploadQueueItem, sha: string): Promise<unknown>
 }
 
-/** The texts a run writes into its row. Each side keeps its own. */
+/**
+ * Texts a run writes into its row. Each side has its own.
+ */
 export interface UploadMessages {
   unknownError(): string
-  /** A field the server refused, by its name. */
+  /**
+   * Text for a field the server refused, by field name.
+   */
   size(): string
   offset(): string
   mimeType(): string
-  /** Put before the name of a refused field there is no text for. */
+  /**
+   * Prefix for a refused field that has no text of its own.
+   */
   systemError(): string
-  /** HTTP 400 on the last try of a chunk. */
+  /**
+   * HTTP 400 on the last try of a chunk.
+   */
   chunkValidationFailed(): string
 }
 
@@ -51,13 +58,20 @@ interface UploadPresetMembers {
   messages: UploadMessages
   apiTimeout: number | null | undefined
   loadHash(): Promise<UploadHash>
-  /** Whether a file of no bytes is started and finished, or refused before anything is asked. */
+  /**
+   * Whether an empty file is started and finished, or refused before any request.
+   */
   emptyFile: 'send' | 'reject'
-  /** The DAM configuration whose prv configuration bounds the chunks, and whose last chunk size the upload starts from. */
+  /**
+   * DAM configuration whose prv configuration bounds the chunks and whose last chunk size the upload starts from.
+   */
   configName: string
 }
 
-/** How one side uploads. Made only by `libraryUploadPreset()` and `adminDamUploadPreset()`; what it holds is not public. */
+/**
+ * How one side uploads. Created only by `libraryUploadPreset()`
+ * and `adminDamUploadPreset()`. Its contents are not public.
+ */
 export interface UploadPreset<S extends UploadSide = UploadSide> {
   readonly [uploadSide]: S
   readonly [uploadPresetMembers]: UploadPresetMembers
@@ -69,19 +83,23 @@ export interface UploadRun<S extends UploadSide = UploadSide> {
   readonly [uploadSide]: S
   uploadInit(): Promise<unknown>
   upload(): Promise<unknown>
-  /** Stops the run wherever it is, and cancels the chunk on the wire. */
+  /**
+   * Stops the run wherever it is and cancels the chunk in flight.
+   */
   stop(): void
-  /** Whether the finish request went out: the server may complete the file whatever became of the answer. */
+  /**
+   * Whether the finish request was sent. The server may complete the file whatever the response.
+   */
   finishAttempted(): boolean
 }
 
 /**
- * Not exported from `src/lib.ts`; the default of `useUpload` (under `default`). The library's API, texts and choices,
- * under the DAM configuration `configName`.
+ * Not exported from `src/lib.ts`. Default of `useUpload` (under `default`).
+ * The library's API, texts and choices under DAM configuration `configName`.
  */
 export function libraryUploadPreset(configName: string): UploadPreset<'library'> {
-  // A chunk is sized against the timeout the application gives the DAM requests of the configuration, else its root
-  // one. One that gives none (`null` in a config file too) gets the default of the composable.
+  // Chunks are sized against the app's DAM request timeout for this configuration, else the root one.
+  // Without one (also `null` in a config file) the composable's default applies.
   const { damClient, endPointImage, apiTimeout } = useCommonAdminCoreDamOptions(configName)
 
   return {
@@ -102,8 +120,8 @@ export function libraryUploadPreset(configName: string): UploadPreset<'library'>
         chunkValidationFailed: () => commonT('common.damImage.uploadErrors.chunkValidationFailed'),
       },
       apiTimeout,
-      // rusha is loaded when a file starts uploading, not with every page that shows the upload queue, and
-      // before the asset is created: a chunk that does not arrive fails the item without an empty asset.
+      // rusha loads when a file starts uploading, not on every page with the upload queue.
+      // It loads before the asset is created, so a load failure fails the item without leaving an empty asset.
       loadHash: () =>
         withTimeout(import('rusha'), HASH_LOAD_TIMEOUT, `rusha did not load within ${HASH_LOAD_TIMEOUT} ms.`).then(
           (rusha) => rusha.default.createHash()
@@ -114,15 +132,25 @@ export function libraryUploadPreset(configName: string): UploadPreset<'library'>
   }
 }
 
-/** admin-dam's API, texts and choices. What is the application's own, the application hands in. */
+/**
+ * admin-dam's API, texts and choices. The application passes in its own parts.
+ */
 export function adminDamUploadPreset(app: {
-  /** `uploadStart`, `uploadChunk`, `uploadFinish` of `fileApi.ts`: four asset types, admin-dam's addresses. */
+  /**
+   * `uploadStart`, `uploadChunk`, `uploadFinish` of `fileApi.ts`: four asset types, admin-dam's addresses.
+   */
   requests: UploadRunRequests
-  /** `system.uploadErrors.*`; as `chunkValidationFailed` its `unknownError`, which its store writes today. */
+  /**
+   * `system.uploadErrors.*`. `chunkValidationFailed` uses its `unknownError`, which its store writes today.
+   */
   messages: UploadMessages
-  /** `envConfig.dam.apiTimeout`. */
+  /**
+   * `envConfig.dam.apiTimeout`.
+   */
   apiTimeout: number | null | undefined
-  /** `() => Promise.resolve(rusha.createHash())`: rusha stays a static import of admin-dam. */
+  /**
+   * `() => Promise.resolve(rusha.createHash())`: rusha stays a static import of admin-dam.
+   */
   loadHash(): Promise<UploadHash>
 }): UploadPreset<'adminDam'> {
   return {

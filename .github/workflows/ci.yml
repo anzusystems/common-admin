@@ -48,10 +48,11 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
 
-      # node_modules/.cache holds only caches that follow what a result depends on: vue-tsc's build info. eslint and
-      # stylelint run without one: they reuse a file's result without tracking everything it depends on. A new entry per
-      # passing run, restored from the latest one for the same runner, Node version, yarn.lock and tsconfigs (vue-tsc's build
-      # info does not notice a vueCompilerOptions change).
+      # Only caches that track what a result depends on: vue-tsc's build info.
+      # eslint and stylelint run without a cache: they reuse a file's result without tracking its dependencies.
+      # Each passing run saves a new entry. Restore uses the latest one
+      # for the same runner, Node version, yarn.lock and tsconfigs.
+      # The tsconfigs are in the key because vue-tsc's build info does not notice a `vueCompilerOptions` change.
       - name: Restore tool caches
         id: tool-cache
         uses: actions/cache/restore@v6
@@ -128,8 +129,8 @@ jobs:
         env:
           CI: true
 
-  # The release workflow is the only other place the library is built: a build that breaks (the
-  # declarations included) would otherwise surface only when a release is cut.
+  # The release workflow is the only other place the library is built.
+  # Without this job a broken build, declarations included, would show up only when a release is cut.
   build:
     strategy:
       matrix:

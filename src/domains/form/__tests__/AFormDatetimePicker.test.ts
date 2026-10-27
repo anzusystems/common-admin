@@ -6,9 +6,9 @@ import AFormFlagDatetimePicker from '@/domains/form/components/AFormFlagDatetime
 import type { DatetimeUTC, DatetimeUTCNullable } from '@/shared/types/common'
 
 /**
- * The collab cases pin *when* the lock travels: the picker commits typed text and calendar clicks in
- * watchers that run after the blur and close events, so a synchronous release hands the room the
- * previous value.
+ * The collab cases pin when the lock is released.
+ * The picker commits typed text and calendar clicks in watchers that run after the blur and close events.
+ * A synchronous release would hand the room the previous value.
  */
 
 const collab = vi.hoisted(() => ({
@@ -75,7 +75,9 @@ const dayButton = (day: number) =>
     | HTMLElement
     | undefined
 
-/** [0] is "now", [1] is "confirm". */
+/**
+ * [0] is "now", [1] is "confirm".
+ */
 const bottomButton = (index: number) =>
   document.querySelectorAll<HTMLElement>('.a-datetime-picker__bottom-button')[index]
 

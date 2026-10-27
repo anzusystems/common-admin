@@ -2,25 +2,25 @@ import { describe, expect, it } from 'vitest'
 import { globKeyToSrcPath, parseTypedRouterDeclaration } from '@/testing/typedRouter'
 
 export interface DescribeCloseButtonsOptions {
-  /** Every `.vue` of the admin: `import.meta.glob('/src/**\/*.vue', { query: '?raw', import: 'default', eager: true })`. */
+  /**
+   * Every `.vue` of the admin: `import.meta.glob('/src/**\/*.vue', { query: '?raw', import: 'default', eager: true })`.
+   */
   sources: Record<string, string>
-  /** `src/typed-router.d.ts`, imported with `?raw`. */
   declaration: string
-  /** The admin's route history blacklist. */
   routeHistoryBlacklist: readonly string[]
-  /** How many buttons may compute their fallback, which two checks cannot read. */
+  /**
+   * How many buttons may compute their fallback, which two checks cannot read.
+   */
   maxComputedFallbacks?: number
 }
 
 /**
- * The close buttons and the two route lists each one carries.
- *
- * `AActionCloseButtonHistory` walks the recorded history backwards for the first entry whose name is
- * not in `skipRouteNames`, and falls back to `fallbackRouteName` only when that walk comes up empty.
- * Both lists are plain strings inside a template: `anzu/valid-route-name` only reaches route names
- * written in `<script>`, and nothing type-checks a string in an attribute. Rename a page and the lists
- * keep the old name, silently -- a skip list that no longer names the view it sits on hands the user
- * straight back to the view they just closed.
+ * `AActionCloseButtonHistory` walks the recorded history backwards for the first entry
+ * not in `skipRouteNames`. It uses `fallbackRouteName` only when that walk finds nothing.
+ * Both lists are plain strings in a template. `anzu/valid-route-name` only
+ * checks names in `<script>`, and nothing type-checks an attribute string.
+ * After a page rename the lists silently keep the old name. A skip list that no
+ * longer names its own view sends the user back to the view they just closed.
  */
 export function describeCloseButtons({
   sources,
@@ -60,11 +60,11 @@ export function describeCloseButtons({
     [...source.matchAll(/<AActionCloseButtonHistory(?![A-Za-z])([^>]*?)\/>/g)].map(([, attrs]) => ({
       file: globKeyToSrcPath(path),
       label: globKeyToSrcPath(path),
-      // Absent means "nothing beyond my own route", which the library skips anyway -- the button
-      // defaults the prop to an empty list, so it still walks back by name.
+      // Absent means "nothing beyond my own route", which the library skips anyway.
+      // The button defaults the prop to an empty list, so it still walks back by name.
       skip: listOf(attrs!, 'skip-route-names') ?? [],
-      // A handful of buttons compute their destination, and those hold an expression rather than a
-      // literal -- the walk still has to be right, only the fallback cannot be read from here.
+      // A few buttons compute their destination, so they hold an expression, not a literal.
+      // The walk must still be right. Only the fallback cannot be read here.
       fallback: listOf(attrs!, 'fallback-route-name'),
       // Told apart from a missing prop, so the checks that need a literal skip such a button loudly
       // rather than passing over it.
@@ -72,7 +72,7 @@ export function describeCloseButtons({
     }))
   )
 
-  // The longest prefix of a route whose last segment is dynamic -- `/x/[id]/edit` -> `/x/[id]`.
+  // The longest prefix of a route whose last segment is dynamic: `/x/[id]/edit` -> `/x/[id]`.
   // Everything at or under it is another view of the same record.
   const recordPrefix = (name: string) => {
     const parts = name.split('/')
@@ -130,9 +130,10 @@ export function describeCloseButtons({
           if (own.includes(other)) continue
           if (other === record || other.startsWith(`${record}/`)) expected.add(other)
         }
-        // Only when the fallback really is this record's own listing: creating pushes to the detail,
-        // so closing the detail must not walk back into the empty form. A button that closes across
-        // entities -- a stats detail returning to the jobs listing -- was never reached that way.
+        // Only when the fallback is this record's own listing: creating pushes to
+        // the detail, so closing the detail must not walk back into the empty form.
+        // A button that closes across entities, such as a stats detail
+        // returning to the jobs listing, was never reached that way.
         const listing = fallback?.[0] ?? ''
         const created = `${listing}/new`
         const ownListing = listing !== '' && name.startsWith(`${listing}/`)
@@ -149,10 +150,10 @@ export function describeCloseButtons({
     })
 
     it('never skips the route it falls back to', () => {
-      // The fallback is where the author wants the user to land -- almost always the listing, but a
-      // handful of views close one level up into a parent record instead. Skipping that route would
-      // walk straight past the intended destination and only reach it in a fresh tab, where there is
-      // no history left to walk.
+      // The fallback is where the author wants the user to land. Usually that is
+      // the listing, but a few views close one level up into a parent record.
+      // Skipping that route would walk past the intended destination and
+      // reach it only in a fresh tab, where there is no history to walk.
       const bad = buttons.flatMap(({ label, skip, fallback }) =>
         (fallback ?? []).filter((name) => skip.includes(name)).map((name) => `${label}: ${name}`)
       )
@@ -161,10 +162,10 @@ export function describeCloseButtons({
     })
 
     it('says how many buttons compute their fallback', () => {
-      // Two checks need a literal to read: "points at routes that exist" and "never skips the route
-      // it falls back to". A button whose fallback is a template expression is outside both, and
-      // silently so -- this states the size of that gap instead of leaving it invisible. The sibling
-      // check does still cover them, since it derives from the routes they sit on.
+      // Two checks need a literal: "points at routes that exist" and "never skips the route it falls back to".
+      // A button whose fallback is a template expression is outside
+      // both, silently. This test states the size of that gap.
+      // The sibling check still covers them, since it derives from the routes they sit on.
       const computed = buttons.filter(({ fallbackComputed }) => fallbackComputed).map(({ label }) => label)
 
       expect(computed.length).toBeLessThanOrEqual(maxComputedFallbacks)
@@ -175,9 +176,9 @@ export function describeCloseButtons({
     })
 
     it('never blacklists a route a close button falls back to', () => {
-      // The fallback is the last resort when history holds nothing to return to. Pointing it at a
-      // blacklisted route is not an error in itself -- the push still works -- but it means the
-      // button leads somewhere the app has decided is not a place to be.
+      // The fallback is the last resort when history holds nothing to return to.
+      // Pointing it at a blacklisted route is not an error, since the push works. But
+      // the button then leads somewhere the app has decided is not a place to be.
       const blacklisted = new Set(routeHistoryBlacklist)
       const bad = buttons.flatMap(({ label, fallback }) =>
         (fallback ?? []).filter((name) => blacklisted.has(name)).map((name) => `${label}: ${name}`)

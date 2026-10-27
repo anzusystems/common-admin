@@ -27,9 +27,6 @@ import { createUploadSettlement } from '@/domains/dam/uploadQueue/settlement/upl
 import { uploadSettlementRuntime } from '@/domains/dam/uploadQueue/settlement/uploadSettlementRuntime'
 import type { UploadSettlement } from '@/domains/dam/uploadQueue/settlement/uploadSettlementTypes'
 
-// The settlement as a store uses it: rows tracked, notifications passed in, the refresh asked for. The DAM is a
-// server that records what the readers of the profile asked, and the time is the manual scheduler's.
-
 const S = 1000
 const MIN = 60 * S
 const QUEUE = 'queue'
@@ -88,7 +85,6 @@ describe('a row that waits for the server, in the library', () => {
     expect(calls.final).toEqual([row.key])
     expect(calls.authorsFetched).toBeGreaterThan(0)
     expect(calls.keywordsFetched).toBeGreaterThan(0)
-    // And nothing is left to ask about.
     expect(settlement.hasTracked()).toBe(false)
     expect(clock.waiting()).toBe(0)
     await clock.advance(10 * MIN)
@@ -102,7 +98,6 @@ describe('a row that waits for the server, in the library', () => {
     settlement.track(QUEUE, row)
 
     const settled = settlement.notify(processedEvent)
-    // In the library the event only starts the read.
     expect(row.status).toBe(UploadQueueItemStatus.Processing)
     await clock.advance(250)
     await settled
@@ -173,7 +168,6 @@ describe('a row that waits for the server, in the library', () => {
       canEditMetadata: false,
       error: { hasError: true, message: '', assetFileFailReason: AssetFileFailReason.InvalidChecksum },
     })
-    // The failure settled it: it is asked about no more.
     expect(server.requests).toHaveLength(1)
   })
 
@@ -236,7 +230,6 @@ describe('a row that waits for the server, in the library', () => {
     const afterAnHour = server.requests.length
     await clock.advance(10 * MIN)
 
-    // Still read after an hour, and never told its processing takes too long: only a final state is written to it.
     expect(server.requests.length).toBeGreaterThan(afterAnHour)
     expect(row).toMatchObject({ status: UploadQueueItemStatus.Failed, error: clientError, canEditMetadata: false })
 
@@ -268,8 +261,8 @@ describe('a row that waits for the server, in the library', () => {
     expect(server.requests).toHaveLength(3)
   })
 
-  // The read that is one too many may be the one the user asked for. The row is given up all the same, and the
-  // refresh does not answer with the outcome that says to ask again: there is nothing left to ask about.
+  // The read that is one too many may be the one the user asked for.
+  // The row is given up anyway, and the refresh does not answer with the outcome that says to ask again.
   it('N-Z7 a refresh that is the third read to miss the asset gives the row up, and answers that it is settled', async () => {
     const { add, calls } = lib()
     const row = add(QUEUE, queueRow())
@@ -300,8 +293,8 @@ describe('a row that waits for the server, in the library', () => {
     expect(settlement.hasTracked()).toBe(true)
   })
 
-  // Two queues may wait for one asset, each from its own moment: while one of the rows is still asked about, the
-  // refresh says to ask again.
+  // Two queues may wait for one asset, each from its own moment.
+  // While one of the rows is still asked about, the refresh says to ask again.
   it('N-Z7 a refresh that gives one row up while another of the asset still waits answers that it is missing', async () => {
     const { add } = lib()
     const first = add(QUEUE, queueRow())
@@ -320,7 +313,6 @@ describe('a row that waits for the server, in the library', () => {
     const row = add(QUEUE, queueRow())
     settlement.track(QUEUE, row)
 
-    // Missing at 5 and 10 s, there at 16, missing at 23 and 31.
     await clock.advance(10 * S)
     server.fileBecomes('asset-1', AssetFileProcessStatus.Stored)
     await clock.advance(6 * S)
@@ -347,10 +339,8 @@ describe('a row that waits for the server, in the library', () => {
     })
     server.garbleList(1)
 
-    // Three ticks: at 5, 10 and 16 s.
     await clock.advance(16 * S)
 
-    // Missing three times, they would have failed. They warn as rows whose read fails, and the others are read.
     expect(garbled.map((row) => [row.status, row.error.message])).toEqual([
       [UploadQueueItemStatus.Processing, TEXT.readFailed],
       [UploadQueueItemStatus.Processing, TEXT.readFailed],
@@ -374,7 +364,6 @@ describe('a row that waits for the server, in the library', () => {
 
     await clock.advance(50 * S)
 
-    // At 5, 20 and 50 s, not at the marks of the age.
     expect(server.asked('assets')).toHaveLength(3)
     expect(rows.map((row) => row.status)).toEqual([UploadQueueItemStatus.Processing, UploadQueueItemStatus.Processing])
   })
@@ -434,7 +423,6 @@ describe('a row that waits for the server, in the library', () => {
     settlement.track(QUEUE, withForm)
     server.fail('assets')
 
-    // Failed at 5 and at 20 s.
     await clock.advance(49 * S)
     expect(server.requests).toHaveLength(2)
     expect(withoutForm.error).toEqual(noError)
@@ -458,7 +446,6 @@ describe('a row that waits for the server, in the library', () => {
     expect(row.error).toMatchObject({ hasError: true, message: TEXT.tooLong })
 
     server.fail('asset')
-    // By the ladder: three failures are over within 15 + 30 s of the first.
     await clock.advance(3 * MIN)
     expect(row.error).toMatchObject({ hasError: true, message: TEXT.readFailed })
 
@@ -559,7 +546,6 @@ describe('a row that waits for the server, in the library', () => {
     ids(1, 51).forEach((assetId) => track(1, assetId))
     ids(2, 2).forEach((assetId) => track(2, assetId))
     track(3, 'asset-3-0')
-    // Two rows of one asset are one id.
     track(2, 'asset-2-0')
 
     await clock.advance(5 * S)
@@ -606,7 +592,6 @@ describe('a row that waits for the server, in the library', () => {
       UploadQueueItemStatus.Processing,
     ])
 
-    // Nor is the queue waiting as after a failed read: the next tick comes at the mark of 10 s.
     await clock.advance(5 * S)
     expect(server.asked('assets').filter((request) => request.licenceId === 1)).toHaveLength(2)
   })
@@ -622,7 +607,6 @@ describe('a row that waits for the server, in the library', () => {
 
     void settlement.notify(metadataEvent)
     await clock.advance(10 * S)
-    // Due long ago, and still not sent.
     expect(server.requests).toHaveLength(1)
 
     server.release()
@@ -648,7 +632,6 @@ describe('a row that waits for the server, in the library', () => {
     server.release()
     await clock.settle()
 
-    // No time has passed since the tick was answered.
     expect(clock.now()).toBe(5 * S)
     expect(server.requests).toHaveLength(2)
     expect(server.mostRunning()).toBe(1)
@@ -660,7 +643,6 @@ describe('a row that waits for the server, in the library', () => {
     const row = add(QUEUE, queueRow())
     const refresh = () => settlement.refreshAsset({ assetId: 'asset-1', fileId: null })
 
-    // No such asset.
     expect(await refresh()).toBe('missing')
 
     server.fileBecomes('asset-1', AssetFileProcessStatus.Stored)
@@ -709,7 +691,6 @@ describe('a row that waits for the server, in the library', () => {
   it('N-Z18 with nothing else to ask, the read of the notification is tried again by itself', async () => {
     const { add } = lib()
     server.fileBecomes('asset-1', AssetFileProcessStatus.Processed)
-    // Not tracked: no tick will ask about it.
     const row = add(QUEUE, queueRow({ type: UploadQueueItemType.Asset, fileId: null }))
     server.fail('asset')
 
@@ -729,7 +710,6 @@ describe('the read a notification asks for, when it fails', () => {
   it('is tried three times, 15 and 30 s apart, and then the row without its form warns', async () => {
     const { add } = lib()
     server.fileBecomes('asset-1', AssetFileProcessStatus.Stored)
-    // Still sending: no tick asks about it yet.
     const row = add(QUEUE, queueRow({ status: UploadQueueItemStatus.Uploading }))
     server.fail('asset')
 
@@ -745,7 +725,6 @@ describe('the read a notification asks for, when it fails', () => {
       canEditMetadata: false,
       error: { hasError: true, message: TEXT.readFailed },
     })
-    // From here on only the refresh of the row asks, and takes the warning away with the metadata it brings.
     await clock.advance(10 * MIN)
     expect(server.requests).toHaveLength(3)
 
@@ -766,13 +745,11 @@ describe('the read a notification asks for, when it fails', () => {
     await clock.advance(2 * S)
     expect(server.requests).toHaveLength(1)
 
-    // The first read is on its way and will fail. The file notification waits in a read of its own.
     server.recover()
     void settlement.notify(processedEvent)
     server.release()
     await clock.advance(250)
 
-    // One more read, not two: and the metadata the failed one was for comes with it.
     expect(server.requests).toHaveLength(2)
     expect(row).toMatchObject({ ...uploaded, ...loadedMetadata })
     await clock.advance(10 * MIN)
@@ -813,7 +790,6 @@ describe('a duplicate whose original cannot be read, in the library', () => {
     })
     expect(givenUp).toMatchObject({ status: UploadQueueItemStatus.Failed, isDuplicate: false, error: clientError })
     expect(calls.final).toEqual([waiting.key])
-    // Neither is asked about by itself any more; the refresh of either may still help, and the store is told so.
     expect(calls.refreshMayHelp).toEqual(['+' + givenUp.key, '+' + waiting.key])
     expect(settlement.hasTracked()).toBe(false)
     const asked = server.requests.length
@@ -838,14 +814,12 @@ describe('the text of a row that fails for a duplicate whose original cannot be 
     expect(waitsLong.error).toMatchObject({ hasError: true, message: TEXT.tooLong })
     expect(writtenOver.error).toMatchObject({ hasError: true, message: TEXT.tooLong })
 
-    // The store writes its own text over the settlement's, and then both files turn out duplicates.
     writtenOver.error = { ...storeText }
     for (const assetId of ['asset-1', 'asset-3']) {
       server.fileBecomes(assetId, AssetFileProcessStatus.Duplicate, { originAssetFile: 'file-unknown' })
     }
     await clock.advance(2 * MIN)
 
-    // That its processing took long is no longer what is wrong with the row; what the store said of it still is.
     expect(waitsLong).toMatchObject({ status: UploadQueueItemStatus.Failed, error: { hasError: true, message: '' } })
     expect(writtenOver).toMatchObject({ status: UploadQueueItemStatus.Failed, error: storeText })
   })
@@ -873,7 +847,6 @@ describe('the rows of the DAM application', () => {
 
     void settlement.notify(processedEvent)
 
-    // The state of the event at once, before anything is read.
     expect(upload.status).toBe(UploadQueueItemStatus.Uploaded)
     expect(calls.final).toEqual([upload.key])
     expect(calls.processedSeen).toEqual([edit.key])
@@ -896,7 +869,6 @@ describe('the rows of the DAM application', () => {
       canEditMetadata: true,
     })
     expect(calls.assetsRead).toEqual(['asset-1'])
-    // A mass-edit row is never asked about by a tick, and the upload is settled.
     expect(settlement.hasTracked()).toBe(false)
     await clock.advance(10 * MIN)
     expect(server.requests).toEqual([{ kind: 'asset', ids: ['asset-1'] }])
@@ -940,7 +912,6 @@ describe('the rows of the DAM application', () => {
 
     await clock.advance(5 * S)
 
-    // One list for both the slots of the asset, then the asset for the row that settled.
     expect(server.requests).toEqual([
       { kind: 'slots', ids: ['asset-1'] },
       { kind: 'asset', ids: ['asset-1'] },
@@ -1004,15 +975,15 @@ describe('the rows of the DAM application', () => {
     await clock.advance(30 * MIN)
 
     expect(server.asked('slots').length).toBeGreaterThan(6)
-    // Not the warning of a form it will never have; the text of its own for the long wait.
     expect(unread).toMatchObject({
       status: UploadQueueItemStatus.Processing,
       error: { hasError: true, message: TEXT.tooLongSlot },
     })
   })
 
-  // Without its form it waits for its metadata, which the asset that is gone will never bring: its misses count as
-  // those of a row that waits, and at the third it fails, with the text of the profile (here its `assetMissing`).
+  // Without its form the row waits for its metadata, which a missing asset never brings.
+  // Its misses count as those of a waiting row, and at the third
+  // it fails with the profile's text (here `assetMissing`).
   it('N-Z21 a row uploaded by its event fails when its asset is missing three times while it has no form, and one with its form stays uploaded', async () => {
     const { add } = dam()
     const withoutForm = add('global', queueRow())
@@ -1020,7 +991,6 @@ describe('the rows of the DAM application', () => {
     settlement.track('global', withoutForm)
 
     void settlement.notify(processedEvent)
-    // Asked at 250 ms, then 15 s and 30 s later.
     await clock.advance(250 + 15 * S)
     expect(server.requests).toHaveLength(2)
     expect(withoutForm).toMatchObject({ status: UploadQueueItemStatus.Uploaded, error: noError })
@@ -1142,7 +1112,6 @@ describe('the tab and the notifications', () => {
     await clock.advance(1)
     expect(server.requests).toHaveLength(1)
 
-    // The next sparse mark is 30 s; dense, it is 16.
     connection.set(false)
     await clock.advance(6 * S)
     expect(server.requests).toHaveLength(2)
@@ -1163,7 +1132,6 @@ describe('under the immediate scheduler of the tests of a store', () => {
     expect(row).toMatchObject({ ...uploaded, ...loadedMetadata })
 
     await settlement.notify({ kind: 'processed', assetId: 'asset-2', fileId: 'file-2' })
-    // No such asset: the try after it is 15 s away, which never comes here; nor does the tick of the queue.
     await new Promise((resolve) => setTimeout(resolve, 20))
     expect(server.requests).toEqual([
       { kind: 'asset', ids: ['asset-1'] },
@@ -1205,7 +1173,6 @@ describe('two slot uploads of one asset at once', () => {
 
       await clock.advance(5 * S)
 
-      // The list of slots said how each file fared; the asset, read to complete the other row, speaks of the main one.
       expect(server.asked('asset')).toHaveLength(1)
       expect(other).toMatchObject(stillItsOwn)
       expect(main.fileId).toBe(
@@ -1264,7 +1231,6 @@ describe('a queue whose rows are gone while the tab is hidden', () => {
     settlement.track(QUEUE, first)
     await clock.advance(2 * S)
     visibility.set(false)
-    // Read although nobody looks, and the row is settled by it.
     void settlement.notify(processedEvent)
     await clock.advance(1 * S)
     expect(first.status).toBe(UploadQueueItemStatus.Uploaded)
@@ -1294,7 +1260,6 @@ describe('a tick that waits for its turn behind another read', () => {
     settlement.track('b', add('b', queueRow({ assetId: 'asset-2', fileId: 'file-2' })))
     server.hold()
     await clock.advance(5 * S)
-    // The tick of `a` is on its way; that of `b` waits behind it.
     expect(server.requests).toEqual([{ kind: 'asset', ids: ['asset-1'] }])
 
     settlement.dropQueue('b')
@@ -1303,10 +1268,8 @@ describe('a tick that waits for its turn behind another read', () => {
     server.release()
     await clock.settle()
 
-    // Its turn has come, and it asks about nothing: not about the row that is gone, nor about the new one.
     expect(server.requests).toEqual([{ kind: 'asset', ids: ['asset-1'] }])
 
-    // The new row is asked about at its own first mark.
     await clock.advance(5 * S - 1)
     expect(server.asked('asset').filter(({ ids }) => ids[0] === 'asset-3')).toHaveLength(0)
     await clock.advance(1)
@@ -1421,7 +1384,6 @@ describe('a settlement disposed of', () => {
     expect(settledState(becomes)).toEqual(before)
     expect(made.calls.final).toEqual([])
 
-    // Nor the file of a duplicate that is only marked: the mark was made before, what completes it is not.
     server = fakeDamServer()
     const { add } = dam()
     server.originFiles.set('file-original', damFile('file-original', AssetFileProcessStatus.Processed))
@@ -1471,7 +1433,6 @@ describe('the warning of a row whose reads keep failing', () => {
     settlement.track(QUEUE, row)
     server.fail('asset')
 
-    // The ticks fail at 5 and at 20 s; the next is due at 50.
     await clock.advance(20 * S)
     expect(row.error).toEqual(noError)
     void settlement.notify(metadataEvent)
@@ -1490,25 +1451,23 @@ describe('the warning of a row whose reads keep failing', () => {
     server.fileBecomes('asset-2', AssetFileProcessStatus.Stored)
     const row = add(QUEUE, queueRow())
     settlement.track(QUEUE, row)
-    // Two assets: the ticks ask in bulk, and are answered. The read of one asset fails.
     settlement.track(QUEUE, add(QUEUE, queueRow({ assetId: 'asset-2', fileId: 'file-2' })))
     server.fail('asset')
 
-    // Tried at 2, 17 and 47 s, with answered ticks in between.
     void settlement.notify(metadataEvent)
     await clock.advance(47 * S)
 
     expect(server.asked('asset')).toHaveLength(3)
     expect(server.asked('assets').length).toBeGreaterThan(3)
     expect(row.error).toEqual(noError)
-    // And it is given up as before: nothing but the ticks asks from here on.
     await clock.advance(10 * MIN)
     expect(server.asked('asset')).toHaveLength(3)
   })
 })
 
 describe('a read a notification asked for, when its rows are taken out', () => {
-  // On the wire it cannot be cancelled. When it fails, nobody is left it would be tried again for.
+  // A read on the wire cannot be cancelled.
+  // If it fails after the rows left, nobody is left to retry it for.
   it('is not tried again when it fails after they left, and begins no streak of failures', async () => {
     const { add, queues } = lib()
     server.fileBecomes('asset-1', AssetFileProcessStatus.Stored)
@@ -1526,7 +1485,6 @@ describe('a read a notification asked for, when its rows are taken out', () => {
     await clock.settle()
     expect(clock.waiting()).toBe(0)
 
-    // What fails for the next row is the first failure of its own streak.
     settlement.track('next', add('next', queueRow({ assetId: 'asset-2', fileId: 'file-2' })))
     await clock.advance(5 * S)
     expect(server.letReport()).toEqual([true, true])
@@ -1545,7 +1503,6 @@ describe('a read a notification asked for, when its rows are taken out', () => {
     const settled = released(settlement.notify(metadataEvent))
     expect(clock.waiting()).toBe(1)
 
-    // Before the row leaves its queue, as the stores do it.
     settlement.untrack(row)
     await clock.settle()
 
@@ -1617,15 +1574,12 @@ describe('an asset of a tick that cannot be written', () => {
       UploadQueueItemStatus.Processing,
     ])
 
-    // The third asset is nowhere: its row was counted as missing at this tick too, and the queue goes on by the
-    // marks of the age, 10 and 16 s, not by the ladder of a failed read.
     await clock.advance(11 * S)
     expect(rows[2]).toMatchObject({ status: UploadQueueItemStatus.Failed, error: { message: TEXT.missing } })
   })
 })
 
 describe('a row that warned while its file was sent, and whose upload then failed', () => {
-  // The metadata notification of a file still being sent, whose read fails three times: at 2, 17 and 47 s.
   const warnedWhileSent = async () => {
     const made = lib()
     server.fileBecomes('asset-1', AssetFileProcessStatus.Stored)
@@ -1640,7 +1594,6 @@ describe('a row that warned while its file was sent, and whose upload then faile
     })
     return row
   }
-  // What the catch of a store does once the finish request has gone out and failed.
   const failsItsUpload = (row: UploadQueueItem, error?: UploadQueueItem['error']) => {
     if (error) row.error = { ...error }
     else row.error.hasError = true
@@ -1668,7 +1621,7 @@ describe('a row that warned while its file was sent, and whose upload then faile
   it('loses the warning and keeps the flag of its failure, when the store wrote no text of its own', async () => {
     const row = await warnedWhileSent()
 
-    // The library's store marks the failure by the flag alone: the text on the row is still the settlement's.
+    // The library's store marks the failure by the flag alone, so the text on the row is still the settlement's.
     failsItsUpload(row)
     server.recover()
     await clock.advance(10 * MIN)
@@ -1708,7 +1661,6 @@ describe('a text of the settlement that nobody wrote over', () => {
 })
 
 describe('a notification that arrives while the read of the metadata notification is on the wire', () => {
-  // The metadata notification, its read sent 2 s later and held open: it will answer what the server knew then.
   const metadataReadOnTheWire = async (made: ReturnType<typeof dam> | ReturnType<typeof lib>) => {
     server.fileBecomes('asset-1', AssetFileProcessStatus.Processed)
     const row = made.add(QUEUE, queueRow())
@@ -1729,11 +1681,9 @@ describe('a notification that arrives while the read of the metadata notificatio
     server.release()
     await clock.settle()
 
-    // The answer is older than the event: it gives the row no state, but its metadata is no state.
     expect(row).toMatchObject({ status: UploadQueueItemStatus.Uploaded, error: noError, ...loadedMetadata })
     expect(made.calls.metadataLoaded).toEqual([row.key])
 
-    // The read the event asked for completes the row, and nothing asks after it.
     await clock.advance(10 * MIN)
     expect(server.requests).toHaveLength(2)
     expect(row).toMatchObject({ ...uploaded, imagePreview: previewOf('file-1'), ...loadedMetadata })
@@ -1753,7 +1703,6 @@ describe('a notification that arrives while the read of the metadata notificatio
     server.release()
     await clock.advance(10 * MIN)
 
-    // The answer said the file was processed; the failure came after it was asked for.
     expect(row).toMatchObject({
       status: UploadQueueItemStatus.Failed,
       error: { hasError: true, message: '', assetFileFailReason: AssetFileFailReason.InvalidMimeType },
@@ -1786,7 +1735,6 @@ describe('a notification that arrives while the read of the metadata notificatio
     const row = await metadataReadOnTheWire(made)
 
     void settlement.notify(processedEvent)
-    // Here the event writes nothing: the row is not older than the answer.
     expect(row.status).toBe(UploadQueueItemStatus.Processing)
     server.release()
     await clock.settle()
@@ -1798,8 +1746,6 @@ describe('a notification that arrives while the read of the metadata notificatio
   })
 })
 
-// A store offers refresh on a failed row only where one may still change it, and the settlement says which rows
-// those are: a row asked about although the client gave it up, and one left without the original of its duplicate.
 describe('whether a refresh may still change a failed row', () => {
   const gaveUp = { status: UploadQueueItemStatus.Failed }
   const yes = (row: UploadQueueItem) => '+' + row.key
@@ -1862,7 +1808,6 @@ describe('whether a refresh may still change a failed row', () => {
     expect(settlement.hasTracked()).toBe(false)
   })
 
-  // The row is failed for the read that failed, not for its file: the refresh asks for the original again.
   it('it may for a row left without the original of its duplicate: the one that waited, and the one given up on', async () => {
     const { add, calls } = lib()
     server.fileBecomes('asset-1', AssetFileProcessStatus.Duplicate, { originAssetFile: 'file-original' })
@@ -1875,18 +1820,14 @@ describe('whether a refresh may still change a failed row', () => {
     await clock.advance(5 * S)
 
     expect([waited.status, givenUp.status]).toEqual([UploadQueueItemStatus.Failed, UploadQueueItemStatus.Failed])
-    // The one given up on was told so when it began to be asked about, and nothing took that back.
     expect(calls.refreshMayHelp).toEqual([yes(givenUp), yes(waited)])
     expect(settlement.hasTracked()).toBe(false)
 
-    // Asked while the original still cannot be read: the refresh did not do what it was pressed for, and says
-    // why, though the file itself is settled. The rows stay as they are, with their way back.
     expect(await settlement.refreshAsset({ assetId: 'asset-1', fileId: null })).toBe('originalUnread')
     expect(await settlement.refreshAsset({ assetId: 'asset-2', fileId: null })).toBe('originalUnread')
     expect([waited.status, givenUp.status]).toEqual([UploadQueueItemStatus.Failed, UploadQueueItemStatus.Failed])
     expect(calls.refreshMayHelp).toEqual([yes(givenUp), yes(waited)])
 
-    // The original can be read again, and the user asks.
     server.originAssets.set(
       'file-original',
       damAsset('asset-original', damFile('file-original', AssetFileProcessStatus.Processed))
@@ -1907,8 +1848,6 @@ describe('whether a refresh may still change a failed row', () => {
     expect(calls.refreshMayHelp.slice(2)).toEqual([no(waited), no(givenUp)])
   })
 
-  // No tick has left the row yet: the refresh is itself the read that finds the duplicate, fails the row for want
-  // of the original, and answers by that.
   it('it may for a row its own refresh fails for want of the original, and that refresh answers why', async () => {
     const { add, calls } = lib()
     server.fileBecomes('asset-1', AssetFileProcessStatus.Duplicate, { originAssetFile: 'file-original' })
@@ -1934,7 +1873,6 @@ describe('whether a refresh may still change a failed row', () => {
     expect(calls.refreshMayHelp).toEqual([yes(copy)])
   })
 
-  // Not asked about any more, such a row is still told when the server says what became of its file.
   it('no longer for a row left without its original, when a refresh then finds its file failed', async () => {
     const { add, calls } = lib()
     server.fileBecomes('asset-1', AssetFileProcessStatus.Duplicate, { originAssetFile: 'file-original' })
@@ -1943,7 +1881,6 @@ describe('whether a refresh may still change a failed row', () => {
     await clock.advance(5 * S)
     expect(calls.refreshMayHelp).toEqual([yes(row)])
 
-    // Still without its original: nothing changes, the refresh may help yet, and says why it could not this time.
     expect(await settlement.refreshAsset({ assetId: 'asset-1', fileId: null })).toBe('originalUnread')
     expect(calls.refreshMayHelp).toEqual([yes(row)])
 
@@ -1957,7 +1894,6 @@ describe('whether a refresh may still change a failed row', () => {
     expect(calls.refreshMayHelp).toEqual([yes(row), no(row)])
   })
 
-  // Not tracked any more, such a row has no tick to find its asset gone: the reads that are made for it count.
   it('no longer for a row left without its original once three reads in a row find no asset', async () => {
     const { add, calls } = lib()
     server.fileBecomes('asset-1', AssetFileProcessStatus.Duplicate, { originAssetFile: 'file-original' })
@@ -1970,14 +1906,12 @@ describe('whether a refresh may still change a failed row', () => {
 
     server.assets.delete('asset-1')
     expect([await refresh(), await refresh()]).toEqual(['missing', 'missing'])
-    // One read that answers, still without the original: the count starts anew.
     server.assets.set('asset-1', asset)
     expect(await refresh()).toBe('originalUnread')
     server.assets.delete('asset-1')
     expect([await refresh(), await refresh()]).toEqual(['missing', 'missing'])
     expect(calls.refreshMayHelp).toEqual([yes(row)])
 
-    // The miss that is one too many: there is nothing left to ask again, and the refresh does not say to.
     expect(await refresh()).toBe('settled')
 
     expect(calls.refreshMayHelp).toEqual([yes(row), no(row)])
@@ -2000,8 +1934,9 @@ describe('whether a refresh may still change a failed row', () => {
     expect(calls.refreshMayHelp).toEqual([yes(row), no(row)])
   })
 
-  // The server's word stands: a duplicate that is announced late, and whose original cannot be read, does not
-  // bring a refresh back to a row the server has failed.
+  // The server's word stands.
+  // A duplicate announced late, whose original cannot be read,
+  // must not bring a refresh back to a row the server has failed.
   it('not for a row the server had failed before the original of its duplicate could not be read', async () => {
     const { add, calls } = lib()
     const row = add(QUEUE, queueRow())
@@ -2041,9 +1976,6 @@ describe('whether a refresh may still change a failed row', () => {
   })
 })
 
-// The poll and the notifications ask for as long as a row waits. The reader of the store hands a failure to
-// whoever collects the errors of the application, and is told of each request whether to: of a streak of failures
-// only the first.
 describe('which failed reads a reader is let report', () => {
   const stored = (assetId: string) => server.fileBecomes(assetId, AssetFileProcessStatus.Stored)
 
@@ -2053,7 +1985,6 @@ describe('which failed reads a reader is let report', () => {
     settlement.track(QUEUE, add(QUEUE, queueRow()))
     server.fail('asset')
 
-    // At 5 s, then 15 and 30 s after a failure.
     await clock.advance(50 * S)
     expect(server.letReport()).toEqual([true, false, false])
 
@@ -2118,14 +2049,12 @@ describe('which failed reads a reader is let report', () => {
     const ofFailing = server.letReport({ asset: 'asset-1' })
     expect(ofFailing.length).toBeGreaterThan(3)
     expect(ofFailing).toEqual([true, ...ofFailing.slice(1).map(() => false)])
-    // The other row was read all along, and each of its reads would have been the first to fail.
     expect(server.letReport({ asset: 'asset-2' }).length).toBeGreaterThan(8)
   })
 
   it('a read a notification asks for: its first try, and none of the tries after it', async () => {
     const { add } = lib()
     stored('asset-1')
-    // Still sending: no tick asks about it.
     add(QUEUE, queueRow({ status: UploadQueueItemStatus.Uploading }))
     server.fail('asset')
 
@@ -2182,7 +2111,6 @@ describe('which failed reads a reader is let report', () => {
     expect(await settlement.refreshAsset({ assetId: 'asset-1', fileId: null })).toBe('error')
     await settlement.settleKnownProcessed({ assetId: 'asset-1', fileId: null }, { withMetadata: true })
     await clock.advance(15 * S)
-    // The tick, three reads the user or a caller asked for, and the tick again.
     expect(server.letReport()).toEqual([true, true, true, true, false])
 
     server.recover()
@@ -2214,7 +2142,6 @@ describe('which failed reads a reader is let report', () => {
     expect(server.letReport()).toEqual([true, false])
   })
 
-  // The upload is over, the dialog closed: what fails in the next one is told anew.
   it('the first failure again once the last queue was dropped, although no read has answered', async () => {
     const { add, queues } = lib()
     stored('asset-1')
@@ -2253,8 +2180,6 @@ describe('which failed reads a reader is let report', () => {
   })
 })
 
-// A store whose queues are under more than one DAM configuration asks under the configuration of the queue a read
-// is for: the settlement names that queue with every read. A reader that does not look at it asks as before.
 describe('the queue a reader is told a read is for', () => {
   const stored = (assetId: string) => server.fileBecomes(assetId, AssetFileProcessStatus.Stored)
 
@@ -2314,7 +2239,7 @@ describe('the queue a reader is told a read is for', () => {
     expect(server.queuesOf('asset')).toEqual(['first', undefined])
   })
 
-  // Noted before the read is asked for: by the time it answers the row may be gone.
+  // The queue is noted before the read is asked for, because the row may be gone by the time it answers.
   it('the refresh: the queue of a row that leaves while the read is on the wire', async () => {
     const { add, queues } = lib()
     stored('asset-1')
@@ -2343,8 +2268,8 @@ describe('the queue a reader is told a read is for', () => {
     expect([first.assetId, second.assetId]).toEqual(['asset-original', 'asset-original'])
   })
 
-  // The tick is of the second queue, and the asset it reads is also that of a row of the first, which it writes
-  // into as well: the original is asked for under the queue of that row, the first to become it.
+  // The tick is of the second queue, and its asset is also that of a row of the first queue.
+  // The original is asked for under the queue of that row, the first to become the duplicate.
   it('the original of a duplicate a tick has found: the queue of the first row to become it, not that of the tick', async () => {
     const { add } = lib()
     server.originAssets.set('file-original', damAsset('asset-original', damFile('file-original')))

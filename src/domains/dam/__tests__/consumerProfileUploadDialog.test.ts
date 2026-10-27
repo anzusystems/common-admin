@@ -16,10 +16,11 @@ import { UploadQueueItemStatus, type UploadQueueItemStatusType } from '@/domains
 import UploadQueueDialog from '@/domains/dam/uploadQueue/components/UploadQueueDialog.vue'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
 
-// What the user sees of an upload in the queue dialog of a widget, under each of the two applications: the title
-// of the dialog, the row of the file, and whether its form and "save and apply" can be used. The real dialog with
-// its real rows over the real queue; the DAM is a client that records its requests, and only the long waits are
-// taken out of real time. No notification comes: what settles the row is a read of its asset.
+// Covers what the user sees of an upload in the queue dialog of a widget under each
+// application: dialog title, file row, and whether its form and "save and apply" work.
+// Uses the real dialog, rows and queue. The DAM is a recording
+// client and only the long waits are taken out of real time.
+// No notification comes; a read of the asset settles the row.
 
 const QUEUE = 'dialog-queue'
 
@@ -58,7 +59,6 @@ describe.each(consumerProfiles)('the upload dialog under the $name', (profile) =
     useDamNotificationsEventBus().reset()
   })
 
-  /** A file is picked: the widget queues it and opens the dialog of its queue. */
   const pickOne = async () => {
     const store = useUploadQueuesStore()
     await store.addByFiles(
@@ -80,8 +80,8 @@ describe.each(consumerProfiles)('the upload dialog under the $name', (profile) =
       },
       global: {
         plugins: [pinia],
-        // What has no say in how an upload settles: the picture of the row (it would ask the image server), the
-        // inputs that ask the DAM for names to offer, the mass operations, and the ways to add more files.
+        // Stubbed because they do not affect how an upload settles: the row picture (it would ask the image
+        // server), the inputs that ask the DAM for names, the mass operations, and the ways to add files.
         stubs: {
           AssetImage: true,
           AFormRemoteAutocompleteWithCached: true,
@@ -94,7 +94,6 @@ describe.each(consumerProfiles)('the upload dialog under the $name', (profile) =
     const [item] = store.getQueueItems(QUEUE)
     return { store, item }
   }
-  /** The text of the library for a key, as the dialog renders it. */
   const text = (key: string) => (wrapper!.vm as unknown as { $t: (key: string) => string }).$t(`common.damImage.${key}`)
   const toolbar = () => document.body.querySelector<HTMLElement>('.v-toolbar')!
   const row = () => document.body.querySelector<HTMLElement>('.dam-upload-queue__item')!
@@ -111,12 +110,10 @@ describe.each(consumerProfiles)('the upload dialog under the $name', (profile) =
     Array.from(toolbar().querySelectorAll<HTMLButtonElement>('button')).find((button) =>
       button.querySelector('.mdi-content-save')
     )!
-  /** The two buttons a failed row can have: the one that takes it out, and the one that asks the server again. */
   const rowButtons = () => ({
     remove: row().querySelector('[data-cy="button-delete"]') !== null,
     refresh: row().querySelector('.mdi-refresh') !== null,
   })
-  /** The file is sent, the server answers what the case says, and the queue asks. */
   const settled = async (status: UploadQueueItemStatusType, serverSays: () => unknown) => {
     const [item] = useUploadQueuesStore().getQueueItems(QUEUE)
     await vi.waitFor(() => expect(item.status).toBe(UploadQueueItemStatus.Processing))
@@ -192,7 +189,6 @@ describe.each(consumerProfiles)('the upload dialog under the $name', (profile) =
     ])
     // Its position is the widget's to give (finding 31).
     expect('position' in (wrapper!.emitted('apply')![0] as [object[]])[0][0]!).toBe(false)
-    // Neither map asks for an author here.
     const ownPrefix = endPoints.asset.replace(/\/asset$/, '/')
     expect(dam.requests.filter((request) => !request.url.startsWith(ownPrefix))).toEqual([])
     expect(dam.unanswered).toEqual([])
@@ -223,7 +219,6 @@ describe.each(consumerProfiles)('the upload dialog under the $name', (profile) =
       dam.fileBecomes('asset-1', AssetFileProcessStatus.Failed, {}, { failReason: AssetFileFailReason.InvalidMimeType })
     )
 
-    // A queue of failed rows only counts as finished.
     expect(toolbar().textContent).toContain(text('upload.titleDone'))
     const error = row().querySelector<HTMLElement>('.dam-upload-queue__overlay--error')!
     expect(error.textContent).toContain(text('queueItem.error'))
@@ -249,7 +244,6 @@ describe.each(consumerProfiles)('the upload dialog under the $name', (profile) =
     expect(error.textContent).toContain(text('uploadErrors.unknownError'))
     expect(fields().every((field) => field.disabled)).toBe(true)
     expect(saveAndApply()!.disabled).toBe(true)
-    // The request may have reached the server all the same: the row offers to ask it, at once.
     expect(rowButtons()).toEqual({ remove: true, refresh: true })
   })
 
@@ -271,7 +265,6 @@ describe.each(consumerProfiles)('the upload dialog under the $name', (profile) =
     expect(rowButtons()).toEqual({ remove: true, refresh: false })
   })
 
-  // The server answered the finish request, and refused: it will not finish the file, whatever is asked later.
   it('offers no refresh on a row whose finish request the server refused, only to take it out', async () => {
     dam.reply((request) =>
       request.method === 'PATCH' && dam.routes.finish.test(request.url)
@@ -289,7 +282,6 @@ describe.each(consumerProfiles)('the upload dialog under the $name', (profile) =
     expect(rowButtons()).toEqual({ remove: true, refresh: false })
   })
 
-  // The server never had the whole file: it will not finish it, and a refresh would only say "still uploading".
   it('offers no refresh on a row whose chunk the server refused, only to take it out', async () => {
     dam.reply((request) =>
       request.method === 'POST' && dam.routes.chunk.test(request.url)

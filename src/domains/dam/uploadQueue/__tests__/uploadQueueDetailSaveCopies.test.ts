@@ -15,9 +15,11 @@ import { AssetFileProcessStatus } from '@/domains/dam/types/AssetFile'
 import { useUploadQueueMassOperations } from '@/domains/dam/uploadQueue/composables/uploadQueueMassOperations'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
 
-// One asset can be a row of two queues (two widgets of a page). A save in its detail gives both rows what the DAM
-// then answers for it, from one read: each row gets its own lists and custom data, as when the read fails. A fill or
-// an edit in one queue changed the row of the other queue too, and that queue's next save sent it for the asset.
+// One asset can be a row of two queues (two widgets of a page).
+// A save in its detail gives both rows what the DAM answers,
+// from one read. Each row gets its own lists and custom data.
+// Before, a fill or edit in one queue changed the row of the other
+// queue too, and that queue's next save sent it for the asset.
 
 const { endPoints, extSystem, licence } = cmsConfiguration
 const QUEUE = 'detail-save-queue'
@@ -55,7 +57,6 @@ const saved = {
   },
 }
 
-/** A copy of one asset in two queues, settled, with its form; its detail saved. */
 const savedInTheDetailOfARowInTwoQueues = async () => {
   const store = useUploadQueuesStore()
   dam.assets.set('asset-1', damAssetWithFile('asset-1', 'file-1', AssetFileProcessStatus.Processed))

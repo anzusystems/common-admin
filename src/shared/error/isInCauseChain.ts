@@ -1,8 +1,8 @@
 import { isDefined, isNull } from '@/shared/utils/common'
 
 /**
- * Walks an error's `.cause` chain (tolerant: a cause is not always an `Error`, and a chain could loop)
- * and answers whether any value in it matches.
+ * Checks whether any value in an error's `.cause` chain matches.
+ * A cause is not always an `Error`, and a chain can loop.
  */
 export const isInCauseChain = (error: unknown, predicate: (value: unknown) => boolean): boolean => {
   const seen = new Set<unknown>()

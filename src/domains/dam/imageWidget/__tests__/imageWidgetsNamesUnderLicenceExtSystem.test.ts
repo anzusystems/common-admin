@@ -26,18 +26,16 @@ import type { ImageAware } from '@/domains/dam/types/ImageAware'
 import { useUploadQueueDialog } from '@/domains/dam/uploadQueue/composables/useUploadQueueDialog'
 import type { DocId } from '@/shared/types/common'
 
-// The names of the authors of the DAM that the image widgets write into the source of an image are looked up under
-// the ext system of the licence of the asset, everywhere, as the read of a held asset and the read before a write do.
-// The name of the authors of a pick and of a confirm went under the ext system of the picker, those of the gallery
-// under that of the page. With today's data the two are the same; here the asset is of a licence of another one, and
-// the DAM names an author after the ext system it is asked under. admin-cms only (admin-ugc has no DAM authors).
+// Author names of the DAM are looked up under the ext system of the asset's
+// licence everywhere, like the read of a held asset and the read before a write.
+// Pick and confirm used the ext system of the picker, and the gallery that of the page. With
+// today's data they are the same, so the test uses an asset of a licence of another ext system.
+// The DAM names an author after the ext system it is asked under. admin-cms only (admin-ugc has no DAM authors).
 
 const profile = cmsConfiguration
 const { endPoints, extSystem, licence } = profile
-/** A licence of another ext system than the one of the page. */
 const OTHER_LICENCE = licence + 1
 const OTHER_EXT_SYSTEM = extSystem + 1
-/** A licence the configuration of the page does not know. */
 const UNKNOWN_LICENCE = licence + 2
 const named = (author: DocId) => `Name of ${author} in ${OTHER_EXT_SYSTEM}`
 const MEDIA = /^\/adm\/v1\/cms\/asset\//
@@ -86,7 +84,6 @@ beforeEach(() => {
     const found = [...dam.assets.values()].filter((asset) => asset.mainFile && files.includes(asset.mainFile.id))
     return { status: 200, data: { data: found, totalCount: found.length } }
   })
-  // The other licence, of the other ext system, configured as the one of the page.
   const config = useDamConfigStore(pinia)
   config.damConfigLicenceExtSystem.set(OTHER_LICENCE, { name: 'other', extSystem: OTHER_EXT_SYSTEM })
   config.damConfigExtSystem.set(OTHER_EXT_SYSTEM, config.damConfigExtSystem.get(extSystem)!)
@@ -111,7 +108,6 @@ const uploadConfig = () => ({
   licenceName: 'own',
   extSystemConfig: useDamConfigStore(pinia).damConfigExtSystem.get(extSystem)!,
 })
-/** An asset of the other licence, its file processed. */
 const inTheDam = (id: string, authors: DocId[] = [], of = OTHER_LICENCE) =>
   dam.assets.set(
     id,
@@ -141,7 +137,6 @@ const confirmButton = () =>
   Array.from(imageDialog()!.querySelectorAll<HTMLButtonElement>('button')).find(
     (button) => button.textContent?.trim() === uiText('common.button.confirm')
   )!
-/** The source each saved image went to the image API with. */
 const sourcesSaved = () =>
   imageApi.calls.flatMap(([call, ...args]) => {
     if (call === 'createImage') return [(args[0] as ImageAware).texts.source]
@@ -191,7 +186,6 @@ describe.each<[string, Component]>([
     })
     widgets.push(mounted)
     await flushPromises()
-    // The picker's configuration: the licence of the page, of its ext system.
     useAssetSelectStore(pinia).setSelectConfig([uploadConfig()])
     return mounted
   }
@@ -305,8 +299,8 @@ describe('the widget of several images, of assets of a licence of another ext sy
     expect(images()[0]!.texts.source).toBe(named('author-3'))
   })
 
-  // Rows of a licence the page has not loaded: their ext system is taken from what the page knows, or the page's own,
-  // and no licence is read for it.
+  // Rows of a licence the page has not loaded take their ext system from
+  // what the page knows, or the page's own. No licence is read for them.
   const licenceReads = () => dam.requests.filter((request) => request.url.startsWith('/adm/v1/asset-licence/'))
   it('reads no licence the page does not know as it saves: the names go under the ext system of the page', async () => {
     const gallery = await mountGallery([12], UNKNOWN_LICENCE)

@@ -14,8 +14,8 @@ afterEach(() => {
   document.body.innerHTML = ''
 })
 
-// With the transitions the page has: Vuetify 4.3 draws the root of a VAlert in its transition, and the stand-in
-// Test Utils draw for it by default took the attributes of the alert, its `data-cy` too.
+// Uses the page's transitions: Vuetify 4.3 draws the root of a `VAlert` in its transition.
+// The default Test Utils stand-in took the alert's attributes, including `data-cy`.
 const mountHost = () => {
   wrapper = mount(defineComponent({ setup: () => () => h(VApp, () => h(AAlerts)) }), {
     attachTo: document.body,

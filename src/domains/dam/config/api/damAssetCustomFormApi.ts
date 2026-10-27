@@ -9,7 +9,7 @@ import { DAM_END_POINT_ASSET_CUSTOM_FORM } from '@/domains/dam/api/damEndPoints'
 
 const ENTITY = 'assetCustomForm'
 
-// `endPoint`: the address of the custom forms the caller goes by; the default one where it gives none.
+// `endPoint`: custom forms address. Defaults when not given.
 
 // todo limit set to 100 for now, add load for pagination?
 export const fetchAssetCustomFormElements = (

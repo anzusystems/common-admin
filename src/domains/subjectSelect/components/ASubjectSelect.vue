@@ -111,10 +111,8 @@ const lastPage = computed(() => {
   return Math.ceil(paginationComputed.value.totalCount / paginationComputed.value.rowsPerPage)
 })
 
-// `>=`, not `===`: an empty list has `totalCount: 0`, so `lastPage` is 0 while `page` is never below
-// 1, and the two can never meet. The page would then count as "not the last one" on a list with
-// nothing in it -- and the same holds before any request has been made, because that initial state is
-// the same numbers.
+// `>=`, not `===`. An empty list has `lastPage` 0 while `page` is at least 1, so they never meet.
+// The same holds before the first request.
 const hasNextPage = computed(() => {
   return !(
     (isNull(paginationComputed.value.hasNextPage) && paginationComputed.value.page >= lastPage.value) ||

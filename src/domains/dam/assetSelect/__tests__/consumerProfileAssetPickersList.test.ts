@@ -29,11 +29,11 @@ import { DamAssetStatus, DamAssetType, type DamAssetTypeType } from '@/domains/d
 import { AssetFileProcessStatus } from '@/domains/dam/types/AssetFile'
 import { SORT_BY_SCORE_DATE } from '@/domains/filters/datatable/utils/datatableColumns'
 
-// The two asset pickers of the image widgets, as admin-cms opens them, and the list they show: which of its tiles are
-// drawn as picked once the list has been read anew, from which page a list in another order or of another type is
-// read, and what the side panel says when the configuration of the custom fields cannot be read. The real pickers
-// with their real bar, tiles and filter; the DAM is a client that records its requests. Not drawn: the pictures, the
-// table, the metadata of the asset of the side panel and the inputs of the filter (each is named by a stand-in).
+// Covers the two asset pickers of the image widgets as admin-cms opens
+// them: which tiles are drawn as picked after the list is read anew,
+// the page used when the order or type changes, and the side panel when the custom field configuration cannot be read.
+// The pickers, bar, tiles and filter are real. The DAM is a recording client.
+// Stand-ins: pictures, table, side panel metadata, filter inputs.
 
 const { endPoints, extSystem, licence } = cmsConfiguration
 const STAND_INS = [
@@ -56,9 +56,7 @@ let pinia: Pinia
 let dam: FakeDam
 let waits: LongWaits
 let wrapper: VueWrapper | undefined
-/** What the DAM lists of each type, page by page. */
 let pagesOf: Partial<Record<DamAssetTypeType, string[][]>>
-/** Whether a list says if a further page follows, as the DAM does, or how many assets there are. */
 let saysIfMoreFollows: boolean
 
 const isListRequest = (request: FakeDamRequest) =>
@@ -77,7 +75,6 @@ const ofType = (id: string) =>
     },
   })
 
-/** What the DAM answers a list request with: the page asked for, of the type asked for. */
 const listAnswer = (request: FakeDamRequest) => {
   const pages = pagesOf[typeOf(request)] ?? []
   const page = offsetOf(request) / PAGE
@@ -90,7 +87,9 @@ const listAnswer = (request: FakeDamRequest) => {
   }
 }
 
-/** The paging of the asset lists is one for the page: what an earlier case left of it is not this one's. */
+/**
+ * The paging of the asset lists is one per page. What an earlier case left in it must not leak into this one.
+ */
 const pagingAsNew = () => {
   let paging!: ReturnType<typeof useAssetSelectActions>['pagination']
   const probe = mount(
@@ -122,7 +121,6 @@ describe('the list of the asset pickers of admin-cms', () => {
     pagesOf = {}
     saysIfMoreFollows = false
     dam.reply((request) => (isListRequest(request) ? listAnswer(request) : undefined))
-    // A read of an asset answers for every asset a list may bring.
     dam.reply((request) => {
       const one = request.method === 'GET' ? request.url.match(dam.routes.one) : null
       return one && /^(image|video)-/.test(one[1]!) ? { status: 200, data: ofType(one[1]!) } : undefined
@@ -160,18 +158,15 @@ describe('the list of the asset pickers of admin-cms', () => {
       },
     })
     wrapper = mounted
-    // Ready once it has the configurations of its licences.
     await flushPromises()
     return mounted
   }
   const listRequests = () => dam.requests.filter(isListRequest)
-  /** The picker has asked for its list so many times, and has the last answer. */
   const listed = async (times: number) => {
     await vi.waitFor(() => expect(listRequests()).toHaveLength(times))
     await vi.waitFor(() => expect(useAssetSelectStore(pinia).loader).toBe(false))
     await flushPromises()
   }
-  /** Mounted over the licence of the widget, opened as the widget opens it, and done listing. */
   const openPicker = async (component: Component, props: Record<string, unknown> = {}) => {
     const mounted = await mountPicker(component, props)
     await mounted.setProps({ modelValue: true })
@@ -181,7 +176,6 @@ describe('the list of the asset pickers of admin-cms', () => {
   // The dialog of the picker is drawn into the body.
   const picker = () => document.body.querySelector<HTMLElement>('.subject-select__card')!
   const tiles = () => Array.from(document.body.querySelectorAll<HTMLElement>('.asset-list-tiles__item'))
-  /** The assets of the tiles, and which of them are drawn as picked: the green frame and the check in the corner. */
   const tilesDrawn = () =>
     tiles().map((tile) => [
       tile.querySelector('[data-cy="asset-tile-title"]')!.textContent!.trim(),
@@ -189,7 +183,6 @@ describe('the list of the asset pickers of admin-cms', () => {
     ])
   const tileOf = (id: string) =>
     tiles().find((tile) => tile.querySelector('[data-cy="asset-tile-title"]')!.textContent!.trim() === id)!
-  /** A click on the tile of an asset, until the list has drawn what it made of it. */
   const clickTile = async (id: string) => {
     tileOf(id).click()
     await flushPromises()
@@ -199,13 +192,11 @@ describe('the list of the asset pickers of admin-cms', () => {
       (button) => button.textContent?.trim() === text
     )!
   const loadMoreButton = () => buttonOfPicker(uiText('common.button.loadMore'))
-  /** "Load more" under the list is pressed, and the further page has come. */
   const loadMore = async () => {
     const listedBefore = listRequests().length
     loadMoreButton().click()
     await listed(listedBefore + 1)
   }
-  /** The user picks another order in the bar of the list, and the list has its answer. */
   const pickAnotherOrder = () =>
     wrapper!.findComponent({ name: 'AssetSelectListBar' }).vm.$emit('sortByChange', {
       id: 2,
@@ -217,7 +208,6 @@ describe('the list of the asset pickers of admin-cms', () => {
     pickAnotherOrder()
     await listed(listedBefore + 1)
   }
-  /** The user submits the filter of the picker, and the list has its answer. */
   const searchAnew = async () => {
     const listedBefore = listRequests().length
     wrapper!.findComponent({ name: 'AFilterWrapperSubjectSelect' }).vm.$emit('submit')
@@ -225,7 +215,6 @@ describe('the list of the asset pickers of admin-cms', () => {
   }
   const typeButton = (type: 'image' | 'video') =>
     document.body.querySelector<HTMLButtonElement>(`[data-cy="button-${type}-types"]`)!
-  /** What the picker says of the count under its list. */
   const says = (selected: number, maxCount = 3) =>
     picker().textContent!.includes(
       uiText('common.assetSelect.meta.texts.pickRangeCount', { minCount: 1, maxCount, selected })
@@ -234,7 +223,6 @@ describe('the list of the asset pickers of admin-cms', () => {
     buttonOfPicker(uiText('common.button.confirm')).click()
     await flushPromises()
   }
-  /** The assets each confirm of the picker handed over. */
   const handedOver = (mounted: VueWrapper) =>
     (mounted.emitted('confirm') ?? []).map(([data]) =>
       (data as { value: Array<{ id: string }> }).value.map((asset) => asset.id)
@@ -243,10 +231,11 @@ describe('the list of the asset pickers of admin-cms', () => {
   const panelLoads = () => !!panel().querySelector('.v-progress-circular')
   const panelShowsAnAsset = () => wrapper!.findComponent({ name: 'AssetMetadata' }).exists()
 
-  // The picked assets are kept beside the list, and outlive it: the count under the list goes by them, and so does
-  // what "confirm" hands over. A list read anew drew none of its tiles as picked all the same. A click on the tile
-  // of a picked asset then only put the mark back, a second one took the asset out; and at the full count no tile
-  // took a click at all, so nothing could be taken out again.
+  // Picked assets are kept beside the list and outlive it. The
+  // count under the list and what "confirm" hands over go by them.
+  // A list read anew drew none of its tiles as picked. A click on a picked
+  // asset's tile then only restored the mark, and a second click removed it.
+  // At the full count no tile took a click, so nothing could be removed.
   describe('draws the tile of a picked asset as picked', () => {
     it.each<[string, Component, Record<string, unknown>, () => Promise<void>]>([
       [`${pickers[0]![0]}: after another order`, pickers[0]![1], pickers[0]![2], sortAnew],
@@ -307,7 +296,7 @@ describe('the list of the asset pickers of admin-cms', () => {
       ])
     })
 
-    // The picker of a gallery takes up to a count: at that count a tile that is not picked takes no click.
+    // A gallery picker takes up to a maximum count. At that count a tile that is not picked takes no click.
     it('at the full count too: a click takes it out, and another asset can be picked in its place', async () => {
       pagesOf.image = [['image-1', 'image-2', 'image-3']]
       const mounted = await openPicker(AAssetSelect, { assetType: DamAssetType.Image, maxCount: 2 })
@@ -353,16 +342,13 @@ describe('the list of the asset pickers of admin-cms', () => {
     })
   })
 
-  // "Load more" moves the paging of the list on, and a search or a reset of the filter puts it back to the first
-  // page. Another order and, in the picker with media, another type did not: the list read anew began at the page
-  // the old one had reached, its first assets were missing, and a type with fewer assets showed none at all.
+  // "Load more" advances the paging, and a search or filter reset returns to the first page.
+  // Changing the order, or the type in the picker with media, did not.
+  // The list read anew started at the page the old one had reached,
+  // missing its first assets, and a type with fewer assets showed none.
   describe('reads its list from the first page', () => {
     const isShown = (element: HTMLElement) => getComputedStyle(element).display !== 'none'
     const listIsRead = () => vi.waitFor(() => expect(useAssetSelectStore(pinia).loader).toBe(false))
-    /**
-     * Open on the images, which the DAM lists as it does: each page says whether a further one follows. A further
-     * page has come: by "load more", unless the list asked for it by itself as that button came into view.
-     */
     const openWithAFurtherPage = async (component: Component, props: Record<string, unknown> = {}) => {
       saysIfMoreFollows = true
       pagesOf.image = [['image-1', 'image-2'], ['image-3'], ['image-4']]
@@ -412,8 +398,8 @@ describe('the list of the asset pickers of admin-cms', () => {
         expect(shownAlerts()).toEqual([])
       })
 
-      // The rows go at the switch, and "load more" under them comes into view: left there, it asks for the page
-      // after the first of the new type before the first has been asked for.
+      // The rows go at the switch and "load more" under them comes into view.
+      // Left there, it requests the page after the first of the new type before the first page was requested.
       it('offers no "load more" under the emptied list, and asks for the first page of that type first', async () => {
         pagesOf.video = [['video-1'], ['video-2']]
         await openOnImagesWithAFurtherPage()
@@ -436,8 +422,8 @@ describe('the list of the asset pickers of admin-cms', () => {
         expect(isShown(loadMoreButton())).toBe(true)
       })
 
-      // The request of the list left was given up only when the next one went out, a pause later: answered within
-      // that pause, its rows came into the list just emptied.
+      // The request of the list left was cancelled only when the next one went out, after a pause.
+      // An answer arriving within that pause put its rows into the list that had just been emptied.
       it.each<[string, boolean]>([
         ['a further page', true],
         ['the first page', false],
@@ -456,7 +442,6 @@ describe('the list of the asset pickers of admin-cms', () => {
           typeButton('video').click()
           await flushPromises()
           expect(tilesDrawn()).toEqual([])
-          // What is still held of the type left answers now, within the pause before the next list is asked for.
           held.waiting
             .filter(({ request }) => typeOf(request) === DamAssetType.Image)
             .forEach((one) => one.release(listAnswer(one.request)))
@@ -475,10 +460,11 @@ describe('the list of the asset pickers of admin-cms', () => {
       )
     })
 
-    // "Load more" is drawn while the list says that a further page follows, and asks for it by itself as it comes into
-    // view. What a list said of that outlived the list: a list that had just begun (another order, a search, a picker
-    // opened again) had the button under it before its first page was asked for, a pause later, and the button asked
-    // for the page after the first; the list then read that page as well, and began with its second page.
+    // "Load more" is shown while the list says a further page follows,
+    // and it loads that page itself when it scrolls into view.
+    // That state outlived the list. A list that had just begun (new order, search,
+    // picker reopened) showed the button before its first page was requested.
+    // The button then asked for the page after the first, and the list began with its second page.
     describe('and offers no "load more" until the first page of a list that has just begun is asked for', () => {
       const image = { assetType: DamAssetType.Image }
       const submitSearch = () => wrapper!.findComponent({ name: 'AFilterWrapperSubjectSelect' }).vm.$emit('submit')
@@ -499,8 +485,9 @@ describe('the list of the asset pickers of admin-cms', () => {
 
           begin()
           await flushPromises()
-          // The list left is shown until the new one comes. The loader stays on meanwhile: the button spins, and a press
-          // asks for nothing. It went, and the loader with it, till the new list was asked for.
+          // The old list stays shown until the new one arrives. The loader
+          // stays on meanwhile: the button spins and a press requests nothing.
+          // Before the fix, the button and the loader disappeared until the new list was requested.
           expect(lists.waiting).toEqual([])
           expect([isShown(loadMoreButton()), loadMoreButton().classList.contains('v-btn--loading')]).toEqual([
             true,
@@ -541,8 +528,8 @@ describe('the list of the asset pickers of admin-cms', () => {
         expect(shownAlerts()).toEqual([])
       })
 
-      // The list of a picker that is closed is no longer waited for: its answer came into the picker opened next,
-      // before that one had read its own list.
+      // The list request of a closed picker is cancelled.
+      // Otherwise its answer reached the next picker opened, before that one had read its own list.
       it('when the picker is closed while its list is on its way: that request is given up, and the picker opened next shows only its own list', async () => {
         pagesOf.image = [['image-1', 'image-2']]
         const mounted = await mountPicker(AAssetSelect, image)
@@ -564,7 +551,6 @@ describe('the list of the asset pickers of admin-cms', () => {
         expect(shownAlerts()).toEqual([])
       })
 
-      // Whatever asks for a further page during the pause before a list is read, the list is read from its first.
       it('and reads the first page of that list also when a further page was asked for during the pause before it', async () => {
         pagesOf.image = [['image-1', 'image-2'], ['image-3']]
         await openPicker(AAssetSelect, image)
@@ -581,8 +567,9 @@ describe('the list of the asset pickers of admin-cms', () => {
     })
   })
 
-  // The form the side panel shows an asset in is drawn from the configuration of the custom fields of the ext system,
-  // read when the picker meets that ext system. When none of its reads answered, the panel went on loading for good.
+  // The form the side panel shows an asset in is built from the custom field
+  // configuration of the ext system, read when the picker first meets that ext system.
+  // When none of the reads answered, the panel kept loading forever.
   describe('whose side panel cannot read the configuration of the custom fields', () => {
     const element = (property: string) => ({
       id: `element-${property}`,
@@ -600,7 +587,6 @@ describe('the list of the asset pickers of admin-cms', () => {
         readonly: false,
       },
     })
-    /** Nobody has read the configuration of the ext system yet; the DAM answers its reads as given, by the type. */
     const configurationIsRead = (answer: (type: string) => { status: number; data?: unknown }) => {
       useDamConfigStore(pinia).damConfigAssetCustomFormElements.delete(extSystem)
       dam.reply((request) => {
@@ -636,8 +622,8 @@ describe('the list of the asset pickers of admin-cms', () => {
       }
     )
 
-    // An ext system may have no custom field at all: its four reads answer, each with an empty list. That is its
-    // configuration, not a failure: the panel shows the asset, without custom fields.
+    // An ext system may have no custom fields: its four reads each answer with an empty list.
+    // That is a valid configuration, not a failure. The panel shows the asset without custom fields.
     it.each(pickers)(
       '%s shows the asset, and says nothing of the configuration, when the ext system has no custom field',
       async (_name, component, props) => {

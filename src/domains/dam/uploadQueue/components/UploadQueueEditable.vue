@@ -19,11 +19,17 @@ const props = withDefaults(
     massOperations: boolean
     configName?: string
     disableDoneAnimation?: boolean
-    /** What the list asks of its host; without it the library's store, caches, alerts and options. */
+    /**
+     * What the list needs from its host. Without it the library store, caches, alerts and options are used.
+     */
     queue?: UploadQueueListBinding
-    /** From how many rows the mass operations are beside the list. */
+    /**
+     * Minimum row count at which the mass operations are shown beside the list.
+     */
     massOperationsFrom?: number
-    /** The arrow keys, PageUp, PageDown, Home and End scroll the list. */
+    /**
+     * Arrow keys, PageUp, PageDown, Home and End scroll the list.
+     */
     keyboardScroll?: boolean
   }>(),
   {
@@ -40,7 +46,9 @@ const emit = defineEmits<{
 }>()
 
 defineSlots<{
-  /** Default: the library's row, its v-models on the item, as today. */
+  /**
+   * Default: the library row, with its v-models on the item.
+   */
   item?(props: {
     item: UploadQueueItem
     index: number
@@ -49,15 +57,15 @@ defineSlots<{
     refreshMayHelp: boolean
   }): unknown
   /**
-   * Default: the library's mass operations of `queueKey`, over the library's store even when `queue` is bound: a host
-   * with its own store gives its sidebar here, as admin-dam does.
+   * Default: the library mass operations of `queueKey`, using the library store even when `queue` is bound.
+   * A host with its own store passes its sidebar here, as admin-dam does.
    */
   sidebar?(props: { queueKey: UploadQueueKey }): unknown
 }>()
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const damConfigName = useDamConfigName(props.configName)
 
-// Created only when the host binds none: a list with its own binding touches nothing of the library's.
+// Created only when the host binds none, so a list with its own binding touches nothing of the library.
 const queue = props.queue ?? useLibraryUploadQueueListBinding(() => props.queueKey, damConfigName)
 
 const { refreshing, refreshItem } = createUploadQueueItemRefresh(queue)
@@ -68,18 +76,18 @@ const list = computed(() => {
 
 const scrollableContainer = ref<HTMLElement | null>(null)
 
-// Inputs that do nothing with these keys themselves, as a switch: on them the keys still scroll the list.
+// Inputs that ignore these keys, such as a switch. On them the keys still scroll the list.
 const KEYLESS_INPUT_TYPES = ['checkbox', 'button', 'submit', 'reset', 'image', 'file']
 
-// A key typed into a field of a row moves its caret or its value: it is left to the browser, and the list stays.
+// A key typed into a row field moves its caret or value. It is left to the browser and the list does not scroll.
 const isTypedIntoField = (target: EventTarget | null) =>
   (target instanceof HTMLInputElement && !KEYLESS_INPUT_TYPES.includes(target.type)) ||
   target instanceof HTMLTextAreaElement ||
   target instanceof HTMLSelectElement ||
   (target instanceof HTMLElement && target.isContentEditable)
 
-// So is one pressed in an open menu, as the one of a field: it moves through that menu. Other overlays, as the dialog
-// the list is in or a snackbar, leave the keys to the list.
+// The same for a key pressed in an open menu, such as a field's menu: it navigates that menu.
+// Other overlays, such as the containing dialog or a snackbar, leave the keys to the list.
 const isInMenu = (target: EventTarget | null) => target instanceof Element && !!target.closest('.v-menu')
 
 const handleKeyboardNavigation = (e: KeyboardEvent) => {

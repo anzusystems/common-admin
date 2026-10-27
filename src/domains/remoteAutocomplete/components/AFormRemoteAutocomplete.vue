@@ -207,9 +207,8 @@ const allItems = computed<ValueObjectOption<T>[]>(() => {
   return Array.from(itemsMap.values())
 })
 
-// The requests of the component on their way (items by their ids, a search, a prefetch): its spinner is on while
-// any of them runs, and goes off with the last. Each turned it off as it ended: a read by ids hid the spinner of a
-// search still running, and the reverse.
+// Counts running requests (by ids, search, prefetch). The spinner stays on until the last one ends.
+// A single flag let a read by ids hide the spinner of a search still running, and the reverse.
 const requestsRunning = ref(0)
 const loadingLocal = computed(() => requestsRunning.value > 0)
 const loadingComputed = computed(() => {
@@ -263,7 +262,7 @@ const tryLoadModelValue = async (tryLoadValue: ModelValueType, prefetch = false)
     showErrorsDefault(e)
     return false
   } finally {
-    // Over before the prefetch below, which bails out while a request of the component runs.
+    // Decremented before the prefetch below, which bails out while a request of the component runs.
     requestsRunning.value--
   }
   if (!isArray(fetchedData) || fetchedData.length === 0) return false
@@ -335,8 +334,7 @@ const singleItemSelectedTitle = computed(() => {
   return undefined
 })
 
-// The clear of the field empties the search with `null` first: an empty search. A field without focus at that
-// moment read its length and threw.
+// Clearing the field first emits a `null` search. Reading its length threw when the field had no focus.
 const onSearchUpdate = (query: string | null) => {
   const text = query ?? ''
   if (!props.multiple && !isFocused.value && text.length === 0) return // vuetify fix
@@ -344,9 +342,8 @@ const onSearchUpdate = (query: string | null) => {
   search.value = text
 }
 
-// The clear empties the value at once and asks for the list once, for an empty search, through the counter of the
-// searches. It asked with the search typed before, outside the counter, wrote that answer whenever it came, and
-// emptied the value only after it.
+// Empties the value at once and fetches the list once for an empty search
+// through the search counter, so a stale answer cannot overwrite it.
 const onClickClear = () => {
   modelValue.value = props.multiple ? [] : null
   apiRequestCounter.value++

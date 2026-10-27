@@ -10,12 +10,10 @@ import { AuthUnavailableError } from '@/shared/error/AuthUnavailableError'
 const { logError } = vi.hoisted(() => ({ logError: vi.fn() }))
 vi.mock('@/domains/system/composables/sentry', () => ({ useSentry: () => ({ logError }) }))
 
-// A failed cache fetch used to leave its ids in the queue forever, so the very same
-// failing batch was resent on every subsequent fetch() (observed in production as one
-// 403 batch retried for hours) while the item stayed _loaded: false and its chip spun
-// until reload. These tests pin the state machine: the queue always drains, whatever the
-// fetch did not resolve becomes terminal, and pruning only counts ids that actually grow
-// the cache.
+// A failed cache fetch left its ids in the queue, so the same failing batch was resent on every `fetch()`.
+// In production one 403 batch was retried for hours while the chip spun until reload.
+// These tests pin that the queue always drains, unresolved ids
+// become terminal, and pruning counts only ids that grow the cache.
 
 interface Row {
   id: number
@@ -119,9 +117,8 @@ describe('defineCached', () => {
       const pending = fetch()
       await vi.advanceTimersByTimeAsync(1600)
 
-      // Awaiting is the assertion: a rejection here would fail the test and, in the app,
-      // surface as an unhandled rejection. The resolved value is not pinned on purpose,
-      // vueuse settles a superseded debounce call with undefined.
+      // Awaiting is the assertion: a rejection would fail the test and be an unhandled rejection in the app.
+      // The resolved value is not pinned on purpose. vueuse settles a superseded debounce call with `undefined`.
       await pending
       expect(fetchCallback).toHaveBeenCalledTimes(1)
       expect(toFetch.value.size).toBe(0)

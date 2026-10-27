@@ -11,28 +11,18 @@ import { AnzuApiForbiddenError } from '@/shared/error/AnzuApiForbiddenError'
 import { AnzuApiResponseCodeError } from '@/shared/error/AnzuApiResponseCodeError'
 import { AnzuApiTimeoutError } from '@/shared/error/AnzuApiTimeoutError'
 
-// The list fetch, and the part of it a caller cannot see: what it writes back into pagination.
-//
-// The helper this replaces -- `apiFetchList` -- took a plain object and MUTATED it, so a caller
-// holding that object saw `totalCount` appear in it. This one replaces the ref's value instead.
-// Anything that kept a reference to the old object and read the count off it afterwards would go
-// on reading a number that no longer changes, with nothing to fail. That is the trap in migrating
-// a list call, and it is the reason for the first block below.
-//
-// The error mapping is one function now (`mapApiError`), shared by the whole family; this file used
-// to say it was a third hand-written copy and that is no longer true. What is pinned below is that a
-// list call reaches that mapping at all and gets the right class out of it -- three of the branches,
-// the ones a list call can reach on its own. The other five are pinned against `useApiRequest`.
-//
-// Not pinned here: the translation of a filter into the query. Every case below runs with a
-// non-mandatory filter whose default is empty, so `getValue` answers null and no `filter_*` is ever
-// emitted. That translation is pinned in `queryBuilderContract.test.ts`, against both builders.
+// The old `apiFetchList` mutated the plain pagination object. This helper replaces the ref's value instead.
+// Code that kept a reference to the old object would keep reading a count that
+// never changes, with no failure. This is the trap when migrating a list call.
+// `mapApiError` is shared by the family. Here only the branches a list call
+// reaches itself are pinned; the others are pinned against `useApiRequest`.
+// Filter-to-query translation is not covered here: every case uses a non-mandatory
+// filter with an empty default. It is pinned in `queryBuilderContract.test.ts`.
 
 const fields = [{ name: 'name', default: '' }] as const satisfies readonly MakeFilterOption<string>[]
 
-// `elastic` goes in through `createFilter`, not onto the config afterwards: only `createFilter`
-// couples it to `simpleFilters`, so a config assembled by hand is one the app cannot produce and
-// would hide the difference between the search endpoint and the flat query format.
+// `elastic` goes in through `createFilter`, which couples it to `simpleFilters`. A hand-assembled config is one
+// the app cannot produce and would hide the difference between the search endpoint and the flat query format.
 const setup = (sortKey: string | null = 'id', elastic = false) => {
   const store = createFilterStore(fields)
   const { filterData, filterConfig } = createFilter(fields, store, { system: 'sys', subject: 'subj', elastic })
@@ -56,8 +46,8 @@ const listResponse = (data: Array<{ id: number }>, over: Record<string, unknown>
   data: { data, totalCount: data.length, ...over },
 })
 
-// The url it was called with, the way an axios failure carries it: the report renders the config
-// axios kept, so a hard-coded one would have it describe a request that never happened.
+// The error carries the url it was called with, like an axios failure. The report renders
+// the kept config, so a hard-coded url would describe a request that never happened.
 const axiosError = (over: Record<string, unknown> = {}, url = '/items') =>
   Object.assign(new Error('request failed'), { isAxiosError: true, config: { url } }, over)
 
@@ -75,8 +65,8 @@ describe('what the list fetch writes back', () => {
 
     expect(pagination.value.totalCount).toBe(57)
     expect(pagination.value.currentViewCount).toBe(2)
-    // The object the caller held before the call is untouched. A migration that assumed otherwise
-    // would read a count that stopped moving, and nothing would say so.
+    // The object the caller held before the call stays untouched.
+    // A migration that assumed otherwise would read a stale count.
     expect(before.totalCount).toBe(0)
     expect(pagination.value).not.toBe(before)
   })
@@ -170,8 +160,8 @@ describe('what the list fetch throws', () => {
   })
 })
 
-// A caller that reads a list again on a timer reports its first failure and says of the rest that it has, as with
-// `useApiRequest`: a poll that asks through an outage would otherwise write the same failure down at every try.
+// A caller that re-reads a list on a timer reports its first failure and marks the rest as reported,
+// as with `useApiRequest`. Otherwise a poll through an outage logs the same failure on every try.
 describe('a list call that asks not to be reported', () => {
   afterEach(() => {
     // Module state shared by every file this worker runs.
@@ -189,7 +179,6 @@ describe('a list call that asks not to be reported', () => {
 
     await expect(fetchList({ report: false })).rejects.toBeInstanceOf(AnzuApiAxiosError)
     expect(logged).not.toHaveBeenCalled()
-    // An answer without the body a list needs: a failure the helper raises itself.
     get.mockResolvedValueOnce({ status: 200, data: '' })
     await expect(fetchList({ report: false })).rejects.toBeInstanceOf(AnzuApiResponseCodeError)
     expect(logged).not.toHaveBeenCalled()

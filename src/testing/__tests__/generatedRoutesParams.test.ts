@@ -2,10 +2,9 @@ import { defineComponent } from 'vue'
 import type { RouteRecordRaw } from 'vue-router'
 import { describeGeneratedRoutes } from '@/testing/generatedRoutes'
 
-// The smoke test fills a param its route constrains with a value the constraint takes. It used to
-// know `\d+` only and fill everything else with `sample`, so a route constrained to a uuid or a log's
-// ObjectId "fell through to the catch-all" in every admin that has one -- the route was fine, the
-// filler was not. Each shape here fails against that filler.
+// The smoke test fills a constrained param with a value the constraint accepts.
+// Routes constrained to a uuid or an ObjectId must not fall through
+// to the catch-all. Each shape here fails with a generic filler.
 
 const route = (name: string, path: string) =>
   `    '${name}': RouteRecordInfo<\n      '${name}',\n      '${path}',\n      Record<never, never>,\n      Record<never, never>,\n      | never\n    >,\n`
@@ -46,7 +45,6 @@ const routes: RouteRecordRaw[] = [
   { path: `/logs/:type/:id(${OBJECT_ID})`, name: '/logs/[type]/[id]', component },
   { path: '/jobs/:id(\\d+)', name: '/jobs/[id]', component },
   { path: '/tags/:slug', name: '/tags/[slug]', component },
-  // A group inside the param's regex closes with `\\)`, as vue-router wants it.
   { path: '/nested/:id((?:\\d+\\))', name: '/nested/[id]', component },
 ]
 const pageFiles = [

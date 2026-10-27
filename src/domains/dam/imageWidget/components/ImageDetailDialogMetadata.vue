@@ -33,14 +33,20 @@ const props = withDefaults(
     saving: boolean
     loading: boolean
     expand?: boolean
-    /** The authors of the DAM are offered in place of the source: those of the asset the widget holds for the image. */
+    /**
+     * Offers DAM authors instead of the source. They are the authors of the asset the widget holds for the image.
+     */
     showDamAuthors?: boolean
-    /** The authors picked so far, while they are offered. */
+    /**
+     * Authors picked so far, used while `showDamAuthors` is on.
+     */
     damAuthors?: DocId[]
     showSourceEnabled?: boolean
     sourceLabel?: string
     editAssetLabel?: string
-    /** What the dialog is opened for, known before anything loads: its title says it. */
+    /**
+     * Asset type the dialog is opened for, known before loading. Used for the title.
+     */
     type?: DamAssetTypeType
   }>(),
   {
@@ -78,8 +84,8 @@ const detailType = computed<DamAssetTypeType | null>(() => {
   }
   return null
 })
-// The title says what the dialog edits, the same while it loads, waits and saves. Taken from the detail, which is empty
-// till what the dialog loads for comes, it said "edit medium" over the loading of an image, and changed as it came.
+// The title must stay the same while loading, waiting and saving.
+// The detail is empty until loaded, so taking the type from it showed "edit medium" while an image loaded.
 const titleType = computed(() => props.type ?? detailType.value)
 
 const imageSourceRequired = computed(() => {
@@ -119,7 +125,6 @@ const onEditAsset = () => {
   emit('editAsset', detail.value.dam.damId)
 }
 
-// The input takes several authors: what it hands over is their list.
 const onDamAuthorsUpdate = (authors: DocId | null | DocId[]) => {
   emit('update:damAuthors', isArray(authors) ? authors : [])
 }

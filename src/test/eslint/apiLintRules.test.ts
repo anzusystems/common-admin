@@ -5,10 +5,9 @@ import { Linter } from 'eslint'
 import tsParser from '@typescript-eslint/parser'
 import { anzuPlugin, recommended } from '@/eslint/plugin.mjs'
 
-// The two rules that carry the migration. They are what tells a call site it has not been moved
-// over, so a rule that does not look at a helper leaves every call of it unguarded -- which is how
-// `useApiCommand` came to be missing from the url-parameter check while holding most of the fleet's
-// `:id` templates.
+// The two rules that carry the migration. They tell a call site that it has not been moved over.
+// A rule that ignores a helper leaves every call of it unguarded. That is how `useApiCommand`
+// was missing from the url-parameter check while holding most of the `:id` templates.
 
 const lint = (code: string, rule: string) => {
   const linter = new Linter()
@@ -36,7 +35,6 @@ describe('anzu/url-params-match-template', () => {
       'url-params-match-template'
     )
 
-    // Both halves of the mismatch, the way it reports them for every other helper.
     expect(messages.map((message) => message.message)).toStrictEqual([
       "urlParams is missing key 'id' required by urlTemplate '/adm/v1/item/:id'.",
       "urlParams key 'itemId' has no matching ':itemId' placeholder in urlTemplate '/adm/v1/item/:id'.",
@@ -52,9 +50,8 @@ describe('anzu/url-params-match-template', () => {
     expect(messages).toHaveLength(0)
   })
 
-  // Every helper that takes a `urlTemplate` has to be in the checked list, and a new one is exactly
-  // where it gets forgotten: `useApiCommand` was missing when it was added, and this one is the
-  // destination for ten fleet sites that pass `urlParams`.
+  // Every helper that takes a `urlTemplate` must be in the checked list.
+  // `useApiCommand` was missing when it was added.
   it('covers the items helper too', () => {
     const messages = lint(
       `useApiFetchItems<Item>({ client, system, entity, urlTemplate: '/article/:id/routes', urlParams: { articleId: 1 } })`,
@@ -64,9 +61,9 @@ describe('anzu/url-params-match-template', () => {
     expect(messages).toHaveLength(2)
   })
 
-  // Substitution is path-only, so the rule has to look only at the path. A placeholder in the query
-  // is a literal the caller wrote on purpose; reporting it fails CI on good code, and adding the key
-  // to silence the rule changes nothing at runtime.
+  // Substitution is path-only, so the rule looks only at the path.
+  // A placeholder in the query is a literal the caller wrote on purpose.
+  // Reporting it fails CI on good code, and adding a key changes nothing at runtime.
   it('ignores a placeholder in the query, where nothing is substituted', () => {
     const messages = lint(
       `useApiFetchItems<Item>({ client, system, entity, urlTemplate: '/article/:id/routes?locale=:locale', urlParams: { id: 1 } })`,
@@ -76,9 +73,9 @@ describe('anzu/url-params-match-template', () => {
     expect(messages).toHaveLength(0)
   })
 
-  // Only whole segments are placeholders, because only whole segments are substituted. A rule that
-  // matched `:id` inside `prefix-:id` would demand a key the runtime never fills in -- and adding it
-  // would turn CI green while the request still went out with the colon in the url.
+  // Only whole segments are placeholders, because only whole segments are substituted.
+  // A rule matching `:id` inside `prefix-:id` would demand a key the runtime never fills in.
+  // Adding it would turn CI green while the request still goes out with the colon in the url.
   it('does not take a colon inside a segment for a placeholder', () => {
     const messages = lint(
       `useApiRequest<Item>({ client, method: 'GET', system, entity, urlTemplate: '/item/prefix-:id', urlParams: {} })`,
@@ -88,9 +85,8 @@ describe('anzu/url-params-match-template', () => {
     expect(messages).toHaveLength(0)
   })
 
-  // And the key is whatever follows the colon, because that is what the runtime looks up: it takes
-  // `part.substring(1)` with no opinion on its shape. A rule that insisted on an identifier missed
-  // `:asset-id` entirely and then reported the caller's correct `urlParams` as matching nothing.
+  // The key is whatever follows the colon, because the runtime takes `part.substring(1)` without checking its shape.
+  // A rule that required an identifier missed `:asset-id` and reported the correct `urlParams` as matching nothing.
   it('accepts a placeholder whose name is not an identifier', () => {
     const messages = lint(
       `useApiRequest<Item>({ client, method: 'GET', system, entity, urlTemplate: '/item/:asset-id', urlParams: { 'asset-id': 7 } })`,
@@ -100,8 +96,8 @@ describe('anzu/url-params-match-template', () => {
     expect(messages).toHaveLength(0)
   })
 
-  // A bare `:` is a key of `''` to the runtime, so it is one to the rule as well. Nobody writes it
-  // deliberately; reporting it is how the typo is seen instead of going out as a literal colon.
+  // A bare `:` is a key of `''` to the runtime, so it is one to the rule too.
+  // Reporting it exposes the typo instead of sending a literal colon.
   it('treats a bare colon the way the runtime does', () => {
     const missing = lint(
       `useApiRequest<Item>({ client, method: 'GET', system, entity, urlTemplate: '/item/:', urlParams: {} })`,
@@ -147,11 +143,11 @@ describe('anzu/prefer-api-command', () => {
     expect(messages).toHaveLength(0)
   })
 
-  // The four criteria the spec sets besides `void`, none of which the type constraint catches: with
-  // no inference site `R` resolves to the constraint itself and compiles, so only the rule sees them.
+  // The four criteria besides `void` are not caught by the type constraint.
+  // With no inference site `R` resolves to the constraint itself and compiles, so only the rule sees them.
   it.each([
-    // On a GET: with `DELETE` the delete branch reports it and the missing-type-argument criterion
-    // goes untested -- removing the check from the rule left this case passing.
+    // Uses GET: with `DELETE` the delete branch reports first,
+    // so the missing-type-argument check goes untested. Removing the check from the rule left this case passing.
     ['no type argument at all', `useApiRequest({ client, method: 'GET', system, entity })`],
     ['any', `useApiRequest<any>({ client, method: 'GET', system, entity })`],
     ['never', `useApiRequest<never>({ client, method: 'GET', system, entity })`],

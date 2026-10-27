@@ -3,11 +3,9 @@ import { DamAssetType, type DamAssetTypeType } from '@/domains/dam/types/Asset'
 import type { UploadQueueItem } from '@/domains/dam/types/UploadQueue'
 import { fillAuthors, fillCustomDataValue, fillKeywords } from '@/domains/dam/uploadQueue/core/uploadQueueFill'
 
-// The three fills of the mass operations, which the library's composable calls over the rows of a queue and
-// admin-dam's store over its own, with what it accepts. They read the type of a row, its custom data, its keywords
-// and its authors, and nothing else: admin-dam's tests seed rows with only those.
+// Tests the three fills of the mass operations.
+// They read only a row's type, custom data, keywords and authors. admin-dam's tests seed rows with only those.
 
-/** A row with only what a fill reads. */
 const bare = (assetType: DamAssetTypeType, parts: Record<string, unknown> = {}) =>
   ({ assetType, customData: {}, keywords: [], authors: [], ...parts }) as unknown as UploadQueueItem
 
@@ -70,7 +68,6 @@ describe.each([
     expect(rows.map(list)).toEqual([[], []])
   })
 
-  // admin-dam: only into the rows of a type that has them enabled.
   it('writes only into the rows it is told it accepts, also when told to replace', () => {
     const rows = [
       bare(DamAssetType.Image),

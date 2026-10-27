@@ -7,16 +7,16 @@ import { createFilter, createFilterStore } from '@/domains/filters/composables/f
 import { FilterInnerConfigKey, FilterInnerDataKey } from '@/domains/filters/utils/filterInjectionKeys'
 import { SubjectScopeKey, SystemScopeKey } from '@/shared/injectionKeys'
 
-// The clear of the form autocomplete empties its value and asks for the list again, for an empty search, once and
-// under the counter of the searches, which takes only the newest answer. It asked with the search typed before,
-// outside the counter, and wrote that answer whenever it came. A field without focus read the length of the `null`
-// search Vuetify empties it with first, and threw into the error handler of the app.
+// Clearing the form autocomplete empties its value and asks for the list again for an
+// empty search, once, under the search counter, which takes only the newest answer.
+// It used to ask with the previous search outside the counter and write that answer whenever it came.
+// A field without focus also read the length of the `null` search
+// Vuetify empties it with first, and threw into the app error handler.
 
 vi.mock('@/domains/collab/composables/commonAdminCollabOptions', () => ({
   useCommonAdminCollabOptions: () => ({ collabOptions: ref({ enabled: false }) }),
 }))
 
-/** What the component let escape: errors of its handlers (`errorHandler` of the app). */
 const escaped: unknown[] = []
 
 let wrapper: VueWrapper | undefined
@@ -26,7 +26,9 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
-/** Past the debounce of the search, so that a request it would start is counted too. */
+/**
+ * Waits past the search debounce so that a request it would start is counted too.
+ */
 const settled = async () => {
   await new Promise((resolve) => setTimeout(resolve, 400))
   await flushPromises()
@@ -35,13 +37,13 @@ const settled = async () => {
 const mountField = async (value: number | number[], { held = false } = {}) => {
   const innerFields = [{ name: 'name' as const, default: '' }]
   const inner = createFilter(innerFields, createFilterStore(innerFields), { system: 'sys', subject: 'inner' })
-  /** The search each request for the list was asked with. */
   const searches: string[] = []
-  /** Once `holdByIds` is called, the reads of items by their ids wait: `byIdAnswers[n]()` lets one answer. */
+  /**
+   * Once `holdByIds` is called, the reads of items by their ids wait: `byIdAnswers[n]()` lets one answer.
+   */
   let holdingByIds = false
   const byIdAnswers: Array<() => void> = []
   const heldById = () => (holdingByIds ? new Promise<void>((resolve) => byIdAnswers.push(resolve)) : undefined)
-  /** With `held`: the answers of the requests for the list, given by the test. */
   const answers: Array<(items: []) => void> = []
   const fetchItems = vi.fn(async () => {
     searches.push(String(inner.filterData.name))
@@ -77,7 +79,6 @@ const mountField = async (value: number | number[], { held = false } = {}) => {
   })
   await vi.waitFor(() => expect(wrapper!.text()).toContain('Group 3'))
   await settled()
-  // What the user searched for before picking.
   inner.filterData.name = 'grou'
   return { searches, answers, models, byIdAnswers, holdByIds: () => (holdingByIds = true) }
 }
@@ -113,7 +114,7 @@ describe('the clear of AFormRemoteAutocomplete', () => {
     expect(models.at(-1)).toBeNull()
   })
 
-  // Two searches on their way: the answer of the older one hid the spinner while the newer one still ran.
+  // With two searches in flight, the answer of the older one hid the spinner while the newer one still ran.
   it('keeps its spinner on until the answer of the latest search', async () => {
     const { answers } = await mountField([3, 5], { held: true })
     const autocomplete = wrapper!.findComponent({ name: 'VAutocomplete' })
@@ -131,8 +132,8 @@ describe('the clear of AFormRemoteAutocomplete', () => {
     expect(autocomplete.props('loading')).toBe(false)
   })
 
-  // Two requests on their way, a search and a read of items by their ids: the spinner stays on till the last of them
-  // ends. Each turned it off as it ended.
+  // With a search and a read by ids in flight, the spinner stays on until the last one ends.
+  // Each used to turn it off when it ended.
   it.each<[string, boolean]>([
     ['a read by ids that ends while a search runs', true],
     ['a search that ends while a read by ids runs', false],

@@ -8,14 +8,18 @@ import { ImageWidgetUploadConfigKey } from '@/domains/dam/imageWidget/utils/imag
 import { useUploadQueueDialog } from '@/domains/dam/uploadQueue/composables/useUploadQueueDialog'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
 
-// The lock of the field of a widget of one image in an article open by two editors, when the widget goes away (the
-// pin of a sidebar widget in admin-cms draws a copy of it elsewhere) while its menu, a dialog, the picker, a drop
-// waiting for the lock or a pick still read or copied holds the field, and nothing was confirmed. Nothing gave the lock
-// back: the server keeps it till it is released or the editor leaves the article, and the field stayed locked for the
-// other editor. The widget gives it back as it goes, once, with the value its field has; not while a save or a delete
-// of it is on its way, whose end gives it back, nor once the copy drawn in its place has taken the lock. A pick of a
-// widget that is gone opens nothing in the copy. The dialog of the image and the collaboration are stand-ins; the
-// save, the delete, the read of a picked asset and its copy into the licence answer when the case lets them.
+// Covers the field lock of a widget in an article open by two editors, when the widget
+// goes away (for example the pin of a sidebar widget in admin-cms draws a copy elsewhere).
+// The widget may hold the field through its menu, a dialog, the picker, a drop
+// waiting for the lock, or a pick still being read or copied, with nothing confirmed.
+// Guards a regression: nothing gave the lock back. The server keeps it until released
+// or the editor leaves the article, so the field stayed locked for the other editor.
+// The widget now gives it back once as it goes, with its field's value.
+// Not while its save or delete is running (the end of that gives it
+// back), and not once the copy drawn in its place has taken the lock.
+// A pick of a gone widget opens nothing in the copy.
+// The image dialog and the collaboration are stand-ins; the save, the delete, the read
+// of a picked asset and its copy into the licence answer when the case lets them.
 
 const released = vi.fn()
 const acquired = vi.fn()
@@ -53,7 +57,6 @@ vi.mock('@/domains/dam/imageWidget/composables/commonAdminImageOptions', () => (
     },
   }),
 }))
-// The asset of a pick is read once the case lets it: as the DAM has it, and as the CMS sees a media.
 vi.mock('@/domains/dam/api/damAssetApi', async (importOriginal) => ({
   ...(await importOriginal<object>()),
   fetchAsset: () =>
@@ -86,7 +89,6 @@ const image = {
   dam: { damId: 'file-7', licenceId: 1, regionPosition: 0, internal: false },
   position: 1,
 }
-/** An image asset as the list of the picker has it. */
 const listed = {
   id: 'asset-9',
   licence: 1,
@@ -111,11 +113,9 @@ describe.each<[string, Component]>([
   ['ImageMediaWidgetInner', ImageMediaWidgetInner],
 ])('the lock of the field of %s when the widget goes', (_name, component) => {
   const isImageWidget = component === ImageWidgetInner
-  /** What the field is given back with, as each widget sends it: the image id, or the image and the media. */
   const valueOf = (id: number | null) => (isImageWidget ? id : { image: id, media: null })
   const FIELD = 'listingImage'
 
-  /** The widget of the field of the article, with its image. */
   const mountWidget = async (more: object = {}) => {
     const model = ref<number | null>(7)
     const Parent = defineComponent({
@@ -168,11 +168,13 @@ describe.each<[string, Component]>([
     await flushPromises()
     return Object.assign(wrapper, { model })
   }
-  // Found anew each time: once another widget is mounted with stand-ins of its own, this one draws them anew.
+  // Found anew each time: once another widget is mounted with its own stand-ins, this one draws them anew.
   const dialogOf = (wrapper: VueWrapper) => wrapper.findComponent({ name: 'ImageDetailDialogMetadata' })
   const pickerOf = (wrapper: VueWrapper) =>
     wrapper.findComponent({ name: isImageWidget ? 'AAssetSelect' : 'AAssetSelectMedia' })
-  /** The widget is taken away, as by the pin that draws its copy in the sidebar. */
+  /**
+   * The widget is removed, as when the pin draws its copy in the sidebar.
+   */
   const goes = async (wrapper: VueWrapper) => {
     mounted.splice(mounted.indexOf(wrapper), 1)
     wrapper.unmount()
@@ -245,7 +247,6 @@ describe.each<[string, Component]>([
     expect(givenBack()).toEqual([[FIELD, valueOf(7)]])
   })
 
-  // The end of the save gives it back (the step before this one): one release, with what the field has.
   it('is not given back as it goes by a widget whose save is on its way, but once, at the end of that save', async () => {
     const wrapper = await mountWidget()
     useImageMediaWidgetStore().setDetail(structuredClone(image))
@@ -279,8 +280,8 @@ describe.each<[string, Component]>([
     expect(givenBack()).toEqual([[FIELD, valueOf(7)]])
   })
 
-  // The pick goes on in no widget: the copy of the widget drawn in its place showed its upload dialog, and asked for
-  // the lock only then.
+  // No widget continues the pick. The copy drawn in place of the
+  // widget showed its upload dialog and asked for the lock only then.
   it('is given back once by a widget that goes while the asset of its pick is copied, whose answer opens nothing', async () => {
     const queued = vi.spyOn(useUploadQueuesStore(), 'addByCopyToLicence').mockResolvedValue(undefined as never)
     const wrapper = await mountWidget()
@@ -301,7 +302,6 @@ describe.each<[string, Component]>([
     queued.mockRestore()
   })
 
-  /** "Remove" in the menu of a widget that deletes its image: the delete is on its way, and the menu closed. */
   const removed = async (wrapper: VueWrapper) => {
     menuOf(wrapper).vm.$emit('update:modelValue', true)
     await flushPromises()
@@ -312,8 +312,8 @@ describe.each<[string, Component]>([
     expect(held.deletes).toHaveLength(1)
   }
 
-  // The end of the delete gave the lock back by the release of its reset, whatever had taken it since: the copy
-  // drawn in place of the widget, with its menu open, lost it.
+  // The end of the delete releases the lock through its reset, whatever took it since.
+  // That would take the lock from the copy drawn in place of the widget, whose menu is open.
   it('is left by a widget that goes while its delete runs to the copy that has taken the lock since', async () => {
     const wrapper = await mountWidget({ callDeleteApiOnRemove: true })
     await removed(wrapper)

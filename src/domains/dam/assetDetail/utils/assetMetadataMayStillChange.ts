@@ -8,9 +8,10 @@ const NOT_PROCESSED_YET: AssetFileProcessStatusType[] = [
 ]
 
 /**
- * The server may yet fill in the metadata of the asset from its file: a form loaded now would write over that when
- * saved, and a save marks the asset described, after which the server fills in nothing. Not an asset that is
- * described already, nor one whose file is processed, failed, a duplicate or not there: nothing more comes of those.
+ * True while the server may still fill the metadata from the file.
+ * A form loaded now would overwrite that on save. A save also
+ * marks the asset described, after which the server fills nothing.
+ * False when already described, or when the file is processed, failed, a duplicate or missing.
  */
 export const assetMetadataMayStillChange = (asset: AssetDetailItemDto) =>
   !asset.flags.described && !!asset.mainFile && NOT_PROCESSED_YET.includes(asset.mainFile.fileAttributes.status)

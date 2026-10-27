@@ -10,20 +10,18 @@ export const PERMISSION_GROUP_ENDPOINT = '/adm/v1/permission-group'
 export interface PermissionGroupApiParams {
   client: AxiosClientFn
   /**
-   * Both of these reach every `useApiRequest` this builds, and both have to be taken rather than
-   * assumed. admin-cms is the proof: its `permissionGroupApi.ts` declared `SYSTEM_COMMON` at the
-   * top and then sent `SYSTEM_CMS` on one of its four calls, so the same file reported two
-   * different systems for the same endpoint. A copy of that file per system multiplies the bug;
-   * one file that is told which system it is cannot have it.
+   * Both reach every `useApiRequest` built here, and both must be passed, not assumed.
+   * admin-cms declared `SYSTEM_COMMON` but sent `SYSTEM_CMS` on
+   * one of four calls, reporting two systems for one endpoint.
+   * One file that is told its system cannot have that bug.
    */
   system: string
   entity?: string
   /**
-   * i18n scope for a server-side validation failure, which is a different question from which
-   * backend answered. `AnzuApiValidationError` builds `<system>.<entity>.model.<field>` keys, and
-   * for a component shared by nine backends the labels are always the library's own `common.*` --
-   * `weather.anzuUser.model.email` exists nowhere. Defaults to `common` plus the entity;
-   * contentHub passes its own pair to keep the keys it already has.
+   * i18n scope for server-side validation failures, separate from which backend answered.
+   * `AnzuApiValidationError` builds `<system>.<entity>.model.<field>` keys. For a component shared by
+   * nine backends the labels are the library's `common.*`; `weather.anzuUser.model.email` does not exist.
+   * Defaults to `common` plus the entity. contentHub passes its own pair to keep its existing keys.
    */
   validationSystem?: string
   validationEntity?: string

@@ -3,12 +3,10 @@ import { mount, type VueWrapper } from '@vue/test-utils'
 import ALoginView from '@/domains/ui/view/components/ALoginView.vue'
 import ALogoutView from '@/domains/ui/view/components/ALogoutView.vue'
 
-// The views an admin signs in and out through: its `/login` page with the link to the sign-in page, its `/logout`
-// page that goes to the sign-out address at once. Each left the admin's own entry in the browser history: after a
-// sign-in, Back from the admin showed `/login` to a user who is signed in; after a sign-out and a new sign-in, Back
-// came to `/logout` and signed the user out at once. Under the real browser history of the page of the test, with the
-// addresses as fragments of it: the admin's own entries and the pages it leaves for are entries of their own all the
-// same, and the page of the test stays.
+// Guards history entries left by the sign-in and sign-out views.
+// After a sign-in, Back from the admin showed `/login` to a signed-in user. After a
+// sign-out and a new sign-in, Back reached `/logout` and signed the user out at once.
+// Uses the real browser history of the test page, with addresses as fragments. The page of the test must stay.
 
 const here = location.href.split('#')[0]!
 let wrapper: VueWrapper | undefined
@@ -17,7 +15,6 @@ afterEach(() => {
   wrapper = undefined
 })
 
-/** The user is on an entry of the admin: the page they were on, `/login` or `/logout`. */
 const onEntry = (name: string) => history.pushState(null, '', `#${name}`)
 const isAt = (name: string) => vi.waitFor(() => expect(location.hash).toBe(`#${name}`))
 const back = async () => {
@@ -63,8 +60,8 @@ describe('ALoginView', () => {
     expect(location.hash).toBe('#page-before-the-sign-in')
   })
 
-  // An admin whose configuration has no sign-in address yet: the button is no link, and a press does nothing. It went
-  // to the address `undefined` of the admin.
+  // An admin whose configuration has no sign-in address yet: the button is not a link and a press does nothing.
+  // It used to go to the address `undefined` of the admin.
   it.each<[string, string | undefined]>([
     ['an empty one', ''],
     ['none', undefined],

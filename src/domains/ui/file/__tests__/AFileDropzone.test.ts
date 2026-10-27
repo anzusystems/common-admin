@@ -5,15 +5,12 @@ import AFileDropzone from '@/domains/ui/file/components/AFileDropzone.vue'
 import { useDropzoneGlobalDragState } from '@/domains/ui/file/composables/dropzone'
 import en from '@/locales/en'
 
-// What the dropzone looks like while a file is dragged over the page, as a browser draws it under each theme of the
-// application: the real component with its real styles, under a real drag. A disabled dropzone lit up as one that
-// takes the file, only without its text: its styles waited for a class it was never given. The queue dialog switches
-// its dropzone off while it saves, and it covers the whole dialog.
-// A dropzone has two looks under a drag: one while the file is anywhere over the page, another once it is over the
-// zone. The second never showed: its rule came before the rule of the first, of the same weight, and a zone with the
-// file over it has the classes of both.
+// Renders the real component with its real styles under a real drag, in each application theme.
+// Guards two bugs. A disabled dropzone lit up like one that takes the file, because its styles waited for a
+// class it never got. The queue dialog disables its dropzone while saving, and it covers the whole dialog.
+// The "over the zone" look never showed. Its rule came before the "file over the
+// page" rule with the same weight, and a zone with the file over it has both classes.
 
-// The texts of the library as the test setup renders them (English).
 const i18n = createI18n({ legacy: false, locale: 'en', fallbackLocale: 'en', messages: { en } })
 const TEXTS = {
   dropHere: i18n.global.t('common.system.dropzone.dropHere'),
@@ -29,8 +26,6 @@ const dragEvent = (type: string) =>
   new DragEvent(type, { dataTransfer: carrying([photo()]), bubbles: true, cancelable: true })
 
 describe.each([
-  // The colours of a dropzone as its styles name them: while a file is dragged over the page (`possible`), while it
-  // is over the zone (`over`), and the background of its own.
   {
     theme: 'v-theme--light',
     possible: { background: 'rgb(229, 237, 241)', outline: 'rgb(186, 207, 212)' },
@@ -66,19 +61,16 @@ describe.each([
     await flushPromises()
     return wrapper.find('.a-file-dropzone').element as HTMLElement
   }
-  /** A file is dragged over the page, not over the dropzone. */
   const dragOverThePage = async () => {
     document.body.dispatchEvent(dragEvent('dragover'))
     await flushPromises()
   }
-  /** A file is dragged over the page, and on over the dropzone. */
   const dragOver = async (zone: HTMLElement) => {
     await dragOverThePage()
     zone.dispatchEvent(dragEvent('dragenter'))
     zone.dispatchEvent(dragEvent('dragover'))
     await flushPromises()
   }
-  /** The file is dragged on, off the dropzone: it is still over the page. */
   const dragOff = async (zone: HTMLElement) => {
     zone.dispatchEvent(dragEvent('dragleave'))
     await dragOverThePage()
@@ -91,12 +83,13 @@ describe.each([
     const style = getComputedStyle(zone)
     return { display: style.display, outline: style.outlineStyle, background: style.backgroundColor }
   }
-  /** The colours the dropzone is lit up in: none while it has no outline. */
+  /**
+   * The colours the dropzone is lit up in: none while it has no outline.
+   */
   const lit = (zone: HTMLElement) => {
     const style = getComputedStyle(zone)
     return style.outlineStyle === 'dashed' ? { background: style.backgroundColor, outline: style.outlineColor } : null
   }
-  /** The texts of the dropzone that are drawn. */
   const textsShown = (zone: HTMLElement) =>
     Array.from(zone.querySelectorAll<HTMLElement>('.text'))
       .filter((text) => getComputedStyle(text).display !== 'none')
@@ -105,7 +98,7 @@ describe.each([
   // As the queue dialog has it: over the whole dialog, transparent, drawn only while a file is dragged.
   const overTheDialog = { variant: 'fill', transparent: true, hoverOnly: true }
 
-  // The zone used to keep the colours of "a file is dragged" with the file over it, in every variant.
+  // Guards a regression: the zone kept the colours of "a file is dragged" when the file was over it, in every variant.
   it.each<[string, Record<string, unknown>]>([
     ['on its own', {}],
     ['small, without its background', { size: 'small', transparent: true }],
@@ -131,14 +124,13 @@ describe.each([
       expect(lit(zone)).toEqual(over)
       expect(textsShown(zone)).toEqual([TEXTS.dropHere])
 
-      // Dragged on off the zone, the file is still over the page.
       await dragOff(zone)
       expect(zone.classList.contains('a-file-dropzone--over')).toBe(false)
       expect(lit(zone)).toEqual(possible)
     }
   )
 
-  // The colour here used to be that of "a file is dragged": this case pinned it for a file over the zone as well.
+  // Guards a regression: the colour was that of "a file is dragged" also for a file over the zone.
   it('lights up and says where to drop, and takes the file dropped', async () => {
     const zone = await mountZone(overTheDialog)
     expect(look(zone).display).toBe('none')
@@ -153,8 +145,8 @@ describe.each([
     expect(wrapper!.emitted('drop')).toHaveLength(1)
   })
 
-  // Still drawn over what it covers: the file dropped lands on it, and is let pass. Neither look is its: not that of
-  // a file dragged over the page, nor that of a file over it.
+  // Still drawn over what it covers: the dropped file lands on it and passes through.
+  // Neither look applies: not the one for a file over the page, nor the one for a file over the zone.
   it('does not light up when it is disabled, shows no box of a text, and lets the file dropped pass', async () => {
     const zone = await mountZone({ ...overTheDialog, disabled: true })
     expect(look(zone).display).toBe('none')

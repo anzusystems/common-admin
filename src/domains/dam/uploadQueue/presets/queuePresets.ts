@@ -28,7 +28,7 @@ const mapQueues = (queues: Ref<Map<UploadQueueKey, UploadQueue>>): UploadQueueCo
   entries: () => queues.value.entries(),
 })
 
-// By `in`, as the store has always looked: a key named after a member of `Object.prototype` finds that member.
+// Uses `in` as the store always did, so a key named after an `Object.prototype` member finds that member.
 const objectQueues = (queues: Ref<Record<UploadQueueKey, UploadQueue>>): UploadQueueContainer => ({
   get: (queueKey) => (queueKey in queues.value ? queues.value[queueKey] : undefined),
   set: (queueKey, queue) => {
@@ -37,11 +37,16 @@ const objectQueues = (queues: Ref<Record<UploadQueueKey, UploadQueue>>): UploadQ
   entries: () => Object.entries(queues.value),
 })
 
-/** Not exported from `src/lib.ts`: only the library store uses it. Every row is uploaded, under the configuration of its queue. */
+/**
+ * Not exported from `src/lib.ts`. Only the library store uses
+ * it. Every row is uploaded under its queue's configuration.
+ */
 export function libraryQueuePreset(store: {
   queues: Ref<Map<UploadQueueKey, UploadQueue>>
   settlement: UploadQueueSettlementProfile
-  /** The DAM configuration the queue was made under, `default` for one the store does not know. */
+  /**
+   * DAM configuration the queue was created under, `default` for a queue the store does not know.
+   */
   configOf(queueKey: UploadQueueKey): string
 }): UploadQueuePreset<'library'> {
   return {
@@ -56,21 +61,35 @@ export function libraryQueuePreset(store: {
   }
 }
 
-/** admin-dam's queue: what it shows and does that the library does not. The store hands in what is its own. */
+/**
+ * admin-dam's queue behavior beyond the library. The store passes in its own parts.
+ */
 export function adminDamQueuePreset(store: {
   queues: Ref<Record<UploadQueueKey, UploadQueue>>
   settlement: UploadQueueSettlementProfile
-  /** `useUpload` of admin-dam's `uploadService.ts`. */
+  /**
+   * `useUpload` of admin-dam's `uploadService.ts`.
+   */
   upload(item: UploadQueueItem, onProgress: UploadProgressCallback): UploadRun<'adminDam'>
-  /** The run of an `ExternalProviderAsset` row: `adminDamImportRun(externalProviderImport(item).importInit)`. */
+  /**
+   * The run of an `ExternalProviderAsset` row: `adminDamImportRun(externalProviderImport(item).importInit)`.
+   */
   importRun(item: UploadQueueItem): UploadRun<'adminDam'>
-  /** `resolveUploadErrorMessage`: the text of a failed upload. */
+  /**
+   * `resolveUploadErrorMessage`.
+   */
   failureMessage(error: unknown): string
-  /** `showError` of the store's `useAlerts()`: one alert per reason. */
+  /**
+   * `showError` of the store's `useAlerts()`: one alert per reason.
+   */
   alert(message: string): void
-  /** `handedOver.add(toRaw(item))`. */
+  /**
+   * `handedOver.add(toRaw(item))`.
+   */
   rowTracked(queueKey: UploadQueueKey, item: UploadQueueItem): void
-  /** `metadataFailures.delete(metadataFailureKey(queueKey, item))`. */
+  /**
+   * `metadataFailures.delete(metadataFailureKey(queueKey, item))`.
+   */
   rowRemoved(queueKey: UploadQueueKey, item: UploadQueueItem): void
 }): UploadQueuePreset<'adminDam'> {
   const queues = objectQueues(store.queues)
@@ -103,7 +122,9 @@ export function adminDamQueuePreset(store: {
   }
 }
 
-/** The run of an import: its request is all there is; `upload` and `stop` do nothing, never `finishAttempted`. */
+/**
+ * Run of an import: only its request. `upload` and `stop` do nothing, and `finishAttempted` is always false.
+ */
 export function adminDamImportRun(uploadInit: () => Promise<unknown>): UploadRun<'adminDam'> {
   return {
     [uploadSide]: 'adminDam',

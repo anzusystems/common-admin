@@ -155,7 +155,9 @@ export interface Props<TItem extends Record<string, any>> {
   loading?: boolean
   error?: string | null
 
-  /** Heading above the list. A ready translated string, like every text prop here. */
+  /**
+   * Heading above the list. A ready translated string, like every text prop here.
+   */
   title?: string | null
 
   /**
@@ -172,9 +174,13 @@ export interface Props<TItem extends Record<string, any>> {
   showEditButton?: boolean
   showAddAfterAction?: boolean
 
-  /** Label of the add button. A ready translated string; omit it for the library's own wording. */
+  /**
+   * Label of the add button. A ready translated string; omit it for the library's own wording.
+   */
   addLabel?: string | null
-  /** Heading of the empty state. A ready translated string. */
+  /**
+   * Heading of the empty state. A ready translated string.
+   */
   emptyTitle?: string | null
 
   disableRowClick?: boolean
@@ -593,8 +599,8 @@ const onDeleteClick = async (vi: ListViewItem<TItem>) => {
   await triggerDeleteClick(vi)
 }
 
-// In-flight guard: a second click while the consumer's save is pending must not send a duplicate.
-// A rejected save keeps the row open and still reaches the app's error handler, as before the guard.
+// Blocks a second click while the consumer's save is pending, so no duplicate is sent.
+// A rejected save keeps the row open and still reaches the app's error handler.
 const savingKeys = ref<Set<ListEditorKey>>(new Set())
 const onSaveClick = async (vi: ListViewItem<TItem>) => {
   if (savingKeys.value.has(vi.key)) return

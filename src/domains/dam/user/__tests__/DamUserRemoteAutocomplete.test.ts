@@ -3,9 +3,6 @@ import { mount } from '@vue/test-utils'
 import { nextTick } from 'vue'
 import ADamUserRemoteAutocomplete from '@/domains/dam/user/components/DamUserRemoteAutocomplete.vue'
 
-// An admin that is not DAM lists DAM users through the DAM client its plugin options configure; a caller may name
-// another client.
-
 const used = vi.hoisted(() => ({ clients: [] as unknown[], configs: [] as string[] }))
 const configured = vi.hoisted(() => () => ({ configured: true }))
 

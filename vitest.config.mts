@@ -109,7 +109,6 @@ export default defineConfig({
     exclude: ['**/node_modules/**', 'src/test/eslint/**', 'src/test/vite/**', 'scripts/**', 'doc/**'],
     // v5 default; pinned so it cannot silently flip.
     clearMocks: true,
-    // Console output of passing tests is noise (thousands of lines); a failing test still shows its own.
     silent: 'passed-only',
     setupFiles: ['./src/test/setup.ts'],
     testTimeout: 30000,

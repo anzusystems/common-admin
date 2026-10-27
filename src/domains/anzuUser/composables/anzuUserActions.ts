@@ -19,27 +19,27 @@ export interface AnzuUserActionsParams {
   system: string
   entity?: string
   /**
-   * i18n scope for a server-side validation failure, which is a different question from which
-   * backend answered. `AnzuApiValidationError` builds `<system>.<entity>.model.<field>` keys, so
-   * the pair has to name the namespace the *labels* live under. It defaults to `common` +
-   * `anzuUser`, which is where the shared form's own fields are; an admin whose form carries
-   * system fields as well passes its own pair, and keeps the base keys beside them.
+   * i18n scope for server-side validation errors, independent of which backend answered.
+   * `AnzuApiValidationError` builds `<system>.<entity>.model.<field>` keys, so this pair
+   * must name where the labels live. Defaults to `common` + `anzuUser`. An admin whose
+   * form adds system fields passes its own pair and keeps the base keys alongside.
    */
   validationSystem?: string
   validationEntity?: string
   endPoint?: string
-  /** Vuelidate scope, when the page collects its fields under one of its own. */
+  /**
+   * Vuelidate scope, when the page collects its fields under one of its own.
+   */
   validationScope?: string | symbol
 }
 
-// The record store is one for every page and every system, and a request is not aborted when its page
-// goes: only the latest fetch may write the record, or reset it on failure. A store reset (a page's
-// teardown, a create page's mount) counts as newer too.
+// The record store is shared by every page and system, and requests are not
+// aborted when a page goes. Only the latest fetch may write or reset the record.
+// A store reset (page teardown, create page mount) also counts as newer.
 let fetchGeneration = 0
 
 /**
- * Per instance, like every other actions composable here. The admins' versions kept their loading
- * flags at module scope.
+ * Per instance, like the other actions composables. The admins' versions kept loading flags at module scope.
  */
 export const useAnzuUserActions = (params: AnzuUserActionsParams) => {
   const { client, system, entity = ANZU_USER_ENTITY, endPoint = ANZU_USER_ENDPOINT } = params
@@ -91,12 +91,9 @@ export const useAnzuUserActions = (params: AnzuUserActionsParams) => {
   const { anzuUser, loadingAnzuUser } = storeToRefs(anzuUserOneStore)
 
   /**
-   * What the server last said, so the page can tell whether anything has been edited.
-   *
-   * A page needs this for two things that look cosmetic and are not: the dot on the owning tab,
-   * and the guard that asks before leaving. Switching a tab is not navigation -- the form stays
-   * mounted and dirty -- so the moment the operator does leave is through a button inside a panel,
-   * and by then nothing else remembers there was unsaved work.
+   * What the server last returned, used to detect edits.
+   * It drives the dot on the owning tab and the leave guard. Switching tabs is not
+   * navigation, so the form stays dirty and the actual leave happens through a panel button.
    */
   const pristine = ref<string>('')
   const snapshot = () => {
@@ -118,9 +115,8 @@ export const useAnzuUserActions = (params: AnzuUserActionsParams) => {
       const res = await execute({ urlParams: { id }, signal: options.signal })
       if (!isLatest()) return undefined
       anzuUserOneStore.setAnzuUser(res)
-      // After the form has settled, not before it. The derived fields recompute in a watcher, and
-      // a baseline taken ahead of that would make an account whose stored full name is empty read
-      // as edited the instant it opens -- an unsaved dot and a leave prompt before anyone typed.
+      // Snapshot after the form settles. Derived fields recompute in a watcher, and an earlier
+      // baseline would mark an account with an empty stored full name as edited on open.
       await nextTick()
       snapshot()
       return true
@@ -136,15 +132,14 @@ export const useAnzuUserActions = (params: AnzuUserActionsParams) => {
     }
   }
 
-  // Collects whatever the form's children registered. With a scope it collects only that scope,
-  // which is how an app keeps its own system fields in a separate one.
+  // Collects what the form's children registered. With a scope it collects
+  // only that scope, which lets an app keep its system fields separate.
   const v$ = params.validationScope ? useVuelidate({}, {}, { $scope: params.validationScope }) : useVuelidate()
 
   const loadingCreateAnzuUser = ref(false)
   /**
-   * The body is the store's record, which the library factory built: `roles: []` and
-   * `enabled: false`. That matters -- a hand-assembled body of base fields would have the backend
-   * fill in `ROLE_USER`, and the account would exist with a role nobody granted.
+   * The body is the store's record from the library factory, with `roles: []` and `enabled: false`.
+   * A hand-assembled body would make the backend add `ROLE_USER`, a role nobody granted.
    */
   const createAnzuUser = async (): Promise<AnzuUser | null> => {
     try {
@@ -169,13 +164,10 @@ export const useAnzuUserActions = (params: AnzuUserActionsParams) => {
 
   const loadingUpdateAnzuUser = ref(false)
   /**
-   * Sends the whole record the preceding GET returned, with only the edited fields changed.
-   *
-   * That is the write invariant, and it is not a style preference: an omitted field is destructive
-   * rather than neutral. `UserDto` defaults `roles` to `[ROLE_USER]`, `enabled` to `true` and both
-   * permission collections to empty, and the manager writes all four unconditionally -- so a body
-   * carrying only the metadata resets roles, wipes grants, detaches groups and switches a disabled
-   * account back on.
+   * Sends the whole record from the preceding GET with only edited fields changed.
+   * An omitted field is destructive. `UserDto` defaults `roles` to `[ROLE_USER]`, `enabled` to `true`
+   * and both permission collections to empty, and the manager writes all four. A metadata-only body
+   * resets roles, wipes grants, detaches groups and re-enables a disabled account.
    */
   const updateAnzuUser = async (): Promise<boolean> => {
     try {
@@ -210,7 +202,9 @@ export const useAnzuUserActions = (params: AnzuUserActionsParams) => {
 
   return {
     isDirty,
-    /** Takes the record as it stands as the new baseline; the page calls it after it seeds one. */
+    /**
+     * Takes the record as it stands as the new baseline; the page calls it after it seeds one.
+     */
     markPristine: snapshot,
     anzuUserList,
     loadingAnzuUserList,

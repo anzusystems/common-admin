@@ -82,10 +82,8 @@ const clearField = () => {
 }
 
 const updateSelected = (newValue: AllowedFilterValues) => {
-  // `null` reaches here when the filter is reset from outside - loading a hash clears every field
-  // before applying it, and the chip has to go with the value. Falling through to `items.find`
-  // would find nothing and leave the previous chip in place, naming a value the query no longer
-  // carries.
+  // `null` arrives when the filter is reset from outside. Loading a hash clears every field first.
+  // Falling through to `items.find` finds nothing and leaves the old chip naming a value the query no longer has.
   if (isNull(newValue) || isUndefined(newValue) || (isArray(newValue) && newValue.length === 0)) {
     filterSelected.value.delete(props.name)
     return

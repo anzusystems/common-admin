@@ -9,13 +9,10 @@ dayjs.extend(utc)
 dayjs.extend(customParseFormat)
 
 /**
- * Value arithmetic of ADatetimePicker, kept out of the component so both modes can be tested
- * without a DOM.
- *
+ * Value arithmetic of ADatetimePicker, kept out of the component so both modes are testable without a DOM.
  * `datetime` values are instants: parsed as such, shown in local time, serialized through `.utc()`.
- * `date` values are calendar days pinned to UTC midnight (`YYYY-MM-DDT00:00:00.000000Z`) and must
- * never cross a timezone: every internal object stays in UTC mode, so `.year()/.month()/.date()`
- * and `.format()` read the same day the API stores.
+ * `date` values are calendar days pinned to UTC midnight and must never cross a timezone. Every internal
+ * object stays in UTC mode, so `.year()/.month()/.date()` and `.format()` read the day the API stores.
  */
 export type DatetimePickerType = 'datetime' | 'date'
 
@@ -39,8 +36,8 @@ export const parseModel = (
     const parsed = dayjs.utc(value)
     return parsed.isValid() ? parsed : null
   }
-  // The canonical shape carries six fraction digits, but `isDatetimeUTC` also accepts three and an
-  // API can answer with none; returning null for those would blank the field and save the blank.
+  // The canonical shape has six fraction digits, but `isDatetimeUTC` also accepts three and an API can send none.
+  // Returning null for those would blank the field and save the blank.
   const parsed = dayjs(value, MODEL_FORMAT)
   const instant = parsed.isValid() ? parsed : dayjs(value)
   if (!instant.isValid()) return null
@@ -49,9 +46,9 @@ export const parseModel = (
 
 export const parseTyped = (text: string, type: DatetimePickerType, keepSeconds = 0): dayjs.Dayjs | null => {
   if (type === 'date') {
-    // The format has to stay a string. `dayjs.utc(text, [format])` takes the array branch of
-    // customParseFormat, which calls the plain factory and drops UTC, so a typed day comes back
-    // shifted by the local offset - the original bug. `dayjs(text, [format]).utc()` shifts it too.
+    // The format must stay a string. With an array, `dayjs.utc(text,
+    // [format])` goes through customParseFormat's plain factory and drops UTC.
+    // A typed day then shifts by the local offset. `dayjs(text, [format]).utc()` shifts it too.
     const parsed = dayjs.utc(text, DATE_TEXT_FORMAT)
     return parsed.isValid() ? parsed : null
   }
@@ -67,7 +64,9 @@ export const serialize = (internal: dayjs.Dayjs, type: DatetimePickerType): Date
 export const formatDisplay = (internal: dayjs.Dayjs, type: DatetimePickerType) =>
   internal.format(displayFormatFor(type))
 
-/** VDatePicker works with local `Date`s, so a date-mode day travels as its local namesake. */
+/**
+ * VDatePicker works with local `Date`s, so a date-mode day travels as its local namesake.
+ */
 export const toCalendarDate = (internal: dayjs.Dayjs, type: DatetimePickerType): Date =>
   type === 'date' ? new Date(internal.year(), internal.month(), internal.date()) : internal.toDate()
 
@@ -75,12 +74,14 @@ export const applyCalendarDate = (internal: dayjs.Dayjs, picked: Date, type: Dat
   if (type === 'date') {
     return dayjs.utc(Date.UTC(picked.getFullYear(), picked.getMonth(), picked.getDate()))
   }
-  // Year and month first: setting the day of an adjacent month onto a shorter month overflows
-  // (8 Feb + day 31 lands on 3 Mar, which the following month set then carries into January).
+  // Set year and month first. Setting a day onto a shorter month overflows: 8
+  // Feb + day 31 becomes 3 Mar, and the month set then moves it to January.
   return internal.set('year', picked.getFullYear()).set('month', picked.getMonth()).set('date', picked.getDate())
 }
 
-/** Today's calendar day, taken from the local clock - the UTC day is yesterday or tomorrow for a part of it. */
+/**
+ * Today's calendar day from the local clock. For part of the day the UTC day is yesterday or tomorrow.
+ */
 export const todayValue = (type: DatetimePickerType, lastMinuteMoment = false): dayjs.Dayjs => {
   if (type === 'date') {
     const now = new Date()
@@ -89,7 +90,9 @@ export const todayValue = (type: DatetimePickerType, lastMinuteMoment = false): 
   return lastMinuteMoment ? dayjs().second(59).millisecond(999) : dayjs().second(0).millisecond(0)
 }
 
-/** Base for a picker interaction that starts with no value at all. */
+/**
+ * Base for a picker interaction that starts with no value at all.
+ */
 export const emptyBaseValue = (type: DatetimePickerType, lastMinuteMoment = false): dayjs.Dayjs => {
   if (type === 'date') return todayValue(type)
   return lastMinuteMoment
@@ -97,6 +100,8 @@ export const emptyBaseValue = (type: DatetimePickerType, lastMinuteMoment = fals
     : dayjs().hour(0).minute(0).second(0).millisecond(0)
 }
 
-/** By second, as `lastMinuteMoment` holds ms at 999; by day where the time carries no meaning. */
+/**
+ * By second, as `lastMinuteMoment` holds ms at 999; by day where the time carries no meaning.
+ */
 export const isSameValue = (value: dayjs.Dayjs, other: dayjs.Dayjs | null, type: DatetimePickerType): boolean =>
   isNull(other) ? false : value.isSame(other, type === 'date' ? 'day' : 'second')

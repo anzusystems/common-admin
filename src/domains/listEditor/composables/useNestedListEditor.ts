@@ -36,9 +36,13 @@ export interface UseNestedListEditorOptions {
   positionField?: string
   parentField?: string
   positionMultiplier?: number
-  /** `false` = the position field is not managed: tree ops never write it. */
+  /**
+   * `false` = the position field is not managed: tree ops never write it.
+   */
   managedPosition?: boolean
-  /** Per-action policy (mirrors the flat controller); default 'renumber'. */
+  /**
+   * Per-action policy, as in the flat controller. Default 'renumber'.
+   */
   positionStrategyFor?: (action: 'add' | 'remove' | 'move') => 'renumber' | 'preserve-values'
   maxDepth: number
   expandedKeys?: Ref<Set<ListEditorKey>>
@@ -76,9 +80,8 @@ const DEFAULT_POSITION_FIELD = 'position'
 const DEFAULT_PARENT_FIELD = 'parent'
 
 /**
- * Nested list editor core. Pure data behavior shared by ANestedSortableListEditor.
- * Works on a tree of `{ data, children, meta }` nodes. Mutators return a cloned tree and also
- * assign it to `model.value`.
+ * Nested list editor core for `ANestedSortableListEditor`. Works on a tree of `{ data, children, meta }` nodes.
+ * Mutators return a cloned tree and also assign it to `model.value`.
  */
 export function useNestedListEditor<TItem extends Record<string, any>>(
   model: Ref<NestedTree<TItem>>,
@@ -124,8 +127,8 @@ export function useNestedListEditor<TItem extends Record<string, any>>(
     if (strategy === 'preserve-values') {
       if (action !== 'move') return
       const values = siblings.map((s) => s.data[positionField])
-      // As in the flat editor: without a finite number on every row there is no slot set to move
-      // through, and inventing one would write a wrong payload.
+      // Same as the flat editor: without a finite number on every row there is no slot set to move through.
+      // Inventing one would write a wrong payload.
       if (!values.every((v) => typeof v === 'number' && Number.isFinite(v))) {
         console.warn(
           `[listEditor] position strategy "preserve-values" needs a finite numeric \`${positionField}\` ` +
@@ -287,8 +290,9 @@ export function useNestedListEditor<TItem extends Record<string, any>>(
     return cloned
   }
 
-  // `renumber: false` leaves the siblings' positions as they are: a row already deleted on the backend,
-  // which does not renumber either, so the gap the server has stays in the editor too.
+  // `renumber: false` keeps sibling positions. The row is already
+  // deleted on the backend, which does not renumber either.
+  // So the editor keeps the same gap the server has.
   const deleteItem = (id: ListEditorKey, opts?: { renumber?: boolean }): NestedTree<TItem> => {
     const cloned = cloneDeep(model.value) as NestedTree<TItem>
     const { node, parent } = findNode(id, cloned.children)

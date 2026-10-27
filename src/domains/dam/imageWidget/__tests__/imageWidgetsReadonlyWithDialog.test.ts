@@ -20,10 +20,10 @@ import { AssetFileProcessStatus } from '@/domains/dam/types/AssetFile'
 import type { ImageAware } from '@/domains/dam/types/ImageAware'
 import { useUploadQueueDialog } from '@/domains/dam/uploadQueue/composables/useUploadQueueDialog'
 
-// A widget of one image turned read-only (the form around it, another editor) draws none of its dialogs and menus:
-// those open close as their cancel does, nothing is saved, and the lock of the field goes back to the room. The dialog
-// stayed open unseen: it kept the lock for the other editors, and came back by itself once the widget could be edited
-// again. A save on its way ends as it does, and gives the lock back then.
+// A widget turned read-only draws none of its dialogs and menus. Open ones
+// close as on cancel, nothing is saved, and the field lock is released.
+// Before, the dialog stayed open unseen, kept the lock from other
+// editors, and came back once the widget was editable again.
 
 const lock = vi.hoisted(() => ({ acquired: [] as unknown[], released: [] as unknown[] }))
 vi.mock('@/domains/collab/composables/commonAdminCollabOptions', async () => {
@@ -102,7 +102,6 @@ describe.each<[string, Component]>([
   ['the image and media widget', ImageMediaWidgetInner],
 ])('%s turned read-only', (_name, component) => {
   const isImageWidget = component === ImageWidgetInner
-  /** What the widget gives the lock back with: its image (and, of the image and media widget, no media). */
   const valueOf = (image: number | null) => (isImageWidget ? image : { image, media: null })
   const mountWidget = async (image: number | null, more: Record<string, unknown> = {}) => {
     const mounted: VueWrapper = mount(component, {
@@ -146,7 +145,6 @@ describe.each<[string, Component]>([
     useAssetSelectStore(pinia).setSelectConfig([uploadConfig()])
     return mounted
   }
-  /** The widget of image 12, its dialog open: "edit image". */
   const editingImage = async () => {
     imageApi.has(structuredClone(stored))
     const widget = await mountWidget(12)
@@ -185,8 +183,6 @@ describe.each<[string, Component]>([
     expect(lock.acquired).toHaveLength(1)
   })
 
-  // The dialog loads for a pick whose asset is being read: it closes, as the cancel of a loading dialog, and the
-  // lock goes back once the read of the pick is over, whose answer puts nothing into the dialog.
   it('gives the lock back while its dialog loads for a pick, and the answer opens nothing', async () => {
     dam.assets.set(
       'asset-9',
@@ -213,7 +209,6 @@ describe.each<[string, Component]>([
 
     await turnReadonly(widget)
     expect(imageDialog()).toBeUndefined()
-    // The pick on its way holds the lock till its read is over.
     expect(lock.released).toEqual([])
     reads.release()
     reads.stop()
@@ -254,8 +249,8 @@ describe.each<[string, Component]>([
     expect(lock.released).toEqual([valueOf(12)])
   })
 
-  // The save fails while the widget is read-only: its dialog, which the save left open, closes then, and the lock goes
-  // back; it does not come back once the widget can be edited again.
+  // The save fails while the widget is read-only. The dialog the save left open closes and the lock is released.
+  // It must not reopen once the widget is editable again.
   it('closes the dialog of a save that fails meanwhile, and gives the lock back then', async () => {
     const widget = await editingImage()
     const saves = imageApi.holdSaves()
@@ -274,9 +269,9 @@ describe.each<[string, Component]>([
     expect(imageDialog()).toBeUndefined()
   })
 
-  // With `expandMetadata` the form is in the page: there is no dialog to close. The form of a pick not yet confirmed
-  // stays as it is, and its host saves it once the widget can be edited again. It was emptied, while the widget went on
-  // showing the pick, and the confirm of the host saved nothing.
+  // With `expandMetadata` the form is in the page, so there is no dialog to close. The form
+  // of an unconfirmed pick stays, and its host saves it once the widget is editable again.
+  // Before, the form was emptied while the widget still showed the pick, and the host's confirm saved nothing.
   it('keeps the form of a pick drawn in the page, which its host saves once the widget can be edited again', async () => {
     dam.assets.set(
       'asset-9',

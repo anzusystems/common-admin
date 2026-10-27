@@ -37,7 +37,6 @@ const requiredText: CustomDataFormElement = {
   },
 }
 
-// A required custom field and required keywords: two fields of the row, both empty.
 const extSystemConfig = {
   image: { keywords: { enabled: true, required: true }, customMetadataPinnedAmount: 2 },
 } as unknown as DamExtSystemConfig
@@ -51,8 +50,8 @@ afterEach(() => {
 })
 
 describe('a row of the upload queue', () => {
-  // The dialog saves the items whose metadata can be edited and skips the rest (`hasMetadataToSave`): a failed
-  // upload, or one still waiting for its metadata. Their fields are disabled, so nothing could be put right.
+  // The dialog saves only items whose metadata can be edited (`hasMetadataToSave`) and skips the rest: a
+  // failed upload, or one still waiting for metadata. Their fields are disabled, so nothing could be fixed.
   it('is validated by the dialog only while its metadata can be edited', async () => {
     const item = reactive(
       useUploadQueueItemFactory().createDefault(
@@ -68,7 +67,6 @@ describe('a row of the upload queue', () => {
     let failing!: () => number
     const Dialog = defineComponent({
       setup() {
-        // The configuration the row reads, in the pinia the components use.
         const store = useDamConfigStore()
         store.damConfigExtSystem.set(EXT_SYSTEM, extSystemConfig)
         store.damConfigAssetCustomFormElements.set(EXT_SYSTEM, {
@@ -81,7 +79,6 @@ describe('a row of the upload queue', () => {
           store.damConfigExtSystem.delete(EXT_SYSTEM)
           store.damConfigAssetCustomFormElements.delete(EXT_SYSTEM)
         }
-        // As `UploadQueueDialog` validates: everything below it.
         const v$ = useVuelidate({ $stopPropagation: true })
         failing = () => {
           v$.value.$touch()
@@ -103,19 +100,17 @@ describe('a row of the upload queue', () => {
     })
     wrapper = mount(Dialog, {
       attachTo: document.body,
-      // The scope is read by the keyword input itself; what it renders asks the API for its items.
+      // The keyword input reads the scope itself. What it renders asks the API for its items, so it is stubbed.
       global: { stubs: { AFormRemoteAutocompleteWithCached: true } },
     })
     await flushPromises()
     expect(wrapper.find('textarea, input').exists()).toBe(true)
     expect(failing()).toBe(0)
 
-    // Its metadata arrived: from now on the save sends the item.
     item.canEditMetadata = true
     await flushPromises()
     expect(failing()).toBe(2)
 
-    // And it failed after all.
     item.canEditMetadata = false
     await flushPromises()
     expect(failing()).toBe(0)
@@ -123,8 +118,8 @@ describe('a row of the upload queue', () => {
 })
 
 describe('the custom metadata form of an asset', () => {
-  // The asset detail and the single upload dialog save through a collector of the asset metadata scope and give
-  // the form no scope of their own.
+  // The asset detail and the single upload dialog save through a collector
+  // of the asset metadata scope. They give the form no scope of its own.
   it('is in the asset metadata scope when it is given none', async () => {
     let invalid!: () => boolean
     const Sidebar = defineComponent({

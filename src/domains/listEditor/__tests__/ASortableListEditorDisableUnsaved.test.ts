@@ -4,13 +4,12 @@ import { defineComponent, h, nextTick, ref } from 'vue'
 import ASortableListEditor from '@/domains/listEditor/components/ASortableListEditor.vue'
 import type { ListEditorHandle } from '@/domains/listEditor/composables/useListEditorController'
 
-// `disableUnsaved` on the sortable variant, mirroring the same prop on `AListEditor`.
-//
-// It exists for a list that is a VIEW of data owned elsewhere -- a display cache rebuilt from a
-// parent's field, where the parent's save is what settles the change. Such a component can never
-// clear an amber row of its own, so raising one leaves a badge pointing at nothing for the life of
-// the mount: a deferred delete tombstones a key that never comes back, and a row arriving after the
-// once-only baseline reads as an addition forever.
+// `disableUnsaved` on the sortable variant, mirroring `AListEditor`.
+// It is for a list that is a view of data owned elsewhere, such as a display cache rebuilt from a parent's field.
+// Such a component can never clear an unsaved row itself, so
+// the badge would point at nothing for the life of the mount.
+// A deferred delete tombstones a key that never returns, and a row
+// arriving after the once-only baseline reads as an addition forever.
 
 interface Item {
   id: number
@@ -56,10 +55,8 @@ describe('ASortableListEditor disableUnsaved', () => {
     handle().deleteItem(2)
     await nextTick()
 
-    // The tombstone outlives the row: nothing brings that key back.
     expect(handle().hasUnsaved).toBe(true)
     expect(handle().unsavedCount).toBe(1)
-    // Guards the guard for the next case: the badge this prop suppresses is really rendered here.
     expect(mounted!.find('.a-le-unsaved-count').exists()).toBe(true)
   })
 

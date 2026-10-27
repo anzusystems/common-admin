@@ -7,9 +7,6 @@ import cs from '@/locales/cs'
 import en from '@/locales/en'
 import sk from '@/locales/sk'
 
-// The button that closes an upload dialog, as both dialogs of the library have it: a queue that is done is closed
-// at once, one that still uploads only after the user says so.
-
 const languages = createI18n({ legacy: false, locale: 'en', messages: { sk, en, cs } })
 
 let wrapper: VueWrapper | undefined
@@ -23,7 +20,6 @@ const mountButton = async (isUploading: boolean, props: Record<string, unknown> 
   await flushPromises()
   return wrapper
 }
-// The question is drawn into the body.
 const question = () => document.body.querySelector<HTMLElement>('[data-cy="delete-panel"]')
 const answer = (name: 'button-confirm' | 'button-cancel') =>
   question()!.querySelector<HTMLButtonElement>(`[data-cy="${name}"]`)!
@@ -60,8 +56,8 @@ describe('the button that closes an upload dialog', () => {
     expect(answer('button-cancel').textContent).toContain(uiText('common.button.cancel'))
   })
 
-  // Finding 43: the question had two "close", its answer and its cross. The answer says what it does; the cross and
-  // the button that opens the question keep their name.
+  // Finding 43: the question had two "close" actions, its answer and its cross.
+  // The answer says what it does. The cross and the button that opens the question keep the name "close".
   it('names the answer of its question for what it does, and keeps "close" for its cross and for itself', async () => {
     await mountButton(true)
 
@@ -113,7 +109,6 @@ describe('the button that closes an upload dialog', () => {
     expect(confirmed()).toHaveLength(0)
   })
 
-  // The upload ended while the question was open: the answer is still the user's to give.
   it('still closes only on the confirmation when the upload ends while the question is open', async () => {
     await mountButton(true)
     await wrapper!.find('[data-cy="button-stop"]').trigger('click')

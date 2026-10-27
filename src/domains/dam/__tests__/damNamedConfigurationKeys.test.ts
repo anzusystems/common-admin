@@ -38,10 +38,6 @@ import { useUploadQueueItemFactory } from '@/domains/dam/uploadQueue/factory/Upl
 import { libraryUploadPreset } from '@/domains/dam/uploadQueue/presets/uploadPresets'
 import { coreDamOptions } from '@/plugins/pluginOptions'
 
-// A page with two DAM configurations: `default`, as admin-cms has it, and `own`, which sets every address with a key,
-// its admin and its timeout. What is asked under `own` goes there, by `own`'s client; under `default` where it went
-// before the keys. Each DAM answers every such address.
-
 const { endPoints, extSystem, licence } = cmsConfiguration
 const OWN = { asset: '/own/v2/asset', image: '/own/v2/image' }
 const OWN_KEYS = {
@@ -66,7 +62,9 @@ const OWN_ADMIN = 'https://own.test'
 const OWN_TIMEOUT = 120
 const EXT = 4
 const LICENCE = 7
-/** From here on a wait is held: below the 1.5 s the caches wait before they ask. */
+/**
+ * Waits from this length are held. The caches wait 1.5 s before they ask.
+ */
 const HELD_FROM_MS = 1_200
 
 let pinia: Pinia
@@ -75,7 +73,6 @@ let own: FakeDam
 let waits: LongWaits
 let wrapper: VueWrapper | undefined
 
-/** A DAM answers each of the addresses with a key, at those given. */
 const answerAt = (of: FakeDam, at: typeof TODAY) =>
   of.reply((request) => {
     if (request.method !== 'GET') return undefined
@@ -136,7 +133,6 @@ afterEach(async () => {
   waits.restore()
 })
 
-/** The method and the path of every request a client was asked, in order, without the query. */
 const asked = (of: FakeDam) =>
   of.requests.map((request: FakeDamRequest) => `${request.method} ${request.url.split('?')[0]}`)
 
@@ -192,8 +188,6 @@ describe('the addresses with a key of a DAM configuration', () => {
     expect(() => useDamConfigState(own.client, 'typo')).not.toThrow()
   })
 
-  // The user input and the user filter under `own` list and look up its users; an input given a client of its own
-  // does so at the fixed address.
   const UserInput = defineComponent({
     name: 'UserInputStandIn',
     props: {

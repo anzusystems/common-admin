@@ -11,9 +11,13 @@ export interface UserSystemResult {
 
 export const CrossSystemPhase = {
   Idle: 'idle',
-  /** First round of an e-mail search: find the person and their id. */
+  /**
+   * First round of an e-mail search: find the person and their id.
+   */
   MatchingEmail: 'matchingEmail',
-  /** Second round: ask every system by that id, to catch the ones holding a different e-mail. */
+  /**
+   * Second round: ask every system by that id, to catch the ones holding a different e-mail.
+   */
   VerifyingById: 'verifyingById',
   Done: 'done',
 } as const
@@ -42,13 +46,8 @@ export interface BulkLogEntry {
   system: string
   outcome: BulkOutcomeType
   /**
-   * Which run the line belongs to.
-   *
-   * The log survives a run so that a retry does not erase the systems that succeeded a minute ago,
-   * and the retry button acts on whatever the log calls failed. Without these two fields a failed
-   * metadata write would be retried as a disable, and a previous person's failures would be retried
-   * against the id currently on screen -- neither `setEnabled` nor `writeMetadata` can tell it is
-   * being asked about a different action or a different account.
+   * The run this line belongs to. The log survives so a retry keeps earlier successes.
+   * Without these fields a retry could repeat the wrong action or target the person now on screen.
    */
   action: BulkActionType
   subjectId: IntegerIdNullable
@@ -56,11 +55,7 @@ export interface BulkLogEntry {
 }
 
 /**
- * Search results and the bulk run live here, not inside the dialog's component.
- *
- * The dialog can be closed while the calls are still going -- one dead backend running into its
- * timeout must not lock the screen -- and state owned by the component would be thrown away with
- * it. The results stay on the page either way.
+ * Kept in a store, not the dialog. The dialog can close while calls run, and the results must survive.
  */
 export const useUserCrossSystemStore = defineStore('commonAdminUserCrossSystemStore', () => {
   const searchTerm = ref('')
@@ -69,11 +64,8 @@ export const useUserCrossSystemStore = defineStore('commonAdminUserCrossSystemSt
   const results = ref(new Map<string, UserSystemResult>())
 
   /**
-   * The same e-mail answered with two different ids.
-   *
-   * Bulk actions stop when this is set. Picking the first one quietly would have every later
-   * fan-out follow the wrong identity, and since no admin can delete an AnzuUser, anything written
-   * under it stays.
+   * The same e-mail answered with two ids. Bulk actions stop when set.
+   * AnzuUser cannot be deleted, so writes under the wrong identity would persist.
    */
   const identityConflict = ref<Map<string, IntegerId> | null>(null)
 
@@ -82,7 +74,9 @@ export const useUserCrossSystemStore = defineStore('commonAdminUserCrossSystemSt
   const bulkSubjectId = ref<IntegerIdNullable>(null)
   const bulkLog = ref<BulkLogEntry[]>([])
 
-  /** The term was neither an address nor an id, so nothing was asked and there is nothing to show. */
+  /**
+   * The term was neither an address nor an id, so nothing was asked and there is nothing to show.
+   */
   const termRejected = ref(false)
 
   function resetResults() {
@@ -91,9 +85,7 @@ export const useUserCrossSystemStore = defineStore('commonAdminUserCrossSystemSt
     identityConflict.value = null
     phase.value = CrossSystemPhase.Idle
     termRejected.value = false
-    // A new search is a new person. Leaving the log behind would put the previous one's failures on
-    // screen under a live retry button, and that retry writes to `resolvedId` -- somebody else by
-    // then.
+    // A new search is a new person. An old log's retry would write to the new `resolvedId`.
     bulkLog.value = []
     bulkAction.value = null
     bulkSubjectId.value = null
@@ -122,13 +114,8 @@ export const useUserCrossSystemStore = defineStore('commonAdminUserCrossSystemSt
   }
 
   /**
-   * Opens a run over `systems`, keeping what the same run already said about the others.
-   *
-   * The retry is why anything is kept at all: "try the failed ones again" runs a subset, and
-   * resetting the whole log would erase the systems that succeeded a minute ago, so a partial
-   * success would read as if it had never happened. What is kept is scoped to this action and this
-   * account, because everything else in the log belongs to a run the operator is no longer looking
-   * at.
+   * Starts a run over `systems`, keeping earlier log entries for the same action and account.
+   * A retry runs a subset; clearing the log would erase earlier successes.
    */
   function startBulk(action: BulkActionType, systems: string[], subjectId: IntegerIdNullable) {
     bulkRunning.value = true
@@ -155,12 +142,9 @@ export const useUserCrossSystemStore = defineStore('commonAdminUserCrossSystemSt
   }
 
   /**
-   * What leaving the page does: nobody on screen for the next visit.
-   *
-   * `resetResults` already drops the log and which run it was for. The lock it deliberately leaves:
-   * a run still writing goes on after the page is gone -- `cancel()` stops the probes, not the
-   * writes -- and releasing it would let a second bulk action start against the same account while
-   * the first is unfinished (B13). The run releases it itself when it ends.
+   * Clears the page for the next visit but keeps the bulk lock.
+   * `cancel()` stops probes, not writes. Releasing the lock would allow a second
+   * bulk action on the same account (B13). The run releases it when done.
    */
   function reset() {
     searchTerm.value = ''

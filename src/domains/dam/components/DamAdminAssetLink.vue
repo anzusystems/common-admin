@@ -17,7 +17,7 @@ const props = withDefaults(
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const damConfigName = useDamConfigName(props.configName)
 
-// The DAM admin of the configuration, else the root one.
+// DAM admin of the configuration, else the root one.
 const { adminDomain, editAssetLabel } = useCommonAdminCoreDamOptions(damConfigName)
 
 const href = computed(() => {

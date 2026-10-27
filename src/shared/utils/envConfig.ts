@@ -33,10 +33,10 @@ const fetchEnvConfig = async (url: string): Promise<object> => {
 }
 
 /**
- * Loads the deployed `config.json` (never from a cache), hands it to `apply`, then runs `start`, the
- * admin's start-up. Either failing shows the fatal error in `#app`. A failed start is reported as
- * what it is, through `reportError` (so an error handler already installed, Sentry's, sees it), not
- * as a config that did not load.
+ * Loads the deployed `config.json` without cache, passes it to `apply`,
+ * then runs `start`. Either failure shows the fatal error in `#app`.
+ * A failed start goes through `reportError`, so an installed handler
+ * such as Sentry sees it, and is not reported as a config load failure.
  */
 export async function startWithEnvConfig<T extends object>(
   apply: (config: T) => void,

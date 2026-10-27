@@ -14,10 +14,11 @@ import { updateRoi } from '@/domains/dam/api/damImageRoiApi'
 import { fetchImageFile } from '@/domains/dam/api/damImageApi'
 import type { AssetFileImage } from '@/domains/dam/types/AssetFile'
 
-// A region saved in the cropper is redrawn by the DAM: the cropper reads the file again two seconds after the save. The
-// panel of the regions beside it offers no "refresh" from the save till that read is over (`cropperBusy` of the store,
-// which only the cropper sets): its read, sent before the redraw, took the place of the cropper's, and both stayed on
-// the old drawing. The previews of the regions are drawn anew after the cropper's read (`timestampRoiPreviews`).
+// A region saved in the cropper is redrawn by the DAM, and the cropper reads the file again two seconds after the save.
+// From the save until that read ends, the region panel beside it offers no "refresh"
+// (`cropperBusy` of the store, set only by the cropper). Otherwise its read, sent
+// before the redraw, replaced the cropper's and both kept the old drawing.
+// The region previews are redrawn after the cropper's read (`timestampRoiPreviews`).
 
 vi.mock('@/domains/dam/api/damImageRoiApi', () => ({
   ENTITY: 'imageRoi',
@@ -79,7 +80,6 @@ const commit = async (cropper: VueWrapper) => {
 }
 
 describe('the save of a region in the cropper, with the panel of the regions beside it', () => {
-  /** The panel of the library, its actions drawn into the action bar of the sidebar. */
   const withPanel = async () => {
     const pinia = setup()
     useAssetDetailStore().setAsset({ id: 'asset-1', mainFile: file('before') } as never)
@@ -160,7 +160,8 @@ describe('the busy flag and the previews of the cropper', () => {
     expect(useImageRoiStore().cropperBusy).toBe(false)
   })
 
-  // Gone before its save answered: the answer sets no timer of a read that would find the cropper gone.
+  // If the cropper is gone before its save answers, the answer
+  // sets no timer for a read that would find the cropper gone.
   it('waits for no redraw once gone while its save was on its way', async () => {
     let saved!: () => void
     const pinia = setup()
@@ -178,8 +179,9 @@ describe('the busy flag and the previews of the cropper', () => {
     expect(useImageRoiStore().cropperBusy).toBe(false)
   })
 
-  // Two commits before the cropper is hidden: two saves on their way. The end of the older one, its failure or the read
-  // after it, left the newer one still waiting, and the cropper was no longer busy.
+  // Two commits before the cropper is hidden leave two saves in flight.
+  // Previously the end of the older one (failure or the read after it) left
+  // the newer one still waiting, and the cropper was no longer marked busy.
   it.each<[string, boolean]>([
     ['the first save fails', true],
     ['the read after the first save ends', false],

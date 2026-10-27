@@ -371,10 +371,9 @@ describe('ANestedSortableListEditor', () => {
 
     it('addItem asFirstChild PREPENDS as first child, and expand() shows it', async () => {
       const { wrapper, model } = mountEditor()
-      // Collapse News (id=2) first: auto-expand is unobservable on an already-expanded parent,
-      // and News — unlike Home — already HAS children, so prepend vs append is distinguishable.
-      // The old test targeted Home (no children) and named itself "appends", which the empty
-      // fixture could not contradict: `asFirstChild: true` PREPENDS.
+      // Collapse News (id=2) first: auto-expand cannot be observed on an expanded parent.
+      // News already has children, so prepend versus append is distinguishable.
+      // `asFirstChild: true` prepends.
       await wrapper.findAll('.a-nested-list-editor__tree-toggle')[1].trigger('click')
       await nextTick()
       expect(wrapper.findAll('.a-le-row').length).toBe(3)
@@ -389,7 +388,6 @@ describe('ANestedSortableListEditor', () => {
 
       const news = model.value.children.find((n) => n.data.id === 2)!
       expect(news.children!.map((c) => c.data.id)).toEqual([101, 21, 22])
-      // Expanded — the other half of the name.
       expect(wrapper.findAll('.a-le-row').length).toBe(6)
     })
 
@@ -874,8 +872,8 @@ describe('ANestedSortableListEditor', () => {
       await apply.trigger('click')
       await flushPromises()
 
-      // Consumer still has to call commit() — the markers stick
-      // around until they confirm the server save.
+      // The consumer still has to call `commit()`.
+      // The markers stay until the server save is confirmed.
       expect(wrapper.findAll('.a-le-row--unsaved').length).toBeGreaterThan(0)
 
       const api = editorExposed(wrapper)
@@ -1027,9 +1025,9 @@ describe('ANestedSortableListEditor', () => {
           }
         }
       ).$.exposed
-      // News (id=2) already has children [21, 22]. Add inside should land as
-      // the third and last child, NOT at index 0 (which was the old
-      // `asFirstChild` semantic, which a consumer still asks for explicitly).
+      // News (id=2) already has children [21, 22].
+      // Add inside must land as the last child, not at index 0.
+      // A consumer must ask for index 0 explicitly with `asFirstChild`.
       exposed.addItem({ id: 99, position: 0, parent: 2, title: 'New inside' }, { parentId: 2, childrenAllowed: true })
       await flushPromises()
       const news = model.value.children.find((n) => n.data.id === 2)!

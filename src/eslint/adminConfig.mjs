@@ -5,9 +5,8 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 import { globalComponentNames } from './globalComponentNames.mjs'
 import { recommended } from './plugin.mjs'
 
-// The target `import` resolves to in an `exports` entry: the first key, in the object's own order, that
-// is one of the conditions an import in node matches. `require.resolve` would take the `require` branch,
-// the CommonJS build, a different module from the one the admin's own `import` gets.
+// The target `import` resolves to in an `exports` entry: the first key, in object order, that node's import matches.
+// `require.resolve` would take the `require` branch, a different CommonJS module.
 const IMPORT_CONDITIONS = new Set(['import', 'node', 'module-sync', 'default'])
 const importTarget = (entry) => {
   if (typeof entry === 'string') return entry
@@ -23,9 +22,9 @@ const importTarget = (entry) => {
   return undefined
 }
 
-// Resolved from the admin, not from this file: the admin declares these plugins, and under pnpm the
-// library's own directory cannot see its consumer's packages. The package's directory is looked up
-// rather than its entry resolved, so a package that only has an `import` entry is found as well.
+// Resolved from the admin, not from this file. The admin declares these
+// plugins, and under pnpm the library cannot see its consumer's packages.
+// The package directory is looked up instead of resolving its entry, so import-only packages are found too.
 const packageDir = (require, name) => {
   for (const base of require.resolve.paths(name) ?? []) {
     const dir = path.join(base, name)
@@ -60,15 +59,11 @@ const vuetifyComponents = (root) => {
 const routeNameSeverity = (value) => (value === false || value === 'off' ? 'off' : value === 'warn' ? 'warn' : 'error')
 
 /**
- * The whole eslint config of an admin, which each of them used to carry as a copy.
- *
- * `root` is the admin's `import.meta.url` (of its eslint.config.mjs): the plugins, Vuetify's component
- * list, `.oxlintrc.json` and `src/typed-router.d.ts` are all resolved against it, never against the
- * cwd -- an eslint run started from a subdirectory would otherwise lose the oxlint-disabled rules and
- * check route names against nothing. `extra` configs come last.
- *
- * @param {import('./plugin.d.mts').AnzuAdminEslintOptions} options
- * @param {...import('eslint').Linter.Config} extra
+ * The whole eslint config of an admin.
+ * `root` is the admin's `import.meta.url` (of its eslint.config.mjs). Plugins, Vuetify's component
+ * list, `.oxlintrc.json` and `src/typed-router.d.ts` resolve against it, not the cwd. Otherwise a
+ * run from a subdirectory loses the oxlint-disabled rules and checks route names against nothing.
+ * `extra` configs come last.
  */
 export async function defineAnzuAdminConfig(options, ...extra) {
   const {
@@ -161,8 +156,8 @@ export async function defineAnzuAdminConfig(options, ...extra) {
         'vue/no-undef-components': [
           'error',
           {
-            // Registered globally rather than imported, so the rule cannot see them: the Vuetify
-            // components, common-admin's button aliases and `Acl`, the router's, and the admin's own.
+            // Registered globally, not imported, so the rule cannot see them: Vuetify components,
+            // common-admin's button aliases and `Acl`, the router's, and the admin's own.
             ignorePatterns: [
               ...vuetifyComponents(rootUrl),
               ...globalComponentNames,
@@ -222,18 +217,15 @@ export async function defineAnzuAdminConfig(options, ...extra) {
       },
     },
     ...vuetify.configs['flat/recommended-v4'],
-    // Derives the disabled-rule list from the oxlint config, so a rule enabled there stops being run
-    // twice. prefer-const is switched off in the shared oxlint rules on purpose, so that it stays
-    // eslint's: oxlint does not run it inside a .vue at all.
+    // Disables in eslint the rules oxlint already runs.
+    // `prefer-const` is off in the shared oxlint rules on purpose so
+    // eslint keeps it. Oxlint does not run it inside `.vue` files.
     ...(oxlint ? await oxlint.buildFromOxlintConfigFile(fileURLToPath(new URL(oxlintConfig, rootUrl))) : []),
     {
-      // The only eslint rules that fight oxfmt. Measured, not assumed: with this block removed, eslint
-      // reports 85 warnings in an admin and 145 in common-admin, and in both they fall on these same
-      // rules and no others.
-      //
-      // html-self-closing is configured rather than switched off, because only its `void` half
-      // conflicts: oxfmt writes `<img />` where the rule's default demands `<img>`. With
-      // `void: 'any'` the formatter keeps that half and eslint keeps `<VBtn></VBtn>`.
+      // The only eslint rules that conflict with oxfmt. Measured: without this
+      // block all warnings in admins and common-admin fall on these rules.
+      // `html-self-closing` is configured, not disabled, because only its `void` half conflicts.
+      // oxfmt writes `<img />`. With `void: 'any'` eslint still enforces `<VBtn></VBtn>`.
       name: 'app/owned-by-oxfmt',
       rules: {
         'vue/html-closing-bracket-newline': 'off',

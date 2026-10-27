@@ -6,7 +6,7 @@ import en from '@/locales/en'
 import sk from '@/locales/sk'
 import { useTimeIntervalOptions } from '@/domains/filters/composables/filterTimeIntervalTools'
 
-// The options are what the select and the filter chip show; an English admin must not read Slovak.
+// The options are what the select and the filter chip show. An English admin must not read Slovak.
 const titlesIn = (locale: 'en' | 'sk') => {
   let titles: string[] = []
   const Probe = defineComponent({

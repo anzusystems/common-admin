@@ -5,8 +5,8 @@ import ASortableListEditor from '@/domains/listEditor/components/ASortableListEd
 import ANestedSortableListEditor from '@/domains/listEditor/components/ANestedSortableListEditor.vue'
 import type { NestedTree } from '@/domains/listEditor/types/listEditorTypes'
 
-// Mounted with v-model:mode="reorder" (a parent that stays in reorder while the editor remounts), the
-// editor enters the session without the Reorder button: Cancel must still put the order back.
+// Mounted with `v-model:mode="reorder"` (a parent that stays in reorder while the editor remounts),
+// the editor enters the session without the Reorder button. Cancel must still restore the order.
 
 interface Row {
   id: number

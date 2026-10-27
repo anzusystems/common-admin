@@ -11,10 +11,11 @@ import {
 import type { FilterConfig, FilterData } from '@/domains/filters/composables/filterFactory'
 import type { ValueObjectOption } from '@/shared/types/ValueObject'
 
-// Clearing a filter means "back to the default", and for this pair the default is not always
-// "everything" - forum's post list defaults to a 365 day window. `onClear` used to set the display
-// to "everything" and then write the default back; the value never changed, so no watcher ran and
-// the control kept claiming the list was unfiltered while the query still carried the window.
+// Clearing a filter means "back to the default", which is not always "everything".
+// Forum's post list defaults to a 365 day window.
+// `onClear` used to set the display to "everything" and write
+// the default back. The value did not change, so no watcher ran.
+// The control then claimed the list was unfiltered while the query still carried the window.
 
 const FROM = '2025-09-08T22:00:00.000000Z'
 const UNTIL = '2026-09-09T21:59:59.000000Z'
@@ -80,7 +81,6 @@ describe('AFilterTimeInterval', () => {
     await (mounted!.vm as unknown as { onClear: () => void }).onClear()
     await flushPromises()
 
-    // The query still carries the window, so the control has to keep saying so.
     expect(filterData.from).toBe(FROM)
     expect(filterData.until).toBe(UNTIL)
     expect(filterSelected.value.has('from')).toBe(true)
@@ -104,7 +104,6 @@ describe('AFilterTimeInterval', () => {
     const { filterSelected, submitResetCounter } = mountFilter(FROM, UNTIL)
     await flushPromises()
 
-    // What `AFilterWrapper.resetFilter` does: clear to defaults, wipe the chips, bump the counter.
     filterSelected.value.delete('from')
     submitResetCounter.value += 1
     await flushPromises()

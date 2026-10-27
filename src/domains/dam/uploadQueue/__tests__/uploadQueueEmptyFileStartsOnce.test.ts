@@ -6,19 +6,20 @@ import { UploadQueueItemStatus } from '@/domains/dam/types/UploadQueue'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
 import { useDamConfigStore } from '@/domains/dam/config/store/damConfigStore'
 
-// A file of no bytes is refused under the set of the library, once its hash has loaded. Until then its row stays
-// waiting, and the queue looks again after each file it adds: it is not started a second time meanwhile.
+// A file of no bytes is refused under the library's settings, once its hash has loaded.
+// Until then its row stays waiting, and the queue looks again after
+// each file it adds. It must not be started a second time meanwhile.
 
 const rushaGate = vi.hoisted(() => {
   let open!: () => void
   const promise = new Promise<void>((resolve) => (open = resolve))
   return { promise, open }
 })
-// A hash is made for each run of an upload, once rusha has loaded.
 const hashes = vi.hoisted(() => ({ made: 0 }))
 
-// rusha is CommonJS and pre-bundled for the browser run: the factory returns what its `module.exports`
-// would be, and the import sees that as `default`, as it does the real package.
+// rusha is CommonJS and pre-bundled for the browser run.
+// The factory returns what its `module.exports` would be, and
+// the import sees that as `default`, as with the real package.
 vi.mock('rusha', async () => {
   await rushaGate.promise
   return {
@@ -66,13 +67,11 @@ vi.mock('@/domains/dam/uploadQueue/composables/damUploadChunkSize', () => ({
 describe('an empty file of a queue while rusha loads', () => {
   it('is run once, while the file added after it starts, and fails', async () => {
     setActivePinia(createPinia())
-    // The bounds of the chunks are loaded, as an upload needs them: the sizing itself is a stand-in here.
     useDamConfigStore().damPrvConfig.settings.imageChunkConfig = { minSize: 1024, maxSize: 1024 }
     const store = useUploadQueuesStore()
     const empty = new File([], 'empty.jpg', { type: 'image/jpeg' })
     const photo = new File(['content'], 'photo.jpg', { type: 'image/jpeg' })
 
-    // The queue looks again once the photo is added: the empty file still waits there for its hash.
     await store.addByFiles('queue', 1, 1, [empty, photo], 'default')
     const [emptyRow] = store.getQueueItems('queue')
     expect(emptyRow!.status).toBe(UploadQueueItemStatus.Waiting)
@@ -81,7 +80,6 @@ describe('an empty file of a queue while rusha loads', () => {
     await vi.waitFor(() => expect(damUploadFinish).toHaveBeenCalledTimes(1))
     await new Promise((resolve) => setTimeout(resolve, 100))
 
-    // One hash for each file: one run of each.
     expect(hashes.made).toBe(2)
     expect(damUploadStart.mock.calls.map(([, , item]) => item.file.name)).toEqual(['photo.jpg'])
     expect(emptyRow!.status).toBe(UploadQueueItemStatus.Failed)

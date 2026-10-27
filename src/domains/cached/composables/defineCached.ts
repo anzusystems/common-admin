@@ -14,15 +14,15 @@ import { HTTP_STATUS_FORBIDDEN, HTTP_STATUS_UNAUTHORIZED } from '@/shared/status
 
 /**
  * Why a fetch settled without resolving an item:
- * - `notFound` -- the server answered and the item was not among the results,
- * - `forbidden` -- the user may not read it (403); asking again in this session cannot change that,
- * - `error` -- anything else: the network, a timeout, a 5xx, a 401 before the session is renewed, and a
- *   404 of the whole request, which is a route or a proxy answering rather than an item missing.
+ * - `notFound`: the server answered and the item was not among the results.
+ * - `forbidden`: the user may not read it (403). Asking again in this session cannot change that.
+ * - `error`: anything else. Network, timeout, 5xx, a 401 before session renewal,
+ * or a 404 of the whole request (a route or proxy answering, not a missing item).
  */
 export type CachedUnresolvedReason = 'notFound' | 'forbidden' | 'error'
 
 /**
- * `_unresolved`: the fetch settled without resolving the item, `_unresolvedReason` says why.
+ * `_unresolved`: the fetch settled without resolving the item. `_unresolvedReason` says why.
  * Whether a later `add()` asks again depends on the reason (see `defineCached`).
  */
 export type CachedItem<T extends object> = T & {
@@ -33,15 +33,17 @@ export type CachedItem<T extends object> = T & {
 
 export interface DefineCachedOptions {
   /**
-   * Ask again, on the next `add()`, for an id the server did not return. Defaults to `true`: an entity
-   * can be created after the first lookup. A cache of users passes `false` -- an id missing from the
-   * table (a system user of another backend) would otherwise be asked for on every page showing it.
+   * Ask again on the next `add()` for an id the server did not return. Defaults
+   * to `true`, because an entity can be created after the first lookup.
+   * A user cache passes `false`. Otherwise an id missing from the table (a
+   * system user of another backend) is requested on every page that shows it.
    */
   retryNotFound?: boolean
   /**
-   * How many ids one call of `fetchCallback` gets, each call committed on its own. Defaults to
-   * `FETCH_BY_IDS_BATCH_SIZE`. A backend that takes fewer ids a request needs its own limit here: split
-   * inside the callback, a failing part would take the parts already loaded with it.
+   * How many ids one `fetchCallback` call gets. Each call is
+   * committed on its own. Defaults to `FETCH_BY_IDS_BATCH_SIZE`.
+   * A backend with a lower per-request limit sets it here. Splitting inside
+   * the callback would make one failing part discard the parts already loaded.
    */
   batchSize?: number
 }
@@ -53,10 +55,9 @@ const isForbidden = (error: unknown) =>
 const unresolvedReason = (error: unknown): CachedUnresolvedReason => (isForbidden(error) ? 'forbidden' : 'error')
 
 /**
- * Not a failure to write down: the user may not (403), nobody is logged in (401, or a session found
- * gone on the way out), the auth service did not answer, or the request was stopped. The api layer
- * keeps 401, 403 and an expired session out of its log itself, and writes an unavailable auth service
- * down with the request it stopped; for a cache all of them are the session, not the fetch.
+ * Errors not worth logging: 403, no logged-in user (401 or a
+ * session gone), auth service not answering, or an aborted request.
+ * The api layer already handles logging of these. For a cache they concern the session, not the fetch.
  */
 const isQuiet = (error: unknown) =>
   isForbidden(error) ||
@@ -95,18 +96,17 @@ export function defineCached<
     options.batchSize && options.batchSize >= 1 ? Math.floor(options.batchSize) : FETCH_BY_IDS_BATCH_SIZE
   const cache: Ref<Map<I, CachedItem<M>>> = ref(new Map())
   const toFetch = ref(new Set()) as Ref<Set<I>>
-  // The ids something shows, each with how many show it (`pin`): the cache drops none of them to stay within its
-  // limit, and goes over it while more than that many are shown. Dropped, a name a chip showed turned it into a
-  // spinner till something added the id again.
+  // Ids currently shown, each with its show count (`pin`). The cache
+  // never drops them to stay within its limit and may exceed it.
+  // Dropping one turned a chip's name back into a spinner until the id was added again.
   const pinned = new Map<I, number>()
-  // Settles, never rejects: a run that failed still hands over what its earlier batches loaded.
+  // Settles, never rejects. A failed run still hands over what its earlier batches loaded.
   const inFlight = new Set<Promise<{ items: T[]; failures: unknown[] }>>()
   const { logError } = useSentry()
 
   /**
-   * Unresolved items are never retried from the queue itself, only on the next `add()`, and only
-   * when asking again can help: a failure (`error`) always, a missing item (`notFound`) unless the
-   * cache opted out, a forbidden one never.
+   * Unresolved items are never retried from the queue, only on the next `add()`, and only when retrying can help.
+   * `error` always retries, `notFound` unless the cache opted out, `forbidden` never.
    */
   const isCached = (id: I) => {
     const item = cache.value.get(id)
@@ -117,8 +117,8 @@ export function defineCached<
     return false
   }
 
-  // Falsy, not only null/undefined: `get`, `has` and `isLoaded` treat 0 and '' as no id, and a blank
-  // factory record (`createdBy: 0`) would otherwise be sent to the server as `filter_in[id]=0`.
+  // Falsy, not only null/undefined. `get`, `has` and `isLoaded` treat 0 and '' as no id.
+  // Otherwise a blank factory record (`createdBy: 0`) is sent to the server as `filter_in[id]=0`.
   const add = (...args: AddToCachedArgs<I>) => {
     const toAdd = new Set<I>()
     for (let i = 0; i < args.length; i++) {
@@ -145,8 +145,8 @@ export function defineCached<
     })
   }
 
-  // Out of the queue as well: an id added and then supplied by hand would still be fetched, and the
-  // answer would overwrite what the caller just put in.
+  // Remove it from the queue too. Otherwise a queued id supplied by
+  // hand is still fetched, and the answer overwrites the caller's data.
   const addManual = (data: T) => {
     const id = data[idProp] as I
     if (!id) return
@@ -170,10 +170,10 @@ export function defineCached<
   }
 
   /**
-   * Drops only as many oldest terminal entries as the overflow requires; dropping every one
-   * of them would send currently rendered chips back to their loading state. A pinned entry is
-   * never dropped.
-   * Must include `_unresolved`, otherwise repeated failures grow the cache past `maxLimit`.
+   * Drops only as many oldest terminal entries as the overflow
+   * requires. Dropping all would send rendered chips back to loading.
+   * Pinned entries are never dropped.
+   * Must include `_unresolved` entries, otherwise repeated failures grow the cache past `maxLimit`.
    */
   const prune = (protectedIds?: Set<I>) => {
     let incoming = 0
@@ -220,13 +220,13 @@ export function defineCached<
 
   const fetchBatch = async (ids: I[]): Promise<T[]> => {
     try {
-      // Awaited inside the `try`: a callback that throws before it returns a promise (a dam client
-      // that is not configured) has to settle its ids too, or they would spin for good.
+      // Awaited inside the `try`. A callback that throws before returning a promise
+      // (e.g. an unconfigured dam client) must settle its ids too, or they spin forever.
       const res = await fetchCallback(ids)
       updateMap(res)
       markUnresolved(ids, 'notFound')
-      // Back within the limit once the batch is settled: the ids added and still on their way could not be dropped
-      // till then, and a large add left the cache over its limit for good, also when the batch failed.
+      // Prune once the batch settles. Ids in flight cannot be dropped before that.
+      // Without this, a large add left the cache over its limit for good, also when the batch failed.
       prune()
       return res
     } catch (error: unknown) {
@@ -236,8 +236,8 @@ export function defineCached<
     }
   }
 
-  // In the batches the api helpers would split the request into anyway, one after another, each
-  // committed on its own: a failing batch leaves the ones before it loaded instead of taking them along.
+  // Fetches in the same batches the api helpers would use, sequentially, each committed on its own.
+  // A failing batch then leaves earlier batches loaded.
   const runBatches = async (ids: I[]) => {
     const items: T[] = []
     const failures: unknown[] = []
@@ -251,13 +251,16 @@ export function defineCached<
     return { items, failures }
   }
 
-  /** Fetches the queue; settles with what loaded and every batch's failure, never rejects. */
+  /**
+   * Fetches the queue; settles with what loaded and every batch's failure, never rejects.
+   */
   const runQueue = async () => {
     if (toFetch.value.size === 0) return { items: [] as T[], failures: [] as unknown[] }
     const ids = Array.from(toFetch.value)
-    // Drained before the request, not after it. A batch that starts while this one is in flight --
-    // a slow answer outlasting the debounce, the `maxWait` timer, an `immediateFetch()` -- would
-    // otherwise send the same ids again. Draining at all keeps a failing batch from being resent.
+    // Drained before the request, not after. Otherwise a batch
+    // started while this one is in flight resends the same ids.
+    // That happens with a slow answer outlasting the debounce, the `maxWait` timer, or `immediateFetch()`.
+    // Draining also keeps a failing batch from being resent.
     updateToFetch(ids)
     const run = runBatches(ids)
     inFlight.add(run)
@@ -282,14 +285,13 @@ export function defineCached<
     })
   }
 
-  // Caught inside the debounced callback, not on the promise it returns: the maxWait timer
-  // is a second invocation path whose promise never reaches the caller, so a rejection
-  // there would escape as an unhandled rejection.
+  // Caught inside the debounced callback, not on its returned promise.
+  // The `maxWait` timer is a second invocation path whose promise
+  // never reaches the caller, so a rejection there would be unhandled.
   const debouncedFetch = useDebounceFn(
     async () => {
       try {
-        // Every batch's failure, not only the first: a 403 in one would otherwise hide a timeout in
-        // the next.
+        // Log every batch's failure, not only the first. A 403 in one would otherwise hide a timeout in the next.
         const { items, failures } = await runQueue()
         failures.forEach(logFailure)
         return items
@@ -303,9 +305,7 @@ export function defineCached<
   )
 
   /**
-   * Debounced fetch for best performance.
-   * For general usage.
-   *
+   * Debounced fetch for general use.
    * Called fire-and-forget, so it never rejects. Use `immediateFetch()` to handle errors.
    */
   const fetch = () => {
@@ -313,13 +313,11 @@ export function defineCached<
   }
 
   /**
-   * Immediate fetch with no debounce and with result in promise.
-   * Use for special cases.
-   *
-   * Waits for the batches already in flight as well and resolves with their items: their ids are out
-   * of the queue, and a caller reading the result (to add the relations of what it fetched) would miss
-   * them. It rejects only when its own batch fails; an id whose batch in flight failed is not in the
-   * result -- check `isUnresolved(id)` for it.
+   * Immediate fetch without debounce, returning the result.
+   * Also waits for batches already in flight and includes their items, since
+   * their ids are out of the queue and callers adding relations would miss them.
+   * Rejects only when its own batch fails. An id whose in-flight batch
+   * failed is missing from the result; check `isUnresolved(id)`.
    */
   const immediateFetch = async () => {
     const pending = Array.from(inFlight)
@@ -328,13 +326,17 @@ export function defineCached<
     return [...own, ...others.flatMap((other) => other.items)]
   }
 
-  /** Something shows the item of `id`: the cache keeps it till as many `unpin` have come. */
+  /**
+   * Marks the item of `id` as shown. The cache keeps it until a matching number of `unpin` calls.
+   */
   const pin = (id: I | null | undefined) => {
     if (!id) return
     pinned.set(id, (pinned.get(id) ?? 0) + 1)
   }
 
-  /** What showed the item of `id` no longer does. The cache goes back within its limit once none is left. */
+  /**
+   * Marks the item of `id` as no longer shown. The cache returns within its limit once no pins are left.
+   */
   const unpin = (id: I | null | undefined) => {
     if (!id) return
     const count = pinned.get(id)
@@ -368,7 +370,9 @@ export function defineCached<
     return item._loaded
   }
 
-  /** Terminal counterpart of `isLoaded`: the fetch settled without resolving the item. */
+  /**
+   * Terminal counterpart of `isLoaded`: the fetch settled without resolving the item.
+   */
   const isUnresolved = (id: I | null | undefined): boolean => {
     if (!id) return false
     return cache.value.get(id)?._unresolved === true

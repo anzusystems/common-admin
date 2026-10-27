@@ -34,24 +34,19 @@ import { useUploadQueueDialog } from '@/domains/dam/uploadQueue/composables/useU
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
 import type { DocId } from '@/shared/types/common'
 
-// The widget of several images (a gallery), under admin-cms: its rows as they come, as they are picked in the library,
-// removed and saved. Rows of one asset shared one list of its authors. A pick that also copies assets into the licence
-// of the upload opened the dialog of the queue before the assets taken as they are were read, so its copies could
-// come before them, and those assets were added by a widget that had gone or turned read-only meanwhile. The images
-// that stayed after a removal went out with a gap in their positions. Once the authors of a row were written into its
-// asset and the images were not saved, the next save found those authors in the asset, said they were given meanwhile
-// and saved nothing. Closing the detail of one asset waited for the save of the detail of another. A gallery drawn
-// while another one saves the same images (the pin of a sidebar widget in admin-cms) read them before that save took
-// effect, and its own save wrote the old texts back. The real widget with its real rows over the real image store; the
-// DAM and the backend of the images are clients that record their requests. Not mounted for real: the sortable list
-// around the rows (a stand-in draws them), the asset picker, the queue dialog and the pictures. Rows picked or uploaded
-// while the images of the entity loaded were put away by that load. And a widget gone while the authors of its save
-// were written went on with the save of its images.
+// Gallery under admin-cms. Regressions guarded here:
+// rows of one asset shared one author list; a pick that copies
+// assets opened the queue dialog before the other assets were read;
+// positions had gaps after a removal; authors written into an asset
+// made the next save report "given meanwhile" and save nothing;
+// a detail close waited for another asset's save; a gallery drawn during another's save wrote old texts back;
+// rows added while the entity images loaded were lost; a widget gone during the author write still saved its images.
+// The sortable list, asset picker, queue dialog and pictures are stand-ins.
 
 const QUEUE = 'gallery'
 const Picker = defineComponent({ name: 'AAssetSelect', emits: ['confirm'], setup: () => () => h('div') })
 const QueueStandIn = defineComponent({ name: 'UploadQueueDialog', emits: ['apply'], setup: () => () => h('div') })
-// The list editor around the rows: only its view is drawn, and a commit of its rows is taken without a word.
+// Stand-in for the sortable list: draws only the rows and ignores commits.
 const Editor = defineComponent({
   name: 'ASortableListEditor',
   setup: (_, { slots, expose }) => {
@@ -81,7 +76,6 @@ beforeEach(() => {
   dam = createFakeDam(endPoints)
   imageApi = installConsumerImageApi(profile, installConsumerProfile(profile, dam.client))
   answerDamNames(dam)
-  // The search of the DAM for assets by their files, which the widget asks before it reads the assets.
   dam.reply((request) => {
     const match = request.method === 'GET' ? request.url.match(SEARCH) : null
     if (!match) return undefined
@@ -144,7 +138,6 @@ const mountWidget = async (modelValue: number[], callDeleteApiOnRemove = false) 
   useAssetSelectStore(pinia).setSelectConfig([uploadConfig()])
   return mounted
 }
-/** An image the entity has: `file-<id>` of `asset-<id>`, unless another file is named. */
 const stored = (id: number, position: number, file = `file-${id}`): ImageAware => ({
   id,
   texts: { description: `image ${id}`, source: `source ${id}` },
@@ -152,10 +145,8 @@ const stored = (id: number, position: number, file = `file-${id}`): ImageAware =
   flags: { showSource: true, internal: false, overrideInternal: false },
   position,
 })
-/** An asset the DAM has, without authors: the rows of its file offer the pick of them. */
 const inTheDam = (asset: DocId, file: DocId, of = licence) =>
   dam.assets.set(asset, damAssetWithFile(asset, file, AssetFileProcessStatus.Processed, { licence: of }))
-/** The entity has these images, each of its own asset without authors: each row offers the pick of them. */
 const withImages = async (ids: number[], sources: Record<number, string> = {}, callDeleteApiOnRemove = false) => {
   ids.forEach((id, index) => {
     const image = stored(id, index + 1)
@@ -175,7 +166,6 @@ const pickInRow = async (row: number, authors: DocId[]) => {
   await damNamesAsked()
 }
 const save = () => (widget!.vm as unknown as { saveImages: () => Promise<boolean> }).saveImages()
-/** The images each save of the widget sent: id, position and description. */
 const imagesSent = () =>
   imageApi.calls
     .filter(([call]) => call === 'bulkUpdateImages')
@@ -186,7 +176,6 @@ const metadataWrites = () =>
   dam.sentTo('PATCH', dam.routes.bulkMetadata).map((request) => dam.body(request) as Array<{ id: DocId }>)
 const rereadsOf = (asset: DocId) =>
   dam.sentTo('GET', dam.routes.one).filter((request) => request.url === `${endPoints.asset}/${asset}`)
-/** The DAM takes the authors a save of metadata writes into an asset: a later read of it answers with them. */
 const damKeepsAuthors = () =>
   dam.reply((request) => {
     if (request.method !== 'PATCH' || !dam.routes.bulkMetadata.test(request.url)) return undefined
@@ -196,7 +185,6 @@ const damKeepsAuthors = () =>
     }
     return undefined
   })
-/** An asset as the list of the picker has it. */
 const listed = (asset: DocId, file: DocId, of = licence) => ({
   id: asset,
   licence: of,
@@ -205,14 +193,12 @@ const listed = (asset: DocId, file: DocId, of = licence) => ({
   attributes: { assetType: DamAssetType.Image },
   podcasts: [],
 })
-/** The user confirms these assets in the picker; `copyTo`: the licence the picker copies into. */
 const confirmPick = (picked: ReturnType<typeof listed>[], copyTo?: number) =>
   widget!.findComponent(Picker).vm.$emit('confirm', {
     type: 'asset',
     value: picked,
     ...(copyTo ? { copyToLicence: copyTo } : {}),
   })
-/** The copy into the licence of the upload answers for each asset as a new copy. */
 const copiesAnswer = () =>
   dam.reply((request) => {
     if (request.method !== 'PATCH' || !COPY.test(request.url)) return undefined
@@ -228,7 +214,6 @@ const copiesAnswer = () =>
     return { status: 200, data: answer }
   })
 const queueDialog = () => useUploadQueueDialog().uploadQueueDialog.value
-/** The row "save and apply" of the queue dialog hands over for an uploaded file. */
 const uploadedRow = () => ({
   key: 'uploaded',
   ...createDamImage({ fileId: 'file-uploaded', licenceId: licence }, { description: 'uploaded', source: 'Upload' }),
@@ -333,8 +318,8 @@ describe('a pick in the library of the widget of several images', () => {
     expect(queueDialog()).toBeNull()
   })
 
-  // The dialog of the queue is where the copies come into the widget from: opened at once, it could add them before
-  // the assets taken as they are had been read, and those came after them.
+  // The queue dialog is where copies enter the widget. Opened at once, it could add
+  // them before the assets taken as they are were read, so they came after the copies.
   it('that also copies assets opens the queue once the assets taken as they are have been added', async () => {
     await withImages([11])
     inTheDam('asset-20', 'file-20')
@@ -380,7 +365,8 @@ describe('a pick in the library of the widget of several images', () => {
     expect(images().map((image) => image.position)).toEqual([1, 2])
   })
 
-  // The upload is the user's work: the dialog of its queue stays, as it does for a widget read-only from the start.
+  // An upload is the user's work, so its queue dialog stays open,
+  // as it does for a widget that is read-only from the start.
   it('leaves the queue dialog of an upload applied while the images load as it is, once the widget has turned read-only by their end', async () => {
     imageApi.has(stored(11, 1))
     inTheDam('asset-11', 'file-11')
@@ -435,8 +421,8 @@ describe('the save of the widget of several images', () => {
     expect(imagesSent()).toHaveLength(2)
   })
 
-  // A widget drawn meanwhile, of the same images, read them before that save of the images, and the save was noted
-  // only once it was sent: its own save wrote the texts it had read back over it.
+  // A widget drawn meanwhile for the same images read them before that save, and the save was noted only once sent.
+  // Its own save then wrote the texts it had read back over the new ones.
   it('saves no image once the widget is gone while the authors picked in a row are written', async () => {
     const mounted = await withImages([12], { 12: '' })
     await pickInRow(0, ['author-5'])
@@ -453,8 +439,8 @@ describe('the save of the widget of several images', () => {
     expect(imagesSent()).toEqual([])
   })
 
-  // The form of the detail is not locked while its save runs, and the detail can be closed before the DAM answers:
-  // the read after its close waits for that save. The read of the asset of another row does not.
+  // The detail form is not locked while saving, so the detail can close before the DAM answers.
+  // The read after the close waits for that save. The read of another row's asset does not.
   it('reads the asset of a row once its detail closes, while the save of the detail of another asset is on its way', async () => {
     await withImages([11, 12], { 11: '', 12: '' })
     const detail = () => useAssetDetailStore(pinia)
@@ -504,8 +490,6 @@ describe('the save of the widget of several images', () => {
   })
 })
 
-// The gallery is taken away while its save is on its way, and a copy of it is drawn elsewhere (the pin of a sidebar
-// widget in admin-cms). The copy reads the images as it is drawn: before that save took effect.
 describe('the widget of several images drawn while the save of another one of the same images is on its way', () => {
   const typedAndSaving = async () => {
     const original = await withImages([11, 12])
@@ -517,8 +501,9 @@ describe('the widget of several images drawn while the save of another one of th
     widget = undefined
     await mountWidget([11, 12])
     await vi.waitFor(() => expect(imageApi.calls.filter(([call]) => call === 'fetchImageListByIds')).toHaveLength(2))
-    // The copy waits for that save once its read has answered, at most the 30 s of `apiTimeout`: a pause of real time
-    // was too short for a slower runner, and the wait was not there yet when a case let it run out.
+    // The copy waits for the save after its read answers, for at most the 30 s `apiTimeout`.
+    // A fixed real-time pause was too short on a slow runner,
+    // and the wait was not yet there when a case let it run out.
     await vi.waitFor(() => expect(waits.lengths()).toContain(30_000))
     return { saves, saved }
   }
@@ -554,8 +539,8 @@ describe('the widget of several images drawn while the save of another one of th
     expect(descriptions()).toEqual(['image 11', 'image 12'])
   })
 
-  // The store of the images is one for the page: the answer of the save of a widget that is gone wrote its rows over
-  // those of the widget drawn next, of another entity.
+  // The image store is page-wide. The save answer of a gone widget
+  // used to overwrite the rows of the next widget, of another entity.
   it('of other images: shows its own rows at once, and the answer of that save writes nothing into them', async () => {
     const original = await withImages([11, 12])
     const saves = imageApi.holdBulkSaves()

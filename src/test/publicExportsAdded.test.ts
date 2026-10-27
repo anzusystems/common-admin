@@ -14,7 +14,6 @@ import { fillAuthors, fillCustomDataValue, fillKeywords } from '@/domains/dam/up
 import { adminDamImportRun, adminDamQueuePreset } from '@/domains/dam/uploadQueue/presets/queuePresets'
 import { useImageRoiStore } from '@/domains/dam/cropper/store/imageRoiStore'
 
-// Values the admins used to define themselves because the library kept them internal.
 describe('exports the admins redefined', () => {
   it('are reachable from the public entry', () => {
     expect(lib.apiErrorStatus).toBeTypeOf('function')
@@ -24,8 +23,7 @@ describe('exports the admins redefined', () => {
     expect(lib.SORT_BY_SCORE_BEST).toBe('score_best')
   })
 
-  // Exported in 1.x, dropped from 2.0 with the commented-out exports: an app tearing down its DAM socket had
-  // nothing to call.
+  // An app tearing down its DAM socket needs this export.
   it('include tearing down the DAM notification socket', () => {
     expect(lib.destroyDamNotifications).toBeTypeOf('function')
   })
@@ -49,7 +47,6 @@ describe('exports the admins redefined', () => {
   })
 })
 
-// DAM upload core (step 5)
 describe('the core of a DAM upload', () => {
   it('has its requests exported without "image" in their names', () => {
     expect(lib.damFileUploadStart).toBe(imageUploadStart)
@@ -124,7 +121,6 @@ describe('apiErrorIsReported', () => {
   })
 })
 
-// 2.0.0: every exported component starts with `A`, and the injection keys end in `Key`.
 describe('renamed in 2.0.0', () => {
   const renamed = {
     DamAdminAssetLink: 'ADamAdminAssetLink',
@@ -156,7 +152,6 @@ describe('renamed in 2.0.0', () => {
   })
 })
 
-// What admin-dam's own code imports of the upload's components once it uses the library's (step 5).
 describe('the components of the DAM upload', () => {
   it.each([
     'ADamAssetImage',
@@ -192,8 +187,8 @@ describe('the components of the DAM upload', () => {
   })
 })
 
-// admin-dam fills the store of the region of interest from a panel of its own, beside the library's
-// `ADamAssetImageRoiSelect`: it had to define the store again, under the same id.
+// admin-dam fills this store from its own panel beside `ADamAssetImageRoiSelect`.
+// The store id must stay the same.
 describe('the store of the region of interest', () => {
   it('is the very store ADamAssetImageRoiSelect reads, exported as useDamImageRoiStore', () => {
     expect(lib.useDamImageRoiStore).toBe(useImageRoiStore)

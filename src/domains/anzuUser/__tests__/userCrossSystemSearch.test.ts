@@ -9,10 +9,10 @@ import {
 } from '@/domains/anzuUser/composables/userSystemDescriptor'
 import { UserSystemAccess, UserSystemPresence } from '@/domains/anzuUser/utils/userSystemState'
 
-// The fan-out, and the rules that make it safe rather than merely parallel: one dead backend costs
-// its own row and nothing else, a late answer from a previous search is dropped, and an e-mail is
-// searched twice -- once to find the person, once by their id, because a system holding a different
-// address for them answers nothing the first time and that looks exactly like "no account here".
+// The fan-out rules: one dead backend costs only its own row, and a late answer from a previous search is dropped.
+// An e-mail is searched twice: once to find the person, once by their id.
+// A system holding a different address for them answers nothing
+// the first time, which looks exactly like "no account here".
 
 const record = (over: Record<string, unknown> = {}) => ({
   id: 42,
@@ -36,9 +36,7 @@ const httpError = (status: number) =>
 
 interface Backend {
   system: string
-  /** `GET /adm/v1/anzu-user/:id` — the probe. */
   request: ReturnType<typeof vi.fn>
-  /** `GET /adm/v1/anzu-user?filter_eq[email]=…` — round one of an e-mail search. */
   get: ReturnType<typeof vi.fn>
 }
 
@@ -85,9 +83,10 @@ describe('what counts as an e-mail', () => {
 
 describe('a term that is neither', () => {
   it('clears the previous person rather than leaving their rows on screen', async () => {
-    // The rows are live: their buttons and all three bulk actions write to `resolvedId`, which is
-    // still the person found a moment ago, while the box above them now holds a surname. The plan
-    // expects exactly this operator -- the one who knows only the name.
+    // The rows are live. Their buttons and all three bulk actions
+    // write to `resolvedId`, which is still the person found earlier,
+    // while the search box now holds a surname.
+    // The plan expects this operator, who knows only the name.
     const backends = ['weather', 'blog'].map((system) => backend(system))
     const store = useUserCrossSystemStore()
     const search = useUserCrossSystemSearch({ descriptors: descriptorsOf(backends) })
@@ -101,7 +100,6 @@ describe('a term that is neither', () => {
     expect(store.resolvedId).toBeNull()
     expect(store.phase).toBe(CrossSystemPhase.Idle)
     expect(store.termRejected).toBe(true)
-    // And nothing was asked of any backend for it.
     expect(backends.every((item) => item.request.mock.calls.length === 1)).toBe(true)
   })
 
@@ -157,7 +155,6 @@ describe('searching by id', () => {
 
     expect(store.results.get('weather')?.axes.presence).toBe(UserSystemPresence.Absent)
     expect(store.results.get('dam')?.axes.access).toBe(UserSystemAccess.Forbidden)
-    // Only the one that answered an authoritative 404 counts as resolved.
     expect(search.unresolvedSystems.value).toEqual(['dam'])
   })
 })
@@ -169,7 +166,6 @@ describe('searching by e-mail', () => {
 
     await search.search('jozef@sme.sk')
 
-    // The budget the plan sets: 9 by id, 18 by e-mail.
     expect(backends.reduce((sum, item) => sum + item.get.mock.calls.length, 0)).toBe(9)
     expect(backends.reduce((sum, item) => sum + item.request.mock.calls.length, 0)).toBe(9)
   })
@@ -188,7 +184,7 @@ describe('searching by e-mail', () => {
 
   it('finds the person through the one system that knows the address, then asks the rest by id', async () => {
     // The case the second round exists for: blog holds the same person under a different address,
-    // so round one gets nothing from it -- which is indistinguishable from "no account here".
+    // so round one gets nothing from it, which is indistinguishable from "no account here".
     const backends = [
       backend('weather'),
       backend('blog', {
@@ -222,7 +218,6 @@ describe('searching by e-mail', () => {
     // written under it could be taken back.
     expect(store.identityConflict).not.toBeNull()
     expect(store.resolvedId).toBeNull()
-    // The second round never runs.
     expect(backends[0].request).not.toHaveBeenCalled()
   })
 
@@ -264,9 +259,9 @@ describe('results that arrive late', () => {
   })
 
   it('stops the requests as well as discarding them', async () => {
-    // Cancelled while one is still on the wire, which is the only moment there is anything to stop:
-    // leaving the page mid-search would otherwise leave up to eighteen calls running against
-    // backends nobody is waiting for any more. The token alone only discards the answers.
+    // Cancel while one request is still pending, the only moment there is anything to stop.
+    // Leaving the page mid-search would otherwise leave up to eighteen calls running against backends nobody waits for.
+    // The token alone only discards the answers.
     let release: (value: unknown) => void = () => {}
     const slow = vi.fn().mockImplementation(() => new Promise((resolve) => (release = resolve)))
     const backends = [backend('weather', { request: slow })]

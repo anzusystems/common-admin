@@ -5,18 +5,14 @@ import { mountCropper, V2_ADAPTER, wait } from '@/domains/dam/cropper/__tests__/
 import { LANDSCAPE_IMAGE, PORTRAIT_IMAGE } from '@/domains/dam/cropper/__tests__/support/cropperImages'
 
 /**
- * How the cropper answers the room it is given.
- *
- * The frame a cropper sits in changes for reasons that have nothing to do with its own width: a
- * shorter window against a `vh` limit, a panel animating open, a tab becoming visible. Each of those
- * used to leave the picture sized for a frame that no longer exists — and a picture larger than its
- * frame hides part of the crop where it cannot be dragged back.
+ * How the cropper reacts to the room it is given.
+ * Its frame changes for reasons unrelated to its width: a shorter window against a `vh` limit, a panel animating open,
+ * a tab becoming visible. A picture larger than its frame hides part of the crop where it cannot be dragged back.
  */
 
 const AR_16_9 = 16 / 9
 const SETTLE = 400
 
-/** The crop as fractions of the picture, read off the page. */
 const cropOf = (root: HTMLElement) => {
   const picture = root.querySelector('cropper-image')!.getBoundingClientRect()
   const box = root.querySelector('cropper-selection')!.getBoundingClientRect()
@@ -29,8 +25,8 @@ const cropOf = (root: HTMLElement) => {
 }
 
 describe('ACropper layout', () => {
-  // The DAM sizes the cropper with `calc(100vh - 160px)`: a shorter window changes the height it may
-  // use without touching its width.
+  // The DAM sizes the cropper with `calc(100vh - 160px)`. A shorter
+  // window changes the allowed height without changing the width.
   it('re-fits when only the height it is allowed changes', async () => {
     const cropper = await mountCropper({
       adapter: V2_ADAPTER,
@@ -68,8 +64,8 @@ describe('ACropper layout', () => {
     cropper.destroy()
   })
 
-  // An ancestor that clips can show less of the host without the host's own box moving at all, so
-  // watching the host alone hears nothing.
+  // A clipping ancestor can show less of the host without the
+  // host's own box changing, so observing the host alone misses it.
   it('re-fits when a clipping ancestor gets shorter', async () => {
     const frame = document.createElement('div')
     frame.style.cssText = 'width: 520px; height: 500px; overflow: hidden;'
@@ -92,7 +88,6 @@ describe('ACropper layout', () => {
     frame.remove()
   })
 
-  // Content above a clipping ancestor's top is hidden just as surely as content below its bottom.
   it('counts the part of itself hidden above a clipping ancestor', async () => {
     const frame = document.createElement('div')
     frame.style.cssText = 'width: 520px; height: 300px; overflow: hidden; position: relative;'
@@ -110,14 +105,13 @@ describe('ACropper layout', () => {
     cropper.host.style.width = '519px'
     await wait(SETTLE)
 
-    // Only 300px of the frame is ever visible; a 400px picture would leave 100px of it unreachable.
     expect(cropper.api.displaySize().height).toBeLessThanOrEqual(301)
     cropper.destroy()
     frame.remove()
   })
 
-  // Mounted inside a closed panel or an unselected tab there is nothing to measure, and the region a
-  // host applies in its `ready` callback has nowhere to go until the panel opens.
+  // Mounted in a closed panel or an unselected tab, there is nothing to measure.
+  // A region a host applies in its `ready` callback has nowhere to go until the panel opens.
   it('applies a crop asked for while it had no layout, once it gets one', async () => {
     const wrapper1 = document.createElement('div')
     wrapper1.style.cssText = 'width: 640px; display: none;'
@@ -129,7 +123,6 @@ describe('ACropper layout', () => {
       props: {
         src: LANDSCAPE_IMAGE.src,
         aspectRatio: AR_16_9,
-        // The region a host binds while its panel is still closed.
         modelValue: { x: 0.1, y: 0.1, width: 0.6, height: 0.45 },
         onReady: () => {
           readyCalls += 1
@@ -166,7 +159,6 @@ describe('ACropper layout', () => {
     wrapper1.style.display = 'block'
     await wait(SETTLE)
 
-    // The 80% box the cropper would have started with had it been visible all along.
     const crop = cropOf(wrapper1)
     expect(crop.width).toBeCloseTo(0.8, 2)
     expect(crop.x).toBeCloseTo(0.1, 2)
@@ -175,7 +167,6 @@ describe('ACropper layout', () => {
     wrapper1.remove()
   })
 
-  // A width seen while the cropper was still loading must not be mistaken for one it laid out for.
   it('still reacts to a width it saw while the image was loading', async () => {
     const cropper = await mountCropper({ adapter: V2_ADAPTER, hostWidth: 640 })
 
@@ -189,6 +180,6 @@ describe('ACropper layout', () => {
     cropper.destroy()
   })
 
-  // A disabled cropper still has to follow its frame: `DamAssetImageRoiSelect` disables it while it
-  // pushes a stored region in, and a layout that settles in that window must not be missed.
+  // A disabled cropper must still follow its frame. `DamAssetImageRoiSelect` disables it while
+  // it pushes a stored region in, and a layout change in that window must not be missed.
 })

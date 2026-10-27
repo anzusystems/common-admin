@@ -13,11 +13,8 @@ import { useDamNotificationsEventBus } from '@/domains/dam/composables/damNotifi
 import KeywordRemoteAutocompleteCachedKeywordChip from '@/domains/dam/keyword/components/KeywordRemoteAutocompleteCachedKeywordChip.vue'
 import { useDamCachedKeywords } from '@/domains/dam/keyword/composables/cachedKeywords'
 
-// A row of the queue holds the ids of its authors and keywords; the chips read their names from two caches, which
-// ask the DAM for them after a pause of their own. An id the DAM does not return (deleted meanwhile, of another
-// ext system) has no name: its chip shows the id, as the chips of the other cached records do. The real caches
-// over a DAM that knows some of the ids asked for and not the others. The caches are one for the whole file, so
-// each case starts them empty; their pause is taken out of real time and let pass by the case.
+// An id the DAM does not return (deleted, or of another ext system) has no name, and its chip shows the id.
+// The caches are shared by the whole file, so each case starts them empty. Their pause is taken out of real time.
 
 const KNOWN: Record<string, string> = { 'author-known': 'Jane Roe', 'keyword-known': 'harvest' }
 const AUTHORS = ['author-known', 'author-missing']
@@ -43,7 +40,6 @@ beforeEach(() => {
       .map((id) => ({ id, name: KNOWN[id], identifier: '', flags: { reviewed: false } }))
     return { status: 200, data: { data: found, totalCount: found.length } }
   })
-  // The pause of the caches before they ask (1.5 s, 5 s at most) is held.
   waits = holdLongWaits(1_000)
   for (const forgotten of [
     useDamCachedAuthors().cachedAuthors,
@@ -61,7 +57,6 @@ afterEach(() => {
   useDamNotificationsEventBus().reset()
 })
 
-/** What a row of the queue does with the ids it is given. The DAM is asked once the pause of the caches is over. */
 const namesQueued = () => {
   const authors = useDamCachedAuthors()
   const keywords = useDamCachedKeywords()
@@ -74,7 +69,6 @@ const stillAsked = () =>
   [...useDamCachedAuthors().cachedAuthors.value.values(), ...useDamCachedKeywords().cachedKeywords.value.values()]
     .filter((item) => !item._loaded && !item._unresolved)
     .map((item) => item.id)
-/** The names were asked for, and the DAM has answered: with the two it knows. */
 const namesAnswered = async () => {
   namesQueued()
   await waits.elapse()
@@ -91,9 +85,8 @@ const mountChip = async (chip: Component, props: Record<string, unknown>) => {
 const spins = (wrapper: VueWrapper) => wrapper.find('.v-progress-circular').exists()
 const hasTooltip = (wrapper: VueWrapper) => wrapper.findComponent({ name: 'VTooltip' }).exists()
 /**
- * The words of the tooltip of a chip, as a pointer over the element it hangs on opens them. The tooltip is drawn
- * from the start: its words count only once it is open, and only those of this chip's own (each chip is an app of
- * its own, so their ids repeat and say nothing).
+ * The tooltip is drawn from the start, but its text counts only once it is open.
+ * Each chip is an app of its own, so element ids repeat and say nothing.
  */
 const tooltipText = async (wrapper: VueWrapper) => {
   const tooltip = wrapper.findComponent({ name: 'VTooltip' })
@@ -127,7 +120,6 @@ describe('chips whose names the DAM is still asked for', () => {
     ]
     const waiting = () => chips.map(({ chip }) => [chip.text(), spins(chip)])
 
-    // Not asked yet, and then asked and not answered yet: a spinner, and no id.
     expect(waiting()).toEqual(chips.map(() => ['', true]))
     await waits.elapse()
     await vi.waitFor(() => expect(lookups.waiting).toHaveLength(2))
@@ -162,7 +154,6 @@ describe('chips whose names the DAM cannot be asked for at all', () => {
 })
 
 describe('the keyword chip', () => {
-  // The cache asks again for an id it did not get, the next time something needs it.
   it('waits again when the cache asks for the keyword once more, and shows the name it then gets', async () => {
     await namesAnswered()
     const wrapper = await mountChip(KeywordRemoteAutocompleteCachedKeywordChip, { id: 'keyword-missing' })
@@ -192,7 +183,6 @@ describe('the keyword chip', () => {
     expect([wrapper.find('.v-chip').text(), spins(wrapper)]).toEqual(['Given by the caller', false])
     expect(damNameLookups(dam)).toEqual([])
 
-    // The DAM is asked, and answers with the name of the keyword.
     await waits.elapse()
     await vi.waitFor(() => expect(stillAsked()).toEqual([]))
     await flushPromises()
@@ -244,8 +234,8 @@ describe.each([
     expect(wrapper.find('.v-chip').text()).toBe('Given by the caller')
   })
 
-  // Today's behaviour, pinned as it is: the title is shown, and the record the DAM did not return is still said not
-  // to have been loaded. admin-dam's own chips say nothing then (a difference for the owner before I1).
+  // Pins current behaviour: the title is shown and the record is still reported as not loaded.
+  // The chips of admin-dam say nothing in that case.
   it('says the record could not be loaded also beside a title its caller gives it', async () => {
     const wrapper = await mountChip(chip, { id: missing, title: 'Given by the caller' })
 
@@ -281,7 +271,6 @@ describe('the chip of an author conflict', () => {
     expect([spins(wrapper), hasTooltip(wrapper)]).toEqual([false, false])
   })
 
-  // A user can pick or create the author meanwhile: the name is then put into the cache by hand.
   it('shows the name once the author is known after all', async () => {
     const wrapper = await mountChip(AuthorRemoteAutocompleteCachedAuthorChipConflicts, { id: 'author-missing' })
     expect(wrapper.find('.v-chip').text()).toBe('#author-missing')
@@ -298,7 +287,6 @@ describe('the chip of an author conflict', () => {
     expect(hasTooltip(wrapper)).toBe(false)
   })
 
-  // The cache asks again for an id it did not get, the next time something needs it.
   it('waits again when the cache asks for the author once more, and shows the name it then gets', async () => {
     const wrapper = await mountChip(AuthorRemoteAutocompleteCachedAuthorChipConflicts, { id: 'author-missing' })
     expect(wrapper.find('.v-chip').text()).toBe('#author-missing')

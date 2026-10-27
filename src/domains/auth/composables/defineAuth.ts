@@ -50,7 +50,9 @@ export function defineAuth<TAclValue extends AclValue>(
     return canForAllHelper(acls, subject)
   }
 
-  /** `can()` and `canForAll()` that never throw -- for templates and route guards. See `canSafeHelper`. */
+  /**
+   * `can()` and `canForAll()` that never throw -- for templates and route guards. See `canSafeHelper`.
+   */
   const canSafe = (acl: TAclValue | TAclValue[], subject?: object) => {
     return canSafeHelper(acl, subject)
   }
@@ -118,12 +120,10 @@ export function defineAuth<TAclValue extends AclValue>(
     }
 
     /**
-     * Answers `undefined` for every failure by default, which loses the reason. `throwOnError`
-     * hands the original error back, for callers that must tell a lost session from a dead backend.
-     *
-     * A failure leaves `currentUser` as it was: unset before the first successful load, the previous
-     * user on a later call, whose permissions `can()` then keeps answering from. The system still
-     * counts as loaded either way, so `can()` does not throw for a system that was never loaded.
+     * Returns `undefined` on any failure by default, which loses the reason.
+     * `throwOnError` rethrows the original error, so callers can tell a lost session from a dead backend.
+     * A failure leaves `currentUser` unchanged, so `can()` keeps using the previous user's permissions.
+     * The system still counts as loaded, so `can()` does not throw.
      */
     const fetchCurrentUser = async (
       client: () => AxiosInstance,
@@ -133,11 +133,9 @@ export function defineAuth<TAclValue extends AclValue>(
       options: { throwOnError?: boolean } = {}
     ) => {
       try {
-        // `useApiRequest`, not the older `apiFetchOne`: it is where the fleet is going, and it is
-        // the difference between a failure arriving as a bare `AnzuFatalError` and arriving as the
-        // error it actually was -- `AnzuApiAxiosError` with the response on its cause, or
-        // `AnzuApiTimeoutError`. A caller passing `throwOnError` can only tell a dead session from
-        // a dead backend if the error says which it was.
+        // Uses `useApiRequest`, not `apiFetchOne`. `apiFetchOne` wraps failures in a bare `AnzuFatalError`.
+        // Callers with `throwOnError` need the real error (`AnzuApiAxiosError`
+        // or `AnzuApiTimeoutError`) to tell a dead session from a dead backend.
         const { execute } = useApiRequest<NonNullable<TCurrentUser>>({
           client,
           method: 'GET',
@@ -160,8 +158,8 @@ export function defineAuth<TAclValue extends AclValue>(
     return {
       currentUser,
       setCurrentUser,
-      // `undefined` until something has tried to load this system, which is the one state
-      // `currentUser` alone cannot tell apart from "loaded, but there is no such user".
+      // `undefined` until something tries to load this system.
+      // `currentUser` alone cannot tell this apart from "loaded, but no such user".
       isCurrentUserLoaded,
       isSuperAdmin,
       isAnonymous,
@@ -248,12 +246,11 @@ export function useAuthHelpers<TAclValue extends AclValue>() {
   }
 
   /**
-   * `canForAll` that answers false instead of throwing: for a system nothing has tried to load yet, which a
-   * template or a route guard may reach first, and for a check that throws, such as an `allowOwner` grant
-   * with no subject. An array is evaluated with AND.
-   *
-   * Reading each system's current user tracks that key, so a render or a computed re-evaluates when its
-   * own system arrives.
+   * `canForAll` that returns false instead of throwing.
+   * Covers a system not loaded yet (templates and route guards may get there
+   * first) and checks that throw, such as an `allowOwner` grant with no subject.
+   * An array is evaluated with AND. Reading each system's current user
+   * makes a render or computed re-evaluate when that system loads.
    */
   const canSafeHelper = (acl: TAclValue | TAclValue[], subject?: object, label = 'canSafe'): boolean => {
     const acls = isArray(acl) ? acl : [acl]
@@ -269,7 +266,7 @@ export function useAuthHelpers<TAclValue extends AclValue>() {
     try {
       return canForAllHelper(acls, subject)
     } catch (error) {
-      // Denied either way; without a word it looks exactly like a missing permission.
+      // Denied either way. Without the warning it looks like a missing permission.
       const key = acls.join(', ')
       warnOnceInDevelopment(`${label}:${key}`, `[${label}] the check of ${key} threw, so it is denied:`, error)
       return false
@@ -285,7 +282,9 @@ export function useAuthHelpers<TAclValue extends AclValue>() {
   }
 }
 
-/** An ACL value carries its system in front of the first underscore: `weather_location_ui`. */
+/**
+ * An ACL value carries its system in front of the first underscore: `weather_location_ui`.
+ */
 export function getSystemFromAcl(acl: any) {
   const parts = acl.split('_')
 

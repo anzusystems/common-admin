@@ -3,11 +3,9 @@ export const isAnzuError = (error: unknown): error is AnzuError => {
 }
 
 /**
- * The base every Anzu error extends.
- *
- * It exists so the api helpers can ask "has this already been mapped?" without testing the error's
- * name: a string prefix answers true for anyone else's class called `Anzu…`, and answers false the
- * moment a class forgets to set `name`. One `instanceof` says exactly what is meant.
+ * Base class of every Anzu error.
+ * The api helpers use `instanceof` to check whether an error is already mapped. A name
+ * prefix check matches foreign `Anzu…` classes and misses classes that do not set `name`.
  */
 export class AnzuError extends Error {
   constructor(message: string, cause: unknown = undefined) {

@@ -12,19 +12,19 @@ import { usePagination } from '@/domains/api/composables/pagination'
 import { useDatatablePageStore } from '@/domains/system/store/datatablePageStore'
 
 // A hash that lost its `~` marker used to be salvaged by dropping everything after the last `&`.
-// Since `serializeFilters` appends `_sort` last, that removed precisely the sort, pagination got
-// `sortBy: null`, and the list was then fetched without `order[...]` — with LIMIT/OFFSET and no
-// ORDER BY, paging can repeat or skip rows. The broken hash stayed in the URL, so it survived
-// reloads. `sortBy: null` remains legitimate for `usePagination(null)` tables, which is why the
-// fix rejects unusable hashes instead of overriding the sort.
+// `serializeFilters` appends `_sort` last, so this removed the sort. The list was then
+// fetched without `order[...]`, and LIMIT/OFFSET without ORDER BY can repeat or skip rows.
+// The broken hash stayed in the URL and survived reloads.
+// `sortBy: null` stays legitimate for `usePagination(null)` tables,
+// so the fix rejects unusable hashes instead of overriding the sort.
 
 const fields = [
   { name: 'name', default: '' },
   { name: 'ids', default: [] as number[] },
 ] as const satisfies readonly MakeFilterOption<string>[]
 
-// `useFilterHelpers` derives it from system/subject unless `storeFiltersLocalStorage`
-// overrides it, so it is not the local-storage key.
+// `useFilterHelpers` derives the page store key from system/subject unless
+// `storeFiltersLocalStorage` overrides it, so it is not the local-storage key.
 const PAGE_STORE_KEY = 'sys_subj'
 
 const setup = (moreOptions: Record<string, unknown> = {}, sortKey: string | null = 'id') => {
@@ -58,7 +58,7 @@ describe('deserializeFilters — end marker handling', () => {
   it('rejects a hash without the end marker instead of dropping its last parameter', () => {
     const { deserializeFilters } = setup()
 
-    // Used to yield sortBy: null; any last parameter was at risk, not just the sort.
+    // Used to yield sortBy: null. Any last parameter was at risk, not just the sort.
     expect(deserializeFilters('#name=abc&_sort=id,desc')).toBeNull()
     expect(deserializeFilters('#name=abc&ids=1%2C2')).toBeNull()
   })
@@ -143,11 +143,12 @@ describe('loadStoredFilters — sort survives', () => {
   })
 })
 
-// Several datatables can share one system/subject — cms has seven for `cms/article` — and they
-// tell themselves apart by overriding `storeFiltersLocalStorage`. The remembered page used to be
-// keyed by system/subject alone, so the dashboard's article table handed its page to the main
-// article list. The second case below is the detector: with the old key the override'd table read
-// from `sys_subj` and got nothing. The first is a guard — it passes either way.
+// Several datatables can share one system/subject (cms has seven for `cms/article`)
+// and tell themselves apart by overriding `storeFiltersLocalStorage`.
+// The remembered page used to be keyed by system/subject alone, so the
+// dashboard's article table handed its page to the main article list.
+// The second case is the detector: with the old key the overridden table read
+// from `sys_subj` and got nothing. The first is a guard that passes either way.
 describe('loadStoredFilters — the remembered page is keyed per table', () => {
   const { setStoredPage, setPreservePage, consumeStoredPage } = useDatatablePageStore()
   const otherTableKey = 'tableFilter_sys_subj_personal'
@@ -177,11 +178,10 @@ describe('loadStoredFilters — the remembered page is keyed per table', () => {
   })
 })
 
-// A url hash reaches a list from a link or from stepping back to an older address, and in both
-// cases it describes the whole view. The fields it does not name used to keep whatever the
-// module-level filter store still held, so the same link landed differently depending on whether
-// the user pasted it into a fresh tab or clicked it inside the running app. Local storage keeps
-// merging: there the absent fields were left out precisely because they equal their default.
+// A url hash from a link or from stepping back describes the whole view.
+// Fields it does not name used to keep what the module-level filter store held,
+// so the same link landed differently in a fresh tab and in the running app.
+// Local storage keeps merging: there absent fields are left out because they equal their default.
 describe('loadStoredFilters — a hash is authoritative', () => {
   it('resets fields the hash does not mention', () => {
     const { pagination, filterData, loadStoredFilters } = setup()
@@ -204,9 +204,10 @@ describe('loadStoredFilters — a hash is authoritative', () => {
     expect(filterData.ids).toEqual([7, 8])
   })
 
-  // Unknown keys are dropped before the reset decides, so a hash meant for another table sharing
-  // the page arrives here looking like a sort-only hash. Treating that as authoritative wiped the
-  // filter of a table the link never addressed, and mirrored the empty result into local storage.
+  // Unknown keys are dropped before the reset decides, so a hash meant
+  // for another table sharing the page looks like a sort-only hash.
+  // Treating that as authoritative wiped the filter of a table the link
+  // never addressed and mirrored the empty result into local storage.
   it('does not reset anything for a hash carrying only a sort', () => {
     const { pagination, filterData, loadStoredFilters } = setup()
     filterData.name = 'mine'
@@ -229,7 +230,6 @@ describe('loadStoredFilters — a hash is authoritative', () => {
 
   it('starts a link on the first page', () => {
     const { setStoredPage } = useDatatablePageStore()
-    // Stored, but no preserve flag: nobody asked to come back, so this is a plain link.
     setStoredPage(PAGE_STORE_KEY, 4)
 
     const { pagination, loadStoredFilters } = setup()
@@ -240,8 +240,8 @@ describe('loadStoredFilters — a hash is authoritative', () => {
     expect(pagination.value.page).toBe(1)
   })
 
-  // The close button sets the preserve flag and pushes the address it left, hash included. Forcing
-  // page 1 for every hash would send the user back to the top of a list they had paged through.
+  // The close button sets the preserve flag and pushes the address it left, hash included.
+  // Forcing page 1 for every hash would send the user back to the top of a list they had paged through.
   it('still restores the page when the close button asked for it', () => {
     const { setStoredPage, setPreservePage } = useDatatablePageStore()
     setStoredPage(PAGE_STORE_KEY, 4)
@@ -293,7 +293,7 @@ describe('buildFilterHash', () => {
     expect(isRouterSafeHash(hash)).toBe(true)
     // vue-router runs encodeURI over the hash; anything it changes is lost on the way.
     expect(encodeURI(hash)).toBe(hash)
-    // ... and it glues a hash without the leading `#` straight onto the path.
+    // vue-router glues a hash without the leading `#` straight onto the path.
     expect(hash.startsWith('#')).toBe(true)
   })
 
@@ -315,8 +315,8 @@ describe('buildFilterHash', () => {
   })
 })
 
-// `cloneDeep` is `structuredClone`, so an array default never compares `===` to its own copy and
-// used to be written into the url on every submit.
+// `cloneDeep` is `structuredClone`, so an array default never compares `===` to its own copy.
+// It used to be written into the url on every submit.
 describe('getFilterDataForStoring — array defaults', () => {
   const withArrayDefault = [
     { name: 'ids', default: [3] as number[] },

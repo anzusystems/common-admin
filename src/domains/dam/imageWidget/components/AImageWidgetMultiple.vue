@@ -50,7 +50,7 @@ const emit = defineEmits<{
 const damConfigName = useDamConfigName(props.configName)
 
 const status = ref<'loading' | 'ready' | 'error'>('loading')
-// Not being allowed to upload is no reason to hide the image that is already there: it is shown read-only.
+// Without upload permission the existing image is still shown, read-only.
 const uploadAllowed = ref(true)
 
 const { damClient } = useCommonAdminCoreDamOptions(damConfigName)
@@ -90,8 +90,8 @@ onMounted(async () => {
   }
   promises.push(getOrLoadDamConfigExtSystemByLicences(props.selectLicences))
   const { extSystem } = uploadConfig.value
-  // The custom fields of its images: every type of the ext system where it has none yet, else the image type alone
-  // where its read failed before. The types loaded are not read again.
+  // Loads custom fields for every type of the ext system if none are loaded yet.
+  // Otherwise loads only the image type if its earlier read failed. Loaded types are not read again.
   if (isUndefined(getDamConfigAssetCustomFormElements(extSystem, DamAssetType.Image))) {
     promises.push(
       loadDamConfigAssetCustomFormElements(
@@ -105,7 +105,7 @@ onMounted(async () => {
   } catch (e) {
     status.value = 'error'
   }
-  // The image type whose read failed beside types that answered is not loaded: its form would have no field.
+  // If the image type failed while other types loaded, the form would have no fields, so this is an error.
   if (isUndefined(getDamConfigAssetCustomFormElements(extSystem, DamAssetType.Image))) status.value = 'error'
   if (status.value !== 'error') status.value = 'ready'
 })
@@ -134,7 +134,7 @@ const { t } = useI18n()
     :readonly="readonly || !uploadAllowed"
     @update:model-value="emit('update:modelValue', $event)"
   />
-  <!-- The config fails also for a user without access to the licence: the image already there is still shown. -->
+  <!-- The config also fails for a user without access to the licence. The existing image is still shown. -->
   <div v-else-if="status === 'error'">
     <AImageWidgetMultipleSimple
       v-if="modelValue.length"

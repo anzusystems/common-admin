@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
-// Runtime import cycles in the library. In a cycle the load order decides whether a module finds its
-// imports initialised -- a `const` read before its module ran throws. Type-only imports are erased
-// and do not count.
+// Runtime import cycles in the library. In a cycle the load
+// order decides whether a module finds its imports initialised.
+// A `const` read before its module ran throws. Type-only imports are erased and do not count.
 const sources = import.meta.glob(
   ['/src/**/*.{ts,vue}', '!/src/test/**', '!/src/**/__tests__/**', '!/src/playground/**', '!/src/**/*.d.ts'],
   {
@@ -56,7 +56,6 @@ for (const [file, raw] of Object.entries(sources)) {
   graph.set(file, deps)
 }
 
-// Tarjan's strongly connected components; a component of more than one module is a cycle.
 const cycles = () => {
   let counter = 0
   const index = new Map<string, number>()
@@ -97,7 +96,6 @@ describe('import cycles', () => {
     expect(graph.size).toBeGreaterThan(400)
   })
 
-  // The last one went with the poll that `api/uploadApi.ts` ran through the upload queue store.
   it('finds none', () => {
     expect(cycles()).toEqual([])
   })

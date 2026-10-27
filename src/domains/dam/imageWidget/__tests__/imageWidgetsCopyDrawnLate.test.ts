@@ -5,13 +5,14 @@ import AImageMediaWidget from '@/domains/dam/imageWidget/components/AImageMediaW
 import AImageWidget from '@/domains/dam/imageWidget/components/AImageWidget.vue'
 import { useImageMediaWidgetStore } from '@/domains/dam/imageWidget/store/imageMediaWidgetStore'
 
-// The copy of a widget of one image pinned while the save of its image is on its way, drawn only once the
-// configuration of its licences has been read from the network: a select licence whose read failed is not kept, and is
-// read again by every widget drawn. The note of the saves of that image was dropped meanwhile, while the save was still
-// on its way: the copy then neither waited for that save nor took what it saved, and its "edit metadata" offered the
-// texts from before it, whose confirm saved them back over the saved ones. The widgets as an admin draws them, with
-// their configuration read through stand-ins; the image backend keeps the texts saved last, and a read answers with
-// what it had when it was sent. The dialog of the image is a stand-in.
+// Guards a regression: a copy of a widget is pinned while its image save is on its
+// way, and drawn only after the licence configuration is read from the network.
+// A select licence whose read failed is not kept, so every drawn widget reads it again.
+// The note of the saves of that image was dropped while the save was still running.
+// The copy then neither waited for the save nor took its result, and its
+// "edit metadata" offered the old texts, whose confirm saved them back.
+// The image backend keeps the texts saved last; a read answers with
+// what it had when it was sent. The image dialog is a stand-in.
 
 const server = vi.hoisted(() => ({
   texts: { description: '', source: '' },
@@ -42,7 +43,7 @@ vi.mock('@/domains/dam/composables/commonAdminCoreDamOptions', async (importOrig
   ...(await importOriginal<object>()),
   useCommonAdminCoreDamOptions: () => ({ damClient: () => ({}), endPointAsset: '/asset' }),
 }))
-// The licences of the widget: that of the upload is known, those of the library are read when the case lets them.
+// The upload licence is known; the library licences are read when the case lets them.
 vi.mock('@/domains/dam/config/composables/damConfigState', () => ({
   useDamConfigState: () => ({
     getOrLoadDamConfigExtSystemByLicence: async () => ({
@@ -143,10 +144,6 @@ describe.each<[string, Component]>([
     await flushPromises()
     await flushPromises()
   }
-  /**
-   * The texts are edited and confirmed in the widget, whose dialog is closed. The widget is pinned while its save is on
-   * its way: it goes, and its copy is drawn, whose configuration is read from the network for a while.
-   */
   const pinnedWhileTheConfigIsRead = async () => {
     const original = drawWidget()
     await flushPromises()

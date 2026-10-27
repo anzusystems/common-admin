@@ -22,9 +22,10 @@ import {
 import { uploadSettlementRuntime } from '@/domains/dam/uploadQueue/settlement/uploadSettlementRuntime'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
 
-// What the notification server does to an upload of admin-cms, from the frame on the socket to the row. The
-// socket is a stub of the global `WebSocket`, the DAM a client that records its requests; nothing of the library
-// is replaced. admin-ugc has no socket: its half is the last case.
+// Covers what the notification server does to an admin-cms upload, from the socket frame to the row.
+// The socket is a stub of the global `WebSocket` and the DAM is a
+// client that records requests. Nothing of the library is replaced.
+// admin-ugc has no socket; its half is the last case.
 
 const QUEUE = 'profile-queue'
 
@@ -69,7 +70,6 @@ describe('an upload under the CMS configuration, with the notification socket op
     socket.accept()
   })
 
-  /** One file, sent whole: the row waits for the server to process it. */
   const uploadOne = async () => {
     const store = useUploadQueuesStore()
     await store.addByFiles(QUEUE, extSystem, licence, [photo()], 'default')
@@ -90,7 +90,6 @@ describe('an upload under the CMS configuration, with the notification socket op
 
     socket.deliver(DamNotificationName.AssetMetadataProcessed, { asset: 'asset-1' })
     await vi.waitFor(() => expect(item.canEditMetadata).toBe(true), SOON)
-    // Its form is there while the file is still being processed.
     expect(item).toMatchObject({
       status: UploadQueueItemStatus.Processing,
       customData: { title: 'from the server' },
@@ -115,7 +114,6 @@ describe('an upload under the CMS configuration, with the notification socket op
     expect(underOwnAssetEndPoint()).toBe(true)
     expect(dam.unanswered).toEqual([])
 
-    // Settled by its notifications, the row is not asked about any more.
     const reads = dam.assetReads().length
     await waits.elapseAll()
     expect(dam.assetReads()).toHaveLength(reads)
@@ -127,7 +125,6 @@ describe('an upload under the CMS configuration, with the notification socket op
 
     socket.deliver(DamNotificationName.AssetFileProcessed, { asset: 'asset-1', id: 'file-1' })
     await vi.waitFor(() => expect(item.status).toBe(UploadQueueItemStatus.Uploaded))
-    // Uploaded, and still without the metadata: the form waits for its own notification.
     expect(item).toMatchObject({
       canEditMetadata: false,
       customData: {},
@@ -191,7 +188,6 @@ describe('an upload under the CMS configuration, with the notification socket op
     expect(store.getQueueProcessedCount(QUEUE)).toBe(store.getQueueTotalCount(QUEUE))
   })
 
-  // The client gave the upload up, and the server finished it all the same.
   it('is an uploaded row with its metadata when its finish request failed and the file notification comes', async () => {
     dam.reply((request) =>
       request.method === 'PATCH' && dam.routes.finish.test(request.url) ? { status: 502 } : undefined
@@ -214,9 +210,9 @@ describe('an upload under the CMS configuration, with the notification socket op
   })
 
   describe('and a frame the queue does not act on', () => {
-    // A read the queue asks for on a notification is due a quarter of a second after it, or two seconds: "asks
-    // for nothing" is said once the time of the queue has moved past both, which a clock of the test does at
-    // once. The first read of the poll is further off.
+    // A read asked for on a notification is due 250 ms or 2 s after it.
+    // "Asks for nothing" is checked once the queue time has moved past both, which the test clock does at once.
+    // The first read of the poll is further off.
     const PAST_ANY_READ_OF_A_NOTIFICATION = 3000
     let clock: ManualScheduler
     beforeEach(() => {

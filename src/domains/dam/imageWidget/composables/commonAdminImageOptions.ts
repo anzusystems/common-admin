@@ -15,7 +15,7 @@ export function useCommonAdminImageOptions(configName: string = 'default') {
   if (
     isUndefined(imageOptions.value) ||
     isUndefined(imageOptions.value.configs) ||
-    // Only what the application has named: `constructor` and the like, which every object has, name no configuration.
+    // Own keys only. Inherited names like `constructor` are not configurations.
     !Object.hasOwn(imageOptions.value.configs, configName) ||
     isUndefined(imageOptions.value.configs[configName])
   ) {

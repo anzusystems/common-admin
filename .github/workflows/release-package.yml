@@ -1,9 +1,9 @@
-# Created by release-tools init: releases are made with release:start and release:publish.
-# A prerelease can also be published by hand: a GitHub Release marked as pre-release, its tag the full version
+# Created by release-tools init. Releases are made with `release:start` and `release:publish`.
+# A prerelease can also be published by hand: a GitHub Release marked as pre-release, tagged with the full version
 # (e.g. 2.0.0-rc.1), on a commit that contains this file (`next` now, `main` after the merge) and whose CI passed.
-# The jobs manual-* check it, build and pack it as the tool does and publish it under the npm tag the tool would
-# choose. Finals only with release:publish. Releases of the tool are skipped (their body ends with its footer).
-# release:init would replace this file with its stub, without the jobs manual-*.
+# The `manual-*` jobs check it, build and pack it as the tool does, and publish it under the npm tag the tool would
+# choose. Finals only with `release:publish`. Releases made by the tool are skipped (their body ends with its footer).
+# `release:init` would replace this file with its stub, without the `manual-*` jobs.
 name: Release
 on:
   push:
@@ -84,8 +84,8 @@ jobs:
             echo "::error::${TAG%%-*} is already released, so no prerelease of it is published."
             exit 1
           fi
-          # The npm tag the tool would choose: <name>-X.Y for a line older than the latest released one, or when the
-          # npm tag <name> already points to a higher version (npm tags never move back).
+          # The npm tag the tool would choose: `<name>-X.Y` for a line older than the latest released one,
+          # or when the npm tag `<name>` already points to a higher version. npm tags never move back.
           npm_tag=$id
           latest=$(grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' "$RUNNER_TEMP/versions.txt" | sort -V | tail -n 1)
           current=$(npm view "$PACKAGE" "dist-tags.$id")

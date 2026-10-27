@@ -5,40 +5,31 @@ import { fileURLToPath } from 'node:url'
 import ts from 'typescript'
 import { DAM_DEFAULT_STORE, DAM_NAME_ACCESSORS, DAM_NAME_STORE_METHODS } from '@/test/support/damConfigNameAccessors'
 
-// Every state of a DAM is kept per DAM configuration name, and a call that names none, or names it with what may be
-// `undefined`, goes to `default` in silence (a public accessor with an optional name), or to every DAM (a settle
-// function of the upload store). In the DAM domain, outside the tests, every call of such an accessor names its
-// configuration with what is a name for sure. The TypeScript compiler API reads the sources (in node: it does not run
-// in the browser of the rest of the suite), and the name argument of each call is accepted only as:
-// - a string literal;
-// - what `useDamConfigName(…)` or `inheritedDamConfigName(…)` answers, also through a variable;
-// - a parameter or a variable typed `string` (or `UploadQueueRowsOf`, of the settle functions), not optional, or with
-//   a string default; a variable that holds an accepted value;
-// - a prop of the component declared without `?` (`props.configName`);
-// - `x ?? <accepted>`, a conditional of two accepted values, a call of a function of the file that answers one,
-//   `{ queueKey }` (of the settle functions).
-// `undefined`, an optional prop or parameter, and anything else are not names. A call in a template is not allowed at
-// all, and neither is `useDamConfigStore()` outside `useDamConfigStoreOf`. An accessor imported under another name, or
-// called by a bracket (`store['refreshAsset'](…)`), is read as itself.
-// What it does not prove: that the name is the right one. A literal or a `string` fixed to `'default'` in a component
-// under `own` passes, and a prop declared without `?` may still be `undefined` at runtime, where a parent leaves it
-// out. It proves that a name is passed, by what the types say.
+// Every DAM state is kept per DAM configuration name. A call with no name, or a possibly `undefined` one,
+// silently uses `default` (public accessors) or hits every DAM (settle functions of the upload store).
+// This guard reads the DAM domain sources outside tests with the TypeScript compiler API, in
+// node. Each accessor call must pass a name that is surely a string: a literal, a
+// `useDamConfigName(…)` or `inheritedDamConfigName(…)` result, a non-optional `string` parameter
+// or variable, a prop declared without `?`, or `??`, a conditional or a local function of those.
+// Calls in templates and `useDamConfigStore()` outside `useDamConfigStoreOf` are not allowed.
+// It does not prove the name is the right one, only that a name is passed, as far as the types say.
 
-/** Where the guard reads; `DAM_GUARD_ROOT` points it at another tree (a check of the guard itself). */
+/**
+ * Where the guard reads; `DAM_GUARD_ROOT` points it at another tree (a check of the guard itself).
+ */
 const ROOT = process.env.DAM_GUARD_ROOT ?? fileURLToPath(new URL('../../domains/dam', import.meta.url))
 
-/** Functions that answer a configuration name, wherever they are declared. */
 const NAME_PRODUCERS = new Set(['useDamConfigName', 'inheritedDamConfigName'])
-/** Types that are a name for sure. */
 const NAME_TYPES = new Set(['UploadQueueRowsOf'])
 
-/** The one nameless call allowed, and why: the store hears a change of any socket, whatever the name. */
+/**
+ * The one nameless call allowed, and why: the store hears a change of any socket, whatever the name.
+ */
 const SOCKET_CHANGE = {
   file: 'uploadQueue/store/uploadQueuesStore.ts',
   call: 'useDamNotificationsConnection().onChange',
 }
 
-/** Names whose type the parser does not see, each a name for sure, and why. */
 const SEEN_TYPED: Array<{ file: string; call: string; argument: string; reason: string }> = [
   {
     file: 'uploadQueue/composables/uploadService.ts',
@@ -77,7 +68,6 @@ const sourcesOf = (root: string): Record<string, string> => {
   return files
 }
 
-/** The scripts of a file, each with the line it starts at; of a `.vue` file its `<script>` blocks. */
 const scriptsOf = (file: string, text: string) => {
   if (!file.endsWith('.vue')) return [{ code: text, line: 0 }]
   return [...text.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/g)].map((match) => ({
@@ -104,7 +94,6 @@ const calleeName = (call: ts.CallExpression) => {
   return null
 }
 
-/** What a method is called on: `store` of `store.x(…)` and of `store['x'](…)`. */
 const receiverOf = (call: ts.CallExpression) =>
   ts.isPropertyAccessExpression(call.expression) || ts.isElementAccessExpression(call.expression)
     ? call.expression.expression.getText()
@@ -119,7 +108,6 @@ const isNameType = (type: ts.TypeNode) =>
   type.kind === ts.SyntaxKind.StringKeyword ||
   (ts.isTypeReferenceNode(type) && ts.isIdentifier(type.typeName) && NAME_TYPES.has(type.typeName.text))
 
-/** The declaration of `name` seen from `from`: a parameter, a variable or a function of an enclosing scope. */
 const declarationOf = (name: string, from: ts.Node): ts.Node | null => {
   for (let node: ts.Node | undefined = from; node; node = node.parent) {
     if (ts.isFunctionLike(node)) {
@@ -138,7 +126,6 @@ const declarationOf = (name: string, from: ts.Node): ts.Node | null => {
   return null
 }
 
-/** Whether a function answers a name: typed `string`, or an arrow whose body is an accepted value. */
 const answersName = (fn: ts.Node, props: Map<string, boolean>, depth: number): boolean => {
   if (!ts.isFunctionLike(fn)) return false
   if (fn.type) return isNameType(fn.type)
@@ -146,7 +133,6 @@ const answersName = (fn: ts.Node, props: Map<string, boolean>, depth: number): b
   return false
 }
 
-/** Whether the expression is a configuration name for sure. */
 const isName = (raw: ts.Expression, props: Map<string, boolean>, depth = 0): boolean => {
   if (depth > 6) return false
   const expr = unwrap(raw)
@@ -181,7 +167,6 @@ const isName = (raw: ts.Expression, props: Map<string, boolean>, depth = 0): boo
     const name = calleeName(expr)
     if (!name) return false
     if (NAME_PRODUCERS.has(name)) return true
-    // A method of a parameter typed in place: `store.configOf(queueKey)` of `store: { configOf(…): string }`.
     if (ts.isPropertyAccessExpression(expr.expression)) {
       const receiver = expr.expression.expression
       const owner = ts.isIdentifier(receiver) ? declarationOf(receiver.text, expr) : null
@@ -207,7 +192,6 @@ const isName = (raw: ts.Expression, props: Map<string, boolean>, depth = 0): boo
   return false
 }
 
-/** The props of a component (`defineProps<{ … }>()`): whether each is declared without `?`. */
 const propsOf = (file: ts.SourceFile) => {
   const props = new Map<string, boolean>()
   const visit = (node: ts.Node) => {
@@ -227,11 +211,9 @@ const propsOf = (file: ts.SourceFile) => {
   return props
 }
 
-/** Destructured accessors under another name: `const { savingOf: wait } = store`. */
 const aliasesOf = (file: ts.SourceFile) => {
   const aliases = new Map<string, string>()
   const visit = (node: ts.Node) => {
-    // `const { savingOf: wait } = store`, `import { useDamCachedUsers as usersOf } from '…'`.
     if ((ts.isBindingElement(node) || ts.isImportSpecifier(node)) && node.propertyName && ts.isIdentifier(node.name)) {
       const accessor = node.propertyName.getText()
       if (ACCESSORS.has(accessor) || accessor === DAM_DEFAULT_STORE) aliases.set(node.name.text, accessor)
@@ -250,7 +232,6 @@ const enclosingFunctionName = (node: ts.Node) => {
   return null
 }
 
-/** The arguments of a call, an array spread into it taken apart. */
 const argumentsOf = (call: ts.CallExpression) =>
   call.arguments.flatMap((argument) =>
     ts.isSpreadElement(argument) && ts.isArrayLiteralExpression(argument.expression)

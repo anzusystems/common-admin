@@ -8,11 +8,13 @@ export const PERMISSION_CONFIG_ENDPOINT = '/adm/v1/permissions/config'
 export interface PermissionConfigApiParams {
   client: AxiosClientFn
   /**
-   * Which backend this instance talks to. It reaches `useApiRequest` for error context and is the
-   * key everything downstream is stored under, so two systems can be loaded side by side.
+   * Which backend this instance talks to. It reaches `useApiRequest` for error context.
+   * It is also the storage key downstream, so two systems can be loaded side by side.
    */
   system: string
-  /** Goes into every `useApiRequest` call; see the per-system entity note in `permissionGroupApi`. */
+  /**
+   * Goes into every `useApiRequest` call; see the per-system entity note in `permissionGroupApi`.
+   */
   entity?: string
   endPoint?: string
 }
@@ -29,8 +31,8 @@ export const usePermissionConfigApi = ({
       method: 'GET',
       system,
       entity,
-      // The config endpoint never answers a field-level validation failure, but the pair is kept
-      // consistent with the rest of the shared api so a future one lands on real labels.
+      // The config endpoint never returns field-level validation failures.
+      // The pair stays consistent with the rest of the shared api so a future one gets real labels.
       validationSystem: 'common',
       validationEntity: entity,
       urlTemplate: endPoint,

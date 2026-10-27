@@ -20,15 +20,14 @@ export type ExecuteRequestParams<B> = {
   urlTemplate?: string
   urlParams?: UrlParams
   body?: B
-  /** Stops this one call, leaving the instance's other calls alone. */
+  /**
+   * Stops this one call, leaving the instance's other calls alone.
+   */
   signal?: AbortSignal
   /**
-   * `false`: a failure of this one call is thrown as ever, and not handed to the api error logger.
-   *
-   * For a caller that repeats a request on a timer and has reported its first failure already: a poll that
-   * asks every few seconds through an outage would otherwise write the same failure down each time. It is the
-   * caller's to say which call that is, call by call; it is not a way to make a kind of request quiet, and an
-   * instance has no such switch.
+   * `false`: a failure of this call is still thrown but not sent to the api error logger.
+   * For pollers that already reported the first failure, so an outage
+   * is not logged on every tick. It is set per call, not per instance.
    */
   report?: boolean
 }
@@ -38,14 +37,17 @@ export type UseApiRequestParams = {
   method: Method
   system: string
   entity: string
-  /** i18n scope for field-level validation failures; defaults to `system` / `entity`. */
+  /**
+   * i18n scope for field-level validation failures; defaults to `system` / `entity`.
+   */
   validationSystem?: string
   validationEntity?: string
   urlTemplate?: string
   urlParams?: UrlParams
-  /** Anything axios takes except what this helper decides: the method, the url, the body and the signal. */
   options?: Omit<AxiosRequestConfig, 'method' | 'url' | 'data' | 'signal'>
-  /** Each call supersedes the one before it -- the autocomplete shape. */
+  /**
+   * Each call cancels the previous one, as for autocomplete.
+   */
   cancelPrevious?: boolean
 }
 
@@ -53,31 +55,17 @@ export type UseApiRequestReturnType<R, B> = {
   execute: (params?: ExecuteRequestParams<B>) => Promise<R>
   abort: () => void
   /**
-   * True while this instance has a request in flight, false once the last one settles.
-   *
-   * It is here so a caller does not have to keep its own: the hand-rolled version is a ref cleared in
-   * a `finally`, and that `finally` belongs to whichever call ended -- including one that
-   * `cancelPrevious` just superseded, which turns the spinner off while the call the user is waiting
-   * for is still running. This one never dips between a superseded call and the one that replaced it.
-   *
-   * Two things to know before replacing a hand-rolled flag with it.
-   *
-   * It covers what this helper does and nothing the caller does afterwards. A flag that also spans a
-   * follow-up cached fetch, a mapping pass or a second endpoint is not the same flag, and swapping it
-   * for this one turns the spinner off too early. Keep your own where it means more than "this helper
-   * is working".
-   *
-   * It belongs to the instance, so it is only reachable if you hold the instance. A factory that
-   * builds one per call and hands back the promise alone -- `const { execute } = useX()` inside the
-   * function that calls it -- cannot expose `loading`, `abort` or `cancelPrevious` at all. Hoist the
-   * instance to where the caller lives first.
+   * True while this instance has a request in flight. Unlike a caller-cleared
+   * `finally` flag, it does not dip when `cancelPrevious` supersedes a call.
+   * It covers only this helper's work. Keep your own flag if it also spans follow-up fetches or mapping.
+   * It belongs to the instance. A factory that builds one per call cannot
+   * expose `loading`, `abort` or `cancelPrevious`, so hoist the instance first.
    */
   loading: Ref<boolean>
 }
 
-// The url is only ever used to say which request the message is about, and a helper that failed
-// before it had one still has to be able to say something. Handed over as a function because
-// building it costs a render and the successful reading of a response does not need it.
+// The url only identifies the request in error messages, and may be missing if the helper failed before
+// building it. It is a function because building it costs a render that successful reads do not need.
 type Interpret<R> = (res: { status: number; data: unknown }, url: () => string | undefined) => R
 
 const createRequest = <R, B>(params: UseApiRequestParams, interpret: Interpret<R>): UseApiRequestReturnType<R, B> => {
@@ -106,39 +94,33 @@ const createRequest = <R, B>(params: UseApiRequestParams, interpret: Interpret<R
 
     const template = isDefined(templateOverride) ? templateOverride : urlTemplate
     const resolvedParams = isDefined(paramsOverride) ? paramsOverride : urlParams
-    // Assigned inside `run`, at the moment there is a url to ask for; undefined until then, which is
-    // what a failure before dispatch honestly reports. An empty string is a different answer: that
-    // is a call whose url really is the client root, and it gets rendered as one.
+    // Set in `run` once there is a url. `undefined` means the failure happened before
+    // dispatch. An empty string is a real url (the client root) and is rendered as such.
     let url: string | undefined
-    // The config axios used, kept for the failures this helper raises after reading the response:
-    // they are not axios errors and carry no config of their own, and rebuilding one describes the
-    // request as the client would send it now rather than as it was sent.
+    // The config axios actually sent. Errors raised after reading the response are not axios errors and have
+    // no config. Rebuilding one would describe the request as it would be sent now, not as it was sent.
     let dispatched: AxiosRequestConfig | undefined
 
     try {
       const res = await abortable.run((abortSignal) => {
-        // Inside `run`, and inside the try with it: `run` opens the generation and, with
-        // `cancelPrevious`, stops the call before this one, so a call that throws on its way to the
-        // wire still supersedes its predecessor instead of leaving it current. And a caller that
-        // forgot the template gets the same error class as every other failure rather than a bare
-        // `Error` nothing in the fleet is written to catch.
+        // Throw inside `run` and its try. `run` opens the generation and, with `cancelPrevious`,
+        // stops the previous call, so a call that throws before sending still supersedes it.
+        // It also gives a missing template the same error class as other failures, not a bare `Error`.
         if (isUndefined(template)) throw new AnzuFatalError(undefined, 'Url template is undefined')
         const requestUrl =
           template !== '' && isDefined(resolvedParams) ? replaceUrlParameters(template, resolvedParams) : template
 
         const axiosConfig: AxiosRequestConfig = { method, url: requestUrl }
-        // `null` omits the body, as it always has -- a caller that means to send JSON `null` wraps it.
+        // `null` omits the body. To send JSON `null`, the caller wraps it.
         if (!isNull(body) && !isUndefined(body)) axiosConfig.data = JSON.stringify(body)
 
-        // `options` first, then what this helper owns: a caller cannot reach in and set the method,
-        // the url, the body or the signal through it. The type says so too; this is for javascript
-        // callers and for anything typed loosely enough to slip past it.
+        // `options` goes first so a caller cannot override the method, url, body or signal.
+        // The type already forbids this. The spread order protects JavaScript and loosely typed callers.
         const config = { ...ownedByHelper(options), ...axiosConfig, signal: abortSignal }
         const instance = client()
 
-        // Recorded last, when nothing between here and the call can throw any more. A body that will
-        // not serialise, or a client factory that fails, is a request that never happened, and the
-        // report has to be able to say so rather than name a url nobody asked for.
+        // Set `url` last, when nothing before the call can throw.
+        // If serialising the body or the client factory fails, no request happened and the report must not name a url.
         url = requestUrl
 
         return instance.request(config)
@@ -147,12 +129,10 @@ const createRequest = <R, B>(params: UseApiRequestParams, interpret: Interpret<R
       dispatched = res.config
       if (!isValidHTTPStatus(res.status)) throw new AnzuApiResponseCodeError(res.status)
 
-      // The url the report will name, so a message and the context beside it cannot disagree about
-      // which request failed when an interceptor rewrote it on the way out.
+      // The url the report names, so the message and context agree when an interceptor rewrote the request.
       return interpret(res, () => requestedUrl(client, url, options, undefined, dispatched))
     } catch (err: unknown) {
-      // Built once and handed to both, the way the batch does it: half the work on the failure path,
-      // and one place that could go wrong instead of two.
+      // Built once and shared by both, as in the batch.
       const context = {
         system,
         entity,
@@ -172,21 +152,16 @@ const createRequest = <R, B>(params: UseApiRequestParams, interpret: Interpret<R
 
 /**
  * A request to an endpoint that always answers with a body.
- *
- * A response without one is the endpoint breaking its own contract, not an empty answer, so it fails
- * like any other error rather than handing back a value the declared type does not admit. An
- * endpoint that answers nothing is `useApiCommand`; one that may answer either is `optionalBody`.
- *
- * `R` excludes `null`, `undefined` and `void` on purpose: those are ways of saying "no body", and a
- * caller saying that has chosen the wrong helper. It is also what makes the migration visible --
- * every `useApiRequest<void, …>` in the fleet stops compiling and names itself.
+ * A response without a body breaks the contract and fails like any other error.
+ * Use `useApiCommand` for endpoints that answer nothing, and `optionalBody` for endpoints that may answer either.
+ * `R` excludes `null`, `undefined` and `void` on purpose, so `useApiRequest<void, …>` does not compile.
  */
 export function useApiRequest<R extends NonNullable<unknown>, B = never>(
   params: UseApiRequestParams & { optionalBody?: false }
 ): UseApiRequestReturnType<R, B>
 /**
- * The same, for an endpoint where a body is optional and its absence is a legitimate answer. The
- * caller narrows, which is the point -- use it only where the endpoint really is documented that way.
+ * Same as above, for an endpoint where a missing body is a legitimate answer. The caller must narrow.
+ * Use it only where the endpoint is documented that way.
  */
 export function useApiRequest<R extends NonNullable<unknown>, B = never>(
   params: UseApiRequestParams & { optionalBody: true }
@@ -197,9 +172,8 @@ export function useApiRequest<R extends NonNullable<unknown>, B = never>(
   const optionalBody = params.optionalBody === true
 
   return createRequest<R | undefined, B>(params, (res, url) => {
-    // 204 is decided by status alone, before the body is looked at: it carries none by definition,
-    // so anything that arrived with one is not something to hand on. A 202 may legitimately carry a
-    // body, which is why it is not in here and falls through to `hasBody` like any other success.
+    // 204 is decided by status alone, because it carries no body by definition.
+    // 202 may carry a body, so it falls through to `hasBody` like any other success.
     if (res.status === HTTP_STATUS_NO_CONTENT) {
       if (optionalBody) return undefined
 
@@ -214,9 +188,8 @@ export function useApiRequest<R extends NonNullable<unknown>, B = never>(
 }
 
 /**
- * A request that asks the backend to do something and reads nothing back -- a delete, or a call that
- * only starts work and answers 202. Any successful status resolves; a body, if one arrives, is
- * ignored rather than typed.
+ * A request that reads nothing back, such as a delete or a call that starts work and answers 202.
+ * Any successful status resolves. A body, if one arrives, is ignored.
  */
 export const useApiCommand = <B = never>(params: UseApiRequestParams): UseApiRequestReturnType<void, B> =>
   createRequest<void, B>(params, () => undefined)

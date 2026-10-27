@@ -134,11 +134,10 @@ export interface ListEditorHandle<TItem extends Record<string, any>> {
 export type ExposedListEditorHandle<TItem extends Record<string, any>> = ShallowUnwrapRef<ListEditorHandle<TItem>>
 
 /**
- * Component-owned state controller for the list editors (v2). Owns row keys,
- * declared dirty tracking (no fragile whole-list JSON diff on volatile fields),
- * validation summary, position renumbering, and the save lifecycle — exposed as
- * a `ListEditorHandle`. Created internally by an editor (default) or by a consumer
- * that passes it in as `:editor`, so the state survives unmount/remount.
+ * State controller for the list editors, exposed as a `ListEditorHandle`. Owns row keys, declared dirty
+ * tracking (no whole-list JSON diff), validation summary, position renumbering and the save lifecycle.
+ * An editor creates it by default. A consumer can create it and
+ * pass it as `:editor` so state survives unmount and remount.
  */
 export function useListEditorController<TItem extends Record<string, any>>(
   options: UseListEditorControllerOptions<TItem>

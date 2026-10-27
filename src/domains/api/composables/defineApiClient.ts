@@ -24,21 +24,19 @@ export interface ApiClientResponseInterceptor {
 }
 
 export interface ApiClientSetup {
-  /** The instance's defaults; nothing is added to them. */
+  /**
+   * The instance's defaults; nothing is added to them.
+   */
   config: CreateAxiosDefaults
   request?: ApiClientRequestInterceptor[]
   response?: ApiClientResponseInterceptor[]
 }
 
 /**
- * An admin's axios client: created on the first call, the same instance on every later one, with its
- * interceptors registered once -- the factories the admins wrote by hand each carried the guard, and
- * one that registered outside it stacked a copy of every interceptor per call.
- *
- * `setup` runs on that first call, not when the module loads, as the guards did: an admin's env config
- * is empty until it has loaded, and a client's interceptors come from modules in an import cycle with
- * it (the refresh interceptor calls the auth api, which goes through the client), so at load time they
- * may not be initialized yet.
+ * Returns a lazily created singleton axios client whose interceptors are registered once.
+ * Registering outside the guard stacks a copy of every interceptor per call.
+ * `setup` runs on the first call, not at module load. Env config is empty until loaded, and interceptors come from
+ * modules in an import cycle with the client (refresh calls the auth api), so they may not be initialized at load time.
  */
 export function defineApiClient(setup: () => ApiClientSetup): () => AxiosInstance {
   let instance: AxiosInstance | null = null
@@ -58,7 +56,9 @@ export function defineApiClient(setup: () => ApiClientSetup): () => AxiosInstanc
   }
 }
 
-/** A `runWhen` that leaves out requests to urls starting with one of `prefixes` (the auth endpoints). */
+/**
+ * A `runWhen` that leaves out requests to urls starting with one of `prefixes` (the auth endpoints).
+ */
 export const skipUrlPrefixes =
   (...prefixes: string[]) =>
   (config: AxiosRequestConfig): boolean =>

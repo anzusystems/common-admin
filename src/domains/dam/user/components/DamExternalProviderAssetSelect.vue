@@ -12,7 +12,9 @@ const props = withDefaults(
     multiple?: boolean
     label?: string
     dataCy?: string
-    /** The DAM configuration whose prv configuration lists the options; inherited when not given. */
+    /**
+     * The DAM configuration whose prv config lists the options. Inherited when not given.
+     */
     configName?: string
   }>(),
   {

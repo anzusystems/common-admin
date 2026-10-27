@@ -34,13 +34,12 @@ import { AssetFileProcessStatus } from '@/domains/dam/types/AssetFile'
 import { useUploadQueueDialog } from '@/domains/dam/uploadQueue/composables/useUploadQueueDialog'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
 
-// An asset picked in the library that has no author: the dialog of the image offers the authors of the DAM in
-// place of a source, and "confirm" saves what the user picks into the asset before it saves the image. What goes to
-// the DAM then, and what the widget says and does when the DAM refuses it. Under admin-cms, whose ext system has
-// the authors of the DAM (admin-ugc has none), for each of the two widgets of one image. The real widgets with their
-// real dialog of the image; the DAM and the backend of the images are clients that record their requests. Not
-// mounted for real: the asset picker (a stand-in answers as it does), the pictures, the asset detail, the upload
-// dialog, and the inputs that ask the DAM for names to offer.
+// Covers an asset without an author picked in the library: the image dialog offers DAM authors instead of a source.
+// "Confirm" saves the picked authors into the asset before it saves the image.
+// Covers what goes to the DAM and what the widget does when the DAM refuses.
+// admin-cms only (admin-ugc has no DAM authors), for both widgets of one image.
+// The DAM and the image backend are request-recording clients. Stand-ins: asset picker,
+// pictures, asset detail, upload dialog, and the inputs that ask the DAM for names.
 
 const { endPoints, extSystem, licence } = cmsConfiguration
 const QUEUE = 'lead-image'
@@ -59,7 +58,6 @@ beforeEach(() => {
   dam = createFakeDam(endPoints)
   imageApi = installConsumerImageApi(cmsConfiguration, installConsumerProfile(cmsConfiguration, dam.client))
   answerDamNames(dam)
-  // What the image and media widget asks about a picked asset first: here, it is no media.
   dam.reply((request) => (request.method === 'GET' && MEDIA.test(request.url) ? { status: 200, data: {} } : undefined))
   dam.assets.set(
     'asset-9',
@@ -108,12 +106,10 @@ describe.each(widgets)('the authors of the DAM picked in the dialog of an image 
       (button) => button.textContent?.trim() === uiText('common.button.confirm')
     )!
   const saves = () => dam.sentTo('PATCH', dam.routes.bulkMetadata)
-  /** The DAM answers the save of the authors so. */
   const answerSaves = (answer: FakeDamAnswer) =>
     dam.reply((request) =>
       request.method === 'PATCH' && dam.routes.bulkMetadata.test(request.url) ? answer : undefined
     )
-  /** The asset without an author is picked, the dialog of the image offers the authors, and the user picks one. */
   const authorPicked = async () => {
     const mounted: VueWrapper = mount(component, {
       attachTo: document.body,
@@ -154,7 +150,6 @@ describe.each(widgets)('the authors of the DAM picked in the dialog of an image 
     await flushPromises()
     return mounted
   }
-  /** "Confirm" is pressed, the DAM has been asked, and the button spins no more. */
   const confirmed = async () => {
     confirmButton().click()
     await vi.waitFor(() => expect(saves()).toHaveLength(1))
@@ -165,7 +160,6 @@ describe.each(widgets)('the authors of the DAM picked in the dialog of an image 
     status: 422,
     data: { contextId: 'context', error: 'validation_failed', fields: { [key]: ['error_field_empty'] } },
   })
-  /** The one alert of a refusal by validation: its heading, and the field each of its lines names. */
   const refusalSaid = () => {
     expect(shownAlerts()).toHaveLength(1)
     const [[colour, text]] = shownAlerts() as Array<[string, string]>
@@ -176,7 +170,6 @@ describe.each(widgets)('the authors of the DAM picked in the dialog of an image 
   const nothingIsSaved = () => {
     expect(imageApi.calls).toEqual([])
     expect(widget!.emitted('afterMetadataSaveSuccess')).toBeUndefined()
-    // The dialog stays, with the authors to pick, for the user to try again.
     expect(imageDialog()).toBeDefined()
     expect(widget!.findComponent(AuthorRemoteAutocompleteWithCached).exists()).toBe(true)
     expect(confirmButton().disabled).toBe(false)
@@ -184,7 +177,6 @@ describe.each(widgets)('the authors of the DAM picked in the dialog of an image 
 
   it('are saved into the asset, the id and the authors alone, before the image is, with their names as its source', async () => {
     const mounted = await authorPicked()
-    /** Whether the image had been written when the DAM got the authors. */
     let imageWrittenFirst: boolean | undefined
     dam.reply((request) => {
       if (request.method === 'PATCH' && dam.routes.bulkMetadata.test(request.url)) {
@@ -205,7 +197,7 @@ describe.each(widgets)('the authors of the DAM picked in the dialog of an image 
     expect(shownAlerts().filter(([colour]) => colour === 'error')).toEqual([])
   })
 
-  // Nothing reads what the DAM answers the save of the authors with.
+  // Nothing reads the DAM's answer to the authors save.
   it('are saved, and the image after them, also when the DAM answers with 200 and no list', async () => {
     answerSaves({ status: 200, data: {} })
     const mounted = await authorPicked()
@@ -217,8 +209,9 @@ describe.each(widgets)('the authors of the DAM picked in the dialog of an image 
     expect(shownAlerts().filter(([colour]) => colour === 'error')).toEqual([])
   })
 
-  // Said once, by the name the forms give the field: the save used to say a refusal itself (as a system error,
-  // "authors" being no custom field) and have the widget say it again, by the key of the request.
+  // A refusal is reported once, by the name the forms give the field.
+  // Before, the save reported it itself as a system error ("authors" is
+  // no custom field) and the widget reported it again by the request key.
   it.each([
     ['the authors by their name', '[0].authors', alertText('common.damImage.asset.model.authors')],
     ['a custom field by the name its form gives it', '[0].customData.description', 'Description of the image'],
@@ -238,8 +231,8 @@ describe.each(widgets)('the authors of the DAM picked in the dialog of an image 
     nothingIsSaved()
   })
 
-  // The save threw while it looked for the name of the field, and its promise was never settled: "confirm" spun
-  // for good, and the dialog could only be closed.
+  // Guards a regression: the save threw while looking up the field name and its promise never settled.
+  // "Confirm" spun forever and the dialog could only be closed.
   it('refused by validation while no custom form of the ext system is loaded: says so once, and "confirm" is free again', async () => {
     answerSaves(refusal('[0].authors'))
     await authorPicked()
@@ -251,10 +244,11 @@ describe.each(widgets)('the authors of the DAM picked in the dialog of an image 
     nothingIsSaved()
   })
 
-  // The names of the picked authors were written into the source of the image before the DAM was asked to take the
-  // authors. The dialog does not show the source while it offers the authors: after a write the DAM refused the names
-  // stayed there unseen, and "confirm" with the pick emptied saved them as the source of the image, the names of
-  // authors the DAM never took and the user had taken out.
+  // Guards a regression: the picked author names were written into
+  // the image source before the DAM was asked to take the authors.
+  // The dialog hides the source while it offers authors, so after a refused write the names stayed there unseen.
+  // "Confirm" with the pick emptied then saved them as the image source,
+  // though the DAM never took those authors and the user had removed them.
   it.each<[string, FakeDamAnswer]>([
     ['forbids them', { status: 403 }],
     ['refuses them by validation', refusal('[0].authors')],
@@ -276,7 +270,6 @@ describe.each(widgets)('the authors of the DAM picked in the dialog of an image 
         'createImage',
         { texts: { description: 'a picked image', source: '' }, dam: { damId: 'file-of-asset-9' } },
       ])
-      // The authors were asked to be saved once, at the first "confirm"; the pick emptied writes nothing.
       expect(saves()).toHaveLength(1)
     }
   )

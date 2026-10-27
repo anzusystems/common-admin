@@ -1,14 +1,13 @@
 import { validRouteName } from './validRouteName.mjs'
 
-// Shared by `prefer-api-command` and `prefer-api-fetch-items`: both ask the same question -- is this
-// call the `useApiRequest` helper, and what did it say it answers with.
+// Shared by `prefer-api-command` and `prefer-api-fetch-items`: is this
+// call the `useApiRequest` helper, and what response type does it declare.
 const isHelperSource = (source) =>
   typeof source === 'string' &&
   (source.includes('domains/api/composables/useApiRequest') || source === '@anzusystems/common-admin')
 
-// Resolved through the scope rather than matched by name. Matching the name fires on anyone
-// else's function called `useApiRequest` and on a parameter that shadows the import inside
-// one function, and stays silent when the real helper is imported under another name.
+// Resolved through scope, not by name. Name matching fires on other functions
+// called `useApiRequest` and on shadowing parameters, and misses an aliased import.
 const isHelperBinding = (context, node) => {
   let scope = context.sourceCode.getScope(node)
   while (scope !== null) {
@@ -79,8 +78,8 @@ const anzuPlugin = {
       create(context) {
         const reportedMethods = new Set(['DELETE', 'delete'])
 
-        // `any` and `never` satisfy the response constraint without meaning anything, and a call
-        // with no type argument at all infers it -- so the type cannot speak for these three.
+        // `any` and `never` satisfy the response constraint without meaning anything. A call
+        // with no type argument infers it. So the type cannot decide these three cases.
         const unhelpfulTypeArgument = (node) => {
           const first = firstTypeArgument(node)
           if (!first) return true
@@ -161,10 +160,10 @@ const anzuPlugin = {
         const envelopeLiteral = (node) => {
           if (node.type !== 'TSTypeLiteral') return false
 
-          // Exactly one member, on purpose: a literal that also spells out `hasNextPage` or
-          // `totalCount` is an author saying they read the metadata, which is a reason to stay on
-          // `useApiRequest`. The generic form carries no such signal, so it is reported and the one
-          // legitimate reader takes a disable with a reason.
+          // Exactly one member on purpose. A literal that also names `hasNextPage` or `totalCount`
+          // signals the author reads the metadata, a reason to stay on `useApiRequest`.
+          // The generic form carries no such signal, so it is reported.
+          // The one legitimate reader uses a disable with a reason.
           if (node.members.length !== 1) return false
           const member = node.members[0]
 
@@ -324,26 +323,19 @@ const anzuPlugin = {
             const resolved = resolveToString(templateProp.value)
             if (resolved === null) return
 
-            // The path only, because that is all `stringUrlTemplateReplace` substitutes into: it
-            // splits the template on `?` and rejoins the query untouched. Scanning the query too
-            // would fail CI on a perfectly good `...?locale=:locale`, and adding `locale` to
-            // `urlParams` to silence it would change nothing at runtime.
+            // Only the path, because `stringUrlTemplateReplace` substitutes only there and rejoins the query untouched.
+            // Scanning the query would fail CI on a valid `...?locale=:locale`.
             const [path] = resolved.split('?')
 
-            // Exactly what `stringUrlTemplateReplace` does, and nothing else: split the path on `/`,
-            // skip any part that does not START with `:`, and take everything after that colon as the
-            // key. Both halves matter and both were got wrong in turn. Hunting for `:name` anywhere
-            // matches inside `prefix-:id`, which the runtime leaves alone, so the rule demanded a key
-            // that is never filled in. Requiring the key to look like an identifier misses `:asset-id`,
-            // which the runtime substitutes happily, so the rule reported the caller's correct
-            // `urlParams` as having no placeholder to match.
+            // Mirrors `stringUrlTemplateReplace`: split the path on `/`, skip parts
+            // not starting with `:`, and take everything after the colon as the key.
+            // Matching `:name` anywhere wrongly hits `prefix-:id`, which the runtime ignores.
+            // Requiring an identifier-like key misses `:asset-id`, which the runtime substitutes.
             const placeholders = new Set()
             for (const segment of path.split('/')) {
               if (!segment.startsWith(':')) continue
-              // No guard on the name, because the runtime has none: a bare `:` takes `''` as its key
-              // and fills the segment in from `params['']`. Nobody writes that on purpose, which is
-              // the point -- it is a typo, and the rule reporting a missing key is how it gets seen
-              // rather than shipped as a literal colon in the url.
+              // No guard on the name, because the runtime has none. A bare `:` uses `''`
+              // as its key. That is a typo, and reporting the missing key surfaces it.
               placeholders.add(segment.slice(1))
             }
 
@@ -379,12 +371,6 @@ const anzuPlugin = {
 
 /**
  * Creates an ESLint flat config entry for Anzu rules.
- *
- * @param {Object} [options]
- * @param {boolean|'error'|'warn'|'off'} [options.noTsExtension='error'] - Severity for no-ts-extension rule.
- * @param {boolean|'error'|'warn'|'off'} [options.preferApiFetchItems='error']
- *   - Severity for prefer-api-fetch-items rule.
- * @returns {Object} ESLint flat config entry
  */
 export function recommended(options = {}) {
   const {
@@ -402,13 +388,11 @@ export function recommended(options = {}) {
     rules['anzu/no-ts-extension'] = tsExtSeverity
   }
 
-  // prefer-api-command
   const preferApiCommandSeverity = normalizeSeverity(preferApiCommand)
   if (preferApiCommandSeverity) {
     rules['anzu/prefer-api-command'] = preferApiCommandSeverity
   }
 
-  // prefer-api-fetch-items
   const preferApiFetchItemsSeverity = normalizeSeverity(preferApiFetchItems)
   if (preferApiFetchItemsSeverity) {
     rules['anzu/prefer-api-fetch-items'] = preferApiFetchItemsSeverity

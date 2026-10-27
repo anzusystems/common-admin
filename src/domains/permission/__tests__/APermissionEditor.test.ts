@@ -7,9 +7,9 @@ import APermissionEditor from '@/domains/permission/components/APermissionEditor
 import { Grant } from '@/domains/auth/valueObject/Grant'
 import type { Permissions } from '@/domains/auth/types/Permission'
 
-// The warning is a parity row of its own: "allow all" silently widening a deliberate deny is the
-// one way this button could grant access nobody asked for, and the count is how the operator
-// learns it did not.
+// The warning is a parity row of its own.
+// "Allow all" silently widening a deliberate deny is the one way this button
+// could grant unrequested access. The count tells the operator it did not.
 vi.mock('@/domains/system/composables/alertsQueue', () => ({ pushAlert: vi.fn() }))
 
 const CONFIG = {
@@ -25,8 +25,9 @@ const CONFIG = {
 const client = () => ({ request: vi.fn().mockResolvedValue({ status: 200, data: CONFIG }) }) as unknown as AxiosInstance
 
 let mounted: VueWrapper | null = null
-// Passed into the mount, not only set active: `src/test/setup.ts` installs a shared pinia through
-// `config.global.plugins`, and the component would otherwise read the config out of that one.
+// Passed into the mount, not only set active.
+// `src/test/setup.ts` installs a shared pinia through `config.global.plugins`,
+// and the component would otherwise read the config from that one.
 let pinia = createPinia()
 
 const mountEditor = async (permissions: Permissions, props: Record<string, unknown> = {}) => {

@@ -23,12 +23,13 @@ import {
 import { uploadSettlementRuntime } from '@/domains/dam/uploadQueue/settlement/uploadSettlementRuntime'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
 
-// The DAM notifications of a page with two configurations of two DAMs: `default`, with the socket of the root
-// `notification`, and `own`, which has a socket only when it names one. Both DAMs have given an asset `a-1`, a copy of
-// which waits in a queue of each configuration. What comes through a socket is of the configurations of that socket:
-// the store settles by it only the rows of their queues, and a listener hears `default`'s socket unless it asks for
-// another. A queue polls as a backup only while the socket of its configuration is open. The time of the settlement is
-// the manual scheduler's; the sockets are a stub of the global `WebSocket`.
+// Page with two configurations of two DAMs. `default` uses the root
+// `notification` socket. `own` has a socket only when it names one.
+// Asset `a-1` exists in both DAMs, and a copy waits in a queue of each configuration.
+// A socket settles only the rows of its own configurations. A
+// listener hears `default`'s socket unless it asks for another.
+// A queue polls as a backup only while its configuration's socket is open.
+// Settlement time is driven by the manual scheduler. Sockets are a stub of the global `WebSocket`.
 
 const { endPoints, extSystem, licence } = cmsConfiguration
 const OWN = { asset: '/own/v2/asset', image: '/own/v2/image' }
@@ -38,7 +39,9 @@ const OF_DEFAULT = 'notified-of-default'
 const OF_OWN = 'notified-of-own'
 const ASSET = 'a-1'
 const S = 1000
-/** From here on a wait is held: below the 1.5 s the caches wait before they ask. */
+/**
+ * Waits from this length are held. The caches wait 1.5 s before they ask.
+ */
 const HELD_FROM_MS = 1_200
 const { Processing, Uploaded } = UploadQueueItemStatus
 const { Processed, Uploading } = AssetFileProcessStatus
@@ -75,7 +78,6 @@ afterEach(async () => {
   forgetAlerts()
 })
 
-/** `default` with the root socket at `ADDRESS`, and `own` with the `notification` given, or none. */
 const configure = (ofOwn?: { enabled?: boolean | string; webSocketUrl?: string }) => {
   const { coreDam } = installConsumerProfile(cmsConfiguration, dam.client)
   initCommonAdminCoreDamOptions({
@@ -93,25 +95,21 @@ const configure = (ofOwn?: { enabled?: boolean | string; webSocketUrl?: string }
   })
   seedDamConfigOf('own', pinia)
 }
-/** The application starts its notifications, as it does once at start-up. */
 const started = () => {
   const notifications = initDamNotifications()
   notifications.openConnection()
   return notifications
 }
-/** `a-1` in each DAM, its file in the state given, a file of its own: `file-default`, `file-own`. */
 const a1In = (status: AssetFileProcessStatusType) => {
   dam.assets.set(ASSET, damAssetWithFile(ASSET, 'file-default', status, { licence }))
   own.assets.set(ASSET, damAssetWithFile(ASSET, 'file-own', status, { licence }))
 }
-/** A copy of `a-1` into the licence in the queue of each configuration: each waits for its DAM. */
 const rowsOfA1 = async () => {
   const store = useUploadQueuesStore()
   await store.addByCopyToLicence(OF_DEFAULT, extSystem, licence, [ASSET], 'default')
   await store.addByCopyToLicence(OF_OWN, extSystem, licence, [ASSET], 'own')
   return { default: store.getQueueItems(OF_DEFAULT)[0]!, own: store.getQueueItems(OF_OWN)[0]! }
 }
-/** The reads of `a-1` a DAM was asked. */
 const readsOfA1 = (of: FakeDam) => of.assetReads().filter((request) => request.url.endsWith(`/${ASSET}`))
 const processed = (asset: string) => ({ asset, id: `file-of-${asset}` })
 

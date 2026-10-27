@@ -61,7 +61,7 @@ const mountWithPendingWork = async () => {
   const api = () => editorRef.value!
   api().updateItem(1, { id: 1, position: 1, parent: null, title: 'A edited' })
   await flushPromises()
-  api().moveDown(3) // C <-> D, a pending reorder
+  api().moveDown(3)
   await flushPromises()
   expect(api().hasUnsaved).toBe(true)
   expect(
@@ -130,8 +130,9 @@ describe('ANestedSortableListEditor acceptChanges keeps unrelated pending work',
     expect(api().hasUnsaved).toBe(false)
   })
 
-  // The page Save: the store takes the server's answer and the editor re-baselines in the same tick,
-  // before the parent re-rendered -- `commit()` alone would read the old prop and write it back.
+  // The page Save: the store takes the server's answer and the editor
+  // re-baselines in the same tick, before the parent re-renders.
+  // `commit()` alone would read the old prop and write it back.
   it('commit(saved) in the tick the parent swapped in the server tree adopts that tree', async () => {
     const { api, model } = await mountWithPendingWork()
     const server: NestedTree<Row> = {
@@ -186,13 +187,12 @@ describe('acceptChanges in the create-through-a-dialog flow', () => {
     )
     await flushPromises()
     const server = new Map(model.value.children.map((n) => [n.data.id, n.data.position]))
-    server.set(99, 2) // created on the server after A
+    server.set(99, 2)
     editorRef.value!.acceptChanges(
       () => editorRef.value!.addItem({ id: 99, position: 2, parent: null, title: 'X' }, { afterId: 1 }),
       [99]
     )
     await flushPromises()
-    // What the page Save sends: the rows marked dirty.
     model.value.children.filter((n) => n.meta.dirty).forEach((n) => server.set(n.data.id, n.data.position))
     expect(model.value.children.map((n) => server.get(n.data.id))).toEqual([1, 2, 3, 4])
   })

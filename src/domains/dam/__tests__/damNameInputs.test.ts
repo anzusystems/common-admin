@@ -20,11 +20,6 @@ import type { UploadQueue } from '@/domains/dam/types/UploadQueue'
 import { UploadQueueSuggestionsKey } from '@/domains/dam/uploadQueue/components/uploadQueueBindings'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
 
-// The inputs of keywords and authors, and their chips, with the values only an application that asks for them gets:
-// disabled as an input switched off, creating a name behind a grant, and the "new" mark of a chip from the
-// application's own queues. Nothing of the library is replaced but the inner input, which asks the DAM for names to
-// offer: a stand-in draws what it is handed. The DAM is a client that records its requests.
-
 const { extSystem } = cmsConfiguration
 const QUEUE = 'name-inputs'
 
@@ -33,7 +28,6 @@ let dam: FakeDam
 let waits: LongWaits
 let wrapper: VueWrapper | undefined
 
-/** The inner input: what it is handed, and the "+ name" its host puts under its list. */
 const Input = defineComponent({
   name: 'NameInputStandIn',
   emits: ['update:search'],
@@ -42,7 +36,6 @@ const Input = defineComponent({
   },
 })
 
-/** The configuration of admin-cms, with what the case adds to it. */
 const configure = (own: Partial<CommonAdminCoreDamConfig> = {}) => {
   const { coreDam } = installConsumerProfile(cmsConfiguration, dam.client)
   initCommonAdminCoreDamOptions({ ...coreDam, configs: { default: { ...coreDam.configs.default!, ...own } } })
@@ -52,7 +45,6 @@ beforeEach(() => {
   pinia = createPinia()
   setActivePinia(pinia)
   dam = createFakeDam(cmsConfiguration.endPoints)
-  // The DAM creates what it is sent, and knows no names.
   dam.reply((request) => {
     if (!/\/(author|keyword)(\/|$)/.test(request.url.split('?')[0]!)) return undefined
     const sent = request.method === 'POST' ? JSON.parse(request.data as string) : undefined
@@ -101,7 +93,6 @@ describe.each(inputs)('the input of %s', (_which, input, chip, id) => {
     })
   })
 
-  // Not disabled itself, it leaves it to the form around it whether it is.
   it('hands the input no "disabled" of its own while it can be edited, also as an input', async () => {
     await mountInput(input, { modelValue: [id], disabled: false, disabledAs: 'input' })
 
@@ -126,7 +117,6 @@ describe('the "+" button of the input of authors', () => {
 })
 
 describe('creating a keyword under a grant the configuration names', () => {
-  /** A keyword nobody has is typed. */
   const typed = async () => {
     await mountInput(KeywordRemoteAutocompleteWithCached, { modelValue: [] })
     wrapper!.findComponent(Input).vm.$emit('update:search', 'new keyword')
@@ -165,7 +155,6 @@ describe('creating a keyword under a grant the configuration names', () => {
 })
 
 describe('creating an author under a grant the configuration names', () => {
-  /** An author nobody has is typed, then entered. */
   const typedAndEntered = async () => {
     await mountInput(AuthorRemoteAutocompleteWithCached, { modelValue: [] })
     wrapper!.findComponent(Input).vm.$emit('update:search', 'New Author')
@@ -234,7 +223,6 @@ describe.each([
     return suggestions
   }
 
-  /** The queue of the library has the name for new: a chip that reads it is marked. */
   const newInTheLibrary = () => {
     useUploadQueuesStore(pinia).forceReloadFileInput(QUEUE)
     useUploadQueuesStore(pinia).getQueue(QUEUE)!.suggestions[list].add('fresh')
@@ -267,7 +255,6 @@ describe.each([
   })
 })
 
-// Finding 44: the conflicts under the input are the authors the user can still take.
 describe('the author conflicts under the input of authors', () => {
   beforeEach(() => {
     for (const id of ['author-1', 'author-2']) {
@@ -279,14 +266,12 @@ describe('the author conflicts under the input of authors', () => {
       })
     }
   })
-  /** The input with its authors and conflicts; a pressed conflict comes back as the new authors, as from a form. */
   const mountWithConflicts = (modelValue: string[]) =>
     mountInput(AuthorRemoteAutocompleteWithCached, {
       modelValue,
       authorConflicts: ['author-1', 'author-2'],
       'onUpdate:modelValue': (authors: string[]) => wrapper!.setProps({ modelValue: authors }),
     })
-  // The chips shown: a pressed chip hides itself, and is no offer whatever its component still holds.
   const offered = () =>
     wrapper!
       .findAllComponents(AuthorRemoteAutocompleteCachedAuthorChipConflicts)
@@ -321,7 +306,6 @@ describe('the author conflicts under the input of authors', () => {
     expect([offered(), hasHeading()]).toEqual([[], false])
   })
 
-  // The conflict is the row's, not taken once: whatever takes the author out of the input offers it again.
   it('offers a conflict again, with its heading, once its author leaves the input', async () => {
     await mountWithConflicts(['author-1', 'author-2'])
     expect([offered(), hasHeading()]).toEqual([[], false])

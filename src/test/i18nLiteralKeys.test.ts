@@ -20,11 +20,8 @@ const sources = import.meta.glob(
 const HOST_KEY_PREFIXES = ['system.subject.']
 
 const PATTERNS: RegExp[] = [
-  // t('k'), $t('k'), commonT('k'), i18n.global.t('k'), show{Error,Success,Info,Warning}T('k')
   /(?<![\w.$])(?:\$?t|commonT|i18n\.global\.t|show(?:Error|Success|Info|Warning)T)\(\s*(['"`])([^'"`$\n]+)\1\s*([,)+])/g,
-  // object/prop literals: titleT: 'k', buttonT: 'k' (a string literal only)
   /\b[a-z]\w*T\??\s*:\s*(['"])([a-z$][\w$]*(?:\.[\w$]+)+)\1\s*([,}\n])/g,
-  // template attributes: title-t="k", :title-t="'k'"
   /\s[a-z][\w-]*-t="(')?([a-z$][\w$]*(?:\.[\w$]+)+)\1?"()/g,
   // a key handed to Vuetify, which translates it through the i18n of the admin: close-label="k"
   /\sclose-label="(')?([a-z$][\w$]*(?:\.[\w$]+)+)\1?"()/g,

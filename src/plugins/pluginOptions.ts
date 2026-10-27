@@ -6,8 +6,8 @@ import type {
 } from '@/AnzuSystemsCommonAdmin'
 import { isUndefined } from '@/shared/utils/common'
 
-// What the plugin was installed with. It lives here, beside the plugin, so that installing it does
-// not load the DAM, image and collab modules that read it: they import from here, not the reverse.
+// Plugin install options. They live here so installing the plugin
+// does not load the DAM, image and collab modules that read them.
 
 export const imageOptions = ref<CommonAdminImageOptions>(undefined)
 

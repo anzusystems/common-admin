@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useUploadMeter } from '@/domains/dam/uploadQueue/composables/uploadMeter'
 
-// The last report of an upload, the whole file and no time left, also where no speed can be read by then: the clock
-// went back before the answer to the last chunk, and the curve starts afresh from that one point. The clock and the
-// second of the meter are faked, as in `uploadMeter.test.ts`.
+// The last report of an upload is the whole file with no time left, even where no speed can be read:
+// the clock went back before the answer to the last chunk, and the curve restarts from that one point.
+// The clock and the meter's second are faked, as in `uploadMeter.test.ts`.
 
 let reports: Array<{ percent: number; speed: number; remaining: number }>
 const report = (percent: number, speed: number, remaining: number) => reports.push({ percent, speed, remaining })

@@ -22,9 +22,8 @@ export const fetchImageListByIds = (client: () => AxiosInstance, ids: IntegerId[
   return execute(ids)
 }
 
-// `optionalBody`, because a body-less answer here is not a broken endpoint: the callers guard the
-// result with a strict `isNull` and expect to be told there is no image, which is what the helper
-// this replaced did. Normalised to `null` so those guards keep working.
+// `optionalBody`: a body-less answer here means there is no image, not a broken endpoint.
+// Callers guard the result with a strict `isNull`, so it is normalised to `null`.
 export const fetchImage = async (client: () => AxiosInstance, id: IntegerId) => {
   const { execute } = useApiRequest<ImageAware, null>({
     client,

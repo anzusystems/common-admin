@@ -16,9 +16,9 @@ export interface UseUnsavedChangesGuardOptions {
    */
   sources: UnsavedSource[]
   /**
-   * Block route navigation via vue-router's onBeforeRouteLeave, and onBeforeRouteUpdate when the path changes. Default true.
-   * Only a literal `false` skips registering the guard; a Ref is read when the navigation happens, so
-   * it can turn blocking on and off later.
+   * Block route navigation via `onBeforeRouteLeave`, and `onBeforeRouteUpdate` when the path changes. Default true.
+   * Only a literal `false` skips registering the guard. A Ref is
+   * read at navigation time, so blocking can be toggled later.
    */
   guardRoute?: boolean | Ref<boolean>
   /**
@@ -73,10 +73,9 @@ export interface UseUnsavedChangesGuardApi {
    */
   acknowledge: () => void
   /**
-   * Releases what the guard registered imperatively — `beforeunload` listener, acknowledge timer,
-   * dialog watcher — and settles an open prompt as "stay". Idempotent, and called automatically on
-   * unmount; outside a component it is the only way to clean up. The route-leave guard is
-   * lifecycle-bound and unaffected.
+   * Releases the `beforeunload` listener, acknowledge timer and dialog watcher, and settles an open prompt as "stay".
+   * Idempotent and called on unmount. Outside a component it is the only way
+   * to clean up. The route-leave guard is lifecycle-bound and unaffected.
    */
   stop: () => void
   /**
@@ -129,8 +128,8 @@ export function useUnsavedChangesGuard(options: UseUnsavedChangesGuardOptions): 
   )
 
   const promptOpen = ref<boolean>(false)
-  // Every navigation waiting on the open prompt: one started meanwhile (the browser's Back) asks too, and the answer is
-  // theirs alike.
+  // All navigations waiting on the open prompt. One started
+  // meanwhile (browser Back) also waits and gets the same answer.
   let pendingResolvers: ((discard: boolean) => void)[] = []
   let acknowledgedOnce = false
   let acknowledgeTimer: ReturnType<typeof setTimeout> | null = null
@@ -177,9 +176,8 @@ export function useUnsavedChangesGuard(options: UseUnsavedChangesGuardOptions): 
     clearAcknowledgeTimer()
   }
 
-  // Route guards — `onBeforeRouteLeave` and `onBeforeRouteUpdate` only work inside a route component
-  // (it reads the current vm context). Outside a component it's a no-op.
-  // A Ref option is read at event time (register whenever it is not a literal `false`).
+  // `onBeforeRouteLeave` and `onBeforeRouteUpdate` only work inside a route component. Outside one they are no-ops.
+  // A Ref option is read at event time.
   if (options.guardRoute !== false && getCurrentInstance()) {
     try {
       const guardLeave = async () => {
@@ -188,19 +186,18 @@ export function useUnsavedChangesGuard(options: UseUnsavedChangesGuardOptions): 
         return discard
       }
       onBeforeRouteLeave(guardLeave)
-      // The same route with other params (another article's edit page) drops this page's changes as surely: an admin
-      // keys its view by path and remounts it, a child route switching under a guarded parent included, and only a
-      // leave was asked about. Any path, not only the guarded route's own params: where the view is not keyed so, the
-      // question is one too many, never a loss of changes without one. Query and hash alone keep the page.
+      // A path change within the same route (another article's edit page) also drops this page's changes.
+      // Admins key their view by path and remount it, including child routes under a guarded parent.
+      // Any path change asks. Where the view is not keyed by path, this is one
+      // extra prompt, never lost changes. Query and hash changes keep the page.
       onBeforeRouteUpdate((to, from) => (to.path === from.path ? true : guardLeave()))
     } catch {
       // Not in a route context — skip silently.
     }
   }
 
-  // beforeunload — modern browsers strip custom messages but still display a
-  // generic confirm. Setting `returnValue` is the canonical way to opt in.
-  // Collected, not tied to onBeforeUnmount: outside a component that hook is a silent no-op.
+  // Browsers ignore custom `beforeunload` messages but show a generic confirm when `returnValue` is set.
+  // Disposers are collected, not tied to `onBeforeUnmount`, because outside a component that hook is a silent no-op.
   const disposers: Array<() => void> = [clearAcknowledgeTimer]
   let stopped = false
 

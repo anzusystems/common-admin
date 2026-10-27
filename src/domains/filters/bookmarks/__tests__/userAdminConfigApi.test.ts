@@ -3,8 +3,9 @@ import type { AxiosInstance } from 'axios'
 import { useUserAdminConfigApi } from '@/domains/filters/bookmarks/api/userAdminConfigApi'
 import { defaultApiErrorLogger, setApiErrorLogger } from '@/domains/api/utils/apiErrors'
 
-// The endpoint answers a 204, and axios delivers it as `data: ''`. Read as a call that owes a body,
-// every save of the manage dialog failed and was reported, though the server had stored it.
+// The endpoint answers 204, which axios delivers as `data: ''`.
+// Read as a call that owes a body, every save of the manage
+// dialog failed and was reported though the server had stored it.
 
 beforeEach(() => {
   setApiErrorLogger(null)

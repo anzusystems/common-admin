@@ -13,10 +13,10 @@ import {
   CollabFieldLockType,
 } from '@/domains/collab/composables/collabEventBus'
 
-// The widget holds an image or a media. Released with a bare id, the other editors could not tell which,
-// nor set either: an admin wrote the value under the field name and nobody else saw the new lead image.
-// Mounted under a `v-model` parent, as in an admin: there an assigned model shows only after the parent renders, and
-// a release that read the models back sent the previous image.
+// The widget holds an image or a media. Released with a bare id, other editors cannot tell which it is, nor set either.
+// An admin wrote the value under the field name and nobody else saw the new lead image.
+// Mounted under a `v-model` parent, as in an admin: an assigned model shows only after the parent renders,
+// and a release that read the models back sent the previous image.
 
 const released = vi.fn()
 const acquired = vi.fn()
@@ -260,7 +260,6 @@ describe('ImageMediaWidgetInner in a collab room', () => {
     await flushPromises()
     expect(released).not.toHaveBeenCalled()
 
-    // Nothing to show: the pick ends without a dialog, and the lock goes.
     fetched.resolve!(null)
     await flushPromises()
     await flushPromises()
@@ -331,7 +330,7 @@ describe('ImageMediaWidgetInner in a collab room', () => {
     wrapper.unmount()
   })
 
-  // Finding 30: the dropzone has turned every file away, and nothing is to be uploaded. The field is not asked for.
+  // The dropzone has turned every file away and nothing is uploaded, so the field is not asked for a lock.
   it('asks for no lock for a drop that brings no file', async () => {
     const { wrapper } = mountWidget('listing-empty-drop')
     await flushPromises()
@@ -344,8 +343,8 @@ describe('ImageMediaWidgetInner in a collab room', () => {
     wrapper.unmount()
   })
 
-  // Finding 47: the upload dialog shows one file. A second drop while the first still waits for the lock of the
-  // field is not taken; both used to queue their file once the lock came.
+  // The upload dialog shows one file. A second drop while the first still waits for the field lock is not taken.
+  // Both used to queue their file once the lock came.
   it('takes one drop while its lock is asked for, and the next one once that is over', async () => {
     const { wrapper } = mountWidget('listing-one-drop-at-a-time')
     const addByFiles = vi.spyOn(useUploadQueuesStore(), 'addByFiles').mockResolvedValue(undefined as never)

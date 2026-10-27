@@ -62,13 +62,13 @@ import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueu
 import type { DocId, IntegerId } from '@/shared/types/common'
 import { isNull, isUndefined } from '@/shared/utils/common'
 
-// The image widget and the library of the DAM, under each of the two applications: where the widget takes its
-// configuration from and whom it lets in, where the asset picker lists from, and what the widget makes of an asset
-// picked there. The real widget; the DAM and the backend of the images are clients that record their requests. Not
-// mounted for real: the pictures (they would ask the image server), the tiles and the table of the picker with
-// the metadata of the asset picked in it, the inputs of its filter (each is named by a stand-in), the asset detail,
-// the upload dialog, and the inputs that ask the DAM for names to offer. Where a case is about what the widget does
-// with a picked asset, the picker itself is a stand-in that answers as the real one does.
+// Image widget and DAM library under both applications: where the widget takes its configuration and whom it lets in,
+// where the asset picker lists from, and what the widget does with a picked asset. The real widget runs;
+// the DAM and the image backend are recording clients.
+// Stubbed: pictures (they would ask the image server), picker
+// tiles, table and filter inputs, asset detail, upload dialog,
+// and the inputs that ask the DAM for names.
+// Where a case is about a picked asset, the picker is a stand-in that answers like the real one.
 
 const QUEUE = 'lead-image'
 const FILTER_INPUTS = [
@@ -90,7 +90,6 @@ const ALWAYS_STAND_INS = [
   'AssetMetadata',
   ...FILTER_INPUTS,
 ]
-/** The id of the image the widget holds: what its form reads. */
 const modelValueOf = (widget: VueWrapper) => (widget.props() as { modelValue: number | null }).modelValue
 const PickerStandIn = defineComponent({ name: 'AAssetSelect', emits: ['confirm'], setup: () => () => h('div') })
 
@@ -99,7 +98,6 @@ let dam: FakeDam
 let imageApi: ConsumerImageApi
 let waits: LongWaits
 let wrapper: VueWrapper | undefined
-/** The map of the application from a picked asset to the texts of an image, where it brings one. */
 let mapOfTheApplication: Mock<AssetSelectMetadataToImageMapFn> | undefined
 
 describe.each(consumerProfiles)('the image widget and the library of the DAM under the $name', (profile) => {
@@ -146,7 +144,6 @@ describe.each(consumerProfiles)('the image widget and the library of the DAM und
     licenceName: 'own',
     extSystemConfig: useDamConfigStore(pinia).damConfigExtSystem.get(extSystem)!,
   })
-  /** The inner widget, with the upload configuration its parent provides: the way admin-ugc mounts it itself. */
   const mountInner = async (props: Record<string, unknown> = {}, picker: 'real' | 'stand-in' = 'real') => {
     const mounted: VueWrapper = mount(ImageWidgetInner, {
       attachTo: document.body,
@@ -156,7 +153,6 @@ describe.each(consumerProfiles)('the image widget and the library of the DAM und
         selectLicences: [licence],
         modelValue: null,
         'onUpdate:modelValue': (value: number | null) => mounted.setProps({ modelValue: value }),
-        // admin-ugc has no user of the DAM, and says so; admin-cms has one.
         skipCurrentUserCheck: !isCms,
         ...props,
       } as never,
@@ -176,7 +172,6 @@ describe.each(consumerProfiles)('the image widget and the library of the DAM und
   // Menus and dialogs are drawn into the body.
   const openMenuItems = () =>
     Array.from(document.body.querySelectorAll<HTMLElement>('.v-menu.v-overlay--active .v-list-item'))
-  /** The user picks "add from the library" in the menu of the widget. */
   const openTheLibrary = async () => {
     await wrapper!.find(`button[aria-label="${damText('image.button.options')}"]`).trigger('click')
     await vi.waitFor(() => expect(openMenuItems().length).toBeGreaterThan(0))
@@ -188,7 +183,6 @@ describe.each(consumerProfiles)('the image widget and the library of the DAM und
   const picker = () => document.body.querySelector<HTMLElement>('.subject-select__card')
   const toForeignPrefix = () => dam.requests.filter((request) => request.url.startsWith(foreignPrefix))
   const notAllowed = ['error', alertText('common.assetSelect.error.unallowedLicence')]
-  /** The application turns the copy into the licence of a widget off, as one whose DAM API has no copy path would. */
   const copyOff = () => {
     const { coreDam } = profile.options(dam.client)
     initCommonAdminCoreDamOptions({
@@ -215,8 +209,6 @@ describe.each(consumerProfiles)('the image widget and the library of the DAM und
       expect(shownAlerts()).toEqual([])
     })
 
-    // admin-ugc names the two filters its users get; admin-cms names none and gets them all. None of the inputs
-    // admin-ugc leaves out is there to ask the DAM for authors, keywords or users.
     it('has the filters the application asks for: all of them, or the ones it names', async () => {
       if (isCms) signInToDam(extSystem)
       await mountInner()
@@ -245,8 +237,6 @@ describe.each(consumerProfiles)('the image widget and the library of the DAM und
       )
     })
 
-    // Over the assets of another licence than the one the widget uploads into, the picker offers to copy the picked
-    // one there, unless the application turns the copy off.
     it.each([
       ['offers', undefined, true],
       ['does not offer, where the application turns it off,', false, false],
@@ -263,9 +253,8 @@ describe.each(consumerProfiles)('the image widget and the library of the DAM und
       expect(picker()!.textContent!.includes(uiText('common.assetSelect.meta.texts.copyToLicence'))).toBe(offered)
     })
 
-    // Without a user of the DAM the licence is allowed to, the picker is for nobody, unless the application says
-    // to skip the check (admin-ugc does on every widget). The widget is told so, and the dialog of the picker does
-    // not open (finding 33: it used to open over no licence, listing nothing); pressed again, it says so again.
+    // Finding 33: the picker dialog used to open over no licence and list nothing.
+    // Pressing again must report the same.
     it('says the licence is not allowed to a page without a user of the DAM that does not skip the check, and opens no picker', async () => {
       await mountInner({ skipCurrentUserCheck: false })
 
@@ -286,9 +275,8 @@ describe.each(consumerProfiles)('the image widget and the library of the DAM und
     })
   })
 
-  // The pickers mounted for real, as the widgets mount them: over the licence of the widget, opened through their
-  // model. The one of the image and media widget is given no `skipCurrentUserCheck` by its widget, so only a page with
-  // a user of the DAM (admin-cms) gets past the check.
+  // The image and media widget gives its picker no `skipCurrentUserCheck`.
+  // Only a page with a DAM user (admin-cms) gets past the check.
   describe('the asset pickers, as the widgets mount them', () => {
     const mountPicker = async (
       component: Component,
@@ -313,11 +301,9 @@ describe.each(consumerProfiles)('the image widget and the library of the DAM und
         },
       })
       wrapper = mounted
-      // Ready once it has the configurations of its licences.
       await flushPromises()
       return mounted
     }
-    /** Opened as the widget opens it, and done listing. */
     const open = async (mounted: VueWrapper) => {
       const listedBefore = listRequests().length
       await mounted.setProps({ modelValue: true })
@@ -332,7 +318,6 @@ describe.each(consumerProfiles)('the image widget and the library of the DAM und
       Array.from(picker()!.querySelectorAll<HTMLButtonElement>('button')).find(
         (button) => button.textContent?.trim() === uiText('common.button.confirm')
       )!
-    /** An image of the given licence, as the list has it. */
     const listed = (id: string, of: IntegerId) =>
       ({
         id,
@@ -341,14 +326,12 @@ describe.each(consumerProfiles)('the image widget and the library of the DAM und
         attributes: { assetType: DamAssetType.Image },
         podcasts: [],
       }) as never
-    /** The images listed, and each picked in the list. */
     const pick = async (...assets: never[]) => {
       const store = useAssetSelectStore(pinia)
       store.setList(assets)
       assets.forEach((_, index) => store.toggleSelectedByIndex(index))
       await flushPromises()
     }
-    /** The user browses another licence; what was picked stays picked. */
     const browse = async (other: IntegerId) => {
       useAssetSelectStore(pinia).selectedLicenceId = other
       await flushPromises()
@@ -386,8 +369,8 @@ describe.each(consumerProfiles)('the image widget and the library of the DAM und
         }
       )
 
-      // The switch keeps the state the user left it in, and what was picked outlives a change of the licence browsed:
-      // the licence of each picked asset decides, not the one browsed when the picker is confirmed.
+      // Picked assets keep their licence when the browsed licence changes.
+      // Each asset's own licence decides, not the one browsed at confirm.
       it.each(pickers)(
         '%s asks for the copy of an asset picked over another licence, confirmed over the licence of the upload',
         async (_, component, own) => {
@@ -422,7 +405,6 @@ describe.each(consumerProfiles)('the image widget and the library of the DAM und
         }
       )
 
-      // Which of them the widget copies is the widget's to say: it copies those of another licence.
       it.each(pickers)(
         '%s asks for the copy of assets picked in both licences, and hands both over',
         async (_, component, own) => {
@@ -440,11 +422,10 @@ describe.each(consumerProfiles)('the image widget and the library of the DAM und
         }
       )
 
-      // The picker of the image and media widget lists one type at a time. A switch to another type emptied the list
-      // and the side panel, but did not give up what a click on a tile had begun: the read of that asset was written
-      // into the panel when it answered, beside the list of the other type. The place of the active tile was kept too,
-      // so the tile at that place of the new list could not be made the active one. With its real tiles and its real
-      // bar; the pictures and the metadata of the picked asset are stand-ins.
+      // Switching type in the image and media picker emptied the list and side panel but not a pending asset read.
+      // That read was written into the panel when it answered. The active tile position was kept too,
+      // so the tile at that place in the new list could not become active.
+      // Real tiles and bar are used; pictures and metadata are stand-ins.
       describe('the picker of the image and media widget, switched to another type', () => {
         const tiles = () => Array.from(document.body.querySelectorAll<HTMLElement>('.asset-list-tiles__item'))
         const tilesDrawn = () =>
@@ -463,7 +444,6 @@ describe.each(consumerProfiles)('the image widget and the library of the DAM und
             texts: { displayTitle: id },
             attributes: { assetType, assetStatus: DamAssetStatus.WithFile },
           })
-        /** The picker over one image and one video of the licence, open on the images. */
         const openOnImages = async () => {
           signInToDam(extSystem)
           dam.assets.set('image-1', ofType('image-1', DamAssetType.Image))
@@ -487,13 +467,11 @@ describe.each(consumerProfiles)('the image widget and the library of the DAM und
         }
         const typeButton = (type: 'image' | 'video') =>
           document.body.querySelector<HTMLButtonElement>(`[data-cy="button-${type}-types"]`)!
-        /** The picker has asked for its list so many times, and has the last answer. */
         const listed = async (times: number) => {
           await vi.waitFor(() => expect(listRequests()).toHaveLength(times))
           await vi.waitFor(() => expect(useAssetSelectStore(pinia).loader).toBe(false))
           await flushPromises()
         }
-        /** The user presses the button of a type in the bar, and the list of that type has come. */
         const switchTo = async (type: 'image' | 'video') => {
           const listedBefore = listRequests().length
           typeButton(type).click()
@@ -523,7 +501,6 @@ describe.each(consumerProfiles)('the image widget and the library of the DAM und
           expect(useAssetDetailStore(pinia).asset).toBeNull()
           expect(shownAlerts()).toEqual([])
 
-          // Back on the images: the panel shows no asset, so the tile clicked before the switch is not the active one.
           await switchTo('image')
           expect(tilesDrawn()).toEqual([['image-1', false]])
           expect([panelLoads(), noAssetPicked()]).toEqual([false, true])
@@ -560,7 +537,6 @@ describe.each(consumerProfiles)('the image widget and the library of the DAM und
           expect(tilesDrawn()).toEqual([['video-1', true]])
           expect(panelShowsAnAsset()).toBe(true)
 
-          // Back on the images: the panel is empty again, so the tile clicked there before is not the active one.
           await switchTo('image')
           expect(tilesDrawn()).toEqual([['image-1', false]])
           expect([noAssetPicked(), panelShowsAnAsset()]).toEqual([true, false])
@@ -588,7 +564,6 @@ describe.each(consumerProfiles)('the image widget and the library of the DAM und
   describe('an asset picked in the library', () => {
     const picked = (id: string, parts: Record<string, unknown> = {}) => ({
       id,
-      // An asset of another licence than the one the widget uploads into.
       licence: 300003,
       mainFile: { id: `file-of-${id}` },
       mainFileInternal: true,
@@ -596,7 +571,6 @@ describe.each(consumerProfiles)('the image widget and the library of the DAM und
       podcasts: [],
       ...parts,
     })
-    /** What the DAM has for the picked asset; in admin-cms it has two authors. */
     const inTheDam = (id: string, authors: string[] = isCms ? ['author-3', 'author-4'] : []) =>
       dam.assets.set(
         id,
@@ -617,7 +591,6 @@ describe.each(consumerProfiles)('the image widget and the library of the DAM und
       useAssetSelectStore(pinia).setSelectConfig([uploadConfig()])
       return mounted
     }
-    /** The user confirms the asset in the picker; nothing is to be copied. */
     const confirmInPicker = async (asset: Record<string, unknown>) => {
       wrapper!.findComponent(PickerStandIn).vm.$emit('confirm', { type: 'asset', value: [asset] })
       await flushPromises()
@@ -640,7 +613,6 @@ describe.each(consumerProfiles)('the image widget and the library of the DAM und
     const imageOfPicked = {
       texts: { description: 'a picked image', source },
       flags: { showSource: true, internal: false, overrideInternal: false },
-      // The file and the licence of the asset as it was listed, internal as the DAM has it.
       dam: { damId: 'file-of-asset-9', regionPosition: 0, licenceId: 300003, internal: true },
       position: 1,
     }
@@ -661,8 +633,6 @@ describe.each(consumerProfiles)('the image widget and the library of the DAM und
       expect(dam.sentTo('GET', dam.routes.one).map((request) => request.url)).toEqual([`${endPoints.asset}/asset-9`])
       expect(useImageMediaWidgetStore(pinia).detail).toEqual(imageOfPicked)
       expect(textsIn(imageDialog()!).map((field) => field.value)).toEqual(['a picked image', source])
-      // admin-cms: the source is the names of the authors of the asset, asked for once. admin-ugc: the texts are
-      // made by its own map, from the asset as it was read, and no author is asked for.
       expect(damNameLookups(dam)).toHaveLength(isCms ? 1 : 0)
       if (mapOfTheApplication) {
         expect(mapOfTheApplication).toHaveBeenCalledTimes(1)
@@ -694,8 +664,6 @@ describe.each(consumerProfiles)('the image widget and the library of the DAM und
     })
 
     if (isCms) {
-      // The ext system has the authors of the DAM: an asset that has none is offered them in place of a source to
-      // type, and what the user picks is saved into the asset before the image is.
       it('without an author: the dialog offers the authors of the DAM in place of the source, and saves them into the asset', async () => {
         inTheDam('asset-9', [])
         const mounted = await mountWithStandIn()
@@ -707,13 +675,12 @@ describe.each(consumerProfiles)('the image widget and the library of the DAM und
         expect(textsIn(imageDialog()!).map((field) => field.value)).toEqual(['a picked image'])
         const authors = mounted.findComponent(AuthorRemoteAutocompleteWithCached)
         expect(authors.exists()).toBe(true)
-        // The asset whose authors are offered is the widget's own: none is put into the store of the detail, which
-        // is the page's.
+        // The widget holds its own asset.
+        // Nothing is put into the detail store, which belongs to the page.
         expect(useAssetDetailStore(pinia).asset).toBeNull()
 
         authors.vm.$emit('update:modelValue', ['author-5'])
         await flushPromises()
-        /** Whether the image had been written when the DAM got the authors. */
         let imageWrittenFirst: boolean | undefined
         dam.reply((request) => {
           if (request.method === 'PATCH' && dam.routes.bulkMetadata.test(request.url)) {
@@ -747,7 +714,6 @@ describe.each(consumerProfiles)('the image widget and the library of the DAM und
         expect(shownAlerts().filter(([colour]) => colour === 'error')).toEqual([])
       })
     } else {
-      // admin-ugc has no authors of the DAM: its own map says what the source is, whatever the asset has.
       it('never offers the authors of the DAM, and asks the DAM for no author', async () => {
         inTheDam('asset-9', ['author-3'])
         const mounted = await mountWithStandIn()
@@ -762,8 +728,9 @@ describe.each(consumerProfiles)('the image widget and the library of the DAM und
       })
     }
 
-    // The description takes 2 000 characters. Over that "confirm" said only that the form has errors, and the
-    // field showed none: the source beside it shows its own.
+    // The description accepts 2000 characters.
+    // Above that, "confirm" only said the form has errors and the
+    // field showed none. The source field beside it shows its own.
     it('shows under the description of the dialog what "confirm" does not take of it', async () => {
       inTheDam('asset-9')
       await mountWithStandIn()
@@ -798,8 +765,8 @@ describe.each(consumerProfiles)('the image widget and the library of the DAM und
       expect(imageDialog()).toBeUndefined()
     })
 
-    // Today's behaviour, pinned as it is: the failed read is said, and the image is offered all the same, from
-    // what the list knew of the asset: its file and its licence, and no texts.
+    // Current behaviour, pinned: the failed read is reported and the image is still offered.
+    // It is built from what the list knew of the asset: file and licence, no texts.
     it('that cannot be read: says so, and still offers the image, without its texts', async () => {
       await mountWithStandIn()
 
@@ -815,8 +782,8 @@ describe.each(consumerProfiles)('the image widget and the library of the DAM und
     })
   })
 
-  // The picker offers the copy when the user browses another licence than the one the widget uploads into, which
-  // only admin-cms has. Where the request of the copy goes is not what is asked here.
+  // The picker offers the copy when the user browses another licence than the upload one, which only admin-cms has.
+  // Where the copy request goes is not tested here.
   if (isCms) {
     describe('an asset picked to be copied into the licence of the widget', () => {
       const COPY = /\/copy-to-licence$/
@@ -879,7 +846,6 @@ describe.each(consumerProfiles)('the image widget and the library of the DAM und
           },
         ])
         expect(useUploadQueueDialog().uploadQueueDialog.value).toBe(QUEUE)
-        // No image is made of the picked asset: the copy goes through the upload dialog first.
         expect(useImageMediaWidgetStore(pinia).detail).toBeNull()
         expect(shownAlerts()).toEqual([])
       })
@@ -908,7 +874,6 @@ describe.each(consumerProfiles)('the image widget and the library of the DAM und
             error: { hasError: false },
           },
         ])
-        // Read by the file the DAM named, from the address of the application.
         expect(dam.originReads().map((request) => request.url)).toEqual(['/adm/v1/asset/asset-file/file-copy'])
         expect(useUploadQueueDialog().uploadQueueDialog.value).toBe(QUEUE)
       })
@@ -924,7 +889,6 @@ describe.each(consumerProfiles)('the image widget and the library of the DAM und
         expect(useImageMediaWidgetStore(pinia).detail).toBeNull()
       })
 
-      // A picker of the application's own that still says to copy: the widget does not ask for it.
       it('where the application turns the copy off: none is asked for, and the asset is picked as it is', async () => {
         copyAnswers('copy')
         copyOff()
@@ -945,9 +909,9 @@ describe.each(consumerProfiles)('the image widget and the library of the DAM und
   }
 })
 
-// admin-cms mounts the outer widget, which takes the configuration of the DAM from the DAM itself and lets only a
-// user the upload licence is allowed to change the image. (admin-ugc mounts the inner widget over a configuration it
-// has written itself: the cases above.)
+// admin-cms mounts the outer widget. It loads the DAM configuration from the
+// DAM and lets only a user allowed on the upload licence change the image.
+// admin-ugc mounts the inner widget over a configuration it wrote itself (the cases above).
 describe('the outer image widget of admin-cms, over a DAM configuration nobody has loaded yet', () => {
   const { endPoints, extSystem, licence } = cmsConfiguration
 
@@ -956,7 +920,8 @@ describe('the outer image widget of admin-cms, over a DAM configuration nobody h
     setActivePinia(pinia)
     dam = createFakeDam(endPoints)
     installConsumerImageApi(cmsConfiguration, installConsumerProfile(cmsConfiguration, dam.client))
-    // What the DAM answers its configuration with: what the profile had written into the store, which is emptied.
+    // The DAM answers its configuration request with what the profile wrote into the store.
+    // The store is then emptied.
     const store = useDamConfigStore(pinia)
     const extSystemConfig = store.damConfigExtSystem.get(extSystem)!
     const elements = store.damConfigAssetCustomFormElements.get(extSystem)!
@@ -1059,17 +1024,15 @@ describe('the outer image widget of admin-cms, over a DAM configuration nobody h
   })
 })
 
-// The authors of the DAM in the dialog of the image of a widget of one image: whose they are, and what "edit asset" of
-// that dialog makes of them. An asset picked in the library that has no author is offered them in place of a source.
-// The dialog drew them over whatever asset the store of the asset detail held, and that store is one for the page: the
-// asset picker, the asset detail and every other widget write there, while the widget only remembered that it had
-// offered them once. So the dialog of one image offered, and saved, the authors of the asset of another, and after
-// "edit asset" (the detail empties that store) the pick was gone, and authors saved in the detail never reached the
-// source of the image. The widget holds the asset it read for its image itself, and reads it again when the detail
-// "edit asset" opened has closed. Both widgets of one image under each application; admin-ugc has no authors of the
-// DAM, so its dialog never offers them. The real widgets with their real dialog of the image and the real dialog of
-// the asset detail, of which only what it frames is not drawn; the asset picker and the upload dialog are stand-ins
-// that answer as the real ones do, but for the cases of a pick made in the real picker, with its real tiles.
+// DAM authors in the single-image dialog: whose they are and what "edit asset" makes
+// of them. A picked asset without authors is offered them in place of a source.
+// The dialog used to read the page-wide asset detail store, which pickers, the detail and other widgets write.
+// So it offered and saved another asset's authors, lost the pick after "edit
+// asset", and authors saved in the detail never reached the image source.
+// The widget now holds the asset it read and reads it again when the
+// detail closes. admin-ugc has no DAM authors, so it never offers them.
+// Real widgets and dialogs are used; the asset picker and upload
+// dialog are stand-ins except where a real picker is mounted.
 const UploadStandIn = defineComponent({
   name: 'UploadQueueDialogSingle',
   emits: ['apply'],
@@ -1085,7 +1048,9 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
 
   let widgets: VueWrapper[] = []
   let detailForm: VueWrapper | undefined
-  /** What a widget mounted with the real picker failed to draw: collected, where it would be thrown into the page. */
+  /**
+   * Draw failures of a widget with the real picker are collected instead of being thrown into the page.
+   */
   let failedToDraw: unknown[] = []
 
   beforeEach(() => {
@@ -1094,11 +1059,9 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
     dam = createFakeDam(endPoints)
     imageApi = installConsumerImageApi(profile, installConsumerProfile(profile, dam.client))
     answerDamNames(dam)
-    // What the image and media widget asks about a picked asset first: here, it is no media.
     dam.reply((request) =>
       request.method === 'GET' && MEDIA.test(request.url) ? { status: 200, data: {} } : undefined
     )
-    // The other licence is of another ext system, configured as the one of the page.
     const config = useDamConfigStore(pinia)
     config.damConfigLicenceExtSystem.set(OTHER, { name: '', extSystem: OTHER_EXT_SYSTEM })
     config.damConfigExtSystem.set(OTHER_EXT_SYSTEM, config.damConfigExtSystem.get(extSystem)!)
@@ -1132,7 +1095,6 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
     extSystemConfig: useDamConfigStore(pinia).damConfigExtSystem.get(extSystem)!,
   })
   const detail = () => useAssetDetailStore(pinia)
-  /** What the DAM has for an asset: `file-of-<id>`, described, in the licence of the widget unless another is named. */
   const inTheDam = (id: string, authors: string[] = [], of: IntegerId = licence) =>
     dam.assets.set(
       id,
@@ -1146,7 +1108,6 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
         },
       })
     )
-  /** An asset as the list of the picker has it. */
   const listed = (id: string, of: IntegerId = licence) => ({
     id,
     licence: of,
@@ -1155,7 +1116,6 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
     attributes: { assetType: DamAssetType.Image },
     podcasts: [],
   })
-  /** An image the entity already has, of a file of its own. */
   const stored = (id: number, file = `file-${id}`, source = `source ${id}`): ImageAware => ({
     id,
     texts: { description: `image ${id}`, source },
@@ -1173,7 +1133,6 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
     Array.from(root.querySelectorAll<HTMLTextAreaElement>('textarea')).filter(
       (field) => field.getAttribute('aria-hidden') !== 'true'
     )
-  /** The texts the dialog of the image shows: the description, and the source where it has that field. */
   const texts = () => fieldsIn(imageDialog()!).map((field) => field.value)
   const typeSource = async (text: string) => {
     const source = fieldsIn(imageDialog()!)[1]!
@@ -1186,23 +1145,19 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
       (button) => button.textContent?.trim() === text
     )!
   const confirmButton = () => buttonOfDialog(uiText('common.button.confirm'))
-  /** What each save of metadata wrote into the DAM: the asset and its authors. */
   const authorsWritten = () =>
     dam
       .sentTo('PATCH', dam.routes.bulkMetadata)
       .map((request) =>
         (dam.body(request) as Array<{ id: DocId; authors?: DocId[] }>).map((one) => [one.id, one.authors])
       )
-  /** The reads of an asset by its id: what a pick reads, and what the widget reads again once a detail has closed. */
   const readsOf = (asset: DocId) =>
     dam.sentTo('GET', dam.routes.one).filter((request) => request.url === `${endPoints.asset}/${asset}`)
-  /** The ext system of each lookup of the names of exactly these authors. */
   const namesAskedOf = (ids: string) =>
     damNameLookups(dam)
       .map((request) => request.url.match(DAM_NAMES)!)
       .filter((match) => match[1] === 'author' && new URLSearchParams(match[3]).get('id') === ids)
       .map((match) => Number(match[2]))
-  /** The DAM takes the authors a save of metadata writes into an asset: a later read of it answers with them. */
   const keepAuthorsOf = (request: FakeDamRequest) => {
     for (const sent of dam.body(request) as Array<{ id: DocId; authors?: DocId[] }>) {
       const asset = dam.assets.get(sent.id)
@@ -1222,8 +1177,7 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
   ])('of %s', (_name, component) => {
     const isImageWidget = component === ImageWidgetInner
     /**
-     * The widget with its buttons in a row, as it is in a form; `image`: the id of the image the entity has. Its
-     * picker is a stand-in, or the real one with its real tiles, of which the pictures are not drawn.
+     * The picker is a stand-in, or the real one with its tiles but without pictures.
      */
     const mountWidget = async (
       image: number | null = null,
@@ -1242,7 +1196,6 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
             ? {
                 modelValue: image,
                 'onUpdate:modelValue': (value: number | null) => mounted.setProps({ modelValue: value }),
-                // admin-ugc has no user of the DAM, and says so; admin-cms has one.
                 skipCurrentUserCheck: !isCms,
               }
             : {
@@ -1256,8 +1209,8 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
         global: {
           plugins: [pinia],
           provide: { [ImageWidgetUploadConfigKey as symbol]: shallowRef(uploadConfig()) },
-          // A component that fails as it is set up is left out of the page, as in an application: thrown here, the
-          // failure would take the cases after this one with it.
+          // A component that fails during setup is left out of the page, as in an application.
+          // Thrown here, the failure would take the following cases down with it.
           ...(picker === 'real' ? { config: { errorHandler: (error: unknown) => failedToDraw.push(error) } } : {}),
           stubs: {
             ...(picker === 'stand-in'
@@ -1282,7 +1235,6 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
       useAssetSelectStore(pinia).setSelectConfig([uploadConfig()])
       return mounted
     }
-    /** The user confirms the asset in the picker of the widget; nothing is to be copied. */
     const pickInLibrary = async (widget: VueWrapper, asset: string, of: IntegerId = licence) => {
       widget.findComponent(PickerStandIn).vm.$emit('confirm', { type: 'asset', value: [listed(asset, of)] })
       await vi.waitFor(() =>
@@ -1291,7 +1243,6 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
       await vi.waitFor(() => expect(confirmButton().disabled).toBe(false))
       await flushPromises()
     }
-    /** "Edit image" of the widget: the dialog of the image it has. */
     const editImage = async (widget: VueWrapper) => {
       const button = () =>
         widget.findAll('.a-image-widget__options button').find((one) => one.text() === damText('image.meta.edit'))
@@ -1304,7 +1255,6 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
       imageDialog()!.querySelector<HTMLButtonElement>('[data-cy="button-close"]')!.click()
       await vi.waitFor(() => expect(imageDialog()).toBeUndefined())
     }
-    /** "Confirm" of the dialog, until the widget has saved its image. */
     const confirmImage = async (widget: VueWrapper) => {
       const saved = widget.emitted('afterMetadataSaveSuccess')?.length ?? 0
       confirmButton().click()
@@ -1312,34 +1262,31 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
       await flushPromises()
     }
     const authorsInput = (widget: VueWrapper) => widget.findComponent(AuthorRemoteAutocompleteWithCached)
-    /** What the dialog offers: the authors picked in it so far, or `null` where it shows the source. */
     const offered = (widget: VueWrapper) =>
       authorsInput(widget).exists() ? (authorsInput(widget).props('modelValue') as DocId[]) : null
     const pickAuthors = async (widget: VueWrapper, authors: DocId[]) => {
       authorsInput(widget).vm.$emit('update:modelValue', authors)
       await flushPromises()
     }
-    /** "Edit asset" of the dialog of the image is pressed. */
     const pressEditAsset = () => buttonOfDialog(useCommonAdminCoreDamOptions('default').editAssetLabel).click()
-    /** The same, and the detail shows the asset. */
     const editAsset = async (asset: DocId) => {
       pressEditAsset()
       await vi.waitFor(() => expect(detail().asset?.id).toBe(asset))
       await flushPromises()
     }
-    /** The form of the detail is not drawn here: this is what its save sends, with the authors the user picks in it. */
+    /**
+     * The detail form is not drawn here. This sends what its save sends, with the authors the user picks.
+     */
     const saveInDetail = async (authors: DocId[]) => {
       const { damClient, endPointAsset } = useCommonAdminCoreDamOptions('default')
       detail().asset!.authors = authors
       await updateAssetMetadata(damClient, endPointAsset, detail().asset!, extSystem, detail().mainFileSingleUse)
       await flushPromises()
     }
-    /** The detail is closed with its own button: the real dialog, of which only what it frames is not drawn. */
     const closeDetail = async (widget: VueWrapper) => {
       widget.findComponent({ name: 'AssetDetailDialogFrame' }).vm.$emit('close')
       await flushPromises()
     }
-    /** The asset is picked, and the dialog of its image offers the authors of the DAM. */
     const pickedWithoutAuthors = async (asset = 'asset-9', image: number | null = null) => {
       inTheDam(asset)
       if (!isNull(image)) imageApi.has(stored(image))
@@ -1348,7 +1295,6 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
       expect(offered(widget)).toEqual([])
       return widget
     }
-    /** As above; then "edit asset" of the dialog, authors saved in the detail, and the detail still open. */
     const authorsSavedInDetail = async (authors: DocId[]) => {
       const widget = await pickedWithoutAuthors()
       damKeepsAuthors()
@@ -1356,7 +1302,6 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
       await saveInDetail(authors)
       return widget
     }
-    /** The reads of an asset by its id wait; `answer` lets them answer with what the DAM has by then. */
     const holdReadsOf = (asset: DocId) => {
       const held = dam.hold('GET', new RegExp(`^${endPoints.asset}/${asset}$`))
       return {
@@ -1368,9 +1313,9 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
 
     if (isCms) {
       describe('are those of the asset the widget read for that image', () => {
-        // The pick of asset-9 was closed without a save: the widget still has its image 7, of another file. The
-        // dialog of that image used to offer the authors of asset-9 all the same, and "confirm" wrote them into it
-        // and named them as the source of image 7.
+        // Closing the pick of asset-9 without a save leaves the widget with image 7 of another file.
+        // The dialog of that image used to still offer asset-9's authors.
+        // "Confirm" wrote them into it and named them as the source of image 7.
         it('are not offered with the image the widget has, once the dialog of a picked asset was closed without a save', async () => {
           const widget = await pickedWithoutAuthors('asset-9', 7)
           await closeImageDialog()
@@ -1395,9 +1340,10 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
           expect(authorsWritten()).toEqual([])
         })
 
-        // Two widgets of one page. The authors picked for the image of the second stayed in the store of the page,
-        // and the dialog of the first showed them: confirmed without a change, the first image took their names as
-        // its source, and they were written into the asset of the second once more.
+        // Two widgets on one page. Authors picked for the second image
+        // stayed in the page store and showed in the first dialog.
+        // Confirmed unchanged, the first image took their names as its
+        // source, and they were written into the second asset again.
         it('are never those picked in another widget of the page', async () => {
           inTheDam('asset-1')
           inTheDam('asset-2')
@@ -1427,7 +1373,6 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
           ])
         })
 
-        // What another part of the page leaves in the store of the detail, or takes from it, is nothing to the dialog.
         it('are not those of an asset left in the store of the asset detail, and stay when that store is emptied', async () => {
           const widget = await pickedWithoutAuthors()
           inTheDam('asset-of-the-page', ['author-3'])
@@ -1449,8 +1394,6 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
           expect(imagesWritten().at(-1)).toMatchObject(['updateImage', 501, { texts: { source: 'Name of author-5' } }])
         })
 
-        // Unchanged: an image saved without an author is offered the authors of its asset again, and those picked then
-        // are saved into that asset.
         it('are offered again for the image saved without an author, and those picked then are saved into its asset', async () => {
           const widget = await pickedWithoutAuthors()
           await confirmImage(widget)
@@ -1469,14 +1412,13 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
             { id: 'asset-9', authors: ['author-5'], described: true },
           ])
           expect(imagesWritten().at(-1)).toMatchObject(['updateImage', 501, { texts: { source: 'Name of author-5' } }])
-          // Saved into the asset, they are offered no more: the image has its source.
           await editImage(widget)
           expect(offered(widget)).toBeNull()
           expect(texts()).toEqual(['of asset-9', 'Name of author-5'])
         })
 
-        // The upload dialog hands the widget the image of its file, with the source its "save and apply" made. Here
-        // the file is the one of the asset picked before, as a duplicate of it is.
+        // The upload dialog hands the widget the image of its file with the source from "save and apply".
+        // Here the file is the one of the asset picked before, as with a duplicate.
         it('are not offered with the image of an upload, used after the pick of an asset without authors', async () => {
           const widget = await pickedWithoutAuthors()
           await closeImageDialog()
@@ -1520,8 +1462,9 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
           ])
         })
 
-        // With `expandMetadata` the form of the image is drawn in the page, not in a dialog, and stays there once the
-        // image is saved: the host of the widget confirms it.
+        // With `expandMetadata` the image form is drawn in the page,
+        // not in a dialog, and stays after the image is saved.
+        // The host of the widget confirms it.
         it('are offered in the form drawn in the page as well, and again once its image is saved without an author', async () => {
           inTheDam('asset-9')
           const widget = await mountWidget(null, QUEUE, { expandMetadata: true })
@@ -1546,13 +1489,12 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
           expect(offered(widget)).toBeNull()
         })
 
-        // The input of the authors asks for names under the ext system of the page, which a click on a tile of the
-        // picker sets: once its read of the asset had answered. A pick confirmed before that gives the read up, so on
-        // a page just loaded the dialog of the picked image had no ext system to offer the authors under: neither the
-        // authors nor the source were drawn, and the image was saved without a source.
+        // The authors input asks for names under the page ext system, which
+        // a tile click in the picker sets once its asset read answers.
+        // A pick confirmed earlier gives that read up. On a freshly loaded page the dialog then had no ext system:
+        // no authors or source were drawn, and the image was saved without a source.
         const picker = () => document.body.querySelector<HTMLElement>('.subject-select__card')
         const tiles = () => Array.from(document.body.querySelectorAll<HTMLElement>('.asset-list-tiles__item'))
-        /** The real picker of the widget, open over one asset without authors, on a page just loaded. */
         const pickerOpenedOnAFreshPage = async () => {
           // No upload, no asset detail and no gallery has said yet which ext system the page is of.
           useExtSystemIdForCached().cachedExtSystemId.value = 0
@@ -1611,9 +1553,8 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
           expect(imagesWritten()).toMatchObject([['createImage', { texts: { source: 'Name of author-5' } }]])
         })
 
-        // The ext system of the page is one value, and another widget of the page writes its own there when an upload
-        // or a copy of its own ends. The answer of the read of the clicked tile says once more which ext system the
-        // names of that asset are of, as it did when the click itself said nothing.
+        // The page ext system is a single value. Another widget writes its own there when its upload or copy ends.
+        // The answer to the clicked tile's read must set the ext system of that asset's names again.
         it('are of the ext system of the picker again once the read of the clicked tile answers, whatever another widget wrote since the click', async () => {
           await pickerOpenedOnAFreshPage()
           const reads = holdReadsOf('asset-9')
@@ -1643,8 +1584,9 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
         })
       })
 
-      // The detail empties the store of the page as it opens, and the dialog lost its pick with it: it showed an
-      // empty source that was not required, and the image went out without one though its asset had authors by then.
+      // The detail empties the page store when it opens, and the dialog lost its pick with it.
+      // It showed an empty source that was not required, and the image
+      // was saved without one though the asset had authors by then.
       describe('once the detail "edit asset" of that dialog opened has closed', () => {
         const mountDetailForm = async () => {
           const Form = defineComponent({
@@ -1669,20 +1611,17 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
 
         it('are offered no more when the asset has authors by then: the image takes their names as its source, which is required', async () => {
           const widget = await authorsSavedInDetail(['author-9', 'author-8'])
-          // Until the detail closes the dialog is as it was.
           expect(offered(widget)).toEqual([])
 
           await closeDetail(widget)
           await vi.waitFor(() => expect(offered(widget)).toBeNull())
           await flushPromises()
 
-          // The asset is read once more, by its id, and the names of its authors once.
           expect(detail().dialog).toBeNull()
           expect(readsOf('asset-9')).toHaveLength(2)
           expect(namesAskedOf('author-9,author-8')).toEqual([extSystem])
           expect(texts()).toEqual(['of asset-9', 'Name of author-9, Name of author-8'])
           expect(shownAlerts()).toEqual([])
-          // The source is the image's own from here on, required as any.
           await typeSource('')
           confirmButton().click()
           await flushPromises()
@@ -1691,14 +1630,12 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
 
           await typeSource('Name of author-9')
           await confirmImage(widget)
-          // Only the save of the detail has written into the asset.
           expect(authorsWritten()).toEqual([[['asset-9', ['author-9', 'author-8']]]])
           expect(imagesWritten()).toMatchObject([
             ['createImage', { texts: { source: 'Name of author-9' }, dam: { damId: 'file-of-asset-9' } }],
           ])
         })
 
-        // What the user picked in the dialog before the detail was for an asset without authors.
         it('give way to the authors of the detail: those picked in the dialog before are written nowhere', async () => {
           const widget = await pickedWithoutAuthors()
           damKeepsAuthors()
@@ -1715,7 +1652,6 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
           expect(imagesWritten()).toMatchObject([['createImage', { texts: { source: 'Name of author-9' } }]])
         })
 
-        // The detail saved something else, or nothing: the asset has no authors, and the dialog goes on offering them.
         it('are offered on while the asset has none, with those picked before, which "confirm" saves into it', async () => {
           const widget = await pickedWithoutAuthors()
           damKeepsAuthors()
@@ -1735,14 +1671,13 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
           expect(imagesWritten()).toMatchObject([['createImage', { texts: { source: 'Name of author-7' } }]])
         })
 
-        // The form of the detail is not locked while its save runs, and the detail can be closed before the DAM answers
-        // it: read at once, the asset would be as it was before that save.
+        // The detail form is not locked while its save runs, so the detail can close before the DAM answers.
+        // Reading the asset at once would return its state from before that save.
         it('are read once the DAM has answered a save of the detail that is on its way when it closes', async () => {
           const widget = await pickedWithoutAuthors()
           await editAsset('asset-9')
           await mountDetailForm()
           const saves = dam.hold('PATCH', dam.routes.bulkMetadata)
-          // An author is picked in the detail, "save" is pressed, and the detail closed at once.
           detail().asset!.authors = ['author-9']
           document.body.querySelector<HTMLButtonElement>('[data-cy="button-save"]')!.click()
           await vi.waitFor(() => expect(saves.waiting).toHaveLength(1))
@@ -1762,8 +1697,8 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
           expect(texts()).toEqual(['of asset-9', 'Name of author-9'])
         })
 
-        // The licence of an asset need not be the one the widget uploads into: the names are those of the ext system
-        // of the licence the asset is in, whatever ext system the page asks for names under by then.
+        // The licence of an asset need not be the upload licence.
+        // Names come from the ext system of the asset's licence, whatever ext system the page asks under by then.
         it('are named under the ext system of the licence of the asset', async () => {
           inTheDam('asset-9', [], OTHER)
           const widget = await mountWidget()
@@ -1782,8 +1717,9 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
           expect(texts()).toEqual(['of asset-9', 'Name of author-9'])
         })
 
-        // What the widget holds may be stale by then: the dialog shows the source in place of the pick, till it shows
-        // the image anew. It kept offering the pick.
+        // The asset the widget holds may be stale by then.
+        // The dialog shows the source in place of the pick until it
+        // shows the image anew. It used to keep offering the pick.
         it.each<[string, () => unknown]>([
           [
             'the asset cannot be read',
@@ -1816,8 +1752,9 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
           expect(shownAlerts()).toEqual([['error', alertText('common.alert.unknownError')]])
         })
 
-        // The read takes a moment, and the dialog offers its pick until it lands: a "confirm" in that moment waits for
-        // it, or it would write what is picked in the dialog over the authors of the detail.
+        // The read takes a moment and the dialog offers its pick until it lands.
+        // A "confirm" in that moment waits for the read. Otherwise it
+        // would write the dialog's pick over the authors of the detail.
         it('hold "confirm" until the asset is read: the image is saved with the source that read gave it', async () => {
           const widget = await pickedWithoutAuthors()
           damKeepsAuthors()
@@ -1846,7 +1783,6 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
           expect(widget.emitted('afterMetadataSaveSuccess')).toHaveLength(1)
         })
 
-        // The DAM names none of the authors: the source the read gave the image is empty, and the form asks for it.
         it('hold "confirm" until the asset is read: the form then asks for a source that read left empty', async () => {
           const widget = await authorsSavedInDetail(['author-9'])
           dam.reply((request) =>
@@ -1873,11 +1809,6 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
           expect(imagesWritten()).toEqual([])
         })
 
-        /**
-         * An image saved without an author, whose dialog offers the authors again; authors saved in the detail of its
-         * asset, the detail closed and "confirm" pressed while the asset is read again, so it waits. Then the dialog is
-         * closed, and opened again for the same image before the read answers. Returns the widget and the held read.
-         */
         const confirmWaitedAndDialogOpenedAgain = async () => {
           const widget = await pickedWithoutAuthors()
           await confirmImage(widget)
@@ -1897,11 +1828,11 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
           return { widget, held }
         }
 
-        // The dialog can be closed while its confirm waits. The wait was not the dialog's: it ended in whatever dialog
-        // was open by then, and the one opened again was confirmed, and its image saved, without a press.
+        // The dialog can close while its confirm waits.
+        // The wait belonged to no dialog: it ended in whichever dialog was open by then.
+        // A dialog opened again was confirmed and its image saved without a press.
         it('drop a "confirm" that waits when the dialog closes: opened again before the asset is read, it is not confirmed without a press', async () => {
           const { widget, held } = await confirmWaitedAndDialogOpenedAgain()
-          // The confirm that waited went with the dialog it was pressed in.
           expect(confirmButton().classList.contains('v-btn--loading')).toBe(false)
 
           // The dialog opened again loads till the read of the detail, still on its way, has answered.
@@ -1916,7 +1847,6 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
           expect(imageDialog()).toBeDefined()
           expect(imagesWritten()).toHaveLength(1)
           expect(widget.emitted('afterMetadataSaveSuccess')).toHaveLength(1)
-          // The read was for this image and its asset, whichever opening of the dialog shows it: it has its source.
           expect(texts()).toEqual(['of asset-9', 'Name of author-9'])
 
           await confirmImage(widget)
@@ -1924,8 +1854,6 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
           expect(authorsWritten()).toEqual([[['asset-9', ['author-9']]]])
         })
 
-        // The dialog opened again loads till the read of the detail has answered: a press is taken only once it shows
-        // the image.
         it('take a "confirm" pressed anew in the dialog opened again once it has read the asset anew: the image is saved once', async () => {
           const { widget, held } = await confirmWaitedAndDialogOpenedAgain()
 
@@ -1949,8 +1877,8 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
           expect(authorsWritten()).toEqual([[['asset-9', ['author-9']]]])
         })
 
-        // With `expandMetadata` the form is in the page and never closes: its host confirms it, and a pick made while
-        // that confirm waits puts the image of another asset into it.
+        // With `expandMetadata` the form is in the page and never closes. Its host confirms it.
+        // A pick made while that confirm waits puts the image of another asset into the form.
         it('drop a "confirm" of the host that waits when another asset is picked into the form drawn in the page', async () => {
           inTheDam('asset-9')
           inTheDam('asset-10')
@@ -1993,8 +1921,6 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
           })
         })
 
-        // The save of the dialog runs: its write of the authors is on its way. "Edit asset" is pressed meanwhile, the
-        // detail closed, and "confirm" pressed again while the asset is read once more: no second save comes of it.
         it('take no second "confirm" while a save of the dialog runs and the asset is read again', async () => {
           const widget = await pickedWithoutAuthors()
           await pickAuthors(widget, ['author-7'])
@@ -2020,10 +1946,10 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
           expect(shownAlerts().filter(([colour]) => colour === 'error')).toEqual([])
         })
 
-        // The image was saved without an author, and its dialog offers them again. Closed before the read answers,
-        // the dialog is given nothing, and neither is the image the widget has. The widget holds the asset on: opened
-        // again, the dialog reads it anew and gives the empty source their names. It dropped the asset, and the source
-        // was typed by hand.
+        // The image was saved without an author and its dialog offers them again.
+        // Closed before the read answers, neither the dialog nor the widget's image gets anything.
+        // The widget keeps the asset, so a reopened dialog reads it anew and fills the empty source with the names.
+        // It used to drop the asset, and the source was typed by hand.
         it('are written nowhere when the dialog of the image was closed before the asset is read, and named in the source once it is opened again', async () => {
           const widget = await pickedWithoutAuthors()
           await confirmImage(widget)
@@ -2051,7 +1977,6 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
           expect(imagesWritten()).toHaveLength(1)
         })
 
-        // The dialog shows the image the widget has, of another file, by the time the read answers.
         it('are written nowhere when the dialog shows the image the widget has by the time the asset is read', async () => {
           const widget = await pickedWithoutAuthors('asset-9', 7)
           damKeepsAuthors()
@@ -2072,8 +1997,9 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
           expect(shownAlerts()).toEqual([])
         })
 
-        // The widget still holds the asset of a pick that was closed without a save, and "edit asset" is pressed in
-        // the dialog of the image it has: that dialog offers no authors, so nothing is read when its detail closes.
+        // The widget still holds the asset of a pick closed without a save.
+        // "Edit asset" in the dialog of the widget's own image offers
+        // no authors, so nothing is read when its detail closes.
         it('are not read after "edit asset" of the image the widget has, whose dialog shows its source', async () => {
           inTheDam('asset-9')
           inTheDam('asset-7')
@@ -2097,7 +2023,6 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
           expect(texts()).toEqual(['image 7', 'source 7'])
         })
 
-        // Another asset is picked before the read answers: the dialog shows its image, which is not the one read for.
         it('are written nowhere when the dialog shows the image of another pick by the time the asset is read', async () => {
           const widget = await authorsSavedInDetail(['author-9'])
           inTheDam('asset-10')
@@ -2145,9 +2070,9 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
           }
         )
 
-        // The form in the page (`expandMetadata`) keeps the pick when the widget turns read-only: the names of the
-        // authors the detail gave the asset do not go into it. (A dialog closes as its cancel does, and its image
-        // goes with it.)
+        // The form in the page (`expandMetadata`) keeps the pick when the widget turns read-only.
+        // The names of the authors the detail gave the asset are not put into it.
+        // A dialog closes like its cancel, and its image goes with it.
         it('are written nowhere when the widget has turned read-only by the time the asset is read', async () => {
           inTheDam('asset-9')
           const widget = await mountWidget(null, QUEUE, { expandMetadata: true })
@@ -2182,8 +2107,8 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
           expect(shownAlerts()).toEqual([])
         })
 
-        // Nothing was saved in a detail that showed no asset. The dialog keeps the pick of the asset the widget holds:
-        // it used to lose it as the detail opened.
+        // Nothing was saved in a detail that showed no asset.
+        // The dialog keeps the pick of the held asset. It used to lose it when the detail opened.
         it('are offered as before after a detail closed from its loader: nothing is read', async () => {
           const widget = await pickedWithoutAuthors()
           await pickAuthors(widget, ['author-7'])
@@ -2222,13 +2147,12 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
       })
     }
 
-    // "Confirm" of the dialog, pressed again while the save the first press began is on its way. The button of the
-    // dialog spins but still takes Enter, and the button of a host that draws the form in its own dialog (the embed
-    // dialogs of the two applications, through `metadataConfirm`) is not disabled while the image is saved: every
-    // press went on to save, a new image was created twice, and the host put it into its text twice.
+    // "Confirm" pressed again while the first save is still running.
+    // The dialog button spins but still takes Enter. The button of a host
+    // (embed dialogs, through `metadataConfirm`) is not disabled during save.
+    // Every press saved: a new image was created twice and the host inserted it into its text twice.
     describe('whose "confirm" is pressed again while the image is being saved', () => {
       const SOURCE = isCms ? ['author-3'] : []
-      /** An asset picked into the dialog, which shows its source: its save writes nothing into the DAM. */
       const pickedWithSource = async (image: number | null = null) => {
         inTheDam('asset-9', SOURCE)
         if (!isNull(image)) imageApi.has(stored(image))
@@ -2237,7 +2161,6 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
         expect(offered(widget)).toBeNull()
         return widget
       }
-      /** As a host confirms the form: by the method the widget exposes. */
       const confirmAsHost = (widget: VueWrapper) =>
         (widget.vm as unknown as { metadataConfirm: () => void }).metadataConfirm()
       const spins = () => confirmButton().classList.contains('v-btn--loading')
@@ -2252,7 +2175,6 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
         confirmButton().click()
         await vi.waitFor(() => expect(saves.waiting).toHaveLength(1))
         expect(spins()).toBe(true)
-        // By the button of the dialog, and as a host does.
         confirmButton().click()
         confirmAsHost(widget)
         await waits.settle()
@@ -2268,7 +2190,6 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
         expect(shownAlerts().filter(([colour]) => colour === 'error')).toEqual([])
       })
 
-      // The form is in the page of the host and never closes: two presses of its button are two calls in a row.
       it('saves once for a host that confirms the form drawn in its page twice', async () => {
         inTheDam('asset-9', SOURCE)
         const widget = await mountWidget(null, QUEUE, { expandMetadata: true })
@@ -2316,8 +2237,8 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
       })
 
       if (isCms) {
-        // The save begins with the authors picked in the dialog: a second press asked for their names and wrote them
-        // into the asset a second time, and saved a second image after them.
+        // The save starts with the authors picked in the dialog.
+        // A second press asked for their names again, wrote them into the asset a second time and saved a second image.
         it('writes the authors picked in the dialog into their asset once, and saves one image', async () => {
           const widget = await pickedWithoutAuthors()
           await pickAuthors(widget, ['author-7'])
@@ -2348,9 +2269,10 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
           },
         }
 
-        // The dialog closed while the names of the picked authors are read, and not opened again: the user has left it,
-        // and nothing more comes of its confirm. The names used to be written into the image right after their read,
-        // which ended the confirm there; kept aside, they let it go on, and the authors were written into the asset.
+        // The dialog closes while the names of the picked authors
+        // are read, and is not opened again: the confirm must end.
+        // The names used to be written into the image right after their read, which ended the confirm there.
+        // Kept aside, they let it go on, and the authors were written into the asset.
         it('ends when its dialog was closed while the names of the picked authors were read: nothing is written or said, and the next "confirm" is taken', async () => {
           const widget = await pickedWithoutAuthors('asset-9', 7)
           await pickAuthors(widget, ['author-7'])
@@ -2377,9 +2299,10 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
           expect(authorsWritten()).toEqual([])
         })
 
-        // A confirm is for the image it was pressed on. The dialog can be closed while the names of the picked authors
-        // are read or the authors written, and opened again for the image the widget has: the confirm ends there. It
-        // went on with the image the dialog showed by then, which was saved without a press, and its dialog closed.
+        // A confirm belongs to the image it was pressed on.
+        // The dialog can close while names are read or authors written, then
+        // open again for the widget's image. The confirm must end there.
+        // It used to go on with the image the dialog showed by then, saving it without a press and closing the dialog.
         it.each<[string, boolean]>([
           ['the names of the authors of another are read', true],
           ['the DAM has taken the authors of another', false],
@@ -2403,7 +2326,6 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
             await damNamesAsked()
             await waits.settle()
 
-            // The authors are sent only by a confirm whose dialog still showed its image once their names were read.
             expect(authorsWritten()).toEqual(atTheNames ? [] : [[['asset-9', ['author-7']]]])
             expect(imagesWritten()).toEqual([])
             expect(widget.emitted('afterMetadataSaveSuccess')).toBeUndefined()
@@ -2411,7 +2333,6 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
             expect(offered(widget)).toBeNull()
             expect(shownAlerts()).toEqual([])
 
-            // The dialog that is open takes a confirm of its own.
             await confirmImage(widget)
             expect(imagesWritten()).toMatchObject([
               ['updateImage', 7, { texts: { description: 'image 7', source: 'source 7' }, dam: { damId: 'file-7' } }],
@@ -2423,8 +2344,9 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
       }
     })
 
-    // That text is the user's, whatever authors the asset gets. admin-ugc has no authors of the DAM, so its dialog
-    // always shows the source; in admin-cms the dialog of an asset picked with its authors does.
+    // That text is the user's, whatever authors the asset gets.
+    // admin-ugc has no DAM authors, so its dialog always shows the source.
+    // In admin-cms a dialog for an asset picked with authors does too.
     it('are not read after "edit asset" of a dialog that shows the source of its image, which stays as it is', async () => {
       inTheDam('asset-9', isCms ? ['author-3'] : [])
       const widget = await mountWidget()

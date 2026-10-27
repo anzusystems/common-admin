@@ -20,12 +20,12 @@ import AImageWidget from '@/domains/dam/imageWidget/components/AImageWidget.vue'
 import ImageWidgetInner from '@/domains/dam/imageWidget/components/ImageWidgetInner.vue'
 import { DamAssetType, type DamAssetTypeType } from '@/domains/dam/types/Asset'
 
-// The custom fields of an ext system are read by four requests, one for each type of asset. When some of them failed
-// beside one that brought fields, the types that answered were written and the types that failed kept the `[]` the
-// store starts them with: the configuration counted as loaded, nothing asked for those types again, and the form of
-// such a type was drawn without its fields until the page was loaded anew. A type whose read failed is not loaded now,
-// and what needs it reads it again, it alone. The real loader, widget and picker; the DAM is a client that records
-// its requests, and only the long waits are taken out of real time.
+// The custom fields of an ext system are read by four requests, one per asset type.
+// When some failed beside one that brought fields, the failed types kept the initial `[]` and the configuration counted
+// as loaded. Nothing requested those types again, and their forms were drawn without fields until a page reload.
+// Now a type whose read failed is not loaded, and whatever needs it reads that type again, alone.
+// The test uses the real loader, widget and picker. The DAM is a client that
+// records requests, and only the long waits are taken out of real time.
 
 const { endPoints, extSystem, licence } = cmsConfiguration
 const CUSTOM_FORM = /^\/adm\/v1\/asset-custom-form\/ext-system\/(\d+)\/type\/(\w+)\/element\?/
@@ -53,7 +53,6 @@ let pinia: Pinia
 let dam: FakeDam
 let waits: LongWaits
 let wrapper: VueWrapper | undefined
-/** How the DAM answers the read of the custom fields of each type of asset, as it is when the read comes. */
 let answers: Record<DamAssetTypeType, { status: number; data?: unknown }>
 
 beforeEach(() => {
@@ -61,14 +60,12 @@ beforeEach(() => {
   setActivePinia(pinia)
   dam = createFakeDam(endPoints)
   installConsumerProfile(cmsConfiguration, dam.client)
-  // Nobody has read the custom fields of the ext system yet.
   useDamConfigStore(pinia).damConfigAssetCustomFormElements.delete(extSystem)
   answers = { image: withFields('title'), audio: withFields('album'), video: withoutFields, document: withoutFields }
   dam.reply((request) => {
     const read = request.method === 'GET' ? request.url.match(CUSTOM_FORM) : null
     return read ? answers[read[2] as DamAssetTypeType] : undefined
   })
-  // The lists of the picker, with no asset.
   dam.reply((request) =>
     request.method === 'GET' && request.url.startsWith(`${endPoints.asset}/licence/${licence}/search?`)
       ? { status: 200, data: { data: [], totalCount: 0 } }
@@ -89,13 +86,11 @@ afterEach(() => {
 })
 
 const state = () => useDamConfigState(dam.client)
-/** The types of asset whose custom fields were read since the request `from`, in order. */
 const formReads = (from = 0) =>
   dam.requests
     .slice(from)
     .map((request) => request.url.match(CUSTOM_FORM)?.[2])
     .filter((type) => type !== undefined)
-/** The fields of a type as the store gives them to what reads that type: `undefined` while they are not loaded. */
 const fieldsOf = (type: DamAssetTypeType) =>
   state()
     .getDamConfigAssetCustomFormElements(extSystem, type)
@@ -112,7 +107,7 @@ describe('the custom fields of a type whose read failed beside a read that broug
       ['album'],
       [],
     ])
-    // As the store has always held them, for what reads it without a type.
+    // Callers that read the store without a type still get `[]`, as before.
     expect(state().getDamConfigAssetCustomFormElements(extSystem)?.image).toEqual([])
   })
 
@@ -147,7 +142,8 @@ describe('the custom fields of a type whose read failed beside a read that broug
     expect([fieldsOf(DamAssetType.Image), fieldsOf(DamAssetType.Audio)]).toEqual([undefined, ['album']])
   })
 
-  // Two widgets of a page read at once: the read that failed, answering last, marked the type the other had loaded.
+  // Two widgets on a page read at once. The read that failed answered
+  // last and marked the type the other read had loaded as not loaded.
   it('stay loaded when another read loaded them meanwhile and a read of them that failed answers last', async () => {
     const images = dam.hold('GET', /\/type\/image\/element\?/)
     const first = state().loadDamConfigAssetCustomFormElements(extSystem)
@@ -180,7 +176,7 @@ describe('the image widget over an ext system whose custom fields are read as it
   const drawn = () => wrapper!.findComponent(ImageWidgetInner).exists()
   const saysItFailed = () => wrapper!.text().includes(damText('error.loadingConfig'))
 
-  // Drawn, its upload offered the form of an image without its fields.
+  // Before the fix, the upload offered the image form without its fields.
   it('says its configuration failed when the image type failed; mounted again, it reads that type alone and is drawn', async () => {
     answers.image = failed
 
@@ -212,7 +208,6 @@ describe('the image widget over an ext system whose custom fields are read as it
 })
 
 describe('an asset picker over an ext system whose audio type failed beside the image type', () => {
-  /** The picker over the licence, opened; nothing of its audio type has been read again by then. */
   const openPicker = async (component: Component, props: Record<string, unknown>) => {
     answers.audio = failed
     await state().loadDamConfigAssetCustomFormElements(extSystem)
@@ -248,7 +243,7 @@ describe('an asset picker over an ext system whose audio type failed beside the 
     expect([fieldsOf(DamAssetType.Audio), saysItFailed(), formReads(from)]).toEqual([['album'], false, ['audio']])
   })
 
-  // It used to look at the custom fields only as its ext system was set.
+  // The widget used to look at the custom fields only when its ext system was set, not when its list type changed.
   it('of the image and media widget reads them alone once its list is switched to audio', async () => {
     const from = await openPicker(AAssetSelectMedia, {})
     expect(formReads(from)).toEqual([])
@@ -261,9 +256,9 @@ describe('an asset picker over an ext system whose audio type failed beside the 
   })
 })
 
-// admin-dam reads the custom fields once, as it starts, and draws these forms with nothing in front that reads a type
-// again. Thrown for a type not loaded, a form took with it what its host draws into it or beside it: the keywords, the
-// authors and the switches of the panel of the metadata.
+// admin-dam reads the custom fields once at start and draws these forms with nothing in front that reads a type again.
+// When the form threw for a type that was not loaded, it also took down what its host
+// draws into or beside it: keywords, authors and the switches of the metadata panel.
 describe('the forms of the custom fields of a type whose read failed beside a read that brought fields', () => {
   let thrown: unknown[]
   beforeEach(async () => {

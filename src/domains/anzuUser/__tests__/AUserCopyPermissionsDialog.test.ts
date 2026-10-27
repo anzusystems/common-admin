@@ -4,9 +4,6 @@ import { defineComponent, h, ref } from 'vue'
 import AUserCopyPermissionsDialog from '@/domains/anzuUser/components/AUserCopyPermissionsDialog.vue'
 import type { AnzuUser } from '@/shared/types/AnzuUser'
 
-// A wizard holds a system's permissions on their own, without the rest of an account, and copies them from
-// another user of that system.
-
 describe('AUserCopyPermissionsDialog', () => {
   it('copies roles, groups and grants into a model that holds only those', async () => {
     const permissions = ref({ roles: ['ROLE_OLD'], permissionGroups: [1], permissions: {} })

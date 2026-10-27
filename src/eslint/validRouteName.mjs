@@ -1,15 +1,14 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-// Route names checked against the admin's generated `src/typed-router.d.ts`: a literal `name`, `route`
-// or `*RouteName` value that starts with `/` has to be one of its routes. The admins had this rule
-// each in its own copy; the path comes from `settings.anzu.typedRouter` (set by
-// `defineAnzuAdminConfig`, absolute) and falls back to the one under the cwd.
+// Checks route names against the admin's generated `src/typed-router.d.ts`. A literal
+// `name`, `route` or `*RouteName` value starting with `/` must be one of its routes.
+// The path comes from `settings.anzu.typedRouter` (absolute, set by
+// `defineAnzuAdminConfig`) and falls back to the one under the cwd.
 
 const loaded = new Map()
-// The declaration is generated and gitignored, so a fresh clone has none until `generate:dts` ran.
-// Staying quiet then would make the rule a no-op exactly when nobody expects it, so the first file of
-// the run says so instead. Once per run and file, not once per linted file.
+// The declaration is generated and gitignored, so a fresh clone lacks it until `generate:dts` runs.
+// Staying silent would make the rule a silent no-op, so it reports once per run and file, not per linted file.
 const reportedMissing = new Set()
 
 function loadRoutes(file) {

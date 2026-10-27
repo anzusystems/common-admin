@@ -32,7 +32,9 @@ const props = withDefaults(
     assetMainFileStatus?: AssetFileProcessStatusType | undefined
     assetMainFileFailReason?: AssetFileFailReasonType | undefined
     configName?: string
-    /** Which of the two buttons of the metadata saves, while it does. */
+    /**
+     * Which of the two metadata save buttons is saving.
+     */
     saving?: 'save' | 'saveAndApply' | null
   }>(),
   {
@@ -53,9 +55,10 @@ const damConfigName = useDamConfigName(props.configName)
 const { simpleAssetSidebarEnabled } = useCommonAdminCoreDamOptions(damConfigName)
 const simpleMode = computed(() => simpleAssetSidebarEnabled && props.isImage && props.enableRoiTab)
 
-// What the item still waits for from the server: its file to be processed, or, uploaded, its metadata. Until
-// then its form stays disabled, and both saves with it. Each wait is counted from its start, as the row of the
-// queue counts it. Here, not in the metadata tab: the wait goes on while the other tab is open.
+// What the item still waits for from the server: file processing, or
+// metadata once uploaded. Until then the form and both saves are disabled.
+// Each wait counts from its start, as in the queue row.
+// Kept here, not in the metadata tab, because the wait continues while the other tab is open.
 const uploadQueuesStore = useUploadQueuesStore()
 const item = computed(() => uploadQueuesStore.getQueueItems(props.queueKey)[0] ?? null)
 const waitsFor = computed(() => {
@@ -76,8 +79,8 @@ watch(
   { immediate: true }
 )
 onUnmounted(() => clearTimeout(refreshTimer))
-// A failed item offers refresh, as the row of the queue does, while one may still change it: the store says so, and
-// the item has its asset.
+// A failed item offers refresh, like the queue row, only while a refresh
+// can still change it: the store says so and the item has its asset.
 const showRefresh = computed(() => {
   if (item.value?.status === UploadQueueItemStatus.Failed) {
     return uploadQueuesStore.refreshMayHelp(item.value) && !isNull(item.value.assetId)

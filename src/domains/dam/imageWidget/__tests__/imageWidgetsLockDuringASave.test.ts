@@ -7,14 +7,15 @@ import { useImageMediaWidgetStore } from '@/domains/dam/imageWidget/store/imageM
 import { ImageWidgetUploadConfigKey } from '@/domains/dam/imageWidget/utils/imageWidgetInkectionKeys'
 import { useUploadQueueDialog } from '@/domains/dam/uploadQueue/composables/useUploadQueueDialog'
 
-// The lock of the field of the two widgets of one image in an article open by two editors, while the save of a
-// "confirm" of the image dialog is on its way. Closed before the save answered, the dialog gave the lock back with the
-// image the field had before, and the release of the answer, as for a lock already given back, never sent the saved
-// image to the other editor. The lock is the confirm's till it is over: given back with the saved image once the save
-// answers, with what the field had when it fails. A menu or picker of the widget opened meanwhile keeps it, and the
-// saved image is sent to the room without it. A widget taken away while its confirm runs gives it back all the
-// same. The dialog of the image and the collaboration are stand-ins; the save of the image answers when the case
-// lets it.
+// Covers the field lock of the two widgets of one image in an
+// article open by two editors, while a "confirm" save is on its way.
+// Guards a regression: a dialog closed before the save answered gave the lock back with the old image, and
+// the release at the answer was treated as already done, so the saved image never reached the other editor.
+// The lock now belongs to the confirm until it ends: released with the
+// saved image on answer, or with the field's previous value on failure.
+// A menu or picker opened meanwhile keeps the lock, and the saved image is sent without releasing it.
+// A widget taken away during its confirm still releases the lock.
+// The image dialog and the collaboration are stand-ins.
 
 const released = vi.fn()
 const acquired = vi.fn()
@@ -34,7 +35,6 @@ vi.mock('@/domains/collab/composables/collabField', () => ({
   }),
 }))
 vi.mock('@/domains/dam/imageWidget/composables/commonAdminImageOptions', () => {
-  // An image is saved under the next id (a new one under 8), once the case lets the save answer.
   const held = (id: number | undefined, data: object) =>
     new Promise((resolve, reject) =>
       saves.waiting.push({
@@ -71,7 +71,6 @@ const image = {
   dam: { damId: 'file-7', licenceId: 1, regionPosition: 0, internal: false },
   position: 1,
 }
-/** The image of a pick or an upload for a widget without an image: it has no id yet. */
 const picked = {
   texts: { description: 'picked', source: 'Agency' },
   flags: image.flags,
@@ -91,10 +90,8 @@ describe.each<[string, Component]>([
   ['ImageMediaWidgetInner', ImageMediaWidgetInner],
 ])('the lock of the field of %s in a room with other editors', (_name, component) => {
   const isImageWidget = component === ImageWidgetInner
-  /** What the field is given back with, as each widget sends it: the image id, or the image and the media. */
   const valueOf = (id: number | null) => (isImageWidget ? id : { image: id, media: null })
 
-  /** The widget of a field of the article: of an image, or of none. */
   const mountWidget = async (field: string, imageId: number | null = 7) => {
     const model = ref<number | null>(imageId)
     const Parent = defineComponent({
@@ -144,12 +141,11 @@ describe.each<[string, Component]>([
     })
     mounted.push(wrapper)
     await flushPromises()
-    // Found anew each time: once another widget is mounted with stand-ins of its own, this one draws its dialog anew
-    // with those.
+    // Found anew each time: once another widget is mounted with its
+    // own stand-ins, this one draws its dialog anew with those.
     return { wrapper, model, dialog: () => wrapper.findComponent({ name: 'ImageDetailDialogMetadata' }) }
   }
   type Dialog = Awaited<ReturnType<typeof mountWidget>>['dialog']
-  /** The dialog of the widget is opened for an image, as "edit metadata", a pick or an upload opens it. */
   const openFor = async (dialog: Dialog, shown: object) => {
     useImageMediaWidgetStore().setDetail(structuredClone(shown) as never)
     dialog().vm.$emit('update:modelValue', true)
@@ -159,7 +155,6 @@ describe.each<[string, Component]>([
     dialog().vm.$emit('close')
     await flushPromises()
   }
-  /** "Confirm" is pressed, and the save of the image is on its way. */
   const confirm = async (dialog: Dialog) => {
     dialog().vm.$emit('confirm')
     await flushPromises()
@@ -171,9 +166,7 @@ describe.each<[string, Component]>([
     await flushPromises()
   }
   const givenBack = () => released.mock.calls
-  /** What was sent to the room as the value of the field, the lock kept. */
   const sent = () => changed.mock.calls
-  /** The menu of the widget is opened and closed again, as by its button and a click beside it. */
   const menuOpenedAndClosed = async (wrapper: VueWrapper) => {
     const menu = wrapper.findComponent({ name: 'VMenu' })
     menu.vm.$emit('update:modelValue', true)
@@ -181,7 +174,6 @@ describe.each<[string, Component]>([
     menu.vm.$emit('update:modelValue', false)
     await flushPromises()
   }
-  /** Each case starts from a widget whose dialog is open over its image, with the lock taken for it. */
   const confirmedAndClosed = async () => {
     released.mockClear()
     acquired.mockClear()
@@ -205,8 +197,8 @@ describe.each<[string, Component]>([
     expect(sent()).toEqual([])
   })
 
-  // The answer gave the lock back while they were open: a pick confirmed in the picker then changed the field, and
-  // the other editor was not told.
+  // Guards a regression: the answer gave the lock back while the menu or picker was open.
+  // A pick confirmed in the picker then changed the field, and the other editor was not told.
   it.each<[string, (wrapper: VueWrapper) => VueWrapper]>([
     [
       'the library picker',
@@ -232,9 +224,11 @@ describe.each<[string, Component]>([
     }
   )
 
-  // Taken away, as by the pin of a sidebar widget that draws a copy of it elsewhere, the widget writes nothing of
-  // the answer: the field keeps what it had, and the copy shows that. Its lock is a message to the room, not a write
-  // into the page: it was never given back, and the field stayed locked for the other editor.
+  // A widget taken away (for example by the pin of a sidebar widget
+  // that draws a copy elsewhere) writes nothing of the answer.
+  // The field keeps its value and the copy shows it.
+  // The lock is a message to the room, not a write into the page.
+  // Guards a regression: it was never given back, and the field stayed locked for the other editor.
   it.each<['answer' | 'fail']>([['answer'], ['fail']])(
     'is given back by a widget taken away while its confirm runs, once the save is over (%s), with what its field has',
     async (how) => {
@@ -250,9 +244,10 @@ describe.each<[string, Component]>([
     }
   )
 
-  // A copy of the widget drawn in its place takes the lock of the same field for a dialog of its own while the save
-  // of the widget taken away is on its way. The server takes the two as one editor's: the late release of the widget
-  // taken away freed the lock the copy held, and the other editor could change the field under its open dialog.
+  // Guards a regression: a copy drawn in place of the widget takes the lock of the
+  // same field for its own dialog while the save of the removed widget is running.
+  // The server treats both as one editor, so the late release by the removed widget freed the copy's lock.
+  // The other editor could then change the field under the copy's open dialog.
   it('is left by a widget taken away to the widget drawn in its place, once that one has taken the lock of the field', async () => {
     const { wrapper } = await confirmedAndClosed()
     mounted.splice(mounted.indexOf(wrapper), 1)
@@ -268,9 +263,11 @@ describe.each<[string, Component]>([
     expect(givenBack()).toEqual([['listingImage', valueOf(7)]])
   })
 
-  // The dialog of another pick or upload sets what the field ends with, also under the id saved here when this was a
-  // create (the image of that dialog takes it). Sent at the answer, that id reached the other editor, whose widget
-  // reads an image again only when the id changes: it went on showing this image after that dialog had saved its own.
+  // The dialog of another pick or upload sets the final field
+  // value, also under the id saved here when this was a create.
+  // Guards a regression: sent at the answer, that id reached the other
+  // editor, whose widget reads an image again only when the id changes.
+  // It kept showing this image after that dialog saved its own.
   it('sends nothing at the answer while the dialog of another pick of the widget is open: the field goes with its release', async () => {
     const { model, dialog } = await confirmedAndClosed()
     await openFor(dialog, { ...image, texts: { description: 'of another pick', source: 'Agency' } })
@@ -317,9 +314,9 @@ describe.each<[string, Component]>([
     expect(givenBack()).toEqual([['listingImage', valueOf(8)]])
   })
 
-  // The store of the image dialog is one for the page: by the time the save answers, what it shows is the image of
-  // the dialog of another widget, opened after this one was closed. That dialog is not this confirm's to keep open,
-  // to empty, or to give the created image to.
+  // The store of the image dialog is one for the page.
+  // When the save answers, it may show the image of another widget's dialog, opened after this one was closed.
+  // That dialog is not this confirm's to keep open, to empty, or to give the created image to.
   it('is given back with the created image when the dialog of another widget is open by then, which keeps its image', async () => {
     released.mockClear()
     const first = await mountWidget('listingImage', null)

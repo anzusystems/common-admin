@@ -10,11 +10,9 @@ import type { IntegerId } from '@/shared/types/common'
 import { isNull, isUndefined } from '@/shared/utils/common'
 
 /**
- * Created and modified -- when and by whom -- for a detail or an edit form.
- *
- * An admin does not use it directly but through its own component made by
- * `createUserAndTimeTrackingFields`, which supplies its user cache and the route to a user's detail.
- * Without `users` it draws the dates only, as it always has.
+ * Created and modified, when and by whom, for a detail or edit form.
+ * Admins use it through their own component from `createUserAndTimeTrackingFields`, which
+ * supplies the user cache and user detail route. Without `users` it draws only the dates.
  */
 const props = withDefaults(
   defineProps<{
@@ -42,7 +40,9 @@ const props = withDefaults(
 )
 
 defineSlots<{
-  /** The user part of a row, for an admin that draws its own chip. */
+  /**
+   * The user part of a row, for an admin that draws its own chip.
+   */
   user?: (props: { id: IntegerId | null; field: 'createdBy' | 'modifiedBy' }) => unknown
 }>()
 
@@ -51,8 +51,8 @@ const slots = useSlots()
 
 const hasDate = (value: string | null | undefined) => !isUndefined(value) && !isNull(value) && value !== ''
 
-// `undefined` is a field the backend does not send (no user tracking), so it is left out; `null` is
-// a field it sends empty, and the chip shows it as such.
+// `undefined` is a field the backend does not send (no user tracking),
+// so it is hidden. `null` is sent empty, and the chip shows it as empty.
 const userShown = (hidden: boolean, id: IntegerId | null | undefined) =>
   !hidden && !isUndefined(id) && (!!props.users || !!slots.user)
 
@@ -61,10 +61,9 @@ const modifiedAtShown = computed(() => !props.hideModifiedAt && hasDate(props.da
 const createdByShown = computed(() => userShown(props.hideCreatedBy, props.data.createdBy))
 const modifiedByShown = computed(() => userShown(props.hideModifiedBy, props.data.modifiedBy))
 
-// The rows ask for their users themselves: the detail and edit actions that load a record do not put
-// its users into the cache, and a save changes `modifiedBy`. Read off `props.data` on every run,
-// because a store replaces the record whole after a fetch or a save. `defineCached` debounces, so the
-// rows of one page share a request with every other chip on it.
+// The rows fetch their users themselves. Record loads do not fill the cache, and a save changes `modifiedBy`.
+// Reads `props.data` on every run because a store replaces the whole record after
+// a fetch or save. `defineCached` debounces, so chips on a page share one request.
 watch(
   [
     () => props.data.createdBy,

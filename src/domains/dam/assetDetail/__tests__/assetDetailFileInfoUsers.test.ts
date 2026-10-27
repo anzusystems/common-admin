@@ -33,13 +33,12 @@ import { useUploadQueueDialog } from '@/domains/dam/uploadQueue/composables/useU
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
 import type { DocId, IntegerId } from '@/shared/types/common'
 
-// The panel "file" of the detail of an asset shows who created the asset and who changed it last, by the chips of the
-// users of its configuration. A click into an asset picker put those two users into the cache for the asset clicked,
-// and nothing else did: the detail opened by "edit asset" of a widget, or of a row of the queue, for an asset not
-// clicked in a picker on the page showed two chips that spun for good. The real hosts with the real dialog of the
-// detail; the DAM and the backend of the images are clients that record their requests, and only the long waits are
-// taken out of real time. Not mounted for real: the sortable list around the rows of the gallery, the asset pickers,
-// the pictures, the editor of the region of interest, the dropzones and the inputs that ask the DAM for names to offer.
+// The "file" panel shows the creator and last modifier as user chips.
+// Only a click in an asset picker used to put those users into the cache.
+// So the detail opened by "edit asset" of a widget or a queue row, for
+// an asset not clicked in a picker, showed two chips that spun forever.
+// Real hosts and the real detail dialog are used. The DAM and image backend
+// are recording clients, and only the long waits are taken out of real time.
 
 const QUEUE = 'detail-users'
 const USERS = /^\/adm\/v1\/user\?/
@@ -87,7 +86,6 @@ const filePanel = () =>
       panel.querySelector('.v-expansion-panel-title')?.textContent?.trim() ===
       uiText('common.damImage.asset.detail.info.file')
   )
-/** The chips of the users of the panel "file": the name each shows beside its avatar, or "spins" while it waits. */
 const userChips = () =>
   Array.from(filePanel()?.querySelectorAll<HTMLElement>('.v-chip') ?? []).map((chip) => {
     if (chip.querySelector('.v-progress-circular')) return 'spins'
@@ -99,7 +97,6 @@ const usersAsked = () =>
     .filter((request) => USERS.test(request.url))
     .map((request) => decodeURIComponent(request.url).match(/filter_in\[id\]=([\d,]+)/)?.[1] ?? '')
 
-/** The DAM knows every user asked for: `User <id>`. */
 const answerUsers = () =>
   dam.reply((request) => {
     if (request.method !== 'GET' || !USERS.test(request.url)) return undefined
@@ -121,7 +118,6 @@ const setUp = (profile: ConsumerProfile) => {
   answerDamNames(dam)
   answerUsers()
   const escaped = profile.endPoints.asset.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-  // The search of the DAM for assets by their files, which the gallery asks before it reads the assets.
   const search = new RegExp(`^${escaped}/licence/(\\d+)/search\\?assetAndMainFileIds=([^&]*)`)
   dam.reply((request) => {
     const match = request.method === 'GET' ? request.url.match(search) : null
@@ -130,7 +126,6 @@ const setUp = (profile: ConsumerProfile) => {
     const found = [...dam.assets.values()].filter((asset) => asset.mainFile && files.includes(asset.mainFile.id))
     return { status: 200, data: { data: found, totalCount: found.length } }
   })
-  // The users the cache of the page has from before are not this case's.
   useDamCachedUsers('default').cachedUsers.value.clear()
   waits = holdLongWaits()
   forgetAlerts()
@@ -178,7 +173,6 @@ const mountPage = async (profile: ConsumerProfile, component: Component, props: 
   })
   await flushPromises()
 }
-/** An image the entity has, `file-12` of `asset-12`, created by the user `createdBy`, changed by `modifiedBy`. */
 const imageInTheDam = (profile: ConsumerProfile, createdBy: IntegerId, modifiedBy: IntegerId) => {
   const stored: ImageAware = {
     id: 12,
@@ -202,7 +196,6 @@ const imageDialog = () =>
   Array.from(document.body.querySelectorAll<HTMLElement>('.v-overlay--active .v-card')).find((one) =>
     one.textContent?.includes(damText('image.meta.edit'))
   )
-/** A widget of one image that has an image, with the dialog of that image open. */
 const mountWithImageDialog = async (profile: ConsumerProfile, component: Component, props: Record<string, unknown>) => {
   await mountPage(profile, component, { expandOptions: true, ...props })
   const editImage = () => page!.findAll('button').find((button) => button.text() === damText('image.meta.edit'))
@@ -216,7 +209,6 @@ const queueStatuses = () =>
   useUploadQueuesStore(pinia)
     .getQueueItems(QUEUE)
     .map((item) => item.status)
-/** The gallery of an entity without images, with a file uploaded through it and processed by the DAM as `asset-1`. */
 const mountGalleryWithUpload = async (createdBy: IntegerId, modifiedBy: IntegerId) => {
   await mountPage(cmsConfiguration, ImageWidgetMultipleInner, { modelValue: [], skipCurrentUserCheck: false })
   await damNamesAsked()
@@ -240,9 +232,7 @@ const mountGalleryWithUpload = async (createdBy: IntegerId, modifiedBy: IntegerI
 
 interface Host {
   name: string
-  /** The page when the user can press "edit asset", its asset created by `createdBy`, changed by `modifiedBy`. */
   mount: (createdBy: IntegerId, modifiedBy: IntegerId) => Promise<void>
-  /** The asset whose detail "edit asset" opens. */
   asset: DocId
   editAsset: () => HTMLButtonElement
 }
@@ -283,7 +273,6 @@ const hosts: Host[] = [
       )!,
   },
   {
-    // The row of the file uploaded through the gallery, whose detail the gallery draws.
     name: 'a row of the queue dialog',
     mount: mountGalleryWithUpload,
     asset: 'asset-1',
@@ -314,7 +303,7 @@ describe.each(hosts.map((host, index) => ({ ...host, createdBy: 31 + 2 * index, 
   }
 )
 
-// admin-ugc switches the panel off: the detail asks for no user.
+// admin-ugc switches the file panel off, so the detail asks for no user.
 describe('the detail opened by "edit asset" under the UGC configuration', () => {
   it('asks for no user: it shows no panel "file"', async () => {
     setUp(ugcConfiguration)

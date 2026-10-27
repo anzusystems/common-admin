@@ -15,11 +15,11 @@ import { AssetFileFailReason, AssetFileProcessStatus } from '@/domains/dam/types
 import { UploadQueueItemStatus } from '@/domains/dam/types/UploadQueue'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
 
-// The upload of one file as each of the two applications has it configured, from the picked file to the settled
-// row, when no notification comes: all admin-ugc has, and what admin-cms falls back on. Nothing of the library is
-// replaced: the requests go to a client that records them, the socket admin-cms opens at start-up is a stub that
-// stays silent, and only the long waits between two reads are taken out of real time. What the notifications do
-// to an upload is in `consumerProfileNotifications.test.ts`.
+// Upload of one file under each application's configuration, with no
+// notification: all admin-ugc has, and the fallback of admin-cms.
+// Requests go to a recording client and the admin-cms socket is a silent
+// stub. Only the long waits between reads are taken out of real time.
+// Notification behavior is in `consumerProfileNotifications.test.ts`.
 
 const QUEUE = 'profile-queue'
 
@@ -67,7 +67,6 @@ describe.each(consumerProfiles)('an upload under the $name', (profile) => {
     useDamNotificationsEventBus().reset()
   })
 
-  /** One file, sent whole: the row waits for the server to process it. */
   const uploadOne = async () => {
     const store = useUploadQueuesStore()
     await store.addByFiles(QUEUE, extSystem, licence, [photo()], 'default')
@@ -75,7 +74,6 @@ describe.each(consumerProfiles)('an upload under the $name', (profile) => {
     await vi.waitFor(() => expect(item.status).toBe(UploadQueueItemStatus.Processing))
     return { store, item }
   }
-  /** Time passes until the queue has asked for the asset once more. */
   const nextRead = async () => {
     const before = dam.assetReads().length
     await waits.elapse()
@@ -103,7 +101,6 @@ describe.each(consumerProfiles)('an upload under the $name', (profile) => {
     expect(form.get('chunk')).toBe('{"offset":0,"size":3000}')
     expect(chunk.config.timeout).toBe(420_000)
 
-    // The checksum of what was sent, not a made-up one.
     expect(dam.body(finish)).toEqual({ checksum: await sha1(bytes) })
 
     expect(dam.requests.filter((request) => request.url.startsWith(foreignPrefix))).toEqual([])
@@ -193,7 +190,6 @@ describe.each(consumerProfiles)('an upload under the $name', (profile) => {
       canEditMetadata: false,
       error: { hasError: true, message: '', assetFileFailReason: AssetFileFailReason.InvalidMimeType },
     })
-    // The queue counts as finished: nothing is left to wait for.
     expect(store.getQueueProcessedCount(QUEUE)).toBe(store.getQueueTotalCount(QUEUE))
     expect(outsideOwnPrefix()).toEqual([])
 

@@ -4,9 +4,8 @@ import { useValidate } from '@/shared/validators/vuelidate/useValidate'
 import type { PermissionGroup } from '@/domains/permission/group/types/PermissionGroup'
 
 /**
- * The same three rules all five admins carry today, verbatim. They are not derived from the
- * backend: `PermissionGroupDto` only requires a title, and the lengths here are the front-end's
- * own stricter profile.
+ * Not derived from the backend: `PermissionGroupDto` only requires a title.
+ * The lengths are a stricter front-end profile shared by all admins.
  */
 export function usePermissionGroupValidation(permissionGroup: Ref<PermissionGroup>) {
   const { maxLength, minLength, required } = useValidate()

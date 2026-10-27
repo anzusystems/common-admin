@@ -3,8 +3,9 @@ import { watch } from 'vue'
 import useVuelidate from '@vuelidate/core'
 import type { ValidationScope } from '@/shared/types/Validation'
 
-// The elements behind "show all", under a collector of their own: the form has to know whether what
-// fails is in here, to show it. The elements report to this collector, and it reports to the form.
+// The elements behind "show all" use their own validation collector,
+// so the form knows whether a failure is in here and can show it.
+// The elements report to this collector, and it reports to the form.
 const props = withDefaults(
   defineProps<{
     visible: boolean
@@ -22,8 +23,8 @@ const emit = defineEmits<{
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const v$ = useVuelidate({ $scope: props.validationScope })
 
-// Whether an element in here shows a message: after a save that touched them all, and also when the user
-// left one of them invalid (the collector as a whole is in error only once every element was touched).
+// Whether an element in here shows an error: after a save touched them all, or when the user left one invalid.
+// The collector as a whole is in error only once every element was touched.
 watch(
   () => v$.value.$errors.length > 0,
   (isError) => emit('error', isError)

@@ -7,7 +7,7 @@ import { DAM_END_POINT_CONFIGURATION, DAM_END_POINT_PUB_CONFIGURATION } from '@/
 
 const ENTITY = 'settings'
 
-// `endPoint`: the address of the configuration of DAM the caller goes by; the default one where it gives none.
+// `endPoint`: DAM configuration address. Defaults when not given.
 
 export const fetchPubConfiguration = (
   damClient: () => AxiosInstance,
@@ -36,10 +36,9 @@ export const fetchConfiguration = (damClient: () => AxiosInstance, endPoint: str
   return execute()
 }
 
-// The id goes through `urlParams` rather than into the string, because that is the shape the rest
-// of the migrated calls use. It does not bring the call under `anzu/url-params-match-template`:
-// that rule wants `urlTemplate` and `urlParams` in one object literal, and every call here passes
-// `urlParams` to `execute` instead, so the rule checks none of them either way.
+// The id goes through `urlParams` to match the other migrated calls.
+// `anzu/url-params-match-template` does not check these calls: it needs `urlTemplate`
+// and `urlParams` in one object literal, and here `urlParams` goes to `execute`.
 export const fetchExtSystemConfiguration = (
   extSystem: IntegerId,
   damClient: () => AxiosInstance,

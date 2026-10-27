@@ -5,9 +5,8 @@ import { DatatablePaginationKey, FilterConfigKey, FilterDataKey } from '@/domain
 import type { UserAdminConfig } from '@/domains/filters/bookmarks/types/UserAdminConfig'
 import { AnzuApiAxiosError } from '@/shared/error/AnzuApiAxiosError'
 
-// The filter-bookmark manage tab, which had no test at all while it carried a hand-rolled inline
-// edit on top of the deprecated `ASortable`. The rename, the delete and the saved order each reach
-// a different endpoint, so what is worth pinning is that each one still reaches its own.
+// The rename, the delete and the saved order each reach a different endpoint.
+// The tests pin that each one still reaches its own.
 
 const updateUserAdminConfig = vi.fn(async (_id: number, _item: UserAdminConfig) => undefined)
 const createUserAdminConfig = vi.fn(async (item: UserAdminConfig) => item)
@@ -26,18 +25,18 @@ vi.mock('@/domains/filters/bookmarks/api/userAdminConfigApi', () => ({
 }))
 
 const getBookmarks = vi.fn(async () => {
-  // The store answers a failed fetch with `null`, but it can also throw outright -- putting its
-  // filter and pagination together happens before any request goes out.
+  // The store answers a failed fetch with `null`, but it can also throw outright.
+  // Putting its filter and pagination together happens before any request goes out.
   if (throwFetch) {
     const hold = holdQueue.shift()
     if (hold) await hold
     throw new Error('never got as far as the request')
   }
-  // Captured when the call is made, not when it answers: that is what lets one request be held
-  // back and answer with the list as it was, after a later one has already brought a newer one.
-  // The real store answers a failed fetch with `null` and hands back a copy of what it holds,
-  // never the array in its cache. The double does both. `failFetch` is separate from the store's
-  // `error` flag on purpose: that flag is one per store, shared with every other request it serves.
+  // The payload is captured when the call is made, not when it answers. This lets one request
+  // be held back and answer with the old list after a later request brought a newer one.
+  // The real store answers a failed fetch with `null` and returns a
+  // copy of its list, never the cached array. The double does both.
+  // `failFetch` is separate from the store's `error` flag, which is shared by every request the store serves.
   const payload = failFetch ? null : [...listItems.value]
   const hold = holdQueue.shift()
   if (hold) await hold
@@ -56,8 +55,8 @@ const removeOne = vi.fn()
 const bookmarkStore = {
   error: false,
   getBookmarks,
-  // `Infinity` is what the real store answers when it could not count, and the cap check is what
-  // has to stop the add there -- nothing further down knows the count was never taken.
+  // `Infinity` is what the real store answers when it could not count.
+  // The cap check must stop the add there, because nothing further down knows the count was never taken.
   fetchBookmarkStats: async () =>
     statsFail
       ? { count: Infinity, maxPosition: 0 }
@@ -134,7 +133,6 @@ const mountDialog = async () => {
   return mounted
 }
 
-// The editor is loaded on the first visit to the manage tab; this waits until that has settled.
 const editorSettled = async (wrapper: VueWrapper) => {
   await vi.waitFor(() => {
     const vm = dialogVm(wrapper)
@@ -145,7 +143,6 @@ const editorSettled = async (wrapper: VueWrapper) => {
   await nextTick()
 }
 
-// The manage tab is behind a tab switch; the dialog's own instance holds the flag.
 const openManageTab = async (wrapper: VueWrapper) => {
   const dialog = wrapper.findComponent({ name: 'FilterBookmarkDialog' })
   const vm = dialog.vm as unknown as { activeTab: string }
@@ -185,7 +182,6 @@ const unsaved = (wrapper: VueWrapper) => {
   return typeof raw === 'boolean' ? raw : raw.value
 }
 
-// The dialog's own primary button, which is now the only thing that persists this tab.
 const confirmDialog = async (wrapper: VueWrapper) => {
   const dialog = wrapper.findComponent({ name: 'FilterBookmarkDialog' })
   await (dialog.vm as unknown as { onConfirm: () => void }).onConfirm()
@@ -208,13 +204,13 @@ describe('filter bookmark manage tab', () => {
     const wrapper = await mountDialog()
     await openManageTab(wrapper)
 
-    // A tick between them: each write goes out through `v-model` and comes back as a prop, so
-    // issuing both in one tick would have the second read the array from before the first.
+    // Wait a tick between the two updates.
+    // Each write goes out through `v-model` and comes back as a prop, so issuing
+    // both in one tick would make the second read the array from before the first.
     editorOf(wrapper).updateItem(2, { customName: 'Renamed' })
     await settleEditor()
     editorOf(wrapper).moveItem(0, 2)
     await settleEditor()
-    // Guards the guard: both changes really registered, so the clean check below means something.
     expect(unsaved(wrapper)).toBe(true)
 
     listItems.value = [bookmark(2, 'Renamed'), bookmark(3, 'Third'), bookmark(1, 'First')]
@@ -224,14 +220,14 @@ describe('filter bookmark manage tab', () => {
     expect(updateUserAdminConfig.mock.calls[0][0]).toBe(2)
     expect(updateUserAdminConfigPositions).toHaveBeenCalledTimes(1)
     expect(updateUserAdminConfigPositions.mock.calls[0][0]).toEqual([2, 3, 1])
-    // The other half of this test's name: the save re-baselines, so the guard has nothing left to
-    // ask about. Without the commit the editor would still read dirty against the fetched list.
+    // The save re-baselines, so the guard has nothing left to ask about.
+    // Without the commit the editor would still read dirty against the fetched list.
     expect(unsaved(wrapper)).toBe(false)
   })
 
   it('does not lose a pending reorder when another row is edited', async () => {
-    // What the per-row save got wrong: re-baselining the saved row meant reloading the list, and
-    // the reload replaced the array the pending order lives in.
+    // Guards a bug: the per-row save reloaded the list to re-baseline the saved row.
+    // The reload replaced the array that holds the pending order.
     const wrapper = await mountDialog()
     await openManageTab(wrapper)
 
@@ -259,8 +255,6 @@ describe('filter bookmark manage tab', () => {
     confirm?.click()
     await settleEditor()
 
-    // Nothing has reached the server yet -- the row is a pending deletion, and it counts as
-    // unsaved work the guard will ask about.
     expect(deleteUserAdminConfig).not.toHaveBeenCalled()
     expect(unsaved(wrapper)).toBe(true)
 
@@ -272,7 +266,7 @@ describe('filter bookmark manage tab', () => {
   })
 
   it('does not lose a pending rename when another row is deleted', async () => {
-    // The delete path used to reload mid-edit, which replaced the array the typed text lives in.
+    // Guards a bug: the delete path reloaded mid-edit and replaced the array that holds the typed text.
     const wrapper = await mountDialog()
     await openManageTab(wrapper)
 
@@ -296,8 +290,8 @@ describe('filter bookmark manage tab', () => {
   })
 
   it('keeps asking on the way out after a glance at the other tab', async () => {
-    // The editor is the only thing registering this tab's pending work with the guard, so a `v-if`
-    // on the tab would unmount it and let the dialog close on a dragged order without a word.
+    // The editor is the only thing registering this tab's pending work with the guard.
+    // A `v-if` on the tab would unmount it and the dialog would close on a dragged order without asking.
     const wrapper = await mountDialog()
     await openManageTab(wrapper)
     editorOf(wrapper).moveItem(0, 2)
@@ -328,13 +322,11 @@ describe('leaving the manage tab with an unapplied order', () => {
     const dialog = wrapper.findComponent({ name: 'FilterBookmarkDialog' })
     const vm = dialog.vm as unknown as { requestClose: () => void; guard: { promptOpen: { value: boolean } } }
 
-    // Nothing pending: the cancel path closes and the parent is told.
     vm.requestClose()
     await flushPromises()
     expect(vm.guard.promptOpen.value).toBe(false)
     expect(dialog.emitted('close')).toBeTruthy()
 
-    // A drag is the one thing here that waits for the save button.
     const second = await mountDialog()
     await openManageTab(second)
     editorOf(second).moveItem(0, 2)
@@ -354,8 +346,8 @@ describe('leaving the manage tab with an unapplied order', () => {
 
 describe('adding a bookmark while the manage tab has pending work', () => {
   it('does not close over it', async () => {
-    // Adding is a decision about the add tab; it says nothing about a reorder left pending on the
-    // other one, so the close it triggers still has to go through the guard.
+    // Adding says nothing about a reorder pending on the other tab.
+    // The close it triggers must still go through the guard.
     const wrapper = await mountDialog()
     await openManageTab(wrapper)
     editorOf(wrapper).moveItem(0, 2)
@@ -389,8 +381,8 @@ describe('loading the manage tab', () => {
     const wrapper = await mountDialog()
     await openManageTab(wrapper)
 
-    // The editor waits for data so its baseline is the fetched list; something has to stand in for
-    // it meanwhile, or the tab is blank for the whole first load.
+    // The editor waits for data so that its baseline is the fetched list.
+    // A placeholder must show meanwhile, or the tab is blank during the first load.
     expect(document.querySelectorAll('.v-progress-circular').length).toBeGreaterThan(0)
     expect(wrapper.findComponent({ name: 'ASortableListEditor' }).exists()).toBe(false)
 
@@ -398,8 +390,8 @@ describe('loading the manage tab', () => {
     release()
     await settleEditor()
 
-    // Empty is still mounted -- the editor has its own empty state, and staying mounted is what
-    // keeps the guard armed.
+    // An empty list stays mounted: the editor has its own empty state.
+    // Staying mounted keeps the guard armed.
     expect(wrapper.findComponent({ name: 'ASortableListEditor' }).exists()).toBe(true)
   })
 
@@ -423,8 +415,8 @@ describe('loading the manage tab', () => {
   })
 
   it('tells the editor it is loading rather than swapping it out', async () => {
-    // The reload at the end of a save must not unmount the editor: it is the only thing holding
-    // this tab's registration with the guard, so an unmount mid-save disarms it.
+    // The reload at the end of a save must not unmount the editor.
+    // It holds this tab's registration with the guard, so an unmount mid-save disarms it.
     const wrapper = await mountDialog()
     await openManageTab(wrapper)
     editorOf(wrapper).moveItem(0, 2)
@@ -445,7 +437,6 @@ describe('loading the manage tab', () => {
   })
 })
 
-// Switching away and back, which is what the dialog treats as re-entering the tab.
 const leaveAndReturn = async (wrapper: VueWrapper) => {
   const vm = dialogVm(wrapper)
   vm.activeTab = 'add'
@@ -460,15 +451,13 @@ describe('re-entering the manage tab', () => {
     await openManageTab(wrapper)
     const fetches = getBookmarks.mock.calls.length
 
-    // A bookmark added on the add tab is the near case; anything that moved server-side reads the
-    // same way from here.
     listItems.value = [bookmark(1, 'First'), bookmark(2, 'Renamed elsewhere'), bookmark(3, 'Third')]
     await leaveAndReturn(wrapper)
 
     expect(getBookmarks.mock.calls.length).toBe(fetches + 1)
     expect(document.body.textContent ?? '').toContain('Renamed elsewhere')
-    // The fetched rows are the new baseline. Without that the refresh would hand the guard a list
-    // of changes the user never made and the save would write them back as theirs.
+    // The fetched rows are the new baseline.
+    // Otherwise the refresh gives the guard changes the user never made, and the save writes them back as theirs.
     expect(unsaved(wrapper)).toBe(false)
   })
 })
@@ -479,8 +468,8 @@ describe('when the list cannot be fetched', () => {
     const wrapper = await mountDialog()
     await openManageTab(wrapper)
 
-    // The editor's own empty state would claim there are no bookmarks, which is not what a failed
-    // request found out.
+    // The editor's empty state would claim there are no bookmarks.
+    // A failed request did not find that out.
     expect(wrapper.findComponent({ name: 'ASortableListEditor' }).exists()).toBe(false)
     expect(document.querySelectorAll('.v-progress-circular').length).toBe(0)
     expect(document.querySelectorAll('.text-error').length).toBeGreaterThan(0)
@@ -513,8 +502,8 @@ describe('when the list cannot be fetched', () => {
 
 describe('saving the manage tab', () => {
   it('sends the deletions even when they empty the list', async () => {
-    // The save button used to be gated on the list being non-empty, which left the one way of
-    // sending three pending deletions switched off by the third of them.
+    // Guards a bug: the save button was disabled for an empty list.
+    // That made it impossible to send the last of several pending deletions.
     const wrapper = await mountDialog()
     await openManageTab(wrapper)
 
@@ -555,8 +544,8 @@ describe('saving the manage tab', () => {
     updateUserAdminConfig.mockRejectedValueOnce(new Error('refused'))
     await confirmDialog(wrapper)
 
-    // Nothing reached the server, so there is nothing to resync from -- and refetching here would
-    // throw away the rename the user is about to retry.
+    // Nothing reached the server, so there is nothing to resync from.
+    // A refetch would throw away the rename the user is about to retry.
     expect(getBookmarks.mock.calls.length).toBe(fetches)
     expect(unsaved(wrapper)).toBe(true)
     expect(editorOf(wrapper).getChanges().updated).toHaveLength(1)
@@ -573,13 +562,12 @@ describe('saving the manage tab', () => {
     editorOf(wrapper).moveItem(0, 2)
     await settleEditor()
 
-    // The rename is written, the order is refused.
     updateUserAdminConfigPositions.mockRejectedValueOnce(new Error('refused'))
     await confirmDialog(wrapper)
 
     expect(updateUserAdminConfig).toHaveBeenCalledTimes(1)
-    // No refetch: it would replace the dragged order with the server's, which is the one thing the
-    // user still has to send. The store is told its copy is behind instead.
+    // No refetch: it would replace the dragged order with the server's, which the user still has to send.
+    // The store is marked stale instead.
     expect(getBookmarks.mock.calls.length).toBe(fetches)
     expect(markStale).toHaveBeenCalled()
     expect(dialogVm(wrapper).itemsManage.map((item) => item.id)).toEqual([2, 3, 1])
@@ -588,9 +576,9 @@ describe('saving the manage tab', () => {
   })
 
   it('does not send a delete twice when a later write failed and the user tries again', async () => {
-    // The batch is not a transaction, so pressing save again has to be safe. A rename resent is the
-    // same PUT with the same result; a delete resent is a call against a row that is no longer
-    // there, and it would stop the batch at the same place every time.
+    // The batch is not a transaction, so pressing save again must be safe.
+    // A resent rename is the same PUT with the same result.
+    // A resent delete targets a row that is gone and would stop the batch at the same place every time.
     const wrapper = await mountDialog()
     await openManageTab(wrapper)
 
@@ -604,8 +592,8 @@ describe('saving the manage tab', () => {
 
     expect(deleteUserAdminConfig).toHaveBeenCalledTimes(1)
     expect(editorOf(wrapper).getChanges().deleted).toEqual([])
-    // The filter bar is on screen reading the cache, and this save never reaches the refresh that
-    // would have taken the deleted bookmark out of it.
+    // The filter bar reads the cache, and this save never reaches
+    // the refresh that would remove the deleted bookmark from it.
     expect(removeOne.mock.calls.map(([, id]) => id)).toEqual([2])
     expect(
       editorOf(wrapper)
@@ -623,8 +611,8 @@ describe('saving the manage tab', () => {
   })
 
   it('stops taking edits while the writes are going out', async () => {
-    // The change set is read once, when the button is pressed. Anything typed after that would not
-    // be in it, would be overwritten by the refresh at the end, and would go out with the close.
+    // The change set is read once, when the button is pressed.
+    // Text typed after that is not in it, is overwritten by the final refresh and goes out with the close.
     const wrapper = await mountDialog()
     await openManageTab(wrapper)
     editorOf(wrapper).updateItem(2, { customName: 'Renamed' })
@@ -645,8 +633,7 @@ describe('saving the manage tab', () => {
 })
 
 describe('two fetches in flight at once', () => {
-  // The tabs switch faster than a request comes back, so a second entry can start one while the
-  // first is still out.
+  // Tabs switch faster than a request returns, so a second entry can start a fetch while the first is still out.
   const held = () => {
     let release = () => {}
     const promise = new Promise<void>((resolve) => (release = () => resolve()))
@@ -661,7 +648,6 @@ describe('two fetches in flight at once', () => {
     holdQueue = [stale.promise]
     await leaveAndReturn(wrapper)
 
-    // While that one is out, the list changes and a later entry fetches it.
     listItems.value = [bookmark(9, 'Newest')]
     await leaveAndReturn(wrapper)
     expect(dialogVm(wrapper).itemsManage.map((item) => item.customName)).toEqual(['Newest'])
@@ -683,14 +669,14 @@ describe('two fetches in flight at once', () => {
     await leaveAndReturn(wrapper)
     await leaveAndReturn(wrapper)
 
-    // The first answer coming back does not report the tab as settled while the second is still
-    // out -- otherwise the editor would take edits again in the gap between the two.
+    // The first answer must not report the tab as settled while the second is still out.
+    // Otherwise the editor takes edits in the gap between the two.
     first.release()
     await settleEditor()
     expect(wrapper.findComponent({ name: 'ASortableListEditor' }).props('loading')).toBe(true)
 
-    // Driven through the handle rather than the rows, which the loading state keeps out of reach:
-    // what is being pinned here is that the answer is dropped even if something did get through.
+    // Driven through the handle because the loading state keeps the rows out of reach.
+    // The test pins that the answer is dropped even if something got through.
     editorOf(wrapper).moveItem(0, 2)
     await settleEditor()
 
@@ -704,8 +690,8 @@ describe('two fetches in flight at once', () => {
 
 describe('adding a bookmark', () => {
   it('clears the name it just used', async () => {
-    // The add path asks the guard before closing, so it can stay open on the other tab's pending
-    // work -- with the name still in the field, a second press would create the same bookmark again.
+    // The add path asks the guard before closing, so the dialog can stay open on the other tab's pending work.
+    // The name must be cleared, or a second press would create the same bookmark again.
     const wrapper = await mountDialog()
     await openManageTab(wrapper)
     editorOf(wrapper).moveItem(0, 2)
@@ -726,7 +712,6 @@ describe('adding a bookmark', () => {
     expect(createUserAdminConfig).toHaveBeenCalledTimes(1)
     expect(vm.customName).toBe('')
 
-    // Pressing it again now has nothing to send: the field is empty and `required` refuses it.
     vm.onConfirm()
     await flushPromises()
     await nextTick()
@@ -735,8 +720,8 @@ describe('adding a bookmark', () => {
 })
 
 describe('a delete whose answer never came back', () => {
-  // The batch is not a transaction and the network is not reliable: a DELETE can reach the server,
-  // be carried out, and still fail on the way back. The next attempt then finds the row gone.
+  // The batch is not a transaction and the network is unreliable.
+  // A DELETE can be carried out and still fail on the way back, so the next attempt finds the row gone.
   const notFound = () => new AnzuApiAxiosError({ response: { status: 404 } } as never)
 
   it('reads "already gone" as done and finishes the batch', async () => {
@@ -778,8 +763,8 @@ describe('a delete whose answer never came back', () => {
 
 describe('while a write is out', () => {
   it('takes no input anywhere in the dialog', async () => {
-    // Not just the editor: switching to the other tab and typing there would be work the close that
-    // follows a successful save takes with it, without asking.
+    // Not just the editor: text typed on the other tab would be lost
+    // by the close that follows a successful save, without asking.
     const wrapper = await mountDialog()
     await openManageTab(wrapper)
     editorOf(wrapper).updateItem(2, { customName: 'Renamed' })
@@ -792,9 +777,8 @@ describe('while a write is out', () => {
     const saving = confirmDialog(wrapper)
     await nextTick()
 
-    // The tabs are the way to the other form, so they are what has to be shut. (The dialog's own
-    // buttons are globally registered wrappers that this harness does not resolve, so they cannot
-    // be asserted on here.)
+    // The tabs lead to the other form, so they are what must be shut.
+    // The dialog's own buttons are globally registered wrappers that this harness does not resolve.
     const tabs = wrapper.findAllComponents({ name: 'VTab' })
     expect(tabs).toHaveLength(2)
     for (const tab of tabs) expect(tab.props('disabled')).toBe(true)
@@ -812,10 +796,8 @@ describe('saving while the list is being refreshed', () => {
     let release = () => {}
     holdQueue = [new Promise<void>((resolve) => (release = () => resolve()))]
 
-    // The server order has changed since this tab was last looked at.
     listItems.value = [bookmark(3, 'Third'), bookmark(2, 'Second'), bookmark(1, 'First')]
 
-    // Entering the tab again starts the refresh; the list on screen is still the old one.
     const vm = dialogVm(wrapper)
     vm.activeTab = 'add'
     await settleEditor()
@@ -824,14 +806,13 @@ describe('saving while the list is being refreshed', () => {
 
     await confirmDialog(wrapper)
 
-    // Saving now would send the order being replaced and undo whatever the refresh is bringing.
+    // Saving now would send the order being replaced and undo what the refresh brings.
     expect(updateUserAdminConfigPositions).not.toHaveBeenCalled()
     expect(wrapper.findComponent({ name: 'FilterBookmarkDialog' }).emitted('close')).toBeFalsy()
 
     release()
     await settleEditor()
 
-    // Once it has landed, the same press works -- on the list that arrived.
     await confirmDialog(wrapper)
     expect(updateUserAdminConfigPositions.mock.calls[0][0]).toEqual([3, 2, 1])
   })
@@ -839,8 +820,8 @@ describe('saving while the list is being refreshed', () => {
 
 describe('while a bookmark is being created', () => {
   it('holds the form it was created from', async () => {
-    // The success path clears this field and closes, so anything typed while the POST is out would
-    // be thrown away without a word.
+    // The success path clears this field and closes.
+    // Anything typed while the POST is out would be thrown away silently.
     const wrapper = await mountDialog()
     const vm = wrapper.findComponent({ name: 'FilterBookmarkDialog' }).vm as unknown as {
       customName: string
@@ -868,9 +849,8 @@ describe('while a bookmark is being created', () => {
 
 describe('trying to close while a write is out', () => {
   it('does not ask about work that is already on its way', async () => {
-    // The toolbar's X and the escape key reach the model without passing anything the write phase
-    // disables. Asking "discard your changes?" there and then writing them anyway, whatever the
-    // answer, is the guard telling the user something that is not true.
+    // The toolbar's X and the escape key reach the model without passing anything the write phase disables.
+    // Asking "discard your changes?" and then writing them anyway would tell the user something untrue.
     const wrapper = await mountDialog()
     await openManageTab(wrapper)
     editorOf(wrapper).updateItem(2, { customName: 'Renamed' })
@@ -896,10 +876,8 @@ describe('trying to close while a write is out', () => {
     listItems.value = [bookmark(1, 'First'), bookmark(2, 'Renamed'), bookmark(3, 'Third')]
     release()
     await saving
-    // `confirmDialog` returns while the write is still held, so the rest of the save runs here.
     await settleEditor()
 
-    // The save's own close still happens, once the write it was waiting for has landed.
     expect(dialog.emitted('close')).toBeTruthy()
   })
 
@@ -922,9 +900,9 @@ describe('trying to close while a write is out', () => {
 
 describe('an error flag raised by somebody else', () => {
   it('does not turn a good answer into a failed one', async () => {
-    // The store keeps one `error` flag for everything it fetches -- this dialog's own bookmark
-    // count among them -- so a count that failed on the add tab must not make the manage tab's
-    // successful fetch read as a failure. Only the answer to a request says how it went.
+    // The store keeps one `error` flag for everything it fetches, including this dialog's bookmark count.
+    // A failed count on the add tab must not make the manage tab's successful fetch read as a failure.
+    // Only the answer to a request says how it went.
     bookmarkStore.error = true
 
     const wrapper = await mountDialog()
@@ -941,7 +919,6 @@ describe('a fetch that throws after a newer one has answered', () => {
     const wrapper = await mountDialog()
     await openManageTab(wrapper)
 
-    // The older fetch is held and will throw; a newer one answers while it is still out.
     let failOlder = () => {}
     holdQueue = [new Promise<void>((resolve) => (failOlder = () => resolve()))]
     throwFetch = true
@@ -955,15 +932,14 @@ describe('a fetch that throws after a newer one has answered', () => {
     listItems.value = [bookmark(1, 'First'), bookmark(2, 'Renamed elsewhere'), bookmark(3, 'Third')]
     await leaveAndReturn(wrapper)
 
-    // Read off the model rather than the page: the editor is still showing its loading state,
-    // because the fetch that is about to throw has not come back yet.
+    // Read off the model, not the page.
+    // The editor still shows its loading state because the fetch that will throw has not returned yet.
     const names = () => dialogVm(wrapper).itemsManage.map((item) => item.customName)
     expect(names()).toEqual(['First', 'Renamed elsewhere', 'Third'])
 
     failOlder()
     await settleEditor()
 
-    // The answer that overtook it is the current one, and it worked.
     expect(dialogVm(wrapper).loadFailed).toBe(false)
     expect(names()).toEqual(['First', 'Renamed elsewhere', 'Third'])
     expect(wrapper.findComponent({ name: 'ASortableListEditor' }).exists()).toBe(true)
@@ -973,9 +949,9 @@ describe('a fetch that throws after a newer one has answered', () => {
 
 describe('where a new bookmark lands', () => {
   it('goes after the highest position in use, not after the row count', async () => {
-    // The gap a save with a deletion leaves behind: three rows, highest position 4. Counting rows
-    // would create this one on 4 as well, and two rows on the same position have no order between
-    // them -- with two deletions the new one would sort ahead of a bookmark created before it.
+    // A save with a deletion leaves a gap: three rows, highest position 4.
+    // Counting rows would create the new one on position 4 as well,
+    // and two rows on the same position have no order between them.
     listItems.value = [
       { ...bookmark(1, 'First'), position: 1 },
       { ...bookmark(3, 'Third'), position: 2 },

@@ -12,8 +12,9 @@ import { immediateScheduler } from '@/domains/dam/uploadQueue/settlement/__tests
 import { manualScheduler } from '@/domains/dam/uploadQueue/settlement/__tests__/support/manualScheduler'
 import { uploadSettlementRuntime } from '@/domains/dam/uploadQueue/settlement/uploadSettlementRuntime'
 
-// rusha is CommonJS and pre-bundled for the browser run: the factory returns what its `module.exports`
-// would be, and the import sees that as `default`, as it does the real package.
+// rusha is CommonJS and pre-bundled for the browser run.
+// The factory returns what its `module.exports` would be, and
+// the import sees that as `default`, as with the real package.
 vi.mock('rusha', () => ({ createHash: () => ({ update: () => undefined, digest: () => 'sha' }) }))
 
 const bus = vi.hoisted(() => ({ listener: undefined as undefined | ((event: unknown) => void) }))
@@ -23,7 +24,6 @@ vi.mock('@/domains/dam/composables/damNotifications', () => ({
   }),
 }))
 
-// Each chunk waits until the test lets that file's request answer, or, as axios does, rejects once its signal aborts.
 const release = new Map<string, () => void>()
 const damUploadStart = vi.fn(async (_c: unknown, _e: unknown, item: UploadQueueItem) => ({
   asset: `asset-${item.file!.name}`,
@@ -36,7 +36,6 @@ const damUploadChunk = vi.fn(
       item.latestChunkAbortController?.signal.addEventListener('abort', () => reject(new axios.CanceledError()))
     })
 )
-// As the real one: a finished upload leaves "uploading" for "processing".
 const damUploadFinish = vi.fn(async (_c: unknown, _i: unknown, item: UploadQueueItem) => {
   item.status = UploadQueueItemStatus.Processing
   return {}
@@ -53,7 +52,7 @@ const assetWithFile = async (_c: unknown, _e: unknown, id: string) => ({
   attributes: { assetStatus: 'with_file' },
 })
 const fetchAsset = vi.fn(assetWithFile)
-// What the poll reads: it has no notification to tell it the file is processed, the asset says so itself.
+// The poll has no notification telling it the file is processed, so the asset itself says so.
 const processedFile = async (_c: unknown, _e: unknown, id: string) => ({
   id,
   mainFile: { id: 'f', links: {}, fileAttributes: { status: 'processed' } },
@@ -64,7 +63,6 @@ const processedFile = async (_c: unknown, _e: unknown, id: string) => ({
   mainFileInternal: null,
   metadata: { customData: {}, authorSuggestions: {}, keywordSuggestions: {} },
 })
-// The original of a duplicate, looked up by its file.
 const noSuchFile = async (): Promise<unknown> => Promise.reject(new Error('404 Not Found'))
 const fetchAssetByFileId = vi.fn(noSuchFile)
 vi.mock('@/domains/dam/api/damAssetApi', async (importOriginal) => ({
@@ -89,11 +87,10 @@ vi.mock('@/domains/dam/uploadQueue/composables/damUploadChunkSize', () => ({
 
 const settle = () => new Promise((resolve) => setTimeout(resolve, 50))
 
-// These cases are not about time: the read a notification asks for comes at once, and the poll of a queue never.
+// These cases are not about time: the read a notification asks for runs at once, and the queue poll never runs.
 const realScheduler = uploadSettlementRuntime.scheduler
 beforeEach(() => {
   setActivePinia(createPinia())
-  // The bounds of the chunks are loaded, as an upload needs them: the sizing itself is a stand-in here.
   useDamConfigStore().damPrvConfig.settings.imageChunkConfig = { minSize: 1024, maxSize: 1024 }
   uploadSettlementRuntime.scheduler = immediateScheduler()
   release.clear()
@@ -107,8 +104,8 @@ afterEach(() => {
   uploadSettlementRuntime.scheduler = realScheduler
 })
 
-// An application with a queue store of its own (admin-dam) has this store alive beside it, through the components
-// it shares: with no row of its own it must not answer the notifications as well.
+// An application with its own queue store (admin-dam) has this store alive beside it through shared components.
+// With no row of its own, this store must not answer the notifications too.
 describe('the notifications', () => {
   it('are listened to from the first row of the store on, and not before', async () => {
     bus.listener = undefined
@@ -141,7 +138,7 @@ describe('a zero-byte file in the upload queue', () => {
   })
 })
 
-// The read failed, not the copy: failing the row for it left a copy the server had made out of reach.
+// Only the read failed, not the copy. Failing the row would make a copy the server already made unreachable.
 describe('an asset copied to the licence whose detail fails to load', () => {
   it('waits on rather than fail, and is settled by the next read of its queue', async () => {
     const clock = manualScheduler()
@@ -168,8 +165,8 @@ describe('an asset copied to the licence whose detail fails to load', () => {
   })
 })
 
-// Its metadata is loaded once, by whichever of the notification, the fallback and the refresh button answers
-// first, and a failed item has none to edit.
+// Metadata is loaded once, by whichever of the notification, the fallback and the refresh button answers first.
+// A failed item has no metadata to edit.
 describe('the metadata of an item in the queue', () => {
   const processed = async (_c: unknown, _e: unknown, id: string) => ({
     id,
@@ -182,17 +179,15 @@ describe('the metadata of an item in the queue', () => {
     metadata: { customData: { title: 'from the server' }, authorSuggestions: {}, keywordSuggestions: {} },
   })
 
-  // The fallback and the refresh button settle an item through `queueItemFullyProcessed`, which loads its
-  // metadata as well.
+  // The fallback and the refresh button settle an item through
+  // `queueItemFullyProcessed`, which also loads its metadata.
   it('keeps what the user typed once its notification had loaded the metadata', async () => {
     const store = useUploadQueuesStore()
     await store.addByCopyToLicence('q', 1, 1, ['asset-typed', 'asset-waiting'], 'default')
     const [typed, waiting] = store.getQueueItems('q')
-    // The metadata notification came while the file was still processing, and the user has typed since.
     typed.canEditMetadata = true
     typed.customData = { title: 'typed' }
     typed.mainFileSingleUse = false
-    // The fallback gave up on it and said so; the refresh button then finds its file processed.
     waiting.error.hasError = true
     fetchAsset.mockImplementation(processed)
 
@@ -202,7 +197,6 @@ describe('the metadata of an item in the queue', () => {
     expect([typed.status, waiting.status]).toEqual([UploadQueueItemStatus.Uploaded, UploadQueueItemStatus.Uploaded])
     expect(typed.customData).toEqual({ title: 'typed' })
     expect(typed.mainFileSingleUse).toBe(false)
-    // A row still without its metadata gets it, and its form with it.
     expect(waiting.customData).toEqual({ title: 'from the server' })
     expect(waiting.canEditMetadata).toBe(true)
     expect(waiting.error.hasError).toBe(false)
@@ -221,7 +215,7 @@ describe('the metadata of an item in the queue', () => {
     expect(late.error.hasError).toBe(false)
   })
 
-  // The same rule for the notifications themselves: their answers can come in either order.
+  // The same rule applies to the notifications themselves: their answers can arrive in either order.
   it('is given its metadata once, and keeps its switches once it has it', async () => {
     const store = useUploadQueuesStore()
     await store.addByCopyToLicence('q', 1, 1, ['asset-typed', 'asset-waiting'], 'default')
@@ -255,12 +249,12 @@ describe('the metadata of an item in the queue', () => {
     await vi.waitFor(() => expect(fetchAsset).toHaveBeenCalled())
     await settle()
 
-    // Editable, it was validated and saved with the rest of the queue.
     expect(failed.canEditMetadata).toBe(false)
     expect(failed.customData).toEqual({})
   })
 
-  // The other order: the server reads the metadata off the first chunk, so its event comes while the file sends.
+  // The other order: the server reads metadata off the first
+  // chunk, so its event arrives while the file is still sending.
   it('stops being editable when its upload fails after its metadata had come', async () => {
     const store = useUploadQueuesStore()
     fetchAsset.mockImplementation(processed)
@@ -277,7 +271,7 @@ describe('the metadata of an item in the queue', () => {
     expect(item.canEditMetadata).toBe(false)
   })
 
-  // A request of the client's failed, and the server finished the upload all the same.
+  // A client request failed, but the server finished the upload anyway.
   it('is an uploaded item again, with its metadata, when its file turns out to be processed', async () => {
     const store = useUploadQueuesStore()
     fetchAsset.mockImplementation(processed)
@@ -292,15 +286,16 @@ describe('the metadata of an item in the queue', () => {
     bus.listener!({ name: DamNotificationName.AssetFileProcessed, data: { asset: item.assetId } })
     await vi.waitFor(() => expect(item.status).toBe(UploadQueueItemStatus.Uploaded))
 
-    // With its form at once, from the answer that settled it: without it the row waits for its refresh button.
+    // The form opens at once from the answer that settled the row. Otherwise the row waits for its refresh button.
     expect(item.canEditMetadata).toBe(true)
     expect(item.customData).toEqual({ title: 'from the server' })
     expect(item.error.hasError).toBe(false)
-    // From the one answer that said the file is processed: a second request could fail and leave it failed.
+    // Taken from the single answer that said the file is processed.
+    // A second request could fail and leave the row failed.
     expect(fetchAsset).toHaveBeenCalledTimes(1)
   })
 
-  // The same row, when its metadata had come before the request failed: the user may have typed into it by then.
+  // The same row, when its metadata came before the request failed. The user may have typed into it by then.
   it('is an uploaded item again with what the user typed, when its metadata had come before the failure', async () => {
     const store = useUploadQueuesStore()
     fetchAsset.mockImplementation(processed)
@@ -319,13 +314,12 @@ describe('the metadata of an item in the queue', () => {
     bus.listener!({ name: DamNotificationName.AssetFileProcessed, data: { asset: item.assetId } })
     await vi.waitFor(() => expect(item.status).toBe(UploadQueueItemStatus.Uploaded))
 
-    // The failure took its form away, not what was in it.
     expect(item.canEditMetadata).toBe(true)
     expect(item.customData).toEqual({ title: 'typed' })
     expect(item.mainFileSingleUse).toBe(false)
   })
 
-  // A copy's own notification settles it as the fallback does: its metadata may be there already.
+  // A copy's own notification settles it like the fallback does. Its metadata may already be there.
   it('keeps what the user typed into a copy whose metadata came before its copied notification', async () => {
     const store = useUploadQueuesStore()
     fetchAsset.mockImplementation(processed)
@@ -343,14 +337,11 @@ describe('the metadata of an item in the queue', () => {
       expect([typed.status, waiting.status]).toEqual([UploadQueueItemStatus.Uploaded, UploadQueueItemStatus.Uploaded])
     )
 
-    // With its file, which the image is built from.
     expect([typed.customData, typed.mainFileSingleUse, typed.fileId]).toEqual([{ title: 'typed' }, false, 'f'])
-    // A copy still without its metadata gets it, with its file and its form.
     expect([waiting.customData, waiting.mainFileSingleUse]).toEqual([{ title: 'from the server' }, true])
     expect([waiting.fileId, waiting.canEditMetadata]).toEqual(['f', true])
   })
 
-  // However the row came by its metadata, and whichever way its file is reported failed and then processed.
   it.each([
     [
       'the fallback loaded',
@@ -387,7 +378,7 @@ describe('the metadata of an item in the queue', () => {
     expect(item.customData).toEqual({ title: 'typed' })
   })
 
-  // And the third order: the notification has settled the row before the request fails.
+  // Third order: the notification settles the row before the request fails.
   it('stays uploaded, with what the user typed, when the request fails after the notification settled it', async () => {
     const store = useUploadQueuesStore()
     fetchAsset.mockImplementation(processed)
@@ -411,7 +402,7 @@ describe('the metadata of an item in the queue', () => {
     expect(item.customData).toEqual({ title: 'typed' })
   })
 
-  // The same, with the processed notification ahead of the failure: it can beat the answer to the finish request.
+  // Same, with the processed notification ahead of the failure. It can beat the answer to the finish request.
   it('is an uploaded item with its metadata also when the request fails while the notification is handled', async () => {
     const store = useUploadQueuesStore()
     let answerLookup!: () => void
@@ -444,7 +435,7 @@ describe('the metadata of an item in the queue', () => {
     copy.canEditMetadata = true
     fetchAsset.mockRejectedValue(new Error('502 Bad Gateway'))
 
-    // The original of a duplicate is looked up by its file, a copy by its asset: neither answers.
+    // A duplicate's original is looked up by its file and a copy by its asset. Neither lookup answers.
     bus.listener!({
       name: DamNotificationName.AssetFileDuplicate,
       data: { asset: 'asset-duplicate', originAssetFile: 'file-original', assetType: DamAssetType.Image },
@@ -455,13 +446,12 @@ describe('the metadata of an item in the queue', () => {
     await settle()
 
     expect(duplicate.canEditMetadata).toBe(false)
-    // The duplicate has no other asset to become; the copy is there, and only its read failed.
     expect([copy.status, copy.canEditMetadata]).toEqual([UploadQueueItemStatus.Processing, true])
   })
 })
 
-// Removed while it sent, an upload went on in the background: it finished, was polled for its processing, and no
-// longer counted as uploading, so the queue started one more beside it.
+// Regression guard: an upload removed while it sent kept running in the background.
+// It finished, was polled for processing, and no longer counted as uploading, so the queue started one extra upload.
 describe('an upload removed while it sends', () => {
   it('stops, and the next file takes its slot', async () => {
     const store = useUploadQueuesStore()
@@ -471,11 +461,12 @@ describe('an upload removed while it sends', () => {
     const removed = store.getQueueItems('removed')[0]!
     const chunkOfA = removed.latestChunkAbortController!.signal
 
-    // Taken out, it is stopped with its run and the chunk on the wire, and c starts in its place at once: the core
-    // starts the next row when a row leaves (Z15), not when the cancelled run ends.
+    // The removed row is stopped together with its run and the chunk on the wire.
+    // `c` starts at once, because the core starts the next row
+    // when a row leaves (Z15), not when the cancelled run ends.
     store.removeByIndex('removed', 0)
     await vi.waitFor(() => expect(release.has('c.jpg')).toBe(true))
-    // Its chunk is answered after all: a run that went on would finish the upload.
+    // The chunk is answered after all. A run that kept going would finish the upload.
     release.get('a.jpg')!()
     await settle()
 
@@ -489,7 +480,6 @@ describe('upload queue parallel limit', () => {
   it('never runs more than two uploads at once', async () => {
     const store = useUploadQueuesStore()
     const files = ['a', 'b', 'c', 'd', 'e', 'f'].map((n) => new File(['x'], `${n}.jpg`, { type: 'image/jpeg' }))
-    // The rows being sent, by their files.
     const uploading = () =>
       store
         .getQueueItems('q')
@@ -501,16 +491,13 @@ describe('upload queue parallel limit', () => {
     expect(uploading()).toEqual(['a.jpg', 'b.jpg'])
     const [a] = store.getQueueItems('q')
 
-    // a finishes: one slot frees up, so exactly one more file may start, the next one.
     release.get('a.jpg')!()
     await vi.waitFor(() => expect(damUploadFinish).toHaveBeenCalledTimes(1))
     await settle()
-    // The upload finished is a's, and it left the slot.
     expect(damUploadFinish.mock.calls.map((call) => call[2].key)).toEqual([a!.key])
     expect(a!.status).toBe(UploadQueueItemStatus.Processing)
     const afterFinish = uploading()
 
-    // The DAM notification for a arrives while the others are still sending.
     await store.queueItemProcessed('asset-a.jpg', 'default')
     await settle()
     expect([afterFinish, uploading()]).toEqual([

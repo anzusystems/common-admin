@@ -4,13 +4,10 @@ import { defineComponent, h, nextTick, ref, type Ref } from 'vue'
 import ASortableListEditor from '@/domains/listEditor/components/ASortableListEditor.vue'
 import type { ExposedListEditorHandle } from '@/domains/listEditor/composables/useListEditorController'
 
-// The unsaved ("amber") lifecycle every list editor in the admins depends on: nothing marked on
-// arrival, marked the moment something changes, cleared once the save is confirmed. Each admin
-// carried this test as a copy; it mounts nothing of theirs.
-//
-// The controller takes its clean baseline ONCE, when it is created. Every row it has not seen by then
-// reads as an unsaved addition, which is why the admins put a list editor behind a `v-if` on its
-// loaded model or pass `loading`. The last test pins that.
+// The unsaved lifecycle every list editor in the admins depends on: nothing
+// marked on arrival, marked on change, cleared once the save is confirmed.
+// The controller takes its clean baseline once, when created. Rows it has not seen by then read as unsaved additions.
+// So the admins put a list editor behind a `v-if` on its loaded model or pass `loading`. The last test pins that.
 
 interface Row {
   id: number
@@ -83,9 +80,8 @@ describe('the unsaved lifecycle a list editor gives its consumer', () => {
   })
 
   it('reads rows that arrive after mount as unsaved additions', async () => {
-    // Not a defect: the reason for every `v-if="…length > 0"` / `v-if="!loading"` in front of a list
-    // editor. Mount it while the fetch is still out and the whole list lands amber before the user
-    // has touched anything.
+    // Not a defect: this is why a list editor sits behind `v-if="…length > 0"` or `v-if="!loading"`.
+    // Mounted while the fetch is out, the whole list is marked unsaved before the user touches anything.
     const { model, editor } = mountEditor([])
     await nextTick()
     expect(editor().hasUnsaved).toBe(false)

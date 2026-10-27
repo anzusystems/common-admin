@@ -2,7 +2,6 @@
 // arguments of each (from 1). The guard `src/test/eslint/damConfigNameGuard.test.ts` reads every call of them in the
 // DAM domain; `src/test/damConfigNameGuard.test.ts` keeps the list to functions that exist.
 
-/** Composables and functions, by their export. */
 export const DAM_NAME_ACCESSORS: Record<string, number> = {
   useCommonAdminCoreDamOptions: 1,
   damEndPointsOf: 1,

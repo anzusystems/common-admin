@@ -39,14 +39,13 @@ import { useUploadQueueDialog } from '@/domains/dam/uploadQueue/composables/useU
 import type { DocId } from '@/shared/types/common'
 import { isNull } from '@/shared/utils/common'
 
-// "Edit image" of an image whose asset a widget of one image holds: an asset picked in the library without authors,
-// whose authors the dialog of that image offers in place of a source. The widget read the asset at its pick and
-// never again, so the dialog went on offering the pick of authors the asset may have been given elsewhere since (in
-// the DAM, by another editor, by another widget of the page), and its "confirm" wrote what was picked over them. It
-// also offered again what was picked in a dialog closed without a confirm. The asset is read anew as the dialog
-// opens, which shows its loading till then. admin-cms only: admin-ugc has no authors of the DAM, so its dialog never
-// offers them. The real widgets with their real dialog of the image; the DAM and the backend of the images are
-// clients that record their requests; the asset picker is a stand-in that answers as the real one does.
+// Guards a regression: the widget read the asset at its pick and never again.
+// The dialog kept offering the author pick although the asset may have been given authors
+// elsewhere since (DAM, another editor, another widget), and its "confirm" overwrote them.
+// It also offered again what was picked in a dialog closed without a confirm.
+// The asset is now read anew when the dialog opens, and the dialog shows loading until then.
+// admin-cms only: admin-ugc has no DAM authors. The DAM and the image
+// backend are request-recording clients; the asset picker is a stand-in.
 
 const QUEUE = 'lead-image'
 const PickerStandIn = defineComponent({ name: 'AAssetSelect', emits: ['confirm'], setup: () => () => h('div') })
@@ -67,7 +66,6 @@ beforeEach(() => {
   dam = createFakeDam(endPoints)
   imageApi = installConsumerImageApi(profile, installConsumerProfile(profile, dam.client))
   answerDamNames(dam)
-  // What the image and media widget asks about a picked asset first: here, it is no media.
   dam.reply((request) => (request.method === 'GET' && MEDIA.test(request.url) ? { status: 200, data: {} } : undefined))
   waits = holdLongWaits()
   forgetAlerts()
@@ -89,7 +87,6 @@ const uploadConfig = () => ({
   licenceName: 'own',
   extSystemConfig: useDamConfigStore(pinia).damConfigExtSystem.get(extSystem)!,
 })
-/** What the DAM has for an asset: `file-of-<id>`, described, in the licence of the widget, without authors. */
 const inTheDam = (id: string) =>
   dam.assets.set(
     id,
@@ -99,11 +96,9 @@ const inTheDam = (id: string) =>
       metadata: { customData: { description: `of ${id}` }, authorSuggestions: {}, keywordSuggestions: {} },
     })
   )
-/** The asset is given authors elsewhere: in the DAM, by another editor or another widget of the page. */
 const givenAuthorsElsewhere = (id: string, authors: DocId[]) => {
   dam.assets.get(id)!.authors = authors
 }
-/** An asset as the list of the picker has it. */
 const listed = (id: string) => ({
   id,
   licence,
@@ -112,7 +107,6 @@ const listed = (id: string) => ({
   attributes: { assetType: DamAssetType.Image },
   podcasts: [],
 })
-/** An image the entity already has, of a file of its own. */
 const stored = (id: number): ImageAware => ({
   id,
   texts: { description: `image ${id}`, source: `source ${id}` },
@@ -130,27 +124,22 @@ const fieldsIn = (root: Element) =>
   Array.from(root.querySelectorAll<HTMLTextAreaElement>('textarea')).filter(
     (field) => field.getAttribute('aria-hidden') !== 'true'
   )
-/** The texts the dialog of the image shows: the description, and the source where it has that field. */
 const texts = () => fieldsIn(imageDialog()!).map((field) => field.value)
-/** The dialog shows its loading, and nothing of the image. */
 const loading = () => !isNull(imageDialog()!.querySelector('.v-progress-circular'))
 const buttonOfDialog = (text: string) =>
   Array.from(imageDialog()!.querySelectorAll<HTMLButtonElement>('button')).find(
     (button) => button.textContent?.trim() === text
   )!
 const confirmButton = () => buttonOfDialog(uiText('common.button.confirm'))
-/** What each save of metadata wrote into the DAM: the asset and its authors. */
 const authorsWritten = () =>
   dam
     .sentTo('PATCH', dam.routes.bulkMetadata)
     .map((request) =>
       (dam.body(request) as Array<{ id: DocId; authors?: DocId[] }>).map((one) => [one.id, one.authors])
     )
-/** The reads of an asset by its id: what a pick reads, and what "edit image" reads anew. */
 const readsOf = (asset: DocId) =>
   dam.sentTo('GET', dam.routes.one).filter((request) => request.url === `${endPoints.asset}/${asset}`)
 const imagesWritten = () => imageApi.calls.filter(([call]) => call === 'createImage' || call === 'updateImage')
-/** The reads of an asset by its id wait; `answer` lets them answer with what the DAM has by then. */
 const holdReadsOf = (asset: DocId) => {
   const held = dam.hold('GET', new RegExp(`^${endPoints.asset}/${asset}$`))
   return {
@@ -169,7 +158,6 @@ describe.each<[string, Component]>([
   ['the image and media widget', ImageMediaWidgetInner],
 ])('"edit image" of %s, for an image whose asset it holds', (_name, component) => {
   const isImageWidget = component === ImageWidgetInner
-  /** The widget with its buttons in a row, as it is in a form; `image`: the id of the image the entity has. */
   const mountWidget = async (image: number | null = null, key = QUEUE) => {
     const mounted: VueWrapper = mount(component, {
       attachTo: document.body,
@@ -210,7 +198,6 @@ describe.each<[string, Component]>([
     useAssetSelectStore(pinia).setSelectConfig([uploadConfig()])
     return mounted
   }
-  /** "Edit image" of the widget: the dialog of the image it has, maybe still loading. */
   const editImage = async (widget: VueWrapper) => {
     const button = () =>
       widget.findAll('.a-image-widget__options button').find((one) => one.text() === damText('image.meta.edit'))
@@ -218,7 +205,6 @@ describe.each<[string, Component]>([
     await button()!.trigger('click')
     await vi.waitFor(() => expect(imageDialog()).toBeDefined())
   }
-  /** The same, once the dialog shows the image. */
   const editImageShown = async (widget: VueWrapper) => {
     await editImage(widget)
     await vi.waitFor(() => expect(loading()).toBe(false))
@@ -228,25 +214,21 @@ describe.each<[string, Component]>([
     imageDialog()!.querySelector<HTMLButtonElement>('[data-cy="button-close"]')!.click()
     await vi.waitFor(() => expect(imageDialog()).toBeUndefined())
   }
-  /** "Confirm" of the dialog, until the widget has saved its image. */
   const confirmImage = async (widget: VueWrapper) => {
     const saved = widget.emitted('afterMetadataSaveSuccess')?.length ?? 0
     confirmButton().click()
     await vi.waitFor(() => expect(widget.emitted('afterMetadataSaveSuccess')).toHaveLength(saved + 1))
     await flushPromises()
   }
-  /** As a host confirms the form: by the method the widget exposes. */
   const confirmAsHost = (widget: VueWrapper) =>
     (widget.vm as unknown as { metadataConfirm: () => void }).metadataConfirm()
   const authorsInput = (widget: VueWrapper) => widget.findComponent(AuthorRemoteAutocompleteWithCached)
-  /** What the dialog offers: the authors picked in it so far, or `null` where it shows the source. */
   const offered = (widget: VueWrapper) =>
     authorsInput(widget).exists() ? (authorsInput(widget).props('modelValue') as DocId[]) : null
   const pickAuthors = async (widget: VueWrapper, authors: DocId[]) => {
     authorsInput(widget).vm.$emit('update:modelValue', authors)
     await flushPromises()
   }
-  /** The asset is picked in the library, and the dialog of its image offers the authors of the DAM. */
   const pickedWithoutAuthors = async (image: number | null = null) => {
     inTheDam('asset-9')
     if (!isNull(image)) imageApi.has(stored(image))
@@ -260,7 +242,6 @@ describe.each<[string, Component]>([
     expect(offered(widget)).toEqual([])
     return widget
   }
-  /** As above, and the image is saved without an author: the widget holds the asset on. */
   const savedWithoutAuthors = async () => {
     const widget = await pickedWithoutAuthors()
     await confirmImage(widget)
@@ -284,7 +265,7 @@ describe.each<[string, Component]>([
     expect(dam.assets.get('asset-9')!.authors).toEqual(['author-3'])
   })
 
-  // The pick was written into the asset the widget holds, and nothing took it back when the dialog was closed.
+  // Guards a regression: the pick was written into the held asset and was not taken back when the dialog closed.
   it('offers none of the authors picked in a dialog closed without a confirm: the pick starts from what the DAM has', async () => {
     const widget = await savedWithoutAuthors()
     await editImageShown(widget)
@@ -301,7 +282,6 @@ describe.each<[string, Component]>([
     expect(imagesWritten().at(-1)).toMatchObject(['updateImage', 501, { texts: { source: '' } }])
   })
 
-  // The title says what the dialog is for, the same while it loads.
   it('shows only its loading while the asset is read: neither its "confirm" nor that of a host takes anything', async () => {
     const widget = await savedWithoutAuthors()
     givenAuthorsElsewhere('asset-9', ['author-3'])
@@ -330,7 +310,7 @@ describe.each<[string, Component]>([
     expect(imagesWritten()).toHaveLength(1)
   })
 
-  // What the widget holds may be stale by then: the pick of it is not offered till the dialog shows the image anew.
+  // The held asset may be stale by then, so the pick is not offered until the dialog shows the image anew.
   it('says once that the asset could not be read, and shows the source in place of the pick', async () => {
     const widget = await savedWithoutAuthors()
     refuseReadsOf('asset-9')
@@ -376,7 +356,6 @@ describe.each<[string, Component]>([
     expect(useImageMediaWidgetStore(pinia).detail).toBeNull()
     expect(imagesWritten()).toHaveLength(1)
     if (what === 'gone') return
-    // The widget holds the asset as before: opened again, the dialog reads it once more.
     await editImage(widget)
     await vi.waitFor(() => expect(reads.waiting).toHaveLength(1))
     reads.answer()
@@ -386,8 +365,9 @@ describe.each<[string, Component]>([
     expect(texts()).toEqual(['of asset-9', 'Name of author-3'])
   })
 
-  // Another widget of the page has the same image, and shows its source: what is typed there and saved is the image's
-  // own, and stays when the asset the first widget holds turns out to have authors, as an empty source would not.
+  // Another widget of the page has the same image and shows its source.
+  // A source typed and saved there belongs to the image and stays when the first
+  // widget's asset turns out to have authors. An empty source would not stay.
   it('keeps the source a save of the image by another widget gave it, once the detail "edit asset" opened gives the asset authors', async () => {
     const widget = await savedWithoutAuthors()
     const other = await mountWidget(501, 'other-image')
@@ -400,7 +380,6 @@ describe.each<[string, Component]>([
     await confirmImage(other)
     expect(imagesWritten().at(-1)).toMatchObject(['updateImage', 501, { texts: { source: 'typed elsewhere' } }])
 
-    // The first widget takes the image as that save left it, and still offers the authors of the asset.
     await editImageShown(widget)
     expect(offered(widget)).toEqual([])
     dam.reply((request) => {

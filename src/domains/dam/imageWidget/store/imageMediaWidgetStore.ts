@@ -18,20 +18,21 @@ export const isImageCreateUpdateAware = (
 
 export const useImageMediaWidgetStore = defineStore('commonAdminImageMediaWidgetStore', () => {
   const detail = ref<MediaAware | ImageCreateUpdateAware | null>(null)
-  // The widgets whose dialog shows the detail: an open image dialog, or the form `expandMetadata` draws in the page.
+  // Widgets whose dialog shows the detail: an open image dialog or the `expandMetadata` form in the page.
   const shownBy = new Set<symbol>()
 
   function reset() {
     detail.value = null
   }
 
-  /** The detail is emptied unless the dialog of a widget other than `widget` shows it: its form would be lost. */
+  /**
+   * Empties the detail unless a widget other than `widget` shows it, since its form would be lost.
+   */
   function resetUnlessShown(widget?: symbol) {
     if ([...shownBy].some((one) => one !== widget)) return
     detail.value = null
   }
 
-  /** Whether the dialog of `widget` shows the detail. */
   function setShownBy(widget: symbol, shows: boolean) {
     if (shows) shownBy.add(widget)
     else shownBy.delete(widget)

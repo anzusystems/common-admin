@@ -23,13 +23,6 @@ import UploadQueueDialogSingle from '@/domains/dam/uploadQueue/components/Upload
 import { useUploadQueueDialog } from '@/domains/dam/uploadQueue/composables/useUploadQueueDialog'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
 
-// The two upload dialogs under admin-cms, while they read an asset. The dialog of one file read the asset of its row
-// once the file was done, and only then: a row that became the original of a duplicate afterwards showed no "File
-// info", and one that became it while the read was on its way did not say that the read failed. "Save and apply" of
-// the queue dialog reads a row uploaded without its form first: closed meanwhile, the dialog still saved the rows once
-// the read had answered. The real dialogs over the real queue; the DAM is a client that records its requests, and
-// only the long waits are taken out of real time.
-
 const profile = cmsConfiguration
 const { endPoints, extSystem, licence } = profile
 const QUEUE = 'dialog-during-read'
@@ -57,7 +50,6 @@ beforeEach(() => {
   forgetAlerts()
   initDamNotifications().openConnection()
   socket.accept()
-  // As the widget leaves it when it opens the dialog of its queue.
   useUploadQueueDialog().uploadQueueDialog.value = QUEUE
 })
 afterEach(async () => {
@@ -78,7 +70,6 @@ const statuses = () => rowsOfQueue().map((item) => item.status)
 const readsOf = (asset: string) =>
   dam.sentTo('GET', dam.routes.one).filter((request) => request.url === `${endPoints.asset}/${asset}`)
 const systemError = ['error', alertText('common.alert.unknownError')]
-/** The original of a duplicate: an asset the DAM has, of the file `file-original`. */
 const originalInTheDam = () =>
   dam.assets.set(
     'asset-original',
@@ -113,7 +104,6 @@ describe('the dialog of one uploaded file', () => {
     await flushPromises()
   }
   const row = () => rowsOfQueue()[0]!
-  /** A file is picked, and the server has processed it: the row is done, as `asset-1`. */
   const processed = async () => {
     await queue().addByFiles(QUEUE, extSystem, licence, [photo()], 'default')
     await mountDialog()
@@ -122,7 +112,6 @@ describe('the dialog of one uploaded file', () => {
     await waits.elapse()
     await vi.waitFor(() => expect(row().status).toBe(Uploaded))
   }
-  /** The file of the row turns out to be a duplicate of `file-original`: the row becomes the original's. */
   const becomesTheOriginal = async () => {
     await queue().queueItemDuplicate('asset-1', 'file-original', DamAssetType.Image, 'default')
     await vi.waitFor(() => expect(row().assetId).toBe('asset-original'))
@@ -143,7 +132,6 @@ describe('the dialog of one uploaded file', () => {
 
   it('says that the read failed of a row that became the original of a duplicate while it was on its way', async () => {
     originalInTheDam()
-    // The read of the dialog: the first of `asset-1` once the row is done.
     let answerTheDialog: ((answer: FakeDamAnswer) => void) | undefined
     dam.reply((request) =>
       request.method === 'GET' &&
@@ -163,7 +151,6 @@ describe('the dialog of one uploaded file', () => {
     await vi.waitFor(() => expect(useAssetDetailStore(pinia).asset?.id).toBe('asset-original'))
   })
 
-  // The dialog is closed meanwhile, its queue emptied, and the widget's next upload is a new row of the same queue.
   it("says nothing of a failed read of a dialog closed meanwhile, over the widget's next upload", async () => {
     let answerTheDialog: ((answer: FakeDamAnswer) => void) | undefined
     dam.reply((request) =>
@@ -198,7 +185,7 @@ describe('"save and apply" of the queue dialog', () => {
   const close = () => toolbar().querySelector<HTMLButtonElement>('[data-cy="button-close"]')!
   const saves = () => dam.sentTo('PATCH', dam.routes.bulkMetadata)
 
-  // With the notifications a file is uploaded before its metadata comes, and the dialog asks about such a row first.
+  // With notifications a file is uploaded before its metadata comes, so the dialog reads such a row first.
   it('saves nothing and hands nothing over once the dialog is closed while it reads a row uploaded without its form', async () => {
     await queue().addByFiles(QUEUE, extSystem, licence, [photo('a.jpg'), photo('b.jpg')], 'default')
     wrapper = mount(UploadQueueDialog, {

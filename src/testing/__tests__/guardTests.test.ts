@@ -101,7 +101,6 @@ const sortableSources = {
   ),
   '/src/pages/articles/[id]/edit.vue': `<template>\n  <ASortableListEditor v-if="items.length > 0" v-model="items" :unsaved-section-label="t('x')" />\n</template>\n`,
   '/src/components/ArticleTags.vue': `<template>\n  <AListEditor v-model="tags" disable-unsaved />\n</template>\n`,
-  // The guards' own sources are not the admin's.
   '/src/test/sortable.test.ts': "import { useSortable } from '@vueuse/integrations/useSortable'\n",
 }
 

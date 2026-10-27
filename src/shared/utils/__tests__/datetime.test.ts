@@ -125,7 +125,6 @@ describe('utils/datetime', () => {
       )
     })
 
-    // The admins' filter default: `dateTimeStartOfDay(-365)`.
     it('reaches a year back', () => {
       setNow('2026-09-25T10:00:00Z')
       expect(dateTimeStartOfDay(-365)).toBe(
@@ -198,7 +197,6 @@ describe('utils/datetime', () => {
       )
     })
 
-    // A wall-clock time the spring-forward skips moves forward an hour, as Date does.
     it('moves a skipped local time forward', () => {
       expect(dateToUtc('2026-03-29T02:30:00')).toBe(
         byZone({
@@ -391,7 +389,6 @@ describe('utils/datetime', () => {
       expect(isDatetimeUTC(Date.now())).toBe(false)
     })
 
-    // Documented: it is a shape check, not a calendar check.
     it('does not validate the calendar', () => {
       expect(isDatetimeUTC('2026-02-30T25:61:61Z')).toBe(true)
     })
@@ -481,7 +478,6 @@ describe('utils/datetime', () => {
   })
 })
 
-// The public signatures no longer expose dayjs types; every unit accepted is one dayjs understands.
 describe('date helper signatures', () => {
   it('dateDiff takes its own unit union, which dayjs understands', () => {
     expectTypeOf<Parameters<typeof dateDiff>[2]>().toEqualTypeOf<DateDiffUnit | undefined>()

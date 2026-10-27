@@ -1,5 +1,5 @@
-// `@anzusystems/common-admin/testing`: the guard tests every admin carried as a copy. Test code only --
-// it imports vitest, and the main entry never imports it.
+// `@anzusystems/common-admin/testing`: guard tests shared by all admins.
+// Test code only. It imports vitest, and the main entry never imports it.
 export { type TypedRouterDeclaration, globKeyToSrcPath, parseTypedRouterDeclaration } from '@/testing/typedRouter'
 export { type DescribeGeneratedRoutesOptions, describeGeneratedRoutes } from '@/testing/generatedRoutes'
 export { type DescribeCloseButtonsOptions, describeCloseButtons } from '@/testing/closeButtons'

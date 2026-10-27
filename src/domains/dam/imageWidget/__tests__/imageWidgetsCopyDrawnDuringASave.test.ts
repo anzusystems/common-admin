@@ -7,12 +7,14 @@ import ImageWidgetInner from '@/domains/dam/imageWidget/components/ImageWidgetIn
 import { useImageMediaWidgetStore } from '@/domains/dam/imageWidget/store/imageMediaWidgetStore'
 import { ImageWidgetUploadConfigKey } from '@/domains/dam/imageWidget/utils/imageWidgetInkectionKeys'
 
-// A widget of one image is taken away while the save of its "edit metadata" is on its way, and a copy of it is drawn
-// elsewhere (the pin of a sidebar widget in admin-cms). The copy reads the image as it is drawn; read before that save
-// took effect, it held the texts from before, "edit metadata" of the copy offered them, and its confirm saved them
-// back over the saved ones. The copy takes the image as the save left it, with no request more, and its dialog waits
-// for a save still on its way. The image backend is a stand-in that keeps the texts saved last; a read answers with
-// what it had when it was sent. The dialog of the image is a stand-in.
+// Guards a regression: a widget is taken away while its "edit metadata" save is on
+// its way, and a copy is drawn elsewhere (the pin of a sidebar widget in admin-cms).
+// The copy read the image before the save took effect, so its "edit metadata"
+// offered old texts and its confirm saved them over the saved ones.
+// The copy now takes the image as the save left it, with no extra
+// request, and its dialog waits for a save still on its way.
+// The image backend is a stand-in that keeps the texts saved last; a read
+// answers with what it had when it was sent. The image dialog is a stand-in.
 
 const server = vi.hoisted(() => ({
   texts: { description: '', source: '' },
@@ -69,7 +71,6 @@ const image = {
   position: 1,
 }
 
-/** The instance of the view of the route the widgets are drawn in: the edit page of the article. */
 const theView = {}
 
 const mounted: VueWrapper[] = []
@@ -90,7 +91,6 @@ describe.each<[string, Component]>([
 ])('"edit metadata" of a copy of %s drawn while the save of its image is on its way', (_name, component) => {
   const isImageWidget = component === ImageWidgetInner
 
-  /** The widget of the field, which sends the read of its image 7 as it is drawn. */
   const drawWidget = (view: object = theView) => {
     const model = ref<number | null>(7)
     const Parent = defineComponent({
@@ -128,7 +128,7 @@ describe.each<[string, Component]>([
       },
     })
     mounted.push(wrapper)
-    // Found anew each time: once another widget is mounted with stand-ins of its own, this one draws them anew.
+    // Found anew each time: once another widget is mounted with its own stand-ins, this one draws them anew.
     return { wrapper, dialog: () => wrapper.findComponent({ name: 'ImageDetailDialogMetadata' }) }
   }
   type Widget = ReturnType<typeof drawWidget>
@@ -138,7 +138,6 @@ describe.each<[string, Component]>([
     return widget
   }
 
-  /** "Edit metadata" in the menu of the widget. */
   const editMetadata = async (widget: Widget) => {
     widget.wrapper.findComponent({ name: 'VMenu' }).vm.$emit('update:modelValue', true)
     await flushPromises()
@@ -157,7 +156,6 @@ describe.each<[string, Component]>([
     await flushPromises()
     await flushPromises()
   }
-  /** The texts of the image are edited and confirmed in the dialog of the widget, which is closed. */
   const savedAndClosed = async () => {
     const original = await mountWidget()
     useImageMediaWidgetStore().setDetail({ ...structuredClone(image), texts: { ...after } })
@@ -174,7 +172,6 @@ describe.each<[string, Component]>([
     mounted.splice(mounted.indexOf(widget.wrapper), 1)
     widget.wrapper.unmount()
   }
-  /** The widget is pinned: it goes, and its copy is drawn in the same task, as the pin of admin-cms draws it. */
   const pinned = async (original: Widget) => {
     goes(original)
     const copy = drawWidget()
@@ -260,14 +257,15 @@ describe.each<[string, Component]>([
     expect(server.reads).toBe(2)
   })
 
-  // The article is left while the save is on its way, and opened again (the list, or a change of its status that
-  // draws the edit page anew): the widget of the image drawn there reads it before the save took effect. It waited
-  // for nothing and took nothing, as the save was of another page, and its confirm wrote the old texts back.
+  // Guards a regression: the article is left while the save is on its way and
+  // opened again (from the list, or by a status change that redraws the edit page).
+  // The widget drawn there read the image before the save took effect.
+  // It waited for nothing and took nothing, because the save belonged
+  // to another page, and its confirm wrote the old texts back.
   it('of a widget drawn on the article opened again while the save is on its way: loads till it answers, then shows the saved texts', async () => {
     goes(await savedAndClosed())
     await flushPromises()
     await new Promise((resolve) => setTimeout(resolve, 20))
-    // Drawn in a view of the edit page of its own.
     const again = await mountWidget({})
 
     await editMetadata(again)
@@ -278,8 +276,8 @@ describe.each<[string, Component]>([
     expect(shownTexts()).toEqual(after)
   })
 
-  // An opening of "edit metadata" closed while it waits takes its wait off the save: opened and closed again and again
-  // over a save that does not answer, the waits piled up on the note of the image.
+  // Guards a regression: an opening of "edit metadata" closed while it waits must take its wait off the save.
+  // Opened and closed repeatedly over a save that never answers, the waits piled up on the image note.
   it('closed while it waits, and opened again: the dialog loads once more, and shows the saved texts when the save answers', async () => {
     const copy = await pinned(await savedAndClosed())
     await editMetadata(copy)
@@ -294,8 +292,9 @@ describe.each<[string, Component]>([
     expect(shownTexts()).toEqual(after)
   })
 
-  // Its wait is taken off the save as the opening ends: closed, or gone with its widget. It stayed till the save
-  // answered, and an opening closed and opened again and again over a save that does not answer piled them up.
+  // The wait is taken off the save when the opening ends, by close or by the widget going away.
+  // Before, it stayed until the save answered, and repeated
+  // open/close over a save that never answers piled the waits up.
   it.each<['closed' | 'gone']>([['closed'], ['gone']])(
     'that waits for the save, %s: lets its wait go at once, the save still on its way',
     async (how) => {
@@ -317,7 +316,7 @@ describe.each<[string, Component]>([
     }
   )
 
-  // No copy: the widget's own save is not waited for. Its answer closes the dialog, as before.
+  // No copy: the widget's own save is not waited for. Its answer closes the dialog.
   it('of the widget whose own save is on its way: opens at once with the image it holds, as before', async () => {
     const widget = await savedAndClosed()
 

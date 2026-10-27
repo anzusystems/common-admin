@@ -147,14 +147,14 @@ export interface CollabRoomOptions {
 }
 
 /**
- * How this client waits for a join or a leave. Kept apart from `CollabRoomOptions`, which the server stores as the
- * room's.
+ * How this client waits for a join or leave ack.
+ * Separate from `CollabRoomOptions`, which the server stores as room options.
  */
 export interface CollabJoinAckOptions {
   /**
-   * Milliseconds to wait for the server's answer before the join fails or the leave resolves. The server may still
-   * finish one the client has given up on; a caller that cleans up or joins again behind it waits longer than the
-   * server can take.
+   * Milliseconds to wait for the server before the join fails or the leave resolves.
+   * The server may still finish an operation the client gave up on. A caller that
+   * cleans up or rejoins afterwards should wait longer than the server can take.
    */
   ackTimeout?: number
 }

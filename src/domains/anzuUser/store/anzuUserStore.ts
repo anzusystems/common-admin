@@ -4,9 +4,7 @@ import { useAnzuUserFactory } from '@/domains/anzuUser/factory/AnzuUserFactory'
 import type { AnzuUser } from '@/shared/types/AnzuUser'
 
 /**
- * The one user the owning form is editing. Cross-system pages do not use this -- they hold a
- * result per system and never a single "current" user -- so it stays a single record, the way the
- * admins have it.
+ * The single user the owning form edits. Cross-system pages keep per-system results instead.
  */
 export const useAnzuUserOneStore = defineStore('commonAdminAnzuUserOneStore', () => {
   const { createAnzuUser } = useAnzuUserFactory()

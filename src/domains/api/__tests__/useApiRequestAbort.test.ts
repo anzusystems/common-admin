@@ -2,8 +2,8 @@ import { describe, expect, it, vi } from 'vitest'
 import type { AxiosInstance } from 'axios'
 import { useApiRequest } from '@/domains/api/composables/useApiRequest'
 
-// The abort controller lived in a single variable, so overlapping calls overwrote it and
-// abort() could end up cancelling nothing at all.
+// The abort controller was kept in a single variable, so overlapping
+// calls overwrote it and `abort()` could cancel nothing.
 
 const deferred = () => {
   let settle: (value: unknown) => void = () => undefined

@@ -6,12 +6,11 @@ import type { IntegerId } from '@/shared/types/common'
 import { isUndefined } from '@/shared/utils/common'
 
 /**
- * Loads what the detail of an asset of the type `assetType` reads of the ext system `extSystem` as it draws, and throws
- * without: the configuration of the ext system and the custom fields of its assets, each one the DAM configuration
- * store of `configName` has not got yet. Of the custom fields, every type where the store has none of the ext system,
- * else the type `assetType` alone where its read failed before. A load that fails, or leaves that type not loaded,
- * rejects with an `AnzuFatalError`, which the alerts say as an unknown error: the loaders reject with `false`, which
- * they do not say.
+ * Loads what the asset detail of type `assetType` needs from ext system `extSystem` and would otherwise throw on.
+ * Loads the ext system config and the custom fields missing in the `configName` store.
+ * Custom fields: all types if the store has none for the ext system, else only `assetType` if its read failed before.
+ * Rejects with `AnzuFatalError` on failure or if the type stays unloaded. Alerts show
+ * it as an unknown error. The loaders reject with `false`, which alerts do not show.
  */
 export async function loadAssetDetailExtSystem(
   client: () => AxiosInstance,

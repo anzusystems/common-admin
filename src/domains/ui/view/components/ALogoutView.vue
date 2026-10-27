@@ -10,8 +10,8 @@ const props = withDefaults(
   }
 )
 
-// The sign-out address takes the place of the admin's own `/logout` in the browser history: left there, Back after
-// the next sign-in came to `/logout`, and signed the user out at once. The page the user was on before stays.
+// The sign-out address replaces the admin's `/logout` in browser history. Otherwise
+// Back after the next sign-in reaches `/logout` and signs the user out at once.
 onMounted(() => {
   if (!props.logoutUrl) return
   window.location.replace(props.logoutUrl())

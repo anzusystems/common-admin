@@ -4,10 +4,8 @@ import { usePermissionConfigFactory } from '@/domains/permission/config/factory/
 import type { PermissionConfig } from '@/domains/permission/config/types/PermissionConfig'
 
 /**
- * One entry per system. The admins this replaces kept `loading` and `initialized` as two module
- * booleans shared by every system they fetched, which is wrong the moment the fetches run in
- * parallel: the first one to finish cleared the flag for all of them, and the first one to fail
- * left it set forever because there was no `finally`.
+ * One entry per system. Shared `loading` and `initialized` flags break with parallel fetches.
+ * The first fetch to finish would clear the flag for all, and a failure without `finally` would leave it set forever.
  */
 export interface PermissionConfigEntry {
   config: PermissionConfig
@@ -27,9 +25,9 @@ export const usePermissionConfigStore = defineStore('commonAdminPermissionConfig
   })
 
   /**
-   * Never returns undefined, so a template can read `.config` before the first fetch lands. The
-   * empty config is a fresh object per call rather than a shared constant: the editor writes into
-   * what it is handed, and one frozen blank would be shared by every system that has not answered.
+   * Never returns undefined, so a template can read `.config` before the first fetch.
+   * The empty config is a fresh object per call. The editor writes into
+   * it, so a shared constant would be shared across unanswered systems.
    */
   function getEntry(system: string): PermissionConfigEntry {
     return entries.value.get(system) ?? emptyEntry()
@@ -45,7 +43,9 @@ export const usePermissionConfigStore = defineStore('commonAdminPermissionConfig
     entries.value.set(system, { ...entry, config, initialized: true })
   }
 
-  /** Drops one system, leaving the others loaded. Used when a system's client is swapped out. */
+  /**
+   * Drops one system, leaving the others loaded. Used when a system's client is swapped out.
+   */
   function resetSystem(system: string) {
     entries.value.delete(system)
   }

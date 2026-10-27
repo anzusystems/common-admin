@@ -23,13 +23,12 @@ import { UploadQueueItemStatus } from '@/domains/dam/types/UploadQueue'
 import { useUploadQueueDialog } from '@/domains/dam/uploadQueue/composables/useUploadQueueDialog'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
 
-// An upload dialog goes away with its widget while it is open (in admin-cms the editor sent out of the article during
-// an upload), and its rows stay in the queue, which the app keeps. The next widget of the same queue key (the same
-// field of another article) added its file to those rows: its dialog showed the first of them, the old file, and "save
-// and apply" handed the widget that one, while the new upload was stopped with the queue. A widget that adds files to a
-// queue no dialog names stops it first. Under admin-cms: the real widgets with their real upload dialogs over the real
-// queue; the DAM and the backend of the images are clients that record their requests, and only the long waits are
-// taken out of real time.
+// An upload dialog goes away with its widget while open (admin-cms: editor sent out
+// of the article during an upload). Its rows stay in the queue, which the app keeps.
+// The next widget of the same queue key added its file to those rows. Its dialog showed the old
+// file, and "save and apply" handed over that one, while the new upload was stopped with the queue.
+// A widget that adds files to a queue no dialog names stops it first.
+// Under admin-cms with real widgets, dialogs and queue. Only the long waits are taken out of real time.
 
 const profile = cmsConfiguration
 const { endPoints, extSystem, licence } = profile
@@ -99,7 +98,6 @@ const uploadConfig = () => ({
   licenceName: '',
   extSystemConfig: useDamConfigStore(pinia).damConfigExtSystem.get(extSystem)!,
 })
-/** The file of an asset is processed by the DAM, and the queue has learnt of it. */
 const processed = async (key: string, title: string, asset: string) => {
   await vi.waitFor(() => expect(statusOf(key, title)).toBe(Processing))
   dam.fileBecomes(asset, AssetFileProcessStatus.Processed, described(title))
@@ -162,7 +160,6 @@ describe.each<[string, Component]>([
     Array.from(document.body.querySelectorAll<HTMLElement>('.v-menu.v-overlay--active .v-list-item'))
   const fileInputOfDialog = () =>
     document.body.querySelector<HTMLInputElement>('[data-cy="create-panel"] input[type="file"]')
-  /** The user picks a file with "Upload image" of the widget's menu. */
   const pickThroughMenu = async (widget: VueWrapper, name: string) => {
     await widget.find(`button[aria-label="${damText('image.button.options')}"]`).trigger('click')
     await vi.waitFor(() => expect(openMenuItem().length).toBeGreaterThan(0))
@@ -251,7 +248,6 @@ describe('an upload into the widget of several images after its queue dialog wen
     await flushPromises()
     return widget
   }
-  /** The user picks files with the upload button of the widget. */
   const pick = async (widget: VueWrapper, name: string) => {
     const input = (widget.element as Element).querySelector<HTMLInputElement>('input[type="file"]')!
     input.files = carrying([photo(name)]).files

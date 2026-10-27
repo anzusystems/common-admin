@@ -42,21 +42,16 @@ import { useUploadQueueDialog } from '@/domains/dam/uploadQueue/composables/useU
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
 import type { DocId, IntegerId } from '@/shared/types/common'
 
-// The detail of an asset as each of its four hosts opens it, under each of the two applications: "edit asset" of a
-// row of the gallery, of the dialog of the image in each of the two widgets of one image, and of a row of the queue
-// dialog, whose detail its host draws (here the gallery). A host opens the detail before it reads the asset. What
-// the detail does when that read fails, when its answer comes after the detail was closed from its loader, and when
-// two reads overlap: a read that failed used to leave the page under a dialog that drew nothing and that nothing
-// closed, and the store of the detail, one for the page, took every answer whenever it came. And what becomes of the
-// detail when its host goes away with it open: its key used to stay in that store. The real hosts with the
-// real dialog of the detail in its real frame; the DAM and the backend of the images are clients that record their
-// requests, and only the long waits are taken out of real time. Not mounted for real: the sortable list around the
-// rows of the gallery, the asset pickers, the pictures, the editor of the region of interest with its regions, the
-// dropzones, the mass operations of the queue dialog, and the inputs that ask the DAM for names to offer.
+// Tests the detail as each of its four hosts opens it, under both applications.
+// A host opens the detail before it reads the asset. Guarded bugs:
+// a failed read left a dialog that drew nothing and could not be closed;
+// the page-wide store took every answer whenever it came;
+// a host that went away with its detail open left its key in the store.
+// Real hosts and the real dialog are used. The DAM and image backend are
+// recording clients, and only the long waits are taken out of real time.
 
 const QUEUE = 'detail-host'
 const TITLE = 'Harbour at dawn'
-// A licence of another ext system than the one of the page.
 const OTHER = 300003
 const OTHER_EXT_SYSTEM = 7
 const { Processing, Uploaded } = UploadQueueItemStatus
@@ -69,7 +64,6 @@ let socket: DamSocket
 let page: VueWrapper | undefined
 
 const Picker = defineComponent({ name: 'AAssetSelect', emits: ['confirm'], setup: () => () => h('div') })
-// The list editor around the rows of the gallery: only its view is drawn.
 const Editor = defineComponent({
   name: 'ASortableListEditor',
   setup: (_, { slots, expose }) => {
@@ -96,19 +90,12 @@ const buttonOf = (root: ParentNode, text: string) =>
 
 interface Host {
   name: string
-  /** Whether the host has the page ask for names under the ext system of the licence of the asset it shows. */
   namesExtSystem: boolean
-  /** The asset "edit asset" opens the detail of. */
   asset: DocId
-  /** What the host reads that asset with. */
   read: () => string
-  /** The page as it is when the user can press "edit asset". */
   mount: () => Promise<void>
-  /** The same page mounted once more, after the first has gone away: as `mount`, where nothing else is named. */
   mountAgain?: () => Promise<void>
-  /** The asset "edit asset" opens the detail of on the page mounted once more: `asset`, where nothing else is named. */
   assetAgain?: DocId
-  /** What the host reads that asset with: as `read`, where nothing else is named. */
   readAgain?: () => string
   editAsset: () => HTMLButtonElement
 }
@@ -123,7 +110,6 @@ describe.each(consumerProfiles)('the detail of an asset as its hosts open it, un
     dam = createFakeDam(endPoints)
     imageApi = installConsumerImageApi(profile, installConsumerProfile(profile, dam.client))
     answerDamNames(dam)
-    // The search of the DAM for assets by their files, which the gallery asks before it reads the assets.
     const search = new RegExp(`^${escaped(endPoints.asset)}/licence/(\\d+)/search\\?assetAndMainFileIds=([^&]*)`)
     dam.reply((request) => {
       const match = request.method === 'GET' ? request.url.match(search) : null
@@ -132,7 +118,6 @@ describe.each(consumerProfiles)('the detail of an asset as its hosts open it, un
       const found = [...dam.assets.values()].filter((asset) => asset.mainFile && files.includes(asset.mainFile.id))
       return { status: 200, data: { data: found, totalCount: found.length } }
     })
-    // The other licence is of another ext system, configured as the one of the page.
     const config = useDamConfigStore(pinia)
     config.damConfigLicenceExtSystem.set(OTHER, { name: '', extSystem: OTHER_EXT_SYSTEM })
     config.damConfigExtSystem.set(OTHER_EXT_SYSTEM, config.damConfigExtSystem.get(extSystem)!)
@@ -163,7 +148,6 @@ describe.each(consumerProfiles)('the detail of an asset as its hosts open it, un
 
   const detail = () => useAssetDetailStore(pinia)
   const pageExtSystem = () => useExtSystemIdForCached().cachedExtSystemId
-  /** An image the entity already has: `file-<id>` of `asset-<id>`. */
   const stored = (id: number): ImageAware => ({
     id,
     texts: { description: `image ${id}`, source: `source ${id}` },
@@ -171,7 +155,6 @@ describe.each(consumerProfiles)('the detail of an asset as its hosts open it, un
     flags: { showSource: true, internal: false, overrideInternal: false },
     position: 1,
   })
-  /** An asset as the DAM answers it: an image with its file processed. */
   const inTheDam = (id: DocId, title = TITLE, of: IntegerId = licence) =>
     damAssetWithFile(id, `file-${id.replace('asset-', '')}`, AssetFileProcessStatus.Processed, {
       licence: of,
@@ -196,7 +179,6 @@ describe.each(consumerProfiles)('the detail of an asset as its hosts open it, un
     })
     await flushPromises()
   }
-  /** The gallery of an entity that has the given images. */
   const mountGallery = async (ids: number[]) => {
     ids.forEach((id) => {
       imageApi.has(stored(id))
@@ -207,12 +189,10 @@ describe.each(consumerProfiles)('the detail of an asset as its hosts open it, un
     await damNamesAsked()
     await flushPromises()
   }
-  // The dialog of the image of a widget of one image is drawn into the body.
   const imageDialog = () =>
     Array.from(document.body.querySelectorAll<HTMLElement>('.v-overlay--active .v-card')).find((card) =>
       card.textContent?.includes(damText('image.meta.edit'))
     )
-  /** A widget of one image that has an image, with the dialog of that image open. */
   const mountWithImageDialog = async (component: Component, props: Record<string, unknown>) => {
     imageApi.has(stored(12))
     dam.assets.set('asset-12', inTheDam('asset-12'))
@@ -228,7 +208,6 @@ describe.each(consumerProfiles)('the detail of an asset as its hosts open it, un
       .getQueueItems(QUEUE)
       .map((item) => item.status)
   const queueRows = () => document.body.querySelectorAll('.overlay--sidebar .dam-upload-queue__item')
-  /** A file picked in the gallery, uploaded and processed by the DAM: `asset` is made of it. */
   const uploadThroughGallery = async (asset: DocId) => {
     const input = (page!.element as Element).querySelector<HTMLInputElement>('input[type="file"]')!
     const picked = new DataTransfer()
@@ -276,7 +255,6 @@ describe.each(consumerProfiles)('the detail of an asset as its hosts open it, un
       editAsset: () => buttonOf(imageDialog()!, useCommonAdminCoreDamOptions('default').editAssetLabel)!,
     },
     {
-      // The row of a file uploaded through the gallery: the first file the DAM is sent is `file-1` of `asset-1`.
       name: '"edit asset" of a row of the queue dialog',
       namesExtSystem: false,
       asset: 'asset-1',
@@ -285,10 +263,10 @@ describe.each(consumerProfiles)('the detail of an asset as its hosts open it, un
         await mountGallery([])
         await uploadThroughGallery('asset-1')
       },
-      // The queue is the app's and still holds the row of the first file; the gallery drawn again does not open its
-      // dialog (it forgot itself as it went with the gallery before). The way back to a row is the user's: a new file
-      // uploaded through the gallery, the second the DAM is sent. It stops the queue no dialog names first: in the
-      // dialog it opens, the row of the new file is the only one.
+      // The queue is the app's and still holds the row of the first file.
+      // The redrawn gallery does not reopen its dialog. A new upload
+      // (the second file sent to the DAM) is the way back to a row.
+      // In the dialog it opens, the new row is the only one.
       mountAgain: async () => {
         await mountGallery([])
         expect([queueStatuses(), queueRows().length]).toEqual([[Uploaded], 0])
@@ -308,13 +286,11 @@ describe.each(consumerProfiles)('the detail of an asset as its hosts open it, un
     },
   ]
 
-  // The detail is drawn into the body: its loader, or the asset.
   const card = () => document.body.querySelector<HTMLElement>('.dam-image-detail')
   const assetDrawn = () => !!card()?.querySelector('.dam-image-detail__left')
   const loaderDrawn = () => !!card()?.querySelector('.v-progress-circular') && !assetDrawn()
   const heading = () => card()?.querySelector('.v-toolbar')?.textContent ?? ''
   const activeOverlays = () => Array.from(document.body.querySelectorAll('.v-overlay--active'))
-  /** Whether a click at the middle of the element lands on it: nothing lies over it. */
   const reachable = (element: Element) => {
     element.scrollIntoView({ block: 'center' })
     const box = element.getBoundingClientRect()
@@ -329,7 +305,9 @@ describe.each(consumerProfiles)('the detail of an asset as its hosts open it, un
     expect(loaderDrawn()).toBe(true)
     await press(card()!.querySelector<HTMLButtonElement>(`button[aria-label="${uiText('common.button.close')}"]`)!)
   }
-  /** What the DAM was asked since, but for the names of authors and keywords, which the caches ask in their own time. */
+  /**
+   * Ignores name requests for authors and keywords. Their caches ask in their own time.
+   */
   const askedSince = (from: number) =>
     dam.requests
       .slice(from)
@@ -341,10 +319,8 @@ describe.each(consumerProfiles)('the detail of an asset as its hosts open it, un
   const failureSaid = [['error', alertText('common.alert.unknownError')]]
 
   describe.each(hosts)('opened by $name', (host) => {
-    // The path that did not change: one read, and the asset it answers with.
     it('shows the asset the DAM answers with, read once as before', async () => {
       await host.mount()
-      // Whatever another widget of the page has left there.
       pageExtSystem().value = OTHER_EXT_SYSTEM
       const before = dam.requests.length
 
@@ -360,8 +336,8 @@ describe.each(consumerProfiles)('the detail of an asset as its hosts open it, un
       expect(shownAlerts()).toEqual([])
     })
 
-    // The detail used to stay: a dialog over the whole window that drew neither its loader nor an asset, and that
-    // neither Esc nor a click outside closes. Only a reload of the page took it away.
+    // A failed read used to leave a dialog over the whole window that drew nothing.
+    // Neither Esc nor a click outside closed it. Only a page reload did.
     it.each<[string, number]>([
       ['is gone from the DAM', 404],
       ['cannot be read', 500],
@@ -379,13 +355,11 @@ describe.each(consumerProfiles)('the detail of an asset as its hosts open it, un
         expect(shownAlerts()).toEqual(failureSaid)
         expect([detail().dialog, detail().asset, detail().loading]).toEqual([null, null, false])
         expect(card()).toBeNull()
-        // The overlays that were there before, and no other.
         expect(activeOverlays().map((overlay) => overlaysBefore.indexOf(overlay))).toEqual(
           overlaysBefore.map((_, index) => index)
         )
         expect(reachable(host.editAsset())).toBe(true)
 
-        // The page goes on: once the DAM answers, "edit asset" opens the detail.
         answerAgain()
         await press(host.editAsset())
         await vi.waitFor(() => expect(detail().asset?.id).toBe(host.asset))
@@ -395,8 +369,8 @@ describe.each(consumerProfiles)('the detail of an asset as its hosts open it, un
       }
     )
 
-    // The store of the detail is one for the page. The answer used to be written into it whenever it came, and
-    // stayed: the next detail showed that asset when its own read failed.
+    // The detail store is one per page. A late answer used to be written into it and stayed.
+    // The next detail then showed that asset when its own read failed.
     it('takes nothing of an answer that comes after it was closed from its loader, and the next detail shows nothing of it', async () => {
       await host.mount()
       const extSystemBefore = pageExtSystem().value
@@ -407,7 +381,6 @@ describe.each(consumerProfiles)('the detail of an asset as its hosts open it, un
       await closeFromLoader()
       expect([detail().dialog, detail().loading]).toEqual([null, false])
       expect(card()).toBeNull()
-      // The answer names an asset of another licence, of another ext system.
       held.release({ status: 200, data: inTheDam('asset-late', 'The late one', OTHER) })
       await waits.settle()
 
@@ -425,8 +398,9 @@ describe.each(consumerProfiles)('the detail of an asset as its hosts open it, un
       expect(shownAlerts()).toEqual(failureSaid)
     })
 
-    // Closed from its loader and opened again, the detail has two reads on their way. The older answer used to be
-    // shown as well: for good when it came last, and whichever came first turned the loader off.
+    // Closed from its loader and opened again, the detail has two reads in flight.
+    // The older answer used to be shown too: permanently when it
+    // came last, and it turned the loader off when it came first.
     it.each<[string, boolean]>([
       ['the older answer comes first', true],
       ['the newer answer comes first', false],
@@ -448,7 +422,6 @@ describe.each(consumerProfiles)('the detail of an asset as its hosts open it, un
         if (olderFirst) {
           first.release(older)
           await waits.settle()
-          // Not the answer the detail waits for: it goes on loading, and the page asks for names as it did.
           expect([detail().dialog, detail().asset, detail().loading]).toEqual([QUEUE, null, true])
           expect(loaderDrawn()).toBe(true)
           expect(pageExtSystem().value).toBe(extSystem)
@@ -469,8 +442,8 @@ describe.each(consumerProfiles)('the detail of an asset as its hosts open it, un
       }
     )
 
-    // The failure of the older read is said, as every failed read was. It is not the read the open detail waits
-    // for: that detail neither closes nor stops loading.
+    // The failure of the older read is still reported, as for every failed read.
+    // It is not the read the open detail waits for, so the detail neither closes nor stops loading.
     it('goes on loading when an older read fails, and shows its asset once its own read answers', async () => {
       await host.mount()
       const held = dam.hold('GET', readOf(host))
@@ -498,10 +471,10 @@ describe.each(consumerProfiles)('the detail of an asset as its hosts open it, un
       expect(shownAlerts()).toEqual(failureSaid)
     })
 
-    // The store of the detail is the page's, and outlives its hosts. A host that went away with its detail open (the
-    // user leaves the page: Back of the browser is enough) used to leave its key there, and the next host with that
-    // key drew the detail at once, over a page that had not asked for it: in admin-ugc an empty dialog over the list
-    // of assets, which only a reload took away.
+    // The detail store is the page's and outlives its hosts.
+    // A host that went away with its detail open (Back in the browser is enough) used to leave its key there.
+    // The next host with that key drew the detail at once. In admin-ugc
+    // that was an empty dialog over the asset list until a reload.
     it('is closed when its host goes away: a host mounted with the same key afterwards draws none', async () => {
       await host.mount()
       await press(host.editAsset())
@@ -522,7 +495,6 @@ describe.each(consumerProfiles)('the detail of an asset as its hosts open it, un
       expect([detail().dialog, detail().asset, detail().loading]).toEqual([null, null, false])
       expect(card()).toBeNull()
       expect(reachable(host.editAsset())).toBe(true)
-      // The page goes on: "edit asset" opens the detail as it did, with one read of the asset it shows now.
       const before = dam.requests.length
       await press(host.editAsset())
       await vi.waitFor(() => expect(detail().asset?.id).toBe(host.assetAgain ?? host.asset))
@@ -543,7 +515,6 @@ describe.each(consumerProfiles)('the detail of an asset as its hosts open it, un
       page!.unmount()
       page = undefined
       expect([detail().dialog, detail().loading]).toEqual([null, false])
-      // The answer names an asset of another licence, of another ext system.
       held.release({ status: 200, data: inTheDam('asset-late', 'The late one', OTHER) })
       await waits.settle()
 
@@ -556,7 +527,6 @@ describe.each(consumerProfiles)('the detail of an asset as its hosts open it, un
 })
 
 const anAsset = (id: DocId) => damAssetWithFile(id, `file-of-${id}`, AssetFileProcessStatus.Processed)
-/** A read the test answers. */
 const heldRead = () => {
   let answer!: (answered: AssetDetailItemDto) => void
   let fail!: (reason: Error) => void
@@ -567,9 +537,6 @@ const heldRead = () => {
   return { read: () => read, answer, fail }
 }
 
-// The store of the detail alone, for what none of the four hosts shows: an asset another part of the page has left in
-// the store, a detail opened over the same queue without a read, as the asset list opens the detail of the asset its
-// side panel shows, and the read that list makes for its side panel when a detail has closed.
 describe('the store of the detail of an asset, opened with a read', () => {
   let store: ReturnType<typeof useAssetDetailStore>
 
@@ -578,7 +545,6 @@ describe('the store of the detail of an asset, opened with a read', () => {
     store = useAssetDetailStore()
   })
 
-  /** The asset list opens the detail of the asset its side panel shows: over its queue, without a read. */
   const openedByTheList = () => {
     store.setAsset(anAsset('asset-of-the-list'))
     store.dialog = QUEUE
@@ -596,7 +562,8 @@ describe('the store of the detail of an asset, opened with a read', () => {
     expect([store.dialog, store.asset?.id, store.loading]).toEqual([QUEUE, 'asset-own', false])
   })
 
-  // No host opens the detail twice without a close between: its loader covers the page. The store does not count on it.
+  // No host opens the detail twice without a close between, because
+  // its loader covers the page. The store does not rely on that.
   it.each<[string, boolean]>([
     ['first', true],
     ['last', false],
@@ -648,14 +615,14 @@ describe('the store of the detail of an asset, opened with a read', () => {
     openedByTheList()
 
     held.fail(new Error('The asset is gone.'))
-    // The failure is the host's to say, as that of every read.
     await expect(opened).rejects.toThrow('The asset is gone.')
 
     expect([store.dialog, store.asset?.id, store.loading]).toEqual([QUEUE, 'asset-of-the-list', false])
   })
 
-  // The asset list reads the asset of its side panel again when a detail has closed. That read is not one a detail
-  // was opened with: written whenever it answered, its asset was what a detail opened meanwhile showed and saved.
+  // The asset list re-reads the side panel asset when a detail has closed.
+  // That read is not one a detail was opened with. If written whenever it
+  // answered, its asset would be what a detail opened meanwhile shows and saves.
   describe('a read beside the detail, of the asset a side panel shows', () => {
     it('is taken while no detail is open, and none was opened since it began', async () => {
       const held = heldRead()
@@ -706,7 +673,6 @@ describe('the store of the detail of an asset, opened with a read', () => {
       expect([store.dialog, store.asset?.id]).toEqual([QUEUE, 'asset-of-the-list'])
     })
 
-    // The close of that detail has its host read again: the older answer is not the news.
     it('is not taken once a detail was opened and closed since, over the read its close began', async () => {
       const older = heldRead()
       const newer = heldRead()
@@ -736,16 +702,14 @@ describe('the store of the detail of an asset, opened with a read', () => {
   })
 })
 
-// The dialog of the detail tells its host that the detail has closed: the button of the dialog closes it, and so does
-// the store, after a read that failed. It is told once for each closing of the detail of that host, with the asset
-// the detail showed when its button closed it. The dialog used to tell at every change of the store's dialog: again,
-// with the asset of the close before, when the detail was opened once more before the host had drawn, and at the
-// opening of another host's detail. The real dialog under a host that draws it as the widgets do; what it frames is
-// not drawn.
+// The dialog tells its host once for each closing of its detail,
+// with the asset the detail showed when its button closed it.
+// It used to tell on every change of the store's dialog:
+// again with the previous asset when the detail was reopened before
+// the host had drawn, and when another host's detail opened.
 describe('the dialog of the detail of an asset, telling its host that the detail closed', () => {
   let store: ReturnType<typeof useAssetDetailStore>
   let host: VueWrapper | undefined
-  /** The asset each `close` told of, by its id: `null` for none. */
   let told: Array<DocId | null>
 
   beforeEach(() => {
@@ -774,7 +738,6 @@ describe('the dialog of the detail of an asset, telling its host that the detail
     host = undefined
   })
 
-  /** The detail of the host is open and shows an asset. */
   const shown = async () => {
     await store.open(QUEUE, async () => anAsset('asset-shown'))
     await flushPromises()
@@ -803,7 +766,7 @@ describe('the dialog of the detail of an asset, telling its host that the detail
     expect(told).toEqual([null])
   })
 
-  // Before the host has drawn again, the dialog that has just closed is still there to see the next opening.
+  // Before the host draws again, the dialog that just closed is still there when the next opening happens.
   it('does not tell again when the detail is opened once more at once, and forgets the asset of the close before', async () => {
     await shown()
 
@@ -814,7 +777,6 @@ describe('the dialog of the detail of an asset, telling its host that the detail
     await flushPromises()
     expect(told).toEqual(['asset-shown'])
 
-    // The detail opened again showed no asset: its read fails, and the store closes it.
     held.fail(new Error('The asset is gone.'))
     await expect(openedAgain).rejects.toThrow('The asset is gone.')
     expect(told).toEqual(['asset-shown', null])
@@ -831,8 +793,8 @@ describe('the dialog of the detail of an asset, telling its host that the detail
     expect(told).toEqual(['asset-shown'])
   })
 
-  // No host can open its detail over the open detail of another: the loader covers the page. Were it to happen, the
-  // detail of this host is gone, and its host is told so once; what it showed is not known by then.
+  // No host can open its detail over another's, because the loader covers the page.
+  // If it happened, this host's detail is gone and the host is told once, without an asset.
   it('tells once, with no asset, when the detail of another host takes its place, and nothing of what follows', async () => {
     await shown()
 
@@ -844,9 +806,8 @@ describe('the dialog of the detail of an asset, telling its host that the detail
     expect(told).toEqual([null])
   })
 
-  // A host that goes away with its detail open: the store is the page's, and its key would stay there for the next
-  // host of that key to draw the detail by. The dialog closes the store as it is taken away, and tells nobody: its
-  // host is going away as well.
+  // The store is the page's, and a leftover key would make the next host with that key draw the detail.
+  // The dialog closes the store when it is taken away and tells nobody, because its host is going away too.
   it('closes the store, and tells nobody, when it is taken away with its detail open', async () => {
     await shown()
 
@@ -873,8 +834,8 @@ describe('the dialog of the detail of an asset, telling its host that the detail
     expect(told).toEqual([])
   })
 
-  // The dialog is taken away by its host as well once its detail has closed, or once the key of another host has
-  // taken its place: what is in the store by then is not its own to close.
+  // The host also removes the dialog after its detail closed or another host's key took its place.
+  // What is in the store by then is not this dialog's to close.
   it.each<[string, () => void]>([
     ['its own has closed', () => pressClose()],
     ['the key of that host has taken the place of its own', () => undefined],
@@ -885,7 +846,6 @@ describe('the dialog of the detail of an asset, telling its host that the detail
     before()
     const openedByAnother = store.open('queue-of-another-host', held.read)
     const toldBefore = [...told]
-    // The host draws again, without the dialog.
     await flushPromises()
 
     expect(host!.findComponent(AssetDetailDialog).exists()).toBe(false)

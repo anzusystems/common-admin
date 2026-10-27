@@ -233,7 +233,6 @@ describe('ImageWidgetInner in a collab room', () => {
     await flushPromises()
     expect(released).not.toHaveBeenCalled()
 
-    // Nothing copied: the pick ends without a dialog, and the lock goes.
     copied.resolve!([])
     await flushPromises()
     await flushPromises()
@@ -300,7 +299,7 @@ describe('ImageWidgetInner in a collab room', () => {
     wrapper.unmount()
   })
 
-  // Finding 30: the dropzone has turned every file away, and nothing is to be uploaded. The field is not asked for.
+  // The dropzone has turned every file away and nothing is uploaded, so the field is not asked for a lock.
   it('asks for no lock for a drop that brings no file', async () => {
     const { wrapper } = mountWidget('listing-empty-drop')
     await flushPromises()
@@ -313,8 +312,8 @@ describe('ImageWidgetInner in a collab room', () => {
     wrapper.unmount()
   })
 
-  // Finding 47: the upload dialog shows one file. A second drop while the first still waits for the lock of the
-  // field is not taken; both used to queue their file once the lock came.
+  // The upload dialog shows one file. A second drop while the first still waits for the field lock is not taken.
+  // Both used to queue their file once the lock came.
   it('takes one drop while its lock is asked for, and the next one once that is over', async () => {
     const { wrapper } = mountWidget('listing-one-drop-at-a-time')
     const addByFiles = vi.spyOn(useUploadQueuesStore(), 'addByFiles').mockResolvedValue(undefined as never)
@@ -375,7 +374,6 @@ describe('ImageWidgetInner in a collab room', () => {
     wrapper.unmount()
   })
 
-  // Left loading, the metadata dialog showed only a spinner for the next upload or edit.
   it('leaves the metadata dialog not loading after a pick that ends early', async () => {
     const { wrapper } = mountWidget('listing-pick-early')
     await openMenu(wrapper)

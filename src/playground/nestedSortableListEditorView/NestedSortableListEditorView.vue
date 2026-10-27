@@ -285,7 +285,7 @@ const failingApply = async (_tree: NestedTree<MenuItem>): Promise<void> => {
   throw new Error('Server rejected the new tree')
 }
 
-// --- imperative ref API demo (the LinkedListManage pattern: rows the server already saved) ---
+// Imperative ref API demo: the LinkedListManage pattern with rows the server already saved.
 
 const refApiRef = ref<ExposedNestedSortableListEditorHandle<MenuItem> | null>(null)
 

@@ -24,7 +24,7 @@ const damConfigName = useDamConfigName(props.configName)
 
 const status = ref<'loading' | 'ready' | 'error'>('loading')
 
-// The name first: a configuration the application has not got throws here, and gets no store.
+// Resolve the options first: an unknown configuration throws here and gets no store.
 const { damClient } = useCommonAdminCoreDamOptions(damConfigName)
 const damConfigStore = useDamConfigStoreOf(damConfigName)
 const { loadDamPrvConfig } = useDamConfigState(damClient, damConfigName)

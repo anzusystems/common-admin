@@ -24,11 +24,10 @@ import en from '@/locales/en'
 import sk from '@/locales/sk'
 import { createAnzuVuetify } from '@/plugins/commonVuetifyConfig'
 
-// Controls of the library that a screen reader named wrongly or not at all: the calendar icon of the date picker
-// (a button through the activator props of its menu, without a name, which Enter and Space did not press), the menu
-// of the current user (named by the initials of the avatar), and the close of a chip that removes a value (Vuetify's
-// "Close"). Each is mounted as an admin mounts it: with the Vuetify of the library, which translates through the i18n
-// of the admin.
+// Controls that a screen reader named wrongly or not at all: the calendar icon of the date picker (a button
+// through the activator props of its menu, without a name, which Enter and Space did not press), the menu of the
+// current user (named by the avatar initials), and the close of a chip that removes a value (Vuetify's "Close").
+// Each is mounted as an admin mounts it, with the library's Vuetify translating through the admin's i18n.
 
 // ACachedChip asks for the router as it is set up.
 vi.mock('vue-router', async (importOriginal) => ({
@@ -155,7 +154,6 @@ describe('the names of controls of the library', () => {
     expect(closed).toEqual([7])
   })
 
-  /** The autocomplete of the roles, with one role picked; answers what it hands the model. */
   const mountRoles = async (locale: string, readonly = false) => {
     const roles = ref(['ROLE_EDITOR'])
     const request = vi.fn().mockResolvedValue({
@@ -202,7 +200,6 @@ describe('the names of controls of the library', () => {
 
     const close = host!.querySelector<HTMLButtonElement>('.v-chip__close')!
     expect(close.getAttribute('aria-label')).toBe(name)
-    // The chip shows the role, small, as the chip of Vuetify did.
     expect(host!.querySelector('.v-chip')!.textContent).toMatch(/editor/i)
     expect(host!.querySelector('.v-chip')!.classList.contains('v-chip--size-small')).toBe(true)
     close.click()
@@ -256,7 +253,6 @@ describe('the names of controls of the library', () => {
     expect(outer.filterData.groups).toEqual([5])
   })
 
-  /** A filter of one value, `group` = 3, with closable chips; counts the requests for the list. */
   const mountSingleFilter = async () => {
     const fields = [{ name: 'group', default: null, variant: 'custom' }] as const
     const outer = createFilter(fields, createFilterStore(fields), { system: 'sys', subject: 'chip' })
@@ -287,7 +283,9 @@ describe('the names of controls of the library', () => {
     await vi.waitFor(() => expect(host!.querySelectorAll('.v-chip__close')).toHaveLength(1))
     return { outer, selectedValues, fetchItems }
   }
-  /** Past the debounce of the search, so that a request it would start is counted too. */
+  /**
+   * Waits past the search debounce so that a request it would start is counted too.
+   */
   const settled = async () => {
     await new Promise((resolve) => setTimeout(resolve, 400))
     await flushPromises()

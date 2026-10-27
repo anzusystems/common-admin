@@ -23,9 +23,8 @@ export function useLoginStatus(to: RouteLocationNormalized) {
     if (serverTimestamp.value) {
       const localTimeDiff = serverTimestamp.value - localTime
       /**
-       * If the server time is ahead of the user’s local time by more than the one-minute grace period,
-       * we need to store that time shift so we can refresh the token sooner. Each login measures it
-       * anew: a shift kept from an earlier one makes a valid JWT look expired.
+       * Stores how far the server time is ahead beyond the one-minute grace period, so the token refreshes sooner.
+       * Measured anew on each login: a shift kept from an earlier login makes a valid JWT look expired.
        */
       localTimeShiftInSeconds.value = Math.max(0, localTimeDiff - 60)
     }

@@ -2,8 +2,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import AFileInputDialog from '@/domains/ui/file/components/AFileInputDialog.vue'
 
-// An image widget with expanded options opens its file choice through `activate()`, on a click of its dropzone. It
-// reached for a ref that was never set, and its input exists only while the dialog is open: the click did nothing.
+// An image widget with expanded options opens the file choice through `activate()` on a click of its dropzone.
+// It used a ref that was never set, and its input exists only while the dialog is open, so the click did nothing.
 
 afterEach(() => {
   vi.restoreAllMocks()

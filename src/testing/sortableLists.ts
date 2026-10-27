@@ -2,21 +2,20 @@ import { describe, expect, it } from 'vitest'
 import { globKeyToSrcPath } from '@/testing/typedRouter'
 
 export interface DescribeSortableListsOptions {
-  /** The admin's sources: `import.meta.glob('/src/**\/*.{vue,ts}', { query: '?raw', import: 'default', eager: true })`. */
+  /**
+   * The admin's sources: `import.meta.glob('/src/**\/*.{vue,ts}', { query: '?raw', import: 'default', eager: true })`.
+   */
   sources: Record<string, string>
-  /** Checks that every list editor registers with the unsaved changes guard or opts out of it. */
   unsavedRegistration?: boolean
 }
 
 /**
- * The list editors replaced older ways of making a list sortable, and a direct `useSortable` is a
- * perfectly valid VueUse import, so nothing fails a build if one comes back.
- *
- * What they cost is not style. The library's editors carry the reorder mode with its own undo, the
- * dirty and unsaved bookkeeping, per-row validation, the delete confirmation and keyboard moves; each
- * hand-rolled list re-implemented some fraction of that and skipped the rest -- two of the lists they
- * replaced wrote a drag into a display array that the save path never read, so reordering them looked
- * applied and was thrown away.
+ * The list editors replaced older ways of making a list sortable. A direct
+ * `useSortable` is a valid VueUse import, so no build fails if one comes back.
+ * The editors carry reorder mode with undo, dirty and unsaved bookkeeping, per-row validation,
+ * delete confirmation and keyboard moves. Hand-rolled lists re-implement only part of that.
+ * Two replaced lists wrote a drag into a display array that the
+ * save path never read, so reordering looked applied and was lost.
  */
 export function describeSortableLists({ sources, unsavedRegistration = true }: DescribeSortableListsOptions): void {
   const using = (pattern: RegExp) =>
@@ -44,18 +43,12 @@ export function describeSortableLists({ sources, unsavedRegistration = true }: D
     })
 
     it.runIf(unsavedRegistration)('registers every list editor with the guard, or says it is not to be', () => {
-      // `unsaved-section-label` reads like a caption and is the whole registration: without it the
-      // editor registers no section, and a guard declared with `sources: []` is left with nothing to
-      // ask about. The rows still go amber, so the loss is silent: the view stops asking on the way
-      // out and looks no different.
-      //
-      // `disable-unsaved` is the deliberate way out, for a list that is saved by the form around it
-      // and has no unsaved state of its own to report; `readonly` never had unsaved state to begin
-      // with.
-      //
-      // Read off the editor's own opening tag rather than the file: every one of these three words
-      // appears elsewhere in a component for its own reasons, and a file-wide search would exempt an
-      // editor because something further down happened to mention one of them.
+      // `unsaved-section-label` is the whole registration. Without it the editor registers no section,
+      // the view stops asking on the way out, and nothing looks different (the rows still go amber).
+      // `disable-unsaved` is the deliberate opt-out for a list saved
+      // by the surrounding form. `readonly` never had unsaved state.
+      // Read from the editor's own opening tag, not the whole file: these words appear
+      // elsewhere in a component for other reasons and would wrongly exempt an editor.
       const unregistered = using(/<A(?:Nested)?(?:Sortable)?ListEditor/)
         .filter(([, source]) => unregisteredListEditorTags(source).length > 0)
         .map(([path]) => path)
@@ -66,17 +59,13 @@ export function describeSortableLists({ sources, unsavedRegistration = true }: D
 }
 
 /**
- * The opening tags of the list editors in a source that neither register with the unsaved changes guard
- * (`:unsaved-section-label`) nor opt out of it (bare `disable-unsaved` or `readonly`).
- *
- * Each tag is read from its `<` to the first `>` outside quotes: an attribute value can hold a `>` of
- * its own (`v-if="items.length > 0"`). Quotes are paired inside the tag only; paired across the file,
- * an apostrophe in a comment (`editor's`) would pair with a quote many lines on and swallow the tag.
- * Attribute values are blanked before the check, so `:readonly="readonly"` -- read-only when its
- * parent happens to say so -- is not taken for the bare attribute.
- *
- * An editor handed a lifted controller (`:editor=`) is left out: the controller belongs to whoever
- * holds it -- the outer editor in whose rows a nested list renders -- and that one registers.
+ * The opening tags of list editors in a source that neither register with the unsaved changes
+ * guard (`:unsaved-section-label`) nor opt out (bare `disable-unsaved` or `readonly`).
+ * Each tag is read from its `<` to the first `>` outside quotes, since a value can hold
+ * `>` (`v-if="items.length > 0"`). Quotes are paired inside the tag only: across the
+ * file, an apostrophe in a comment would pair with a distant quote and swallow the tag.
+ * Attribute values are blanked first, so `:readonly="readonly"` is not taken for the bare attribute.
+ * An editor given a lifted controller (`:editor=`) is skipped. The outer editor that owns the controller registers.
  */
 export function unregisteredListEditorTags(source: string): string[] {
   const tags: string[] = []

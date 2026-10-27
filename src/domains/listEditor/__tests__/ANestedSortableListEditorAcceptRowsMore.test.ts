@@ -93,8 +93,8 @@ describe('acceptRows: saved tree follow-ups', () => {
   it('accepting a row whose saved subtree holds its new parent keeps both in the saved tree', async () => {
     const t = mountTree([n(1, 'A', 1, null, [n(2, 'B', 1, 1)]), n(3, 'C', 2, null)])
     await flushPromises()
-    t.handle().outdent(2) // [A, B, C]
-    t.handle().moveTo(1, 2, 0) // [B[A], C]
+    t.handle().outdent(2)
+    t.handle().moveTo(1, 2, 0)
     await flushPromises()
     t.handle().acceptChanges(() => t.handle().updateItem(1, { id: 1, position: 1, parent: 2, title: 'A2' }), [1])
     await flushPromises()

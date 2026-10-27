@@ -30,10 +30,10 @@ describe('AFileInput limits that arrive after mount', () => {
   })
 })
 
-// A browser tells of a pick only when it changes what the input holds: an input that kept its file told nothing when
-// the same file was picked again. Its host could make it anew by changing `fileInputKey`, and a host that is not
-// given the key (a button drawn through a slot of the asset list) could not: after a failed or stopped upload the
-// same file could not be picked again. The input lets go of its files once it has handed them over.
+// A browser fires a change only when the files held by the input change, so picking the same file again tells nothing.
+// Hosts could recreate the input by changing `fileInputKey`. A host without the key (a button in
+// a slot of the asset list) could not pick the same file again after a failed or stopped upload.
+// The input releases its files once it has handed them over.
 describe('AFileInput once a pick is handled', () => {
   const jpeg = (name: string) => new File([new Uint8Array(100)], name, { type: 'image/jpeg' })
   const tiff = (name: string) => new File([new Uint8Array(100)], name, { type: 'image/tiff' })
@@ -43,7 +43,9 @@ describe('AFileInput once a pick is handled', () => {
     (wrapper.emitted('filesInput') ?? []).map(([files]) => (files as File[]).map((file) => file.name))
   const inputOf = (wrapper: VueWrapper) => wrapper.find('input[type="file"]').element as HTMLInputElement
   const held = (input: HTMLInputElement) => Array.from(input.files ?? []).map((file) => file.name)
-  /** As the system dialog of a browser: a pick of the very files the input holds changes nothing, and is not told. */
+  /**
+   * As the system dialog of a browser: a pick of the very files the input holds changes nothing, and is not told.
+   */
   const pickInBrowser = async (input: HTMLInputElement, ...files: File[]) => {
     if (held(input).join('/') === files.map((file) => file.name).join('/')) return
     await pick(input, ...files)
@@ -98,7 +100,6 @@ describe('AFileInput once a pick is handled', () => {
     wrapper.unmount()
   })
 
-  // The way of the hosts that have the key: as before, a changed key is a new input.
   it('is made anew when its host changes the key, and the new input hands over what is picked', async () => {
     const wrapper = mount(AFileInput, { props: { fileInputKey: 1, multiple: true } })
     const first = inputOf(wrapper)
@@ -114,9 +115,9 @@ describe('AFileInput once a pick is handled', () => {
   })
 })
 
-// The input with a dropzone of its own, as the file dialog of the image widgets has it. A drop can carry several
-// files whatever the input takes; the system dialog of an input that takes one hands over one. The real dropzone
-// under a real drop; the alerts are read from their queue, which no component of a test shows.
+// The input with its own dropzone, as in the file dialog of the image widgets.
+// A drop can carry several files even when the input takes one. The system dialog of such an input hands over one.
+// The alerts are read from their queue, because no component in the test shows them.
 describe('AFileInput with its dropzone', () => {
   const jpeg = (name: string, size = 100) => new File([new Uint8Array(size)], name, { type: 'image/jpeg' })
   const tiff = (name: string) => new File([new Uint8Array(100)], name, { type: 'image/tiff' })
@@ -135,7 +136,9 @@ describe('AFileInput with its dropzone', () => {
     useAlertsQueue().value = []
   })
 
-  /** Mounted, and its dropzone listening: it starts to once it is drawn. */
+  /**
+   * Mounted, and its dropzone listening: it starts to once it is drawn.
+   */
   const mountWithDropzone = async (multiple = false) => {
     const wrapper = mount(AFileInput, {
       attachTo: document.body,
@@ -152,7 +155,8 @@ describe('AFileInput with its dropzone', () => {
   }
 
   describe('that takes one file', () => {
-    // The first dropped was taken before the check: refused, it took the file the check lets through with it.
+    // Guards a bug: the first dropped file was taken before the check,
+    // so a refused file took along the file the check lets through.
     it.each([
       ['of a type it does not take', () => tiff('scan.tiff'), 'scan.tiff'],
       ['larger than it takes', () => jpeg('huge.jpg', 2000), 'huge.jpg'],

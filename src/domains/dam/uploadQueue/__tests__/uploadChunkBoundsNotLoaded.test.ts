@@ -14,11 +14,10 @@ import { useUploadQueueItemFactory } from '@/domains/dam/uploadQueue/factory/Upl
 import { libraryUploadPreset } from '@/domains/dam/uploadQueue/presets/uploadPresets'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
 
-// The bounds of the chunks of an upload come with the prv configuration of its DAM configuration, and are 0 and 0 in
-// a store that never had it loaded or filled. Sized by them, a chunk is of no bytes: the upload had the DAM create its
-// asset, then tried that chunk four times, each refused by the request of the library before it went out, and failed;
-// the asset was left in the DAM. The real upload service and the real queue against clients that record their
-// requests; the pauses between the tries of a chunk are over at once.
+// Chunk bounds come with the prv configuration and are 0 and 0 in a store that never had it loaded.
+// Sized by them, a chunk had no bytes. The upload had the DAM create its asset, then tried the chunk four
+// times, each refused by the library's request before it went out, and failed. The asset was left in the DAM.
+// Real upload service and queue against recording clients. Pauses between chunk retries are skipped.
 
 const { endPoints, extSystem, licence } = ugcConfiguration
 const OWN = { asset: '/own/v2/asset', image: '/own/v2/image' }
@@ -45,7 +44,6 @@ beforeEach(() => {
       own: { damClient: own.client, endPointAsset: OWN.asset, endPointImage: OWN.image },
     },
   })
-  // `own` is the named configuration of an application that fills its ext system, but not its bounds.
   seedDamConfigOf('own').damPrvConfig.settings.imageChunkConfig = { ...NOT_LOADED }
   waits = holdLongWaits(10_000, { passFrom: 1_000 })
 })
@@ -54,7 +52,6 @@ afterEach(() => {
   waits.restore()
 })
 
-/** A file of 3000 bytes in a row of its own, at a speed in bytes a second. */
 const rowOf = (speed: number | null = null) => {
   const item = useUploadQueueItemFactory().createDefault(
     'file_photo.jpg',
@@ -68,7 +65,6 @@ const rowOf = (speed: number | null = null) => {
   item.progress.speed = speed
   return item
 }
-/** The bounds of `default` as a store that never had its prv configuration loaded has them. */
 const defaultNotLoaded = () => {
   const store = useDamConfigStore()
   store.damPrvConfig.settings.imageChunkConfig = { ...NOT_LOADED }
@@ -121,12 +117,11 @@ describe('the chunks of an upload', () => {
     expect(dam.sentTo('PATCH', dam.routes.finish)).toHaveLength(1)
   })
 
-  // The bounds were there when the upload started, and are gone before its chunks (the store emptied by its `reset`):
-  // the size of the chunk is taken back into them, to 0.
+  // The bounds were there when the upload started and are gone before its chunks (the store emptied by `reset`).
+  // The chunk size is then written back into the bounds as 0.
   it('are never of no bytes: the upload fails at once instead, and is not finished', async () => {
     useDamConfigStore().damPrvConfig.settings.imageChunkConfig = { minSize: 1000, maxSize: 100_000 }
     useDamUploadChunkSize().updateChunkSize(0.001)
-    // At 1000 bytes a second a chunk of 1000 takes 1 s, too short against 30 s: the size is taken up, into the bounds.
     const { uploadInit, upload } = useUpload(rowOf(1000))
     await uploadInit()
     useDamConfigStore().reset()

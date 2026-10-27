@@ -26,7 +26,7 @@ const emit = defineEmits<{
 
 const fixValue = (value: any) => {
   if (props.config.attributes.type === CustomDataFormElementType.Integer) {
-    // A cleared input is no value, not `NaN`: an optional number can be emptied, a required one says so.
+    // A cleared input is null, not `NaN`. An optional number can be emptied; a required one reports the error.
     const parsed = parseInt(value)
     return Number.isNaN(parsed) ? null : parsed
   }
@@ -51,7 +51,7 @@ const modelValueComputed = computed(() => {
 const { maxLength, minLength, requiredIf, minValue, maxValue, stringArrayItemLength } = useValidate()
 
 const rules = computed(() => {
-  // What the user cannot change is not theirs to fix; the server does not validate it either.
+  // Readonly fields are not validated. The user cannot fix them and the server does not validate them either.
   if (props.config.attributes.readonly) return { modelValueComputed: {} }
   const dynamicRules: Record<string, any> = {
     modelValueComputed: {

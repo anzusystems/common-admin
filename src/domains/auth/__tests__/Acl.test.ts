@@ -6,9 +6,9 @@ import { useAuthStore } from '@/domains/auth/store/authStore'
 import { defineAuth } from '@/domains/auth/composables/defineAuth'
 import { Grant } from '@/domains/auth/valueObject/Grant'
 
-// Acl used to watch the whole `currentUsers` map without `deep`, which meant it evaluated once on
-// mount and never again. Nobody noticed while every current user was loaded before the first
-// component mounted; an admin that loads them on demand notices immediately.
+// Acl watched the whole `currentUsers` map without `deep`, so it evaluated once on mount and never again.
+// This went unnoticed while all current users were loaded before
+// the first mount. It shows immediately when users load on demand.
 
 const { useCurrentUser } = defineAuth<`${string}_${string}_${string}`>('brick')
 
@@ -19,9 +19,8 @@ const userWith = (permissions: Record<string, number>) =>
     resolvedPermissions: permissions,
   }) as never
 
-// Wrappers are kept so they can be unmounted between tests. Left mounted, a wrapper from an
-// earlier test re-evaluates its computed when the next test writes a current user -- and one
-// asking about an `AllowOwner` permission with no subject throws while doing it.
+// Wrappers are kept so they can be unmounted between tests. A wrapper left mounted re-evaluates its computed when
+// a later test writes a current user. One asking about an `AllowOwner` permission with no subject throws then.
 const wrappers: ReturnType<typeof mount>[] = []
 
 const mountAcl = (permission: string | string[], subject?: object) => {
@@ -46,8 +45,8 @@ afterEach(() => {
 
 describe('Acl', () => {
   it('hides the slot for a system nothing has loaded, instead of throwing', () => {
-    // The whole reason this component exists next to `can()`: templates may render before their
-    // system is there, and `canHelper` throws in exactly that case.
+    // This is why the component exists next to `can()`: templates may
+    // render before their system is loaded, and `canHelper` throws then.
     expect(() => mountAcl('brick_menu_ui')).not.toThrow()
     expect(isVisible(mountAcl('brick_menu_ui'))).toBe(false)
   })
@@ -72,8 +71,8 @@ describe('Acl', () => {
   })
 
   it('hides the slot again when the permission is taken away', async () => {
-    // The old version latched on the first `true` and stopped watching, so a revoked permission
-    // stayed granted until a reload.
+    // The old version latched on the first `true` and stopped
+    // watching, so a revoked permission stayed granted until reload.
     useCurrentUser('brick').setCurrentUser(userWith({ brick_menu_ui: Grant.Allow }))
     const wrapper = mountAcl('brick_menu_ui')
     expect(isVisible(wrapper)).toBe(true)
@@ -98,7 +97,6 @@ describe('Acl', () => {
   })
 
   it('shows the slot for an empty array, as it always has', () => {
-    // No permission to check is not the same as a denied one, and there is no system to ask about.
     expect(isVisible(mountAcl([]))).toBe(true)
   })
 
@@ -115,8 +113,8 @@ describe('Acl', () => {
 
 describe('Acl subject', () => {
   it('re-evaluates when the subject changes', async () => {
-    // `AllowOwner` answers per record, so the same permission flips with the subject -- and the
-    // old watcher, which latched on the first `true`, could never have noticed.
+    // `AllowOwner` answers per record, so the same permission changes with the
+    // subject. A watcher that latched on the first `true` would miss that.
     useCurrentUser('brick').setCurrentUser(userWith({ brick_menu_ui: Grant.AllowOwner }))
     const wrapper = mountAcl('brick_menu_ui', { createdBy: 2 })
     expect(isVisible(wrapper)).toBe(false)
@@ -129,9 +127,8 @@ describe('Acl subject', () => {
 
 describe('Acl across systems', () => {
   it('hides the slot while any of the systems is still missing', () => {
-    // Values from different systems are handled, not merely tolerated: every system involved has
-    // to be loaded. Checking only the first value would leave `canHelper` to throw on the second,
-    // which is the one thing this component must never do.
+    // Every system involved must be loaded. Checking only the
+    // first value would leave `canHelper` to throw on the second.
     useCurrentUser('brick').setCurrentUser(userWith({ brick_menu_ui: Grant.Allow }))
 
     expect(() => mountAcl(['brick_menu_ui', 'weather_location_ui'])).not.toThrow()

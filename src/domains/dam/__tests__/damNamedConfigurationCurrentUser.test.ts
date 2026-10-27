@@ -27,11 +27,6 @@ import AImageWidgetMultiple from '@/domains/dam/imageWidget/components/AImageWid
 import { initCommonAdminImageOptions } from '@/domains/dam/imageWidget/composables/commonAdminImageOptions'
 import { DamAssetType } from '@/domains/dam/types/Asset'
 
-// Whose licences a widget and an asset select under a DAM configuration offer: those of the current user of the
-// system the configuration names (`currentUser`), `dam` by default. Two users are loaded, as an application loads them:
-// the one of `dam`, a user of the ext system of the licence, and one of `x`, who may use no licence. `own` names `x`,
-// `open` names none (`false`): every licence. The prop `skipCurrentUserCheck` of an asset select still wins.
-
 const { endPoints, extSystem, licence } = cmsConfiguration
 const OWN = { asset: '/own/v2/asset', image: '/own/v2/image' }
 
@@ -93,7 +88,6 @@ afterEach(() => {
   forgetAlerts()
 })
 
-/** What the asset list is mounted without: its bar, its tiles and table, its filter, the detail and the queue. */
 const listStubs = Object.fromEntries(
   [
     'AssetSelectListBar',
@@ -158,9 +152,8 @@ describe('the licences of a DAM configuration', () => {
     }
   )
 
-  // A configuration that names a system whose user is no user of DAM: an admin of it is no admin of DAM, and nothing
-  // is read of a user that has no licences of DAM. The error is written down; the widget shows read-only, the list says
-  // the licence is not allowed.
+  // A user of a system that is not a DAM user: an admin of it is no admin of DAM, and nothing is read of its licences.
+  // The error is logged, the widget is read-only and the list says the licence is not allowed.
   it.each([
     ['an admin of that system', ['ROLE_SUPER_ADMIN']],
     ['a user of that system', []],
@@ -168,7 +161,6 @@ describe('the licences of a DAM configuration', () => {
     const auth = useAuthStore()
     auth.currentUsers.value.set('cms', { id: 3, roles, resolvedPermissions: {} } as never)
     auth.currentUsersLoaded.value.set('cms', true)
-    // As the application's load of that user leaves it: the role of an admin of that system.
     auth.isAdminRoleBySystem.value.set('cms', 'ROLE_SUPER_ADMIN')
     const logged = vi.spyOn(console, 'error').mockImplementation(() => undefined)
 

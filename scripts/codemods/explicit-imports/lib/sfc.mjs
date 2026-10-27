@@ -1,8 +1,8 @@
 /**
- * A single-file component seen the way the Vue plugin compiles it in dev: `compileScript` without
- * an inlined template gives the bindings and the script, `compileTemplate` with those bindings
- * gives a render function where every name the template does not bind is `_ctx.X` — the names
- * unimport's template addon supplied.
+ * A single-file component as the Vue plugin compiles it in dev.
+ * `compileScript` without an inlined template gives the bindings and the
+ * script. `compileTemplate` with those bindings gives a render function.
+ * In it every name the template does not bind is `_ctx.X`: the names unimport's template addon supplied.
  */
 export function compileFs(ts) {
   return { fileExists: ts.sys.fileExists, readFile: ts.sys.readFile, realpath: ts.sys.realpath }
@@ -55,12 +55,16 @@ export function compileSfc(sfc, ts, file, descriptor, { isProd = false } = {}) {
 const CONTEXT_REFERENCE = /\b_ctx\.([\w$]+)\b/g
 const TARGET_REFERENCE = /(\$setup|\$props|\$data|\$options|_ctx)\.([\w$]+)\b/g
 
-/** Names the template reaches through `_ctx`: unbound, i.e. auto-imported or global properties. */
+/**
+ * Names the template reaches through `_ctx`: unbound, i.e. auto-imported or global properties.
+ */
 export function contextNames(render) {
   return new Set(Array.from(render?.matchAll(CONTEXT_REFERENCE) ?? [], (m) => m[1]))
 }
 
-/** Per name, where the template takes it from: `$setup`, `$props`, `_ctx`, … */
+/**
+ * Per name, where the template takes it from: `$setup`, `$props`, `_ctx`, …
+ */
 export function templateTargets(render) {
   const targets = {}
   for (const m of render?.matchAll(TARGET_REFERENCE) ?? []) {
@@ -69,7 +73,9 @@ export function templateTargets(render) {
   return Object.fromEntries(Object.entries(targets).map(([name, set]) => [name, [...set].sort()]))
 }
 
-/** The runtime `props` option of the compiled component (dev or prod), or '' when there is none. */
+/**
+ * The runtime `props` option of the compiled component (dev or prod), or '' when there is none.
+ */
 export function runtimeProps(script) {
   const match = script?.match(/(?<![\w$])props: /)
   if (!match) return ''

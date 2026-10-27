@@ -15,18 +15,14 @@ import { DamAssetType } from '@/domains/dam/types/Asset'
 import { AssetFileProcessStatus, type AssetFileProcessStatusType } from '@/domains/dam/types/AssetFile'
 import { useAlertsQueue } from '@/domains/system/composables/alertsQueue'
 
-// The image of the CMS each of the three widgets makes of an asset picked in the library (IM2 to IM5 of the design),
-// key by key: `damImageSites.test.ts` has the places outside the widgets. The real widgets over a picker that hands
-// the pick over; the DAM is a client that records its requests. What the picker hands over and what the DAM then
-// answers for the asset differ on purpose: the file and the internal flag are the picked ones, the texts are read.
-// The licence of the picked assets is another one than the licence the widget uploads to.
+// The picker result and the later DAM answer for the asset differ on purpose.
+// The file and the internal flag are the picked ones. The texts are read from the DAM.
+// The picked assets belong to a different licence than the one the widget uploads to.
 
 const connection = vi.hoisted(() => ({
   client: null as null | (() => unknown),
   mapOfTheApplication: undefined as undefined | (() => { description: string; source: string }),
-  /** The configuration of the ext system: whether it has the authors of the DAM for an image. */
   extSystemConfig: {} as Record<string, unknown>,
-  /** The images the widgets created. */
   created: [] as unknown[],
   saved: (id: number) => ({
     id,
@@ -63,8 +59,6 @@ vi.mock('@/domains/dam/composables/commonAdminCoreDamOptions', async (importOrig
     customAssetSelectMetadataToImageMap: connection.mapOfTheApplication,
   }),
 }))
-// The ext system of the licence is known. It offers no authors of the DAM in place of the source, but where a case
-// says it has them.
 vi.mock('@/domains/dam/config/composables/damConfigState', () => ({
   useDamConfigState: () => ({
     getDamConfigExtSystem: () => connection.extSystemConfig,
@@ -86,7 +80,6 @@ beforeEach(() => {
   connection.mapOfTheApplication = undefined
   connection.extSystemConfig = {}
   connection.created = []
-  // What the image and media widget asks about a picked asset first.
   dam.reply((request) => (request.method === 'GET' && MEDIA.test(request.url) ? { status: 200, data: {} } : undefined))
   answerDamNames(dam)
   useAlertsQueue().value = []
@@ -98,7 +91,6 @@ afterEach(() => {
 
 const Picker = defineComponent({ emits: ['confirm'], setup: () => () => h('div') })
 
-/** An image as the picker hands it over. */
 const pickedAs = (id: string, mainFileInternal?: boolean | null) => ({
   id,
   licence: ASSET_LICENCE,
@@ -107,7 +99,6 @@ const pickedAs = (id: string, mainFileInternal?: boolean | null) => ({
   attributes: { assetType: DamAssetType.Image },
   podcasts: [],
 })
-/** The same asset as the DAM answers it: another file, never internal, its description untrimmed, two authors. */
 const inTheDam = (id: string) =>
   dam.assets.set(
     id,
@@ -125,7 +116,6 @@ const pick = async (
   props: Record<string, unknown>,
   ...picked: Array<ReturnType<typeof pickedAs>>
 ) => {
-  // But for an asset a case has put into the DAM its own way.
   picked.filter(({ id }) => !dam.assets.has(id)).forEach(({ id }) => inTheDam(id))
   wrapper = mount(widget, {
     props: {
@@ -159,9 +149,8 @@ const pick = async (
     },
   })
   await flushPromises()
-  // The asset of the detail is the page's: what an earlier case left there is not this one's.
+  // The asset detail store is page-wide. Reset it so an earlier case does not leak into this one.
   useAssetDetailStore().setAsset(null)
-  // As the picker leaves its store: the licences it offered, the one of the picked assets browsed.
   useAssetSelectStore().setSelectConfig([
     { licence: ASSET_LICENCE, extSystem: 1 } as never,
     { licence: UPLOAD_LICENCE, extSystem: 1 } as never,
@@ -210,8 +199,6 @@ describe.each<[string, Component, string]>([
   })
 })
 
-// Both read the mapping of the application: the image and media widget did not (IM11, finding 45). What the
-// mapping hands goes into the image as it is, also where it is no text, and the DAM is asked for no author.
 describe.each<[string, Component, Record<string, unknown>]>([
   ['the image widget (IM2)', ImageWidgetInner, { modelValue: null }],
   ['the image and media widget (IM3)', ImageMediaWidgetInner, { image: null, media: null }],
@@ -231,7 +218,6 @@ describe.each<[string, Component, Record<string, unknown>]>([
       dam: { damId: 'file-as-picked-a', licenceId: ASSET_LICENCE, regionPosition: 0, internal: true },
       position: 1,
     })
-    // Handed the asset as the DAM answers it, once.
     expect(mapping.mock.calls).toEqual([
       [expect.objectContaining({ id: 'a', authors: ['author-1-of-a', 'author-2-of-a'] })],
     ])
@@ -269,7 +255,6 @@ describe('the images the widget of several images makes of picked assets', () =>
     ])
   })
 
-  // The editor of the list asks for a way to make an empty row, and hides the button that would use it.
   it('has an empty image for the editor of the list, of no file (IM6)', async () => {
     await pick(ImageWidgetMultipleInner, { modelValue: [] })
     const factory = wrapper!.findComponent({ name: 'ASortableListEditor' }).props('factory') as () => unknown
@@ -287,7 +272,6 @@ describe('the images the widget of several images makes of picked assets', () =>
     expect(images()).toEqual([])
   })
 
-  // Unlike the image widget, the gallery makes an empty text of what the mapping hands in place of one.
   it.each([
     [
       'the texts the mapping of the application makes of the asset',
@@ -319,14 +303,13 @@ describe('the images the widget of several images makes of picked assets', () =>
   })
 })
 
-// Finding 49 (F-D): an ext system that has the authors of the DAM offers them to a picked asset that has none, and
-// saves what is picked into the asset, which marks the asset described. Not while the server may yet fill in the
-// metadata of the asset from its file: marked described, it would get none of that.
+// Finding 49: an ext system with DAM authors offers them for a picked asset
+// that has none, and saves the pick into the asset, which marks it described.
+// Not while the server may still fill in the asset metadata from its file. A described asset would get none of that.
 describe.each<[string, Component, Record<string, unknown>]>([
   ['the image widget', ImageWidgetInner, { modelValue: null }],
   ['the image and media widget', ImageMediaWidgetInner, { image: null, media: null }],
 ])('the authors of the DAM %s offers a picked asset that has none', (_name, widget, props) => {
-  /** The asset in the DAM, without an author, its file in the given state. */
   const withoutAuthors = (status: AssetFileProcessStatusType, described = false) =>
     dam.assets.set(
       'a',
@@ -372,9 +355,7 @@ describe.each<[string, Component, Record<string, unknown>]>([
     await pick(widget, props, pickedAs('a'))
 
     expect(imageDialog().props('showDamAuthors')).toBe(true)
-    // The asset whose authors are offered is the widget's own: none is put into the store of the detail, the page's.
     expect(useAssetDetailStore().asset).toBeNull()
-    // As the dialog of the image hands the widget what the user picks in it.
     imageDialog().vm.$emit('update:damAuthors', ['author-5'])
     await flushPromises()
     expect(imageDialog().props('damAuthors')).toEqual(['author-5'])

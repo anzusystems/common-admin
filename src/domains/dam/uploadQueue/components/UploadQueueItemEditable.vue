@@ -41,26 +41,42 @@ const props = withDefaults(
     mainFileSingleUseEnabled?: boolean
     disableDoneAnimation?: boolean
     /**
-     * A failed row a refresh may still change: its finish request went out and the server has said nothing final
-     * about it, or the original of its duplicate could not be read. The queue knows which rows those are; a row
-     * shown outside a queue has no such state.
+     * A failed row that a refresh may still change: its finish request went out and the
+     * server gave no final answer, or the original of its duplicate could not be read.
+     * The queue knows these rows. A row shown outside a queue has no such state.
      */
     refreshMayHelp?: boolean
-    /** Where "cancel" is offered. */
+    /**
+     * Statuses in which "cancel" is offered.
+     */
     cancelStatuses?: readonly UploadQueueItemStatusType[]
-    /** The line "The main file is a duplicate." under the title. */
+    /**
+     * Shows the line "The main file is a duplicate." under the title.
+     */
     duplicateNotice?: boolean
-    /** The form stays off on a duplicate whatever its metadata. */
+    /**
+     * Keeps the form disabled on a duplicate regardless of its metadata.
+     */
     disableFormOnDuplicate?: boolean
-    /** The scope the fields of an editable row report to; a row that cannot be edited reports to none. */
+    /**
+     * The scope the fields of an editable row report to. A non-editable row reports to none.
+     */
     validationScope?: ValidationScope
-    /** How keywords and authors look while the row cannot be edited; handed to both inputs as `disabledAs`. */
+    /**
+     * How keywords and authors look while the row is not editable. Passed to both inputs as `disabledAs`.
+     */
     disabledFieldsAs?: DamFieldsDisabledAs
-    /** A duplicate gets no edit button at all: neither the `edit` slot nor its default is drawn. */
+    /**
+     * A duplicate gets no edit button: neither the `edit` slot nor its default is rendered.
+     */
     hideEditOnDuplicate?: boolean
-    /** Whether the row offers refresh, worked out by its host. Without it the row works it out itself. */
+    /**
+     * Whether the row offers refresh, decided by the host. Without it the row decides itself.
+     */
     refreshOffered?: boolean | undefined
-    /** The DAM configuration whose rules and forms the row follows; inherited when not given. */
+    /**
+     * The DAM configuration whose rules and forms the row follows. Inherited when not given.
+     */
     configName?: string
   }>(),
   {
@@ -77,7 +93,7 @@ const props = withDefaults(
     validationScope: ADamAssetMetadataValidationScopeSymbol,
     disabledFieldsAs: 'chips',
     hideEditOnDuplicate: false,
-    // Declared, or Vue would make an absent boolean `false` and the row would never offer refresh by itself.
+    // Declared explicitly, otherwise Vue casts an absent boolean to `false` and the row never offers refresh by itself.
     refreshOffered: undefined,
     configName: undefined,
   }
@@ -97,11 +113,17 @@ const emit = defineEmits<{
 const damConfigName = useDamConfigName(props.configName)
 
 defineSlots<{
-  /** Over the picture, under the error overlay. */
+  /**
+   * Rendered over the picture, under the error overlay.
+   */
   'image-overlay'?(props: { item: UploadQueueItem }): unknown
-  /** Left of the action line. Default: "Edit in Media Library", disabled without metadata, emits `showDetail`. */
+  /**
+   * Left of the action line. Default: "Edit in Media Library", disabled without metadata, emits `showDetail`.
+   */
   edit?(props: { item: UploadQueueItem }): unknown
-  /** Last of the action line. Default: "Remove from queue" while it is offered, emits `removeItem`. */
+  /**
+   * Last in the action line. Default: "Remove from queue" while offered, emits `removeItem`.
+   */
   remove?(props: { item: UploadQueueItem; index: number; offered: boolean }): unknown
 }>()
 
@@ -145,8 +167,8 @@ const mainFileSingleUse = computed({
 
 const { t } = useI18n()
 
-// The save skips an item whose metadata cannot be edited, so nothing in its row is validated: it could not be
-// put right. A scope is read once, when a field is set up - hence the key on the form.
+// The save skips an item whose metadata cannot be edited, so its row is not validated: the user could not fix it.
+// A field reads its scope only once at setup, hence the key on the form.
 const metadataValidationScope = computed(() => {
   return props.item.canEditMetadata ? props.validationScope : false
 })
@@ -190,11 +212,11 @@ const showCancel = computed(() => {
   return props.cancelStatuses.includes(props.item.status)
 })
 
-// Of a row that has not failed: offered once it has waited, for its file or for its metadata.
+// For a row that has not failed: refresh is offered after it has waited for its file or its metadata.
 const refreshDue = ref(false)
 const refreshTimer: Ref<ReturnType<typeof setTimeout> | undefined> = ref(undefined)
-// A failed row offers refresh only while one may still change it. One whose chunk the server never took, or
-// whose file the server has failed, has nothing a refresh could find.
+// A failed row offers refresh only while a refresh can still change it.
+// A row whose chunk the server never took, or whose file the server failed, has nothing a refresh could find.
 const offeredByRow = computed(() => {
   if (props.item.status === UploadQueueItemStatus.Failed) return props.refreshMayHelp && !isNull(props.item.assetId)
   return refreshDue.value
@@ -202,7 +224,7 @@ const offeredByRow = computed(() => {
 const showRefresh = computed(() => {
   return props.refreshOffered ?? offeredByRow.value
 })
-// Remove comes with refresh, and a failed row has it at once: nothing else takes such a row out of the queue.
+// Remove comes with refresh, and a failed row gets it at once: nothing else takes such a row out of the queue.
 const showRemove = computed(() => {
   return showRefresh.value || props.item.status === UploadQueueItemStatus.Failed
 })
@@ -247,14 +269,14 @@ watch(
       clearTimeout(refreshTimer.value)
       refreshTimer.value = undefined
       refreshDue.value = false
-      // An uploaded row whose metadata has not come by then has a disabled form, and the save skips it. Refresh
-      // loads the metadata.
+      // An uploaded row whose metadata has not arrived by then has a
+      // disabled form and the save skips it. Refresh loads the metadata.
       refreshTimer.value = setTimeout(() => {
         if (props.item.status !== UploadQueueItemStatus.Uploaded || props.item.canEditMetadata) return
         refreshDue.value = true
       }, SHOW_REFRESH_AFTER_SECONDS * 1000)
     } else if (newValue === UploadQueueItemStatus.Failed) {
-      // Its wait is over: what a failed row offers follows `refreshMayHelp`, at once.
+      // The wait is over. For a failed row, the offer follows `refreshMayHelp` immediately.
       clearTimeout(refreshTimer.value)
       refreshTimer.value = undefined
       refreshDue.value = false
@@ -266,7 +288,7 @@ watch(
 watch(
   () => props.item.canEditMetadata,
   (canEdit) => {
-    // The metadata of an uploaded row came after all, by its notification or by that refresh.
+    // The metadata arrived after all, by notification or by refresh.
     if (canEdit && props.item.status === UploadQueueItemStatus.Uploaded) refreshDue.value = false
   }
 )

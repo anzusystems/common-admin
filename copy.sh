@@ -65,8 +65,8 @@ if [[ ! -d "${COMMON_ADMIN_PROJECT}/dist" ]]; then
     exit 1
 fi
 
-# A failed build can leave dist/ without its entry or declarations, and the copy below deletes each
-# admin's working copy before it writes the new one.
+# A failed build can leave dist/ without its entry or declarations.
+# The copy below deletes each admin's working copy before it writes the new one.
 for entry in common-admin.js common-admin.d.ts common-admin.css; do
     if [[ ! -f "${COMMON_ADMIN_PROJECT}/dist/${entry}" ]]; then
         echo "Error: dist/${entry} not found in ${COMMON_ADMIN_PROJECT}. The build did not finish; build it again."
@@ -100,29 +100,29 @@ for target in "${TARGETS[@]}"; do
     # Create directories before copying files
     mkdir -p "${PACKAGE_DIR}/dist"
 
-    # Copy package.json from COMMON_ADMIN_PROJECT to the target project. Removed first: `cp` writes into an
-    # existing file, and under pnpm that file is a hard link into the global store.
+    # Removed first: `cp` writes into an existing file, and under pnpm that file is a hard link into the global store.
     rm -f "${PACKAGE_DIR}/package.json"
     cp "${COMMON_ADMIN_PROJECT}/package.json" "${PACKAGE_DIR}/"
 
     cp -r "${COMMON_ADMIN_PROJECT}/dist/"* "${PACKAGE_DIR}/dist/"
 
-    # The eslint plugin ships from `src/eslint` (package.json "files"), not from dist. Without this the
-    # admins keep linting with the plugin of whatever version they installed, however old.
-    # Same for the Vite plugins (`src/vite`, Sentry and source maps), which the admin's build loads.
+    # The eslint plugin ships from `src/eslint` (package.json "files"), not from dist.
+    # Without this the admins keep linting with the plugin of whatever version they installed.
+    # Same for the Vite plugins in `src/vite` (Sentry and source maps), which the admin's build loads.
     for dir in eslint vite; do
         rm -rf "${PACKAGE_DIR}/src/${dir}"
         mkdir -p "${PACKAGE_DIR}/src/${dir}"
         cp -r "${COMMON_ADMIN_PROJECT}/src/${dir}/"* "${PACKAGE_DIR}/src/${dir}/"
     done
 
-    # Clear Vite's dependency pre-bundle cache so it picks up the new files, and vue-tsc's build info: tsc --build
-    # does not look at node_modules, so it would call the admin up to date against the old declarations
+    # Clear Vite's dependency pre-bundle cache so it picks up the new files.
+    # Clear vue-tsc's build info too: `tsc --build` does not look at node_modules
+    # and would treat the admin as up to date against the old declarations.
     rm -rf "${target}/node_modules/.vite/deps/" "${target}/node_modules/.cache/tsc/"
 
-    # Empty the trigger file (creating it if needed): the admin's Vite plugin restarts the dev server,
-    # which re-bundles the new files. Emptied, not touched: `yarn dev:admin` lists the files it changed
-    # in it, and a stale list would make the plugin reload those few instead of taking everything.
+    # Emptying the trigger file makes the admin's Vite plugin restart the dev server, which re-bundles the new files.
+    # Emptied, not touched: `yarn dev:admin` lists the files it changed
+    # in it. A stale list would make the plugin reload only those files.
     : > "${target}/.common-admin-updated"
 
     echo "Successfully copied release from ${COMMON_ADMIN_PROJECT} (dist, src/eslint, src/vite) to ${PACKAGE_DIR}"

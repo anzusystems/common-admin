@@ -51,7 +51,9 @@ export const dateModifyMinutes = (minutes = 0, date: null | Date = null): Date =
   return date
 }
 
-/** Today as a calendar day: UTC midnight of the local date, the shape a `type: 'date'` picker emits. */
+/**
+ * Today as a calendar day: UTC midnight of the local date, the shape a `type: 'date'` picker emits.
+ */
 export const dateUtcToday = (): DateUTC => {
   const now = new Date()
   return dayjs.utc(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate())).format(FORMAT) + SUFFIX
@@ -106,7 +108,9 @@ export const datePretty = (isoDate: DatetimeUTC | DatetimeUTCNullable | string |
   return dayjs(isoDate).format('DD.MM.YYYY')
 }
 
-/** Counterpart of `datePretty` for calendar-day values: reads the day the API stores, in any timezone. */
+/**
+ * Counterpart of `datePretty` for calendar-day values: reads the day the API stores, in any timezone.
+ */
 export const dateUtcPretty = (
   isoDate: DatetimeUTC | DatetimeUTCNullable | string | null,
   edgeDateValue = ''
@@ -122,7 +126,6 @@ export const timePretty = (isoDate: DatetimeUTC | DatetimeUTCNullable | string |
   return dayjs(isoDate).format('HH:mm')
 }
 
-/** A unit `dateDiff` counts in: singular, plural or short, as dayjs names them. */
 export type DateDiffUnit =
   | 'millisecond'
   | 'milliseconds'
@@ -175,8 +178,8 @@ const _getMonthInterval = (
   expandToCurrentMonth: boolean = false
 ): MonthIntervalUTC | MonthIntervalDate => {
   const from = new Date(nowDate)
-  // Day and month together: on the 31st, moving the month first lands on a missing day and rolls
-  // over into the month after, before the day is reset.
+  // Set day and month together. On the 31st, setting the month first
+  // lands on a missing day and rolls over into the next month.
   from.setMonth(from.getMonth() + monthOffset, 1)
   from.setHours(0, 0, 0, 0)
   const until = new Date(nowDate)

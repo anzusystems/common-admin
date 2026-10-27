@@ -86,7 +86,7 @@ describe('useSubjectSelect rollback race', () => {
       },
     })
     wrapper = mount(Host)
-    const next = api.onFetchNextPage() // page 2 in flight
+    const next = api.onFetchNextPage()
     api.submitFilter() // page 1 (a filter submit while page 2 is in flight)
     await wait(300)
     calls[1].resolve([])

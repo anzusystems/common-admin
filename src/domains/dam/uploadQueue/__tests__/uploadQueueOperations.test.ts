@@ -18,10 +18,9 @@ import { AssetFileFailReason, AssetFileProcessStatus } from '@/domains/dam/types
 import { UploadQueueItemStatus, UploadQueueItemType } from '@/domains/dam/types/UploadQueue'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
 
-// What a widget and the upload dialog do to a queue: add files, add copies, stop one row, stop all, remove a
-// row, take over what the asset detail saved. The real store with the real upload under it; the DAM is a client
-// that records its requests, and a chunk request held back keeps a file "being sent" for as long as a case needs.
-// The configuration is that of admin-cms: nothing here depends on which application it is.
+// Uses the real store with the real upload. The DAM is a client that records requests.
+// A held chunk request keeps a file "being sent" as long as a case needs.
+// The configuration is admin-cms's; nothing here depends on the application.
 
 const { endPoints, extSystem, licence } = cmsConfiguration
 const QUEUE = 'operations-queue'
@@ -66,7 +65,6 @@ const starts = () => dam.sentTo('POST', dam.routes.start)
 const finishes = () => dam.sentTo('PATCH', dam.routes.finish)
 const { Waiting, Uploading, Processing, Uploaded, Failed, Stop } = UploadQueueItemStatus
 
-/** Three files in the queue with the chunk requests held back: two are being sent, the third waits its turn. */
 const twoSendingOneWaiting = async () => {
   const store = useUploadQueuesStore()
   const chunks = dam.hold('POST', dam.routes.chunk)
@@ -113,8 +111,8 @@ describe('files added to a queue', () => {
     expect(counts()).toEqual({ total: 4, processed: 0 })
   })
 
-  // The dialog tells its rows apart by their key, and a name is not one: the same file can be picked twice, and
-  // two folders can each have a `photo.jpg`.
+  // The dialog tells rows apart by key, not by name.
+  // The same file can be picked twice, and two folders can each have a `photo.jpg`.
   it('have a key each, two files of one name too', async () => {
     const store = useUploadQueuesStore()
     dam.hold('POST', dam.routes.chunk)
@@ -129,8 +127,8 @@ describe('files added to a queue', () => {
     expect(keys.every((key) => key.length > 0)).toBe(true)
   })
 
-  // What the ext system does not list as an image is left out without a word: the widget's file input and
-  // dropzone are what tells the user, before the files get here.
+  // Files the ext system does not list as images are dropped silently.
+  // The widget's file input and dropzone already warn the user before files get here.
   it('are left out when the ext system does not list their type as an image', async () => {
     const config = useDamConfigStore().damConfigExtSystem.get(extSystem)!
     useDamConfigStore().damConfigExtSystem.set(extSystem, {
@@ -148,7 +146,6 @@ describe('files added to a queue', () => {
         file('scan.tiff', 'image/tiff'),
         file('listed.png', 'image/png'),
         file('paper.pdf', 'application/pdf'),
-        // A type the ext system knows, and not an image: the library uploads images only.
         file('song.mp3', 'audio/mpeg'),
         file('untyped', ''),
       ],
@@ -191,7 +188,6 @@ describe('files added to a queue', () => {
       { total: 3, processed: 0 },
     ])
 
-    // Stopping one leaves the other as it is.
     store.stopUpload(QUEUE)
     await waits.settle()
     expect([statuses(QUEUE), statuses(OTHER_QUEUE)]).toEqual([[], [Uploading, Uploading, Waiting]])
@@ -220,11 +216,10 @@ describe('assets copied to the licence, added to a queue', () => {
       }))
     )
     expect(counts()).toEqual({ total: 2, processed: 0 })
-    // Nothing is sent for them.
     expect(dam.requests.filter((request) => request.url.startsWith(endPoints.image))).toEqual([])
   })
 
-  // A copy that already exists in the licence answers with the asset it is: picked twice, it is added twice.
+  // A copy that already exists in the licence answers with the same asset, so picking it twice adds it twice.
   it('have a key each, an asset added twice too', async () => {
     const store = useUploadQueuesStore()
 
@@ -256,14 +251,14 @@ describe('assets copied to the licence, added to a queue', () => {
   })
 })
 
-// A queue is a list of rows, not a map by asset: one asset can be in it twice. A copy that already exists in the
-// licence answers with the asset it is, so picked twice it is two rows; and two uploaded files that both turn out
-// to be duplicates of one original are two rows of that original. Whatever happens to the asset happens to both.
+// A queue is a list of rows, not a map by asset, so one asset can be in it twice.
+// A copy that already exists in the licence answers with the same asset, giving two rows.
+// Two uploads that both turn out to duplicate one original are also two rows of it.
+// Whatever happens to the asset happens to both.
 describe('one asset in two rows of a queue', () => {
   const fromTheServer = {
     metadata: { customData: { title: 'from the server' }, authorSuggestions: {}, keywordSuggestions: {} },
   }
-  /** The same asset copied to the licence twice: two rows that wait for the server. */
   const copiedTwice = async () => {
     const store = useUploadQueuesStore()
     await store.addByCopyToLicence(QUEUE, extSystem, licence, ['asset-1'], 'default')
@@ -355,7 +350,7 @@ describe('one asset in two rows of a queue', () => {
     }
   })
 
-  // The rows are told apart by what they are, not by their asset: one can go and the other stays.
+  // Rows are told apart by identity, not by asset, so one can go while the other stays.
   it('one of the two stopped: the other waits on and is settled by a read, the stopped one is not', async () => {
     const { store, first, second } = await copiedTwice()
 
@@ -377,7 +372,7 @@ describe('one asset in two rows of a queue', () => {
     await vi.waitFor(() => expect([first.canEditMetadata, second.canEditMetadata]).toEqual([true, true]), {
       timeout: 5000,
     })
-    // As the row's form writes: a new value, not a change of the one it was given.
+    // Matches how the row's form writes: it assigns a new value instead of mutating the given one.
     first.customData = { title: 'typed into the first' }
 
     notify(DamNotificationName.AssetFileCopied, { asset: 'asset-1', id: 'file-1' })
@@ -389,8 +384,8 @@ describe('one asset in two rows of a queue', () => {
     ])
   })
 
-  // The way one asset comes to be in a queue twice without any copy, in admin-ugc too: the same picture picked
-  // twice, or two pictures the DAM already has as one.
+  // How one asset gets into a queue twice without a copy, also in admin-ugc:
+  // the same picture picked twice, or two pictures the DAM already has as one.
   it('two files that turn out to be one original: both rows become it, and a save in its detail reaches both', async () => {
     const store = useUploadQueuesStore()
     await store.addByFiles(QUEUE, extSystem, licence, photos('a', 'b'), 'default')
@@ -444,7 +439,6 @@ describe('one row stopped', () => {
     expect(statuses()).toEqual([Uploading, Uploading])
     expect(counts()).toEqual({ total: 2, processed: 0 })
 
-    // And nothing more comes of it: the file is not finished.
     chunks.release()
     await vi.waitFor(() => expect(statuses()).toEqual([Processing, Processing]))
     expect(
@@ -468,8 +462,8 @@ describe('one row stopped', () => {
     expect(items[2].status).toBe(Stop)
   })
 
-  // The row hands over the position it was drawn at. By the time the queue acts on it the list can have changed:
-  // it is the row handed over that goes, wherever it is by then.
+  // The row hands over the position it was drawn at.
+  // The list can change before the queue acts, so the handed-over row is removed wherever it is by then.
   it.each([0, 1, 7])('with a position that is not its own (%s): that row goes, and no other', async (position) => {
     const { store, chunks, items } = await twoSendingOneWaiting()
 
@@ -507,7 +501,7 @@ describe('a queue stopped', () => {
     expect(store.getQueueItems(QUEUE)).toEqual([])
     expect(counts()).toEqual({ total: 0, processed: 0 })
     expect(store.getQueueItemsTypes(QUEUE)).toEqual([])
-    // The file input is keyed by it: a new key is an input that has forgotten the files picked before.
+    // The file input is keyed by it. A new key gives an input that forgets previously picked files.
     expect(store.getQueue(QUEUE)!.fileInputKey).toBeGreaterThan(fileInputKey)
 
     await waits.settle(150)
@@ -545,7 +539,6 @@ describe('a queue stopped', () => {
 })
 
 describe('a row removed from a queue', () => {
-  /** Two files sent whole; the first is settled as uploaded, the second still waits for the server. */
   const oneUploadedOneProcessing = async () => {
     const store = useUploadQueuesStore()
     await store.addByFiles(QUEUE, extSystem, licence, photos('a', 'b'), 'default')
@@ -590,8 +583,6 @@ describe('a row removed from a queue', () => {
   })
 })
 
-// The asset detail, opened from a row, saves the metadata itself and tells the queue: the rows of that asset then
-// show what was saved.
 describe('a save in the asset detail', () => {
   const saved = {
     keywords: ['keyword-saved'],
@@ -602,7 +593,6 @@ describe('a save in the asset detail', () => {
       keywordSuggestions: {},
     },
   }
-  /** A copy of one asset in two queues, settled, with its form, and typed into. */
   const copiesInTwoQueues = async () => {
     const store = useUploadQueuesStore()
     dam.assets.set('asset-1', damAssetWithFile('asset-1', 'file-1', AssetFileProcessStatus.Processed))
@@ -639,8 +629,8 @@ describe('a save in the asset detail', () => {
     expect(dam.assetReads().every((read) => read.url.startsWith('/adm/v1/asset/'))).toBe(true)
   })
 
-  // The detail has the single-use switch too, and saves it with the rest. A row left with the value it had would
-  // send that with the next save of the queue, over what the user has just saved.
+  // The detail also has the single-use switch and saves it with the rest.
+  // A row left with its old value would send it with the next queue save, over what the user just saved.
   it.each([true, false])('gives them the single-use switch now in the DAM (%s) as well', async (singleUse) => {
     const { store, here, other, there } = await copiesInTwoQueues()
     for (const item of [here, other, there]) item.mainFileSingleUse = !singleUse
@@ -662,7 +652,6 @@ describe('a save in the asset detail', () => {
     ])
   })
 
-  // The queue asks the DAM for the asset once more and takes that answer, not what the detail handed it.
   it('takes what the DAM answers for that asset, not what the detail hands over', async () => {
     const { store, here } = await copiesInTwoQueues()
     dam.fileBecomes('asset-1', AssetFileProcessStatus.Processed, saved)
@@ -675,8 +664,8 @@ describe('a save in the asset detail', () => {
     expect(here.keywords).toEqual(['keyword-saved'])
   })
 
-  // The detail goes on telling the queue once it was opened from a row, also about an asset opened from elsewhere:
-  // its save used to wait for a read of that asset, with no row to write it into.
+  // Once opened from a row, the detail keeps notifying the queue, also for an asset opened from elsewhere.
+  // Its save used to wait for a read of that asset, with no row to write it into.
   it.each([
     ['whose asset the DAM can be asked for', false],
     ['whose asset cannot be read', true],
@@ -706,7 +695,6 @@ describe('a save in the asset detail', () => {
     expect(dam.requests).toEqual([])
   })
 
-  // The read is asked for as before while a row of the asset is in a queue, whatever queue it is.
   it('asks the DAM for the asset once, when only another queue than the first holds a row of it', async () => {
     const store = useUploadQueuesStore()
     dam.assets.set('asset-1', damAssetWithFile('asset-1', 'file-1', AssetFileProcessStatus.Processed))
@@ -729,7 +717,6 @@ describe('a save in the asset detail', () => {
   })
 
   describe('when the asset cannot be read again', () => {
-    /** The asset as the detail holds it after its save: with what was saved, and the switch it had when loaded. */
     const heldByTheDetail = (mainFileSingleUse: boolean | null = null) =>
       damAssetWithFile('asset-1', 'file-1', AssetFileProcessStatus.Processed, {
         ...structuredClone(saved),
@@ -740,8 +727,8 @@ describe('a save in the asset detail', () => {
         request.method === 'GET' && dam.routes.one.test(request.url) ? { status: 502 } : undefined
       )
 
-    // The detail is saved by then. Rows left as they were would send their old values with the next save of the
-    // queue, over what the user has just saved. The detail keeps its switch apart from the asset, and names it.
+    // Rows left unchanged would send their old values with the next queue save, over what the user just saved.
+    // The detail keeps its switch apart from the asset and names it.
     it.each([true, false])(
       'gives the rows of that asset what the detail saved, the single-use switch (%s) too',
       async (singleUse) => {
@@ -758,7 +745,7 @@ describe('a save in the asset detail', () => {
             authors: ['author-saved'],
             customData: { title: 'saved in the detail' },
             mainFileSingleUse: singleUse,
-            // What the DAM suggests is not the detail's to say: as the rows had it.
+            // What the DAM suggests is not the detail's to say, so the rows keep their own.
             authorConflicts: [],
             status: Uploaded,
             canEditMetadata: true,
@@ -781,7 +768,6 @@ describe('a save in the asset detail', () => {
       }
     )
 
-    // The detail goes on being typed into, and so does each row.
     it('gives each row copies of its own, and none of them the lists of the detail', async () => {
       const { store, here, there } = await copiesInTwoQueues()
       const detail = heldByTheDetail()
@@ -810,7 +796,6 @@ describe('a save in the asset detail', () => {
       })
     })
 
-    // A caller that names no switch: the rows keep theirs.
     it('leaves the rows their switch when the detail names none', async () => {
       const { store, here, there } = await copiesInTwoQueues()
       for (const item of [here, there]) item.mainFileSingleUse = true
@@ -838,7 +823,6 @@ describe('a save in the asset detail', () => {
       fileId: null,
       keywords: ['keyword-saved'],
       customData: { title: 'saved in the detail' },
-      // Its metadata is in the row, its form is not open: that takes the read that settles it.
       canEditMetadata: false,
     })
     expect(counts()).toEqual({ total: 1, processed: 0 })

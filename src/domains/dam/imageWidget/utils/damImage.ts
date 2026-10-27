@@ -5,14 +5,15 @@ import { isUndefined } from '@/shared/utils/common'
 export interface DamImageFile {
   fileId: DocId
   licenceId: IntegerId
-  /** `mainFileInternal` of the asset; false where it is not known. */
+  /**
+   * `mainFileInternal` of the asset; false if unknown.
+   */
   internal?: boolean | null
 }
 
 /**
- * The image of the CMS for a file of the DAM. `position` and `id` are keys of the image only where they are given,
- * 0 included: what a caller sends has the keys it had when it built the object by hand. A text is empty where the
- * caller names none, and otherwise as handed, whatever a mapping of the application made of it.
+ * CMS image for a DAM file. `position` and `id` are set only when given, including 0, to match hand-built objects.
+ * Texts are empty when not given, otherwise used as passed, regardless of application mappings.
  */
 export function createDamImage(
   file: DamImageFile,
@@ -30,8 +31,8 @@ export function createDamImage(
 }
 
 /**
- * What the image API is sent of an image: its own fields. A widget carries more with it (the asset and the authors
- * an upload was mapped from, the key and the authors of a row of the gallery), which no backend reads.
+ * Only the image's own fields for the image API. Widget extras
+ * such as asset, authors and row key are not read by any backend.
  */
 export function imageFieldsOf(image: ImageCreateUpdateAware): ImageCreateUpdateAware {
   const fields: ImageCreateUpdateAware = { texts: image.texts, flags: image.flags, dam: image.dam }

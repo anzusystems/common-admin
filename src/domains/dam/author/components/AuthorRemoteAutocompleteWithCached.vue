@@ -37,9 +37,13 @@ const props = withDefaults(
     authorConflicts?: DocId[]
     dataCy?: string
     validationScope?: ValidationScope
-    /** While disabled: the chips of the authors (today's library), or the input and its "+" switched off. */
+    /**
+     * How a disabled field looks: author chips (current library behaviour), or the input and its "+" disabled.
+     */
     disabledAs?: DamFieldsDisabledAs
-    /** The DAM configuration to work under. Left out: that of the component it is in, else `default`. */
+    /**
+     * DAM configuration to use. Defaults to the parent component's, else `default`.
+     */
     configName?: string
   }>(),
   {
@@ -100,7 +104,7 @@ const { filterData, filterConfig } = useAuthorInnerFilter()
 provide(FilterInnerConfigKey, filterConfig)
 provide(FilterInnerDataKey, filterData)
 
-// The conflicts the user can still take: an author the input has already is not offered again.
+// Authors the input already has are not offered again.
 const offeredConflicts = computed(() =>
   (props.authorConflicts ?? []).filter((id) =>
     isArray(modelValueComputed.value) ? !modelValueComputed.value.includes(id) : modelValueComputed.value !== id
@@ -121,7 +125,7 @@ const searchChange = (newValue: string) => {
 }
 
 const { addManualToCachedAuthors } = useDamCachedAuthors(damConfigName)
-// The cache of its configuration, which the inner input takes once.
+// The inner input reads this cache only once.
 const useCachedOfName = () => useDamCachedAuthorsForRemoteAutocomplete(damConfigName)
 
 const afterCreate = (author: DamAuthor) => {
@@ -252,8 +256,10 @@ const showAdd = computed(() => {
           </template>
         </VListItem>
       </template>
-      <!-- Only the close of the slot's chip: its other props (`onMousedown`) would keep a press on the chip from
-        opening the list, as it does. -->
+      <!--
+        Pass only the chip's close. Its other props (`onMousedown`)
+        would stop a press on the chip from opening the list.
+      -->
       <template #chip="{ props: chipSlotProps, item: chipSlotItem }">
         <AuthorRemoteAutocompleteCachedAuthorChip
           v-if="chipSlotItem"
@@ -316,7 +322,7 @@ const showAdd = computed(() => {
 .a-authors-append-item {
   position: sticky;
   bottom: 0;
-  // The menu's own surface: a white bar sat in the dark theme's menu.
+  // Use the menu surface color. A white bar showed in the dark theme.
   background-color: rgb(var(--v-theme-surface));
   transform: translateY(8px);
 }

@@ -135,7 +135,7 @@ export function useCollabAnyDataChange(room: CollabRoom, disableAutoUnsubscribe 
         collabFieldDataBufferState.set(room, new Map())
       }
       collabFieldDataBufferState.get(room)?.set(field, data)
-      // As `useCollabField` does: a lock held while the other editor left is released on the server too.
+      // As in `useCollabField`: a lock held while the other editor left must be released on the server too.
       if (!collabSocket.value.connected || !fieldLockMaybeHeld(room, field, currentUserId.value)) return
     }
     collabSocket.value

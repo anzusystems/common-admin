@@ -89,7 +89,6 @@ describe('restoring values from the hash', () => {
     expect(deserializeFilters('#codes=007,008~')?.filters.codes).toEqual(['007', '008'])
   })
 
-  // admin-blog UserFilter `phone` (startsWith, type string), admin-inhouse `phoneNumber`, `postcode`.
   it('gives a string field back as the string that was submitted', () => {
     const fields = [
       { name: 'phone', variant: 'startsWith', default: null, type: 'string' },
@@ -98,7 +97,6 @@ describe('restoring values from the hash', () => {
     first.filterData.phone = '0905'
     first.submitFilter(first.pagination)
 
-    // Next visit of the list (remount): the store is rebuilt and filled from hash/localStorage.
     window.location.hash = ''
     const second = setup(fields, 'users')
     second.loadStoredFilters(second.pagination)
@@ -112,7 +110,7 @@ describe('clearOneFilterSelected with a chip value missing from the data', () =>
     const fields = [{ name: 'ids', default: [] as number[] }] as const satisfies readonly MakeFilterOption[]
     const { filterData, filterConfig } = setup(fields)
     filterData.ids = [7, 8]
-    // Chip values from the API are strings, the data came back from the hash as numbers.
+    // Chip values from the API are strings, while the data came back from the hash as numbers.
     const selected = ref(
       new Map<string, ValueObjectOption<string | number>[]>([
         [

@@ -3,13 +3,9 @@ import { mountCropper, nextFrame, V2_ADAPTER, wait } from '@/domains/dam/cropper
 import { LANDSCAPE_IMAGE, PORTRAIT_IMAGE, SMALL_IMAGE } from '@/domains/dam/cropper/__tests__/support/cropperImages'
 
 /**
- * What the new cropper looks like, pinned against the stylesheet cropper.js v1 shipped.
- *
- * The v1 component drew the crop box out of plain elements whose colours lived in `cropper.css`;
- * the v2 elements take theirs from a `--theme-color` custom property inside each shadow root. The
- * values below are the ones read straight out of `cropper.css` (`.cropper-view-box` outline,
- * `.cropper-face`, `.cropper-dashed`, `.cropper-center`, `.cropper-point`, `.cropper-modal`), so a
- * change in either direction is a change to how the crop looks and shows up as a failure.
+ * Appearance of the new cropper, pinned against the cropper.js v1 stylesheet.
+ * The v2 elements take their colours from a `--theme-color` custom property inside each shadow root.
+ * The expected values are read from `cropper.css`, so any change to the crop look fails the test.
  */
 
 const themeColorOf = (element: Element) => getComputedStyle(element).getPropertyValue('--theme-color').trim()
@@ -31,7 +27,7 @@ describe('ACropper appearance', () => {
     expect(grid.getAttribute('rows')).toBe('3')
     expect(grid.getAttribute('columns')).toBe('3')
     expect(grid.hasAttribute('covered')).toBe(true)
-    // v1 drew the thirds but no outer border — the blue outline already marks the edge.
+    // No outer border: the blue outline already marks the edge.
     expect(grid.hasAttribute('bordered')).toBe(false)
     expect(normaliseColor(themeColorOf(grid))).toBe('rgba(238,238,238,0.5)')
     cropper.destroy()
@@ -86,7 +82,6 @@ describe('ACropper appearance', () => {
   it('shades everything outside the crop the way .cropper-modal did', async () => {
     const cropper = await mountCropper({ adapter: V2_ADAPTER })
     const shade = cropper.find('cropper-shade')
-    // `.cropper-modal` was #000 at opacity .5.
     expect(normaliseColor(themeColorOf(shade))).toBe('rgba(0,0,0,0.5)')
     cropper.destroy()
   })
@@ -157,7 +152,6 @@ describe('ACropper appearance', () => {
     const image = cropper.api.displaySize()
     cropper.destroy()
 
-    // 800x600 fitted to the 640px container, as the v1 component (viewMode 1) laid it out.
     expect(image.width).toBeCloseTo(640, 0)
     expect(image.height).toBeCloseTo(480, 0)
   })
@@ -182,17 +176,15 @@ describe('ACropper appearance', () => {
     const cropper = await mountCropper({ adapter: V2_ADAPTER, hostWidth: 520, fixture: SMALL_IMAGE })
     const canvas = cropper.find('cropper-canvas').getBoundingClientRect()
     const image = cropper.find('cropper-image').getBoundingClientRect()
-    // The frame keeps the width it was given, as cropper.js v1's container did...
     expect(canvas.width).toBeCloseTo(520, 0)
     expect(canvas.height).toBeCloseTo(SMALL_IMAGE.naturalHeight, 0)
-    // ...and the picture sits in the middle of it.
     expect(image.left - canvas.left).toBeCloseTo((520 - SMALL_IMAGE.naturalWidth) / 2, 0)
     cropper.destroy()
   })
 
-  // cropper.js v1 measured its container through an inline `<img>`, so the font's descender made the
-  // container a few pixels taller than the picture and the picture was then scaled up to fill it —
-  // a 240px wide source came out at 247px. Nothing here reproduces that.
+  // cropper.js v1 measured its container through an inline `<img>`. The font descender made the container a few
+  // pixels taller than the picture, and the picture was scaled up to fill it (240px source shown at 247px).
+  // The new cropper must not reproduce that.
   it('shows a small source at its natural size instead of scaling it up by a font descender', async () => {
     const cropper = await mountCropper({ adapter: V2_ADAPTER, hostWidth: 520, fixture: SMALL_IMAGE })
     const picture = cropper.api.displaySize()
@@ -211,8 +203,8 @@ describe('ACropper appearance', () => {
     cropper.destroy()
   })
 
-  // `ACropperjs` measured only its own container, so a picture inside a short, clipped ancestor was
-  // simply cut off at the fold — and the part of the crop down there could not be dragged back.
+  // `ACropperjs` measured only its own container. A picture inside a short, clipped ancestor
+  // was cut off at the fold, and the crop part down there could not be dragged back.
   it('fits the picture into an ancestor that clips it', async () => {
     const frame = document.createElement('div')
     frame.style.cssText = 'width: 520px; max-height: 300px; overflow: hidden;'
@@ -230,8 +222,8 @@ describe('ACropper appearance', () => {
     frame.remove()
   })
 
-  // An ancestor that scrolls is a different matter: what it hides is a scroll away, not gone, so
-  // shrinking the picture to fit would be taking away resolution for no reason.
+  // Content hidden by a scrolling ancestor is still reachable by scrolling.
+  // Shrinking the picture to fit would lose resolution for no reason.
   it('leaves the picture alone inside an ancestor that scrolls', async () => {
     const frame = document.createElement('div')
     frame.style.cssText = 'width: 520px; max-height: 300px; overflow-y: auto;'

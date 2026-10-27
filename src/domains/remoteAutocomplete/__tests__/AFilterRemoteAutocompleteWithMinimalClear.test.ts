@@ -13,12 +13,13 @@ import {
   FilterSubmitResetCounterKey,
 } from '@/domains/filters/utils/filterInjectionKeys'
 
-// The clear of the filter autocomplete of minimal items empties the filter and asks for the list again, for an empty
-// search, once and under the counter of the searches, which takes only the newest answer. It asked with the search
-// typed before, outside the counter, wrote that answer whenever it came, and emptied the filter only after it. A field
-// without focus read the length of the `null` search Vuetify empties it with first, and threw into the error handler.
+// Clearing the minimal-items filter autocomplete empties the filter and asks for the list again
+// for an empty search, once, under the search counter, which takes only the newest answer.
+// It used to ask with the previous search outside the counter, write
+// that answer whenever it came, and empty the filter only after it.
+// A field without focus also read the length of the `null` search
+// Vuetify empties it with first, and threw into the error handler.
 
-/** What the component let escape: errors of its handlers (`errorHandler` of the app). */
 const escaped: unknown[] = []
 
 let wrapper: VueWrapper | undefined
@@ -28,7 +29,9 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
-/** Past the debounce of the search, so that a request it would start is counted too. */
+/**
+ * Waits past the search debounce so that a request it would start is counted too.
+ */
 const settled = async () => {
   await new Promise((resolve) => setTimeout(resolve, 400))
   await flushPromises()
@@ -50,13 +53,13 @@ const mountFilter = async (
   const innerFields = [{ name: 'name' as const, default: '' }]
   const inner = createFilter(innerFields, createFilterStore(innerFields), { system: 'sys', subject: 'inner' })
   const selected = new Map<string, unknown>()
-  /** The search each request for the list was asked with. */
   const searches: string[] = []
-  /** Once `holdByIds` is called, the reads of items by their ids wait: `byIdAnswers[n]()` lets one answer. */
+  /**
+   * Once `holdByIds` is called, the reads of items by their ids wait: `byIdAnswers[n]()` lets one answer.
+   */
   let holdingByIds = false
   const byIdAnswers: Array<() => void> = []
   const heldById = () => (holdingByIds ? new Promise<void>((resolve) => byIdAnswers.push(resolve)) : undefined)
-  /** With `held`: the answers of the requests for the list, given by the test. */
   const answers: Array<(items: unknown[]) => void> = []
   const fetchItemsMinimal = vi.fn(async () => {
     searches.push(String(inner.filterData.name))
@@ -87,7 +90,6 @@ const mountFilter = async (
   })
   await vi.waitFor(() => expect(selected.has(name)).toBe(true))
   await settled()
-  // What the user searched for before picking.
   inner.filterData.name = 'grou'
   return {
     filterData: outer.filterData as Record<string, unknown>,
@@ -118,7 +120,7 @@ describe('the clear of AFilterRemoteAutocompleteWithMinimal', () => {
     }
   )
 
-  // Emptied at once, the filter would not change for its watcher: the default is put back into the field as before.
+  // Emptied at once, the filter would not change for its watcher, so the default is put back into the field as before.
   it('shows a filter of one value cleared onto the default it holds with that value', async () => {
     const { filterData, selected, searches } = await mountFilter('group', 3, { fallback: 3 })
     const before = searches.length
@@ -144,7 +146,7 @@ describe('the clear of AFilterRemoteAutocompleteWithMinimal', () => {
     expect(filterData.group).toBeNull()
   })
 
-  // Two searches on their way: the answer of the older one hid the spinner while the newer one still ran.
+  // With two searches in flight, the answer of the older one hid the spinner while the newer one still ran.
   it('keeps its spinner on until the answer of the latest search', async () => {
     const { answers } = await mountFilter('groups', [3, 5], { held: true })
     const autocomplete = wrapper!.findComponent({ name: 'VAutocomplete' })
@@ -162,8 +164,8 @@ describe('the clear of AFilterRemoteAutocompleteWithMinimal', () => {
     expect(autocomplete.props('loading')).toBe(false)
   })
 
-  // Two requests on their way, a search and a read of items by their ids: the spinner stays on till the last of them
-  // ends. Each turned it off as it ended.
+  // With a search and a read by ids in flight, the spinner stays on until the last one ends.
+  // Each used to turn it off when it ended.
   it.each<[string, boolean]>([
     ['a read by ids that ends while a search runs', true],
     ['a search that ends while a read by ids runs', false],

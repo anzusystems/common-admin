@@ -13,9 +13,10 @@ import { handleRecordLoadError, useRecordPage } from '@/domains/system/composabl
 import { useRouteHistory } from '@/domains/system/composables/routeHistory'
 import { AnzuApiAxiosError } from '@/shared/error/AnzuApiAxiosError'
 
-// A page that acts after an asynchronous step does nothing while the user navigates elsewhere, or once the user has
-// left: in production every page's chunk is fetched on its first visit, and the page's redirect would cancel the
-// user's navigation, its message stay on the page the user went to.
+// A page that acts after an asynchronous step must do nothing
+// while the user navigates elsewhere or once the user has left.
+// In production every page chunk is fetched on first visit. Otherwise the page's redirect
+// would cancel the user's navigation and its message would stay on the page the user went to.
 
 vi.mock('@/domains/system/composables/alertsQueue', () => ({ pushAlert: vi.fn() }))
 
@@ -33,7 +34,6 @@ const settle = async () => {
 }
 
 const page = defineComponent(() => () => null)
-// The destinations' chunks, held until the test lets them arrive.
 let chunk = deferred()
 let otherChunk = deferred()
 let untrack: (() => void) | undefined
@@ -60,7 +60,6 @@ const makeRouter = (pages: Record<string, Component> = {}) => {
   return router
 }
 
-// As the admins' App.vue: the view keyed by the path.
 const mountApp = (router: Router) => {
   wrapper = mount(
     defineComponent({
@@ -244,7 +243,6 @@ describe('usePageNavigation', () => {
     mountApp(router)
     await nextTick()
 
-    // The action's success hides the button before its redirect runs.
     shown.value = false
     await nextTick()
     expect(await push!('/list')).toBe(true)

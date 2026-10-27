@@ -19,12 +19,13 @@ export type UseApiFetchListParams = {
   client: AxiosClientFn
   system: string
   entity: string
-  /** i18n scope for field-level validation failures; defaults to `system` / `entity`. */
+  /**
+   * i18n scope for field-level validation failures; defaults to `system` / `entity`.
+   */
   validationSystem?: string
   validationEntity?: string
   urlTemplate?: string
   urlParams?: UrlParams
-  /** Anything axios takes except what this helper decides: the method, the url, the body and the signal. */
   options?: Omit<AxiosRequestConfig, 'method' | 'url' | 'data' | 'signal'>
   cancelPrevious?: boolean
 }
@@ -33,13 +34,13 @@ export type FetchListParams = {
   urlTemplate?: string
   urlParams?: UrlParams
   forceElastic?: boolean
-  /** Stops this one call, leaving the instance's other calls alone. */
+  /**
+   * Stops this one call, leaving the instance's other calls alone.
+   */
   signal?: AbortSignal
   /**
-   * `false`: a failure of this one call is thrown as ever, and not handed to the api error logger.
-   *
-   * As in `useApiRequest`: for a caller that reads a list again on a timer and has reported its first failure
-   * already. It is the caller's to say which call that is, call by call; an instance has no such switch.
+   * `false`: a failure of this call is still thrown but not sent to the api error logger.
+   * For a caller that polls a list and has already reported its first failure. It is set per call, not per instance.
    */
   report?: boolean
 }
@@ -87,35 +88,25 @@ export const useApiFetchList = <T>(params: UseApiFetchListParams): UseApiFetchLi
       report: reported = true,
     } = fetchParams
 
-    // Assigned inside `run`, once, at the moment there is a url to ask for. It stays undefined until
-    // then, and that is what a failure before dispatch reports: the field says which url was
-    // requested, and a call that never reached the wire requested none. Neither the client root nor
-    // the path it was going to build is an answer to that question.
+    // Assigned inside `run` once a url exists. It stays undefined before
+    // that, because a call that never reached the wire requested no url.
     let url: string | undefined
-    // The config axios used, kept for the failures this helper raises after reading the response:
-    // they carry no config of their own, and rebuilding one describes the request as the client
-    // would send it now rather than as it was sent.
+    // The config axios used, kept for failures raised after reading the response. Those carry
+    // no config, and a rebuild would describe the request as the client would send it now.
     let dispatched: AxiosRequestConfig | undefined
 
-    // Handed over by `run`, not read before it: `run` is what opens a new generation, so a value
-    // taken beforehand belongs to the previous call and would never match.
+    // Set by `run`, not read before it. `run` opens the new
+    // generation, so an earlier value belongs to the previous call.
     let generation = 0
     let ownSignal: AbortSignal | undefined
     const writePagination = (next: Partial<Pagination>) => {
-      // Two ways to stop being the call whose answer counts, and both have to be checked: a newer
-      // call opened a generation, or this one was cancelled through a signal of its own. Aborting
-      // does not stop a response already on its way, so either can still arrive and write.
-      //
-      // The generation belongs to the instance, not to this `pagination` ref, so one instance serves
-      // one list. Two concurrent calls on a shared instance writing to different refs would leave
-      // the older ref unwritten -- correct for the same list shown twice, wrong for two lists.
+      // Check both a newer generation and this call's own abort. Aborting does not stop a response already arriving.
+      // The generation belongs to the instance, so one instance must serve one list.
+      // Concurrent calls writing to different refs would leave the older ref unwritten.
       if (abortable.generation() !== generation) return
       if (ownSignal?.aborted === true) return
-      // The caller's own signal, read directly rather than through the relay `run` set up for it.
-      // `run` drops that relay as soon as the response is in hand, and the write happens after --
-      // so an abort landing in between leaves `ownSignal` untouched, and the call the caller just
-      // stopped would go on to write the pagination. This is the only state the family writes
-      // outside `run`, so it is the only place the gap exists.
+      // Read the caller's signal directly, not the relay. `run` drops the relay once the response arrives
+      // and this write happens after, so an abort in between would otherwise still write pagination.
       if (signal?.aborted === true) return
       pagination.value = { ...pagination.value, ...next }
     }
@@ -125,14 +116,10 @@ export const useApiFetchList = <T>(params: UseApiFetchListParams): UseApiFetchLi
         generation = currentGeneration
         ownSignal = abortSignal
 
-        // The whole url is derived here, inside `run`, and that is the point of putting it here:
-        // `run` is what opens a new generation and, with `cancelPrevious`, stops the call before
-        // this one. Anything done ahead of it belongs to no generation yet, so a missing template or
-        // a malformed filter config -- both of which throw while the url is being built -- would
-        // leave the previous call current, and its answer, arriving afterwards, would write
-        // pagination for a query the caller has already replaced. It also keeps all of it inside the
-        // try, so the caller gets the same error class as for every other failure rather than a bare
-        // `Error` nothing in the fleet is written to catch.
+        // The url is derived inside `run`, which opens the generation and, with
+        // `cancelPrevious`, stops the previous call. If building it threw before `run`,
+        // the previous call would stay current and write pagination for a replaced query.
+        // Inside the try so these failures raise the same error class as others.
         const template = isDefined(urlTemplateOverride) ? urlTemplateOverride : urlTemplate
         if (isUndefined(template)) throw new AnzuFatalError(undefined, 'Url template is undefined')
 
@@ -143,28 +130,24 @@ export const useApiFetchList = <T>(params: UseApiFetchListParams): UseApiFetchLi
         const requestUrl = baseUrl + generateListQuery(pagination, filterData, filterConfig)
         const instance = client()
 
-        // Recorded last, when nothing between here and the call can throw any more: a client factory
-        // that fails is a request that never happened, and the report says so by naming no url.
+        // Recorded last, when nothing before the call can throw. A failing
+        // client factory means no request happened, so no url is reported.
         url = requestUrl
 
         return instance.get(requestUrl, { ...ownedByHelper(options), signal: abortSignal })
       }, signal)
 
       dispatched = res.config
-      // The url the report will name, so a message and the context beside it cannot disagree about
-      // which request failed when an interceptor rewrote it on the way out.
+      // The url the report names, so the message and context agree when an interceptor rewrote the request.
       const asSent = () => requestedUrl(client, url, options, undefined, dispatched)
       if (!isValidHTTPStatus(res.status)) throw new AnzuApiResponseCodeError(res.status)
 
-      // 204 is an empty list, and the metadata has to say so -- left alone it keeps answering for
-      // the previous query.
+      // 204 is an empty list. The metadata must be reset, or it keeps describing the previous query.
       if (res.status === HTTP_STATUS_NO_CONTENT) {
-        // A 204 says the list is empty; it says nothing about which kind of list it is. So the mode
-        // the pagination is already in decides which field gets cleared: a counted list keeps
-        // `null`, and an infinite one keeps a boolean and gets `false` -- which is what it means,
-        // "there is nothing after this". Writing `null` for both put an infinite list into counted
-        // mode, where `ASubjectSelect` reads a next page as available and its autoload fires again
-        // on the same 204, and `ADatatablePagination` offers Next and Last on an empty page.
+        // The current pagination mode decides what to clear. A counted list
+        // keeps `hasNextPage` as `null`, an infinite one gets `false`.
+        // Writing `null` for both switched infinite lists to counted mode. `ASubjectSelect` then autoloaded
+        // the same 204 again, and `ADatatablePagination` offered Next and Last on an empty page.
         const stillCounted = isNull(pagination.value.hasNextPage)
         writePagination({ totalCount: 0, hasNextPage: stillCounted ? null : false, currentViewCount: 0 })
         return []
@@ -175,15 +158,13 @@ export const useApiFetchList = <T>(params: UseApiFetchListParams): UseApiFetchLi
       }
 
       const list = readListBody<T>(res.data, res.status, asSent())
-      // Only when the response said something about paging at all: a body that named no mode has
-      // said nothing to write, and a count of what just arrived would be the one field left
-      // describing a query nobody asked about.
+      // Only write when the response named a paging mode. Otherwise a lone
+      // `currentViewCount` would be stale metadata for an earlier query.
       if (list.mode !== 'unknown') writePagination({ ...list.pagination, currentViewCount: list.items.length })
 
       return list.items
     } catch (err: unknown) {
-      // Built once and handed to both, the way the batch does it: half the work on the failure path,
-      // and one place that could go wrong instead of two.
+      // Built once and shared by both, as in the batch.
       const context = {
         system,
         entity,
@@ -210,24 +191,11 @@ export type UseApiFetchListReturnType<T> = {
   ) => Promise<T[]>
   abort: () => void
   /**
-   * True while this instance has a request in flight, false once the last one settles.
-   *
-   * It is here so a caller does not have to keep its own: the hand-rolled version is a ref cleared in
-   * a `finally`, and that `finally` belongs to whichever call ended -- including one that
-   * `cancelPrevious` just superseded, which turns the spinner off while the call the user is waiting
-   * for is still running. This one never dips between a superseded call and the one that replaced it.
-   *
-   * Two things to know before replacing a hand-rolled flag with it.
-   *
-   * It covers what this helper does and nothing the caller does afterwards. A flag that also spans a
-   * follow-up cached fetch, a mapping pass or a second endpoint is not the same flag, and swapping it
-   * for this one turns the spinner off too early. Keep your own where it means more than "this helper
-   * is working".
-   *
-   * It belongs to the instance, so it is only reachable if you hold the instance. A factory that
-   * builds one per call and hands back the promise alone -- `const { execute } = useX()` inside the
-   * function that calls it -- cannot expose `loading`, `abort` or `cancelPrevious` at all. Hoist the
-   * instance to where the caller lives first.
+   * True while this instance has a request in flight. Unlike a caller-cleared
+   * `finally` flag, it does not dip when `cancelPrevious` supersedes a call.
+   * It covers only this helper's work. Keep your own flag if it also spans follow-up fetches or mapping.
+   * It belongs to the instance. A factory that builds one per call cannot
+   * expose `loading`, `abort` or `cancelPrevious`, so hoist the instance first.
    */
   loading: Ref<boolean>
 }

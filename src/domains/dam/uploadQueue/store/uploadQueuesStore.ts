@@ -39,7 +39,9 @@ import { commonT } from '@/plugins/i18n'
 import { defineStore } from 'pinia'
 import { getCurrentScope, ref } from 'vue'
 
-/** The fields of a row the user edits, and the save of a detail writes. */
+/**
+ * Fields the user edits and a detail save writes.
+ */
 export interface EditableFields {
   keywords: DocId[]
   authors: DocId[]
@@ -57,31 +59,39 @@ const editableFieldsOf = (item: UploadQueueItem): EditableFields =>
 
 const sameValue = (one: unknown, other: unknown) => JSON.stringify(one) === JSON.stringify(other)
 
-/** The rows of an asset as they were at a moment, field by field (`noteRowsOfAsset`). */
+/**
+ * Field-by-field snapshot of an asset's rows (`noteRowsOfAsset`).
+ */
 export interface RowsNote {
   assetId: DocId
-  /** The DAM configuration of the queues the rows are in. */
+  /**
+   * DAM configuration of the queues the rows are in.
+   */
   configName: string
   rows: Map<UploadQueueItem, EditableFields>
 }
 
 /**
- * The rows a settle function of the store is for: those of the queues of the DAM configuration of this name, or of
- * the configuration of the queue `queueKey`. Required: two DAMs may give one asset id.
+ * Which rows a settle function targets: queues of the named DAM configuration, or of the configuration of `queueKey`.
+ * Required because two DAMs may share an asset id.
  */
 export type UploadQueueRowsOf = string | { queueKey: UploadQueueKey }
 
-/** What a write left as the user had changed it: those fields, and those keys of the custom data. */
+/**
+ * What a write left as the user had changed it: these fields and these custom data keys.
+ */
 interface KeptByWrite {
   fields: Set<'keywords' | 'authors' | 'mainFileSingleUse'>
   customKeys: Set<string>
 }
 
 /**
- * What the detail saved, into a row of its asset, each copy the row's own: a field the user has changed since `was`
- * (the row as the save was pressed) keeps what the user gave it, a field of the custom data each on its own. A row
- * `was` does not know (it became a row of the asset meanwhile) takes all. `mainFileSingleUse` undefined: left as is.
- * Answers what it kept.
+ * Writes the saved detail into a row of its asset. Each row gets its own copies.
+ * A field the user changed since `was` (the row when save was pressed)
+ * keeps the user's value. Custom data keys are compared one by one.
+ * A row unknown to `was` (it became a row of the asset meanwhile)
+ * takes everything. `mainFileSingleUse` undefined is left as is.
+ * Returns what it kept.
  */
 const writeUnchanged = (item: UploadQueueItem, was: EditableFields | undefined, saved: EditableFields) => {
   const kept: KeptByWrite = { fields: new Set(), customKeys: new Set() }
@@ -110,9 +120,8 @@ const writeUnchanged = (item: UploadQueueItem, was: EditableFields | undefined, 
 }
 
 /**
- * Another note of the rows, of a save of the same asset still on its way, takes what a write has just put into `item`:
- * that is no change of the user's, and the later write takes its place. Taken as the user's, the later save kept the
- * values of the earlier one.
+ * Another pending save of the same asset takes over what a write just put into `item`.
+ * That value is not a user change. Otherwise the later save would keep the earlier save's values.
  */
 const takeWrite = (note: RowsNote, item: UploadQueueItem, kept: KeptByWrite) => {
   const entry = note.rows.get(item)
@@ -134,22 +143,22 @@ export const useUploadQueuesStore = defineStore('commonAdminUploadQueuesStore', 
 
   const { createDefault } = useUploadQueueItemFactory()
 
-  // The DAM configuration each queue was made under: its files are sent, and its rows asked about, by the client
-  // and at the addresses of that configuration. A queue the store was given no name for is under `default`.
+  // The DAM configuration each queue was created under. Its files are sent
+  // and its rows read with that configuration's client and endpoints.
+  // A queue without a given name uses `default`.
   const configNames = new Map<UploadQueueKey, string>()
   const configOf = (queueKey?: UploadQueueKey) =>
     (isUndefined(queueKey) ? undefined : configNames.get(queueKey)) ?? 'default'
-  // Read when a request is made, by the queue it is for.
+  // Resolved per request, from the queue it is for.
   const damOf = (queueKey?: UploadQueueKey) => useCommonAdminCoreDamOptions(configOf(queueKey))
 
-  // The poll asks for as long as a row waits: the settlement says of each of its requests whether a failure of it
-  // is the first of a streak, and only that one is reported.
+  // The poll repeats while a row waits. The settlement decides per request
+  // whether a failure starts a streak, and only that one is reported.
 
-  // An asset that does not exist is an answer, which the settlement counts; anything else is a read that failed.
+  // A missing asset is an answer the settlement counts. Anything else is a failed read.
   const readAsset = async (assetId: DocId, options?: UploadReadOptions) => {
     const { damClient, endPointAsset } = damOf(options?.queueKey)
     try {
-      // Called as ever unless it is to be quiet.
       return options?.report === false
         ? await fetchAsset(damClient, endPointAsset, assetId, { report: false })
         : await fetchAsset(damClient, endPointAsset, assetId)
@@ -159,21 +168,21 @@ export const useUploadQueuesStore = defineStore('commonAdminUploadQueuesStore', 
     }
   }
 
-  // The list goes to the client as it is, and reports nothing by itself. A failure it reports is thrown as it was
-  // reported: the settlement asks it whether it was written down.
+  // The list request reports nothing by itself. A reported failure is
+  // rethrown as reported, so the settlement can check whether it was logged.
   const readAssets = async (licenceId: IntegerId, assetIds: DocId[], options?: UploadReadOptions) => {
     const { damClient, endPointAsset } = damOf(options?.queueKey)
     try {
       return await fetchAssetListByIds(damClient, endPointAsset, assetIds, licenceId)
     } catch (failure) {
       if (options?.report) {
-        // An answer that carries no list of assets is rejected as the answers themselves.
+        // An answer without an asset list is rejected like the failed answers.
         const answer = isArray<{ status?: number; config?: AxiosRequestConfig }>(failure) ? failure.at(-1) : undefined
         const url = `${endPointAsset}/licence/${licenceId}/ids/${assetIds.join(',')}`
         const context = {
           system: SYSTEM_CORE_DAM,
           entity: ENTITY,
-          // As the request went out, with the address of the client, when axios has kept it.
+          // The URL as sent, with the client's base address, when axios kept the config.
           url: requestedUrl(damClient, url, {}, failure, answer?.config),
         }
         const error = isArray(failure) ? new AnzuApiResponseCodeError(answer?.status ?? 0) : failure
@@ -183,13 +192,14 @@ export const useUploadQueuesStore = defineStore('commonAdminUploadQueuesStore', 
     }
   }
 
-  // What becomes of a row once its file is with the server: the poll of its queue, the notifications and the
-  // refresh button all go through here. The core counts the queue and starts the next row after a final state, and
-  // keeps the failed rows a refresh may still change.
+  // Handles a row once its file is on the server. The queue poll,
+  // notifications and the refresh button all go through here.
+  // The core counts the queue, starts the next row after a final
+  // state, and keeps failed rows a refresh may still change.
   const profile: UploadQueueSettlementProfile = {
     roleOf: (row) => (row.type === UploadQueueItemType.Asset ? UploadRowRole.Copy : UploadRowRole.Upload),
     policyFor: () => ({ reader: 'asset', settleOn: 'read', duplicate: 'becomeOriginal', metadata: 'load' }),
-    // By the asset alone, whatever the file an event names.
+    // Matched by asset only, whatever file an event names.
     matches: (row, target) => row.assetId === target.assetId,
     readers: {
       asset: readAsset,
@@ -200,9 +210,9 @@ export const useUploadQueuesStore = defineStore('commonAdminUploadQueuesStore', 
       },
       failureReported: apiErrorIsReported,
     },
-    // Two DAMs may give one asset id: what concerns the rows of a configuration is settled in its queues alone.
+    // Two DAMs may use the same asset id, so rows are settled only within the queues of their configuration.
     configOf,
-    // The names of the rows of a queue are of the DAM of its configuration.
+    // Names of a queue's rows come from the DAM of its configuration.
     caches: {
       addAuthors: (ids, queueKey) => useDamCachedAuthors(configOf(queueKey)).addToCachedAuthors(ids),
       addKeywords: (ids, queueKey) => useDamCachedKeywords(configOf(queueKey)).addToCachedKeywords(ids),
@@ -215,22 +225,21 @@ export const useUploadQueuesStore = defineStore('commonAdminUploadQueuesStore', 
       assetMissing: () => commonT('common.damImage.uploadErrors.unknownError'),
       assetGone: () => commonT('common.damImage.queueItem.assetGone'),
     },
-    // The socket of the configuration of the queue: a configuration without one is polled for densely.
+    // Uses the socket of the queue's configuration. A configuration without a socket is polled more often.
     connection: {
       isPushAlive: (queueKey) => useDamNotificationsConnection(configOf(queueKey)).isPushAlive(),
       onChange: useDamNotificationsConnection().onChange,
     },
   }
 
-  // Every row of this store is uploaded through the library's upload service. Made in the scope of the store: a
-  // store disposed of leaves no timer of a poll, no listener for the tab or for the socket.
+  // Created in the store's scope, so a disposed store leaves no poll timer and no tab or socket listener.
   const core = createUploadQueueCore(libraryQueuePreset({ queues, settlement: profile, configOf }))
   const { settlement } = core
 
-  // The key of a queue is one widget's, and so of one configuration: a queue that has rows takes none under another
-  // name. Refused, not sent under the name the queue has: that is not where the caller said. The queue is named
-  // with its row, and nothing is awaited between the two: of two adds that overlap, the one whose row is in the
-  // queue first has named it. The row starts at once, under that name.
+  // A queue key belongs to one widget and so to one configuration. A queue with
+  // rows refuses another configuration name instead of sending under its own.
+  // The name is set together with the row, with no await in between.
+  // Of two overlapping adds, the first row in the queue sets the name.
   function addRowUnder(queueKey: UploadQueueKey, configName: string, item: UploadQueueItem) {
     const known = configNames.get(queueKey)
     if (!isUndefined(known) && known !== configName && core.getQueueItems(queueKey).length > 0) {
@@ -244,9 +253,9 @@ export const useUploadQueuesStore = defineStore('commonAdminUploadQueuesStore', 
 
   const storeScope = getCurrentScope()
 
-  // Without the file a notification names: the rows are matched by their asset alone, and a read asked for
-  // about a file that is not the main one would take the state of that file from the notification unchecked.
-  // `configNames`: the configurations of the socket it came through, whose queues alone it concerns.
+  // The file a notification names is dropped. Rows match by asset only,
+  // and a read for a non-main file would take that file's state unchecked.
+  // `configNames`: configurations of the socket it came through. Only their queues are affected.
   const toSettlementEvent = (event: DamNotification, configNames: string[]): UploadSettlementEvent | null => {
     switch (event.name) {
       case DamNotificationName.AssetFileProcessed:
@@ -277,24 +286,24 @@ export const useUploadQueuesStore = defineStore('commonAdminUploadQueuesStore', 
   }
 
   const { addDamNotificationListener } = useDamNotifications()
-  // With its first row, not with the store: an application with a queue store of its own keeps this one alive
-  // too, and both would answer every notification. Never taken back.
+  // Starts with the first row, not with the store. An application with its own queue store
+  // keeps this one alive too, and both would answer every notification. Never removed.
   let listening = false
   function listenToNotifications() {
     if (listening) return
     listening = true
-    // Every socket of the page: an event concerns the rows of the queues of the configurations of its socket.
+    // Listens on every socket of the page. An event concerns only the queues of its socket's configurations.
     const listen = () =>
       addDamNotificationListener(
         (event, origin) => {
           const settlementEvent = toSettlementEvent(event, origin)
-          // Not awaited: the read it asks for comes later.
+          // Not awaited: the read it triggers happens later.
           if (settlementEvent) void settlement.notify(settlementEvent)
         },
         { all: true }
       )
-    // In the scope of the store, as when the store itself subscribed. The first row is added from a component, and
-    // a listener added in the scope of that component would go with it.
+    // Run in the store's scope. The first row is added from a component,
+    // and a listener in that component's scope would be disposed with it.
     if (storeScope) storeScope.run(listen)
     else listen()
   }
@@ -306,8 +315,7 @@ export const useUploadQueuesStore = defineStore('commonAdminUploadQueuesStore', 
     assets: DocId[],
     configName: string
   ) {
-    // Thrown here for a configuration the application has not got, before anything is done for it: its DAM
-    // configuration store is not made either.
+    // Throws here for an unknown configuration, before anything is done, so its DAM config store is not created.
     useCommonAdminCoreDamOptions(configName)
     const { getDamConfigExtSystem } = useDamConfigState(undefined, configName)
 
@@ -327,7 +335,7 @@ export const useUploadQueuesStore = defineStore('commonAdminUploadQueuesStore', 
       )
       queueItem.assetId = assetId
       addRowUnder(queueKey, configName, queueItem)
-      // Nothing is uploaded here: the copy waits for the server from the start.
+      // Nothing is uploaded for a copy. It waits for the server from the start.
       const added = core.getQueueItems(queueKey).at(-1)
       if (added) core.track(queueKey, added)
     }
@@ -340,8 +348,7 @@ export const useUploadQueuesStore = defineStore('commonAdminUploadQueuesStore', 
     files: File[],
     configName: string
   ) {
-    // Thrown here for a configuration the application has not got, before anything is done for it: its DAM
-    // configuration store is not made either.
+    // Throws here for an unknown configuration, before anything is done, so its DAM config store is not created.
     useCommonAdminCoreDamOptions(configName)
     const { getDamConfigExtSystem } = useDamConfigState(undefined, configName)
 
@@ -367,8 +374,8 @@ export const useUploadQueuesStore = defineStore('commonAdminUploadQueuesStore', 
     }
   }
 
-  // The names of before the settlement, kept for their callers until the queues are unified. `of`: whose rows they
-  // settle, read by the client of that configuration.
+  // Legacy names kept for callers until the queues are unified. `of`:
+  // whose rows they settle, read with that configuration's client.
 
   const targetOf = (assetId: DocId, of: UploadQueueRowsOf) => ({
     assetId,
@@ -397,7 +404,9 @@ export const useUploadQueuesStore = defineStore('commonAdminUploadQueuesStore', 
     settlement.settleKnownFailed(targetOf(assetId, of), failReason)
   }
 
-  /** The refresh button of a row: asks what became of the file now, and settles the rows of the asset by it. */
+  /**
+   * Row refresh button: reads the file's current state and settles the asset's rows by it.
+   */
   function refreshAsset(assetId: DocId, of: UploadQueueRowsOf): Promise<UploadRefreshOutcome> {
     return settlement.refreshAsset(targetOf(assetId, of))
   }
@@ -406,24 +415,23 @@ export const useUploadQueuesStore = defineStore('commonAdminUploadQueuesStore', 
     core.stopItemUpload(queueKey, queueItem)
   }
 
-  // The writes of saves of a detail of an asset on their way, counted by the configuration and the asset: only the
-  // latest one writes. Two that overlapped left the rows with the values of whichever read answered last, and the
-  // later save, with the notes of its own, kept the values of the earlier one as typed meanwhile. Two DAMs may give one
-  // asset id: the saves under two configurations are of two assets.
+  // Pending detail-save writes per configuration and asset. Only the latest one writes.
+  // Otherwise overlapping saves left rows with whichever read
+  // answered last, and the later save kept the earlier values.
+  // Two DAMs may share an asset id, so saves under two configurations concern two assets.
   const detailWrites = new Map<string, number>()
   const detailWriteKey = (configName: string, assetId: DocId) => `${configName}\u0000${assetId}`
-  // The numbers of those writes, one count for every asset: a number is never given twice, also once the write of an
-  // asset that had it is over. Counted by the asset, the third save after two that had ended took the number of the
-  // first, and the late read of the first wrote while the third was on its way.
+  // Write numbers come from one global counter and are never reused.
+  // A per-asset counter let a third save reuse the first save's
+  // number, and the first save's late read wrote over the third.
   let lastDetailWrite = 0
 
-  // The notes of the rows of saves of a detail that are on their way: a write takes its place in the others.
+  // Notes of pending detail saves. A write updates the other notes.
   const openNotes = new Set<RowsNote>()
 
   /**
-   * The rows of the asset `assetId` as they are, in every queue of the DAM configuration `configName`, field by field:
-   * taken as the save of a detail of that asset is pressed, and handed to `updateFromDetail` once it has been
-   * answered, or to `forgetRowsNote` once it has failed.
+   * Snapshots the rows of `assetId` in every queue of `configName`, field by field, when a detail save is pressed.
+   * Pass it to `updateFromDetail` on success or to `forgetRowsNote` on failure.
    */
   function noteRowsOfAsset(assetId: DocId, configName: string): RowsNote {
     const rows = new Map<UploadQueueItem, EditableFields>()
@@ -438,14 +446,16 @@ export const useUploadQueuesStore = defineStore('commonAdminUploadQueuesStore', 
     return note
   }
 
-  /** The save the note was taken for has failed: nothing writes by it. */
+  /**
+   * The save for this note failed. Nothing is written from it.
+   */
   function forgetRowsNote(note: RowsNote) {
     openNotes.delete(note)
   }
 
   /**
-   * `kept`: what the write into `item` left as the user had it; every other note of that asset, of that configuration,
-   * takes the rest.
+   * `kept`: what the write into `item` left as the user had it.
+   * Every other note of that asset and configuration takes the rest.
    */
   const othersTakeWrite = (own: RowsNote, item: UploadQueueItem, kept: KeptByWrite) => {
     openNotes.forEach((note) => {
@@ -455,13 +465,13 @@ export const useUploadQueuesStore = defineStore('commonAdminUploadQueuesStore', 
   }
 
   /**
-   * `configName`: the DAM configuration the detail was saved under; only the rows of the
-   * queues of that configuration are written, and their names go to its caches. `mainFileSingleUse`: the switch the
-   * detail saved with the asset, which keeps it apart from the asset it hands over. `rowsAtSave`: the rows of the asset
-   * as the save was pressed (`noteRowsOfAsset`); as they are now where not given. A field of a row the user has changed
-   * since keeps what the user gave it (a field of the custom data each on its own): only the fields as they were then
-   * take what the detail saved. What was typed into the row meanwhile was replaced. Of two writes of one asset under
-   * one configuration on their way at once, only the later one writes.
+   * `configName`: the DAM configuration the detail was saved under.
+   * Only its queues are written, and names go to its caches.
+   * `mainFileSingleUse`: the switch saved with the detail. `rowsAtSave`: the
+   * rows when save was pressed (`noteRowsOfAsset`); current rows if omitted.
+   * A field the user changed since keeps the user's value, custom data
+   * keys each on their own. Unchanged fields take the saved values.
+   * Of two concurrent writes of one asset under one configuration, only the later one writes.
    */
   async function updateFromDetail(
     asset: AssetDetailItemDto,
@@ -474,22 +484,22 @@ export const useUploadQueuesStore = defineStore('commonAdminUploadQueuesStore', 
     try {
       dam = useCommonAdminCoreDamOptions(configName)
     } catch (e) {
-      // The application has no configuration of that name: the rows are left alone, in silence, as ever.
+      // Unknown configuration name: rows are left alone silently.
       return
     }
     const { addToCachedKeywords, fetchCachedKeywords } = useDamCachedKeywords(configName)
     const { addToCachedAuthors, fetchCachedAuthors } = useDamCachedAuthors(configName)
-    // The queues of the configuration: another DAM may have an asset of that id.
+    // Only this configuration's queues: another DAM may have an asset with the same id.
     const queuesOfConfig = () =>
       Array.from(queues.value.entries()).filter(([queueKey]) => configOf(queueKey) === configName)
-    // The detail goes on telling the queue once it was opened from a row, also of an asset no queue holds a row of:
-    // there is nothing to write then, and its save would wait for the read in vain.
+    // A detail opened from a row keeps notifying the queue even when no queue has a row of the
+    // asset. Then there is nothing to write, and the save would wait for the read in vain.
     const rows = queuesOfConfig().flatMap(([, queue]) => queue.items)
     const isRowOfAsset = (item: UploadQueueItem) => item.assetId === asset.id && !!item.type
-    // A row whose file the server is processing may become a row of the asset while it is read: one whose file turns
-    // out to be a duplicate of the file of the asset becomes the original of that duplicate. It gets the write as any
-    // row of the asset: the asset was not read at all while no row had it yet. The DAM finds a duplicate within the
-    // licence of the file only: a row of another licence never becomes a row of the asset.
+    // A processing row may become a row of the asset during the read,
+    // when its file turns out to be a duplicate of the asset's file.
+    // It gets the write like any row of the asset, since the asset was not read while no row had it.
+    // The DAM detects duplicates only within the file's licence, so rows of another licence are excluded.
     const mayBecomeRowOfAsset = (item: UploadQueueItem) =>
       !!item.type && item.status === UploadQueueItemStatus.Processing && item.licenceId === asset.licence
     if (!rows.some(isRowOfAsset) && !rows.some(mayBecomeRowOfAsset)) {
@@ -501,18 +511,18 @@ export const useUploadQueuesStore = defineStore('commonAdminUploadQueuesStore', 
     const turn = ++lastDetailWrite
     const writeKey = detailWriteKey(configName, asset.id)
     detailWrites.set(writeKey, turn)
-    // A later save of the detail of the asset under the configuration has begun its write since: that one writes.
+    // A later save of this asset under this configuration started its write since. That one writes.
     const isLatest = () => detailWrites.get(writeKey) === turn
     try {
       const assetRes = await fetchAsset(dam.damClient, dam.endPointAsset, asset.id)
       if (!isLatest()) return
-      // One answer for the rows of the asset in every queue of the configuration: each gets copies of its own, or a fill
-      // of a custom field in one queue (it writes into the custom data in place) would change the row of another, and
-      // that queue would send it with its next save.
+      // One answer serves the asset's rows in every queue of the configuration, but each row gets its own copies.
+      // Filling a custom field writes into custom data in place, so a shared
+      // object would change another queue's row and that queue would send it.
       queuesOfConfig().forEach(([queueKey, queue]) => {
         queue.items.forEach((item) => {
           if (item.assetId === assetRes.id && item.type) {
-            // The detail saves the switch too: left as it was, the next save of the queue would send the old value.
+            // The detail saves the switch too. Left unchanged, the next queue save would send the old value.
             const kept = writeUnchanged(item, before.get(item), {
               keywords: assetRes.keywords,
               authors: assetRes.authors,
@@ -534,9 +544,10 @@ export const useUploadQueuesStore = defineStore('commonAdminUploadQueuesStore', 
       })
     } catch (e) {
       if (!isLatest()) return
-      // The detail is saved all the same: left as they were, the rows would send their old values with the next save
-      // of the queue, over what the detail has just saved. Each row gets copies of its own, not the lists of the
-      // detail. The suggestions are the server's to say, and stay as the rows have them.
+      // The detail is saved anyway. Unchanged rows would send their
+      // old values with the next queue save, over the detail's values.
+      // Each row gets its own copies, not the detail's lists.
+      // Suggestions come from the server and stay as the rows have them.
       queuesOfConfig().forEach(([, queue]) => {
         queue.items.forEach((item) => {
           if (item.assetId === asset.id && item.type) {
@@ -571,12 +582,13 @@ export const useUploadQueuesStore = defineStore('commonAdminUploadQueuesStore', 
     queueItemFailed,
     refreshAsset,
     /**
-     * Whether a refresh may still change a failed row: its finish request went out before the client gave it up and
-     * the server has said nothing final about it since, or its file is a duplicate whose original could not be
-     * read. A row that failed otherwise has no use for refresh.
+     * Whether a refresh may still change a failed row. True when its finish request went out before the client gave
+     * up and the server has said nothing final since, or when it is a duplicate whose original could not be read.
      */
     refreshMayHelp: core.refreshMayHelp,
-    /** The row failed because its asset was missing from as many reads as it takes ("Asset už neexistuje."). */
+    /**
+     * The row failed because its asset was missing from enough reads ("Asset už neexistuje.").
+     */
     isGivenUpMissing: (item: UploadQueueItem) => settlement.isGivenUpMissing(item),
     removeByIndex: core.removeByIndex,
     stopItemUpload,

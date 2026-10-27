@@ -67,7 +67,9 @@ export function listFiles(dir: string): string[] {
   return readdirSync(dir, { recursive: true, encoding: 'utf8' })
 }
 
-/** Copies `src/vite` somewhere `@sentry/vite-plugin` cannot be resolved from. */
+/**
+ * Copies `src/vite` somewhere `@sentry/vite-plugin` cannot be resolved from.
+ */
 export function copyViteEntryOutsideRepository(): string {
   const dir = mkdtempSync(join(tmpdir(), 'anzu-vite-nopeer-'))
   cpSync(join(import.meta.dirname, '../../vite'), dir, { recursive: true })

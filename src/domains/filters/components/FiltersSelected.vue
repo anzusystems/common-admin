@@ -36,18 +36,16 @@ const selectedArray = computed(() => {
 const { clearOneFilterSelected, isClearable } = useFilterClearHelpers()
 
 /**
- * Clearing means "back to the default", so on a field already holding its default there is
- * nothing to clear and the close button would do nothing at all - it would drop the chip, write
- * the same value back, and the chip would come straight back. Only fields with a non-null default
- * can reach that state; an array is different, because closing one chip removes one option.
+ * Clearing restores the default. On a field already at its non-null default, the close
+ * button would drop the chip, write the same value, and the chip would come back.
+ * Arrays differ: closing one chip removes one option.
  */
 const canClear = (name: string) => {
   if (!isClearable(name, filterConfig)) return false
   // `isClearable` has just read this same config, so it is there.
   const config = filterConfig.fields[name]!
-  // A time interval is a pair sharing one chip, and clearing writes the default into both. Only
-  // `until` may differ - the custom dialog opens prefilled, so shortening just the upper bound
-  // leaves `from` at its default - and the button still has work to do then.
+  // A time interval is a pair sharing one chip, and clearing writes the default into both.
+  // Only `until` may differ, because the custom dialog opens prefilled. The button still has work then.
   if (config.type === 'timeInterval' && config.related) {
     // `createFilter` checked that the related field is configured.
     const related = filterConfig.fields[config.related]!

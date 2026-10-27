@@ -105,7 +105,9 @@ export interface NestedListEditorHandle<TItem extends Record<string, any>> {
   getChanges: () => NestedListEditorChanges<TItem>
   /** Adopt the saved tree as the new baseline; backfill keys; clear dirty/submitted. */
   commit: (saved?: NestedTree<TItem>) => void
-  /** Adopt only these rows as saved (a server-confirmed single-row op); other pending work stays. */
+  /**
+   * Adopt only these rows as saved (a server-confirmed single-row op); other pending work stays.
+   */
   acceptRows: (keys: ListEditorKey[]) => void
   /** Discard unsaved edits back to the last committed baseline (or a given tree). */
   reset: (tree?: NestedTree<TItem>) => void
@@ -147,13 +149,16 @@ export type ExposedNestedListEditorHandle<TItem extends Record<string, any>> = S
   NestedListEditorHandle<TItem>
 >
 
-/** What `ANestedSortableListEditor` exposes on top of the controller handle. */
+/**
+ * What `ANestedSortableListEditor` exposes on top of the controller handle.
+ */
 export interface NestedSortableListEditorExtras {
   /**
-   * Runs a tree mutation the server has already made (a row created through a dialog) and adopts as
-   * saved only the rows it added or edited, plus `keys`. Siblings it only renumbered and other pending
-   * work stay unsaved (the server may not have renumbered them), and so does the position of a created
-   * row the op renumbered. `commit()` would adopt the whole tree instead.
+   * Runs a tree mutation the server already made (e.g. a row created through a dialog).
+   * Adopts as saved only the rows it added or edited, plus `keys`.
+   * Siblings it only renumbered, other pending work and a renumbered position of
+   * a created row stay unsaved, because the server may not have renumbered them.
+   * `commit()` would adopt the whole tree instead.
    */
   acceptChanges: (op: () => void, keys?: ListEditorKey[]) => void
   enterReorderMode: () => void
@@ -166,7 +171,9 @@ export interface NestedSortableListEditorExtras {
   collapseDetail: (id: ListEditorKey) => void
 }
 
-/** `ANestedSortableListEditor` read through a template ref: the unwrapped handle and its extras. */
+/**
+ * `ANestedSortableListEditor` read through a template ref: the unwrapped handle and its extras.
+ */
 export type ExposedNestedSortableListEditorHandle<TItem extends Record<string, any>> =
   ExposedNestedListEditorHandle<TItem> & NestedSortableListEditorExtras
 
@@ -522,9 +529,8 @@ export function useNestedListEditorController<TItem extends Record<string, any>>
     submitted.value = false
   }
 
-  // Adopt ONLY the given rows as saved (server-confirmed single-row ops); other pending work stays.
-  // The saved tree follows along — reset() and getChanges().deleted read it: an accepted row takes its
-  // current data and place there, an accepted key no longer in the tree leaves it.
+  // The saved tree is updated too, because `reset()` and `getChanges().deleted` read it.
+  // An accepted row takes its current data and place there. An accepted key no longer in the tree leaves it.
   const acceptRows = (keys: ListEditorKey[]): void => {
     if (keys.length === 0) return
     const wanted = new Set(keys)
@@ -570,11 +576,11 @@ export function useNestedListEditorController<TItem extends Record<string, any>>
           saved.meta = { ...saved.meta, dirty: false }
           const siblings = baseSiblings(parentKey)
           if (!siblings) {
-            // The new parent is not in the saved tree (e.g. it was this row's own saved child, detached
-            // with it): keep the row where it was saved rather than drop it and its children.
+            // The new parent is not in the saved tree, e.g. it was this row's own saved child detached with it.
+            // Keep the row at its saved place rather than drop it and its children.
             if (previous) previous.siblings.splice(previous.index, 0, saved)
           } else {
-            // After the nearest preceding sibling the saved tree knows, so pending rows don't skew it.
+            // Insert after the nearest preceding sibling the saved tree knows, so pending rows do not skew the index.
             let at = 0
             for (let i = index - 1; i >= 0; i--) {
               const seen = siblings.findIndex((s) => keyOf(s.data) === keyOf(nodes[i]!.data))
@@ -633,8 +639,8 @@ export function useNestedListEditorController<TItem extends Record<string, any>>
   const updateItem = (key: ListEditorKey, data: TItem, markDirty = true): void => {
     tree.updateItem(key, data, markDirty)
   }
-  // An immediate delete: the row is gone on the backend, and the editor removes it with its subtree, so
-  // neither is part of the saved tree `reset()` restores any more.
+  // Immediate delete: the row is gone on the backend and the editor removes it with its subtree.
+  // So neither stays in the saved tree that `reset()` restores.
   const dropFromBaseline = (key: ListEditorKey): void => {
     if (!baselineTree.value) return
     const base = cloneTree(baselineTree.value)
@@ -660,12 +666,10 @@ export function useNestedListEditorController<TItem extends Record<string, any>>
   }
 
   const deleteItem = (key: ListEditorKey, opts?: { trackDeleted?: boolean; renumber?: boolean }): void => {
-    // A previously-saved row removed in deferred mode is tombstoned (counts as unsaved + reported in
-    // getChanges().deleted). `trackDeleted: false` (immediate — already deleted on the backend) skips it.
-    // `treeHasKey` guards against a phantom tombstone: an immediate delete removes the row in the
-    // component's own handler (trackDeleted:false), then a consumer removing it again (acceptChanges
-    // around deleteItem) re-calls deleteItem for the now-gone key — without the guard that second call
-    // would tombstone a baseline row that is already deleted, surfacing a bogus unconfirmed change.
+    // A saved row removed in deferred mode is tombstoned: it counts as unsaved and appears in `getChanges().deleted`.
+    // `trackDeleted: false` (immediate, already deleted on the backend) skips this.
+    // `treeHasKey` prevents a phantom tombstone when a consumer calls
+    // `deleteItem` again for a row the component already removed.
     if (baselineHashes.value.has(key) && opts?.trackDeleted !== false && treeHasKey(key)) {
       deletedKeys.value.add(key)
     } else if (baselineHashes.value.has(key) && treeHasKey(key)) {

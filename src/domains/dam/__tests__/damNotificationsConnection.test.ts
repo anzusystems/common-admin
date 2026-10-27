@@ -10,13 +10,12 @@ import {
 import { destroyDamNotifications, initDamNotifications } from '@/domains/dam/composables/damNotifications'
 import { useDamNotificationsConnection } from '@/domains/dam/composables/damNotificationsConnection'
 
-// When an application has the notification service at all, and what the upload queues are told about its socket:
-// with the socket open they poll only as a backup. The options go through the real plugin options, the socket is
-// a stub of the global `WebSocket`.
+// When the application has the notification service, and what the upload queues are told about its socket.
+// With the socket open, queues poll only as a backup.
+// Options go through the real plugin options. The socket is a stub of the global `WebSocket`.
 
 const ADDRESS = 'ws://localhost/notifications'
 
-/** The options of an application, with `notification` as given, or without it altogether. */
 const configure = (...notification: [unknown?]) =>
   initCommonAdminCoreDamOptions({
     configs: { default: {} },
@@ -35,7 +34,6 @@ afterEach(() => {
 })
 
 const closeSocket = () => socket.sockets.at(-1)!.onclose?.(new CloseEvent('close'))
-/** The application starts its notifications, as it does once at start-up. */
 const started = () => {
   const notifications = initDamNotifications()
   notifications.openConnection()
@@ -43,7 +41,7 @@ const started = () => {
 }
 
 describe('the notification service of an application', () => {
-  // A deployment template puts the value in quotes, and renders a boolean of its variables as `True`.
+  // A deployment template puts the value in quotes and renders a boolean as `True`.
   it.each([true, 'true', 'True', 'TRUE', ' true ', '\tTrue\n'])('is on with enabled %j and an address', (enabled) => {
     configure({ enabled, webSocketUrl: ADDRESS })
 
@@ -52,7 +50,7 @@ describe('the notification service of an application', () => {
     expect(socket.sockets.map((one) => one.url)).toEqual([ADDRESS])
   })
 
-  // Any text used to count as on, "false" among them.
+  // Any text used to count as on, including "false".
   it.each(['1', 'false', 'False', 'yes', 'on', 'truee', 't rue', '', ' ', 1, 0, false, null, undefined])(
     'is off with enabled %j, whatever the address',
     (enabled) => {
@@ -158,8 +156,8 @@ describe('what the upload queues are told of the notification socket', () => {
     expect(heard).toEqual([])
   })
 
-  // A queue subscribes when its first row begins to wait, from wherever that row was added: a component that is
-  // gone by the time the socket closes.
+  // A queue subscribes when its first row starts waiting. That row may
+  // come from a component that is gone by the time the socket closes.
   it('still reaches a listener that subscribed inside a scope which has ended since', () => {
     configure({ enabled: true, webSocketUrl: ADDRESS })
     const inScope: boolean[] = []

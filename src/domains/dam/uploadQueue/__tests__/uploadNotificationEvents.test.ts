@@ -19,12 +19,6 @@ import { manualScheduler } from '@/domains/dam/uploadQueue/settlement/__tests__/
 import { uploadSettlementRuntime } from '@/domains/dam/uploadQueue/settlement/uploadSettlementRuntime'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
 
-// What each notification does to the rows of the queue, from the event on the notification bus to the row. The
-// events are put on the real bus, as the socket puts them there (`damNotifications.test.ts` has that half, and
-// `consumerProfileNotifications.test.ts` the whole way from a frame). The configuration is that of admin-cms, the
-// only application with notifications: the poll for the state of a file is on beside them.
-// Nothing of the library is replaced: the DAM is a client that records its requests.
-
 const { endPoints, extSystem, licence } = cmsConfiguration
 const QUEUE = 'events-queue'
 const OTHER_QUEUE = 'events-queue-of-another-widget'
@@ -61,7 +55,6 @@ const fromTheServer = {
 // The metadata notification may come to be read with a delay of its own.
 const SOON = { timeout: 5000 }
 
-/** One file, sent whole: the row waits for the server to process it. */
 const uploadOne = async () => {
   const store = useUploadQueuesStore()
   await store.addByFiles(QUEUE, extSystem, licence, [photo('photo.jpg')], 'default')
@@ -74,9 +67,9 @@ const unreadable = () =>
     request.method === 'GET' && request.url.startsWith(endPoints.asset) ? { status: 502 } : undefined
   )
 /**
- * For "asks for nothing": a read the queue asks for on a notification is due a quarter of a second after it, or
- * two seconds. With the time of the queue in the hands of the test it is moved past both at once; the first read
- * of the poll is further off. To be called before the first row is added.
+ * A read the queue asks for on a notification is due 250 ms or 2 s after it.
+ * The test moves the queue's time past both at once, so "asks for nothing" can be asserted.
+ * Call it before the first row is added.
  */
 const nothingMoreIsDue = () => {
   const clock = manualScheduler()
@@ -181,8 +174,8 @@ describe('a notification about the asset of a row', () => {
     expect(store.getQueueProcessedCount(QUEUE)).toBe(store.getQueueTotalCount(QUEUE))
   })
 
-  // The rows are matched by their asset, whatever file the notification names: what became of the file is what
-  // the read of the asset says, not what the notification is taken to mean.
+  // Rows are matched by their asset, whatever file the notification names.
+  // What became of the file is what the read of the asset says.
   it('asset_file_copied that names another file than the main one: the row is settled by what its asset says', async () => {
     const store = useUploadQueuesStore()
     await store.addByCopyToLicence(QUEUE, extSystem, licence, ['asset-copy'], 'default')
@@ -220,7 +213,6 @@ describe('a notification about the asset of a row', () => {
     expect(store.getQueueProcessedCount(QUEUE)).toBe(1)
   })
 
-  // The same asset copied in two widgets: each has its own queue, and both rows are settled.
   it('settles the rows of that asset in every queue', async () => {
     const store = useUploadQueuesStore()
     await store.addByCopyToLicence(QUEUE, extSystem, licence, ['asset-copy'], 'default')
@@ -241,8 +233,8 @@ describe('a notification about the asset of a row', () => {
     expect([store.getQueueProcessedCount(QUEUE), store.getQueueProcessedCount(OTHER_QUEUE)]).toEqual([1, 1])
   })
 
-  // The queue begins to listen with its first row, and that row is added from a component: a widget that is
-  // unmounted later, while the queue and its dialog live on.
+  // The queue starts listening with its first row, which is added from a widget.
+  // That widget can be unmounted later while the queue and its dialog live on.
   it('still reaches the queue once the component that added its first row is gone', async () => {
     const store = useUploadQueuesStore()
     const component = effectScope()
@@ -277,7 +269,7 @@ describe('a notification about the asset of a row', () => {
   })
 })
 
-// The notifications and the poll are both live in admin-cms: whichever answers first settles the row.
+// In admin-cms both notifications and the poll are live. Whichever answers first settles the row.
 describe('a notification that comes while the row waits to be asked about', () => {
   it('asset_file_processed: settles the row, which is then asked about no more', async () => {
     const { item } = await uploadOne()
@@ -292,7 +284,6 @@ describe('a notification that comes while the row waits to be asked about', () =
 
   it('asset_file_failed: fails the row, which is then asked about no more', async () => {
     const { item } = await uploadOne()
-    // What the poll would find, were it to ask.
     dam.fileBecomes('asset-1', AssetFileProcessStatus.Processed, fromTheServer)
 
     notify(DamNotificationName.AssetFileFailed, {
@@ -347,7 +338,6 @@ describe('a notification whose asset cannot be read', () => {
     }
   )
 
-  // The notification names the asset and says why: there is nothing to read.
   it('asset_file_failed: the row fails with the reason all the same, and nothing is asked for', async () => {
     const nothingMore = nothingMoreIsDue()
     const { item } = await uploadOne()
@@ -437,14 +427,14 @@ describe('the failed notification', () => {
 
     expect(item).toMatchObject({
       canEditMetadata: false,
-      // What it had been given stays in the row.
       customData: { title: 'from the server' },
       error: { hasError: true, assetFileFailReason: AssetFileFailReason.DownloadFailed },
     })
     expect(store.getQueueProcessedCount(QUEUE)).toBe(store.getQueueTotalCount(QUEUE))
   })
 
-  // The row shows its message before the reason: left there, an older message would hide why the file failed.
+  // The row shows its message before the reason.
+  // An older message left in place would hide why the file failed.
   it('takes away a message the row already had: its reason is what the row says', async () => {
     const { item } = await uploadOne()
     item.error.hasError = true
@@ -460,11 +450,10 @@ describe('the failed notification', () => {
     })
   })
 
-  // Z26: the server takes a failed file nowhere. What is left of it is not sent, so two files go out, not three.
-  // Nothing here waits on real time: each step waits for the state of the requests.
+  // Z26: the server takes a failed file nowhere, so the rest of it is not sent. Two files go out, not three.
+  // Nothing waits on real time. Each step waits for the state of the requests.
   it('stops sending a file that is still being sent, and gives its place to the next one', async () => {
     const store = useUploadQueuesStore()
-    // Three chunks to a file of 3000 bytes.
     useDamConfigStore().damPrvConfig.settings.imageChunkConfig = { minSize: 1000, maxSize: 1000 }
     const chunks = dam.hold('POST', dam.routes.chunk)
     const statuses = () => store.getQueueItems(QUEUE).map((item) => item.status)
@@ -472,7 +461,6 @@ describe('the failed notification', () => {
     await store.addByFiles(QUEUE, extSystem, licence, [photo('a.jpg'), photo('b.jpg'), photo('c.jpg')], 'default')
     const [first, second, third] = store.getQueueItems(QUEUE)
     const chunkOf = (item: typeof first) => `/adm/v1/image/${item.fileId}/chunk`
-    /** The chunks of the file of a row that went out, each by where it begins and how long it is. */
     const chunksSentOf = (item: typeof first) =>
       dam
         .sentTo('POST', dam.routes.chunk)
@@ -486,7 +474,6 @@ describe('the failed notification', () => {
     ])
 
     failed(first.assetId!)
-    // Its chunk on the way is cancelled, and the third file starts in its place.
     await vi.waitFor(() => expect(onTheirWay()).toEqual([chunkOf(second), chunkOf(third)].sort()))
     expect(statuses()).toEqual([
       UploadQueueItemStatus.Failed,
@@ -495,8 +482,6 @@ describe('the failed notification', () => {
     ])
     expect(store.getQueueProcessedCount(QUEUE)).toBe(1)
 
-    // The other two go on, chunk by chunk, to their end. Of the failed file nothing more goes out: neither its two
-    // chunks that were left, nor its finish.
     await vi.waitFor(() => {
       chunks.release()
       expect([second.status, third.status]).toEqual([
@@ -515,7 +500,6 @@ describe('the failed notification', () => {
         .map((request) => request.url)
         .sort()
     ).toEqual([`/adm/v1/image/${second.fileId}/uploaded`, `/adm/v1/image/${third.fileId}/uploaded`].sort())
-    // The row says why the server failed it, and the end of its run wrote nothing over that.
     expect(first.error).toEqual({
       hasError: true,
       message: '',

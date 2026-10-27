@@ -13,10 +13,9 @@ import UploadQueueEditable from '@/domains/dam/uploadQueue/components/UploadQueu
 import { useUploadQueueItemFactory } from '@/domains/dam/uploadQueue/factory/UploadQueueItemFactory'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
 
-// The list of a queue over the library's own store, without a binding of its host: as it mounts, it hands the
-// keywords and the authors of its rows to the name caches, and they ask the DAM for their names. Only the binding of a
-// host had a case of its own (`uploadQueueListHosted.test.ts`). The rows are stand-ins, so the names are asked for by
-// the list alone; the DAM is a client that records its requests.
+// The list runs over the library's own store, without a host binding.
+// On mount it hands the keywords and authors of its rows to the name caches, which ask the DAM for names.
+// Rows are stand-ins, so only the list asks for names. The DAM is a client that records requests.
 
 const { endPoints, extSystem, licence } = cmsConfiguration
 const QUEUE = 'library-queue'
@@ -56,7 +55,6 @@ const row = (key: string) => {
   item.authors = [`author-of-${key}`]
   return item as UploadQueueItem
 }
-/** The ids of the names of that kind the DAM was asked for, over all its lookups. */
 const askedFor = (kind: 'author' | 'keyword') =>
   damNameLookups(dam)
     .map((request) => request.url.match(DAM_NAMES)!)

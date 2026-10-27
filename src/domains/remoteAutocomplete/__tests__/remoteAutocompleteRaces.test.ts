@@ -120,9 +120,9 @@ describe('AFilterRemoteAutocomplete by-id load', () => {
       global: { provide },
     })
     await flushPromises()
-    o.filterData.ids = [1] // e.g. restored from the hash on mount
+    o.filterData.ids = [1]
     await flushPromises()
-    o.filterData.ids = [2] // user changes it / a bookmark is applied before the first answer
+    o.filterData.ids = [2]
     await flushPromises()
     calls[1].resolve([{ value: 2, title: 'two' }])
     await flushPromises()

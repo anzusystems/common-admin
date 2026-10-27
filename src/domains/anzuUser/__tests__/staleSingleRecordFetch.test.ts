@@ -21,8 +21,6 @@ const record = (id: number) => ({
   _resourceName: 'x',
   _system: 'cms',
 })
-// GET of 5 and 8 answer, GET of 7 fails, GET of 9 answers whenever the test settles `slow`, every PUT
-// answers with its body.
 let slow: { promise: Promise<{ status: number; data: unknown }>; settle: (status: number) => void }
 const request = vi.fn((config: { method?: string; url?: string; data?: unknown }) => {
   if (config.method?.toUpperCase() === 'PUT')
@@ -72,8 +70,8 @@ describe('stale single-record fetch', () => {
 })
 
 describe('what a page reads from the single-record fetch', () => {
-  // `true` loaded, `false` leave (the message is shown), `undefined` a newer fetch took over -- the page
-  // leaves only on `false`, so a superseded fetch must not read as a failure.
+  // `true` loaded, `false` leave (the message is shown), `undefined` a newer fetch took over.
+  // The page leaves only on `false`, so a superseded fetch must not read as a failure.
   it('anzuUser: true, false, then undefined for the fetch a newer one superseded', async () => {
     const actions = inComponent(() => useAnzuUserActions({ client, system: 'cms' }))
     expect(await actions.fetchAnzuUser(5)).toBe(true)
@@ -96,7 +94,6 @@ describe('what a page reads from the single-record fetch', () => {
     const controller = new AbortController()
     const pending = load(9, { signal: controller.signal })
     await new Promise((resolve) => setTimeout(resolve, 0))
-    // The helper hands the request a signal of its own, tied to the caller's.
     const sent = (request.mock.calls.at(-1)![0] as { signal?: AbortSignal }).signal
     expect(sent?.aborted).toBe(false)
 
@@ -148,7 +145,6 @@ describe.each([
     },
   ],
 ])('%s: an older fetch answering late', (_name, setup) => {
-  // One record store serves every page and every system (cms users vs content-hub users).
   it.each([
     ['fails', 500],
     ['succeeds', 200],
@@ -164,8 +160,8 @@ describe.each([
     expect(pageB.loading()).toBe(false)
   })
 
-  // A create page resets the store on mount and never fetches; the edit page left behind still has one
-  // in flight.
+  // A create page resets the store on mount and never fetches.
+  // The edit page left behind still has a fetch in flight.
   it.each([
     ['fails', 500],
     ['succeeds', 200],

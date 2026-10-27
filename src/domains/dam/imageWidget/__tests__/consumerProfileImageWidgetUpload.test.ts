@@ -38,12 +38,10 @@ import UploadQueueDialogSingle from '@/domains/dam/uploadQueue/components/Upload
 import { useUploadQueueDialog } from '@/domains/dam/uploadQueue/composables/useUploadQueueDialog'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
 
-// An upload into the widget of one image, from the file the user picks to the image the widget saves, under each
-// of the two applications. The real widget with its real file input, its real upload dialog and its real dialog
-// of the image over the real queue; the DAM and the backend of the images are clients that record their requests,
-// and only the long waits are taken out of real time. Not mounted for real: the asset picker (it has cases of its
-// own), the pictures (they would ask the image server), the editor of the region of interest (the cropper) with
-// its sidebar, the asset detail, and the inputs that ask the DAM for names to offer.
+// Real widget, file input, upload dialog and image dialog over the real queue, under both applications.
+// The DAM and the image backend are recording clients. Only the long waits are taken out of real time.
+// Not mounted for real: the asset picker, pictures, the
+// region-of-interest editor, the asset detail and the DAM name inputs.
 
 const QUEUE = 'lead-image'
 const { Processing, Uploaded, Uploading } = UploadQueueItemStatus
@@ -60,7 +58,6 @@ const metadata = (customData: Record<string, unknown>) => ({
   metadata: { customData, authorSuggestions: {}, keywordSuggestions: {} },
 })
 const Picker = defineComponent({ name: 'AAssetSelect', emits: ['confirm'], setup: () => () => h('div') })
-/** The id of the image the widget holds: what its form reads. */
 const modelValueOf = (widget: VueWrapper) => (widget.props() as { modelValue: number | null }).modelValue
 const carrying = (files: File[]) => {
   const dataTransfer = new DataTransfer()
@@ -71,7 +68,6 @@ const carrying = (files: File[]) => {
 describe.each(consumerProfiles)('an upload into the image widget under the $name', (profile) => {
   const { endPoints, extSystem, licence } = profile
   const isCms = profile === cmsConfiguration
-  /** The image of the file the upload made, at the size the application's widgets show images in. */
   const pictureOf = (file: string) => `https://image.test/image/w500-h281/${file}.jpg`
 
   beforeEach(() => {
@@ -87,7 +83,6 @@ describe.each(consumerProfiles)('an upload into the image widget under the $name
       initDamNotifications().openConnection()
       socket.accept()
     }
-    // admin-cms has its user of the DAM by the time a widget mounts; admin-ugc has none.
     if (isCms) signInToDam(extSystem)
   })
   afterEach(() => {
@@ -104,7 +99,6 @@ describe.each(consumerProfiles)('an upload into the image widget under the $name
 
   const queue = () => useUploadQueuesStore(pinia)
   const item = () => queue().getQueueItems(QUEUE)[0]
-  /** The inner widget, with the upload configuration its parent provides: the way admin-ugc mounts it itself. */
   const mountWidget = async (props: Record<string, unknown> = {}, component: Component = ImageWidgetInner) => {
     const widget: VueWrapper = mount(component, {
       attachTo: document.body,
@@ -158,7 +152,6 @@ describe.each(consumerProfiles)('an upload into the image widget under the $name
     Array.from(document.body.querySelectorAll<HTMLElement>('.v-menu.v-overlay--active .v-list-item'))
   const fileInputOfDialog = () =>
     document.body.querySelector<HTMLInputElement>('[data-cy="create-panel"] input[type="file"]')
-  /** The user picks files with "Upload image" of the widget's menu. */
   const pickThroughMenu = async (widget: VueWrapper, files: File[]) => {
     await widget.find(`button[aria-label="${damText('image.button.options')}"]`).trigger('click')
     await vi.waitFor(() => expect(openMenuItem().length).toBeGreaterThan(0))
@@ -174,7 +167,6 @@ describe.each(consumerProfiles)('an upload into the image widget under the $name
   const uploadDialog = () => document.body.querySelector<HTMLElement>('.dam-image-detail')
   const inUploadDialog = <T extends Element>(selector: string) =>
     document.body.querySelector<T>(`.dam-image-detail ${selector}`)
-  /** The server has processed the file, the queue has asked, and the upload dialog has read the asset. */
   const processed = async (parts: Record<string, unknown>) => {
     await vi.waitFor(() => expect(item().status).toBe(Processing))
     dam.fileBecomes('asset-1', AssetFileProcessStatus.Processed, parts)
@@ -184,7 +176,6 @@ describe.each(consumerProfiles)('an upload into the image widget under the $name
     await damNamesAsked()
     await flushPromises()
   }
-  /** What the DAM has for the uploaded file: a description, and whoever each application takes for the source. */
   const withAnAuthor = {
     ...metadata({ description: ' a lead image ', author: ' A. Author ' }),
     authors: isCms ? ['author-1'] : [],
@@ -195,7 +186,6 @@ describe.each(consumerProfiles)('an upload into the image widget under the $name
     await vi.waitFor(() => expect(useImageMediaWidgetStore(pinia).detail).not.toBeNull())
     await flushPromises()
   }
-  /** The dialog of the image the widget is about to save. */
   const imageDialog = () =>
     Array.from(document.body.querySelectorAll<HTMLElement>('.v-overlay--active .v-card')).find((card) =>
       card.textContent?.includes(damText('image.meta.edit'))
@@ -209,14 +199,15 @@ describe.each(consumerProfiles)('an upload into the image widget under the $name
     Array.from(imageDialog()!.querySelectorAll<HTMLButtonElement>('button'))
       .find((button) => button.textContent?.trim() === uiText('common.button.confirm'))!
       .click()
-  /** What the image API is sent: the fields of an image, and nothing else (finding 36). */
   const savedImage = {
     texts: { description: 'a lead image', source },
     dam: { damId: 'file-1', licenceId: licence, regionPosition: 0, internal: false },
     flags: { showSource: true, internal: false, overrideInternal: false },
     position: 1,
   }
-  /** What the upload dialog hands the widget: the map of an upload adds the asset and its authors, which ride along. */
+  /**
+   * The upload map adds `assetId` and the authors to the image handed to the widget.
+   */
   const handedImage = { ...savedImage, authorIds: isCms ? ['author-1'] : [], assetId: 'asset-1' }
   const existing: ImageAware = {
     id: 7,
@@ -244,9 +235,7 @@ describe.each(consumerProfiles)('an upload into the image widget under the $name
       expect(`${first.method} ${first.url}`).toBe(`POST ${endPoints.image}/licence/${licence}`)
       expect(useUploadQueueDialog().uploadQueueDialog.value).toBe(QUEUE)
       expect(uploadDialog()!.textContent).toContain(damText('upload.title'))
-      // The names of the authors and keywords of the rows are asked for by the ext system of the widget.
       expect(useExtSystemIdForCached().cachedExtSystemId.value).toBe(extSystem)
-      // The dialog that offered the file input is closed again.
       expect(fileInputOfDialog()).toBeNull()
       expect(shownAlerts()).toEqual([])
     })
@@ -282,8 +271,9 @@ describe.each(consumerProfiles)('an upload into the image widget under the $name
       expect(uploadDialog()).not.toBeNull()
     })
 
-    // Finding 47: the widget holds one image, and its upload dialog shows one file. The others used to be uploaded
-    // as well, unseen, saved with the switches of the first, and left in the DAM without an image.
+    // Finding 47: the widget holds one image and its upload dialog shows one file.
+    // The other files used to be uploaded unseen, saved with the
+    // first file's switches, and left in the DAM without an image.
     describe.each<[string, Component]>([
       ['the image widget', ImageWidgetInner],
       ['the image and media widget', ImageMediaWidgetInner],
@@ -330,9 +320,8 @@ describe.each(consumerProfiles)('an upload into the image widget under the $name
       })
     })
 
-    // Finding 81: the dialog "upload" of the menu opens has a dropzone of its own. It took the first file dropped
-    // before the check: one the ext system does not take lost the file dropped with it, and of several nothing said
-    // that only the first was taken.
+    // Finding 81: the dropzone of the menu's upload dialog took the first dropped file before validation.
+    // A file the ext system rejects lost the other dropped files, and nothing said that only the first was taken.
     describe.each<[string, Component]>([
       ['the image widget', ImageWidgetInner],
       ['the image and media widget', ImageMediaWidgetInner],
@@ -383,8 +372,8 @@ describe.each(consumerProfiles)('an upload into the image widget under the $name
       })
     })
 
-    // Finding 30: the file is turned away with a warning, and that is all. Nothing is queued, and no upload dialog
-    // opens over a queue without a row: it used to, and showed a loader until it was closed.
+    // Finding 30: a rejected file only gets a warning. Nothing is queued and no upload dialog opens.
+    // The dialog used to open over an empty queue and show a loader until closed.
     describe.each<[string, Component]>([
       ['the image widget', ImageWidgetInner],
       ['the image and media widget', ImageMediaWidgetInner],
@@ -426,7 +415,6 @@ describe.each(consumerProfiles)('an upload into the image widget under the $name
         turnedAway()
       })
 
-      // What is left of the files goes on as before: the one the ext system takes is queued, the other is named.
       it('dropped together with one it takes: that one is queued, and the upload dialog opens over it', async () => {
         const chunks = dam.hold('POST', dam.routes.chunk)
         const widget = await mountWidget({}, component)
@@ -448,7 +436,6 @@ describe.each(consumerProfiles)('an upload into the image widget under the $name
         expect(uploadDialog()).not.toBeNull()
       })
 
-      // The turn before left nothing behind: the widget takes the next file as any other.
       it('and then one it takes: that one is queued, and the upload dialog opens over it', async () => {
         const widget = await mountWidget({}, component)
         await dropTurnedAway(widget)
@@ -478,11 +465,9 @@ describe.each(consumerProfiles)('an upload into the image widget under the $name
       const { sourceLabel } = useCommonAdminCoreDamOptions('default')
       expect(imageDialog()!.textContent).toContain(sourceLabel)
       expect(imageDialog()!.querySelector('.v-switch') !== null).toBe(isCms)
-      // The upload dialog has closed itself and emptied its queue.
       expect(uploadDialog()).toBeNull()
       expect(queue().getQueueItems(QUEUE)).toEqual([])
       expect(useUploadQueueDialog().uploadQueueDialog.value).toBeNull()
-      // Nothing is saved as an image yet, and the widget still has none.
       expect(imageApi.calls).toEqual([])
       expect(widget.emitted('update:modelValue')).toBeUndefined()
     })
@@ -497,11 +482,11 @@ describe.each(consumerProfiles)('an upload into the image widget under the $name
       await vi.waitFor(() => expect(widget.emitted('afterMetadataSaveSuccess')).toHaveLength(1))
       await flushPromises()
 
-      // Only the fields of an image are sent, and the widget shows the image from the answer: it used to read the
-      // image it had just created once more (finding 36).
+      // Finding 36: only the image fields are sent, and the widget shows the image from the create answer.
+      // It used to read the just-created image again.
       expect(imageApi.calls).toEqual([['createImage', savedImage]])
       expect(Object.keys(imageApi.calls[0]![1] as object).sort()).toEqual(['dam', 'flags', 'position', 'texts'])
-      // admin-cms leaves the save to the library, which asks the CMS backend; admin-ugc saves by its own function.
+      // admin-cms leaves the save to the library, which calls the CMS backend. admin-ugc saves with its own function.
       expect(imageApi.requests.map((request) => `${request.method} ${request.url}`)).toEqual(
         isCms ? ['POST /adm/v1/image'] : []
       )
@@ -514,7 +499,6 @@ describe.each(consumerProfiles)('an upload into the image widget under the $name
       expect(shownAlerts().filter(([colour]) => colour !== 'success')).toEqual([])
     })
 
-    // The widget of an image or a media saves the same way: the fields of an image, and no read of it afterwards.
     it('then "confirm" in the image and media widget saves a new image the same way', async () => {
       const widget = await mountWidget({}, ImageMediaWidgetInner)
       await pickThroughMenu(widget, [photo()])
@@ -536,7 +520,6 @@ describe.each(consumerProfiles)('an upload into the image widget under the $name
       expect(shownAlerts().filter(([colour]) => colour !== 'success')).toEqual([])
     })
 
-    // Only that once: an id the model is changed to afterwards is read, also the one of the image the widget created.
     it('reads the image its model is changed to after that, as before', async () => {
       const widget = await mountWidget()
       await pickThroughMenu(widget, [photo()])
@@ -560,7 +543,6 @@ describe.each(consumerProfiles)('an upload into the image widget under the $name
     })
 
     describe('in the image and media widget', () => {
-      /** The widget has created its image, 501; `props` say what its parent does with the id it is handed. */
       const created = async (props: Record<string, unknown> = {}) => {
         const widget = await mountWidget(props, ImageMediaWidgetInner)
         await pickThroughMenu(widget, [photo()])
@@ -572,7 +554,6 @@ describe.each(consumerProfiles)('an upload into the image widget under the $name
         expect(imageApi.calls).toEqual([['createImage', savedImage]])
         return widget
       }
-      /** A video of the DAM, as the form holds it. */
       const video = {
         damMedia: {
           imageFileId: null,
@@ -609,8 +590,9 @@ describe.each(consumerProfiles)('an upload into the image widget under the $name
         ])
       })
 
-      // The parent has not taken the id of the created image, and puts a media into the form first: that run of the
-      // watcher ends at the media. The image the parent names afterwards is read, though it is the created one.
+      // The parent does not take the created image id and puts a media into the form first.
+      // That watcher run ends at the media. The image the parent
+      // names afterwards is still read, though it is the created one.
       it('reads the created image when its parent names it only after a media', async () => {
         const widget = await created({ 'onUpdate:image': () => undefined })
 
@@ -643,8 +625,6 @@ describe.each(consumerProfiles)('an upload into the image widget under the $name
       expect(widget.findComponent({ name: 'VImg' }).attributes('src')).toBe(pictureOf('file-1'))
     })
 
-    // An uploaded file whose asset has no author gives the image no source. admin-cms requires one, and the
-    // dialog does not save without it; admin-ugc does not require it.
     it('of a file without an author: the image has no source, which only admin-cms asks the user to fill in', async () => {
       const widget = await mountWidget()
       await pickThroughMenu(widget, [photo()])
@@ -675,8 +655,6 @@ describe.each(consumerProfiles)('an upload into the image widget under the $name
     })
   })
 
-  // The embed dialog of both applications: the buttons of the widget in a row instead of behind a menu, and the
-  // texts of the image as a form in the page instead of in a dialog, saved when the host asks for it.
   describe('with its options and its image form expanded', () => {
     const expanded = { expandOptions: true, expandMetadata: true }
     const buttonsOf = (widget: VueWrapper) => widget.findAll('.a-image-widget__options button')
@@ -710,7 +688,6 @@ describe.each(consumerProfiles)('an upload into the image widget under the $name
       await saveAndApply()
       await flushPromises()
 
-      // No dialog of the image: its form is in the widget, and the picture is the uploaded one already.
       expect(imageDialog()).toBeUndefined()
       expect(textsIn(widget.element).map((field) => field.value)).toEqual(['a lead image', source])
       expect(widget.findComponent({ name: 'VImg' }).attributes('src')).toBe(pictureOf('file-1'))
@@ -724,7 +701,6 @@ describe.each(consumerProfiles)('an upload into the image widget under the $name
       expect(imageApi.calls[0]).toEqual(['createImage', savedImage])
       expect(modelValueOf(widget)).toBe(501)
       expect(widget.emitted('afterMetadataSaveSuccess')).toHaveLength(1)
-      // The button of the library now offers to replace the image.
       expect(buttonsOf(widget).map((button) => button.text())).toContain(
         useCommonAdminCoreDamOptions('default').replaceFromDamLabel
       )
@@ -745,9 +721,10 @@ describe.each(consumerProfiles)('an upload into the image widget under the $name
     })
   })
 
-  // The queue belongs to the page, not to the widget that started it, and goes on. The dialog that was open forgets
-  // itself as it goes with the widget: the page kept it named, and a widget mounted with the same key afterwards (in
-  // admin-cms the editor sent out of the article and back) opened it at once.
+  // The queue belongs to the page and keeps going when its widget is removed.
+  // The open dialog must forget itself with the widget. Otherwise
+  // a widget mounted later with the same key opens it at once
+  // (in admin-cms: the editor sent out of the article and back).
   describe('a queue whose widget is taken away while the upload dialog is open', () => {
     it('goes on, and a widget mounted with the same key afterwards does not open its dialog', async () => {
       const chunks = dam.hold('POST', dam.routes.chunk)
@@ -769,7 +746,6 @@ describe.each(consumerProfiles)('an upload into the image widget under the $name
       expect(again.findComponent(UploadQueueDialogSingle).exists()).toBe(false)
       expect(uploadDialog()).toBeNull()
 
-      // The upload ends in the queue all the same, which keeps its row.
       chunks.release()
       await vi.waitFor(() => expect(item().status).toBe(Processing))
       dam.fileBecomes('asset-1', AssetFileProcessStatus.Processed, withAnAuthor)

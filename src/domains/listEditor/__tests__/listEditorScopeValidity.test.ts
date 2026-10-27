@@ -67,9 +67,8 @@ describe.each([
     await nextTick()
     await nextTick()
 
-    // Row renders collapsed (no #item form mounted) — the old bug: the collector wouldn't see it.
+    // The row renders collapsed (no `#item` form mounted). The collector used to miss it.
     expect(document.querySelectorAll('.a-le-row-body').length).toBe(0)
-    // Oracle: the editor's aggregate validity is in the collector → the save gate blocks.
     expect(collector.value.$invalid).toBe(true)
   })
 
@@ -80,7 +79,6 @@ describe.each([
     await nextTick()
     expect(document.querySelectorAll('.a-le-row--validation-invalid').length).toBe(0)
 
-    // The save flow's `v$.$touch()` propagates to the editor's scoped child → reveal-on-touch.
     collector.value.$touch()
     await nextTick()
     await nextTick()
@@ -100,7 +98,6 @@ describe.each([
     const collector = mountHost(comp, data, undefined)
     await nextTick()
     await nextTick()
-    // No registration under the scope → the collector is unaffected (identical legacy behavior).
     expect(collector.value.$invalid).toBe(false)
   })
 
@@ -110,7 +107,6 @@ describe.each([
     await nextTick()
     await nextTick()
     expect(collector.value.$invalid).toBe(true)
-    // Fix the row while it stays collapsed — the aggregate validity must re-flow and clear the gate.
     data.value[0].name = 'now valid'
     await nextTick()
     await nextTick()

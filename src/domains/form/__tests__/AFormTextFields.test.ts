@@ -27,7 +27,6 @@ type Opts = {
   scope?: boolean
 }
 
-/** A parent that owns a vuelidate state `{ article: { title } }` and renders the field on it. */
 const mountField = ({ field, rules = {}, props = {}, initial = '', scope = true }: Opts) => {
   const state = ref({ article: { title: initial as string | number | null } })
   let v$: any

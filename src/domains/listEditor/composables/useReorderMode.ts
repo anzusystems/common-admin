@@ -194,9 +194,8 @@ export function useReorderMode<T>(options: UseReorderModeOptions<T>): UseReorder
       }
       applying.value = false
     }
-    // Deliberately keep `movedKeys` populated — consumer still has to persist
-    // the new order via their own API call before rows are truly "saved"; we
-    // let them clear the state via `commit()` on success.
+    // Keep `movedKeys` populated. The consumer still has to persist the new order with its own API call.
+    // It clears the state via `commit()` on success.
     options.snapshot.value = null
     options.mode.value = 'view'
     options.onApplyEnd?.()
@@ -204,23 +203,12 @@ export function useReorderMode<T>(options: UseReorderModeOptions<T>): UseReorder
     options.emit.reorderEnd()
   }
 
-  // Handle external mode flips (v-model:mode from a parent) — mirror the
-  // same bookkeeping enterReorderMode / cancelReorderMode do so the state
-  // stays consistent whether the transition came from a button click or a
-  // parent binding. Embedded editors do NOT take a snapshot; their parent
-  // (the outer non-embedded editor) owns one that covers nested data too.
-  //
-  // The view→reorder→view cleanup path differs between embedded and
-  // non-embedded:
-  //   - non-embedded cancel: snapshot is set → clear state here
-  //   - non-embedded apply: applyReorder nulls snapshot BEFORE flipping
-  //     mode, so the snapshot-guarded branch is skipped → movedKeys stays
-  //     populated until consumer calls commit() (the contract)
-  //   - embedded: no snapshot ever, clear state on every view transition
-  //     so the inner editor's movedKeys doesn't outlive a parent
-  //     cancel/apply (otherwise rows would render as `unsaved` after the
-  //     parent restores the original data)
-  // Immediate: an editor mounted with mode already `reorder` needs the same snapshot, or Cancel keeps the moves.
+  // Handle mode flips from a parent `v-model:mode` with the same bookkeeping as enterReorderMode / cancelReorderMode.
+  // Embedded editors take no snapshot. The outer editor's snapshot covers nested data.
+  // Non-embedded: cancel has a snapshot and clears state here. `applyReorder`
+  // nulls the snapshot before the flip, so `movedKeys` stays until `commit()`.
+  // Embedded: clear state on every view transition, or rows show as `unsaved` after a parent cancel or
+  // apply. Immediate: an editor mounted in `reorder` needs the snapshot too, or Cancel keeps the moves.
   watch(
     options.mode,
     (newMode, oldMode) => {
@@ -241,9 +229,10 @@ export function useReorderMode<T>(options: UseReorderModeOptions<T>): UseReorder
           options.movedKeys.value = new Set()
           applyError.value = null
           applying.value = false
-          // Reconcile session immediate (backend) deletes: the parent has already flushed both props, so
-          // the model reflects a Cancel's snapshot-restore (deleted row resurrected → re-remove) or an
-          // Apply (row stayed gone → the re-remove is a no-op). Deferred deletes need nothing here.
+          // Reconcile immediate (backend) deletes from this session. The parent has already flushed both props.
+          // After Cancel the snapshot restore brings the deleted row back,
+          // so it is removed again. After Apply the removal is a no-op.
+          // Deferred deletes need nothing here.
           options.onEmbeddedExit?.()
         }
       }

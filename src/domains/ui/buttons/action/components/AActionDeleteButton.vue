@@ -22,8 +22,8 @@ const props = withDefaults(
     loading?: boolean
     color?: string | undefined
     size?: number
-    // When set, deleting acknowledges the unsaved-changes leave guard first, so the delete's follow-up
-    // navigation is not blocked by a now-meaningless "unsaved changes, really leave?" prompt. (BUG-08)
+    // When set, deleting acknowledges the unsaved-changes guard first,
+    // so the follow-up navigation shows no stale prompt. (BUG-08)
     guard?: { acknowledge: () => void }
     // Shown only when the current user passes it; no ACL, no check. An array is evaluated with AND.
     acl?: RegisteredAclValue | RegisteredAclValue[]

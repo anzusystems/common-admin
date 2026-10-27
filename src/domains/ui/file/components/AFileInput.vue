@@ -76,8 +76,8 @@ const onDropzoneDrop = (files: File[]) => {
     validateData(files)
     return
   }
-  // One file is taken: the first the check lets through. Taken before the check, the first dropped lost a file
-  // the check lets through whenever one it refuses was dropped before it.
+  // Take the first file that passes the check. Taking the first dropped
+  // file before the check lost a valid file when a refused one came first.
   const checked = checkFormatsAndSizes(files)
   if (checked.length > 1) showWarningT('common.system.upload.onlyOneFile')
   emit('filesInput', checked.slice(0, 1))
@@ -87,8 +87,8 @@ const onInputFileChange = (payload: Event) => {
   const event = payload as InputFileChangeEvent
   emit('change', event)
   validateData(Array.from(event.target?.files ?? []))
-  // Handed over, or refused with its warning: emptied, the input tells of the same file when it is picked again. With
-  // the value kept it told nothing until its host changed `fileInputKey`, which not every host is given.
+  // Clear the input after handing over or refusing the file, so picking the same file again fires a change.
+  // Not every host changes `fileInputKey` to reset it.
   if (event.target) event.target.value = ''
 }
 

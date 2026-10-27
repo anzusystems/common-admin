@@ -33,21 +33,17 @@ import { useUploadQueueDialog } from '@/domains/dam/uploadQueue/composables/useU
 import { useAlertsQueue } from '@/domains/system/composables/alertsQueue'
 import type { DocId } from '@/shared/types/common'
 
-// The save of the widget of several images (a gallery), with authors of the DAM picked in a row: a row of an asset
-// that had no authors when the row came, which offers them in place of a source. The DAM replaces the authors of the
-// asset with what the widget sends, and the widget read the asset when the row came: authors the asset was given
-// elsewhere since (in the DAM, by another editor, by another widget of the page) were written over. Each asset with
-// something picked is read again right before the write; once one has authors nothing is written, its rows take them,
-// and the user is told and saves again. A row then takes their names as its source where it has none of its own: where
-// its source is empty, or is what "fill empty" of the mass operations wrote there, which the row did not show. The
-// same when the asset detail "edit asset" of a row opened closes. admin-cms only: admin-ugc has no authors of the DAM.
-// The real widget with its real rows over the real image store, and the real dialog of the asset detail, of which only
-// what it frames is not drawn; the DAM and the backend of the images are clients that record their requests. Not
-// mounted for real: the sortable list around the rows (a stand-in draws them), the asset picker and the pictures.
+// Gallery save with DAM authors picked in a row (admin-cms only).
+// The DAM replaces an asset's authors with what the widget sends.
+// Authors given elsewhere since the row came used to be overwritten.
+// Now each asset with a pick is read again right before the write.
+// If it now has authors, nothing is written. Its rows take them, the user is told and saves again.
+// A row takes their names as its source only if the source is empty or was
+// written by "fill empty". The same applies when the "edit asset" detail closes.
 
 const QUEUE = 'gallery'
 const Picker = defineComponent({ name: 'AAssetSelect', emits: ['confirm'], setup: () => () => h('div') })
-// The list editor around the rows: only its view is drawn, and a commit of its rows is taken without a word.
+// Stand-in for the sortable list: draws only the rows and ignores commits.
 const Editor = defineComponent({
   name: 'ASortableListEditor',
   setup: (_, { slots, expose }) => {
@@ -74,7 +70,6 @@ beforeEach(() => {
   dam = createFakeDam(endPoints)
   imageApi = installConsumerImageApi(profile, installConsumerProfile(profile, dam.client))
   answerDamNames(dam)
-  // The search of the DAM for assets by their files, which the widget asks before it reads the assets.
   dam.reply((request) => {
     const match = request.method === 'GET' ? request.url.match(SEARCH) : null
     if (!match) return undefined
@@ -133,10 +128,6 @@ const mountWidget = async (modelValue: number[]) => {
   await flushPromises()
   return mounted
 }
-/**
- * The entity has these images, `file-<id>` of `asset-<id>`, each asset without authors: each row offers the pick of
- * them. `sources`: the source an image has, where it is not `source <id>`.
- */
 const withImages = async (ids: number[], sources: Record<number, string> = {}) => {
   ids.forEach((id, index) => {
     const image: ImageAware = {
@@ -158,17 +149,15 @@ const withImages = async (ids: number[], sources: Record<number, string> = {}) =
   await flushPromises()
   return mounted
 }
-/** The asset is given authors elsewhere: in the DAM, by another editor or another widget of the page. */
 const givenAuthorsElsewhere = (id: DocId, authors: DocId[]) =>
   dam.assets.set(id, { ...structuredClone(dam.assets.get(id)!), authors })
 const rows = () => widget!.findAllComponents(ImageWidgetMultipleItem)
 const pickInRow = async (row: number, authors: DocId[]) => {
   rows()[row]!.findComponent(AuthorRemoteAutocompleteWithCached).vm.$emit('update:modelValue', authors)
   await flushPromises()
-  // What the caches ask of the picked authors is asked by now: a lookup held next is the one of the save.
+  // The cache lookups of the picked authors must be done by now, so the next held lookup is the one of the save.
   await damNamesAsked()
 }
-/** "Fill empty" of the mass operations above the widget: the rows without authors of the DAM get these. */
 const fillEmptyAuthors = async (authors: DocId[]) => {
   await useImageMassOperations('default').replaceEmptyAuthors(authors)
   await flushPromises()
@@ -179,18 +168,14 @@ const textsOf = (root: Element) =>
   Array.from(root.querySelectorAll<HTMLTextAreaElement>('textarea'))
     .filter((field) => field.getAttribute('aria-hidden') !== 'true')
     .map((field) => field.value)
-/** What each save of metadata has sent to the DAM, in order. */
 const metadataWrites = () =>
   dam.sentTo('PATCH', dam.routes.bulkMetadata).map((request) => dam.body(request) as Array<{ id: DocId }>)
-/** The reads of an asset by its id: what the save reads again. */
 const rereadsOf = (asset: DocId) =>
   dam.sentTo('GET', dam.routes.one).filter((request) => request.url === `${endPoints.asset}/${asset}`)
-/** How often the names of exactly these authors were asked for. */
 const namesAskedOf = (ids: string) =>
   damNameLookups(dam)
     .map((request) => request.url.match(DAM_NAMES)!)
     .filter((match) => match[1] === 'author' && new URLSearchParams(match[3]).get('id') === ids).length
-/** The lookups of the names of an author wait; `release` lets them answer as the DAM names the author. */
 const holdNamesOf = (author: DocId) => {
   const held = dam.hold('GET', new RegExp(`^/adm/v1/author/ext-system/\\d+/search\\?.*id=${author}$`))
   return {
@@ -206,12 +191,10 @@ const holdNamesOf = (author: DocId) => {
   }
 }
 const calls = () => imageApi.calls.map(([call]) => call)
-/** The source each image went to the image API with. */
 const sourcesSaved = () => {
   const [, sent] = imageApi.calls.at(-1) as ['bulkUpdateImages', ImageAware[]]
   return sent.map((image) => [image.id, image.texts.source])
 }
-/** Each row as the widget has it: its image, its asset, its authors, whether it offers the pick, its source. */
 const asRows = () =>
   images().map((image) => [image.id, image.assetId, image.damAuthors, image.showDamAuthors, image.texts.source])
 const givenMeanwhileSaid = [['warning', alertText('common.damImage.image.meta.galleryAuthorsGivenMeanwhile')]]
@@ -239,7 +222,6 @@ describe('the save of the widget of several images, with authors of the DAM pick
           'source of their own now have their names; the authors you picked were not saved, and nothing was saved. ' +
           'Check and save again.'
       )
-      // It stays till the user closes it.
       expect(useAlertsQueue().value.at(-1)!.timeout).toBe(-1)
       expect(asRows()).toEqual([[12, 'asset-12', ['author-3'], false, shown]])
       expect(textsOf(rows()[0]!.element)).toEqual(['image 12', shown])
@@ -252,7 +234,6 @@ describe('the save of the widget of several images, with authors of the DAM pick
     }
   )
 
-  // All or nothing: what is picked for the other asset waits for the next save.
   it('writes nothing of another asset either, and writes the pick of that one with the next save', async () => {
     await withImages([12, 13], { 12: '', 13: '' })
     await pickInRow(0, ['author-5'])
@@ -278,8 +259,6 @@ describe('the save of the widget of several images, with authors of the DAM pick
     expect([rereadsOf('asset-12'), rereadsOf('asset-13')].map((reads) => reads.length)).toEqual([1, 2])
   })
 
-  // "Fill empty" writes the names of what it picks into the source of a row that offers the pick, which the row does
-  // not show: that source gives way to the names of the authors of the DAM, also over the one the image had stored.
   it('writes nothing over the authors an asset was given since of what "fill empty" picked in its row, and gives the row their names', async () => {
     await withImages([12, 13], { 12: 'source 12', 13: '' })
     await fillEmptyAuthors(['author-7'])
@@ -304,7 +283,6 @@ describe('the save of the widget of several images, with authors of the DAM pick
     expect(dam.assets.get('asset-12')!.authors).toEqual(['author-3'])
   })
 
-  // A source the user gives the row after "fill empty" is the user's, also with the very text "fill empty" wrote.
   it.each<[string, () => Promise<void>]>([
     [
       '"replace everywhere" of the source of the mass operations',
@@ -329,7 +307,6 @@ describe('the save of the widget of several images, with authors of the DAM pick
         const source = Array.from(row.querySelectorAll<HTMLTextAreaElement>('textarea')).filter(
           (field) => field.getAttribute('aria-hidden') !== 'true'
         )[1]!
-        // Typed over: a character taken away and typed again.
         for (const text of ['Name of author-', 'Name of author-7']) {
           source.value = text
           source.dispatchEvent(new Event('input', { bubbles: true }))
@@ -356,7 +333,6 @@ describe('the save of the widget of several images, with authors of the DAM pick
     }
   )
 
-  // The check is the last thing before the write: the names of the picked authors are looked up before it.
   it('reads the asset again after the names of the picked authors: given authors meanwhile, it writes nothing', async () => {
     await withImages([12], { 12: '' })
     await pickInRow(0, ['author-5'])
@@ -445,11 +421,8 @@ describe('the save of the widget of several images, with authors of the DAM pick
   })
 })
 
-// "Edit asset" of a row opens the detail of its asset, and when it closes the asset is read again: once it has
-// authors, the rows of that asset that offer the pick take them, by the same rule as the save above.
 describe('the detail of the asset of a row of the widget of several images, once it has closed', () => {
   const detail = () => useAssetDetailStore(pinia)
-  /** The DAM takes the authors a save of metadata writes into an asset: a later read of it answers with them. */
   const damKeepsAuthors = () =>
     dam.reply((request) => {
       if (request.method !== 'PATCH' || !dam.routes.bulkMetadata.test(request.url)) return undefined
@@ -458,7 +431,6 @@ describe('the detail of the asset of a row of the widget of several images, once
       }
       return undefined
     })
-  /** "Edit asset" of a row: the detail of its asset is open. */
   const editAssetOf = async (row: number) => {
     const asset = images()[row]!.assetId!
     const { editAssetLabel } = useCommonAdminCoreDamOptions('default')
@@ -469,7 +441,9 @@ describe('the detail of the asset of a row of the widget of several images, once
     await vi.waitFor(() => expect(detail().asset?.id).toBe(asset))
     await flushPromises()
   }
-  /** The form of the detail is not drawn here: this is what its save sends, with the authors the user picks in it. */
+  /**
+   * The detail form is not drawn here. This sends what its save sends, with the authors the user picks.
+   */
   const saveInDetail = async (authors: DocId[]) => {
     const { damClient, endPointAsset } = useCommonAdminCoreDamOptions('default')
     detail().asset!.authors = authors
@@ -481,7 +455,6 @@ describe('the detail of the asset of a row of the widget of several images, once
     await flushPromises()
   }
 
-  // The image with a source of its own keeps it: `consumerProfileImageWidgetMultipleUpload.test.ts`.
   it.each<[string, string, boolean]>([
     ['an image without a source', '', false],
     ['a source "fill empty" wrote over the one of its image', 'source 12', true],
@@ -499,12 +472,10 @@ describe('the detail of the asset of a row of the widget of several images, once
     expect(asRows()).toEqual([[12, 'asset-12', ['author-9'], false, 'Name of author-9']])
     expect(textsOf(rows()[0]!.element)).toEqual(['image 12', 'Name of author-9'])
     expect(await save()).toBe(true)
-    // Only the save of the detail has written into the asset.
     expect(metadataWrites()).toHaveLength(1)
     expect(sourcesSaved()).toEqual([[12, 'Name of author-9']])
   })
 
-  // The save waits for that read. A widget gone meanwhile asks for nothing more once it has answered.
   it('writes nothing, and asks for nothing more, when the widget is gone while its save waits for that read', async () => {
     const mounted = await withImages([12], { 12: '' })
     damKeepsAuthors()
@@ -522,21 +493,17 @@ describe('the detail of the asset of a row of the widget of several images, once
     widget = undefined
     held.release()
     await waits.settle()
-    // What the save may have asked since is let answer too.
     held.release()
 
     expect(await saved).toBe(false)
     await waits.settle()
     expect(rereadsOf('asset-12')).toHaveLength(1)
     expect(namesAskedOf('author-7')).toBe(lookups)
-    // Only the save of the detail has written into the asset.
     expect(metadataWrites()).toHaveLength(1)
     expect(calls()).toEqual(['fetchImageListByIds'])
   })
 })
 
-// The store of the images remembers what "fill empty" wrote into the source of each row, by the key of the row. A row
-// removed, or replaced by the rows the save of the widget answers with, takes its mark with it: none is left behind.
 describe('the marks of the sources "fill empty" wrote', () => {
   it('go with their rows: a row removed, or no more among the rows set, has none when it comes again', async () => {
     await withImages([12, 13, 14], { 12: '', 13: '', 14: '' })

@@ -3,11 +3,10 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { defineComponent, h } from 'vue'
 import DamAssetImageRoiSelectLazy from '@/domains/dam/cropper/components/DamAssetImageRoiSelectLazy.vue'
 
-// The upload queue's detail dialogs load the region editor, and cropper.js under it, when it first
-// shows. What the dialogs rely on is that the props reach the editor once it is there, and that a
-// chunk that fails to arrive leaves a way to try again rather than a spinner forever.
+// The upload queue detail dialogs load the region editor, and cropper.js under it, on first show.
+// The dialogs rely on props reaching the editor once loaded, and on a
+// failed chunk leaving a way to retry instead of an endless spinner.
 
-// The real loader by default; a case that needs other chunk behaviour says so with a one-off answer.
 const loadDamAssetImageRoiSelect = vi.hoisted(() => vi.fn())
 vi.mock('@/domains/dam/cropper/utils/damAssetImageRoiSelectLoader', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/domains/dam/cropper/utils/damAssetImageRoiSelectLoader')>()

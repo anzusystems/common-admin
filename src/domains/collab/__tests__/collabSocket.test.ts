@@ -4,8 +4,6 @@ import { useCollabInit } from '@/domains/collab/composables/collabInit'
 import { useCollabRoom } from '@/domains/collab/composables/collabRoom'
 import { useCollabReconnectEventBus } from '@/domains/collab/composables/collabEventBus'
 
-// A socket.io client that records the handlers collab registers and the ack of each emit, so a test
-// can play the server.
 type Fn = (...args: any[]) => any
 const handlers: Record<string, Fn> = {}
 const acks: Record<string, Fn> = {}

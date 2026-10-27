@@ -12,11 +12,15 @@ import { isNull } from '@/shared/utils/common'
 const props = defineProps<{
   client: AxiosClientFn
   system: string
-  /** From the route. A log id means nothing without the store it came from. */
+  /**
+   * From the route. A log id means nothing without the store it came from.
+   */
   type: LogTypeType
   id: string
   logPaths: LogPaths
-  /** Where a log that cannot be loaded leaves to when the history has nowhere: the page's Close fallback. */
+  /**
+   * Where a log that cannot be loaded leaves to when history is empty. The page's Close fallback.
+   */
   fallbackRouteName?: RouteRecordName
   fallbackRouteParams?: Record<string, any>
 }>()
@@ -30,8 +34,8 @@ const { log, detailLoading, fetchData, cancel } = useLogDetailActions({
   type: props.type,
 })
 
-// Without `loading`: the view has no buttons to hide, and a page that gives no fallback would keep
-// the card loading for good once a fresh tab has nowhere to go back to.
+// No `loading`: the view has no buttons to hide.
+// With it, a page without a fallback would keep the card loading forever in a fresh tab.
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { leave } = useRecordPage({
   fallbackRouteName: props.fallbackRouteName,

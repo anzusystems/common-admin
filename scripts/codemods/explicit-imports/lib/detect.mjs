@@ -24,7 +24,9 @@ export function createDetector({ ts, sfc, unimport }, names) {
     return new Set(matchedImports.map((i) => i.as))
   }
 
-  /** @returns {Promise<{ script: Set<string>, template: Set<string> }>} */
+  /**
+   * @returns {Promise<{ script: Set<string>, template: Set<string> }>}
+   */
   async function detect(file, source) {
     if (!file.endsWith('.vue')) return { script: await detectScript(source, `${file}.ts`), template: new Set() }
     const descriptor = parseSfc(sfc, file, source)

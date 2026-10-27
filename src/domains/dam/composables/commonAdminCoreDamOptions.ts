@@ -45,9 +45,9 @@ const resolveImageRotateAcl = (config: CommonAdminCoreDamConfig): AclValue | nul
 }
 
 /**
- * The addresses with a key of the configuration `configName` beyond its five, each its default where it does not set
- * it. Throws for nothing: without a configured plugin, or without that configuration, all are the defaults, for the
- * loaders of the DAM configuration an application calls at its start (admin-dam's `useDamConfigState(damClient)`).
+ * Keyed endpoints of configuration `configName`, each falling back to its default.
+ * Never throws: without a configured plugin or that configuration, all are defaults.
+ * Apps call the config loaders at startup (admin-dam's `useDamConfigState(damClient)`).
  */
 export function damEndPointsOf(configName: string) {
   const configs = commonAdminCoreDamOptions.value?.configs
@@ -64,12 +64,14 @@ export function damEndPointsOf(configName: string) {
   }
 }
 
-/** The options of the DAM configuration `configName`. Internal: the name is required, a call cannot fall to `default`. */
+/**
+ * Options of DAM configuration `configName`. Internal. The name is required so a call cannot fall back to `default`.
+ */
 export function useCommonAdminCoreDamOptions(configName: string) {
   if (
     isUndefined(commonAdminCoreDamOptions.value) ||
     isUndefined(commonAdminCoreDamOptions.value.configs) ||
-    // Only what the application has named: `constructor` and the like, which every object has, name no configuration.
+    // Own keys only. Inherited names like `constructor` are not configurations.
     !Object.hasOwn(commonAdminCoreDamOptions.value.configs, configName) ||
     isUndefined(commonAdminCoreDamOptions.value.configs[configName])
   ) {
@@ -85,7 +87,7 @@ export function useCommonAdminCoreDamOptions(configName: string) {
     endPointAuthor: commonAdminCoreDamOptions.value.configs[configName].endPointAuthor || DEFAULT_END_POINT_AUTHOR,
     endPointKeyword: commonAdminCoreDamOptions.value.configs[configName].endPointKeyword || DEFAULT_END_POINT_KEYWORD,
     ...damEndPointsOf(configName),
-    // The system whose user decides the licences; `false`: every licence.
+    // The system whose user decides the licences. `false` means every licence.
     currentUser: commonAdminCoreDamOptions.value.configs[configName].currentUser ?? SYSTEM_DAM,
     adminDomain:
       commonAdminCoreDamOptions.value.configs[configName].adminDomain ?? commonAdminCoreDamOptions.value.adminDomain,
@@ -95,7 +97,7 @@ export function useCommonAdminCoreDamOptions(configName: string) {
     keywordCreateAcl: commonAdminCoreDamOptions.value.configs[configName].keywordCreateAcl,
     authorCreateAcl: commonAdminCoreDamOptions.value.configs[configName].authorCreateAcl,
     mainFileSingleUseEnabled: commonAdminCoreDamOptions.value.configs[configName].mainFileSingleUseEnabled ?? true,
-    // As configured: on unless `false`, which those who read it check.
+    // Passed as configured. Readers treat it as on unless `false`.
     copyToLicenceEnabled: commonAdminCoreDamOptions.value.configs[configName].copyToLicenceEnabled,
     showSourceEnabled: commonAdminCoreDamOptions.value.configs[configName].showSourceEnabled ?? true,
     showFileInfoEnabled: commonAdminCoreDamOptions.value.configs[configName].showFileInfoEnabled ?? true,
@@ -120,7 +122,8 @@ export function useCommonAdminCoreDamOptions(configName: string) {
     customUploadMetadataToImageMap: commonAdminCoreDamOptions.value.configs[configName].customUploadMetadataToImageMap,
     customAssetSelectMetadataToImageMap:
       commonAdminCoreDamOptions.value.configs[configName].customAssetSelectMetadataToImageMap,
-    assetListEnabledFilters: commonAdminCoreDamOptions.value.configs[configName].assetListEnabledFilters, // defaults to undefined = all filters
+    // undefined means all filters
+    assetListEnabledFilters: commonAdminCoreDamOptions.value.configs[configName].assetListEnabledFilters,
     simpleAssetSidebarEnabled: commonAdminCoreDamOptions.value.configs[configName].simpleAssetSidebar ?? false,
   }
 }
@@ -130,9 +133,9 @@ export interface DamNotificationOptions {
   webSocketUrl: string
 }
 
-// A deployment template puts the value in quotes, and renders a boolean of its variables as `True`: the text
-// "true" switches the service on as well, in any letter case and with whitespace around it. Nothing else does:
-// "false" is a text too, and used to count as on.
+// A deployment template quotes the value and renders booleans as `True`.
+// So the string "true" also enables it, in any case and with
+// surrounding whitespace. Any other string, including "false", is off.
 export const normalizeDamNotificationOptions = (
   raw: { enabled?: boolean | string; webSocketUrl?: string } | undefined
 ): DamNotificationOptions => {
@@ -142,16 +145,18 @@ export const normalizeDamNotificationOptions = (
   return { enabled: on && webSocketUrl.length > 0, webSocketUrl }
 }
 
-/** One notification socket of the page, and the DAM configurations it is the socket of. */
+/**
+ * One notification socket of the page and the DAM configurations that use it.
+ */
 export interface DamNotificationSocketOptions {
   options: DamNotificationOptions
   configNames: string[]
 }
 
 /**
- * The notification sockets of the configurations: one for each distinct service, shared by the configurations that
- * name it. `default`'s first, also while it is off: its own `notification`, else the root one. Another configuration
- * has one only with a `notification` of its own that is on.
+ * One socket per distinct service, shared by the configurations that name it.
+ * `default`'s comes first, even when off: its own `notification`, else the root one.
+ * Other configurations get one only with their own enabled `notification`.
  */
 export function damNotificationSockets(): DamNotificationSocketOptions[] {
   const { notification } = useCommonAdminCoreDamOptionsGlobal()

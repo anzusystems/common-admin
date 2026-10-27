@@ -9,12 +9,9 @@ import { ImageWidgetUploadConfigKey } from '@/domains/dam/imageWidget/utils/imag
 import { DamAssetType } from '@/domains/dam/types/Asset'
 import { useUploadQueueDialog } from '@/domains/dam/uploadQueue/composables/useUploadQueueDialog'
 
-// The title of the image dialog says what the dialog edits, and does not change while it loads, waits or saves. It was
-// taken from what the store of the dialog holds, which is empty while the dialog loads for a pick or waits for a save:
-// the dialog of an image was titled "edit medium" then, and changed to "edit image" once the image came. The dialog
-// takes what it is opened for from its widget: the image widget always an image, the image and media widget the asset
-// picked, what it holds for "edit metadata", or the uploaded image. The dialog is drawn on its own, and as a stand-in
-// in the widgets, whose reads of a picked asset answer when the case lets them.
+// The image dialog title says what the dialog edits and must not change while it loads, waits or saves.
+// It used to come from the dialog store, which is empty while loading a pick or waiting for a save.
+// The dialog was titled "edit medium" and switched to "edit image" when the image arrived.
 
 const held = vi.hoisted(() => ({ reads: [] as Array<() => void> }))
 
@@ -108,7 +105,6 @@ describe('the title of the image dialog', () => {
   })
 })
 
-/** The widget of a field, with its image, or with a video (the image and media widget). */
 const mountOf = async (component: Component, holds: 'image' | 'video' = 'image') => {
   const isImageWidget = component === ImageWidgetInner
   const Parent = defineComponent({
@@ -169,7 +165,6 @@ const pick = async (widget: Widget, asset: object) => {
   widget.picker().vm.$emit('update:modelValue', false)
   await flushPromises()
 }
-/** What the dialog is opened for, and whether it loads, after each read of the pick has answered. */
 const typesWhileRead = async (widget: Widget) => {
   const seen = [[widget.dialog().props('type'), widget.dialog().props('loading')]]
   while (held.reads.length > 0) {

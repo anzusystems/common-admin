@@ -33,20 +33,15 @@ import type { ImageAware } from '@/domains/dam/types/ImageAware'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
 import type { IntegerId } from '@/shared/types/common'
 
-// "Edit asset" of the dialog of the image of a widget of one image, as admin-cms mounts it: its root, which loads the
-// configuration of its upload licence. The detail reads the configuration of the ext system it is opened under as it
-// draws, and threw "Ext system must be initialised." without it: opened under 0, as the root of a widget of one image
-// wrote no ext system (the gallery's root does), for an image whose licence the client cannot resolve; and opened under
-// an ext system the client resolved but whose configuration the store never had. The real roots and widgets with the
-// real detail; the DAM and the backend of the images are clients that record their requests, and only the long waits
-// are taken out of real time. Not mounted for real: the asset pickers, the pictures, the editor of the region of
-// interest, the dropzones and the inputs that ask the DAM for names to offer.
+// "Edit asset" in the image dialog of a single-image widget as admin-cms mounts it. The detail reads
+// the ext system configuration while drawing and threw "Ext system must be initialised." in two cases:
+// opened under ext system 0 (the single-image root writes none) for an image whose licence the client cannot resolve,
+// and opened under a resolved ext system whose configuration the store never loaded.
 
 const QUEUE = 'root-edit-asset'
 const { endPoints, extSystem, licence } = cmsConfiguration
 // A licence the client cannot read (the DAM refuses it to the user): the client cannot resolve it.
 const UNRESOLVED = 900009
-// A licence of another ext system, whose configuration nothing on the page has loaded.
 const OTHER = 300003
 const OTHER_EXT_SYSTEM = 7
 const LICENCE_READ = new RegExp(`^/adm/v1/asset-licence/(\\d+)$`)
@@ -60,13 +55,10 @@ let imageApi: ConsumerImageApi
 let waits: LongWaits
 let socket: DamSocket
 let page: VueWrapper | undefined
-/** What the components of the page threw. */
 let thrown: unknown[]
-/** The configuration of the other ext system, as the DAM answers it. */
 let otherConfiguration: unknown
 
 const Picker = defineComponent({ name: 'AAssetSelect', emits: ['confirm'], setup: () => () => h('div') })
-// The list editor around the rows of the gallery: only its view is drawn.
 const Editor = defineComponent({
   name: 'ASortableListEditor',
   setup: (_, { slots, expose }) => {
@@ -91,7 +83,6 @@ const buttonOf = (root: ParentNode, text: string) =>
   Array.from(root.querySelectorAll<HTMLButtonElement>('button')).find((button) => button.textContent?.trim() === text)
 const detail = () => useAssetDetailStore(pinia)
 const pageExtSystem = () => useExtSystemIdForCached().cachedExtSystemId
-// The detail is drawn into the body: its loader, or the asset with its metadata.
 const card = () => document.body.querySelector<HTMLElement>('.dam-image-detail')
 const assetDrawn = () => !!card()?.querySelector('.dam-image-detail__left')
 const metadataDrawn = () => !!card()?.querySelector('[data-cy="custom-field-authors"]')
@@ -112,7 +103,6 @@ const configurationAsked = (from = 0) =>
     .map((request) => request.url.replace(/\?.*$/, ''))
 const failureSaid = [['error', alertText('common.alert.unknownError')]]
 
-/** The DAM: the licences it lets the user read, the configuration of the other ext system, and the users. */
 const answerDam = () => {
   const store = useDamConfigStore(pinia)
   otherConfiguration = structuredClone(store.damConfigExtSystem.get(extSystem)!)
@@ -158,7 +148,6 @@ beforeEach(() => {
   initDamNotifications().openConnection()
   socket.accept()
   signInToDam(extSystem)
-  // A page on which nothing has written the ext system of the configuration yet.
   pageExtSystem().value = 0
   thrown = []
 })
@@ -180,7 +169,6 @@ const stored: ImageAware = {
   flags: { showSource: true, internal: false, overrideInternal: false },
   position: 1,
 }
-/** The image of the widget is of the file of an asset of the licence `of`. */
 const imageOfLicence = (of: IntegerId) => {
   imageApi.has(stored)
   dam.assets.set(
@@ -196,7 +184,6 @@ describe.each<[string, Component, Record<string, unknown>]>([
   ['the image widget', AImageWidget, { modelValue: 12 }],
   ['the image and media widget', AImageMediaWidget, { image: 12, media: null }],
 ])('"edit asset" of %s', (_name, root, props) => {
-  /** The root as admin-cms mounts it, with the dialog of its image open. */
   const mountWithImageDialog = async () => {
     page = mount(root, {
       attachTo: document.body,
@@ -285,8 +272,9 @@ describe.each<[string, Component, Record<string, unknown>]>([
     expect(shownAlerts()).toEqual(failureSaid)
   })
 
-  // Its image fields failing beside its audio fields, the custom fields of that ext system counted as loaded: the detail
-  // drew the image form without its fields, and nothing read them again.
+  // Guards a regression: when the image fields of an ext system failed
+  // beside its audio fields, its custom fields counted as loaded.
+  // The detail drew the image form without its fields, and nothing read them again.
   it('closes the detail when the image fields of that ext system fail beside its others; the next opening reads them alone', async () => {
     imageOfLicence(OTHER)
     await mountWithImageDialog()
@@ -345,13 +333,13 @@ describe.each<[string, Component, Record<string, unknown>]>([
   })
 })
 
-// A gallery of admin-cms whose site group offers a licence of another ext system to pick from: its root loads the
-// configuration of that ext system, not the custom fields of its assets. The gallery opened the detail of an image of
-// that licence all the same, and the metadata form threw "Custom form elements must be initialised.".
+// Guards a regression: a gallery of admin-cms whose site group offers a licence of another
+// ext system loads the configuration of that ext system, not the custom fields of its assets.
+// The gallery still opened the detail of an image of that licence, and
+// the metadata form threw "Custom form elements must be initialised.".
 describe('"edit asset" of a row of the gallery', () => {
   it('loads the custom fields of the ext system of a select licence before the detail shows the asset', async () => {
     imageOfLicence(OTHER)
-    // The gallery reads the assets of its images by their files.
     dam.reply((request) => {
       const files = request.method === 'GET' ? request.url.match(/\/search\?assetAndMainFileIds=([^&]*)/) : null
       if (!files) return undefined

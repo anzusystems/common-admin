@@ -73,7 +73,7 @@ const onConfirm = async () => {
     showRecordWas('created')
     onClose()
     if (!isUndefined(res.id) && !props.disableRedirect && props.redirectRouteName) {
-      // Not when the user is on the way elsewhere, or there already.
+      // Skipped when the user is navigating elsewhere or already there.
       void push({
         name: props.redirectRouteName,
         params: { [props.redirectParamName]: res[props.redirectParamName] },

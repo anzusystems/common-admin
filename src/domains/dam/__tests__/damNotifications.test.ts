@@ -9,8 +9,8 @@ import {
 } from '@/domains/dam/composables/damNotifications'
 import { type DamNotification, DamNotificationName } from '@/domains/dam/composables/damNotificationsEventBus'
 
-// initDamNotifications() used to be unguarded: every call built a fresh socket that nothing could
-// close, so a router guard accumulated one per attempt. Pins the singleton contract.
+// `initDamNotifications()` used to build a new socket on every call, and nothing could close it.
+// A router guard accumulated one socket per attempt. These tests pin the singleton contract.
 
 const setOptions = (webSocketUrl: string, enabled = true) => {
   initCommonAdminCoreDamOptions({
@@ -80,7 +80,7 @@ describe('damNotifications singleton', () => {
     expect(handle.damNotificationsInitialized.value).toBe(false)
   })
 
-  // Disposed directly, the handle stayed cached: the next init handed it back, and it never opened again.
+  // A handle disposed directly stayed cached. The next init returned it and it never opened again.
   it('opens a fresh connection after its handle was disposed directly', () => {
     const first = initDamNotifications()
     first.dispose()
@@ -104,7 +104,6 @@ describe('damNotifications singleton', () => {
   })
 })
 
-// The way of a notification from the server to whoever listens: a frame on the socket, an event for the listeners.
 describe('the notification socket', () => {
   let socket: DamSocket
   let off: () => void = () => {}

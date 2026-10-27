@@ -62,8 +62,8 @@ export const useCommonVuetifyConfig = () => {
   }
 
   const commonDefaults = () => {
-    // No input can hover (a touch screen): a tap emulates the hover and focus a tooltip opens on, and nothing
-    // ever ends them, so the tooltip stayed open. There it opens neither way.
+    // On touch-only screens a tap emulates hover and focus, and nothing
+    // ends them, so tooltips stayed open. There tooltips open on neither.
     const touchOnly = typeof window !== 'undefined' && !!window.matchMedia?.('(any-hover: none)').matches
     return {
       global: {},
@@ -153,16 +153,20 @@ export const useCommonVuetifyConfig = () => {
 }
 
 export interface CreateAnzuVuetifyOptions {
-  /** The admin's vue-i18n instance, in composition mode: Vuetify's own texts are translated through it. */
+  /**
+   * The admin's vue-i18n instance, in composition mode: Vuetify's own texts are translated through it.
+   */
   i18n: I18n<any, any, any, string, false>
-  /** Merged over the common defaults per component, the way admin-ugc sets `VDataTableServer`. */
+  /**
+   * Merged over the common defaults per component, the way admin-ugc sets `VDataTableServer`.
+   */
   defaults?: VuetifyOptions['defaults']
 }
 
 /**
- * The Vuetify instance every admin created in its own `vuetify.ts`, identical in all six: the common
- * aliases, theme and defaults, texts through the admin's i18n, the `Intersect` directive. The stylesheets
- * (`vuetify/styles`, the icon font) stay imported by the admin, where their order is decided.
+ * The Vuetify instance shared by all admins: common aliases, theme and
+ * defaults, texts through the admin's i18n, and the `Intersect` directive.
+ * The stylesheets (`vuetify/styles`, the icon font) stay imported by the admin, which decides their order.
  */
 export function createAnzuVuetify({ i18n, defaults }: CreateAnzuVuetifyOptions) {
   const { commonTheme, commonAliases, commonDefaults } = useCommonVuetifyConfig()

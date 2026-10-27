@@ -14,7 +14,9 @@ const props = withDefaults(
      * `linkLastItem`). Default: its route name with `routeParams`, or `{ id }` when it has an id.
      */
     resolveBreadcrumbRoute?: (item: BreadcrumbItem) => RouteLocationRaw
-    /** Another teleport slot to render into. Default: the app bar's actionbar. */
+    /**
+     * Another teleport slot to render into. Default: the app bar's actionbar.
+     */
     target?: TeleportSlot
   }>(),
   {

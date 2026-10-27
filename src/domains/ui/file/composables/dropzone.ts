@@ -30,9 +30,9 @@ const checkReallyDraggingEnded = (event: DragEvent, dragging: boolean) => {
   }
 }
 
-// Module level, not per call: `removeEventListener` matches by identity, so per-call handlers made
-// `destroyGlobalDragState()` remove references that were never added. The state is global — destroy
-// belongs to app teardown.
+// Handlers are module level because `removeEventListener` matches by identity. Per-call
+// handlers made `destroyGlobalDragState()` remove listeners that were never added.
+// The state is global, so destroy belongs to app teardown.
 const dragoverHandler = (event: DragEvent) => {
   event.preventDefault()
   checkReallyDraggingEnded(event, true)

@@ -28,19 +28,15 @@ import KeywordRemoteAutocompleteWithCached from '@/domains/dam/keyword/component
 import { DamAssetType } from '@/domains/dam/types/Asset'
 import type { ImageStoreItem } from '@/domains/dam/types/ImageAware'
 
-// The ext system the caches of names of each DAM configuration ask under is that configuration's: a page with
-// `default`, as admin-cms has it (ext system 1), and `own`, another DAM with a client and addresses of its own (ext
-// system 2), each with the widget of several images that writes its ext system as it mounts. Whichever wrote last, the
-// caches, the dialogs and the detail under each name go by its own ext system and rules; the other client is asked
-// nothing.
-
 const { endPoints, extSystem: EXT_DEFAULT, licence: LICENCE_DEFAULT } = cmsConfiguration
 const OWN = { asset: '/own/v2/asset', image: '/own/v2/image' }
 const OWN_AUTHOR = '/own/v2/author'
 const EXT_OWN = 2
 const LICENCE_OWN = 300003
 const NAMES = /^(.*)\/(author|keyword)\/ext-system\/(\d+)\/search$/
-/** From here on a wait is held: below the 1.5 s the caches wait before they ask. */
+/**
+ * Waits from this length are held. The caches wait 1.5 s before they ask.
+ */
 const HELD_FROM_MS = 1_200
 
 const ofOwn: DamConfigOfDam = {
@@ -61,7 +57,6 @@ let waits: LongWaits
 let wrappers: VueWrapper[] = []
 let errors: unknown[] = []
 
-/** A DAM gives every author and keyword asked for a name of its own. */
 const answerNames = (of: FakeDam, which: string) =>
   of.reply((request) => {
     const [path, query] = request.url.split('?')
@@ -87,12 +82,10 @@ beforeEach(() => {
     },
   })
   initCommonAdminImageOptions({ ...image, configs: { ...image.configs, own: image.configs.default! } })
-  // Filled before anything mounts, as an application fills a configuration whose client cannot read it.
   fillDamConfigOf('own', ofOwn)
   waits = holdLongWaits(HELD_FROM_MS)
   forgetAlerts()
   errors = []
-  // Nothing of either configuration has written its ext system yet: each case says what it starts from.
   useExtSystemIdForCached('default').cachedExtSystemId.value = 0
   useExtSystemIdForCached('own').cachedExtSystemId.value = 0
 })
@@ -105,7 +98,6 @@ afterEach(async () => {
   useDamNotificationsEventBus().reset()
 })
 
-/** The method and the path of every request for names a client was asked, in order. */
 const askedForNames = (of: FakeDam) =>
   of.requests
     .map((request) => `${request.method} ${request.url.split('?')[0]}`)
@@ -120,7 +112,6 @@ const mounted = (component: Component, options: Record<string, unknown>) => {
   return wrapper
 }
 
-/** A component under `own` that hands the name to nothing by itself: what is in it has the name from it. */
 const UnderOwn = defineComponent({
   setup(_, { slots }) {
     useDamConfigName('own')
@@ -129,7 +120,6 @@ const UnderOwn = defineComponent({
   },
 })
 
-// What the widget holds beside the store and the detail, which no case here asks about.
 const widgetStandIns = Object.fromEntries(
   [
     'VImg',
@@ -144,7 +134,6 @@ const widgetStandIns = Object.fromEntries(
   ].map((name) => [name, true])
 )
 const queueOf = (name: 'default' | 'own') => `named-ext-system-${name}`
-/** The widget of several images under the name: it writes the ext system of its licence as it mounts. */
 const mountWidget = async (name: 'default' | 'own') => {
   const wrapper = mounted(AImageWidgetMultiple, {
     attachTo: document.body,
@@ -187,9 +176,9 @@ describe.each(orders)('two widgets of two configurations, mounted %s, then %s', 
     expect(askedForNames(own)).toEqual([`GET ${OWN_AUTHOR}/ext-system/${EXT_OWN}/search`])
   })
 
-  // The detail "edit asset" of a row opens is under the configuration of its widget, with that widget's ext system:
-  // with the page's, written last by the other widget, it threw "Ext system must be initialised." where the store of
-  // its configuration has no such ext system, and was not drawn.
+  // The detail opened from a row must use its widget's configuration and ext system.
+  // With the page's ext system, written last by the other widget,
+  // it threw "Ext system must be initialised." and was not drawn.
   it(`the asset detail of the widget under ${first} opens with the rules of ${first}`, async () => {
     await mountWidget(first)
     await mountWidget(last)
@@ -255,9 +244,6 @@ describe('the authors of the image dialogs under a named configuration, after a 
     expect(subject.findComponent(AuthorRemoteAutocompleteWithCached).props('extSystem')).toBe(EXT_OWN)
   })
 
-  // The asset the widget holds for the image of its pick has been given authors elsewhere since: their names are looked
-  // up under the ext system of its licence, and where the configuration does not know it, under the one the
-  // configuration asks for names under.
   it("the dialog of a widget looks the names of the authors given meanwhile up under that configuration's", async () => {
     const UNKNOWN_LICENCE = 400004
     own.assets.set('asset-without', damAsset('asset-without', { licence: UNKNOWN_LICENCE }))
@@ -272,7 +258,6 @@ describe('the authors of the image dialogs under a named configuration, after a 
         return () => h('div')
       },
     })
-    // As the click in the asset select of the widget writes it.
     useExtSystemIdForCached('own').cachedExtSystemId.value = EXT_OWN
     const subject = mounted(ImageWidgetInner, {
       props: {
@@ -317,7 +302,6 @@ describe('the authors of the image dialogs under a named configuration, after a 
     })
     await flushPromises()
     await flushPromises()
-    // A widget of `default` writes its ext system after the click.
     useExtSystemIdForCached('default').cachedExtSystemId.value = EXT_DEFAULT
     own.assets.set(
       'asset-without',

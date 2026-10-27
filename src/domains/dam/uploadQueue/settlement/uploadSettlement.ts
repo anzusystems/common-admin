@@ -46,40 +46,60 @@ interface TrackedRow {
   queue: UploadQueue
   row: UploadQueueItem
   state: UploadTrackState
-  /** The asset the row is read by. A duplicate that becomes its original changes the one of the row. */
+  /**
+   * The asset the row is read by. It changes when a duplicate becomes its original.
+   */
   assetId: DocId
 }
 
-/** One request of a tick, and the tracked rows it asks about. */
+/**
+ * One request of a tick, and the tracked rows it asks about.
+ */
 interface ReadUnit {
   rows: TrackedRow[]
-  /** `missing`: the one asset that was asked for by itself does not exist, which its reader was free to report. */
+  /**
+   * `missing`: the single asset requested alone does not exist. Its reader may report that.
+   */
   read(
     options: UploadReadOptions
   ): Promise<{ assets: AssetDetailItemDto[]; missing?: boolean } | { slotFiles: AssetFileNullable[] }>
 }
 
-/** The reads of one DAM, one after another, and whether a streak of their failures is being reported. */
+/**
+ * Sequential reads of one DAM, and whether a streak of their failures is being reported.
+ */
 interface ReadLane {
   chain: Promise<void>
   failing: boolean
 }
 
-/** A read of one asset an event asked for, waiting for its time. */
+/**
+ * A read of one asset requested by an event, waiting for its time.
+ */
 interface PendingNamedRead {
-  /** Of `pending`: the asset, and the configuration the read is for. */
+  /**
+   * Key in `pending`: the asset and the configuration the read is for.
+   */
   key: string
   assetId: DocId
-  /** The configuration whose rows the read is for (`configOf` of the profile); every queue's when left out. */
+  /**
+   * The configuration whose rows the read is for (`configOf` of the profile). All queues when omitted.
+   */
   configName?: string
-  // By `fileId ?? ''`.
+  // Keyed by `fileId ?? ''`.
   targets: Map<string, { fileId: DocIdNullable; intent: UploadReadIntent }>
   dueAt: number
-  /** Failed tries in a row. */
+  /**
+   * Consecutive failed tries.
+   */
   failures: number
-  /** Tries in a row that found no asset. */
+  /**
+   * Consecutive tries that found no asset.
+   */
   misses: number
-  /** A failure of its tries was written down: the next ones are not reported. */
+  /**
+   * A failure of these tries was reported. Further ones are not.
+   */
   told: boolean
   timer: { handle: unknown } | null
   waiters: Array<() => void>
@@ -88,27 +108,25 @@ interface PendingNamedRead {
 const TICK_INTENT: UploadReadIntent = { hint: null, metadata: true, early: false, seen: true }
 
 /**
- * The settlement of the rows of one store: which rows wait for the server, one coordinator of all the reads, and
- * what starts a read: the tick of a queue, a notification, the refresh of a row.
+ * Settlement for the rows of one store: tracks rows waiting for the server and coordinates all reads.
+ * Reads start from a queue tick, a notification or a row refresh.
  */
 export function createUploadSettlement(profile: UploadSettlementProfile): UploadSettlement {
   const memory = createUploadSettleMemory()
   const pollers = new Map<UploadQueueKey, QueuePoller>()
-  // One read of an asset waits at a time, and with the configurations of the queues one for each configuration.
+  // At most one pending read per asset, or one per configuration when queues have configurations.
   const pending = new Map<string, PendingNamedRead>()
   let unsubscribe: Array<() => void> = []
   let disposed = false
-  // Raised when a queue is dropped: a tick that waited for its turn meanwhile is not for the queue that has the
-  // key now.
+  // Incremented when a queue is dropped. A tick that waited meanwhile must not run for the queue that now has the key.
   const generations = new Map<UploadQueueKey, number>()
-  // The poll and the notifications ask for as long as a row waits, and a reader is to report only the first of
-  // their requests that fails and is written down: `failing` of the lane from such a failure until a read answers,
-  // and beside it the `reported` of each tracked row, until a read brings its asset. A failure that was not written
-  // down (a timeout, 401, 403, as the readers say) has told nobody, and begins nothing.
-  // One read at a time in a lane: its reads have one order, and a later one never overtakes. With the configurations
-  // of the queues (`configOf`) a lane for each configuration, and one for the reads that name none: a slow DAM holds
-  // back no read of another, and the failures of each are a streak of their own. Without them, one lane for the
-  // whole store, as ever.
+  // The poll and notifications retry while a row waits. A reader reports only the first failure that is written down.
+  // `failing` of the lane holds from such a failure until a read answers.
+  // `reported` of each tracked row holds until a read brings its asset.
+  // A failure that was not written down (timeout, 401, 403) starts
+  // no streak. One read at a time per lane keeps reads in order.
+  // With `configOf`, each configuration has its own lane and streak, plus one lane for
+  // reads naming none, so a slow DAM blocks no other. Without it, one lane for the store.
   const lanes = new Map<string | undefined, ReadLane>()
   const laneOf = (configName?: string) => {
     const key = profile.configOf ? configName : undefined
@@ -119,15 +137,16 @@ export function createUploadSettlement(profile: UploadSettlementProfile): Upload
     }
     return lane
   }
-  /** The lane of the reads of the queue. */
   const laneOfQueue = (queueKey: UploadQueueKey) => laneOf(profile.configOf?.(queueKey))
-  /** The lane of the reads of a target: of the one configuration it names. */
+  /**
+   * Only a target that names exactly one configuration gets that configuration's lane.
+   */
   const laneOfTarget = (target: UploadSettlementTarget) =>
     laneOf(target.configNames?.length === 1 ? target.configNames[0] : undefined)
   const failureReported = (error: unknown) => profile.readers.failureReported?.(error) ?? true
 
   const scheduler = () => uploadSettlementRuntime.scheduler
-  // Asked anew after every wait: nothing is written, called or planned for a settlement that was disposed of.
+  // Checked after every wait: a disposed settlement writes, calls and schedules nothing.
   const isDisposed = () => disposed
   const generationOf = (queueKey: UploadQueueKey) => generations.get(queueKey) ?? 0
 
@@ -174,10 +193,14 @@ export function createUploadSettlement(profile: UploadSettlementProfile): Upload
 
   const fetchCaches = () => settle.fetchNames()
 
-  /** The configuration of the queue, as a target names it; nothing for a profile without `configOf`. */
+  /**
+   * `undefined` for a profile without `configOf`.
+   */
   const namesOfQueue = (queueKey: UploadQueueKey) => (profile.configOf ? [profile.configOf(queueKey)] : undefined)
 
-  /** Answers whether this miss was the one too many: the row is given up. */
+  /**
+   * Returns true when this miss reaches the limit and the row is given up.
+   */
   const countMiss = (tracked: Pick<TrackedRow, 'queueKey' | 'row' | 'state'>) => {
     tracked.state.misses++
     if (tracked.state.misses < UPLOAD_POLL_MISSING_LIMIT) return false
@@ -185,10 +208,10 @@ export function createUploadSettlement(profile: UploadSettlementProfile): Upload
     return true
   }
 
-  // A row left failed without the original of its duplicate, and an uploaded one still without its metadata, are
-  // no longer tracked, and a refresh may still help them. The reads that find no asset are counted for them here,
-  // across them all and until one answers: at the limit there is nothing a refresh could read, and the uploaded
-  // row fails. Answers as `countMiss` does.
+  // Untracked rows that a refresh may still help: failed without
+  // the duplicate's original, or uploaded without metadata.
+  // Misses are counted across all reads until one answers. At
+  // the limit the uploaded row fails. Returns like `countMiss`.
   const missesOfLeft = new WeakMap<UploadQueueItem, number>()
   const countsMissesOfLeft = (row: UploadQueueItem) =>
     memory.refreshMayHelp.has(toRaw(row)) || settle.awaitsMetadata(row)
@@ -205,7 +228,9 @@ export function createUploadSettlement(profile: UploadSettlementProfile): Upload
     return true
   }
 
-  /** The live rows a read of the asset would write into, for any of the given targets, of the configurations named. */
+  /**
+   * Live rows a read of the asset would write into, for any of the targets, limited to the named configurations.
+   */
   const concernedRows = (
     assetId: DocId,
     targets: Iterable<{ fileId: DocIdNullable; intent: Pick<UploadReadIntent, 'early'> }>,
@@ -232,7 +257,7 @@ export function createUploadSettlement(profile: UploadSettlementProfile): Upload
           row.status !== UploadQueueItemStatus.Stop && settle.concerns(queueKey, row, target, purpose)
       )
 
-  // A read brought the asset of these rows: the counts of the tracked ones start anew, and their warning goes.
+  // A read found the asset: reset the miss counts of tracked rows and clear their warning.
   const readSucceeded = (rows: Array<{ row: UploadQueueItem }>) => {
     for (const { row } of rows) {
       missesOfLeft.delete(toRaw(row))
@@ -248,8 +273,6 @@ export function createUploadSettlement(profile: UploadSettlementProfile): Upload
 
   const untold = (rows: Array<{ row: UploadQueueItem }>) =>
     rows.every(({ row }) => settle.trackStateOf(row)?.reported !== true)
-
-  // ---- the tick of a queue
 
   const readUnitsOf = (rows: TrackedRow[]): ReadUnit[] => {
     const byLicence = new Map<IntegerId, Map<DocId, TrackedRow[]>>()
@@ -268,7 +291,7 @@ export function createUploadSettlement(profile: UploadSettlementProfile): Upload
     const units: ReadUnit[] = []
     for (const [licenceId, byAsset] of byLicence) {
       const assetIds = [...byAsset.keys()]
-      // One asset is asked for by itself, as a notification asks for it.
+      // A single asset uses the same single read as a notification.
       if (assetIds.length === 1) {
         units.push({
           rows: byAsset.get(assetIds[0]!)!,
@@ -285,7 +308,7 @@ export function createUploadSettlement(profile: UploadSettlementProfile): Upload
           rows: batch.flatMap((assetId) => byAsset.get(assetId)!),
           read: async (options) => {
             const assets = await profile.readers.assets(licenceId, batch, options)
-            // Not "every asset is missing".
+            // A non-list answer must not be taken as "every asset is missing".
             if (!Array.isArray(assets)) throw new Error('uploadSettlement: unexpected asset list')
             return { assets }
           },
@@ -323,8 +346,8 @@ export function createUploadSettlement(profile: UploadSettlementProfile): Upload
           startedAt
         )
       } catch (error) {
-        // One asset that cannot be written is not the end of the tick: the others, and the counts and the texts of
-        // every row, go on.
+        // One asset that fails to write does not end the tick. Other
+        // assets and the counts and texts of every row continue.
         console.error('uploadQueue: a read asset could not be written', error)
       }
     }
@@ -355,8 +378,7 @@ export function createUploadSettlement(profile: UploadSettlementProfile): Upload
     switch (file.fileAttributes?.status) {
       case AssetFileProcessStatus.Processed:
         settle.settleProcessedByEvent(target)
-        // The asset completes the row, and gives an open detail its main file. Not awaited: it waits for this
-        // very read to end.
+        // Not awaited: it waits for this read to end.
         void scheduleNamed(
           assetId,
           row.fileId,
@@ -394,20 +416,19 @@ export function createUploadSettlement(profile: UploadSettlementProfile): Upload
   }
 
   const readQueue = async (queueKey: UploadQueueKey, generation: number, startedAt: number) => {
-    // Asked when the tick gets its turn and after every wait: it may have waited behind another read, and its
-    // queue may have been dropped meanwhile, with another one under the same key by now.
+    // Checked when the tick gets its turn and after every wait. It may have queued behind
+    // another read, and its queue may have been dropped and replaced under the same key.
     const goesOn = () => !isDisposed() && generationOf(queueKey) === generation
     if (!goesOn()) return
     const lane = laneOfQueue(queueKey)
     const units = readUnitsOf(trackedRows(queueKey))
     if (!units.length) return
-    // Each request is told whether a failure of it is the first of a streak: for every request of a tick that
-    // begins one, since they go out together.
+    // The requests of a tick go out together, so each one that could start a streak may report its failure.
     const options = units.map((unit) => ({
       report: !lane.failing && unit.rows.every(({ state }) => !state.reported),
       queueKey,
     }))
-    // The requests go out together; what they brought is written one after another.
+    // Requests go out in parallel; results are applied sequentially.
     const answers = await Promise.allSettled(units.map((unit, index) => unit.read(options[index]!)))
     if (!goesOn()) return
     let failed = 0
@@ -427,16 +448,16 @@ export function createUploadSettlement(profile: UploadSettlementProfile): Upload
       }
       unit.rows.forEach(({ state }) => (state.readFailures = 0))
       if ('assets' in answer.value) {
-        // Into the rows of the configuration of the queue alone: another DAM may have an asset of that id.
+        // Only into rows of the queue's configuration: another DAM may have an asset with the same id.
         await applyAssets(unit, answer.value.assets, startedAt, goesOn, namesOfQueue(queueKey))
-        // The reader has said so, when it was let: it is not let again for these rows.
+        // The reader already reported the missing asset, so these rows do not report it again.
         if (answer.value.missing && report) unit.rows.forEach(({ state }) => (state.reported = true))
       } else {
         await applySlotFiles(unit, answer.value.slotFiles, startedAt, goesOn)
       }
       if (!goesOn()) return
     }
-    // A request that answered ends the streak; one that failed and was written down begins it.
+    // Any answered request ends the streak. A failure that was written down starts it.
     if (failed < units.length) lane.failing = false
     else if (reportedFailure) lane.failing = true
     fetchCaches()
@@ -456,11 +477,9 @@ export function createUploadSettlement(profile: UploadSettlementProfile): Upload
       settle.syncNotice(row)
     }
 
-    // The poller takes this for a failed read and waits by its error ladder.
+    // The poller treats this as a failed read and backs off by its error ladder.
     if (failed === units.length) throw new Error('uploadSettlement: the read of the queue failed')
   }
-
-  // ---- reads a notification asks for
 
   const mergeTarget = (read: PendingNamedRead, fileId: DocIdNullable, intent: UploadReadIntent) => {
     const key = fileId ?? ''
@@ -491,8 +510,8 @@ export function createUploadSettlement(profile: UploadSettlementProfile): Upload
   }
 
   /**
-   * A read of the named asset in `delayMs`; joins the read of that asset that waits already. Of each configuration
-   * named, a read of its own for the rows of its queues; without one, a read for the rows of every queue.
+   * Schedules a read of the asset in `delayMs`, joining a read of it that already waits.
+   * Each named configuration gets its own read for its queues' rows. Without names, one read covers every queue.
    */
   const scheduleNamed = (
     assetId: DocId,
@@ -551,7 +570,7 @@ export function createUploadSettlement(profile: UploadSettlementProfile): Upload
       armNamed(read)
       return
     }
-    // An event came while this read was on its way and waits in a read of its own: the retry joins it.
+    // An event arrived during this read and waits in its own read. The retry joins it.
     read.targets.forEach(({ fileId, intent }) => mergeTarget(waiting, fileId, intent))
     waiting.failures = Math.max(waiting.failures, read.failures)
     waiting.misses = Math.max(waiting.misses, read.misses)
@@ -565,26 +584,26 @@ export function createUploadSettlement(profile: UploadSettlementProfile): Upload
     }
   }
 
-  /** The configurations a pending read names: its own, or none. */
   const namesOfRead = (read: PendingNamedRead) => (isUndefined(read.configName) ? undefined : [read.configName])
-  /** The rows the pending read is for, as they are now. */
+  /**
+   * Evaluated anew each time, since rows may have left meanwhile.
+   */
   const rowsOfRead = (read: PendingNamedRead) => concernedRows(read.assetId, read.targets.values(), namesOfRead(read))
 
   const readNamed = async (read: PendingNamedRead, startedAt: number) => {
     try {
-      // The rows it was for have left their queues meanwhile: nothing to ask for.
+      // Its rows have left their queues meanwhile.
       const askedFor = rowsOfRead(read)
       if (isDisposed() || !askedFor.length) return
       const lane = laneOf(read.configName)
-      // Until one of its tries was written down, when no streak runs and none of its rows has had its trouble
-      // reported.
+      // Reports until one of its tries was written down, while no streak runs and none of its rows was reported.
       const report = !lane.failing && !read.told && read.misses === 0 && untold(askedFor)
       let asset: AssetDetailItemDto | null
       try {
         asset = await profile.readers.asset(read.assetId, { report, queueKey: askedFor[0]!.queueKey })
       } catch (error) {
         if (isDisposed()) return
-        // Its rows left while it was on the wire: nobody waits for another try, and it begins no streak.
+        // Its rows left while it was in flight: no retry and no streak.
         const left = rowsOfRead(read)
         if (!left.length) return
         read.failures++
@@ -593,8 +612,8 @@ export function createUploadSettlement(profile: UploadSettlementProfile): Upload
           read.told = true
           lane.failing = true
         }
-        // The count of the read times its tries, and says when a row no tick asks about has waited in vain. A
-        // tracked row warns by its own count: ticks fail and succeed for it between the tries of this read.
+        // The read's own count paces its retries and warns for untracked rows.
+        // A tracked row warns by its own count, because ticks fail and succeed for it between these retries.
         const exhausted = read.failures >= UPLOAD_POLL_READ_FAILURE_LIMIT
         const warned: Array<{ row: UploadQueueItem }> = []
         for (const entry of left) {
@@ -605,7 +624,7 @@ export function createUploadSettlement(profile: UploadSettlementProfile): Upload
           }
           if (state ? state.readFailures >= UPLOAD_POLL_READ_FAILURE_LIMIT : exhausted) warned.push(entry)
         }
-        // Once exhausted, only the refresh of the row asks again.
+        // Once exhausted, only a manual refresh of the row reads again.
         if (!exhausted) retryNamed(read, read.failures)
         warnAboutRead(warned)
         return
@@ -626,11 +645,10 @@ export function createUploadSettlement(profile: UploadSettlementProfile): Upload
           if (report) state.reported = true
           countMiss({ queueKey, row, state })
         }
-        // Nobody is left to try again for.
         if (!concerned.length) return
         if (read.misses < UPLOAD_POLL_MISSING_LIMIT) retryNamed(read, read.misses)
-        // A row an event has settled is not flipped to failed; it only says its data could not be read. One still
-        // without its metadata has failed by its count above.
+        // A row an event has settled is not flipped to failed. It only warns that its data could not be read.
+        // A row still without metadata already failed by its count above.
         else warnAboutRead(untracked)
         return
       }
@@ -653,15 +671,13 @@ export function createUploadSettlement(profile: UploadSettlementProfile): Upload
     }
   }
 
-  // ---- reads asked for at once
-
-  // Of the reads of several configurations, the outcome first in this order that any of them had is told.
+  // With reads of several configurations, the first outcome in this order that any of them had is returned.
   const OUTCOME_ORDER: UploadRefreshOutcome[] = ['error', 'originalUnread', 'missing', 'pending', 'settled']
 
   /**
-   * What the one who asked is told of the read. What asking again may mend, by its cause: the read failed
-   * (`error`), the asset was not found (`missing`), or a row is left without the original of its duplicate
-   * (`originalUnread`). A target that names several configurations is read once for each, by a queue of it.
+   * Outcome of the read for the caller. Retryable causes: `error` (read failed),
+   * `missing` (asset not found), `originalUnread` (duplicate's original not read).
+   * A target naming several configurations is read once per configuration, through one of its queues.
    */
   const readTargetNow = (target: UploadSettlementTarget, intent: UploadReadIntent): Promise<UploadRefreshOutcome> => {
     const targets = settle.byConfiguration(target)
@@ -675,12 +691,12 @@ export function createUploadSettlement(profile: UploadSettlementProfile): Upload
     enqueueRead(laneOfTarget(target), async (startedAt) => {
       try {
         if (isDisposed()) return 'error'
-        // The queue of the first row the read is for, noted before it is asked.
+        // Queue of the first concerned row, taken before the read.
         const queueKey = concernedRows(target.assetId, [{ fileId: target.fileId, intent }], target.configNames)[0]
           ?.queueKey
-        // A configuration named that has no row of the asset (any longer): its DAM is not asked.
+        // A named configuration with no row of the asset left: its DAM is not asked.
         if (profile.configOf && target.configNames?.length && isUndefined(queueKey)) return 'settled'
-        // The user asked: every failure of it is reported.
+        // A user-requested read reports every failure.
         const asset = await profile.readers.asset(target.assetId, { report: true, queueKey })
         if (isDisposed()) return 'error'
         laneOfTarget(target).failing = false
@@ -690,12 +706,12 @@ export function createUploadSettlement(profile: UploadSettlementProfile): Upload
           let askedOn = false
           for (const { queueKey, row } of concerned) {
             const state = settle.trackStateOf(row)
-            // Said by this read: the poll does not say it again.
+            // Reported by this read, so the poll does not report it again.
             if (state) state.reported = true
             if (state ? countMiss({ queueKey, row, state }) : countMissOfLeft({ queueKey, row })) givenUp = true
             else if (state || countsMissesOfLeft(row)) askedOn = true
           }
-          // The miss that was one too many has settled its rows, as given up: there is nothing to ask again.
+          // The final miss gave up and settled its rows, so there is nothing to retry.
           return givenUp && !askedOn ? 'settled' : 'missing'
         }
         readSucceeded(concerned)
@@ -703,7 +719,7 @@ export function createUploadSettlement(profile: UploadSettlementProfile): Upload
         if (isDisposed()) return 'error'
         fetchCaches()
         if (leftWithout) return 'originalUnread'
-        // Otherwise by the state of the main file alone, whichever rows were written.
+        // Otherwise decided by the main file status alone, regardless of which rows were written.
         return isFinalFileStatus(asset.mainFile?.fileAttributes?.status) ? 'settled' : 'pending'
       } catch {
         return 'error'
@@ -776,8 +792,6 @@ export function createUploadSettlement(profile: UploadSettlementProfile): Upload
     return Promise.resolve()
   }
 
-  // ---- tracking
-
   const subscribe = () => {
     if (unsubscribe.length) return
     unsubscribe = [
@@ -785,7 +799,7 @@ export function createUploadSettlement(profile: UploadSettlementProfile): Upload
         const visible = uploadSettlementRuntime.visibility.isVisible()
         pollers.forEach((poller) => (visible ? poller.readNow('visible') : poller.reschedule()))
       }),
-      // The notifications came alive or died: the rhythm of the other mode.
+      // Notifications connected or dropped: switch pollers to the other rhythm.
       profile.connection.onChange(() => pollers.forEach((poller) => poller.reschedule())),
     ]
   }
@@ -800,7 +814,7 @@ export function createUploadSettlement(profile: UploadSettlementProfile): Upload
     if (!poller) {
       poller = createQueuePoller({
         youngestAgeMs: () => youngestAgeMs(queueKey),
-        // The socket of the configuration of the queue: the queue of one without a socket polls densely.
+        // Uses the socket of the queue's configuration. A queue without a live socket polls densely.
         mode: () => (profile.connection.isPushAlive(queueKey) ? 'sparse' : 'dense'),
         read: () => {
           const generation = generationOf(queueKey)
@@ -825,7 +839,6 @@ export function createUploadSettlement(profile: UploadSettlementProfile): Upload
     const raw = toRaw(row)
     const queue = queueOf(queueKey)
     if (!queue || !toRaw(queue.items).some((item) => toRaw(item) === raw)) return
-    // Nothing a tick could ask about.
     if (row.status === UploadQueueItemStatus.Stop || isNull(row.assetId)) return
     const reader = settle.policyOf(row).reader
     if (reader === 'none' || (reader === 'slots' && !profile.readers.slotFiles)) return
@@ -837,12 +850,12 @@ export function createUploadSettlement(profile: UploadSettlementProfile): Upload
       readFailures: 0,
       reported: false,
     })
-    // Failed by the client, and the server may finish the file all the same.
+    // The client failed it, but the server may still finish the file.
     settle.setRefreshMayHelp(queueKey, row, options.clientFailed === true)
     pollerOf(queueKey).rowAdded()
   }
 
-  // The rows a waiting read was asked for are leaving: a read no other row needs does not wait on.
+  // Its rows are leaving: cancel a waiting read that no other row needs.
   const cancelUnneeded = (leaving: (entry: { queueKey: UploadQueueKey; row: UploadQueueItem }) => boolean) => {
     for (const read of pending.values()) {
       if (rowsOfRead(read).some((entry) => !leaving(entry))) continue
@@ -853,7 +866,7 @@ export function createUploadSettlement(profile: UploadSettlementProfile): Upload
     }
   }
 
-  // The store takes the row out: its ticks end here, and so do the reads notifications asked for on its behalf.
+  // The store removed the row: its ticks end, and so do notification reads made for it.
   const untrack = (row: UploadQueueItem) => {
     if (isDisposed()) return
     const raw = toRaw(row)
@@ -876,8 +889,7 @@ export function createUploadSettlement(profile: UploadSettlementProfile): Upload
     const lane = laneOfQueue(queueKey)
     pollers.get(queueKey)?.stop()
     pollers.delete(queueKey)
-    // Nothing is asked about any more, by the store or in the lane of the queue: what fails for the next rows is a
-    // streak of its own.
+    // Nothing is tracked any more, so failures of later rows start a new streak.
     if (!pollers.size) {
       unsubscribeAll()
       lanes.forEach((one) => (one.failing = false))

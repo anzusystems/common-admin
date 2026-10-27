@@ -19,11 +19,9 @@ import {
 import UploadQueueItemEditable from '@/domains/dam/uploadQueue/components/UploadQueueItemEditable.vue'
 import { useUploadQueueItemFactory } from '@/domains/dam/uploadQueue/factory/UploadQueueItemFactory'
 
-// One row of the queue dialog, shown by itself, in each state an upload goes through: what its picture says, which
-// buttons it has, what it tells its queue when one is pressed, and what stands between the picture and the form.
-// The row is the real one with its real picture and form, under the configuration of admin-cms; nothing is asked of
-// the DAM, and only the twenty seconds a row waits before it offers refresh are taken out of real time. The buttons
-// of a failed row, and the refresh a row comes to offer, are in `uploadQueueRowRefresh.test.ts`.
+// One real row with its real picture and form, shown alone in each upload state, under the admin-cms configuration.
+// Nothing is asked of the DAM. Only the twenty-second wait before refresh is taken out of real time.
+// Failed-row buttons and refresh are in `uploadQueueRowRefresh.test.ts`.
 
 const { endPoints, extSystem, licence } = cmsConfiguration
 const QUEUE = 'row-states'
@@ -46,7 +44,6 @@ afterEach(() => {
   waits.restore()
 })
 
-/** A row of a picked file that has its asset, in the given state; `rowProps` are what the queue hands it besides. */
 const mountRow = async (
   status: UploadQueueItemStatusType,
   parts: Partial<UploadQueueItem> = {},
@@ -75,7 +72,7 @@ const mountRow = async (
   })
   wrapper = mount(Queue, {
     attachTo: document.body,
-    // What the keyword and author inputs render asks the DAM for names to offer.
+    // The keyword and author inputs ask the DAM for names to offer when rendered.
     global: { plugins: [pinia], stubs: { AFormRemoteAutocompleteWithCached: true } },
   })
   await flushPromises()
@@ -95,7 +92,7 @@ const buttons = () => ({
   refresh: refreshButton().exists(),
   remove: removeButton().exists(),
 })
-// The fields of the form the user types into; a growing text field has a hidden twin that measures it.
+// A growing text field has a hidden twin that measures it.
 const fields = () =>
   wrapper!
     .findAll<HTMLInputElement | HTMLTextAreaElement>('input[type="text"], textarea')
@@ -103,7 +100,6 @@ const fields = () =>
 const singleUseSwitch = () => wrapper!.find<HTMLInputElement>('.v-switch input')
 
 describe('a row of the upload queue that has not failed', () => {
-  // The picture says where the file is; cancel is offered until all of the file is with the server.
   it.each<[string, string, UploadQueueItemStatusType, string]>([
     ['loads what it needs before it is sent', 'can be cancelled', UploadQueueItemStatus.Loading, 'upload.processing'],
     ['waits its turn', 'can be cancelled', UploadQueueItemStatus.Waiting, 'upload.waiting'],
@@ -138,8 +134,6 @@ describe('a row of the upload queue that has not failed', () => {
     expect(cancelled.item.assetId).toBe('asset-1')
   })
 
-  // Its file is done and its form is open: nothing is left to cancel, to ask the server or to take out, however
-  // long the row stays in the dialog.
   it('that is uploaded with its metadata: none of cancel, refresh and remove, also once it has waited', async () => {
     await mountRow(UploadQueueItemStatus.Uploaded, { canEditMetadata: true })
     expect(buttons()).toEqual({ cancel: false, refresh: false, remove: false })
@@ -157,7 +151,6 @@ describe('a row of the upload queue that has not failed', () => {
       UploadQueueItemStatus.Uploaded,
       {
         canEditMetadata: true,
-        // As a read of the processed asset leaves the row.
         assetStatus: DamAssetStatus.WithFile,
         imagePreview: {
           url: PIXEL,
@@ -172,14 +165,12 @@ describe('a row of the upload queue that has not failed', () => {
       rowProps
     )
 
-    // The picture loads its image once it is in view.
     await vi.waitFor(() => expect(picture().find('img').attributes('src')).toBe(PIXEL))
     expect(picture().text().includes(damText('upload.done'))).toBe(done)
   })
 })
 
 describe('the "edit asset" button of a row', () => {
-  // The detail it opens edits the metadata, which is not there to edit before the server has read the file.
   it.each([
     ['waits its turn', UploadQueueItemStatus.Waiting],
     ['is being sent', UploadQueueItemStatus.Uploading],
@@ -195,7 +186,6 @@ describe('the "edit asset" button of a row', () => {
   it('asks for the detail of the asset of the row once its metadata can be edited', async () => {
     const item = await mountRow(UploadQueueItemStatus.Processing)
 
-    // The metadata notification comes while the server still works on the file.
     item.canEditMetadata = true
     await flushPromises()
     expect(editButton().element.disabled).toBe(false)
@@ -216,7 +206,6 @@ describe('the lines between the picture and the form of a row', () => {
     expect(wrapper!.text()).toContain('(2.93 KB)')
   })
 
-  // A copy to the licence has no file of the user's, and no name of one.
   it('are not there for a row that has no name of a file', async () => {
     await mountRow(UploadQueueItemStatus.Processing, { type: UploadQueueItemType.Asset })
 
@@ -230,7 +219,6 @@ describe('the lines between the picture and the form of a row', () => {
     await mountRow(UploadQueueItemStatus.Uploaded, { canEditMetadata: true, isDuplicate })
 
     expect(wrapper!.text().includes(damText('asset.detail.info.status.duplicate'))).toBe(isDuplicate)
-    // A duplicate is the original from then on: its form is that of the original, open.
     expect(fields().length).toBeGreaterThan(0)
     expect(fields().some((field) => field.element.disabled)).toBe(false)
     expect(editButton().element.disabled).toBe(false)
@@ -264,7 +252,7 @@ describe('what a row with an error says over its picture', () => {
     notSaid.forEach((text) => expect(overlay().text()).not.toContain(text))
   })
 
-  // A warning the queue writes on a row it goes on asking about: the row is not failed, and keeps what it had.
+  // A warning the queue writes on a row it keeps polling. The row has not failed and keeps its state.
   it('is said of a row that has not failed as well, over the picture that still says what the file waits for', async () => {
     await mountRow(UploadQueueItemStatus.Processing, error({ message: damText('uploadErrors.processingTooLong') }))
 
@@ -288,7 +276,6 @@ describe('the form of a row', () => {
     expect(singleUseSwitch().element.disabled).toBe(false)
   })
 
-  // The row holds nothing itself: what the user types goes to the queue, which hands the row its values.
   it('hands the queue what the user types, with the custom data the row already has', async () => {
     await mountRow(UploadQueueItemStatus.Uploaded, {
       canEditMetadata: true,
@@ -327,7 +314,6 @@ describe('the single-use switch of a row', () => {
 
     expect(singleUseSwitch().exists()).toBe(false)
     expect(wrapper!.text()).not.toContain(damText('asset.model.mainFileSingleUse'))
-    // The rest of the form is as it was.
     expect(fields().length).toBe(2)
   })
 

@@ -21,10 +21,9 @@ import { useUploadQueueItemRefresh } from '@/domains/dam/uploadQueue/composables
 import { useUploadQueueDialog } from '@/domains/dam/uploadQueue/composables/useUploadQueueDialog'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
 
-// "Save and apply" of the queue dialog reads once more every uploaded row that has no form yet, as its refresh does,
-// and that read counts as any other: the one that is the third to find no asset fails the row ("Asset už
-// neexistuje."). The row is not handed over, and the user is told why, as by its refresh. The real dialog over the
-// real queue, under each of the two applications; the DAM is a client that records its requests.
+// "Save and apply" reads again every uploaded row that has no form yet. Such a read counts like any other.
+// The third read that finds no asset fails the row ("Asset už
+// neexistuje."). The row is not handed over and the user is told why.
 
 const QUEUE = 'dialog-save-asset-gone'
 const { Processing, Uploaded, Failed } = UploadQueueItemStatus
@@ -57,7 +56,6 @@ describe.each(consumerProfiles)('"save and apply" of the upload dialog under the
       initDamNotifications().openConnection()
       socket.accept()
     }
-    // As the widget leaves it when it opens the dialog of its queue.
     useUploadQueueDialog().uploadQueueDialog.value = QUEUE
   })
   afterEach(() => {
@@ -80,10 +78,6 @@ describe.each(consumerProfiles)('"save and apply" of the upload dialog under the
       [damText('upload.saveAndApply'), damText('upload.apply')].includes(button.textContent?.trim() ?? '')
     )!
 
-  /**
-   * Two files are uploaded: the first has its form, the second is announced as processed and its metadata is not.
-   * The asset of the second is then gone.
-   */
   const secondWithoutItsFormAndGone = async () => {
     await useUploadQueuesStore(pinia).addByFiles(QUEUE, extSystem, licence, [photo('a.jpg'), photo('b.jpg')], 'default')
     wrapper = mount(UploadQueueDialog, {
@@ -116,7 +110,6 @@ describe.each(consumerProfiles)('"save and apply" of the upload dialog under the
       data: { asset: b!.assetId, id: b!.fileId },
     } as unknown as DamNotification)
     await vi.waitFor(() => expect(statuses()).toEqual([Processing, Uploaded]))
-    // The poll asks about the first, and settles it with its form.
     await waits.elapse()
     await vi.waitFor(() => expect(statuses()).toEqual([Uploaded, Uploaded]))
     await flushPromises()
@@ -127,7 +120,6 @@ describe.each(consumerProfiles)('"save and apply" of the upload dialog under the
 
   it('fails a row its read is the third to find without its asset, hands over the others, and says the asset no longer exists', async () => {
     const { a, b } = await secondWithoutItsFormAndGone()
-    // Its refresh, pressed twice: two reads that do not find the asset.
     const { refreshItem } = useUploadQueueItemRefresh('default')
     await refreshItem(b.assetId!, b, QUEUE)
     await refreshItem(b.assetId!, b, QUEUE)
@@ -143,8 +135,6 @@ describe.each(consumerProfiles)('"save and apply" of the upload dialog under the
     expect(shownAlerts()).toEqual([['warning', alertText(ASSET_GONE)]])
   })
 
-  // Failed during the read by the word of the server, with no reason given: the asset is there, and nothing says
-  // it is gone.
   it('says nothing of a row its read finds failed by the server, which it leaves out', async () => {
     const { a, b } = await secondWithoutItsFormAndGone()
     dam.fileBecomes(b.assetId!, AssetFileProcessStatus.Failed, {}, { failReason: AssetFileFailReason.None })
@@ -158,8 +148,6 @@ describe.each(consumerProfiles)('"save and apply" of the upload dialog under the
     expect(shownAlerts()).toEqual([])
   })
 
-  // Its failed notification comes while the read is on its way, and the read then finds no asset: the row failed by
-  // the notification, not for its asset gone, and its misses were not counted.
   it('says nothing of a row a failed notification fails while its read is on its way', async () => {
     const { a, b } = await secondWithoutItsFormAndGone()
     const reads = dam.hold('GET', dam.routes.one)

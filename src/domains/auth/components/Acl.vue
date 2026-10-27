@@ -5,9 +5,9 @@ import { useAuthHelpers } from '@/domains/auth/composables/defineAuth'
 
 const props = withDefaults(
   defineProps<{
-    // An array is evaluated with AND. Values from different systems are handled correctly --
-    // every system involved must be loaded, or the slot stays hidden -- but keeping them from one
-    // system is still the clearer thing to write.
+    // An array is evaluated with AND. Values from different systems work:
+    // every involved system must be loaded, or the slot stays hidden.
+    // Prefer values from one system for clarity.
     permission: TAclValue | TAclValue[]
     subject?: object
   }>(),
@@ -19,11 +19,9 @@ const props = withDefaults(
 const { canSafeHelper } = useAuthHelpers<TAclValue>()
 
 /**
- * A computed, not a watcher that latches on the first `true`: it re-evaluates when its own system's
- * current user arrives, and a permission taken away is taken away without a reload.
- *
- * This is the non-throwing variant of `can()`, for templates that may render before their system is
- * there -- `canSafeHelper` answers false where `canHelper` would throw.
+ * A computed, not a watcher latching on the first `true`. It re-evaluates when its
+ * system's current user arrives, and a revoked permission applies without a reload.
+ * Uses `canSafeHelper` because the template may render before its system is loaded. `canHelper` would throw.
  */
 const allowed = computed<boolean>(() => canSafeHelper(props.permission, props.subject, 'Acl'))
 </script>

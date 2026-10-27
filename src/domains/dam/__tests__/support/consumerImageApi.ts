@@ -4,9 +4,9 @@ import { initCommonAdminImageOptions } from '@/domains/dam/imageWidget/composabl
 import type { ImageAware, ImageCreateUpdateAware } from '@/domains/dam/types/ImageAware'
 import type { IntegerId } from '@/shared/types/common'
 
-// Where an image widget saves its images, under each of the two applications. admin-cms leaves it to the library,
-// which asks the CMS backend through the image client of the options (`/adm/v1/image`); admin-ugc brings six
-// functions of its own. Either way a test reads the same thing back: what was asked to be saved, in order.
+// Where an image widget saves its images. admin-cms leaves it to the
+// library, which uses the image client of the options (`/adm/v1/image`).
+// admin-ugc brings six functions of its own. Either way the test reads back what was asked to be saved, in order.
 
 export type ImageApiCall =
   | ['createImage', ImageCreateUpdateAware]
@@ -16,20 +16,19 @@ export type ImageApiCall =
   | ['fetchImageListByIds', IntegerId[]]
   | ['deleteImage', IntegerId]
 
-// What the widget hands over is reactive: the record keeps it as it was at that moment. What a stand-in of admin-ugc
-// hands back is a copy too, as its backend answers: what the widget changes in it stays out of `images`.
+// The widget hands over reactive data, so the record keeps a copy of it as it was at that moment.
+// The admin-ugc stand-ins also return copies, as its backend
+// does. Changes the widget makes to them stay out of `images`.
 const plain = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
 
 const ONE = /^\/adm\/v1\/image\/(\d+)$/
 const ALL = '/adm/v1/image'
 
 /**
- * Replaces the image part of an installed profile with one that answers. Call after `installConsumerProfile`, with
- * what it returned.
+ * Replaces the image part of an installed profile. Call after `installConsumerProfile` with its return value.
  */
 export function installConsumerImageApi(profile: ConsumerProfile, options: ReturnType<typeof installConsumerProfile>) {
   const calls: ImageApiCall[] = []
-  /** The images the backend has, by id. */
   const images = new Map<IntegerId, ImageAware>()
   let lastId = 500
   const store = (image: ImageCreateUpdateAware, id = image.id ?? ++lastId): ImageAware => {
@@ -37,23 +36,17 @@ export function installConsumerImageApi(profile: ConsumerProfile, options: Retur
     images.set(id, stored)
     return stored
   }
-  // The saves of one image a test holds (`holdSaves`): each is recorded as it is asked for, and answered once the test
-  // lets it, as saved or as one that failed.
   type HeldSave = (failed: boolean) => void
   let held: HeldSave[] | undefined
   const whenLet = () => new Promise<boolean>((resolve) => held!.push(resolve))
   const answerSave = (saved: () => FakeDamAnswer) =>
     held ? whenLet().then((failed) => (failed ? { status: 500 } : saved())) : saved()
-  // The saves of several images at once a test holds (`holdBulkSaves`), as those of one image.
   let heldBulk: HeldSave[] | undefined
   const whenBulkLet = () => new Promise<boolean>((resolve) => heldBulk!.push(resolve))
 
-  // The reads of one image a test holds (`holdReads`): each is recorded as it is asked for, and answered once the test
-  // lets it.
   let heldReads: Array<() => void> | undefined
   const whenReadLet = () => new Promise<void>((resolve) => heldReads!.push(resolve))
 
-  // The CMS backend as the browser sees it: a client that records its requests.
   const server = createFakeDam({ asset: '/not-the-dam/asset', image: '/not-the-dam/image' })
   const body = (request: FakeDamRequest) => JSON.parse(request.data as string) as never
   server.reply((request) => {
@@ -103,7 +96,6 @@ export function installConsumerImageApi(profile: ConsumerProfile, options: Retur
       default: {
         ...own,
         imageClient: server.client,
-        // The six functions of admin-ugc are the application's own code: stand-ins that answer as its backend.
         ...(bringsItsOwn
           ? {
               imageApi: {
@@ -144,36 +136,33 @@ export function installConsumerImageApi(profile: ConsumerProfile, options: Retur
   })
 
   return {
-    /** What was asked of the image API, whoever answered it. */
     calls,
     images,
-    /** The requests to the CMS backend: none when the application brings its own functions. */
+    /**
+     * The requests to the CMS backend: none when the application brings its own functions.
+     */
     requests: server.requests,
     unanswered: server.unanswered,
-    /** Whether the application brings its own image API (admin-ugc) or leaves it to the library (admin-cms). */
     bringsItsOwn,
-    /** An image the backend already has. */
     has: (image: ImageAware) => store(image, image.id),
-    /** From now on a read of one image waits until the test lets it answer: `waiting[n]()`, in the order asked. */
+    /**
+     * From now on a read of one image waits until the test lets it answer: `waiting[n]()`, in the order asked.
+     */
     holdReads: () => {
       const waiting: Array<() => void> = (heldReads = [])
       return { waiting }
     },
-    /** From now on a create or an update of one image waits until the test lets it answer. */
     holdSaves: () => {
       const waiting: HeldSave[] = (held = [])
       return {
         waiting,
-        /** Lets every save held so far answer: as saved, or as one that failed. */
         release: (how: 'saved' | 'failed' = 'saved') => waiting.splice(0).forEach((answer) => answer(how === 'failed')),
       }
     },
-    /** From now on a save of several images at once (the gallery's) waits until the test lets it answer. */
     holdBulkSaves: () => {
       const waiting: HeldSave[] = (heldBulk = [])
       return {
         waiting,
-        /** Lets every save held so far answer: as saved, or as one that failed. */
         release: (how: 'saved' | 'failed' = 'saved') => waiting.splice(0).forEach((answer) => answer(how === 'failed')),
       }
     },

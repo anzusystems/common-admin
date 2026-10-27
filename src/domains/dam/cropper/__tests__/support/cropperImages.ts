@@ -1,8 +1,7 @@
-// Generated fixtures — deterministic PNGs used by the cropper suites.
-// Inlined as data URIs so a test never waits on the dev server or the network: the browser
-// decodes them synchronously enough that `img.decode()` settles on the first tick.
-// Each picture is four coloured quadrants (red/blue top, yellow/green bottom) with a white
-// centre cross and a dark 1px frame, so a crop rectangle is identifiable in a screenshot.
+// Generated deterministic PNG fixtures, inlined as data URIs so tests never wait on the dev server or the network.
+// Each picture has four coloured quadrants (red/blue top,
+// yellow/green bottom), a white centre cross and a dark 1px frame,
+// so a crop rectangle is identifiable in a screenshot.
 
 export interface CropperFixture {
   src: string
@@ -37,9 +36,9 @@ export const WIDE_IMAGE: CropperFixture = {
 export const ALL_FIXTURES = [LANDSCAPE_IMAGE, PORTRAIT_IMAGE, SMALL_IMAGE, WIDE_IMAGE]
 
 /**
- * The same landscape picture served as a file rather than inlined. Needed wherever the code under
- * test appends a query string to the source — `DamAssetImageRoiSelect` adds `?manipulated=…` for
- * cache-busting, which would corrupt the payload of a `data:` URI.
+ * The same landscape picture served as a file instead of inlined.
+ * Needed where the code under test appends a query string to the source:
+ * `DamAssetImageRoiSelect` adds `?manipulated=…` for cache-busting, which would corrupt a `data:` URI.
  */
 export const LANDSCAPE_IMAGE_URL: CropperFixture = {
   naturalWidth: 800,
@@ -47,7 +46,9 @@ export const LANDSCAPE_IMAGE_URL: CropperFixture = {
   src: '/playground/cropper-landscape.png',
 }
 
-/** The other pictures, also served as files, for the cases that need a query string on the source. */
+/**
+ * The other pictures, also served as files, for the cases that need a query string on the source.
+ */
 export const PORTRAIT_IMAGE_URL: CropperFixture = {
   naturalWidth: 600,
   naturalHeight: 800,

@@ -15,8 +15,8 @@ const SOURCES = [
   { title: 'Wide 1200x400', value: '/playground/cropper-wide.png', width: 1200, height: 400 },
 ]
 
-// Keyed by name rather than by number: `NaN` is the value that stands for a free-form crop, and a
-// select cannot hold it — nothing equals `NaN`, so picking it would never register as a change.
+// Keyed by name, not number. `NaN` means a free-form crop, and
+// a select cannot hold it because `NaN` never equals itself.
 const RATIOS: Record<string, number> = {
   '16:9': 16 / 9,
   '4:3': 4 / 3,
@@ -41,7 +41,9 @@ interface Pixels {
   height: number
 }
 
-/** The component speaks fractions of the picture; shown in source pixels. */
+/**
+ * The component speaks fractions of the picture; shown in source pixels.
+ */
 const data = shallowRef<Pixels | null>(null)
 const crop = ref<CropRect | null>(null)
 

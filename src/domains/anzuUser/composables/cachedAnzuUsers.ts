@@ -14,12 +14,9 @@ export interface CachedAnzuUsersParams {
 type Registry = ReturnType<typeof buildRegistry>
 
 /**
- * One cache per system, not one shared by all of them.
- *
- * Every backend keeps its own user table. Ids come from the central login and agree across them, but
- * a user who exists in one backend need not exist in another -- the system accounts of sms-gateway
- * live only there. An admin over several backends that resolved all of them against one table would
- * draw some users as unknown, which is what admin-inhouse did with the weather cache.
+ * One cache per system, not one shared cache.
+ * Each backend has its own user table. Ids agree across them, but a user may exist in only
+ * one backend (sms-gateway system accounts). A shared table would draw such users as unknown.
  */
 const registries = new Map<string, Registry>()
 
@@ -46,16 +43,16 @@ const buildRegistry = (params: Required<CachedAnzuUsersParams>) => {
     (ids: IntegerId[]) => useFetchAnzuUserListByIds().execute(ids),
     'id',
     1000,
-    // A user missing from the table stays missing: a system user of another backend would otherwise
-    // be asked for on every page that shows it.
+    // A user missing from the table stays missing. Otherwise another
+    // backend's system user would be requested on every page that shows it.
     { retryNotFound: false }
   )
 }
 
 /**
- * Users of one backend, read from its `/adm/v1/anzu-user` (every backend has it), for an admin that has
- * no user cache of its own for that backend. Returns the names the admins' own `useCachedUsers()` use,
- * so it plugs into `createUserAndTimeTrackingFields` as it is.
+ * Users of one backend, read from its `/adm/v1/anzu-user`, for an admin without its own user cache for that backend.
+ * Returns the same names as the admins' `useCachedUsers()`, so
+ * it plugs into `createUserAndTimeTrackingFields` directly.
  */
 export const useCachedAnzuUsers = (params: CachedAnzuUsersParams) => {
   const resolved = {
@@ -87,7 +84,9 @@ export const useCachedAnzuUsers = (params: CachedAnzuUsersParams) => {
   }
 }
 
-/** Test seam. Registries are module state and would otherwise leak between cases. */
+/**
+ * Test seam. Registries are module state and would otherwise leak between cases.
+ */
 export const resetCachedAnzuUserRegistries = () => {
   registries.clear()
 }

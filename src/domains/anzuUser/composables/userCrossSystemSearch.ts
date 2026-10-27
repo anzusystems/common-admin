@@ -30,24 +30,22 @@ export const isEmailTerm = (term: string): boolean => EMAIL_PATTERN.test(term.tr
 
 /**
  * The cross-system fan-out.
- *
- * No calls to the current-user endpoints go out at all: the buttons in a row are decided by the
- * probe's answer rather than by `<Acl>`, so there is nothing to load nine current users for. The
- * budget is nine calls when searching by id, eighteen when searching by e-mail.
+ * No current-user endpoints are called, because row buttons depend on the
+ * probe's answer, not `<Acl>`. Budget: nine calls by id, eighteen by e-mail.
  */
 export const useUserCrossSystemSearch = (params: CrossSystemSearchParams) => {
   const store = useUserCrossSystemStore()
   const { descriptors, refreshHook } = params
 
-  // One probe instance per system, built once: each keeps its own abort token, and rebuilding them
-  // per search would lose the ability to invalidate what is still in flight.
+  // One probe per system, built once. Each keeps its own abort token, and
+  // rebuilding per search would lose the ability to invalidate in-flight requests.
   const probes = new Map(
     descriptors.map((descriptor) => [descriptor.system, useUserSystemProbe({ descriptor, refreshHook })])
   )
 
   /**
-   * Every search gets a number. A late answer from the previous one is dropped rather than written
-   * over the results of the search the operator is looking at now.
+   * Each search gets a number. A late answer from an older search
+   * is dropped instead of overwriting the current results.
    */
   let generation = 0
 
@@ -65,7 +63,9 @@ export const useUserCrossSystemSearch = (params: CrossSystemSearchParams) => {
     store.setResult(descriptor.system, { axes: probe.axes.value, user: probe.user.value })
   }
 
-  /** Results are written as they arrive, never through `Promise.all`: one dead backend must not hold up the rest. */
+  /**
+   * Results are written as they arrive, never through `Promise.all`: one dead backend must not hold up the rest.
+   */
   const searchById = async (id: IntegerId) => {
     const token = ++generation
     store.resetResults()
@@ -76,13 +76,14 @@ export const useUserCrossSystemSearch = (params: CrossSystemSearchParams) => {
     store.phase = CrossSystemPhase.Done
   }
 
-  /** Exact match, `filter_eq[email]`, one row. `startsWith` would match a different person. */
+  /**
+   * Exact match, `filter_eq[email]`, one row. `startsWith` would match a different person.
+   */
   const lookupByEmail = async (descriptor: AnyUserSystemDescriptor, email: string): Promise<AnzuUser | null> => {
     if (!descriptor.isEnabled()) return null
     const { filterData, filterConfig } = useAnzuUserEmailLookupFilter()
     filterData.email = email
-    // One row: an exact match either exists or does not, and asking for a page of them would only
-    // cost the backend more.
+    // One row is enough: an exact match either exists or does not.
     const { pagination } = usePagination('id', SortOrder.Desc, { rowsPerPage: 1 })
 
     const { execute } = useApiFetchList<AnzuUser>({
@@ -96,17 +97,15 @@ export const useUserCrossSystemSearch = (params: CrossSystemSearchParams) => {
       const rows = await execute(pagination, filterData, filterConfig)
       return rows[0] ?? null
     } catch {
-      // The second round asks every system by id anyway, so a failure here is not a verdict about
-      // that system -- it only means this round could not contribute an id.
+      // The second round asks every system by id anyway.
+      // A failure here only means this round found no id. It is not a verdict about the system.
       return null
     }
   }
 
   /**
-   * Two rounds, and the first one must not lie while the second is still running.
-   *
-   * Between them a row is neither present nor absent: showing "no account here" in that window
-   * would invite the operator to press Create for an account that does exist under another address.
+   * Two rounds. Between them a row is neither present nor absent.
+   * Showing "no account here" in that window would invite Create for an account that exists under another address.
    */
   const searchByEmail = async (email: string) => {
     const token = ++generation
@@ -128,7 +127,7 @@ export const useUserCrossSystemSearch = (params: CrossSystemSearchParams) => {
 
     const distinctIds = new Set(ids.values())
     if (distinctIds.size > 1) {
-      // The same address under two identities. Bulk actions stop here rather than guessing.
+      // The same address under two identities. Bulk actions stop here instead of guessing.
       store.identityConflict = ids
       store.phase = CrossSystemPhase.Done
       for (const row of found) {
@@ -148,8 +147,7 @@ export const useUserCrossSystemSearch = (params: CrossSystemSearchParams) => {
 
     const id = distinctIds.values().next().value
     if (id === undefined) {
-      // Nobody anywhere under this address. Every row is still unknown rather than absent: an
-      // address search cannot prove absence, only an id search can.
+      // Rows stay unknown, not absent. An address search cannot prove absence, only an id search can.
       store.phase = CrossSystemPhase.Done
       return
     }
@@ -158,13 +156,9 @@ export const useUserCrossSystemSearch = (params: CrossSystemSearchParams) => {
   }
 
   /**
-   * Runs the fan-out, and answers whether it ran at all.
-   *
-   * A term that is neither an address nor an id has to clear the screen rather than be ignored.
-   * The rows left standing are live: their buttons and all three bulk actions write to
-   * `resolvedId`, which is still the previous person, while the box above them now holds a name
-   * that was never searched for. The plan expects this operator -- the one who knows only a
-   * surname -- so the answer has to be an empty result, not the last one.
+   * Runs the fan-out and returns whether it ran.
+   * A term that is neither an address nor an id clears the results.
+   * Stale rows stay live: their buttons and bulk actions write to `resolvedId`, the previous person.
    */
   const search = async (term: string): Promise<boolean> => {
     const trimmed = term.trim()
@@ -185,7 +179,9 @@ export const useUserCrossSystemSearch = (params: CrossSystemSearchParams) => {
     return true
   }
 
-  /** Re-reads one system after a write, so the row stops showing what it showed before it. */
+  /**
+   * Re-reads one system after a write so the row shows the new state.
+   */
   const refreshSystem = async (system: string) => {
     const descriptor = descriptors.find((item) => item.system === system)
     const id = store.resolvedId
@@ -196,11 +192,9 @@ export const useUserCrossSystemSearch = (params: CrossSystemSearchParams) => {
   const resultFor = (system: string): UserSystemResult | undefined => store.results.get(system)
 
   /**
-   * Whether creating an account may be offered when nobody was found.
-   *
-   * Only when every relevant probe answered an authoritative 404. A 401, a 403 or a timeout means
-   * the record could not be read, which is not the same as not existing -- and a duplicate identity
-   * cannot be taken back.
+   * Create is offered only when every relevant probe answered an authoritative 404.
+   * A 401, 403 or timeout means the record could not be read, not that it is missing.
+   * A duplicate identity cannot be undone.
    */
   const unresolvedSystems = computed(() =>
     descriptors

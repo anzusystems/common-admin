@@ -10,9 +10,8 @@ import { signOutOfDam } from '@/domains/dam/__tests__/support/uploadUi'
 import AuthorRemoteAutocompleteWithCached from '@/domains/dam/author/components/AuthorRemoteAutocompleteWithCached.vue'
 import KeywordRemoteAutocompleteWithCached from '@/domains/dam/keyword/components/KeywordRemoteAutocompleteWithCached.vue'
 
-// The inputs of keywords and authors draw their chips as cached chips of their own. Where an admin makes the chips of
-// its autocompletes closable (Vuetify's defaults), the close of such a chip takes its name out of the value, as the
-// chip Vuetify draws does: the cached chip is handed the props of the chip slot. It only hid itself, the name stayed.
+// Where an admin makes autocomplete chips closable, closing a cached chip must remove its name from the value.
+// The cached chip only hid itself and the name stayed. It is now handed the props of the chip slot.
 
 const { extSystem } = cmsConfiguration
 
@@ -25,7 +24,6 @@ beforeEach(() => {
   pinia = createPinia()
   setActivePinia(pinia)
   dam = createFakeDam(cmsConfiguration.endPoints)
-  // The DAM knows no names: the chips show the ids.
   dam.reply((request) =>
     /\/(author|keyword)(\/|$)/.test(request.url.split('?')[0]!)
       ? { status: 200, data: { data: [], totalCount: 0 } }

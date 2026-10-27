@@ -80,7 +80,7 @@ const {
   fetchAssetListDebounced,
   reset,
 } = useAssetSelectActions(damConfigName)
-// The ordering in the list bar reads this; without it the dialog would pick up the host page's pagination.
+// The list bar ordering reads this. Without it the dialog would use the host page's pagination.
 provide(DatatablePaginationKey, pagination)
 
 const { loadDamConfigAssetCustomFormElements, getDamConfigAssetCustomFormElements } = useDamConfigState(
@@ -109,7 +109,7 @@ const onOpen = () => {
   }
   if (selectConfigLocal.length === 0) {
     showErrorT('common.assetSelect.error.unallowedLicence')
-    // Not opened over no licence: it would list nothing, and the next press would not say why.
+    // Not opened without a licence: it would list nothing, and the next press would not say why.
     modelValue.value = false
     return
   }
@@ -142,9 +142,9 @@ const onClose = () => {
   reset()
 }
 
-// The switch as the user left it, for the picked assets of another licence than the one of the upload: the picked ones
-// outlive a change of the licence browsed, so the licence of each decides, not the one browsed now. One already in
-// the licence of the upload is not copied; the widget takes it as it is.
+// The copy switch as the user left it, for picked assets of another licence than the upload licence.
+// Picks survive a change of the browsed licence, so each asset's own licence decides.
+// Assets already in the upload licence are not copied. The widget takes them as they are.
 const getCopyToLicenceId = () => {
   if (
     copyToLicenceEnabled !== false &&
@@ -205,8 +205,8 @@ const loadingSidebarRight = computed(() => {
 
 const { showErrorsDefault } = useAlerts()
 const customFormConfigLoading = ref(true)
-// The configuration of the custom fields could not be read: the side panel says so, in place of the form of the
-// asset, which cannot be drawn without it. It used to load without an end.
+// The custom fields config could not be read. The side panel shows
+// a notice instead of the asset form, which needs that config.
 const customFormConfigFailed = ref(false)
 
 const sortByChange = (option: DatatableOrderingOption) => {
@@ -223,8 +223,9 @@ watch(
     if (isUndefined(newValue)) return
     customFormConfigLoading.value = true
     customFormConfigFailed.value = false
-    // The custom fields of the type it lists: every type of the ext system where it has none yet, else that type alone
-    // where its read failed before. The types loaded are not read again.
+    // Custom fields of the listed type: all types of the ext system if
+    // none are loaded, else only this type if its read failed before.
+    // Loaded types are not read again.
     const type = props.assetType
     if (isUndefined(getDamConfigAssetCustomFormElements(newValue, type))) {
       try {
@@ -235,7 +236,7 @@ watch(
       } catch (e) {
         showErrorsDefault(e)
       }
-      // The answer for an ext system the list has left since says nothing of the one it lists now.
+      // Ignore an answer for an ext system the list has since left.
       if (extId.value !== newValue) return
       customFormConfigFailed.value = isUndefined(getDamConfigAssetCustomFormElements(newValue, type))
     }

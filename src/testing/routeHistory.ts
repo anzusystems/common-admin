@@ -4,24 +4,17 @@ import { useRouteHistory } from '@/domains/system/composables/routeHistory'
 import { parseTypedRouterDeclaration } from '@/testing/typedRouter'
 
 export interface DescribeRouteHistoryOptions {
-  /** `src/typed-router.d.ts`, imported with `?raw`. */
   declaration: string
-  /** The admin's route history blacklist. */
   routeHistoryBlacklist: readonly string[]
-  /** What the admin runs at start-up to set up the history. */
   initRouteHistory: () => void
 }
 
 /**
- * What the close buttons stand on.
- *
- * `describeCloseButtons` checks that every button names the right routes; this checks that naming
- * them does anything. The history is module state inside the library, filled by the navigation guard
- * and read back by `navigateBack`, so the admin's set-up and the library are only correct together.
- *
- * The route names come out of the declaration rather than being made up: made-up ones would be
- * rejected by `anzu/valid-route-name`, and real ones keep the test honest about the strings the app
- * actually carries.
+ * `describeCloseButtons` checks that every button names the right routes. This checks that naming them does anything.
+ * The history is module state in the library, filled by the navigation guard and read
+ * by `navigateBack`, so the admin's set-up and the library are only correct together.
+ * Route names come from the declaration. Made-up names would be rejected
+ * by `anzu/valid-route-name`, and real ones keep the test honest.
  */
 export function describeRouteHistory({
   declaration,
@@ -92,7 +85,6 @@ export function describeRouteHistory({
     })
 
     it('falls back when history holds nothing but the view being closed', () => {
-      // A tab opened straight on a record: nothing was visited before it.
       visit(record!)
 
       const router = routerOn(record!)

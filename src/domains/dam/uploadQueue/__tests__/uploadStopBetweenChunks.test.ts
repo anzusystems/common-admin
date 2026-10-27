@@ -8,7 +8,6 @@ import { useDamConfigStore } from '@/domains/dam/config/store/damConfigStore'
 
 vi.mock('rusha', () => ({ createHash: () => ({ update: () => undefined, digest: () => 'sha' }) }))
 
-// What uploadQueuesStore.stopItemUpload does to an item.
 const stop = (item: UploadQueueItem) => {
   item.status = UploadQueueItemStatus.Stop
   if (item.latestChunkAbortController) uploadStop(item.latestChunkAbortController)
@@ -50,7 +49,6 @@ const outcome = (p: Promise<unknown>, ms: number) =>
     new Promise((r) => setTimeout(() => r('pending'), ms)),
   ])
 
-// The bounds of the chunks are loaded, as an upload needs them: the sizing itself is a stand-in here.
 beforeEach(() => {
   setActivePinia(createPinia())
   useDamConfigStore().damPrvConfig.settings.imageChunkConfig = { minSize: 1024, maxSize: 1024 }
@@ -59,7 +57,6 @@ beforeEach(() => {
 describe('Stop on a multi-chunk upload', () => {
   it('sends no further chunk and does not finish when stopped between chunks', async () => {
     const item = threeChunkItem()
-    // The first chunk's response is in; Stop lands before the second chunk starts.
     onChunk = async (i) => {
       if (damUploadChunk.mock.calls.length === 1) stop(i)
       return {}

@@ -17,7 +17,6 @@ beforeAll(() => {
 
 type Rules = Record<string, unknown>
 
-/** Mounts a component that runs vuelidate over `state` with `rules`, and hands back `v$`. */
 const setup = <S extends Record<string, unknown>>(state: Ref<S>, rules: Rules | (() => Rules)) => {
   let v$!: Ref<Validation>
   mount(

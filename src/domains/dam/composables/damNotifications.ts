@@ -19,7 +19,9 @@ let singleton: DamNotificationsHandle | undefined = undefined
 let singletonScope: EffectScope | undefined = undefined
 let singletonKey: string | undefined = undefined
 
-/** One socket, of the configurations `configNames`: what comes through it is told to come from them. */
+/**
+ * One socket for the configurations `configNames`. Its events are tagged with those names.
+ */
 function createDamSocket({ options: notification, configNames }: DamNotificationSocketOptions) {
   const enabled = notification.enabled
 
@@ -27,7 +29,9 @@ function createDamSocket({ options: notification, configNames }: DamNotification
 
   let warningTimer: ReturnType<typeof setTimeout> | undefined = undefined
 
-  /** The socket has given up: the user is told, once it has failed. One warning waits at a time, which a close takes. */
+  /**
+   * Warns the user once the socket gives up. Only one warning is shown at a time; closing it clears it.
+   */
   const warnFailed = () => {
     if (!enabled) return
     const { showWarning } = useAlerts()
@@ -40,7 +44,7 @@ function createDamSocket({ options: notification, configNames }: DamNotification
   const { open, close, status } = useWebSocket(notification.webSocketUrl, {
     immediate: false,
     autoClose: false,
-    // Plain string url — VueUse's `watch(urlRef, open)` would never fire.
+    // Plain string url. VueUse's `watch(urlRef, open)` would never fire.
     autoConnect: false,
     autoReconnect: {
       retries: 5,
@@ -55,7 +59,7 @@ function createDamSocket({ options: notification, configNames }: DamNotification
     },
   })
 
-  // Only an open socket counts: one that still connects, or has given up, brings no notification.
+  // Only an open socket counts. A connecting or failed one brings no notifications.
   watch(status, (current) => setDamNotificationsPushAlive(enabled && current === 'OPEN', configNames), {
     immediate: true,
     flush: 'sync',
@@ -76,8 +80,8 @@ function createDamSocket({ options: notification, configNames }: DamNotification
     try {
       open()
     } catch (error) {
-      // An address the browser refuses. `default`'s throws, as the one socket of the page did; that of another
-      // configuration fails as a socket that gave up does, and the page goes on.
+      // The browser refused the address. For `default` this throws. For other
+      // configurations it fails like a socket that gave up, and the page continues.
       if (configNames.includes('default')) throw error
       console.error('damNotifications: the socket could not be opened', error)
       warnFailed()
@@ -93,8 +97,8 @@ function createDamSocket({ options: notification, configNames }: DamNotification
 }
 
 /**
- * The sockets of the page, `default`'s first. The handle acts on them all; its `status` is that of `default`'s
- * socket, as it was of the one socket of the page.
+ * All sockets of the page, `default`'s first. The handle acts
+ * on all of them. Its `status` is that of `default`'s socket.
  */
 function createDamNotifications(sockets: DamNotificationSocketOptions[], onDispose: () => void = () => {}) {
   const [ofDefault, ...others] = sockets.map(createDamSocket)
@@ -107,7 +111,7 @@ function createDamNotifications(sockets: DamNotificationSocketOptions[], onDispo
   const openConnection = () => {
     if (disposed) return
     damNotificationsInitialized.value = true
-    // The others are opened also when that of `default` throws, which is thrown once they are.
+    // The others open even when `default`'s throws. That error is rethrown after they open.
     let failure: { error: unknown } | undefined
     all.forEach((socket) => {
       try {
@@ -135,10 +139,10 @@ function createDamNotifications(sockets: DamNotificationSocketOptions[], onDispo
 }
 
 /**
- * The DAM notification sockets of the page: `default`'s, from its `notification` or the root one, and one for each
- * other service a configuration names (configurations that name one service share its socket). Memoized by the
- * services and the configurations of each, so a reconfigured plugin gets fresh sockets while repeated calls with the
- * same config reuse the existing ones. The handle opens, closes and disposes of them all.
+ * DAM notification sockets of the page: `default`'s, plus one per other service
+ * a configuration names (shared by configurations naming the same service).
+ * Memoized by services and their configurations. A reconfigured plugin gets fresh sockets, repeated calls reuse them.
+ * The handle opens, closes and disposes of them all.
  */
 export function initDamNotifications() {
   const sockets = damNotificationSockets()
@@ -150,7 +154,7 @@ export function initDamNotifications() {
   if (singleton) destroyDamNotifications()
 
   singletonScope = effectScope(true)
-  // Disposed directly, the handle is forgotten too: kept, the next call handed back a socket that never opened again.
+  // Disposing directly also forgets the handle. Otherwise the next call returned a socket that never reopened.
   const handle: DamNotificationsHandle = singletonScope.run(() =>
     createDamNotifications(sockets, () => {
       if (singleton === handle) forgetSingleton()
@@ -171,27 +175,32 @@ const forgetSingleton = () => {
 }
 
 /**
- * Tears the sockets down and invalidates the previous handle. Owned by the app bootstrap —
- * tying it to a component unmount would kill the shared connection for everyone else.
+ * Tears the sockets down and invalidates the previous handle. Owned by app bootstrap.
+ * Tying it to a component unmount would kill the shared connection for everyone else.
  */
 export function destroyDamNotifications() {
   singleton?.dispose()
   forgetSingleton()
 }
 
-/** Which sockets a listener of DAM notifications hears. */
+/**
+ * Which sockets a DAM notification listener hears.
+ */
 export interface DamNotificationListenerOptions {
-  /** The socket of this DAM configuration; `default` where left out. */
+  /**
+   * Socket of this DAM configuration. Defaults to `default`.
+   */
   configName?: string
-  /** Every socket of the page; `configName` is not read then. */
+  /**
+   * Every socket of the page. `configName` is ignored then.
+   */
   all?: boolean
 }
 
 type DamNotificationCallback = (event: DamNotification, origin: string[]) => void
 type DamNotificationBusListener = (event: DamNotification, from?: string[]) => void
 
-// One listener of the bus for a callback and the sockets it hears: added twice, it is one listener, heard once, as the
-// callback itself was.
+// One bus listener per callback and socket set. Adding it twice yields one listener, heard once.
 const busListeners = new WeakMap<DamNotificationCallback, Map<string, DamNotificationBusListener>>()
 const busListenerOf = (callback: DamNotificationCallback, options: DamNotificationListenerOptions) => {
   const key = options.all ? 'all' : `of ${options.configName ?? 'default'}`
@@ -203,10 +212,10 @@ const busListenerOf = (callback: DamNotificationCallback, options: DamNotificati
   let listener = ofCallback.get(key)
   if (!listener) {
     listener = (event, from) => {
-      // An event put on the bus without the socket it came through is taken for one of `default`'s.
+      // An event put on the bus without its socket is treated as `default`'s.
       const origin = from ?? ['default']
       if (!options.all && !origin.includes(options.configName ?? 'default')) return
-      // A copy for each: the names are those of the socket for every event to come.
+      // A copy per callback. The array is the socket's names, shared by every future event.
       callback(event, [...origin])
     }
     ofCallback.set(key, listener)
@@ -218,9 +227,10 @@ export function useDamNotifications() {
   const eventBus = useDamNotificationsEventBus()
 
   /**
-   * Hears the socket of `default`, or the one `options` names. The callback gets, beside the event, the names of the
-   * configurations of the socket it came through (a copy of its own). One callback added twice for the same sockets is
-   * heard once. Returns the `off` handle; outside a component setup the caller must keep and call it.
+   * Hears `default`'s socket, or the one `options` names. The
+   * callback also gets a copy of the socket's configuration names.
+   * One callback added twice for the same sockets is heard once.
+   * Returns the `off` handle. Outside a component setup the caller must keep and call it.
    */
   const addDamNotificationListener = (
     callback: DamNotificationCallback,

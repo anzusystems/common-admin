@@ -6,37 +6,38 @@ import type { BaseUser } from '@/shared/types/AnzuUser'
 export interface UserMetadataValidationOptions {
   /**
    * The system's profile (`requiredMetadata` on its descriptor). `false` requires only the
-   * e-mail; `true` also requires first name, last name, full name, avatar text and avatar colour.
-   * It applies the same way to creating and to editing -- within a system it is one rule.
+   * e-mail. `true` also requires first, last and full name, avatar text and avatar colour.
+   * It applies equally to create and edit.
    */
   required: MaybeRefOrGetter<boolean>
-  /** Whether the id is a field at all. When it is, and this is a create, it is required. */
+  /**
+   * Whether the id is a field at all. When it is, and this is a create, it is required.
+   */
   idInput: MaybeRefOrGetter<boolean>
   isEdit: MaybeRefOrGetter<boolean>
-  /** Scope key, so an owning form can validate its own fields alongside the app's system fields. */
+  /**
+   * Scope key, so an owning form can validate its own fields alongside the app's system fields.
+   */
   scope?: string | symbol | false
 }
 
 /**
  * The `BaseUserDto` rules, per profile.
- *
- * The lengths come from the backend constraints (`email` 256, first/last 120, full 242, avatar
- * text 2-3). The backend requires only the e-mail; the front end is deliberately stricter, and
- * `requiredMetadata` is what says by how much.
+ * Lengths follow backend constraints (`email` 256, first/last 120, full 242, avatar text 2-3). The
+ * backend requires only the e-mail. The front end is deliberately stricter, as set by `requiredMetadata`.
  */
 export function useUserMetadataValidation(user: Ref<BaseUser>, options: UserMetadataValidationOptions) {
   const { email, hexColor, maxLength, minLength, required } = useValidate()
 
   const rules = computed(() => {
-    // Read inside the computed, not once at setup: the "not found anywhere" dialog switches the
-    // target system under a mounted form, and a profile captured at mount would go on applying the
-    // first system's rules to all the others.
+    // Read inside the computed, not at setup. The "not found anywhere" dialog switches the target
+    // system under a mounted form, and a profile captured at mount would keep the first system's rules.
     const requiredWhenProfileSays = toValue(options.required) ? { required } : {}
 
     return {
       user: {
-        // Only on a create, and only where the id is typed at all: on an edit it is a primary key
-        // being displayed, and in cms the backend resolves it from SSO.
+        // Required only on create where the id is typed. On edit it is a
+        // displayed primary key, and in cms the backend resolves it from SSO.
         id: toValue(options.idInput) && !toValue(options.isEdit) ? { required } : {},
         email: {
           required,
@@ -49,8 +50,8 @@ export function useUserMetadataValidation(user: Ref<BaseUser>, options: UserMeta
           fullName: { ...requiredWhenProfileSays, minLength: minLength(3), maxLength: maxLength(242) },
         },
         avatar: {
-          // Shape, not length: `minLength(7)` lets `#GGGGGG` through and the server rejects it.
-          // The rule passes an empty value, so a profile that does not require a colour still saves.
+          // Check the shape, not the length: `minLength(7)` accepts `#GGGGGG`, which the server rejects.
+          // `hexColor` passes an empty value, so a profile without a required colour still saves.
           color: { ...requiredWhenProfileSays, hexColor },
           text: { ...requiredWhenProfileSays, minLength: minLength(2), maxLength: maxLength(3) },
         },

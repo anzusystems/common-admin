@@ -4,8 +4,6 @@ import { useCollabState } from '@/lib'
 // eslint-disable-next-line no-restricted-imports -- as above
 import type * as lib from '@/lib'
 
-// The admins read four things from the collaboration state; the socket and the socket.io protocol
-// behind it are the library's business.
 describe('useCollabState', () => {
   it('gives an admin the reconnect flag, the room info, the field buffer and gatherBufferData', () => {
     expect(Object.keys(useCollabState()).sort()).toEqual([

@@ -55,12 +55,10 @@ export function useFormatAndSizeCheck(
     }
     for (const accept of accepts) {
       if (accept.startsWith('.')) {
-        // .format
         if (file.name.toLowerCase().endsWith(accept)) {
           return true
         }
       } else {
-        // type
         const splitType = accept.split('/')
         if (splitType[1] === '*' && damFileTypeFix(file).startsWith(splitType[0] + '/')) {
           return true
@@ -76,7 +74,7 @@ export function useFormatAndSizeCheck(
     if (keys.length === 0 || isUndefined(sizes)) {
       return true
     }
-    // A file exactly at the limit passes, as in the dam's own check: the limit is the largest size allowed.
+    // A file exactly at the limit passes, as in the DAM's own check.
     // `keys` are `Object.keys` of these same sizes.
     for (const key of keys) {
       const limit = sizes[key]!
@@ -86,7 +84,6 @@ export function useFormatAndSizeCheck(
       } else if (pattern.startsWith('.')) {
         if (file.name.toLowerCase().endsWith(pattern) && limit >= file.size) return true
       } else {
-        // type
         const splitType = pattern.split('/')
         if (splitType[1] === '*' && damFileTypeFix(file).startsWith(splitType[0] + '/') && limit >= file.size) {
           return true

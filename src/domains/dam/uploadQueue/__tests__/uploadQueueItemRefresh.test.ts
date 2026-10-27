@@ -25,7 +25,7 @@ vi.mock('@/domains/dam/api/damImageApi', () => ({
   rotateImage: vi.fn(),
   copyToLicence: vi.fn(),
 }))
-// Every export spelled out: `importOriginal` here closes an import cycle and stalls the browser runner.
+// Every export is spelled out: `importOriginal` here closes an import cycle and stalls the browser runner.
 const fetchAsset = vi.fn()
 const fetchAssetByFileId = vi.fn()
 vi.mock('@/domains/dam/api/damAssetApi', () => ({
@@ -80,7 +80,6 @@ const asset = (status: string) => ({
 const STILL_PROCESSING = 'common.damImage.queueItem.stillUploadingOrProcessing'
 const REFRESH_FAILED = 'common.damImage.queueItem.refreshFailed'
 const ASSET_GONE = 'common.damImage.queueItem.assetGone'
-/** The warnings the user was shown, by their keys. */
 const warned = () => showWarningT.mock.calls.map(([key]) => key as string)
 
 let wrapper: VueWrapper | undefined
@@ -90,13 +89,12 @@ beforeEach(() => {
   fetchAssetByFileId.mockReset()
 })
 afterEach(() => {
-  // Also the queue of the last case, which is in the pinia the component mounts with.
+  // Also stops the queue of the last case, which is in the pinia the component mounts with.
   useUploadQueuesStore().stopUpload('q')
   wrapper?.unmount()
   wrapper = undefined
 })
 
-/** A copy to the licence: an item that is processing, with its asset and nothing else. */
 const processingItem = async () => {
   const store = useUploadQueuesStore()
   await store.addByCopyToLicence('q', 1, 1, ['asset-1'], 'default')
@@ -104,7 +102,6 @@ const processingItem = async () => {
 }
 
 describe('the refresh of an item of the upload queue', () => {
-  // Its processed notification came and its metadata never did: the form is disabled, and the save skips the item.
   it('gives an uploaded item still without its metadata the metadata and its form', async () => {
     fetchAsset.mockResolvedValue(asset(AssetFileProcessStatus.Processed))
     const item = await processingItem()
@@ -126,7 +123,6 @@ describe('the refresh of an item of the upload queue', () => {
     [AssetFileProcessStatus.Processed, UploadQueueItemStatus.Uploaded, false, []],
     [AssetFileProcessStatus.Duplicate, UploadQueueItemStatus.Uploaded, true, []],
     [AssetFileProcessStatus.Failed, UploadQueueItemStatus.Failed, false, []],
-    // The file is not done: the item waits on, and the user is told that, not that the read failed.
     [AssetFileProcessStatus.Stored, UploadQueueItemStatus.Processing, false, [STILL_PROCESSING]],
   ])('settles a processing item whose file is %s as %s', async (fileStatus, status, isDuplicate, warnings) => {
     fetchAsset.mockResolvedValue(asset(fileStatus))
@@ -148,7 +144,6 @@ describe('the refresh of an item of the upload queue', () => {
 
     await expect(refreshItem('asset-1')).resolves.toBeUndefined()
     expect([refreshing.value, item.status]).toEqual([false, UploadQueueItemStatus.Processing])
-    // Nothing about the item changed: the user is told why, not left to press again and wonder.
     expect(warned()).toEqual([REFRESH_FAILED])
 
     await refreshItem('asset-1')
@@ -166,7 +161,7 @@ describe('the refresh of an item of the upload queue', () => {
     expect(warned()).toEqual([ASSET_GONE])
   })
 
-  // The third read that finds no asset gives the item up: it fails, and has no refresh left to try again with.
+  // The third read that finds no asset gives the item up. It fails and has no refresh left.
   it('says nothing on the press that finds the asset gone for the third time', async () => {
     fetchAsset.mockRejectedValue(new AnzuApiResponseCodeError(404))
     const item = await processingItem()
@@ -189,10 +184,9 @@ describe('the upload queue', () => {
     fetchAsset.mockResolvedValue(asset(AssetFileProcessStatus.Processed))
     wrapper = mount(UploadQueueEditable, {
       props: { queueKey: 'q', extSystem: 1, massOperations: false },
-      // The rows and the mass operations read the configuration of the ext system, which is not what is asked here.
       global: { stubs: { UploadQueueItemEditable: true, AssetQueueSelectedSidebar: true } },
     })
-    // In the pinia the component uses: mounting made it the active one.
+    // Use the pinia the component uses: mounting made it the active one.
     const item = await processingItem()
     await flushPromises()
 
@@ -202,9 +196,9 @@ describe('the upload queue', () => {
     expect(fetchAsset.mock.calls[0]![2]).toBe('asset-1')
   })
 
-  // The queue says which row was pressed: what the press says goes by that row. The server has failed its file, so
-  // no refresh may change it, and a read that fails is not followed by "try again". The row before it, of another
-  // asset, waits on: handed over in its place, it would be told to.
+  // The queue says which row was pressed, and the message depends on that row.
+  // The server has failed its file, so no refresh may change it, and a failed read is not followed by "try again".
+  // The row before it, of another asset, waits on. Handed over in its place, it would be told to try again.
   it('hands the refresh the row that asked: one whose file the server failed is not told to try again', async () => {
     fetchAsset.mockReset()
     fetchAsset.mockRejectedValue(new Error('502 Bad Gateway'))
@@ -232,9 +226,10 @@ describe('the upload queue', () => {
     expect(warned()).toEqual([])
   })
 
-  // And in which queue: an uploaded row still without its metadata keeps its status when it is taken out, and only
-  // its queue tells that nobody is left to try again. Left in its queue, the same press with the same failed read
-  // is told to: a queue named wrongly would take every row for gone, and the queue would never say it.
+  // The queue also says in which queue the row is. An uploaded row still without its metadata
+  // keeps its status when taken out, so only its queue tells that nobody is left to try again.
+  // Left in its queue, the same press with the same failed read is
+  // told to. A wrongly named queue would take every row for gone.
   it.each([
     ['still in it is told the state could not be loaded', false, [REFRESH_FAILED]],
     ['taken out of it meanwhile is not told to try again', true, []],
@@ -247,7 +242,6 @@ describe('the upload queue', () => {
     const item = await processingItem()
     bus.listener!({ name: DamNotificationName.AssetFileProcessed, data: { asset: 'asset-1' } })
     await vi.waitFor(() => expect(item.status).toBe(UploadQueueItemStatus.Uploaded))
-    // The read the notification asks for is over before the refresh is pressed.
     await vi.waitFor(() => expect(fetchAsset).toHaveBeenCalled())
     await flushPromises()
     expect(item.canEditMetadata).toBe(false)
@@ -267,9 +261,9 @@ describe('the upload queue', () => {
   })
 })
 
-// "Still uploading or processing" is for a row the read found as it was. One that ended while the refresh was
-// reading, or was taken out of its queue, is not told it, as it is not told to try again. Called without the row, the
-// refresh cannot tell, and says it as before.
+// "Still uploading or processing" is shown only for a row the read found as it was.
+// A row that ended during the refresh read, or was taken out of its queue, is not told this.
+// Called without the row, the refresh cannot tell and shows it as before.
 describe('the warning that the file of a pressed row is not done yet', () => {
   const mountList = () => {
     wrapper = mount(UploadQueueEditable, {
@@ -277,7 +271,6 @@ describe('the warning that the file of a pressed row is not done yet', () => {
       global: { stubs: { UploadQueueItemEditable: true, AssetQueueSelectedSidebar: true } },
     })
   }
-  /** Holds the next read of the asset until the case answers it. */
   const holdRead = () => {
     const readsBefore = fetchAsset.mock.calls.length
     const held = {
@@ -325,7 +318,7 @@ describe('the warning that the file of a pressed row is not done yet', () => {
       UploadQueueItemStatus.Failed,
       [],
     ],
-    // Not told its queue, the refresh does not know the row is gone: that it stopped is enough.
+    // Without the queue, the refresh cannot know the row is gone. A stopped row is enough.
     [
       'the refresh given the row and not its queue: not to a row stopped during the read',
       withTheRowOnly,
@@ -365,7 +358,7 @@ describe('the warning that the file of a pressed row is not done yet', () => {
     }
   )
 
-  // An uploaded row still without its metadata keeps its status when it is taken out: only its queue tells.
+  // An uploaded row without metadata keeps its status when taken out. Only its queue can tell.
   it.each([
     ['still in the list is told the file is not done', false, [STILL_PROCESSING]],
     ['taken out of the list during the read is not told it', true, []],
@@ -375,7 +368,6 @@ describe('the warning that the file of a pressed row is not done yet', () => {
     const item = await processingItem()
     bus.listener!({ name: DamNotificationName.AssetFileProcessed, data: { asset: 'asset-1' } })
     await vi.waitFor(() => expect(item.status).toBe(UploadQueueItemStatus.Uploaded))
-    // The read the notification asks for is over before the refresh is pressed.
     await vi.waitFor(() => expect(fetchAsset).toHaveBeenCalled())
     await flushPromises()
     const read = holdRead()

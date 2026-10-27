@@ -9,7 +9,6 @@ vi.mock('@/domains/dam/uploadQueue/store/uploadQueuesStore', () => ({
     getQueueItems: () => queue.items,
     getQueueTotalCount: () => queue.items.length,
     getQueueProcessedCount: () => queue.items.length,
-    // "Save and apply" asks about an uploaded row without its form once more: here the read brings none.
     refreshAsset: async () => 'error',
     isGivenUpMissing: () => false,
   }),
@@ -18,7 +17,6 @@ vi.mock('@/domains/dam/composables/commonAdminCoreDamOptions', async (importOrig
   ...(await importOriginal<object>()),
   useCommonAdminCoreDamOptions: () => ({ damClient: () => ({}), endPointAsset: '/asset' }),
 }))
-// The save itself: nothing comes back for an item that was not sent.
 vi.mock('@/domains/dam/api/damAssetApi', async (importOriginal) => ({
   ...(await importOriginal<object>()),
   bulkUpdateAssetsMetadata: async () => [],
@@ -30,13 +28,11 @@ afterEach(() => {
   wrapper = undefined
 })
 
-/** Mounts the dialog over the given queue and answers its "save and apply" and "save" buttons. */
 const mountDialog = async (items: unknown[]) => {
   queue.items = items
   wrapper = mount(UploadQueueDialog, {
     attachTo: document.body,
     props: { queueKey: 'queue', licenceId: 1, fileInputKey: 0, extSystem: 1, accept: undefined, maxSizes: undefined },
-    // The parts of the dialog that have no say in the save.
     global: {
       stubs: { UploadQueueEditable: true, UploadQueueButtonStop: true, AFileInput: true, AFileDropzone: true },
     },
@@ -51,8 +47,7 @@ const mountDialog = async (items: unknown[]) => {
   return { wrapper, saveAndApply: saveAndApply!, save: save! }
 }
 
-// What the bulk save sends is an item with an asset whose metadata can be edited. Each of these has its asset
-// and file ids: an upload gets them when it starts.
+// Each item has its asset and file ids, because an upload gets them when it starts.
 const item = (name: string, status: string, canEditMetadata: boolean) => ({
   assetId: `asset-${name}`,
   fileId: `file-${name}`,
@@ -64,7 +59,7 @@ const waitingForMetadata = item('waiting', UploadQueueItemStatus.Uploaded, false
 const editable = item('editable', UploadQueueItemStatus.Uploaded, true)
 
 describe('the upload dialog', () => {
-  // "Save" sent nothing and said "saved".
+  // Regression: "Save" sent nothing and said "saved".
   it('cannot be saved while no item of the queue would be sent', async () => {
     const { save, saveAndApply } = await mountDialog([failed, waitingForMetadata])
     expect([saveAndApply.disabled, save.disabled]).toEqual([false, true])

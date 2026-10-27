@@ -11,7 +11,6 @@ import { CustomDataFormElementType } from '@/domains/customDataForm/types/Custom
 const wrappers: VueWrapper[] = []
 afterEach(() => {
   wrappers.splice(0).forEach((wrapper) => wrapper.unmount())
-  // "Show all" is one choice for every form.
   useCustomDataForm().showAll.value = false
 })
 
@@ -51,7 +50,6 @@ const mountForm = (formProps: ReturnType<typeof props>) => {
   return wrapper
 }
 const validate = (wrapper: VueWrapper) => (wrapper.vm as unknown as { validate: () => Promise<boolean> }).validate()
-// The block of the elements behind "show all".
 const hiddenPart = (wrapper: VueWrapper) => wrapper.findComponent(ACustomDataFormHiddenPart)
 const toggleButton = (wrapper: VueWrapper) => wrapper.find('button').element as HTMLButtonElement
 const toggle = async (wrapper: VueWrapper) => {
@@ -111,7 +109,6 @@ describe('ACustomDataForm: the elements behind "show all"', () => {
 
     // A press that did nothing would say nothing: the button is disabled instead.
     expect(toggleButton(wrapper).disabled).toBe(true)
-    // A second save that fails finds it open.
     expect(await validate(wrapper)).toBe(false)
     expect(hiddenPart(wrapper).isVisible()).toBe(true)
 
@@ -124,7 +121,6 @@ describe('ACustomDataForm: the elements behind "show all"', () => {
     expect(hiddenPart(wrapper).isVisible()).toBe(false)
   })
 
-  // Without a save: the user opened them, left one of two invalid, and reaches for "hide".
   it('cannot be hidden while one of them shows a message, also when the others were never touched', async () => {
     const wrapper = mountForm(
       props({ pinned: 'filled', first: '', second: '' }, [
@@ -152,7 +148,6 @@ describe('ACustomDataForm: the elements behind "show all"', () => {
     await flushPromises()
     expect([hiddenPart(passing).isVisible(), hiddenPart(pinnedFails).isVisible()]).toEqual([false, false])
 
-    // After a save, an edit that makes a pinned element invalid does not open them either.
     await passing.setProps({ modelValue: { pinned: '', other: 'filled' } })
     await flushPromises()
     expect(hiddenPart(passing).isVisible()).toBe(false)
@@ -171,7 +166,6 @@ describe('ACustomDataForm: the elements behind "show all"', () => {
     expect([hiddenPart(first).isVisible(), hiddenPart(second).isVisible()]).toEqual([true, true])
   })
 
-  // "Hide" is one choice for every form, as "show all" is.
   it('are hidden by the button in every form that shows no error, and stay open in one that does', async () => {
     const fixed = mountForm(props({ pinned: 'filled', other: '' }))
     const failing = mountForm(props({ pinned: 'filled', other: '' }))
@@ -186,7 +180,6 @@ describe('ACustomDataForm: the elements behind "show all"', () => {
 
     await toggle(pressed)
     expect(visible()).toEqual([false, true, false])
-    // "Show all" is off for the page: once fixed, the one left open is hidden by its own button.
     await failing.setProps({ modelValue: { pinned: 'filled', other: 'filled' } })
     await flushPromises()
     await toggle(failing)

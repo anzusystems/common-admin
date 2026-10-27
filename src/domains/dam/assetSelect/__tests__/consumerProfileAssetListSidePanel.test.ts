@@ -40,13 +40,11 @@ import { useUploadQueueDialog } from '@/domains/dam/uploadQueue/composables/useU
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
 import { SORT_BY_SCORE_DATE } from '@/domains/filters/datatable/utils/datatableColumns'
 
-// The list of assets of the asset page of admin-ugc and its side panel: the asset the panel shows once a detail has
-// closed, whose answer a click on a tile may write, which row of the table is marked, from which page a list in
-// another order is read, and what the panel says when the configuration of the custom fields cannot be read. The real
-// list with its real tiles or table, its real queue dialog and the real dialog of the asset detail; the DAM is a
-// client that records its requests, and only the long waits are taken out of real time. Not drawn: the bar of the
-// list, the pictures, the metadata of the asset of the side panel, what the dialog of the detail frames, and the
-// inputs of the filter (each is named by a stand-in).
+// Covers the asset page list of admin-ugc and its side panel: the asset
+// shown after a detail closes, late click answers, the marked table row,
+// the page used when the order changes, and the panel when the custom field configuration cannot be read.
+// The list, tiles, table, queue dialog and detail dialog are real. The DAM is a recording client.
+// Stand-ins: list bar, pictures, side panel metadata, detail dialog frame, filter inputs.
 
 const profile = ugcConfiguration
 const { endPoints, extSystem, licence } = profile
@@ -79,11 +77,8 @@ let dam: FakeDam
 let waits: LongWaits
 let socket: DamSocket
 let wrapper: VueWrapper | undefined
-/** The page's entry of the upload, handed to its slot by the list. */
 let handed: { onFileInput: (files: File[]) => void } | undefined
-/** What the list answers its reads with from now on, page by page, in place of its two assets. */
 let pages: string[][] | undefined
-/** Whether a list says if a further page follows, as the DAM does, or how many assets there are. */
 let saysIfMoreFollows: boolean
 
 const photo = (name: string) => new File([new Uint8Array(3000)], name, { type: 'image/jpeg' })
@@ -94,7 +89,6 @@ const offsetOf = (request: FakeDamRequest) =>
 const inTheList = (id: string, title = `Title of ${id}`) =>
   damAssetWithFile(id, `file-of-${id}`, AssetFileProcessStatus.Processed, { licence, texts: { displayTitle: title } })
 
-/** What the DAM answers a list request with: the page asked for. */
 const listAnswer = (request: FakeDamRequest) => {
   const page = offsetOf(request) / PAGE
   const listed = pages ? (pages[page] ?? []) : ['asset-50', 'asset-51']
@@ -108,7 +102,9 @@ const listAnswer = (request: FakeDamRequest) => {
   }
 }
 
-/** The paging of the asset lists is one for the page: what an earlier case left of it is not this one's. */
+/**
+ * The paging of the asset lists is one per page. What an earlier case left in it must not leak into this one.
+ */
 const pagingAsNew = () => {
   let paging!: ReturnType<typeof useAssetSelectActions>['pagination']
   const probe = mount(
@@ -166,16 +162,14 @@ describe('the asset list of the asset page of admin-ugc and its side panel', () 
     extSystemConfig: useDamConfigStore(pinia).damConfigExtSystem.get(extSystem)!,
   })
   const listRequests = () => dam.requests.filter(isListRequest)
-  /** The list has asked for its assets so many times, and has the last answer. */
   const listed = async (times: number) => {
     await vi.waitFor(() => expect(listRequests()).toHaveLength(times))
     await vi.waitFor(() => expect(useAssetSelectStore(pinia).loader).toBe(false))
     await flushPromises()
   }
   /**
-   * The list on a page with an upload entry of its own, as the asset page has it, over the two assets of the licence;
-   * its side panel is open. `real`: what is drawn for real of what a stand-in names otherwise. `read`: whether to
-   * wait until the list has asked once and has its answer.
+   * `real`: parts drawn for real that a stand-in would otherwise replace.
+   * `read`: whether to wait until the list has made its first request and has the answer.
    */
   const mountList = async (real: string[] = [], props: Record<string, unknown> = {}, read = true) => {
     wrapper = mount(AAssetListInner, {
@@ -184,7 +178,6 @@ describe('the asset list of the asset page of admin-ugc and its side panel', () 
         assetType: DamAssetType.Image,
         queueKey: QUEUE,
         selectConfigs: [uploadConfig()],
-        // admin-ugc has no user of the DAM, and says so.
         skipCurrentUserCheck: true,
         ...props,
       },
@@ -210,7 +203,6 @@ describe('the asset list of the asset page of admin-ugc and its side panel', () 
   const readOf = (asset: string) => new RegExp(`^${endPoints.asset}/${asset}$`)
   const readsOf = (asset: string) => dam.sentTo('GET', readOf(asset)).length
   const tiles = () => wrapper!.findAll('.asset-list-tiles__item')
-  /** The assets of the tiles, and which of the tiles is drawn as the active one. */
   const tilesDrawn = () =>
     tiles().map((tile) => [tile.find('[data-cy="asset-tile-title"]').text(), tile.classes(ACTIVE_TILE)])
   // The side panel is a column of a wide window, and a dialog of a narrow one.
@@ -221,7 +213,6 @@ describe('the asset list of the asset page of admin-ugc and its side panel', () 
     )
   const panelLoads = () => !!panel()?.querySelector('.v-progress-circular')
   const panelShowsAnAsset = () => wrapper!.findComponent({ name: 'AssetMetadata' }).exists()
-  /** The first tile is clicked, and the side panel shows its asset. */
   const firstTileClicked = async () => {
     await tiles()[0]!.trigger('click')
     await vi.waitFor(() => expect(detail().asset?.id).toBe('asset-50'))
@@ -231,7 +222,6 @@ describe('the asset list of the asset page of admin-ugc and its side panel', () 
       ['Second in the list', false],
     ])
   }
-  /** The user picks another order in the bar of the list, and the list has its answer: these assets from now on. */
   const sortAnew = async (...then: string[][]) => {
     if (then.length > 0) pages = then
     const listedBefore = listRequests().length
@@ -250,13 +240,11 @@ describe('the asset list of the asset page of admin-ugc and its side panel', () 
       .element.click()
     await listed(listedBefore + 1)
   }
-  /** "Edit" of the side panel: the detail of the asset the panel shows. */
   const editInPanel = async () => {
     wrapper!.findComponent({ name: 'AssetMetadata' }).vm.$emit('editInDam')
     await flushPromises()
     expect(detail().dialog).toBe(QUEUE)
   }
-  /** The detail is closed with its own button: the real dialog, of which only what it frames is not drawn. */
   const closeDetail = () => wrapper!.findComponent({ name: 'AssetDetailDialogFrame' }).vm.$emit('close')
   // The queue dialog is drawn into the body.
   const queueDialog = () => document.body.querySelector<HTMLElement>('.overlay--sidebar')
@@ -264,7 +252,6 @@ describe('the asset list of the asset page of admin-ugc and its side panel', () 
     Array.from(queueDialog()!.querySelectorAll<HTMLButtonElement>('.dam-upload-queue__item button')).find(
       (button) => button.textContent?.trim() === damText('image.button.editAsset')
     )!
-  /** A file is uploaded through the page's entry: its row of the queue is `asset-1`, with its form. */
   const oneUploaded = async () => {
     handed!.onFileInput([photo('a.jpg')])
     const row = () => queue().getQueueItems(QUEUE)[0]
@@ -277,7 +264,6 @@ describe('the asset list of the asset page of admin-ugc and its side panel', () 
     await vi.waitFor(() => expect(row()!.status).toBe(Uploaded))
     await flushPromises()
   }
-  /** "Edit asset" of the row of the queue: its detail shows the uploaded asset. */
   const detailOfTheRowOpened = async () => {
     editAssetOfRow().click()
     await vi.waitFor(() => expect([detail().dialog, detail().asset?.id]).toEqual([QUEUE, 'asset-1']))
@@ -285,10 +271,9 @@ describe('the asset list of the asset page of admin-ugc and its side panel', () 
   }
   const failed = ['error', alertText('common.alert.unknownError')]
 
-  // The side panel goes on showing the asset of a clicked tile when a list read anew no longer has it, with "edit"
-  // beside it. The detail empties the panel as it closes, and the list read the asset again only by its active tile:
-  // over such a list there is none, so the panel was left saying that no asset is picked, though it was that asset
-  // that had just been edited.
+  // The side panel keeps showing the asset of a clicked tile when a list read anew no longer has it.
+  // The detail empties the panel as it closes, and the list re-read the asset only by its active tile.
+  // Over such a list there is no active tile, so the panel said no asset was picked.
   describe('shows the asset of a clicked tile again once a detail has closed over a list that no longer has it', () => {
     it('as it is by then, after the detail "edit" of the panel opened', async () => {
       await mountList()
@@ -297,7 +282,6 @@ describe('the asset list of the asset page of admin-ugc and its side panel', () 
       expect(tilesDrawn()).toEqual([['Second in the list', false]])
       expect([detail().asset?.id, panelShowsAnAsset()]).toEqual(['asset-50', true])
       await editInPanel()
-      // As a save of the detail leaves it in the DAM.
       dam.assets.set('asset-50', inTheList('asset-50', 'Saved in the detail'))
 
       closeDetail()
@@ -309,7 +293,6 @@ describe('the asset list of the asset page of admin-ugc and its side panel', () 
       expect(tilesDrawn()).toEqual([['Second in the list', false]])
       expect(shownAlerts()).toEqual([])
 
-      // Its tile is the active one again in a list that brings it back.
       await sortAnew(['asset-51', 'asset-50'])
       expect(tilesDrawn()).toEqual([
         ['Second in the list', false],
@@ -317,7 +300,6 @@ describe('the asset list of the asset page of admin-ugc and its side panel', () 
       ])
     })
 
-    // The detail of a row of the queue empties the panel as well: closed, the panel shows what it showed before.
     it('after the detail of a row of the queue', async () => {
       await mountList()
       await firstTileClicked()
@@ -357,8 +339,9 @@ describe('the asset list of the asset page of admin-ugc and its side panel', () 
       expect(shownAlerts()).toEqual([failed])
     })
 
-    // A click whose read failed left its tile marked beside the panel, which went on showing the asset before it, and
-    // the detail "edit" of the panel opened showed that asset: closed, it had the asset of the tile clicked read.
+    // A failed click read left its tile marked while the panel showed the previous asset.
+    // The detail opened from the panel showed that previous asset,
+    // so closing it must read the asset of the tile clicked.
     it('after a click whose read failed: the tile of the asset the panel shows is marked, and that asset is read', async () => {
       await mountList()
       await firstTileClicked()
@@ -402,9 +385,10 @@ describe('the asset list of the asset page of admin-ugc and its side panel', () 
     })
   })
 
-  // The answer of a click on a tile was written into the store of the detail whenever it came, as long as no later
-  // click had asked for another asset. That store is the page's, and the detail of a row of the queue shows its asset:
-  // an answer that came once that detail was open put the asset of the tile into it, and its save went into that asset.
+  // The answer of a tile click was written into the detail store
+  // whenever it arrived, if no later click had asked for another asset.
+  // That store is shared by the page. If the answer arrived while a queue row detail was
+  // open, the tile asset replaced the row asset and its save went to the wrong asset.
   describe('takes the answer of a clicked tile that comes once the detail of a row of the queue is open', () => {
     it.each<[string, boolean]>([
       ['shows its asset', false],
@@ -433,7 +417,6 @@ describe('the asset list of the asset page of admin-ugc and its side panel', () 
       await waits.settle()
       expect([detail().dialog, detail().asset?.id, detail().loading]).toEqual([QUEUE, 'asset-1', false])
 
-      // Closed, the detail has the list read the asset of its active tile: the panel shows the clicked asset.
       closeDetail()
       await vi.waitFor(() => expect(ofTheClick.waiting).toHaveLength(1))
       ofTheClick.release()
@@ -447,8 +430,6 @@ describe('the asset list of the asset page of admin-ugc and its side panel', () 
       expect(shownAlerts()).toEqual([])
     })
 
-    // The list goes on remembering the clicked asset while that detail is open, also over a list without its tile:
-    // the close of the detail has it read.
     it('and shows the clicked asset once that detail has closed, also over a list that no longer has its tile', async () => {
       await mountList()
       const ofTheClick = dam.hold('GET', readOf('asset-50'))
@@ -482,11 +463,11 @@ describe('the asset list of the asset page of admin-ugc and its side panel', () 
     })
   })
 
-  // The tiles frame the one whose asset the side panel shows. The table marked only the rows that are picked, and
-  // the list of the asset page picks none: its table showed nothing of the asset of the panel.
+  // Tiles frame the tile whose asset the side panel shows.
+  // The table marked only picked rows, and the asset page list
+  // picks none, so its table showed nothing for the panel asset.
   describe('drawn as a table', () => {
     const rows = () => wrapper!.findAll('tr.a-datatable__row')
-    /** The assets of the rows, and which of the rows is drawn as the active one: framed, as the active tile is. */
     const rowsDrawn = () =>
       rows().map((row) => {
         const style = getComputedStyle(row.element)
@@ -528,7 +509,7 @@ describe('the asset list of the asset page of admin-ugc and its side panel', () 
     })
   })
 
-  // "Load more" moves the paging of the list on, and a search puts it back to the first page; another order did not.
+  // "Load more" advances the paging and a search resets it to the first page. Changing the order did not reset it.
   it('reads the list in another order from its first page, after "load more"', async () => {
     pages = [['asset-50', 'asset-51'], ['asset-52']]
     await mountList()
@@ -545,8 +526,8 @@ describe('the asset list of the asset page of admin-ugc and its side panel', () 
     expect(tilesDrawn().map(([title]) => title)).toEqual(['First in the list', 'Second in the list'])
   })
 
-  // The list of the asset page reads its assets again once "save and apply" of its upload has saved: from the page
-  // "load more" had reached, so the uploaded asset, the first of the list, was not in it.
+  // After "save and apply" of an upload, the list was re-read from the page "load more" had reached,
+  // so the uploaded asset, first in the list, was missing.
   it('reads the list from its first page once an upload is applied, after "load more"', async () => {
     pages = [['asset-50', 'asset-51'], ['asset-52']]
     await mountList()
@@ -565,18 +546,17 @@ describe('the asset list of the asset page of admin-ugc and its side panel', () 
     expect(queueDialog()).toBeNull()
   })
 
-  // The paging of the list is one for the page, and outlived the list: mounted again (the user is back on the asset
-  // page) after a list that said a further page follows, the list drew "load more" under its empty list at once,
-  // and the button asked for the page after the first before the first had been asked for.
+  // The paging is shared by the page and outlived the list.
+  // Mounted again after a list that had a further page, the list drew "load more" under its empty list,
+  // and the button requested the second page before the first.
   it('asks for its first page, once, when it is mounted again after a list that had a further page', async () => {
     const isShown = (element: HTMLElement) => getComputedStyle(element).display !== 'none'
     const loadMoreButton = () =>
       wrapper!.findAll('button').find((button) => button.text() === uiText('common.button.loadMore'))!.element
-    // As the DAM answers a list: with whether a further page follows.
     saysIfMoreFollows = true
     pages = [['asset-50', 'asset-51'], ['asset-52']]
-    // Whatever the list asks for waits: its first page is let answer, and a further page, if the list asks for one by
-    // itself as "load more" comes into view, stays on its way.
+    // Every list request is held. The first page is released,
+    // and a further page, requested automatically when "load more" comes into view, stays pending.
     const lists = dam.hold('GET', new RegExp(`^${endPoints.asset}/licence/${licence}/search\\?`))
     await mountList([], {}, false)
     await vi.waitFor(() => expect(lists.waiting).toHaveLength(1))
@@ -596,10 +576,10 @@ describe('the asset list of the asset page of admin-ugc and its side panel', () 
     expect(listRequests().slice(before).map(offsetOf)).toEqual([0])
   })
 
-  // The form the side panel shows an asset in is drawn from the configuration of the custom fields of the ext system,
-  // read when the list meets that ext system. When none of its reads answered, the panel went on loading for good.
+  // The side panel form is drawn from the custom field configuration
+  // of the ext system, read when the list meets that ext system.
+  // When none of the reads answered, the panel loaded forever.
   describe('whose side panel cannot read the configuration of the custom fields', () => {
-    /** Nobody has read the configuration of the ext system yet, and the DAM answers none of its reads. */
     const configurationIsNotRead = () => {
       useDamConfigStore(pinia).damConfigAssetCustomFormElements.delete(extSystem)
       dam.reply((request) => (request.method === 'GET' && CUSTOM_FORM.test(request.url) ? { status: 500 } : undefined))
@@ -629,8 +609,9 @@ describe('the asset list of the asset page of admin-ugc and its side panel', () 
       expect([saysItFailed(), panelLoads(), panelShowsAnAsset()]).toEqual([true, false, false])
     })
 
-    // The list of a page with several licences can be switched to one of another ext system while the configuration
-    // of the first is still being read: what that read answers says nothing of the ext system listed by then.
+    // A page with several licences can switch to another ext system
+    // while the configuration of the first is still loading.
+    // The result of that read must not affect the ext system listed by then.
     it('says nothing of a read that fails for an ext system the list has left since', async () => {
       const OTHER = { licence: 200005, extSystem: 9 }
       const config = useDamConfigStore(pinia)
@@ -661,9 +642,8 @@ describe('the asset list of the asset page of admin-ugc and its side panel', () 
       expect([saysItFailed(), panelLoads()]).toEqual([false, false])
     })
 
-    // An ext system may have no custom field at all: each of its four reads answers with an empty list. That is its
-    // configuration: the panel shows the asset in its form, which has no custom field then. The form itself is drawn
-    // for real here.
+    // An ext system may have no custom fields: all four reads answer with an empty list.
+    // That is a valid configuration, and the panel shows the asset in a form without custom fields.
     it('shows the asset in its form, without custom fields, when the ext system has none', async () => {
       useDamConfigStore(pinia).damConfigAssetCustomFormElements.delete(extSystem)
       dam.reply((request) =>

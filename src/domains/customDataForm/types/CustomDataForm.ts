@@ -20,7 +20,10 @@ export interface CustomDataFormElementAttributes {
   readonly: boolean
 }
 
-/** `null`: a value that was emptied (a cleared number), also as the API returns it once saved. A value never set has no key. */
+/**
+ * `null` is an emptied value (e.g. a cleared number), and the API
+ * returns it that way once saved. A value never set has no key.
+ */
 export type CustomDataValue = boolean | string | number | string[] | number[] | null
 
 export interface CustomDataAware {

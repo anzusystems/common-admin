@@ -26,10 +26,9 @@ import { uploadSettlementRuntime } from '@/domains/dam/uploadQueue/settlement/up
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
 import { useAlertsQueue } from '@/domains/system/composables/alertsQueue'
 
-// What is reported of the reads the queue makes while it waits for the server: the first failure of a series,
-// and only one the error logger writes down. A failure it drops -- a timeout, a 401, a 403 -- has told nobody: a
-// later one it would write is reported all the same, and the series begins there. Through the real store, as in
-// `uploadStatusPolling.test.ts`; the DAM is a client that records its requests and times out where it is told.
+// Only the first failure of a series is reported, and only one the error logger writes down.
+// A dropped failure (timeout, 401, 403) has told nobody. A later
+// failure is reported all the same, and the series begins there.
 
 const QUEUE = 'report-queue'
 const { Processing, Uploaded } = UploadQueueItemStatus
@@ -39,7 +38,6 @@ const MINUTE = 60 * SECOND
 let dam: FakeDam
 let clock: ManualScheduler
 let socket: DamSocket
-// While set, a read of an asset runs out of time on its way, as axios rejects such a request.
 let timingOut = false
 let timedOut = 0
 const logged = vi.fn()
@@ -77,7 +75,7 @@ const use = (profile: ConsumerProfile) => {
   setApiErrorLogger(logged)
 }
 afterEach(() => {
-  // Before the clock of the next case: a timer is taken back on the clock of that moment.
+  // Runs before the clock of the next case: a timer is taken back on the clock of that moment.
   useUploadQueuesStore().stopUpload(QUEUE)
   destroyDamNotifications()
   uploadSettlementRuntime.scheduler = realScheduler
@@ -95,7 +93,6 @@ const fromTheServer = {
 const notify = (name: DamNotificationNameType, data: Record<string, unknown>) =>
   useDamNotificationsEventBus().emit({ name, data } as unknown as DamNotification)
 
-/** Every read of an asset is answered so, from now on, until the returned function takes it back. */
 const readsAnswer = (profile: ConsumerProfile, status: number) =>
   dam.reply((request) =>
     request.method === 'GET' && request.url.startsWith(profile.endPoints.asset) ? { status } : undefined
@@ -106,7 +103,6 @@ describe.each(consumerProfiles)('a series of failed reads that begins quietly, u
 
   beforeEach(() => use(profile))
 
-  /** The files, sent whole: their rows wait for the server, `asset-1` and on. */
   const sentFiles = async (...names: string[]) => {
     const store = useUploadQueuesStore()
     await store.addByFiles(QUEUE, extSystem, licence, names.map(photo), 'default')
@@ -120,13 +116,11 @@ describe.each(consumerProfiles)('a series of failed reads that begins quietly, u
     await sentFiles('photo.jpg')
     timingOut = true
 
-    // At 5 s.
     await clock.advance(5 * SECOND)
     expect([timedOut, reported()]).toEqual([1, []])
 
     timingOut = false
     readsAnswer(profile, 502)
-    // At 15, 30 and 60 s after a failure.
     await clock.advance(2 * MINUTE)
 
     expect(dam.assetReads().length).toBeGreaterThan(1)
@@ -164,8 +158,8 @@ describe.each(consumerProfiles)('a series of failed reads that begins quietly, u
     expect(reported()[0]).toMatch(new RegExp(`^502 ${endPoints.asset}/licence/${licence}/ids/asset-[12],asset-[12]$`))
   })
 
-  // An uploaded row still without its metadata is asked about by its notification alone: its read tries again by
-  // itself.
+  // An uploaded row still without its metadata is asked about by its notification alone.
+  // Its read tries again by itself.
   it('the read a notification asks for: a try that timed out tells nobody, and the 502 of its next try is reported', async () => {
     const [item] = await sentFiles('photo.jpg')
     dam.fileBecomes('asset-1', AssetFileProcessStatus.Processed, fromTheServer)
@@ -180,7 +174,6 @@ describe.each(consumerProfiles)('a series of failed reads that begins quietly, u
 
     timingOut = false
     readsAnswer(profile, 502)
-    // Its tries at 15 and 30 s after a failure.
     await clock.advance(MINUTE)
 
     expect(dam.assetReads()).toHaveLength(3)

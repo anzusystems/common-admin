@@ -5,7 +5,7 @@ const showSuccess = vi.fn()
 vi.mock('@/domains/system/composables/alerts', () => ({ useAlerts: () => ({ showSuccess }) }))
 const { default: ACopyText } = await import('@/domains/ui/components/ACopyText.vue')
 
-// No Clipboard API: an insecure context (plain http on a non-localhost host) has no navigator.clipboard.
+// No Clipboard API: an insecure context (plain http on a non-localhost host) has no `navigator.clipboard`.
 const descriptor = Object.getOwnPropertyDescriptor(Navigator.prototype, 'clipboard')!
 afterEach(() => Object.defineProperty(Navigator.prototype, 'clipboard', descriptor))
 

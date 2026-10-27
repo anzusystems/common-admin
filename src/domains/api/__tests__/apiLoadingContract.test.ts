@@ -8,10 +8,9 @@ import { AnzuApiCancelledError } from '@/shared/error/AnzuApiCancelledError'
 import { createFilter, createFilterStore, type MakeFilterOption } from '@/domains/filters/composables/filterFactory'
 import { usePagination } from '@/domains/api/composables/pagination'
 
-// The piece that makes `cancelPrevious` safe to turn on. The pattern the fleet uses is a `loading`
-// ref the caller clears in a `finally`, and that `finally` belongs to whichever call ended -- so a
-// superseded call turns the spinner off while the call the user is actually waiting for is still in
-// flight. The helper owns the flag instead, and derives it from what it has in flight.
+// Makes `cancelPrevious` safe to enable. Callers clear a `loading` ref in a `finally`, and that `finally` belongs
+// to whichever call ended. A superseded call would turn the spinner off while the current call is still in flight.
+// The helper owns the flag and derives it from what it has in flight.
 
 const fields = [{ name: 'name', default: '' }] as const satisfies readonly MakeFilterOption<string>[]
 
@@ -72,12 +71,11 @@ describe('what the helper says about being busy', () => {
     expect(loading.value).toBe(false)
   })
 
-  // The reason it exists. The superseded call settles -- as a cancellation -- while the new one is
-  // still running, and a `finally` in the caller would clear the flag right there.
+  // The superseded call settles as a cancellation while the new one
+  // still runs. A caller's `finally` would clear the flag at that point.
   it('does not go quiet when a superseded call ends and a newer one is still running', async () => {
-    // The mock answers an abort the way axios does, by rejecting. A mock that simply never settles
-    // makes this test pass without testing anything: the superseded call never ends, so the code
-    // that would clear the flag never runs -- which is the exact moment at issue.
+    // The mock rejects on abort like axios. A mock that never settles passes without
+    // testing anything, because the code that would clear the flag never runs.
     const get = vi.fn().mockImplementation(
       (_url: string, config: { signal: AbortSignal }) =>
         new Promise((_resolve, reject) => {
@@ -92,8 +90,6 @@ describe('what the helper says about being busy', () => {
     const second = execute(pagination, filterData, filterConfig)
     void second.catch(() => undefined)
 
-    // The superseded call has actually ended -- it rejected as a cancellation, and its own cleanup
-    // has run. The one still in flight is the one the caller is waiting for.
     await expect(first).rejects.toBeInstanceOf(AnzuApiCancelledError)
 
     expect(loading.value).toBe(true)
@@ -111,8 +107,6 @@ describe('what the helper says about being busy', () => {
     expect(loading.value).toBe(false)
   })
 
-  // Two overlapping calls without `cancelPrevious`: the flag is about the instance, not about one
-  // call, so it stays true until the last of them is done.
   it('stays true until the last of several overlapping calls is done', async () => {
     const resolvers: ((value: unknown) => void)[] = []
     const request = vi.fn().mockImplementation(() => new Promise((r) => resolvers.push(r as never)))

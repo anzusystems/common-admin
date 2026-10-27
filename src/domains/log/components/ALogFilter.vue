@@ -38,9 +38,9 @@ const { logTypeOptions } = useLogType()
           sm="4"
         >
           <!--
-            A plain select, not `AFilterValueObjectOptionsSelect`: that one throws unless the name
-            it is given is a live filter field, and the type is not one. It picks the endpoint and
-            lives in the route, which is also what makes it survive a filter reset.
+            A plain select, not `AFilterValueObjectOptionsSelect`. That one throws
+            unless the name is a live filter field, and the type is not one.
+            The type picks the endpoint and lives in the route, so it survives a filter reset.
           -->
           <VSelect
             :model-value="type"

@@ -15,18 +15,14 @@ const permissionGroupListFields = [
 type ListFields = typeof permissionGroupListFields
 
 /**
- * One filter store per system.
- *
- * The admins kept theirs at module scope, which is correct while an admin has a single backend and
- * wrong here: admin-inhouse has four, and a shared store would carry a title typed under `weather`
- * straight into the `brick` list.
+ * One filter store per system. admin-inhouse has four backends, and a shared
+ * store would carry a title typed under `weather` into the `brick` list.
  */
 const listStores = new Map<string, FilterData<ListFields>>()
 
 /**
- * Local-storage key for the list filter. Named rather than derived so it cannot collide with the
- * per-admin views this replaces, which store under `tableFilter_common_permissionGroup`; while
- * both versions are on screen they must not share remembered filters (rule 8.0).
+ * Local-storage key for the list filter. Named so it does not collide with the replaced
+ * per-admin views' `tableFilter_common_permissionGroup` key while both are in use.
  */
 export const permissionGroupFilterStorageKey = (system: string) => `commonPermissionGroup_${system}`
 
@@ -40,9 +36,9 @@ export function usePermissionGroupListFilter(system: string): {
     listStores.set(system, store)
   }
 
-  // `system: 'common'` is the translation namespace, not the backend: the labels live in the
-  // library's own `common.permissionGroup.filter.*` and are the same text whichever backend the
-  // rows came from. The backend identity is what keys the store above.
+  // `system: 'common'` is the translation namespace, not the backend.
+  // Labels live in `common.permissionGroup.filter.*` for every backend.
+  // The backend identity keys the store above.
   const { filterConfig, filterData } = createFilter(permissionGroupListFields, store, {
     system: 'common',
     subject: PERMISSION_GROUP_ENTITY,
@@ -52,9 +48,8 @@ export function usePermissionGroupListFilter(system: string): {
 }
 
 export function usePermissionGroupInnerFilter() {
-  // `title` is the autocomplete's `filter-by-field`. Built per call and never registered: an
-  // autocomplete's filter is scratch state for one open menu, and two of them on a page must not
-  // type into each other.
+  // `title` is the autocomplete's `filter-by-field`. Built per call and never
+  // registered: two autocompletes on a page must not type into each other.
   const innerFields = [
     { name: 'title' as const, variant: 'startsWith', default: null, type: 'string' },
   ] satisfies readonly MakeFilterOption[]
@@ -67,7 +62,9 @@ export function usePermissionGroupInnerFilter() {
   return { filterConfig, filterData }
 }
 
-/** Test seam; the list stores are module state. */
+/**
+ * Test seam; the list stores are module state.
+ */
 export const resetPermissionGroupListFilters = () => {
   listStores.clear()
 }

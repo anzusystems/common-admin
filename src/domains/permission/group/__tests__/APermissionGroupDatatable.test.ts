@@ -78,8 +78,8 @@ describe('APermissionGroupDatatable', () => {
   it('counts the grants of a group rather than printing them', async () => {
     const { wrapper } = await mountDatatable()
 
-    // Read out of the cell, not off the row: the fixture's ids, createdBy and dates all contain a
-    // "1", so a search over the whole table would match whatever the cell rendered.
+    // Read from the cell, not the row: the fixture's ids, createdBy and dates all contain "1",
+    // so a search over the whole table would match whatever the cell rendered.
     const cells = wrapper.findAll('tbody tr:first-child td')
     const grants = cells.find((cell) => cell.find('.v-chip').exists())!
     expect(grants.text().trim()).toBe('1')

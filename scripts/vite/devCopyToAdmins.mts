@@ -42,9 +42,9 @@ function walk(dir: string, base = dir, out: string[] = []): string[] {
 
 const isDeclaration = (file: string) => file.endsWith('.d.ts')
 
-// A new file under the old name, never a write into the old one: under pnpm the old one is a hard link
-// into the global store, shared by every project on that version. The rename also means the admin's
-// dev server never reads a half-written file.
+// Write a new file and rename it over the old one, never write into the old one.
+// Under pnpm the old one is a hard link into the global store, shared by every project on that version.
+// The rename also means the admin's dev server never reads a half-written file.
 function copyFile(from: string, to: string) {
   fs.mkdirSync(path.dirname(to), { recursive: true })
   const temp = `${to}.${process.pid}.tmp`
@@ -53,16 +53,13 @@ function copyFile(from: string, to: string) {
 }
 
 /**
- * `vite build --watch` companion: after each rebuild copies the files whose content changed into
- * every admin's `node_modules/@anzusystems/common-admin/dist`, removes the ones the build no longer
- * emits, and writes their names into the admin's `.common-admin-updated` (`*` after a full copy),
- * which the admin's `commonAdminDevWatch()` reacts to.
- *
- * A full copy happens for an admin whenever its package does not hold this watch session's copy
- * (the first build, or `./copy.sh` or a reinstall replaced it meanwhile, which removes the marker
- * file). Bookkeeping advances only after a copy succeeded, so a failed one is simply redone.
- *
- * Declarations (`*.d.ts`) are never removed: the watch build does not generate them (only the
+ * `vite build --watch` companion. After each rebuild it copies changed files into every admin's
+ * `node_modules/@anzusystems/common-admin/dist`, removes files the build no longer emits, and writes their
+ * names into the admin's `.common-admin-updated` (`*` after a full copy) for `commonAdminDevWatch()`.
+ * A full copy happens when the admin's package does not hold this watch session's copy:
+ * the first build, or `./copy.sh` or a reinstall replaced it and removed the marker
+ * file. Bookkeeping advances only after a successful copy, so a failed one is redone.
+ * Declarations (`*.d.ts`) are never removed. The watch build does not generate them (only the
  * stylesheet's), so the admin keeps the ones from the last full `yarn build` + `./copy.sh`.
  */
 export function devCopyToAdmins(): Plugin {

@@ -138,7 +138,7 @@ export function useCollabInit() {
          * flushed just before this handler runs, and its acknowledgement arrives a round trip
          * later to find its claim gone. */
         collabRoomInfoState.clear()
-        // The server let the locks of the old connection go; a timed-out request was dropped from the send buffer.
+        // The server released the old connection's locks, and timed-out requests were dropped from the send buffer.
         collabFieldLocksUnanswered.clear()
         // Without the reset a transient network error burns the flag and a later JWT
         // expiration never triggers a token refresh.

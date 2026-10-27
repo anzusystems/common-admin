@@ -3,12 +3,12 @@ import { isNull } from '@/shared/utils/common'
 import { useDamConfigStoreOf } from '@/domains/dam/config/store/damConfigStore'
 import { inheritedDamConfigName } from '@/domains/dam/composables/damConfigName'
 
-// The last size of each DAM configuration: one upload hands it to the next one of its name.
+// Last chunk size per DAM configuration. One upload passes it to the next upload of the same configuration.
 const chunkSizes = new Map<string, number>()
 
 /**
- * The size of the next chunk of an upload under the DAM configuration `configName`, bounded by its prv configuration.
- * A name left out is the inherited one in a component's setup, else `default`.
+ * The next chunk size of an upload under the DAM configuration `configName`, bounded by its prv configuration.
+ * Without a name, the inherited one in a component's setup is used, else `default`.
  */
 export function useDamUploadChunkSize(apiTimeout: number = 30, configName?: string) {
   const name = inheritedDamConfigName(configName)
@@ -35,8 +35,8 @@ export function useDamUploadChunkSize(apiTimeout: number = 30, configName?: stri
     return false
   }
 
-  // Answers whether the size changed: at a bound of the configuration it stays, and the chunk of a retry is not read
-  // from the file again.
+  // Returns whether the size changed. At a configuration bound it
+  // stays, so a retry does not re-read the chunk from the file.
   const resize = (size: number) => {
     const next = returnFromRange(size)
     const changed = next !== lastChunkSize.value

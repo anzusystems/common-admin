@@ -16,7 +16,6 @@ import { immediateScheduler } from '@/domains/dam/uploadQueue/settlement/__tests
 import { uploadSettlementRuntime } from '@/domains/dam/uploadQueue/settlement/uploadSettlementRuntime'
 
 const bus = vi.hoisted(() => ({ listener: undefined as undefined | ((event: unknown) => void) }))
-// The sidebar without tabs, which an admin can ask for.
 const options = vi.hoisted(() => ({ simpleAssetSidebarEnabled: false }))
 
 vi.mock('@/domains/dam/api/damImageApi', () => ({
@@ -27,7 +26,7 @@ vi.mock('@/domains/dam/api/damImageApi', () => ({
   rotateImage: vi.fn(),
   copyToLicence: vi.fn(),
 }))
-// Every export spelled out: `importOriginal` here closes an import cycle and stalls the browser runner.
+// Every export is spelled out: `importOriginal` here closes an import cycle and stalls the browser runner.
 const fetchAsset = vi.fn()
 const fetchAssetByFileId = vi.fn()
 const bulkUpdateAssetsMetadata = vi.fn(async (..._sent: unknown[]): Promise<unknown[]> => [])
@@ -92,8 +91,8 @@ const asset = () => ({
 })
 const notify = (name: string) => bus.listener!({ name, data: { asset: 'asset-1' } })
 
-// The dialog waits twenty seconds before it offers refresh. Fake timers stall the browser runner, so only a wait
-// that long is held back, until the test lets it pass.
+// The dialog waits twenty seconds before it offers refresh.
+// Fake timers stall the browser runner, so only a wait that long is held back until the test lets it pass.
 const realSetTimeout = window.setTimeout
 const realClearTimeout = window.clearTimeout
 const waits = new Map<number, { run: () => void; ms: number }>()
@@ -106,8 +105,8 @@ const elapse = async () => {
   await flushPromises()
 }
 
-// The dialog is not about how the queue keeps time: the read a notification asks for comes at once, and the poll
-// of the queue never.
+// The dialog is not about how the queue keeps time.
+// The read a notification asks for comes at once, and the poll of the queue never.
 const realScheduler = uploadSettlementRuntime.scheduler
 
 let wrapper: VueWrapper | undefined
@@ -127,7 +126,6 @@ beforeEach(() => {
   }) as typeof window.clearTimeout
 })
 afterEach(() => {
-  // The stores are those of the pinia every test of this file mounts with.
   useUploadQueuesStore().stopUpload(QUEUE)
   uploadSettlementRuntime.scheduler = realScheduler
   useAssetDetailStore().reset()
@@ -142,11 +140,9 @@ afterEach(() => {
   waits.clear()
 })
 
-/** Mounts `component` and puts one item into its queue: a copy to the licence, processing, with its asset. */
 const mountWithItem = async (component: Parameters<typeof h>[0], props: Record<string, unknown>, stubs: string[]) => {
   const Host = defineComponent({
     setup() {
-      // The configuration the form reads, in the pinia the components use.
       const config = useDamConfigStore()
       config.damConfigExtSystem.set(EXT_SYSTEM, extSystemConfig)
       config.damConfigAssetCustomFormElements.set(EXT_SYSTEM, {
@@ -162,7 +158,7 @@ const mountWithItem = async (component: Parameters<typeof h>[0], props: Record<s
     attachTo: document.body,
     global: { stubs: Object.fromEntries(stubs.map((name) => [name, true])) },
   })
-  // Mounting made the components' pinia the active one.
+  // Mounting made the pinia of the components the active one.
   const store = useUploadQueuesStore()
   await store.addByCopyToLicence(QUEUE, EXT_SYSTEM, 1, ['asset-1'], 'default')
   await flushPromises()
@@ -170,7 +166,6 @@ const mountWithItem = async (component: Parameters<typeof h>[0], props: Record<s
 }
 
 describe('the sidebar of the single-file upload dialog', () => {
-  /** What the dialog hands its sidebar; a case changes it where the dialog would. */
   let handedOver: Record<string, unknown>
   const mountSidebar = (parts: Record<string, unknown> = {}) => {
     handedOver = reactive({
@@ -188,8 +183,7 @@ describe('the sidebar of the single-file upload dialog', () => {
     return mountWithItem(
       UploadQueueDialogSingleSidebar,
       handedOver,
-      // What the keyword and author inputs render asks the API for its items; the region tab is not what is asked
-      // here.
+      // The keyword and author inputs ask the API for their items when rendered. The region tab is not under test here.
       [
         'AFormRemoteAutocompleteWithCached',
         'AuthorRemoteAutocompleteCachedAuthorChipConflicts',
@@ -197,10 +191,9 @@ describe('the sidebar of the single-file upload dialog', () => {
       ]
     )
   }
-  // The dialog offers the region tab once the item is uploaded and its asset read, not before. Until then the
-  // sidebar has its tabs, also in an application that asks for one without them.
+  // The dialog offers the region tab only once the item is uploaded and its asset read.
+  // Until then the sidebar has its tabs, also in an application that asks for one without them.
   const mountSidebarOfUnfinished = () => mountSidebar({ enableRoiTab: false })
-  /** What the dialog does once the item is uploaded: it reads the asset and offers the region tab. */
   const assetRead = async () => {
     handedOver.enableRoiTab = true
     await flushPromises()
@@ -212,7 +205,7 @@ describe('the sidebar of the single-file upload dialog', () => {
       (name) => (wrapper!.find(`[data-cy="${name}"]`).element as HTMLButtonElement).disabled
     )
 
-  // Its form stays disabled and both saves with it, so the uploaded image could not be used at all.
+  // Regression: the form stayed disabled, and both saves with it, so the uploaded image could not be used.
   it.each([
     ['with tabs', false],
     ['without tabs', true],
@@ -250,7 +243,7 @@ describe('the sidebar of the single-file upload dialog', () => {
     expect(refreshButton().exists()).toBe(false)
   })
 
-  // The buttons belong to the metadata tab, which is unmounted while the other one is open.
+  // The buttons belong to the metadata tab, which is unmounted while the other tab is open.
   it('goes on waiting while the other tab is open', async () => {
     const item = await mountSidebar()
     notify(DamNotificationName.AssetFileProcessed)
@@ -265,8 +258,8 @@ describe('the sidebar of the single-file upload dialog', () => {
     expect(refreshButton().exists()).toBe(true)
   })
 
-  // The server can be slow to settle the file, and its notification can be lost: the row of the queue dialog offers
-  // refresh for that, and so does this dialog.
+  // The server can be slow to settle the file, and its notification can be lost.
+  // The row of the queue dialog offers refresh for that, and so does this dialog.
   it.each([
     ['in an application whose sidebar has tabs', false],
     ['in one that asks for a sidebar without tabs', true],
@@ -287,7 +280,6 @@ describe('the sidebar of the single-file upload dialog', () => {
 
     expect(fetchAsset).toHaveBeenCalledWith(expect.anything(), '/asset', 'asset-1')
     expect(item.customData).toEqual({ title: 'from the server' })
-    // The sidebar without tabs is drawn from here on.
     expect(tabs().exists()).toBe(!simple)
     expect(refreshButton().exists()).toBe(false)
     expect(saveButtons()).toEqual([false, false])
@@ -324,8 +316,9 @@ describe('the sidebar of the single-file upload dialog', () => {
     expect((refreshButton().element as HTMLButtonElement).disabled).toBe(false)
   })
 
-  // The file is a duplicate whose original cannot be read: the press fails the item. A failed item whose refresh
-  // may still help is offered it, as its row in the queue is (finding 25), and the press says why it could not.
+  // The file is a duplicate whose original cannot be read, so the press fails the item.
+  // A failed item whose refresh may still help is offered it, as its
+  // row in the queue is (finding 25). The press says why it could not.
   it('says why when the refresh itself fails the item, and still offers it', async () => {
     const item = await mountSidebarOfUnfinished()
     fetchAsset.mockImplementation(async () => ({
@@ -348,7 +341,6 @@ describe('the sidebar of the single-file upload dialog', () => {
     expect(refreshButton().exists()).toBe(true)
   })
 
-  // Finding 25: as the row of the queue, a failed item whose refresh may still help has it, and the press reads again.
   it('offers it to a failed item whose refresh may still help, and reads again when pressed', async () => {
     const item = await mountSidebarOfUnfinished()
     fetchAsset.mockImplementation(async () => ({
@@ -376,8 +368,8 @@ describe('the sidebar of the single-file upload dialog', () => {
     expect(fetchAssetByFileId).toHaveBeenCalledTimes(2)
   })
 
-  // An uploaded item still without its metadata keeps its status when it is taken out of the queue: the sidebar
-  // says in which queue it was pressed, and nobody is told to try again on an item that is gone.
+  // An uploaded item still without its metadata keeps its status when taken out of the queue.
+  // The sidebar says in which queue it was pressed, so nobody is told to try again on an item that is gone.
   it('says nothing when the item was taken out of its queue while its refresh was on its way', async () => {
     const item = await mountSidebarOfUnfinished()
     notify(DamNotificationName.AssetFileProcessed)
@@ -411,7 +403,6 @@ describe('the sidebar of the single-file upload dialog', () => {
     expect(refreshButton().exists()).toBe(false)
   })
 
-  // As the row of the queue counts: the wait for the file and the wait for the metadata each start anew.
   it('takes it back when the item turns uploaded, and waits anew for its metadata', async () => {
     const item = await mountSidebarOfUnfinished()
     await elapse()
@@ -452,7 +443,6 @@ describe('the sidebar of the single-file upload dialog', () => {
 
     await wrapper!.find('.v-switch input').setValue(true)
     expect(item.mainFileSingleUse).toBe(true)
-    // What the dialog does when the item turns uploaded.
     useAssetDetailStore().setAsset(asset() as never)
     await flushPromises()
 
@@ -460,8 +450,8 @@ describe('the sidebar of the single-file upload dialog', () => {
     expect(item.mainFileSingleUse).toBe(true)
   })
 
-  // Several authors of that name: the store finds them when it loads the item's metadata. The list of the asset
-  // detail, which this input read, is filled by nothing.
+  // Several authors of that name: the store finds them when it loads the item's metadata.
+  // The list of the asset detail, which this input read before, is filled by nothing.
   it('offers the author conflicts of the item', async () => {
     const item = await mountSidebar()
     notify(DamNotificationName.AssetMetadataProcessed)
@@ -478,7 +468,6 @@ describe('the sidebar of the single-file upload dialog', () => {
 })
 
 describe('the single-file upload dialog', () => {
-  // Saving a duplicate saves into its original: the notice says what that asset is, and stays.
   it.each([
     ['is single use', true, false, true],
     ['is not', false, true, false],
@@ -489,7 +478,6 @@ describe('the single-file upload dialog', () => {
       const item = await mountWithItem(
         UploadQueueDialogSingle,
         { licenceId: 1, fileInputKey: 0, accept: undefined, maxSizes: undefined },
-        // The sidebar itself is mounted: the notice is in its slot.
         [
           'UploadQueueDialogSingleSidebarMetadata',
           'AssetDetailSidebarROI',
@@ -514,12 +502,11 @@ describe('the single-file upload dialog', () => {
     const item = await mountWithItem(
       UploadQueueDialogSingle,
       { licenceId: 1, fileInputKey: 0, accept: undefined, maxSizes: undefined },
-      // The parts of the dialog that have no say in what is sent.
       ['UploadQueueDialogSingleSidebar', 'AssetImage', 'UploadQueueButtonStop', 'DamAssetImageRoiSelectLazy']
     )
     notify(DamNotificationName.AssetMetadataProcessed)
     await vi.waitFor(() => expect(item.canEditMetadata).toBe(true))
-    // Set while the file was still processing; the asset the dialog then loads says otherwise.
+    // Set while the file is still processing. The asset the dialog then loads says otherwise.
     item.mainFileSingleUse = true
     notify(DamNotificationName.AssetFileProcessed)
     await vi.waitFor(() => expect(useAssetDetailStore().asset?.id).toBe('asset-1'))

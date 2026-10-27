@@ -6,7 +6,7 @@ import { useApiFetchByIds } from '@/domains/api/composables/useApiFetchByIds'
 import { useApiRequest } from '@/domains/api/composables/useApiRequest'
 import type { IntegerId } from '@/shared/types/common'
 
-// The address of the authors is the application's to say (`endPointAuthor` of its DAM configuration).
+// The application sets the authors address (`endPointAuthor` of its DAM configuration).
 const LIST = '/ext-system/:extSystemId'
 export const ENTITY = 'author'
 

@@ -21,11 +21,6 @@ import type {
   UploadSettlementProfile,
 } from '@/domains/dam/uploadQueue/settlement/uploadSettlementTypes'
 
-// The reads of a store with queues of two DAM configurations, `default` and `own`, two DAMs: each configuration reads
-// in a lane of its own, so a DAM that is slow to answer holds back no read of the other, and the failures of each are
-// a streak of their own, reported as such. A store that does not say the configurations of its queues reads in one
-// lane, as before. The poll of a queue asks whether notifications come for that queue.
-
 const S = 1000
 const OF_DEFAULT = 'lane-of-default'
 const OF_OWN = 'lane-of-own'
@@ -54,10 +49,6 @@ afterEach(() => {
 
 const configOf = (queueKey: UploadQueueKey) => (queueKey === OF_OWN ? 'own' : 'default')
 
-/**
- * The library's profile, its readers asking the DAM of the queue they are given; with `configOf`, or without it as
- * admin-dam's. A copy row of `asset-1` in each queue. `pushAsked`: the queues the poll asked about notifications for.
- */
 const twoQueues = (withConfigOf = true) => {
   const made = libProfile(servers.default)
   const serverOf = (queueKey?: UploadQueueKey) => servers[queueKey === undefined ? 'default' : configOf(queueKey)]

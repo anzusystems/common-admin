@@ -152,9 +152,8 @@ const allItems = computed<ValueObjectOption<DocId | IntegerId>[]>(() => {
   })
 })
 
-// The requests of the component on their way (items by their ids, a search, a prefetch): its spinner is on while
-// any of them runs, and goes off with the last. Each turned it off as it ended: a read by ids hid the spinner of a
-// search still running, and the reverse.
+// Counts running requests (by ids, search, prefetch). The spinner stays on until the last one ends.
+// A single flag let a read by ids hide the spinner of a search still running, and the reverse.
 const requestsRunning = ref(0)
 const loading = computed(() => requestsRunning.value > 0)
 
@@ -235,8 +234,7 @@ const singleItemSelectedTitle = computed(() => {
   return undefined
 })
 
-// The clear of the field empties the search with `null` first: an empty search. A field without focus at that
-// moment read its length and threw.
+// Clearing the field first emits a `null` search. Reading its length threw when the field had no focus.
 const onSearchUpdate = (query: string | null) => {
   const text = query ?? ''
   if (!filterConfigCurrent.value.multiple && !isFocused.value && text.length === 0) return // vuetify fix
@@ -256,11 +254,9 @@ const onSelectedUpdate = (newValue: any) => {
   emit('change')
 }
 
-// The clear empties the filter in one go, with the model Vuetify has emptied, and asks for the list once, for an
-// empty search, through the counter of the searches. It asked with the search typed before, outside the counter,
-// wrote that answer whenever it came, and emptied the filter only after it. The list is there now: the auto-fetch
-// of an empty filter is not needed. A filter of one value cleared onto the default it held does not change for its
-// watcher: its value is shown again here.
+// Clearing empties the filter in one step and fetches the list once for an empty search through the search counter.
+// So the auto-fetch for an empty filter is not needed. A single-value filter cleared
+// onto its default does not change for its watcher, so its value is shown again here.
 const onClickClear = () => {
   clearField()
   clearAutoFetchTimer()
@@ -306,10 +302,14 @@ const updateFilterSelected = (
 
 const isEmptyValue = (value: unknown) => isNull(value) || isUndefined(value) || (isArray(value) && value.length === 0)
 
-/** The value of the filter its watcher (below) saw last. */
+/**
+ * The value of the filter its watcher (below) saw last.
+ */
 let watchedValue: unknown
 
-/** Puts a value of the filter into the field and the chips: from the items it has, or read by their ids. */
+/**
+ * Puts a value of the filter into the field and the chips: from the items it has, or read by their ids.
+ */
 const showValue = async (newValue: string | number | Array<string | number>) => {
   const found = await tryToLoadFromLocalData(newValue)
   if (found) {

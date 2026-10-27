@@ -39,12 +39,8 @@ import { useDamUploadChunkSize } from '@/domains/dam/uploadQueue/composables/dam
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
 import { useDamDistributionServiceType } from '@/domains/dam/user/types/DamDistributionServiceType'
 
-// The DAM configuration store per configuration name: a page with `default`, as admin-cms has it, and `own`, with a
-// client and addresses of its own. What the DAM of each says of its configuration (its prv configuration, the ext
-// system a licence is of, the ext system's rules and custom forms, the chunk sizes) is kept for its name, loaded with
-// its client, and read by what works under it; the other client is asked nothing. Both DAMs have ext system 4 and
-// licence 300003, each with a configuration of its own. Where a case fills both stores it fills `own`'s first: on a
-// library with one store for every name, the last fill would be what both read.
+// Cases that fill both stores fill `own` first.
+// With one store for every name, the last fill would be what both read.
 
 const { endPoints } = cmsConfiguration
 const OWN = { asset: '/own/v2/asset', image: '/own/v2/image' }
@@ -92,7 +88,6 @@ beforeEach(() => {
     configs: { ...coreDam.configs, own: { damClient: own.client, endPointAsset: OWN.asset, endPointImage: OWN.image } },
   })
   initCommonAdminImageOptions({ ...image, configs: { ...image.configs, own: image.configs.default! } })
-  // What is started under `own` has ids of its own.
   let started = 0
   own.reply((request) => {
     if (request.method !== 'POST' || !own.routes.start.test(request.url)) return undefined
@@ -123,7 +118,6 @@ afterEach(() => {
   useDamNotificationsEventBus().reset()
 })
 
-/** The method and the path of every request a client was asked, once each, sorted. */
 const asked = (of: FakeDam) =>
   [...new Set(of.requests.map((request) => `${request.method} ${request.url.split('?')[0]}`))].sort()
 const configurationOf = (extSystem: number) =>
@@ -136,7 +130,6 @@ const configurationOf = (extSystem: number) =>
     ),
   ].sort()
 
-/** A component under `own` that hands the name to nothing by itself: what is in it has the name from it. */
 const UnderOwn = defineComponent({
   setup(_, { slots }) {
     useDamConfigName('own')
@@ -144,7 +137,6 @@ const UnderOwn = defineComponent({
     return () => slots.default?.()
   },
 })
-// What the widgets hold beside the store, which no case here asks about.
 const widgetStandIns = Object.fromEntries(
   [
     'VImg',
@@ -221,7 +213,6 @@ describe.each(widgets)('the root widget %s under a named configuration', (_name,
     expect(ownStore.damConfigAssetCustomFormElements.get(EXT)?.image.map((element) => element.name)).toEqual([
       ofOwn.fieldName,
     ])
-    // The store of the default configuration is as it was.
     expect(useDamConfigStore().damPrvConfig.settings.imageChunkConfig).toEqual(ofDefault.chunk)
     expect(useDamConfigStore().damConfigAssetCustomFormElements.get(EXT)?.image[0]?.name).toBe(ofDefault.fieldName)
   })
@@ -254,7 +245,7 @@ describe.each(widgets)('the root widget %s under a named configuration', (_name,
 })
 
 describe('the chunks of an upload under a named configuration', () => {
-  // First: no upload under either name has left a last size before it (the size is kept per name for the next one).
+  // No upload has left a last size under either name yet. The last size is kept per name for the next upload.
   it('are of the size its store bounds them to, while those of an upload under default are of default', async () => {
     fillDamConfigOf('own', { ...ofOwn, chunk: { minSize: 2000, maxSize: 2000 } })
     fillDamConfigOf('default', ofDefault)
@@ -281,7 +272,6 @@ describe('the chunks of an upload under a named configuration', () => {
     underDefault.updateChunkSize(1_000_000_000)
     expect(underDefault.lastChunkSize.value).toBe(ofDefault.chunk.maxSize)
 
-    // Within the bounds of `own`, whatever the upload above left.
     const underOwn = useDamUploadChunkSize(30, 'own')
     expect(underOwn.lastChunkSize.value).toBeLessThanOrEqual(ofOwn.chunk.maxSize)
     underOwn.updateChunkSize(1_000_000_000)
@@ -346,7 +336,6 @@ describe('the public composables of the DAM configuration', () => {
     keywordsOfType: useDamKeywordAssetTypeConfig(DamAssetType.Image, EXT).keywordEnabled.value,
     authorsOfType: useDamAuthorAssetTypeConfig(DamAssetType.Image, EXT).authorEnabled.value,
     services: useDamDistributionServiceType().allDistributionServiceTypeOptions.value.map((option) => option.title),
-    // Grown as far as the bounds of the store go.
     chunk: (() => {
       const sizing = useDamUploadChunkSize()
       sizing.updateChunkSize(1_000_000_000)

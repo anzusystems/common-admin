@@ -45,7 +45,7 @@ export function useApiQueryBuilder() {
     q.value.push('filter_' + filterVariant + '[' + field + ']=' + formatValue(value))
   }
 
-  // `resolveTimeIntervalFilter` is returned, so any caller can pass any names: a missing one fails by name.
+  // `resolveTimeIntervalFilter` is public, so callers can pass any field names. A missing one fails with its name.
   const fieldConfig = (filterConfig: FilterConfig<any>, name: string) => {
     const field = filterConfig.fields[name]
     if (isUndefined(field)) throw new Error(`useApiQueryBuilder: filter field "${name}" is not configured`)

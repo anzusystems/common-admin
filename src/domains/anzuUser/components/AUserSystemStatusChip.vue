@@ -17,10 +17,9 @@ const { t } = useI18n()
 const state = computed<UserSystemStateType>(() => resolveUserSystemState(props.axes))
 
 /**
- * One definition, one set of colours, one set of icons -- shown in the "other systems" table, in a
- * cross-system row, in a bulk-action row and in the log. A text chip rather than a hover tooltip:
- * a tooltip does not exist on touch, cannot be scanned down a column, and would let "no account
- * here" and "no access" look nearly the same.
+ * Shared appearance for the "other systems" table, cross-system rows, bulk-action rows and the log.
+ * A text chip, not a tooltip: tooltips do not work on touch, cannot be scanned
+ * down a column, and would make "no account here" and "no access" look alike.
  */
 const APPEARANCE: Record<UserSystemStateType, { color: string; icon: string; muted: boolean }> = {
   [UserSystemState.Loading]: { color: 'default', icon: 'mdi-dots-horizontal', muted: true },

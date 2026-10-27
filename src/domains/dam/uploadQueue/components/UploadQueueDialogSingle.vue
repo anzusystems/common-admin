@@ -75,7 +75,7 @@ const isDone = computed(() => {
   return !isNull(item.value) && item.value.status === UploadQueueItemStatus.Uploaded
 })
 
-// The title stays "done", in the colour of an error for a file refused or failed.
+// The title stays "done", in the error colour for a refused or failed file.
 const isFailed = computed(() => item.value?.status === UploadQueueItemStatus.Failed)
 
 const { damClient, endPointAsset, endPointAuthor, customUploadMetadataToImageMap, simpleAssetSidebarEnabled } =
@@ -109,13 +109,14 @@ const isUploading = computed(() => {
   return queueTotalCount.value > queueProcessedCount.value
 })
 
-// The item's own switch: the store loads it with the item's metadata and leaves it to the user after that (a
-// duplicate takes over the original's). Not the asset detail's, which is set anew from the server when the item
-// turns uploaded, over what the user had chosen while the file was still on its way.
+// The item's own switch. The store loads it with the item's metadata,
+// then the user owns it. A duplicate takes the original's value.
+// Not the asset detail's value: that is reset from the server when the
+// item turns uploaded, overwriting the user's choice made during upload.
 const mainFileSingleUse = computed(() => item.value?.mainFileSingleUse ?? false)
 
-// What the original of a duplicate is, as it was found: the notice is about that asset, and does not follow the
-// switch, which is the item's value from then on.
+// Whether the duplicate's original is single use, as found. The notice is about that
+// asset and does not follow the switch, which is the item's value from then on.
 const originalIsSingleUse = ref(false)
 watch(
   () => item.value?.isDuplicate,
@@ -125,7 +126,7 @@ watch(
   { immediate: true }
 )
 
-// Which of the two buttons saves, while it does: the other one waits, and neither sends a second request.
+// Which button is saving. The other one waits, so no second request is sent.
 const saving = ref<'save' | 'saveAndApply' | null>(null)
 
 const onSave = async () => {
@@ -181,33 +182,33 @@ const onSaveAndApply = async () => {
     )
     await onStopConfirm()
   } catch (error) {
-    // The save is said above. What follows it, the images made of its answer, is said as it was before.
     showErrorsDefault(error)
   } finally {
     saving.value = null
   }
 }
 
-// Read once the file is done, and again once the row has another asset: a row that turns out to be a duplicate becomes
-// the original of that duplicate only after the original asset has been read, and showed no "File info" then.
+// Read when the file is done and again when the row gets another asset.
+// A duplicate row becomes the original only after the original asset was read, so the first read showed no "File info".
 watch(
   [isDone, () => item.value?.assetId],
   async ([done, assetId]) => {
     if (!done || !assetId) return
-    // The row it is read for: the queue of a dialog closed meanwhile is emptied, and the next upload of the widget is
-    // a new row of the same queue.
+    // Capture the row being read. A dialog closed meanwhile empties its
+    // queue, and the widget's next upload is a new row in the same queue.
     const row = item.value
     try {
       const res = await fetchAsset(damClient, endPointAsset, assetId)
-      // Closed meanwhile, the dialog has emptied its queue. The detail store is shared: written now, the asset of
-      // this file would be what the next dialog shows. Nor the asset of a row that has another one by now.
+      // If the dialog closed meanwhile, its queue is emptied. The detail store
+      // is shared, so writing now would show this asset in the next dialog.
+      // The same applies to a row that has another asset by now.
       if (item.value?.assetId !== assetId) return
       assetDetailStore.setAsset(res)
       enableRoiTab.value = true
     } catch (e) {
-      // Closed meanwhile as well: the error would be shown over whatever the user has gone on to, the next upload of
-      // the widget among it. A row that has become the original of a duplicate meanwhile is the same row, and its
-      // failed read is said as any.
+      // Skip the error if the dialog closed meanwhile. It would appear
+      // over whatever the user moved on to, such as the next upload.
+      // A row that became the original of a duplicate is the same row, so its failed read is reported normally.
       if (item.value !== row) return
       showErrorsDefault(e)
     }

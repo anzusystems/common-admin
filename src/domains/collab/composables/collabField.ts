@@ -29,9 +29,11 @@ import { useCommonAdminCollabOptions } from '@/domains/collab/composables/common
 import { useCollabCurrentUserId } from '@/domains/collab/composables/collabCurrentUserId'
 
 /**
- * `reacquireWhenActive`: a lock the component asked for and has not released is asked for again whenever the room
- * turns active — back after a lost connection, whose server let it go, or joined by another editor while this one was
- * alone and asked for none. For a field that holds the lock while it has the focus.
+ * `reacquireWhenActive`: a lock the component requested and has
+ * not released is requested again whenever the room turns active.
+ * This covers a reconnect, where the server released it, and
+ * another editor joining while this one was alone and held none.
+ * For a field that holds the lock while focused.
  */
 export function useCollabField(
   room: CollabRoom,
@@ -178,8 +180,9 @@ export function useCollabField(
         collabFieldDataBufferState.set(room, new Map())
       }
       collabFieldDataBufferState.get(room)?.set(field, data)
-      // Left alone by the other editor, this one still holds the lock on the server, and whoever came back found the
-      // field locked. Released there too while connected; after a disconnect the server has let it go already.
+      // When the other editor leaves, this one still holds the lock
+      // on the server, so a returning editor finds the field locked.
+      // Release it there while connected. After a disconnect the server has already released it.
       if (!collabSocket.value.connected || !fieldLockMaybeHeld(room, field, currentUserId.value)) return
     }
     collabSocket.value

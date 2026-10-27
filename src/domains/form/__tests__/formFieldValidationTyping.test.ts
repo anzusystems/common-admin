@@ -5,8 +5,8 @@ import { maxLength, required } from '@vuelidate/validators'
 import type AFormTextField from '@/domains/form/components/AFormTextField.vue'
 import type { AFormFieldValidation } from '@/shared/types/Validation'
 
-// Form fields took `v?: any`, so a typo in `:v="v$.titel"` or a hand-made object missing `$touch`
-// only showed at runtime.
+// Form fields used to take `v?: any`.
+// A typo in `:v="v$.titel"` or an object without `$touch` only showed at runtime.
 describe('AFormFieldValidation', () => {
   it('is what a vuelidate field state is', () => {
     const v$ = useVuelidate(

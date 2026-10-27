@@ -4,13 +4,11 @@ import ACropper from '@/domains/dam/cropper/components/ACropper.vue'
 import { LANDSCAPE_IMAGE, type CropperFixture } from '@/domains/dam/cropper/__tests__/support/cropperImages'
 
 /**
- * Shared harness for `ACropper` (cropper.js v2). The adapter names the selectors of its custom
- * elements, so the suites read like the behaviour they pin rather than like the markup.
+ * Shared harness for `ACropper` (cropper.js v2). The adapter names the selectors of the custom elements.
  */
 
 /**
- * A crop in source pixels. `ACropper` speaks fractions of the picture; the harness converts, so the
- * assertions compare the numbers a reader can check against the fixture.
+ * A crop in source pixels. `ACropper` uses fractions of the picture; the harness converts them.
  */
 export interface CropperData {
   x: number
@@ -23,34 +21,27 @@ export interface CropperApi {
   getData: () => CropperData
   setData: (data: Partial<CropperData>) => Promise<void>
   /**
-   * The crop as fractions of the picture, measured straight off the page. Unlike `getData` this
-   * needs no knowledge of which file is loaded, so it is the one to use when the source changes.
+   * The crop as fractions of the picture, measured off the page.
+   * Unlike `getData` it does not need to know which file is loaded, so use it when the source changes.
    */
   getCrop: () => CropperData
-  /** The picture's displayed size, in CSS pixels. */
   displaySize: () => { width: number; height: number }
 }
 
 export interface CropperAdapter {
   name: string
   component: Component
-  /** The element that moves the whole crop box. */
   face: string
-  /** The bottom-right resize grip. */
   seHandle: string
-  /** The north (top-centre) resize grip. */
   nHandle: string
-  /** The west (left-centre) resize grip. */
   wHandle: string
-  /** The north-east (top-right) corner grip. */
   neHandle: string
-  /** The surface that starts a brand new crop box when dragged. */
+  /**
+   * The surface that starts a brand new crop box when dragged.
+   */
   drawSurface: string
-  /** The element whose box equals the displayed image. */
   imageBox: string
-  /** The crop box itself. */
   cropBox: string
-  /** True once the cropper has torn itself down. */
   isDestroyed: (host: HTMLElement) => boolean
 }
 
@@ -75,7 +66,9 @@ export interface MountOptions {
   fixture?: CropperFixture
   hostWidth?: number
   props?: Record<string, unknown>
-  /** Where the host goes. Defaults to the document body; pass a frame to test clipping. */
+  /**
+   * Where the host goes. Defaults to the document body; pass a frame to test clipping.
+   */
   parent?: HTMLElement
 }
 
@@ -92,8 +85,8 @@ export interface MountedCropper {
 const READY_TIMEOUT = 5000
 
 /**
- * Mounts a cropper and resolves once it reports itself ready, so nothing downstream has to guess at
- * a sleep duration. Both components call the `ready` prop exactly once per source image.
+ * Mounts a cropper and resolves once it reports ready, so tests need no sleep.
+ * Both components call the `ready` prop once per source image.
  */
 export const mountCropper = async (options: MountOptions): Promise<MountedCropper> => {
   const { adapter, fixture = LANDSCAPE_IMAGE, hostWidth = 640, props = {}, parent } = options
@@ -151,7 +144,6 @@ export const mountCropper = async (options: MountOptions): Promise<MountedCroppe
     return { width: rect.width, height: rect.height }
   }
 
-  /** Reads the crop off the page, in source pixels, for whichever component this is. */
   const getData = (): CropperData => {
     const canvas = find('cropper-canvas').getBoundingClientRect()
     const picture = find('cropper-image').getBoundingClientRect()
@@ -234,9 +226,8 @@ const pointerInit = (point: Point, pointerType: 'mouse' | 'touch' = 'mouse'): Po
 })
 
 /**
- * Drives a real pointer gesture. Both cropper versions start an action from a `pointerdown` on the
- * grip itself and then track `pointermove`/`pointerup` on the document, so the moves are dispatched
- * there rather than at the element under the cursor.
+ * Drives a real pointer gesture. Both cropper versions start an action from a `pointerdown` on the grip
+ * and track `pointermove`/`pointerup` on the document, so the moves are dispatched there.
  */
 export const drag = async (
   element: HTMLElement,
@@ -258,8 +249,8 @@ export const drag = async (
 }
 
 /**
- * A two-finger pinch centred on the element. Both versions read this through pointer events, and it
- * is the one gesture that zooms the picture rather than changing the crop.
+ * A two-finger pinch centred on the element. Both versions read it through pointer events.
+ * It is the one gesture that zooms the picture instead of changing the crop.
  */
 export const pinch = async (element: HTMLElement, spread: number, steps = 6) => {
   const rect = element.getBoundingClientRect()
@@ -269,8 +260,8 @@ export const pinch = async (element: HTMLElement, spread: number, steps = 6) => 
 
   element.dispatchEvent(new PointerEvent('pointerdown', pointerInit({ x: x - start, y }, 'touch')))
   element.dispatchEvent(new PointerEvent('pointerdown', { ...pointerInit({ x: x + start, y }, 'touch'), pointerId: 2 }))
-  // Dispatched on the element rather than the document: cropper.js reads `event.target` to work out
-  // what is under the finger, and a real browser reports the element, not the document.
+  // Dispatched on the element, not the document. cropper.js reads `event.target` to find what is under the finger,
+  // and a real browser reports the element.
   for (let step = 1; step <= steps; step++) {
     const offset = start + (spread * step) / steps
     element.dispatchEvent(new PointerEvent('pointermove', pointerInit({ x: x - offset, y }, 'touch')))
@@ -287,12 +278,10 @@ export const pinch = async (element: HTMLElement, spread: number, steps = 6) => 
   await wait(200)
 }
 
-/** The centre of an element, in client coordinates — the natural place to grab it. */
 export const centerOf = (element: HTMLElement): Point => {
   const rect = element.getBoundingClientRect()
   return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 }
 }
 
-/** Displayed pixels per source pixel, measured off the page. */
 export const scaleOf = (cropper: { api: CropperApi }, fixture: CropperFixture = LANDSCAPE_IMAGE): number =>
   cropper.api.displaySize().width / fixture.naturalWidth

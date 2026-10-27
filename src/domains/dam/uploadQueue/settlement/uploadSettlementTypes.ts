@@ -13,104 +13,119 @@ export const UploadRowRole = {
 export type UploadRowRoleType = (typeof UploadRowRole)[keyof typeof UploadRowRole]
 
 export interface UploadSettlePolicy {
-  /** What a tick reads the state of the row's file with. `none`: the row is never tracked. */
+  /**
+   * How a tick reads the state of the row's file. `none`: the row is never tracked.
+   */
   reader: 'asset' | 'slots' | 'none'
   /**
-   * For the `processed` state ONLY.
-   * `read`: uploaded only from a read, the event merely starts that read.
-   * `event`: the state of the event is written at once, the read completes the row.
-   * `never`: `processed` does not change the state of the row (mass edit), it only completes it.
-   * `failed` and `duplicate` are written to every row that passes `matches(…, 'settle')`.
+   * Applies to the `processed` state only.
+   * `read`: uploaded only after a read; the event just starts the read.
+   * `event`: the event state is written at once; the read completes the row.
+   * `never`: `processed` does not change the row state (mass edit), it only completes
+   * it. `failed` and `duplicate` apply to every row matching `matches(…, 'settle')`.
    */
   settleOn: 'read' | 'event' | 'never'
   duplicate: 'becomeOriginal' | 'markDuplicate'
-  /** `load`: the row is to have a form, and its metadata is loaded into it. */
+  /**
+   * `load`: the row gets a form, and its metadata is loaded into it.
+   */
   metadata: 'load' | 'none'
 }
 
 export interface UploadSettlementTarget {
   assetId: DocId
-  /** The file the event or the read speaks of; `null` when the caller does not know it. */
+  /**
+   * `null` when the caller does not know the file.
+   */
   fileId: DocIdNullable
   /**
-   * The DAM configurations the target is of: with `configOf` of the profile, a row in a queue of another configuration
-   * is not concerned. Left out or empty: the rows of every queue. Two DAMs may give one asset id.
+   * DAM configurations of the target. With `configOf`, rows in queues of other configurations are not concerned.
+   * Omitted or empty: rows of every queue. Two DAMs may share an asset id.
    */
   configNames?: string[]
 }
 
-/** What the settlement says of one request it asks a reader for. A reader that ignores it behaves as before. */
+/**
+ * Per-request options a reader may honour. A reader that ignores them keeps its old behaviour.
+ */
 export interface UploadReadOptions {
   /**
-   * Whether a failure of this request is to be reported to whoever collects the errors of the application.
-   *
-   * The poll and the notifications ask again and again for as long as a row waits, so of their requests only
-   * the first that fails in a streak is `true`; a read that answers ends the streak (with `configOf` of the profile,
-   * a streak is of one configuration, and only a read of that configuration ends it). The streak begins with a
-   * failure that was written down (`readers.failureReported`): after one that was not, the next request is
-   * `true` again. An asset that does not exist (404) counts as such a failure: it is `true` once per row at most.
-   * A read the user asked for (the refresh) is always `true`.
+   * Whether a failure of this request should be reported to the app error collector.
+   * Polls and notifications retry while a row waits, so only the first failure of a streak is
+   * `true`. An answered read ends the streak; with `configOf`, streaks are per configuration.
+   * A streak starts only with a failure that was written down (`readers.failureReported`).
+   * A 404 counts as such, so it is `true` at most once per row.
+   * A user-requested refresh is always `true`.
    */
   report: boolean
   /**
-   * The queue the read is for: of the poll its own queue; of a read a notification or the refresh asked for, the
-   * queue of the first row it concerns. For a reader that asks under the configuration of the queue. Not given when
-   * the read concerns no row.
+   * The queue the read is for: the polled queue, or for notification
+   * and refresh reads the queue of the first concerned row.
+   * Lets a reader use the queue's configuration. Omitted when the read concerns no row.
    */
   queueKey?: UploadQueueKey
 }
 
-/** What a store hands its settlement. */
 export interface UploadSettlementProfile {
-  /** A live view of the queues of the store. The settlement keeps no rows, it always asks. */
+  /**
+   * Live view of the store's queues. The settlement keeps no rows and always asks.
+   */
   queues(): Iterable<[UploadQueueKey, UploadQueue]>
   /**
-   * The DAM configuration the queue `queueKey` is of. With it, a target or an event that names configurations
-   * concerns only the rows of their queues: the poll of a queue names that of the queue, and every read made for a
-   * target or an event (one a notification asks for, the refresh, a known processed file, the original of a duplicate)
-   * is made once for each configuration it names, by the queue of its first concerned row of that configuration, and
-   * written into its rows alone; a configuration named whose queues have no row of the asset is not read. The reads of
-   * a configuration go one after another, beside those of the others (and those that name none in a lane of their
-   * own), each configuration with its own streak of failures. The caches are told the queue of the rows whose names
-   * they get. Without it, every row of the asset is concerned, all reads go one after another with one streak, and the
-   * caches are called without a queue, as before.
+   * DAM configuration of the queue. With it, named targets and
+   * events concern only rows of their configurations' queues.
+   * Each such read runs once per named configuration, through the queue of its first concerned
+   * row, and writes only into those rows. A configuration with no row of the asset is not read.
+   * Reads run sequentially per configuration, in parallel across configurations (unnamed reads get
+   * their own lane), each with its own failure streak. Caches get the queue of the named rows.
+   * Without it, every row of the asset is concerned, all reads share one lane and streak, and caches get no queue.
    */
   configOf?(queueKey: UploadQueueKey): string
   roleOf(row: UploadQueueItem): UploadRowRoleType
   policyFor(role: UploadRowRoleType): UploadSettlePolicy
   /**
-   * `settle`: the row may be given a state. `decorate`: it may be completed without a change of state.
-   * `metadata`: it may be given its metadata from the metadata notification.
+   * `settle`: the row may get a new state. `decorate`: it may be completed without a state change.
+   * `metadata`: it may get metadata from the metadata notification.
    */
   matches(row: UploadQueueItem, target: UploadSettlementTarget, purpose: 'settle' | 'decorate' | 'metadata'): boolean
 
   readers: {
-    /** One asset; `null` when it does not exist (404). Throws only when the request fails. */
+    /**
+     * One asset; `null` when it does not exist (404). Throws only when the request fails.
+     */
     asset(assetId: DocId, options?: UploadReadOptions): Promise<AssetDetailItemDto | null>
-    /** Assets of one licence. The missing ones are not in the answer. An answer that is no list throws. */
+    /**
+     * Assets of one licence. The missing ones are not in the answer. An answer that is no list throws.
+     */
     assets(licenceId: IntegerId, assetIds: DocId[], options?: UploadReadOptions): Promise<AssetDetailItemDto[]>
-    /** DAM: the files of all the slots of an asset. An answer that is no list throws. */
+    /**
+     * DAM: the files of all the slots of an asset. An answer that is no list throws.
+     */
     slotFiles?(assetId: DocId, options?: UploadReadOptions): Promise<AssetFileNullable[]>
-    /** LIB: the asset the original file of a duplicate belongs to. `queueKey`: of the first row that is to become it. */
+    /**
+     * LIB: the asset the original file of a duplicate belongs to. `queueKey`: of the first row that is to become it.
+     */
     duplicateOriginAsset?(
       originFileId: DocId,
       options?: Pick<UploadReadOptions, 'queueKey'>
     ): Promise<AssetDetailItemDto>
-    /** DAM: the original file of a duplicate, by its type. */
+    /**
+     * DAM: the original file of a duplicate, by its type.
+     */
     duplicateOriginFile?(originFileId: DocId, assetType: DamAssetTypeType): Promise<AssetFileNullable>
     /**
-     * Whether a failure of a read that was let report (`report: true`) was written down, by what the read threw:
-     * `apiErrorIsReported` for readers that report through the api error logger. One that was not (a timeout, a
-     * 401, a 403) has told nobody, and the next read is let report again. Without it, every such failure was.
+     * Whether a failure of a read with `report: true` was written
+     * down, judged by the thrown error, e.g. `apiErrorIsReported`.
+     * If not (timeout, 401, 403), nobody was told and the next read may
+     * report again. Without this, every failure counts as written down.
      */
     failureReported?(error: unknown): boolean
   }
   /**
-   * `queueKey`: the queue of the rows whose names are added, and the one whose names are to be fetched, given only to
-   * a profile with `configOf`, as the second argument (an `add` of `defineCached`, which takes every argument as an
-   * id, is to be wrapped). Such a profile is asked to fetch, where the fetch was asked for before (after a read,
-   * after a duplicate became its original), for each queue whose rows were given names since its last fetch. A
-   * profile without it is called without a queue, as before.
+   * `queueKey` is passed as the second argument only to a profile with `configOf`.
+   * Wrap a `defineCached` `add`, which treats every argument as an id.
+   * Such a profile is asked to fetch once per queue whose rows got
+   * names since its last fetch. Without `configOf`, calls get no queue.
    */
   caches: {
     addAuthors(ids: DocId[], queueKey?: UploadQueueKey): void
@@ -123,44 +138,49 @@ export interface UploadSettlementProfile {
     readFailed(row: UploadQueueItem): string
     assetMissing(row: UploadQueueItem): string
     /**
-     * The text of an uploaded row still without its metadata whose asset was missing from as many reads as it
-     * takes: it fails with it. Without it, `assetMissing`.
+     * Fail text for an uploaded row without metadata whose asset
+     * was missing from too many reads. Defaults to `assetMissing`.
      */
     assetGone?(row: UploadQueueItem): string
   }
   /**
-   * `'load'`: this row may be given its metadata from the notification although it has failed. `undefined`: the
-   * default rules. DAM: a mass-edit row its batch load left out.
+   * `'load'`: the row may get metadata from the notification although it failed. `undefined`: default rules.
+   * DAM: a mass-edit row its batch load left out.
    */
   metadataGate?(queueKey: UploadQueueKey, row: UploadQueueItem): 'load' | undefined
   hooks: {
-    /** The row has reached a final state: count the queue again and start the next waiting upload. */
+    /**
+     * The row has reached a final state: count the queue again and start the next waiting upload.
+     */
     onRowFinal(queueKey: UploadQueueKey, row: UploadQueueItem): void
-    /** After every asset that was read (DAM: the main file for the open detail). */
+    /**
+     * After every asset that was read (DAM: the main file for the open detail).
+     */
     onAssetRead?(asset: AssetDetailItemDto): void
-    /** A row with `settleOn: 'never'` has learnt its file is processed (an event, a tick or a manual read). */
+    /**
+     * A row with `settleOn: 'never'` has learnt its file is processed (an event, a tick or a manual read).
+     */
     onProcessedSeen?(queueKey: UploadQueueKey, row: UploadQueueItem): void
-    /** The row was given its metadata. */
     afterMetadataLoaded?(queueKey: UploadQueueKey, row: UploadQueueItem): void
     /**
-     * Whether a refresh may still change a failed row, told whenever that changes. For a store that offers
-     * refresh on a failed row only where it can help.
-     *
-     * `true`: the row is asked about although the client gave it up (`track(…, { clientFailed: true })`), or its
-     * file is a duplicate whose original could not be read. `false`: the server has said what became of the file
-     * (processed, failed, a duplicate that was settled), its asset is gone from as many reads as it takes, or the
-     * store took the row out (`untrack`, `dropQueue`). A row never told `true` is never told `false`. Not called
-     * by `dispose()`.
+     * Whether a refresh may still change a failed row; called when
+     * that changes, for stores that offer refresh only where it helps.
+     * `true`: tracked despite `clientFailed: true`, or a duplicate whose original could not be read.
+     * `false`: the server settled the file, the asset was missing too
+     * often, or the store removed the row (`untrack`, `dropQueue`).
+     * Never `false` without a prior `true`. Not called by `dispose()`.
      */
     onRefreshMayHelp?(queueKey: UploadQueueKey, row: UploadQueueItem, mayHelp: boolean): void
   }
   connection: {
     /**
-     * Whether notifications come for the rows of the queue `queueKey`: its poll is then only a backup. A profile
-     * that keeps one state for all its queues may leave the queue unread.
+     * Whether notifications arrive for the queue's rows; the poll is then
+     * only a backup. A profile with one shared state may ignore `queueKey`.
      */
     isPushAlive(queueKey?: UploadQueueKey): boolean
-    /** Called whenever that may have changed, for any queue. */
+    /**
+     * Called whenever that may have changed, for any queue.
+     */
     onChange(callback: () => void): () => void
   }
 }
@@ -168,52 +188,66 @@ export interface UploadSettlementProfile {
 export interface UploadSettlementEvent {
   kind: 'processed' | 'failed' | 'duplicate' | 'metadata' | 'copied'
   assetId: DocId
-  /** `event.data.id` */
+  /**
+   * `event.data.id`
+   */
   fileId: DocIdNullable
   failReason?: AssetFileFailReasonType
   originAssetFile?: DocIdNullable
   assetType?: DamAssetTypeType | null
-  /** The DAM configurations the event is of, as on `UploadSettlementTarget`. Left out: every queue. */
+  /**
+   * DAM configurations of the event, as on `UploadSettlementTarget`. Omitted: every queue.
+   */
   configNames?: string[]
 }
 
 /**
- * `settled`: the main file is in a final state, or its asset was missing once too often and its rows were given
- * up. `pending`: not yet. And what asking again may mend: `error`, the read failed; `missing`, the asset was not
- * found; `originalUnread`, a row is left without the original of its duplicate, which could not be read.
+ * `settled`: the main file is final, or the asset was missing too often and its rows were given up. `pending`: not yet.
+ * Retryable: `error` (read failed), `missing` (asset not found),
+ * `originalUnread` (duplicate's original could not be read).
  */
 export type UploadRefreshOutcome = 'settled' | 'pending' | 'error' | 'missing' | 'originalUnread'
 
-/** What a store uses. */
 export interface UploadSettlement {
-  /** The row began to wait for the server. A row that is not in the queue `queueKey` is ignored. */
+  /**
+   * The row starts waiting for the server. Ignored if the row is not in `queueKey`.
+   */
   track(queueKey: UploadQueueKey, row: UploadQueueItem, options?: { clientFailed?: boolean }): void
   untrack(row: UploadQueueItem): void
-  /** The queue was cleared: its poller is dropped. */
+  /**
+   * The queue was cleared: its poller is dropped.
+   */
   dropQueue(queueKey: UploadQueueKey): void
 
-  /** A notification. Resolves after the write (a delayed read included) or after a failed read; never rejects. */
+  /**
+   * A notification. Resolves after the write (a delayed read included) or after a failed read; never rejects.
+   */
   notify(event: UploadSettlementEvent): Promise<void>
   /**
-   * The manual refresh: a read at once, with the metadata, without a hint. With `configOf` of the profile, a
-   * configuration the target names whose queues have no row of the asset is not read (`settled`); of several, the
-   * outcome first of `error`, `originalUnread`, `missing`, `pending`, `settled` that any of their reads had.
+   * Manual refresh: an immediate read with metadata and no hint.
+   * With `configOf`, a named configuration with no row of the asset is not read (`settled`). With several,
+   * returns the first of `error`, `originalUnread`, `missing`, `pending`, `settled` any read had.
    */
   refreshAsset(target: UploadSettlementTarget): Promise<UploadRefreshOutcome>
-  /** The caller knows the file is processed: a read at once, with the hint `processed`. */
+  /**
+   * The caller knows the file is processed: a read at once, with the hint `processed`.
+   */
   settleKnownProcessed(target: UploadSettlementTarget, options: { withMetadata: boolean }): Promise<void>
-  /** A known duplicate without a read of the asset: the `duplicate` event, and a copy the licence already has. */
+  /**
+   * Settles a known duplicate without reading the asset: the `duplicate` event, or a copy the licence already has.
+   */
   settleKnownDuplicate(
     target: UploadSettlementTarget,
     originFileId: DocIdNullable,
     assetType: DamAssetTypeType | null
   ): Promise<void>
-  /** A known failure, without a read. Synchronous. */
+  /**
+   * A known failure, without a read. Synchronous.
+   */
   settleKnownFailed(target: UploadSettlementTarget, failReason: AssetFileFailReasonType): void
 
   /**
-   * The row failed by the read that was one too many to find no asset of it (the poll's, a notification's, a
-   * refresh's), and the server has settled it by nothing else since.
+   * The row failed because too many reads found no asset, and the server has not settled it otherwise since.
    */
   isGivenUpMissing(row: UploadQueueItem): boolean
   hasTracked(): boolean

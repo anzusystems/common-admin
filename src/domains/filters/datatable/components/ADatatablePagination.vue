@@ -33,9 +33,8 @@ if (isUndefined(pagination)) {
 const { t } = useI18n()
 const { setStoredPage } = useDatatablePageStore()
 
-// `useFilterHelpers` provides the key, so tables sharing a system/subject stay apart. Both
-// fallbacks are optional on purpose: a datatable may provide pagination without either, and it
-// then keeps the shared bucket it had before the store was keyed.
+// `useFilterHelpers` provides the key, so tables sharing a system/subject stay apart.
+// Both are optional. A datatable providing pagination without them uses the shared bucket.
 const providedPageKey = inject(DatatablePageStoreKey, undefined)
 const filterConfig = inject(FilterConfigKey, undefined)
 const pageStoreKey = computed(
@@ -62,10 +61,8 @@ const disabledFirstAndPrev = computed(() => {
   return pagination.value.page === 1
 })
 
-// `>=`, not `===`: an empty list has `totalCount: 0`, so `lastPage` is 0 while `page` is never below
-// 1, and the two can never meet. The page would then count as "not the last one" on a list with
-// nothing in it -- and the same holds before any request has been made, because that initial state is
-// the same numbers.
+// `>=`, not `===`. An empty list has `lastPage` 0 while `page` is at least 1, so they never meet.
+// The same holds before the first request.
 const disabledLast = computed(() => {
   return !isNull(pagination.value.hasNextPage) || pagination.value.page >= lastPage.value
 })
@@ -104,10 +101,9 @@ watch(
   }
 )
 
-// Leading edge only: the throttle is a click-spam guard, not a rate limiter. VueUse 15 flipped
-// `trailing` to true by default, which replays the last click once the window closes -- stepping
-// prev/next a second time, and past `lastPage`, because the queued callback never re-reads the
-// disabled state.
+// Leading edge only. The throttle guards against click spam.
+// VueUse 15 defaults `trailing` to true, which replays the last click and can step
+// past `lastPage`, because the queued callback does not recheck the disabled state.
 const onClickFirst = useThrottleFn(
   () => {
     pagination.value.page = 1

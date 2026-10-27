@@ -18,10 +18,11 @@ import { AssetFileProcessStatus } from '@/domains/dam/types/AssetFile'
 import type { ImageAware, ImageStoreItem } from '@/domains/dam/types/ImageAware'
 import { useUploadQueueDialog } from '@/domains/dam/uploadQueue/composables/useUploadQueueDialog'
 
-// A file uploaded into the gallery that is a duplicate of an asset a row has: the upload dialog has saved the authors of
-// that asset, and the rows of it that offer the pick of authors take them, as after the detail of a row closes. The
-// source of such a row takes their names only where it is empty or is what a pick wrote there ("fill empty"); a source
-// of the image's own stays. It took the source of the upload always. admin-cms only (admin-ugc has no DAM authors).
+// A file uploaded into the gallery that duplicates an asset a
+// row has: the upload dialog has saved that asset's authors.
+// Rows offering the author pick take them. Their source takes the names only if it is
+// empty or was written by "fill empty". It used to always take the upload's source.
+// admin-cms only.
 
 const profile = cmsConfiguration
 const { endPoints, extSystem, licence } = profile
@@ -37,7 +38,6 @@ const Editor = defineComponent({
     return () => h('div', slots['view-body']?.())
   },
 })
-/** The upload dialog of the widget: only what it applies is of interest here. */
 const UploadDialog = defineComponent({ name: 'UploadQueueDialog', emits: ['apply'], setup: () => () => h('div') })
 
 let pinia: Pinia
@@ -52,7 +52,6 @@ beforeEach(() => {
   dam = createFakeDam(endPoints)
   imageApi = installConsumerImageApi(profile, installConsumerProfile(profile, dam.client))
   answerDamNames(dam)
-  // The search of the DAM for assets by their files, which the widget asks before it reads the assets.
   dam.reply((request) => {
     const match = request.method === 'GET' ? request.url.match(SEARCH) : null
     if (!match) return undefined
@@ -76,7 +75,6 @@ afterEach(async () => {
 
 const images = () => useImageStore(pinia).images
 
-/** The gallery with image 12 of `asset-12`, which has no authors: its row offers the pick of them. */
 const galleryWith = async (source: string) => {
   const image: ImageAware = {
     id: 12,
@@ -126,7 +124,6 @@ const galleryWith = async (source: string) => {
   expect(images()[0]!.showDamAuthors).toBe(true)
 }
 
-/** The upload dialog applies a file that is a duplicate of `asset-12`, whose authors it has saved. */
 const applyDuplicate = async () => {
   useUploadQueueDialog().uploadQueueDialog.value = QUEUE
   await flushPromises()

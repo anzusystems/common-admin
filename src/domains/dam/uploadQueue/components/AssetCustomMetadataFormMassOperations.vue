@@ -44,8 +44,8 @@ const configAssetCustomFormElements = getDamConfigAssetCustomFormElements(props.
 if (isUndefined(configAssetCustomFormElements)) {
   throw new Error('Custom form elements must be initialised.')
 }
-// A type whose read failed beside reads that answered is not loaded: the form says so in place of its fields. Thrown,
-// it took the rest of the panel of its host with it.
+// A type whose read failed while other reads succeeded is not loaded. The form shows that instead of its fields.
+// Throwing here would break the rest of the host panel.
 const typeNotLoaded = computed(() => isUndefined(getDamConfigAssetCustomFormElements(props.extSystem, props.assetType)))
 
 const elements = computed(() => {

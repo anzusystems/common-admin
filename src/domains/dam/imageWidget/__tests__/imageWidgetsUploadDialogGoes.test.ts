@@ -7,10 +7,10 @@ import { ImageWidgetUploadConfigKey } from '@/domains/dam/imageWidget/utils/imag
 import UploadQueueDialogSingle from '@/domains/dam/uploadQueue/components/UploadQueueDialogSingle.vue'
 import { useUploadQueueDialog } from '@/domains/dam/uploadQueue/composables/useUploadQueueDialog'
 
-// The upload dialog of a widget of one image is open, and the widget goes away with its page (in admin-cms the editor
-// sent out of the article's room during an upload is taken to the detail of the article). The page kept the dialog
-// named, and the next widget of that queue opened it at once, over whatever it was drawn in. The dialog forgets itself
-// as it goes. The upload dialog is drawn without its frame.
+// The upload dialog is open and the widget goes away with its page
+// (admin-cms: an editor sent out of the article's room during an upload).
+// The page kept the dialog named, so the next widget of that queue opened it at
+// once, over whatever it was drawn in. The dialog now forgets itself when it goes.
 
 vi.mock('@/domains/dam/imageWidget/composables/commonAdminImageOptions', () => ({
   useCommonAdminImageOptions: () => ({
@@ -117,8 +117,6 @@ describe.each<[string, Component]>([
     expect(drawsTheUploadDialog(next)).toBe(false)
   })
 
-  // Two widgets of one queue key each draw the upload dialog: the one that goes leaves the other's open, and an add of
-  // that widget, its dialog named, keeps the upload going.
   it('opened in two widgets of its queue: the one that goes leaves the dialog of the other, the last one forgets it', async () => {
     const one = await mountWidget()
     const other = await mountWidget()

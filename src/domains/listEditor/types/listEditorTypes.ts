@@ -47,8 +47,8 @@ export interface NestedPositionHint {
 }
 
 /**
- * A tree node of any record shape with stable keys addressable via configurable fields (keyField,
- * positionField, parentField). Admin-cms data types like `LinkedListItemKind` are assignable to this.
+ * A tree node of any record shape, addressed via configurable fields (keyField, positionField, parentField).
+ * Admin-cms types like `LinkedListItemKind` are assignable to it.
  */
 export interface NestedTreeNode<TItem = any> {
   data: TItem

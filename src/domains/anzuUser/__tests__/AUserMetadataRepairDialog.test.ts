@@ -104,8 +104,9 @@ describe('AUserMetadataRepairDialog', () => {
   })
 
   it('keeps a deliberate full name when the source is switched to the record that holds it', async () => {
-    // cms matches what the names would derive, so its flags start clean. weather does not -- that
-    // value was set on purpose, and switching to weather is the operator saying "this is the one".
+    // cms matches what the names would derive, so its flags start clean.
+    // weather does not. That value was set on purpose, and switching
+    // to weather means the operator chose it as the source.
     const store = seed({
       cms: record({ person: { firstName: 'Jozef', lastName: 'Mrkvicka', fullName: 'Jozef Mrkvicka' } }),
       weather: record({ person: { firstName: 'Jozef', lastName: 'Novak', fullName: 'Ing. Jozef Novak' } }),
@@ -117,8 +118,8 @@ describe('AUserMetadataRepairDialog', () => {
     await select.setValue('weather')
     await flushPromises()
 
-    // Deriving here would throw away the very value the operator picked as the source of truth --
-    // and then propose writing the derived one into every system.
+    // Deriving here would discard the value the operator picked as the source of truth,
+    // and then propose writing the derived value into every system.
     expect(fieldValue('user-fullName')).toBe('Ing. Jozef Novak')
     expect(store.resolvedId).toBe(42)
   })
@@ -131,7 +132,6 @@ describe('AUserMetadataRepairDialog', () => {
     })
     const wrapper = await mountDialog()
 
-    // Source is cms, so weather and blog differ.
     expect(document.querySelector('[data-cy="repair-system-weather"]')).not.toBeNull()
     expect(document.querySelector('[data-cy="repair-system-blog"]')).not.toBeNull()
     expect(document.querySelector('[data-cy="repair-system-cms"]')).toBeNull()
@@ -197,9 +197,9 @@ describe('AUserMetadataRepairDialog', () => {
   })
 
   it('will not write a blank value from the source into the other systems', async () => {
-    // Plan lines 483-486: the repair is always strict, because a loose form could put an empty name
-    // into cms. The source is the first configured system with a record -- in inhouse that is cms,
-    // which never required a colour -- so its blanks would be written everywhere they differ.
+    // The repair is always strict, because a loose form could put an empty name into cms.
+    // The source is the first configured system with a record. In inhouse that is cms, which never required a colour,
+    // so its blanks would be written everywhere they differ.
     seed({
       cms: record({ person: { firstName: '', lastName: '', fullName: '' }, avatar: { color: '', text: '' } }),
       blog: record(),
@@ -211,7 +211,6 @@ describe('AUserMetadataRepairDialog', () => {
     await flushPromises()
 
     expect(wrapper.emitted('confirm')).toBeUndefined()
-    // Still on the form, not on the log of a run that never happened.
     expect(document.querySelector('[data-cy="repair-log"]')).toBeNull()
   })
 
@@ -219,7 +218,6 @@ describe('AUserMetadataRepairDialog', () => {
     seed({ cms: record(), weather: record() })
     const wrapper = await mountDialog()
 
-    // Nothing differs, so there is nothing to write and no row to tick.
     expect(document.querySelector('[data-cy="repair-system-weather"]')).toBeNull()
 
     const confirm = document.querySelector('[data-cy="repair-confirm"]') as HTMLElement

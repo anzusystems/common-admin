@@ -11,9 +11,8 @@ import { cloneDeep, isNull } from '@/shared/utils/common'
 
 const props = defineProps<{
   /**
-   * Reads the source account from the server. It is a prop because the shape of a user differs per
-   * system -- cms answers `CmsUserDto`, dam `DamUserDto` -- and because the page already holds an
-   * api instance pointed at the right backend.
+   * Reads the source account from the server. A prop because the user shape differs per system (cms
+   * `CmsUserDto`, dam `DamUserDto`), and the page already has an api instance for the right backend.
    */
   fetchSourceUser: (id: number) => Promise<AnzuUser>
   /**
@@ -21,11 +20,14 @@ const props = defineProps<{
    * fields; systems with none leave this out.
    */
   copySystemFields?: ((target: TUser, source: AnzuUser) => void) | undefined
-  /** i18n keys listed in the dialog, so the operator sees exactly what will be overwritten. */
+  /**
+   * i18n keys listed in the dialog, so the operator sees exactly what will be overwritten.
+   */
   copiedSettingKeys?: string[]
 }>()
 
-// What the dialog overwrites is all it needs of the account: a wizard holds a system's permissions without the rest.
+// Typed `TUser` with only the overwritten fields, because a wizard
+// holds a system's permissions without the rest of the account.
 const user = defineModel<TUser>('user', { required: true })
 
 const dialog = ref(false)

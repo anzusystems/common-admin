@@ -21,17 +21,14 @@ import UploadQueueDialog from '@/domains/dam/uploadQueue/components/UploadQueueD
 import { useUploadQueueDialog } from '@/domains/dam/uploadQueue/composables/useUploadQueueDialog'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
 
-// Where the components under a named DAM configuration hand its name, or their queue, to the upload store: a widget
-// under `own` whose copy of an asset into the licence is there already, and the "save and apply" of the dialog of a
-// queue under `own`, which asks about a row without its form once more. Two DAMs, `default` and `own`, have each given
-// an asset `a-1`, and a queue of `default` has a row of it: only `own`'s row is touched, and only `own`'s DAM asked.
-
 const { endPoints, extSystem, licence } = cmsConfiguration
 const OWN = { asset: '/own/v2/asset', image: '/own/v2/image' }
 const OF_DEFAULT = 'entries-of-default'
 const OF_OWN = 'entries-of-own'
 const ASSET = 'a-1'
-/** From here on a wait is held: below the 1.5 s the caches wait before they ask. */
+/**
+ * Waits from this length are held. The caches wait 1.5 s before they ask.
+ */
 const HELD_FROM_MS = 1_200
 const { Processing, Uploaded } = UploadQueueItemStatus
 const { Processed } = AssetFileProcessStatus
@@ -73,13 +70,11 @@ afterEach(async () => {
   useDamNotificationsEventBus().reset()
 })
 
-/** The paths of the reads of `a-1` a DAM was asked, in order. */
 const readsOfA1 = (of: FakeDam) =>
   of
     .assetReads()
     .map((request) => request.url)
     .filter((url) => url.endsWith(`/${ASSET}`))
-/** A copy of `a-1` into the licence waits in the queue of `default`. */
 const rowOfDefault = async () => {
   const store = useUploadQueuesStore()
   await store.addByCopyToLicence(OF_DEFAULT, extSystem, licence, [ASSET], 'default')
@@ -165,7 +160,6 @@ describe('the dialog of a queue under a named DAM configuration', () => {
     own.assets.set(ASSET, damAssetWithFile(ASSET, 'file-own', Processed, { licence }))
     const store = useUploadQueuesStore()
     await store.addByCopyToLicence(OF_OWN, extSystem, licence, [ASSET], 'own')
-    // Processed, without its metadata: the row is uploaded without its form.
     await store.queueItemProcessed(ASSET, 'own')
     const [ofOwn] = store.getQueueItems(OF_OWN)
     expect(ofOwn).toMatchObject({ status: Uploaded, canEditMetadata: false })

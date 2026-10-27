@@ -5,12 +5,13 @@ import { type UploadQueueItem, UploadQueueItemStatus } from '@/domains/dam/types
 import { useUpload } from '@/domains/dam/uploadQueue/composables/uploadService'
 import { useDamConfigStore } from '@/domains/dam/config/store/damConfigStore'
 
-// rusha, which hashes the upload, is imported when a file starts uploading, before its asset is created.
-// Until the first chunk goes out there is no request for Stop to cancel, so the upload has to notice the
-// stop itself -- rather than create the asset, send every chunk and finish what the user stopped.
+// `rusha` is imported when a file starts uploading, before its asset is created.
+// Until the first chunk goes out there is no request for Stop to cancel.
+// The upload must notice the stop itself, instead of creating the asset, sending every chunk and finishing.
 
-// rusha is CommonJS and pre-bundled for the browser run: the factory returns what its `module.exports`
-// would be, and the import sees that as `default`, as it does the real package.
+// rusha is CommonJS and pre-bundled for the browser run.
+// The factory returns what its `module.exports` would be, and
+// the import sees that as `default`, as with the real package.
 vi.mock('rusha', () => ({ createHash: () => ({ update: () => undefined, digest: () => 'sha-of-file' }) }))
 
 const damUploadStart = vi.fn(async () => ({ asset: 'asset-1', id: 'file-1' }))
@@ -41,7 +42,6 @@ const queueItem = () =>
     latestChunkAbortController: null,
   }) as unknown as UploadQueueItem
 
-// The bounds of the chunks are loaded, as an upload needs them: the sizing itself is a stand-in here.
 beforeEach(() => {
   setActivePinia(createPinia())
   useDamConfigStore().damPrvConfig.settings.imageChunkConfig = { minSize: 1024, maxSize: 1024 }

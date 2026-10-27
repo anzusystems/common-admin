@@ -4,10 +4,9 @@ import type { AxiosInstance } from 'axios'
 import { useLanguageSettings } from '@/domains/system/composables/languageSettings'
 import { usePermissionConfigActions } from '@/domains/permission/config/composables/permissionConfigActions'
 
-// The three per-admin versions this replaces shared one `loading` and one `initialized` boolean
-// across every system they fetched. With a parallel fan-out that is wrong twice over: the first
-// answer cleared the flag for all of them, and the first failure left it set for the session
-// because there was no `finally`.
+// The per-admin versions shared one `loading` and one `initialized` boolean across all fetched systems.
+// With a parallel fan-out the first answer cleared the flag for all of them.
+// The first failure left it set for the session because there was no `finally`.
 
 const configFor = (subject: string) => ({
   roles: [],
@@ -75,8 +74,8 @@ describe('usePermissionConfigActions', () => {
   })
 
   it('falls back to the raw acl key, which is the whole contract of the translation table', async () => {
-    // Keyed by whatever language the app is in: the backend ships one entry per language and the
-    // lookup is `group.key.lang`, so pinning `en` here would only test the fallback twice.
+    // Keyed by the current app language: the backend ships one entry per language and the lookup is `group.key.lang`.
+    // Pinning `en` would only test the fallback twice.
     const { currentLanguageCode } = useLanguageSettings()
     const request = vi.fn().mockResolvedValue({
       status: 200,
@@ -98,8 +97,8 @@ describe('usePermissionConfigActions', () => {
     await actions.fetchPermissionConfig()
 
     expect(actions.translatePermission('subjects', 'location')).toBe('Location')
-    // Never blank: the ACL vocabulary lives in the backend yaml and an untranslated one is shown
-    // as the key an operator can search for.
+    // Never blank: the ACL vocabulary lives in the backend yaml.
+    // An untranslated entry is shown as its key, which an operator can search for.
     expect(actions.translatePermission('actions', 'ui')).toBe('ui')
   })
 

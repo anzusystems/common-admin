@@ -55,13 +55,11 @@ describe('ASortableListEditor — Escape while Apply is in flight', () => {
     await nextTick()
     expect(saved).toEqual([[2, 1, 3]])
 
-    // Keyboard user presses Escape on a focused row while the request is pending.
     await wrapper.find('.a-le-row').trigger('keydown', { key: 'Escape' })
     await nextTick()
     resolveApply()
     await flushPromises()
 
-    // The server has [2, 1, 3]; the editor must not show [1, 2, 3].
     expect(model.value.map((i) => i.id)).toEqual([2, 1, 3])
     expect(mode.value).toBe('view')
   })

@@ -20,8 +20,8 @@ export function useSentry(component = 'common-admin') {
   const consoleLabel = `[${component}]`
 
   /**
-   * Sentry is imported lazily, so nothing here is synchronous and nothing here may throw: a failed
-   * report must never take down the code that was only trying to report something.
+   * Sentry is imported lazily, so this is async and must never
+   * throw. A failed report must not break the code that reports.
    */
   const report = (send: (sentry: typeof SentryType) => void): void => {
     getSentry().then((sentry) => {

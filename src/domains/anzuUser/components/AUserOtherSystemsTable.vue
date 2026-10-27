@@ -9,11 +9,14 @@ const props = defineProps<{
   descriptors: AnyUserSystemDescriptor[]
   userId: IntegerId
   readonly?: boolean
-  /** Whether an account created from here would be switched on -- the dialog says so out loud. */
+  /**
+   * Whether an account created from here would be switched on. The dialog states it.
+   */
   createEnabled?: boolean
-  /** What the owning system holds, to prefill the create form. */
+  /**
+   * What the owning system holds, to prefill the create form.
+   */
   source?: BaseUser | null
-  /** The system a create is currently running for. */
   creatingSystem?: string | null
 }>()
 
@@ -22,11 +25,8 @@ const emit = defineEmits<{
 }>()
 
 /**
- * A read-only list of panels, not `AUserSystemOverview`.
- *
- * The overview adds a search, bulk actions and inconsistency detection, and belongs to task 3.
- * Building this out of it would make task 2 depend on task 3, which the plan's task table says it
- * does not.
+ * A read-only list of panels, not `AUserSystemOverview`. The overview adds search, bulk
+ * actions and inconsistency detection, and building on it would make task 2 depend on task 3.
  */
 const panels = ref<InstanceType<typeof AUserSystemPanel>[]>([])
 

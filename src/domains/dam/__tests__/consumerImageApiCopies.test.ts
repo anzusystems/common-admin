@@ -7,10 +7,10 @@ import { createFakeDam } from '@/domains/dam/__tests__/support/fakeDam'
 import { useCommonAdminImageOptions } from '@/domains/dam/imageWidget/composables/commonAdminImageOptions'
 import type { ImageAware } from '@/domains/dam/types/ImageAware'
 
-// Where an image widget saves its images answers with copies under either application: admin-cms through the backend
-// the fake client stands for, admin-ugc through its own six functions, stand-ins that answer as its backend. What a
-// widget changes in what it is handed stays out of the backend under both alike: a case of one could otherwise pass
-// on a change in memory that its twin of the other catches.
+// Image copies come back under both applications: admin-cms through
+// the fake client, admin-ugc through its own six stand-in functions.
+// Changes a widget makes to its input stay out of the backend under both. Otherwise
+// a case for one could pass on an in-memory change that its twin catches.
 
 const stored: ImageAware = {
   id: 7,

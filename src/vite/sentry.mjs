@@ -19,16 +19,11 @@ function loadSentryVitePlugin() {
 }
 
 /**
- * The Sentry build setup shared by the admins: release, source map upload, and the library's own
- * source maps chained into the admin's (see `commonAdminSourcemaps`).
- *
- * Enabled when both `APP_DEPLOY_ENV` and `SENTRY_URL` are set. Then the build emits `hidden` source
- * maps (the JS does not point at them), uploads them and deletes them from the output directory,
- * so they never reach the deployed site. A missing token, org or project fails the build instead
- * of skipping the upload with a warning, and so does a failed upload.
- *
- * @param {import('./index.d.mts').AnzuSentryOptions} options
- * @returns {import('vite').PluginOption[]}
+ * Sentry build setup shared by the admins: release, source map upload,
+ * and the library's maps chained in (see `commonAdminSourcemaps`).
+ * Enabled when `APP_DEPLOY_ENV` and `SENTRY_URL` are set. The build then emits `hidden` source
+ * maps, uploads them and deletes them from the output, so they never reach the deployed site.
+ * A missing token, org or project fails the build instead of warning, and so does a failed upload.
  */
 export function anzuSentry({ project, org = 'petitpress', release, sourcemaps, ...overrides }) {
   const env = process.env
@@ -44,8 +39,8 @@ export function anzuSentry({ project, org = 'petitpress', release, sourcemaps, .
   }
 
   const sentryVitePlugin = loadSentryVitePlugin()
-  // The upload runs in the output directory, while a relative glob would be matched against the
-  // working directory: derive it from the resolved `build.outDir` instead.
+  // The upload runs in the output directory, but a relative glob matches
+  // against the working directory. Derive it from the resolved `build.outDir`.
   let resolveOutDir
   const filesToDeleteAfterUpload = new Promise((resolveGlob) => {
     resolveOutDir = (outDir) => resolveGlob(`${outDir.split(sep).join('/')}/**/*.js.map`)

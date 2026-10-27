@@ -52,8 +52,8 @@ const asset = (id: string, status: string) => ({
   mainFileSingleUse: null,
   mainFileInternal: null,
 })
-// The reads are timed by the queue: the one a notification asks for a moment after it, the poll five seconds after
-// the row began to wait.
+// The queue times the reads: a notification triggers one shortly after
+// it, and the poll runs five seconds after the row began to wait.
 const realScheduler = uploadSettlementRuntime.scheduler
 let clock: ManualScheduler
 beforeEach(() => {
@@ -67,7 +67,7 @@ afterEach(() => {
   uploadSettlementRuntime.scheduler = realScheduler
 })
 describe('a failed asset fetch on a copied or duplicate item', () => {
-  // The read failed, not the copy: failed for it, a copy the server had made was out of reach.
+  // Only the read failed, not the copy. Failing the row would make a copy the server already made unreachable.
   it('a copy whose read after its notification failed waits on, and the poll settles it', async () => {
     fetchAsset
       .mockRejectedValueOnce(new Error('502'))
@@ -79,7 +79,6 @@ describe('a failed asset fetch on a copied or duplicate item', () => {
     const item = store.getQueueItems('q')[0]!
     expect(fetchAsset).toHaveBeenCalledTimes(1)
     expect([item.status, item.error.hasError]).toEqual([UploadQueueItemStatus.Processing, false])
-    // The first read of its queue is due by now, and its asset answers as processed.
     await clock.advance(4000)
     expect([item.status, item.fileId]).toEqual([UploadQueueItemStatus.Uploaded, 'file-of-asset-1'])
   })

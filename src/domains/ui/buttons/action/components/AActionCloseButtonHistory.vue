@@ -7,9 +7,8 @@ import { useDatatablePageStore } from '@/domains/system/store/datatablePageStore
 const props = withDefaults(
   defineProps<{
     /**
-     * Route names that are not a destination -- the sibling views of the record being closed and
-     * the create form it may have been reached from. The route the button sits on is skipped
-     * anyway, so it does not belong here.
+     * Route names that are not a destination: the record's sibling views and its create form.
+     * The route the button is on is skipped anyway, so do not list it.
      */
     skipRouteNames?: RouteRecordName[]
     fallbackRouteName?: RouteRecordName
@@ -39,7 +38,7 @@ const onClick = () => {
     fallbackRouteName: props.fallbackRouteName,
     fallbackRouteParams: props.fallbackRouteParams,
   })
-  // Right after the push: its `afterEach` comes later, its guards first.
+  // Right after the push: its guards run first, its `afterEach` later.
   preservePageForLanding(router, closing)
 }
 </script>

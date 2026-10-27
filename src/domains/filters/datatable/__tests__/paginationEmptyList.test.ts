@@ -7,14 +7,10 @@ import { DatatablePaginationKey } from '@/domains/filters/utils/filterInjectionK
 import { usePagination } from '@/domains/api/composables/pagination'
 import type { Pagination } from '@/domains/api/composables/pagination'
 
-// What the paginator makes of an empty list, asserted on the rendered buttons rather than on the
-// expression -- the bug this pins was not in what the api wrote but in what the component made of it,
-// and a test that recomputed the expression itself would have agreed with the bug.
-//
-// An empty counted list has `totalCount: 0`, so `lastPage` is 0 while `page` is never below 1: with
-// `===` the two could never meet, and every empty list counted as "not on the last page". Next and
-// Last stayed live on a page with nothing in it. It is the same state a list is in before the first
-// request, so it was the first thing a user could see.
+// Asserts on the rendered buttons, not the expression: a test that recomputed the expression would agree with the bug.
+// An empty counted list has `totalCount: 0`, so `lastPage` is 0 while `page` is never below 1.
+// With `===` they never met, so Next and Last stayed live on an empty page.
+// The same state occurs before the first request.
 
 const mountPagination = (over: Partial<Pagination> = {}) => {
   const { pagination } = usePagination('id')
@@ -47,7 +43,6 @@ describe('what the paginator offers on an empty list', () => {
     expect(last?.attributes('disabled')).toBeDefined()
   })
 
-  // And the cases that have to keep working.
   it('offers the next page where there is one', () => {
     const { next, last } = mountPagination({ hasNextPage: null, totalCount: 100, rowsPerPage: 25, page: 1 })
 
@@ -77,10 +72,10 @@ describe('what the paginator offers on an empty list', () => {
   })
 })
 
-// The same reading, in the component that acts on it by itself. `ASubjectSelect` does not disable a
-// button -- it decides whether to load more, and shows the control that triggers it. On an empty list
-// it used to show that control and satisfy its own autoload condition, so the loading never stopped
-// starting. It is a dialog, so its content is teleported and has to be read off the document.
+// Same check in the component that acts on it by itself.
+// `ASubjectSelect` decides whether to load more. On an empty list it showed the
+// load control and met its own autoload condition, so loading never stopped.
+// It is a dialog, so its content is teleported and must be read off the document.
 const mountSubjectSelect = async (over: Partial<Pagination> = {}) => {
   const { pagination } = usePagination('id')
 

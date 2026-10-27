@@ -14,8 +14,8 @@ import { defineAuth } from '@/domains/auth/composables/defineAuth'
 import { Grant } from '@/domains/auth/valueObject/Grant'
 import { useCommonVuetifyPlugins } from '@/test/support/commonVuetify'
 
-// The shared buttons used to show to everyone unless the admin wrapped them; `acl` lets the button
-// check itself, and without it nothing changes for the callers that pass none.
+// The shared buttons used to show to everyone unless the admin wrapped them.
+// `acl` lets the button check itself. Without it nothing changes for callers that pass none.
 
 useCommonVuetifyPlugins()
 
@@ -62,7 +62,7 @@ afterEach(() => {
   wrappers.splice(0).forEach((wrapper) => wrapper.unmount())
 })
 
-// The delete button was a fragment before (button and dialog); the others were one element and must stay so.
+// The delete button used to be a fragment (button and dialog). The others are one element and must stay so.
 const singleRootButtons = buttons.filter(([name]) => name !== 'AActionDeleteButton')
 
 describe.each(singleRootButtons)('%s root', (_name, component, props) => {

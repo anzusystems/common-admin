@@ -5,9 +5,9 @@ import { AnzuFatalError } from '@/shared/error/AnzuFatalError'
 import { useAlerts } from '@/domains/system/composables/alerts'
 import { commonT } from '@/plugins/i18n'
 
-// Requests the token refresh stopped reach the callers as `AnzuFatalError`, the refresh's error in its
-// cause chain. Every one of them used to show the sticky "system error": a page with ten requests got
-// ten of them during an auth outage, and one for each request a signed-out user still had running.
+// Requests stopped by the token refresh reach callers as `AnzuFatalError` with the refresh error in its cause chain.
+// Each used to show the sticky "system error": a page with ten requests got ten
+// during an auth outage, and a signed-out user got one per running request.
 
 vi.mock('@/domains/system/composables/alertsQueue', () => ({ pushAlert: vi.fn() }))
 
@@ -38,7 +38,6 @@ describe('what the default error handling shows for a request the token refresh 
     expect(pushAlert).toHaveBeenCalledTimes(1)
     expect(vi.mocked(pushAlert).mock.calls[0]![1]).toBe(commonT('common.alert.authUnavailable'))
 
-    // A later outage is told again.
     vi.advanceTimersByTime(60_000)
     showErrorsDefault(stopped())
     expect(pushAlert).toHaveBeenCalledTimes(2)

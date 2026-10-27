@@ -17,15 +17,12 @@ import { isInCauseChain } from '@/shared/error/isInCauseChain'
 import { HTTP_STATUS_FORBIDDEN, HTTP_STATUS_NOT_FOUND } from '@/shared/statusCodes'
 
 /**
- * Shows why a record could not be loaded and says whether its page should leave.
- *
- * For the record's own get-one, not for what a page loads around it: a 404 or 403 there means the
- * record is not there for this user, a 404 of a secondary request does not. A request that was
- * stopped (the page is gone) and a session found expired (the logout is already loading) show
- * nothing and do not leave. Everything else -- a 5xx, the network, a timeout, the sign-in server --
- * shows the message `showErrorsDefault` has for it and leaves too: the page would only show an
- * empty record with live buttons. While the user is navigating to another page (`trackNavigation`)
- * it shows nothing, the message would stay there; the page's `leave` then stays put as well.
+ * Shows why a record failed to load and returns whether its page should leave.
+ * Only for the record's own get-one: a 404 or 403 there means the record is unavailable, unlike for secondary requests.
+ * An aborted request or an expired session shows nothing and does not leave. Other errors show the
+ * `showErrorsDefault` message and leave, since the page would show an empty record with live buttons.
+ * While the user navigates elsewhere (`trackNavigation`) it shows nothing
+ * and does not leave, because the message would stay on the next page.
  */
 export const handleRecordLoadError = (error: unknown, duration = -1): boolean => {
   if (isAnzuApiCancelledError(error)) return false
@@ -49,35 +46,43 @@ export const handleRecordLoadError = (error: unknown, duration = -1): boolean =>
 }
 
 export interface UseRecordPageOptions {
-  /** Where to go when nothing in the history is a destination: the entity's list. */
+  /**
+   * Where to go when nothing in the history is a destination: the entity's list.
+   */
   fallbackRouteName?: RouteRecordName
   fallbackRouteParams?: Record<string, any>
   /**
-   * What the page gives its Close button: the record's sibling views and the create form. A route
-   * with the record's params is skipped as that record's address only, see `leave`.
+   * Same as the page's Close button: the record's sibling views and the create form.
+   * A route with the record's params is skipped only as that record's address, see `leave`.
    */
   skipRouteNames?: RouteRecordName[]
   /**
-   * The page's loading flag. `leave` holds it up, so the empty record's buttons never show, and the
-   * page lowers it as it unmounts: the flag is often shared by every view of the entity, and the
-   * next one -- a create form that loads nothing -- must not inherit it.
+   * The page's loading flag. `leave` keeps it up so the empty record's buttons never show.
+   * The page lowers it on unmount. The flag is often shared by all views of
+   * the entity, and the next one (e.g. a create form) must not inherit it.
    */
   loading?: Ref<boolean>
   /**
-   * The record's load, run on mount with the page's signal; `false` from it leaves the page (`leave`), `true` and
-   * `undefined` keep it. A load the page also calls later (a refresh after a save) is fine:
-   * `load: () => getData()`. Leave it out, and write the `onMounted` by hand, when the page acts on the result
-   * otherwise, loads in setup or makes more requests on mount.
+   * The record's load, run on mount with the page's signal. `false` leaves the page, `true` and `undefined` keep it.
+   * A load also called later is fine: `load: () => getData()`.
+   * Omit it and write `onMounted` by hand when the page acts on
+   * the result, loads in setup or makes more requests on mount.
    */
   load?: (signal: AbortSignal) => Promise<boolean | undefined>
 }
 
 export interface UseRecordPageReturn {
-  /** For the record's get-one: stopped when the page unmounts. */
+  /**
+   * For the record's get-one: stopped when the page unmounts.
+   */
   signal: AbortSignal
-  /** Back to where the user came from, else to the fallback. Resolves whether it got there. */
+  /**
+   * Back to where the user came from, else to the fallback. Resolves whether it got there.
+   */
   leave: () => Promise<boolean>
-  /** The user is still on this page and not navigating away: for a redirect after the load. */
+  /**
+   * The user is still on this page and not navigating away: for a redirect after the load.
+   */
   onPage: () => boolean
 }
 
@@ -96,7 +101,7 @@ const paramsOf = (router: Router, name: RouteRecordName) => {
   }))
 }
 
-// `router.back()` answers nothing; its landing, or its error, is the answer.
+// `router.back()` returns nothing, so its landing or its error is the result.
 const waitForLanding = (router: Router) =>
   new Promise<boolean>((resolve) => {
     const done = (landed: boolean) => {
@@ -115,26 +120,14 @@ const settled = (navigation: Promise<NavigationFailure | void | undefined>) =>
   )
 
 /**
- * For a detail or edit page: aborts the record's load when the page goes, and leaves the page when
- * the load fails.
- *
- * ```ts
- * useRecordPage({
- *   fallbackRouteName: '/x',
- *   skipRouteNames: [...],
- *   loading: detailLoading,
- *   load: (signal) => fetchData(id, { signal }),
- * })
- * ```
- *
- * `false` from the loader means "leave"; `undefined` is a load that was superseded or stopped on
- * purpose, after which the page stays. A page that does more with the load writes its own `onMounted`
- * with the returned `signal` and `leave`, see `load`.
- *
- * While the user is navigating to another page (an async guard, a lazy chunk; `trackNavigation`),
- * the page does not leave: the user's navigation decides, and should it fail, the page stays with
- * its loading flag up. Not handled: a guard that refuses the step back can leave the address bar out
- * of step with the router.
+ * For a detail or edit page: aborts the record's load when the page goes, and leaves the page when the load fails.
+ * `false` from the loader means leave. `undefined` is a superseded or aborted load, and the page stays.
+ * While the user navigates elsewhere (`trackNavigation`), the page does not
+ * leave. If that navigation fails, the page stays with its loading flag up.
+ * Not handled: a guard that refuses the step back can leave the address bar out of sync with the router.
+ * @example
+ * useRecordPage({ fallbackRouteName: '/x', skipRouteNames: [...],
+ * loading: detailLoading, load: (signal) => fetchData(id, { signal }) })
  */
 export function useRecordPage(options: UseRecordPageOptions = {}): UseRecordPageReturn {
   const router = useRouter()
@@ -142,28 +135,26 @@ export function useRecordPage(options: UseRecordPageOptions = {}): UseRecordPage
   const { preservePageForLanding } = useDatatablePageStore()
   const { onPage } = usePageNavigation()
 
-  // The path, not the name: /x/1 and /x/2 share a name, and a late failure of the one must not move
-  // the user off the other.
+  // The path, not the name: /x/1 and /x/2 share a name, and a late failure of one must not move the user off the other.
   const path = router.currentRoute.value.path
-  // On it again: a failure there before no longer counts.
+  // The page is visited again, so an earlier failure no longer counts.
   forgetLeftAfterFailure(path)
   const controller = new AbortController()
   let unmounted = false
   onBeforeUnmount(() => {
     unmounted = true
     controller.abort()
-    // Raised by `leave`, or left up by the load just aborted, whose `finally` no longer owns it. The
-    // next page mounts after this one is gone and raises it again for its own load.
+    // Raised by `leave`, or left up by the aborted load whose `finally` no longer owns it.
+    // The next page mounts after this one is gone and raises it again for its own load.
     if (options.loading) options.loading.value = false
   })
 
   const stillHere = () => !unmounted && router.currentRoute.value.path === path
 
-  // Unlike the Close button, which skips every entry with the record's route name so that closing
-  // one row never opens another, this goes back to the view the user actually came from -- another
-  // record of the same entity included. Only the addresses of THIS record are skipped, compared
-  // without query and hash (a tab in the query is the same view), plus the create form the record
-  // may have been saved from: back there, Save would create a second record.
+  // Unlike the Close button, which skips every entry with the record's route name, this
+  // returns to the view the user came from, including another record of the same entity.
+  // Only this record's addresses are skipped, compared without query and hash (a tab in the query is the same view).
+  // The create form is skipped too: going back there, Save would create a second record.
   const skipped = () => {
     const current = router.currentRoute.value
     const paths = new Set<string>([pathOf(current.fullPath)])
@@ -192,10 +183,9 @@ export function useRecordPage(options: UseRecordPageOptions = {}): UseRecordPage
     const { paths, names } = skipped()
     for (let i = history.value.length - 1; i >= 0; i--) {
       const entry = history.value[i]!
-      // An address a page just left after a failure is no destination either: two failing records
-      // next to each other in the history -- A, then B, while the backend is down -- would send the
-      // user back and forth for as long as the outage lasts, B leaving to A, which finds B as its
-      // newest entry. Skipped, the chain ends at the list.
+      // Addresses left recently after a failure are skipped too.
+      // Otherwise two failing records in the history (A, then B, backend down) send the
+      // user back and forth for the whole outage. Skipped, the chain ends at the list.
       if (paths.has(pathOf(entry.fullPath)) || isLeftAfterFailureRecently(pathOf(entry.fullPath))) continue
       if (entry.name !== undefined && entry.name !== null && names.has(entry.name as RouteRecordName)) continue
       return entry.fullPath
@@ -203,9 +193,8 @@ export function useRecordPage(options: UseRecordPageOptions = {}): UseRecordPage
     return undefined
   }
 
-  // Leaves no trace of the failed address: a step back when the target is the entry right before
-  // it, a replace otherwise -- a push would let the browser's Back return to the page that just
-  // failed, which would fail and leave again.
+  // Leaves no trace of the failed address: a step back when the target is the previous entry, a replace otherwise.
+  // A push would let browser Back return to the failed page, which would fail and leave again.
   const go = async (to: RouteLocationRaw): Promise<boolean> => {
     let target: string
     try {
@@ -213,9 +202,9 @@ export function useRecordPage(options: UseRecordPageOptions = {}): UseRecordPage
     } catch {
       return false
     }
-    // Without the hash: a list's filter writes it under the router, so the record's `state.back`
-    // names the list without it, while the route history has it. The filter also keeps the list
-    // entry's `current` in step, so the step back lands on the filter, and adds no entry.
+    // Compared without the hash. A list filter writes the hash outside the
+    // router, so `state.back` lacks it while the route history has it.
+    // The filter keeps the list entry's `current` in sync, so the step back lands on the filter and adds no entry.
     const back = router.options.history.state.back
     if (typeof back === 'string' && withoutHash(back) === withoutHash(target)) {
       const landing = waitForLanding(router)
@@ -230,11 +219,10 @@ export function useRecordPage(options: UseRecordPageOptions = {}): UseRecordPage
 
   const leave = async (): Promise<boolean> => {
     if (!stillHere()) return false
-    // Held up for good on a leave that fails: the record is not loaded, and its buttons -- Save
-    // creating a new record, Delete with the address's id -- must not come back. The Close button,
-    // which no page ties to loading, is the way out then.
+    // Stays up for good if the leave fails. The record is not loaded, and its Save and Delete buttons must not return.
+    // The Close button, which no page ties to loading, is the way out then.
     if (options.loading) options.loading.value = true
-    // The user is on the way to another page: that navigation decides, ours would cancel it.
+    // The user is navigating to another page. That navigation decides, and ours would cancel it.
     if (!onPage()) return false
     markLeftAfterFailure(path)
     const target = findTarget()

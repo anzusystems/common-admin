@@ -18,7 +18,6 @@ afterEach(() => {
 
 type Handler = (file: string) => void
 
-// Just enough of a Vite dev server for the plugin's `configureServer`.
 function fakeServer(root: string, excluded: boolean) {
   const handlers = new Map<string, Handler[]>()
   const invalidated: string[] = []
@@ -119,7 +118,6 @@ describe('commonAdminDevWatch', () => {
     const { server, trigger, invalidated } = fakeServer(root, true)
     configureServer(plugin, server)
 
-    // An import it already had: invalidated in place.
     trigger('components/ACopy.js\n')
     expect(server.restart).not.toHaveBeenCalled()
     expect(invalidated).toEqual([join(dist, 'components/ACopy.js')])
@@ -174,7 +172,6 @@ describe('commonAdminDevWatch', () => {
     // Pre-bundled for the library as well, an excluded package would load twice.
     expect(extra.optimizeDeps.include).toEqual([`${PACKAGE} > dayjs`])
 
-    // Still known, so a change that imports it is no new import.
     const { server, trigger } = fakeServer(root, true)
     configureServer(plugin, server)
     trigger('AMenu.js\n')
@@ -223,9 +220,9 @@ describe('commonAdminDevWatch', () => {
 })
 
 describe('copy.sh', () => {
-  // A `yarn dev:admin` leaves the files it changed listed in the trigger. `touch` kept that list, and
-  // the admin then reloaded those few files over a node_modules copy.sh had just replaced whole --
-  // measured: the page showed a mix of the two builds.
+  // `yarn dev:admin` leaves the files it changed listed in the trigger. `touch` kept that list.
+  // The admin then reloaded only those files over a node_modules that copy.sh had replaced whole.
+  // Measured: the page showed a mix of the two builds.
   const libraryWithBuild = () => {
     const library = tempRoot()
     for (const dir of ['dist', 'src/eslint', 'src/vite']) mkdirSync(join(library, dir), { recursive: true })
@@ -252,8 +249,9 @@ describe('copy.sh', () => {
   })
 
   it('never writes through a pnpm hard link into the store', () => {
-    // pnpm: the package is a symlink into the virtual store, and every file there is a hard link to
-    // the global content-addressable store -- written in place, it would change it for every project.
+    // pnpm: the package is a symlink into the virtual store, and every
+    // file there is a hard link to the global content-addressable store.
+    // Written in place, it would change the file for every project.
     const library = libraryWithBuild()
     const admin = tempRoot()
     const store = tempRoot()

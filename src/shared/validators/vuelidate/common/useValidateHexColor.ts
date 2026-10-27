@@ -4,11 +4,9 @@ import { commonT } from '@/plugins/i18n'
 const t = commonT
 
 /**
- * `#RRGGBB`, which is what the backend's `CssColor(HEX_LONG)` accepts.
- *
- * The admins validated this by length alone -- `minLength(7)` and `maxLength(7)` -- which lets
- * `#GGGGGG` through the form and has the server reject it. `helpers.regex` passes an empty value,
- * so a system whose profile does not require a colour still saves without one.
+ * `#RRGGBB`, which the backend's `CssColor(HEX_LONG)` accepts.
+ * A length-only check lets `#GGGGGG` through and the server rejects it.
+ * `helpers.regex` passes an empty value, so a system that does not require a colour still saves without one.
  */
 export function useValidateHexColor() {
   const withI18nMessage = createI18nMessage({ t })

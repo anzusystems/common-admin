@@ -18,13 +18,13 @@ import { type AssetDetailItemDto, type AssetMetadataSuggestions, DamAssetType } 
 import { AssetFileProcessStatus } from '@/domains/dam/types/AssetFile'
 import type { DocId } from '@/shared/types/common'
 
-// Finding 160: the DAM leaves the authors of a name read from the file as suggestions when several of its authors have
-// that name, and the card of a row of the queue offers them under the authors as "author conflicts". The detail of an
-// asset offers them too, from the asset it shows; the side panels, read-only, and the dialog of an image do not. The
-// real detail with its real sidebar over the real store of the detail, opened as its hosts open it, beside the real
-// metadata of a side panel or the real dialog of an image; the DAM is a client that records its requests and knows
-// every author asked for. Not mounted for real: the picture, the editor of the region of interest with its regions,
-// and the inner inputs that ask the DAM for names to offer. Under admin-cms only: admin-ugc has no authors.
+// Finding 160: when several DAM authors share a name read from the file, the DAM
+// leaves them as suggestions. A queue row card offers them as "author conflicts". The
+// asset detail offers them too. Read-only side panels and the image dialog do not.
+// Uses the real detail, sidebar and store, opened as their hosts open
+// them. The DAM is a recording client that knows every author asked for.
+// Stubbed: the picture, the region of interest editor and its regions, and inner
+// inputs that ask the DAM for names. Only admin-cms, as admin-ugc has no authors.
 
 const profile = cmsConfiguration
 const { endPoints, extSystem, licence } = profile
@@ -33,7 +33,7 @@ const QUEUE = 'author-conflicts'
 let pinia: Pinia
 let dam: FakeDam
 let wrapper: VueWrapper | undefined
-// The caches of names are one for the file: each case has authors of its own, which no case before has asked for.
+// The name caches are shared by the file, so each case uses authors that no earlier case asked for.
 let round = 0
 let a: DocId, b: DocId, c: DocId
 
@@ -57,7 +57,6 @@ afterEach(async () => {
 })
 
 const detail = () => useAssetDetailStore(pinia)
-/** An image as the DAM answers it before it is saved: with the authors it found by the names in its file. */
 const asset = (authorSuggestions: AssetMetadataSuggestions, authors: DocId[] = [], number = 1): AssetDetailItemDto =>
   damAssetWithFile(`asset-${number}`, `file-${number}`, AssetFileProcessStatus.Processed, {
     licence,
@@ -65,14 +64,8 @@ const asset = (authorSuggestions: AssetMetadataSuggestions, authors: DocId[] = [
     authors,
     metadata: { authorSuggestions, keywordSuggestions: {}, customData: {} },
   })
-/** Two DAM authors of one name, one of another, and a name the DAM has no author of. */
 const suggested = () => ({ 'Jana Nová': [a, b], 'Peter Malý': [c], Nikto: [] })
 
-/**
- * The page with the host of the detail, which draws it while the store names its queue. `panel`: beside it the
- * metadata of a side panel of the asset of the store, read-only as every side panel draws it. `imageDialog`: beside
- * it the dialog of an image that offers the authors of the DAM, as after an upload.
- */
 const mountPage = async ({ panel = false, imageDialog = false } = {}) => {
   if (imageDialog) {
     useImageMediaWidgetStore(pinia).setDetail({
@@ -113,21 +106,19 @@ const mountPage = async ({ panel = false, imageDialog = false } = {}) => {
   })
   await flushPromises()
 }
-/** The detail opened over the asset of the store, which it does not read: as "edit" of the side panel of the list. */
 const openOverTheStore = async (shown: AssetDetailItemDto, page: Parameters<typeof mountPage>[0] = {}) => {
   detail().setAsset(shown)
   detail().dialog = QUEUE
   await mountPage(page)
   await namesShown()
 }
-/** What is drawn now has had the names it asked for. */
 const namesShown = async () => {
   await flushPromises()
   await damNamesAsked()
   await flushPromises()
 }
 
-// The detail, the panel and the dialog of the image are drawn into the body.
+// The detail, the panel and the image dialog are drawn into the body.
 const detailCard = () => document.body.querySelector<HTMLElement>('.dam-image-detail')
 const sidePanel = () => document.body.querySelector<HTMLElement>('.side-panel')
 const imageDialogCard = () =>
@@ -139,7 +130,6 @@ const chipsIn = (root: HTMLElement | null | undefined) =>
     .findAllComponents(AuthorRemoteAutocompleteCachedAuthorChipConflicts)
     .map((conflict) => conflict.find('.v-chip').element as HTMLElement)
     .filter((chip) => !!root?.contains(chip))
-/** The conflicts offered in `root`, as their chips say them. */
 const offeredIn = (root: HTMLElement | null | undefined) => chipsIn(root).map((chip) => chip.textContent?.trim())
 const spinningIn = (root: HTMLElement | null | undefined) =>
   chipsIn(root).some((chip) => !!chip.querySelector('.v-progress-circular'))
@@ -208,7 +198,7 @@ describe('the author conflicts of the detail of an asset', () => {
     expect(spinningIn(detailCard())).toBe(false)
   })
 
-  // Suggestions stored on the asset before the authors of its ext system were switched off stay on it.
+  // Suggestions stored on the asset before its ext system switched authors off stay on it.
   it('are not offered, nor their names asked for, where the ext system has the authors off', async () => {
     const extSystems = useDamConfigStore(pinia).damConfigExtSystem
     const config = extSystems.get(extSystem)!
@@ -244,7 +234,6 @@ describe('the author conflicts of the asset of the detail elsewhere', () => {
   it('are not offered in the dialog of an image, while the detail of that asset offers them', async () => {
     await openOverTheStore(asset(suggested()), { imageDialog: true })
 
-    // Its input of the authors of the DAM is there, a stand-in for the inner input.
     expect(imageDialogCard()!.querySelector('a-form-remote-autocomplete-with-cached-stub')).not.toBeNull()
     expect([offeredIn(imageDialogCard()), headingIn(imageDialogCard())]).toEqual([[], false])
     expect(offeredIn(detailCard())).toEqual([`Name of ${a}`, `Name of ${b}`])

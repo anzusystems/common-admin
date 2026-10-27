@@ -53,7 +53,7 @@ describe('loading baseline with a lifted controller', () => {
     await flushPromises()
     show.value = true
     await flushPromises()
-    loading.value = false // save failed
+    loading.value = false
     await flushPromises()
     expect(ctrl.hasUnsaved.value).toBe(true)
   })

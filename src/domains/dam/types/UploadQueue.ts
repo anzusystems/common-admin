@@ -53,16 +53,19 @@ export interface UploadQueueItem {
   assetId: DocIdNullable
   duplicateAssetId: DocIdNullable
   /**
-   * The asset the row pointed to when the server found its file a duplicate: the one its upload made, or for a slot
-   * or mass-edit row the asset it edits. `assetId` names the original once the row has become it (the library).
-   * Null while the row is no duplicate.
+   * The asset the row pointed to when the server found its file a duplicate.
+   * That is the asset its upload made, or for a slot or mass-edit row the asset it edits.
+   * Once the row has become the original (library), `assetId`
+   * names the original. Null while the row is not a duplicate.
    */
   uploadedAssetId?: DocIdNullable
   fileId: DocIdNullable
   externalProviderAssetId: AssetExternalProviderIdNullable
   externalProviderName: string | null
   externalProviderMetadata: AssetExternalProviderMetadata
-  /** Aborts the chunk request in flight (Stop); a new one per chunk. */
+  /**
+   * Aborts the chunk request in flight (Stop). A new one is created per chunk.
+   */
   latestChunkAbortController: AbortController | null
   chunkSize: number
   currentChunkIndex: number
@@ -84,9 +87,13 @@ export interface UploadQueueItem {
     message: string
     assetFileFailReason: AssetFileFailReasonType
   }
-  /** @deprecated The queue polls for its rows itself; nothing sets or reads this. */
+  /**
+   * @deprecated The queue polls for its rows itself; nothing sets or reads this.
+   */
   notificationFallbackTimer: ReturnType<typeof setTimeout> | undefined
-  /** @deprecated The queue polls for its rows itself; nothing reads this. */
+  /**
+   * @deprecated The queue polls for its rows itself; nothing reads this.
+   */
   notificationFallbackTry: number
   slotName: string | null
   image: undefined | ImageAware // todo check

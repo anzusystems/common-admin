@@ -5,9 +5,9 @@ import type Acl from '@/domains/auth/components/Acl.vue'
 import type {} from '@/shared/types/globalComponents'
 import type { AclValue, AclValueOf, RegisteredAclValue } from '@/domains/auth/types/Permission'
 
-// `Acl` is registered globally by the plugin, so templates use it without an import. Before 2.0 the
-// library did not declare it, every admin declared it by hand, and the ACL values it accepted came
-// from an `AclValue` redeclaration that was a duplicate identifier (hidden by skipLibCheck).
+// `Acl` is registered globally by the plugin, so templates use it without an import.
+// Before 2.0 the library did not declare it. Every admin declared it by hand, and the accepted ACL values
+// came from an `AclValue` redeclaration that was a duplicate identifier, hidden by `skipLibCheck`.
 describe('Acl typing', () => {
   it('is declared as a global component', () => {
     expectTypeOf<GlobalComponents['Acl']>().toEqualTypeOf<typeof Acl>()

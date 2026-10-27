@@ -6,9 +6,10 @@ import type { UserSystemManageTarget } from '@/domains/anzuUser/composables/user
 const props = withDefaults(
   defineProps<{
     target: UserSystemManageTarget
-    /** The system's name as the app translates it. */
     systemLabel: string
-    /** "Edit" instead of "Manage in X" -- used where the operator is already in that admin. */
+    /**
+     * "Edit" instead of "Manage in X" -- used where the operator is already in that admin.
+     */
     internalLabel?: string | undefined
   }>(),
   {
@@ -21,9 +22,7 @@ const { t } = useI18n()
 const isExternal = computed(() => props.target.kind === 'external')
 
 /**
- * A missing url is a configured-but-absent template, and it says so rather than sitting there dead.
- * The prototype this replaces did `:disabled="!userEditUrl"` and gave no reason -- while the
- * variable it depended on was in fact misconfigured in every environment.
+ * A missing url means the template is configured but absent. Show the reason instead of a silently disabled button.
  */
 const missingUrl = computed(() => props.target.kind === 'external' && props.target.href === null)
 
@@ -44,9 +43,8 @@ const label = computed(() =>
   >
     <template #activator="{ props: tooltipProps }">
       <!--
-        An anchor, not a click handler. This is what leaves the page, so middle-click, open in a new
-        tab and the screen reader's announcement all have to work -- which is also why the tab bar
-        never navigates: `VTab` renders `role="tab"` and could not carry this.
+        An anchor, not a click handler, so middle-click, open in new tab and screen reader announcements work.
+        This is also why the tab bar never navigates: `VTab` renders `role="tab"` and cannot carry a link.
       -->
       <span v-bind="tooltipProps">
         <VBtn

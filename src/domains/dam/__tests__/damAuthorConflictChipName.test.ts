@@ -7,10 +7,9 @@ import en from '@/locales/en'
 import sk from '@/locales/sk'
 import { createAnzuVuetify } from '@/plugins/commonVuetifyConfig'
 
-// An author the DAM suggests under a name that several authors have is offered as a chip with a "+", which adds
-// the author to the field. The "+" is the close button of the chip, and a screen reader read it as "Close". The
-// chip is mounted as an admin mounts it: with the Vuetify of the library, which translates through the i18n of the
-// admin (the Vuetify of the test setup translates by itself, and would leave the key of the name as it is).
+// The "+" of the chip is the chip's close button, so a screen reader read it as "Close".
+// The chip is mounted with the library Vuetify, which translates through the admin
+// i18n. The test setup Vuetify translates by itself and would hide the problem.
 
 let app: App | undefined
 let host: HTMLElement | undefined
@@ -20,7 +19,6 @@ afterEach(() => {
   app = host = undefined
 })
 
-/** The chip of the author in an admin of that language; answers the ids its "+" asks to add. */
 const mountChip = async (locale: string) => {
   const i18n = createI18n({ legacy: false, locale, fallbackLocale: false, messages: { sk, en, cs } })
   const added: unknown[] = []

@@ -6,10 +6,9 @@ import { createPinia, setActivePinia } from 'pinia'
 import AUserMetadataForm from '@/domains/anzuUser/components/AUserMetadataForm.vue'
 import type { BaseUser } from '@/shared/types/AnzuUser'
 
-// Decision 28: the two derived fields keep recomputing until somebody edits them, and the flag is
-// seeded from the data rather than starting clean -- a stored value that differs from what the
-// names would produce was set on purpose. The cms fixtures carry exactly that case
-// (`Anzu` + `User 1` with a full name of `Anzu User1`).
+// The two derived fields keep recomputing until somebody edits them. The flag is seeded from the data.
+// A stored value that differs from what the names would produce was set on purpose.
+// The cms fixtures carry this case (`Anzu` + `User 1` with a full name of `Anzu User1`).
 
 const user = (over: Partial<BaseUser> = {}): BaseUser => ({
   id: 1,
@@ -78,12 +77,10 @@ describe('AUserMetadataForm derived fields', () => {
     await flushPromises()
 
     expect(value(wrapper, 'user-fullName')).toBe('Dr. Jozef Mrkvicka')
-    // The initials were not touched, so they still follow.
     expect(value(wrapper, 'user-avatarText')).toBe('JN')
   })
 
   it('treats a stored value that differs from the names as set on purpose', async () => {
-    // The cms fixture: a full name nobody would derive from those two names.
     const wrapper = await mountForm(user({ person: { firstName: 'Anzu', lastName: 'User 1', fullName: 'Anzu User1' } }))
 
     await input(wrapper, 'user-firstName').setValue('Anzu2')
@@ -116,9 +113,8 @@ describe('AUserMetadataForm derived fields', () => {
   })
 
   it('writes nothing while readonly, which is what makes one component serve detail too', async () => {
-    // `randomColor: true` on purpose. Without it the colour picker's watcher never reaches the
-    // branch that writes, so the assertion below would hold with or without the guard -- which is
-    // what the test used to do.
+    // `randomColor: true` is needed. Without it the colour picker's watcher never reaches the branch that writes,
+    // so the assertion would hold with or without the guard.
     const value = user({ person: { firstName: 'Jozef', lastName: 'Mrkvicka', fullName: 'Jozef Mrkvicka' } })
     const wrapper = await mountForm(value, { readonly: true, randomColor: true })
 
@@ -130,7 +126,6 @@ describe('AUserMetadataForm derived fields', () => {
   })
 
   it('does fill an empty colour where the form is editable, which is the behaviour being guarded', async () => {
-    // The other half of the pair: a guard nothing would trip is a guard nothing proves.
     const value = user()
     await mountForm(value, { randomColor: true })
     await flushPromises()

@@ -3,8 +3,9 @@ import { mount } from '@vue/test-utils'
 import { nextTick, ref } from 'vue'
 import ASystemBar from '@/domains/system/systemBar/components/ASystemBar.vue'
 
-// Each return to the window starts a version check with retries. A second one replaced the timer of the first,
-// which then outlived the unmount and fetched for a bar no longer there.
+// Each return to the window starts a version check with retries.
+// A second one used to replace the timer of the first, which then
+// outlived the unmount and fetched for a bar no longer there.
 
 const active = ref(true)
 vi.mock('@/domains/system/composables/useUserActivity', () => ({

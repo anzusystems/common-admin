@@ -29,9 +29,9 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
   const minCount = ref(0)
   const maxCount = ref(0)
   const activeItemIndex = ref<null | number>(null)
-  // The asset of the active item: a list read anew has it at another place, or not at all, and the active item is
-  // found by it. Kept by its place alone, the new list had no active item, and the one that had come to that place
-  // could not be made active by a click.
+  // The active item is found by its asset id, since a reloaded list may have it at another position or not at all.
+  // Tracking by position left the new list without an active item, and
+  // the item now at that position could not be activated by a click.
   const activeAssetId = ref<null | DocId>(null)
 
   function showLoader() {
@@ -67,9 +67,9 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
     maxCount.value = value
   }
 
-  // The selection outlives the list it was made in: a list read anew (a search, another order) or a further page may
-  // bring an asset that is selected. Its item says so, as the count does: drawn unselected, a click on it only put
-  // the mark back, and at the full count no click took the asset out.
+  // The selection outlives the list it was made in. A list read anew or a further page may bring a selected asset.
+  // Its item must show it as selected. Otherwise a click only
+  // re-marks it, and at the full count no click can deselect it.
   function setList(items: AssetSearchListItemDto[]) {
     const activeIndex = items.findIndex((item) => item.id === activeAssetId.value)
     assetListItems.value = items.map((item, index) => {
@@ -83,7 +83,7 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
   }
 
   function appendList(items: AssetSearchListItemDto[]) {
-    // The asset of the active item may come only with a later page of a list read anew.
+    // The active asset may arrive only with a later page of a re-read list.
     const activeIndex = isNull(activeItemIndex.value) ? items.findIndex((item) => item.id === activeAssetId.value) : -1
     const assets = items.map((asset, index) => {
       return {
@@ -96,8 +96,8 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
     assetListItems.value = assetListItems.value.concat(assets)
   }
 
-  // An asset the list has twice (two pages returned it) is one asset: a click selects it or takes it out, and every
-  // item of it says so. One item took the click alone: taken out, the asset kept its check on the other item.
+  // An asset listed twice (two pages returned it) is one asset. A click toggles it and every item of it reflects that.
+  // Otherwise deselecting one item left the check on the other.
   function toggleSelectedByIndex(index: number) {
     const item = assetListItems.value[index]
     if (!item) return
@@ -140,8 +140,8 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
   }
 
   /**
-   * The item of the asset the side panel shows is the active one, and that asset is the one the list finds its active
-   * item by; none for `null`, or for an asset the list has no item of.
+   * Marks the item of the asset the side panel shows as active. The list keeps finding its active item by that asset.
+   * No item is active for `null` or for an asset the list has no item of.
    */
   function setActiveByAssetId(assetId: DocId | null) {
     const index = isNull(assetId) ? -1 : assetListItems.value.findIndex((item) => item.asset.id === assetId)
@@ -153,16 +153,15 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
   }
 
   /**
-   * For a list whose side panel has lost the asset of the item that was active, while the list had no item of it: a
-   * list read later is to mark no item beside a panel that shows no asset.
+   * Call when the side panel lost the active asset and the list has no item of it.
+   * A later list then marks no item beside a panel that shows no asset.
    */
   function forgetActiveAsset() {
     activeAssetId.value = null
   }
 
   /**
-   * The asset the list finds its active item by: that of the active item, or of the one that was active, while the
-   * list read last has no item of it and it has not been forgotten.
+   * The asset the list finds its active item by. It persists while the last list has no item of it, until forgotten.
    */
   function getActiveAssetId() {
     return activeAssetId.value
@@ -267,11 +266,10 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
     return selectConfig.value[0]
   })
 
-  // For the image widgets once an asset was picked: the ext system of the licence it came from. The store
-  // gets a licence config only when there is one (`initStoreContext` callers return early on an empty
-  // list), the list fetch stops without a licence, and nothing empties the config afterwards, so a missing
-  // one here is a caller reading it outside that flow. A function rather than the computed throwing: Pinia's
-  // devtools read every getter without a try.
+  // The ext system of the licence a picked asset came from, for the image widgets.
+  // The config is always set inside the `initStoreContext` flow,
+  // so a missing one means a caller reads it outside that flow.
+  // A function, not a throwing computed: Pinia devtools read every getter without a try.
   function requireSelectedSelectConfig() {
     const config = selectedSelectConfig.value
     if (isUndefined(config)) {

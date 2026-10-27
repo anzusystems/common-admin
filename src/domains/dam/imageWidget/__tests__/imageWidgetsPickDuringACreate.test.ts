@@ -28,13 +28,11 @@ import { DamAssetType } from '@/domains/dam/types/Asset'
 import { AssetFileProcessStatus } from '@/domains/dam/types/AssetFile'
 import { useUploadQueueDialog } from '@/domains/dam/uploadQueue/composables/useUploadQueueDialog'
 
-// A widget of one image that has none yet: "confirm" of its image dialog creates the image. While that create is on
-// its way, the dialog can be closed and opened again for another pick in the library or another upload, made for a
-// widget without an image: its image had no id, and its confirm, once the create had answered, created a second
-// image, which the widget took, and the first one was left unused. Under admin-cms. The real widgets with their real
-// dialog of the image; the DAM and the backend of the images are clients that record their requests. The asset
-// picker and the upload dialog are stand-ins, of which the picker answers as the real one does; the pictures are not
-// drawn.
+// While the create of the image of a widget without an image is on its way,
+// the dialog can be closed and opened again for another pick or upload.
+// That image had no id, so its confirm created a second image after the first
+// create answered. The widget took the second and the first was left unused.
+// Under admin-cms. The asset picker and the upload dialog are stand-ins; the picker answers as the real one does.
 
 const profile = cmsConfiguration
 const { endPoints, extSystem, licence } = profile
@@ -65,7 +63,6 @@ describe.each<[string, Component]>([
     dam = createFakeDam(endPoints)
     imageApi = installConsumerImageApi(profile, installConsumerProfile(profile, dam.client))
     answerDamNames(dam)
-    // What the image and media widget asks about a picked asset first: of an image there is nothing to say.
     dam.reply((request) =>
       request.method === 'GET' && MEDIA.test(request.url) ? { status: 200, data: {} } : undefined
     )
@@ -91,7 +88,6 @@ describe.each<[string, Component]>([
     extSystemConfig: useDamConfigStore(pinia).damConfigExtSystem.get(extSystem)!,
   })
   const shown = () => useImageMediaWidgetStore(pinia).detail
-  /** What the DAM has for an asset: `file-of-<id>`, described, with an author, in the licence of the widget. */
   const inTheDam = (id: string, author: string) =>
     dam.assets.set(
       id,
@@ -101,7 +97,6 @@ describe.each<[string, Component]>([
         metadata: { customData: { description: `of ${id}` }, authorSuggestions: {}, keywordSuggestions: {} },
       })
     )
-  /** An image as the list of the picker has it. */
   const listed = (id: string) => ({
     id,
     licence,
@@ -110,7 +105,7 @@ describe.each<[string, Component]>([
     attributes: { assetType: DamAssetType.Image },
     podcasts: [],
   })
-  // The dialogs of the widget are drawn into the body.
+  // The widget dialogs are rendered into the body.
   const imageDialog = () =>
     Array.from(document.body.querySelectorAll<HTMLElement>('.v-overlay--active .v-card')).find((card) =>
       card.textContent?.includes(damText('image.meta.edit'))
@@ -129,7 +124,6 @@ describe.each<[string, Component]>([
   const imageOf = (widget: VueWrapper) =>
     (widget.props() as { modelValue?: number | null; image?: number | null })[isImageWidget ? 'modelValue' : 'image']
   const saved = (widget: VueWrapper) => widget.emitted('afterMetadataSaveSuccess') ?? []
-  /** The widget without an image, with its buttons in a row, as it is in a form. */
   const mountWidget = async (key = QUEUE) => {
     const mounted: VueWrapper = mount(component, {
       attachTo: document.body,
@@ -170,14 +164,12 @@ describe.each<[string, Component]>([
     useAssetSelectStore(pinia).setSelectConfig([uploadConfig()])
     return mounted
   }
-  /** The user confirms the image asset in the picker of the widget; nothing is to be copied. */
   const pickInLibrary = async (widget: VueWrapper, asset: string) => {
     widget.findComponent(PickerStandIn).vm.$emit('confirm', { type: 'asset', value: [listed(asset)] })
     await vi.waitFor(() => expect(shown()).toMatchObject({ dam: { damId: `file-of-${asset}` } }))
     await vi.waitFor(() => expect(texts()).toEqual([`of ${asset}`, `Name of author-of-${asset}`]))
     await flushPromises()
   }
-  /** The queue dialog of the widget applies an uploaded file: the dialog of its image opens. */
   const applyUpload = async (widget: VueWrapper) => {
     useUploadQueueDialog().uploadQueueDialog.value = QUEUE
     await flushPromises()
@@ -194,10 +186,6 @@ describe.each<[string, Component]>([
     imageDialog()!.querySelector<HTMLButtonElement>('[data-cy="button-close"]')!.click()
     await vi.waitFor(() => expect(imageDialog()).toBeUndefined())
   }
-  /**
-   * An asset is picked into the widget without an image, and "confirm" pressed in its dialog: the image is being
-   * created, till the case lets the backend answer. The dialog is closed then.
-   */
   const createdOnItsWayAndClosed = async () => {
     inTheDam('asset-9', 'author-of-asset-9')
     const widget = await mountWidget()
@@ -226,7 +214,6 @@ describe.each<[string, Component]>([
       await openAgain(widget)
       const ofThatDialog = texts()
 
-      // The button spins while the image is being created, and a press is not taken.
       expect(spins()).toBe(true)
       confirmButton().click()
       await waits.settle()
@@ -257,9 +244,10 @@ describe.each<[string, Component]>([
     }
   )
 
-  // The store of the image dialog is one for the page. Another widget, whose pick was still being read, opens its
-  // dialog over this one and puts its image there while this image is being created: the created id went to that
-  // image, and its confirm updated this widget's image with the file and texts of the other one.
+  // The store of the image dialog is shared by the page. Another widget, whose pick is still being
+  // read, opens its dialog over this one and puts its image there while this image is being created.
+  // The created id went to that image, and its confirm updated
+  // this widget's image with the file and texts of the other one.
   it('gives the created id to no image another widget has put into the store of the dialog meanwhile', async () => {
     inTheDam('asset-9', 'author-of-asset-9')
     inTheDam('asset-10', 'author-of-asset-10')
@@ -280,7 +268,6 @@ describe.each<[string, Component]>([
     expect(shown()).toMatchObject({ dam: { damId: 'file-of-asset-10' } })
     expect(shown()).not.toHaveProperty('id')
 
-    // The other widget confirms its own pick, as a host confirms the form: it creates its own image.
     ;(another.vm as unknown as { metadataConfirm: () => void }).metadataConfirm()
     await vi.waitFor(() => expect(saves.waiting).toHaveLength(1))
     saves.release()
@@ -294,7 +281,6 @@ describe.each<[string, Component]>([
     expect(shownAlerts()).toEqual([])
   })
 
-  // Nothing was created: the image of the dialog opened again is the widget's first, and its confirm creates it.
   it('for another asset picked in the library, when that create fails: its confirm creates the image', async () => {
     const { widget, saves } = await createdOnItsWayAndClosed()
     inTheDam('asset-10', 'author-of-asset-10')

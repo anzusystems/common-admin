@@ -21,9 +21,9 @@ import type {
 
 export type PluginOptions = {
   /**
-   * The admin's vue-i18n instance, in composition mode (`legacy: false`). The library translates
-   * through it -- components, validators, alerts -- so its messages have to include the library's
-   * (`common`, `error`, `$vuetify` from `messagesSk`/`messagesEn`/`messagesCs`).
+   * The admin's vue-i18n instance, in composition mode (`legacy: false`).
+   * The library translates through it (components, validators, alerts), so its messages must include
+   * the library's `common`, `error` and `$vuetify` from `messagesSk`/`messagesEn`/`messagesCs`.
    */
   i18n: CommonAdminI18n
   languages: { available: LanguageCode[]; default: LanguageCode }
@@ -66,65 +66,85 @@ export interface CommonAdminCoreDamConfig {
   endPointImage?: string
   endPointRoi?: string
   /**
-   * Where the authors of DAM are listed, looked up by id and created; `/adm/v1/author` by default. Read from the
-   * configuration a component runs under, and by the cache of author names of that configuration.
+   * Endpoint for listing, looking up and creating DAM authors; `/adm/v1/author` by default.
+   * Used by components under this configuration and by its author name cache.
    */
   endPointAuthor?: string
-  /** The same for the keywords of DAM; `/adm/v1/keyword` by default. */
+  /**
+   * The same for the keywords of DAM; `/adm/v1/keyword` by default.
+   */
   endPointKeyword?: string
   /**
-   * Where the settings of DAM are read, and the configuration of an ext system (`/ext-system/:extSystem` after it);
-   * `/adm/v1/configuration` by default. Read by the loaders of the DAM configuration of this configuration.
+   * Endpoint for DAM settings and, with `/ext-system/:extSystem` appended,
+   * an ext system's configuration; `/adm/v1/configuration` by default.
    */
   endPointConfiguration?: string
-  /** Where the public configuration of DAM is read (`loadDamPubConfig`); `/pub/v1/configuration` by default. */
+  /**
+   * Where the public configuration of DAM is read (`loadDamPubConfig`); `/pub/v1/configuration` by default.
+   */
   endPointPubConfiguration?: string
-  /** Where a licence is read by its id, for its ext system; `/adm/v1/asset-licence` by default. */
+  /**
+   * Where a licence is read by its id, for its ext system; `/adm/v1/asset-licence` by default.
+   */
   endPointAssetLicence?: string
-  /** Where the custom forms of an ext system and of a distribution service are read; `/adm/v1/asset-custom-form`. */
+  /**
+   * Where the custom forms of an ext system and of a distribution service are read; `/adm/v1/asset-custom-form`.
+   */
   endPointAssetCustomForm?: string
   /**
-   * Where the users of DAM are listed and looked up by id: the cache of users of this configuration, and the user
-   * inputs and filters under it that are given no client of their own; `/adm/v1/user` by default.
+   * Endpoint for listing and looking up DAM users; `/adm/v1/user` by default.
+   * Used by this configuration's user cache and by user inputs and filters under it that have no client of their own.
    */
   endPointUser?: string
-  /** Where the podcasts of a licence are listed (`/licence/:licenceId` after it); `/adm/v1/podcast` by default. */
+  /**
+   * Where the podcasts of a licence are listed (`/licence/:licenceId` after it); `/adm/v1/podcast` by default.
+   */
   endPointPodcast?: string
-  /** Where the image and media widget reads a picked asset as a medium of the CMS; `/adm/v1/cms/asset` by default. */
+  /**
+   * Where the image and media widget reads a picked asset as a medium of the CMS; `/adm/v1/cms/asset` by default.
+   */
   endPointCmsAsset?: string
   /**
-   * The system whose current user decides which licences the image widgets and asset selects under this
-   * configuration may upload into and pick from: `dam` by default. That user is to be a user of DAM, as DAM gives
-   * its current user (`DamCurrentUserDto`); the application loads it itself, as it loads the one of `dam`. A user of
-   * another system allows no licence, and the error is written to the console. `false` allows every licence, as the
-   * `skipCurrentUserCheck` of a component does, and that prop still wins.
+   * The system whose current user decides which licences image widgets and asset
+   * selects under this configuration may upload into and pick from; `dam` by default.
+   * That user must be a DAM user (`DamCurrentUserDto`). The application loads it itself, as it
+   * does for `dam`. A user of another system allows no licence and logs an error to the console.
+   * `false` allows every licence, like a component's `skipCurrentUserCheck`. That prop still wins.
    */
   currentUser?: string | false
-  /** The DAM admin an asset of this configuration links to; the root `adminDomain` where left out. */
+  /**
+   * The DAM admin an asset of this configuration links to; the root `adminDomain` where left out.
+   */
   adminDomain?: string
   /**
-   * The time, in seconds, a request of this configuration may take, as its `damClient` times out (the library sets
-   * no timeout on the client): the size of the chunks of its uploads and the wait limit of its widgets go by it. The
-   * root `apiTimeout` where left out.
+   * Request timeout in seconds for this configuration, matching its
+   * `damClient` timeout. The library sets no timeout on the client.
+   * Upload chunk size and widget wait limits depend on it. Falls back to the root `apiTimeout`.
    */
   apiTimeout?: number
   /**
-   * The grant a region of interest's save needs, checked before the editor is offered. By default
-   * `dam_regionOfInterest_update` for the default `/adm/v1/roi`, and none for another endpoint (the UGC one checks no
-   * grant); `null` checks none.
+   * The grant needed to save a region of interest, checked before the editor is offered.
+   * Default: `dam_regionOfInterest_update` for the default `/adm/v1/roi`, none
+   * for another endpoint (the UGC one checks no grant). `null` checks none.
    */
   roiUpdateAcl?: AclValue | null
-  /** The grant an image's rotation needs, as `roiUpdateAcl`: `dam_image_update` for the default `/adm/v1/image`. */
+  /**
+   * The grant an image's rotation needs, as `roiUpdateAcl`: `dam_image_update` for the default `/adm/v1/image`.
+   */
   imageRotateAcl?: AclValue | null
-  /** The grant creating a keyword needs, checked before it is offered (Enter, comma, "+ name"). None by default. */
+  /**
+   * The grant creating a keyword needs, checked before it is offered (Enter, comma, "+ name"). None by default.
+   */
   keywordCreateAcl?: AclValue | null
-  /** The same for an author, also the "+" button. */
+  /**
+   * The same for an author, also the "+" button.
+   */
   authorCreateAcl?: AclValue | null
   mainFileSingleUseEnabled?: boolean
   /**
-   * The copy of a picked asset into the licence a widget uploads into: the asset picker offers it and the widgets send
-   * it. On unless `false`; an application whose licence of the upload is the only one it picks from has no use for it
-   * and is to turn it off, as admin-ugc is.
+   * Copying a picked asset into the widget's upload licence: the asset
+   * picker offers it and the widgets send it. On unless `false`.
+   * An application that picks only from its upload licence has no use for it and should turn it off, as admin-ugc does.
    */
   copyToLicenceEnabled?: boolean
   showSourceEnabled?: boolean
@@ -140,11 +160,11 @@ export interface CommonAdminCoreDamConfig {
   assetListEnabledFilters?: string[]
   simpleAssetSidebar?: boolean
   /**
-   * The notification service of this configuration, read as the root `notification` of `coreDam` is. Left out,
-   * `default` has the root one and another configuration none: its uploads are then polled for at the rhythm of a
-   * page without the service. Configurations that name one service share its socket: an event of it concerns the rows
-   * of each, a read it asks for is made for each by its own client, and a failure or a duplicate it tells of is
-   * written into the rows of each.
+   * The notification service of this configuration, read like the root `notification` of `coreDam`.
+   * If left out, `default` uses the root one and other configurations have none.
+   * Their uploads are then polled at the rate of a page without the service.
+   * Configurations naming the same service share its socket. An event applies to the rows of each, each requested
+   * read uses that configuration's own client, and a reported failure or duplicate is written into the rows of each.
    */
   notification?: {
     enabled?: boolean | string
@@ -157,12 +177,14 @@ export type CommonAdminCoreDamOptions =
   | {
       configs: { [key: string]: CommonAdminCoreDamConfig }
       apiTimeout: number
-      /** @deprecated The state of an upload is always polled for; the value is not read. */
+      /**
+       * @deprecated The state of an upload is always polled for; the value is not read.
+       */
       uploadStatusFallback?: boolean
       adminDomain: string
       /**
-       * The notification service is used only with an address and `enabled` either `true` or the text "true", in
-       * any letter case and with whitespace around it ignored ("True", " TRUE "). Any other value is off.
+       * Used only with an address and `enabled` set to `true` or the text "true",
+       * case-insensitive and trimmed ("True", " TRUE "). Any other value is off.
        */
       notification?: {
         enabled?: boolean | string

@@ -6,9 +6,10 @@ import type { AxiosInstance } from 'axios'
 import { useAnzuUserActions } from '@/domains/anzuUser/composables/anzuUserActions'
 import { usePermissionGroupActions } from '@/domains/permission/group/composables/permissionGroupActions'
 
-// After a save the form stays open. The update has to bring the tracking of the saved record into the
-// store -- or the form shows the time and user from before the save -- and, for a user, before the
-// unsaved-changes baseline is taken, or that write would mark the saved form as unsaved.
+// After a save the form stays open. The update has to bring the saved record's tracking into the store,
+// or the form shows the time and user from before the save.
+// For a user this must happen before the unsaved-changes baseline
+// is taken, or the write marks the saved form as unsaved.
 
 const record = () => ({
   id: 5,
@@ -30,7 +31,6 @@ const record = () => ({
   _system: 'cms',
 })
 
-// The server answers a PUT with the saved record: its own modification time and user.
 const request = vi.fn((config: { method?: string; data?: unknown }) => {
   if (config.method?.toUpperCase() === 'PUT') {
     const body = JSON.parse(String(config.data ?? '{}'))

@@ -22,26 +22,26 @@ const QUEUE_MAX_PARALLEL_UPLOADS = 2
 
 export const UPLOAD_QUEUE_ITEM_CHUNK_SIZE = 10485760
 
-// A file name is not unique, nor is an asset added twice: rows that share a `:key` have Vue patch the wrong one.
-// One count for every core of the page.
+// File names and added assets are not unique. Rows sharing a `:key` make Vue patch the wrong row.
+// One counter for all cores on the page.
 let queueItemSequence = 0
 
-// An answer of the server that says no (4xx). The requests of an upload reject with the error of axios as it is.
+// A 4xx server refusal. Upload requests reject with the raw axios error.
 const isRefusal = (error: unknown) => {
   const status = axios.isAxiosError(error) ? error.response?.status : apiErrorStatus(error)
 
   return !isUndefined(status) && status >= 400 && status < 500
 }
 
-// Waiting for its turn, being sent, or with the server: not settled yet, one way or the other.
 const isUnderWay = (status: UploadQueueItemStatusType) =>
   status === UploadQueueItemStatus.Waiting ||
   status === UploadQueueItemStatus.Uploading ||
   status === UploadQueueItemStatus.Processing
 
 /**
- * The upload queue of a store: its queues as the store holds them, two uploads at a time per queue, the run of each
- * row, how a row leaves, and the settlement of the rows the server works on. Made in the setup of the store.
+ * Upload queue of a store: its queues, two uploads at a time per queue,
+ * each row's run, row removal, and settlement of rows the server processes.
+ * Created in the store setup.
  */
 export function createUploadQueueCore<S extends UploadSide>(preset: UploadQueuePreset<S>): UploadQueueCore {
   const {
@@ -54,9 +54,9 @@ export function createUploadQueueCore<S extends UploadSide>(preset: UploadQueueP
     refreshable,
   } = preset[uploadQueuePresetMembers]
 
-  // The runs still going, by their row as the core got it: a stop reaches a run also between its chunks.
+  // Active runs by row, so a stop also reaches a run between chunks.
   const stopHandles = new WeakMap<UploadQueueItem, () => void>()
-  // The failed rows a refresh may still change, as the settlement tells them. Reactive, for the rows that show it.
+  // Failed rows a refresh may still change, as reported by the settlement. Reactive so rows can show it.
   const refreshableRows = reactive(new WeakSet<UploadQueueItem>())
 
   const { hooks, ...settlementProfile } = profile
@@ -66,8 +66,8 @@ export function createUploadQueueCore<S extends UploadSide>(preset: UploadQueueP
     hooks: {
       ...hooks,
       onRowFinal: (queueKey, row) => {
-        // Z26: the server takes a failed file nowhere, so what is left of it is not sent. Its place is free below,
-        // and with the run stopped no third file goes out beside two.
+        // Z26: the server discards a failed file, so its remaining chunks are not sent.
+        // Stopping the run frees its slot, so no third upload runs beside two.
         if (row.status === UploadQueueItemStatus.Failed && stopHandles.has(row)) stopRun(row)
         hooks?.onRowFinal?.(queueKey, row)
         recalculateQueueCounts(queueKey)
@@ -83,7 +83,7 @@ export function createUploadQueueCore<S extends UploadSide>(preset: UploadQueueP
     },
   })
 
-  // A store disposed of leaves nothing behind: no timer of a poll, no listener for the tab or for the socket.
+  // A disposed store leaves no poll timer and no tab or socket listener.
   if (getCurrentScope()) onScopeDispose(() => settlement.dispose())
 
   function getQueue(queueKey: UploadQueueKey) {
@@ -136,7 +136,7 @@ export function createUploadQueueCore<S extends UploadSide>(preset: UploadQueueP
     if (!queues.get(queueKey)) queues.set(queueKey, emptyQueue(0))
   }
 
-  // Into a queue that is not there: nothing, as for the counts below.
+  // Adding to a missing queue does nothing, as for the counts below.
   function addQueueItem(queueKey: UploadQueueKey, item: UploadQueueItem) {
     queues.get(queueKey)?.items.push(item)
   }
@@ -184,13 +184,13 @@ export function createUploadQueueCore<S extends UploadSide>(preset: UploadQueueP
   }
 
   async function queueItemUploadStart(item: UploadQueueItem, queueKey: UploadQueueKey) {
-    // A row whose run is under way already: one that cannot be sent stays waiting while its hash loads, and the
-    // queue looks again after each file it adds.
+    // Run already started. A row that cannot be sent stays waiting while
+    // its hash loads, and the queue rechecks after each added file.
     if (stopHandles.has(item)) return
     let run: UploadRun<S> | undefined
     try {
-      // Made here: a set that cannot make the run fails its row as a failed upload does. Thrown past this, it left
-      // the row waiting, to be started and to throw again with every row after it.
+      // Created inside the try so a preset that cannot create the run fails the row like a failed upload.
+      // Otherwise the row stayed waiting and threw again on every start, with every row after it.
       run = runnerFor(item, queueKey)(item, (progress, speed, estimate) => {
         setUploadSpeed(item, progress, speed, estimate)
       })
@@ -198,29 +198,29 @@ export function createUploadQueueCore<S extends UploadSide>(preset: UploadQueueP
       await run.uploadInit()
       await run.upload()
       stopHandles.delete(item)
-      // Not a row its notification has settled meanwhile, nor a stopped one.
+      // Skip a row its notification has settled meanwhile, and a stopped row.
       if (item.status === UploadQueueItemStatus.Processing) track(queueKey, item)
       recalculateQueueCounts(queueKey)
       processUpload(queueKey)
     } catch (error) {
       stopHandles.delete(item)
-      // Stopped: it is gone from the queue, or the queue goes, and whatever stopped it started the next one. Uploaded:
-      // the processed notification beat the answer to the finish request, and its settlement counted the queue.
+      // Stopped: it left the queue or the queue is going, and whatever stopped it started the next row.
+      // Uploaded: the processed notification arrived before the finish response, and its settlement counted the queue.
       if (item.status === UploadQueueItemStatus.Stop || item.status === UploadQueueItemStatus.Uploaded) return
-      // Failed before its request was, by the settlement, which stopped the run and counted the queue: the row keeps
-      // the reason of the server, nothing is written over it and nothing told (Z26).
+      // Already failed by the settlement, which stopped the run and counted the queue.
+      // The row keeps the server's reason. Nothing is overwritten or alerted (Z26).
       if (item.status === UploadQueueItemStatus.Failed) return
-      // Read before anything is written into the row: whether its reason was told already is among the failed rows.
+      // Call before writing to the row: whether the reason was already reported is read from the failed rows.
       const failure = onClientFailure?.(queueKey, item, error)
       item.error.hasError = true
       if (failure) item.error.message = failure.message
       item.status = UploadQueueItemStatus.Failed
-      // Its metadata event comes while the file still sends, and had enabled the form.
+      // Its metadata event arrives while the file is still uploading and had enabled the form.
       item.canEditMetadata = false
       failure?.alert()
-      // The finish request went out, so the server may complete the file all the same: the row is asked about for as
-      // long as it stays in the queue. Not when the server answered that request with a refusal: it is sent once,
-      // and a file the server has refused to finish it will not finish.
+      // The finish request was sent, so the server may still complete
+      // the file. Keep tracking the row while it stays in the queue.
+      // Not after a refusal: finish is sent once, and the server will not finish a file it refused.
       if (run?.finishAttempted() && !isRefusal(error)) {
         track(queueKey, item, { clientFailed: true })
       }
@@ -229,8 +229,9 @@ export function createUploadQueueCore<S extends UploadSide>(preset: UploadQueueP
     }
   }
 
-  // A row on its way, or one whose upload still runs although the server has settled it, is stopped: its run, also
-  // between chunks, and the chunk on the wire. A settled row without a run stays as it is.
+  // Stops a row that is under way, or whose run continues after the server
+  // settled it. Stops the run, also between chunks, and the chunk in flight.
+  // A settled row without a run is left as is.
   function stopRow(item: UploadQueueItem) {
     if (!isUnderWay(item.status) && !stopHandles.has(item)) return
     item.status = UploadQueueItemStatus.Stop
@@ -248,12 +249,12 @@ export function createUploadQueueCore<S extends UploadSide>(preset: UploadQueueP
     const item = queue?.items[index]
     if (!queue || !item) return
     stopRow(item)
-    // The poll of the queue no longer asks about it, nor does a read a notification asked for on its behalf.
+    // Neither the queue poll nor a read requested by a notification asks about it any more.
     settlement.untrack(item)
     rowRemoved?.(queueKey, item)
     queue.items.splice(index, 1)
     recalculateQueueCounts(queueKey)
-    // Its run, if any, ends without starting the next row: the place is free now.
+    // Its run, if any, ends without starting the next row, so start it here.
     processUpload(queueKey)
   }
 
@@ -263,7 +264,7 @@ export function createUploadQueueCore<S extends UploadSide>(preset: UploadQueueP
     item.status = UploadQueueItemStatus.Stop
     settlement.untrack(item)
     stopRun(item)
-    // By identity: the position the caller saw the row at is another row's once the list has changed.
+    // By identity: the index the caller saw may belong to another row once the list changed.
     const currentIndex = queue.items.indexOf(item)
     if (currentIndex > -1) removeByIndex(queueKey, currentIndex)
     processUpload(queueKey)
@@ -273,7 +274,7 @@ export function createUploadQueueCore<S extends UploadSide>(preset: UploadQueueP
     const queue = queues.get(queueKey)
     if (!queue) return
     if (queue.items.length === 0) {
-      // Emptied row by row, the queue still has its idle poll: it goes with the queue.
+      // A queue emptied row by row still has its idle poll. Drop it with the queue.
       settlement.dropQueue(queueKey)
       return
     }
@@ -288,13 +289,13 @@ export function createUploadQueueCore<S extends UploadSide>(preset: UploadQueueP
     forceReloadFileInput(queueKey)
   }
 
-  // Also of a queue that is not there: it is made, empty.
+  // A missing queue is created empty.
   function clearQueue(queueKey: UploadQueueKey) {
     queues.get(queueKey)?.items.forEach((item) => {
       rowRemoved?.(queueKey, item)
       stopRow(item)
     })
-    // Before the queue is replaced: its rows are no longer asked about.
+    // Before replacing the queue, so its rows are no longer polled.
     settlement.dropQueue(queueKey)
     queues.set(queueKey, emptyQueue(getQueueFileInputKey(queueKey) + 1))
   }

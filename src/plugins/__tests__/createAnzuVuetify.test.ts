@@ -3,8 +3,8 @@ import { createApp } from 'vue'
 import { createI18n } from 'vue-i18n'
 import { createAnzuVuetify, useCommonVuetifyConfig } from '@/plugins/commonVuetifyConfig'
 
-// The Vuetify instance the six admins created in their own `vuetify.ts`. admin-ugc merged its
-// `VDataTableServer` defaults over the common ones; that has to keep working the same way.
+// The Vuetify instance the six admins created in their own `vuetify.ts`.
+// admin-ugc merged its `VDataTableServer` defaults over the common ones. This must keep working the same way.
 
 const i18n = () => createI18n({ legacy: false, locale: 'sk', messages: { sk: { $vuetify: { close: 'Zavrieť' } } } })
 

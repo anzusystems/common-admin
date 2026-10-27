@@ -38,8 +38,8 @@ const props = withDefaults(
     persistentPlaceholder?: boolean
     help?: string | undefined
     readonly?: boolean
-    // `v-model.number` and `.trim`. Vue applies them to what this component emits; VTextField reads `trim` too, to keep
-    // the caret in place.
+    // Vue applies `.number` and `.trim` to what this component emits.
+    // VTextField also reads `trim` to keep the caret in place.
     modelModifiers?: Partial<Record<'number' | 'trim' | 'lazy', true>>
   }>(),
   {

@@ -20,9 +20,13 @@ const props = withDefaults(
   defineProps<{
     queueKey: UploadQueueKey
     extSystem: IntegerId
-    /** What the mass operations ask of their host; without it the library's store. */
+    /**
+     * What the mass operations need from their host. Without it they use the library store.
+     */
     operations?: UploadQueueMassOperationsBinding
-    /** The DAM configuration whose rules the operations follow; inherited when not given. */
+    /**
+     * The DAM configuration whose rules the operations follow. Inherited when not given.
+     */
     configName?: string
   }>(),
   {
@@ -42,7 +46,7 @@ const massOperationsAuthors = ref([])
 
 const { t } = useI18n()
 
-// The two icon buttons beside a field, named for who cannot see them: what each does, and to which field.
+// Accessible names for the two icon buttons beside a field: the action and the field.
 const fillEmptyName = (field: string) => t('common.damImage.asset.massOperations.fillOneEmptyField', { field })
 const replaceName = (field: string) => t('common.damImage.asset.massOperations.replaceOneField', { field })
 

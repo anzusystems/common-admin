@@ -27,7 +27,7 @@ export function useImageMassOperations(configName: string) {
       const item = items[i]!
       if (forceReplace || isUndefined(item.texts.source) || item.texts.source.length === 0) {
         item.texts.source = value
-        // A text the user gives, not the names of a pick of authors.
+        // The source is user-given text, not names from an author pick.
         imageStore.forgetSourceOfPick(item)
       }
     }
@@ -39,11 +39,11 @@ export function useImageMassOperations(configName: string) {
 
   const replaceEmptyAuthors = async (value: DocId[], forceReplace = false) => {
     if (imageStore.readonly) return
-    // No authors picked fill nothing: written all the same, they would only take the source of the rows away.
+    // Empty picks fill nothing. Writing them would only clear the rows' sources.
     if (!forceReplace && value.length === 0) return
-    // Their names under the ext system of the licence of the asset of each row, as every name of the authors of the
-    // DAM the widgets write, and under the one the configuration asks for names under where the page does not know the
-    // licence (not read for it): one lookup per ext system. That one went for every row.
+    // Names under the ext system of each row's asset licence, as everywhere else in the widgets.
+    // Falls back to the configured ext system when the licence is unknown. One
+    // lookup per ext system; the fallback was previously used for every row.
     const pageExtSystem = cachedExtSystemId.value
     const extSystemOf = new Map<IntegerId, IntegerId>()
     imageStore.images.forEach((item) => {
@@ -68,10 +68,9 @@ export function useImageMassOperations(configName: string) {
     for (let i = 0; i < items.length; i++) {
       const item = items[i]!
       const noAuthors = isUndefined(item.damAuthors) || item.damAuthors.length === 0
-      // Of white space alone it is empty too, as the check of a required source takes it.
+      // Whitespace counts as empty, as in the required-source check.
       const noSource = isUndefined(item.texts.source) || item.texts.source.trim().length === 0
-      // A row that does not offer the authors shows its source: filled in, that source is the user's, and the names
-      // of the picked authors are not written over it.
+      // A row not offering the authors shows its source. A filled source is the user's and is not overwritten.
       if (forceReplace || (noAuthors && (item.showDamAuthors || noSource))) {
         item.damAuthors = value
         item.texts.source = namesUnder.get(extSystemOf.get(item.dam.licenceId) ?? pageExtSystem) ?? ''

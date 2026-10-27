@@ -10,10 +10,10 @@ import type { AssetFileImage } from '@/domains/dam/types/AssetFile'
 import type { RegionOfInterest } from '@/domains/dam/types/Roi'
 
 /**
- * The region-of-interest editor exactly as the DAM ships it — the real `DamAssetImageRoiSelect`,
- * the real API layer, the real stores — with a mock axios adapter in place of the backend. It is
- * here so the one production use of the cropper can be clicked through and looked at without a
- * running DAM, including the awkward shapes: a tall picture inside a short, clipped container.
+ * The DAM's real region-of-interest editor (`DamAssetImageRoiSelect`, API
+ * layer and stores) with a mock axios adapter instead of the backend.
+ * Lets the one production use of the cropper be tried without a
+ * running DAM, including a tall picture in a short clipped container.
  */
 
 const EXT_SYSTEM = 1
@@ -91,13 +91,11 @@ const load = () => {
 }
 
 /**
- * Holds the editor in its loading state for three seconds. The picture is a local file that decodes in
- * one frame, so without this the loader is never on screen long enough to look at — and it is the
- * thing a DAM user sees every time they open the region editor.
+ * Holds the editor in its loading state for three seconds. The local picture
+ * decodes in one frame, so the loader would otherwise never be visible.
  */
 const simulateSlowLoad = () => {
-  // Only the store's loader flag, so the editor stays mounted and shows its own spinner — the one
-  // a DAM user actually sees — rather than vanishing from the page altogether.
+  // Only the store's loader flag, so the editor stays mounted and shows its own spinner instead of disappearing.
   imageRoiStore.showLoader()
   window.setTimeout(() => {
     load()

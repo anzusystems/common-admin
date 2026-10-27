@@ -27,7 +27,6 @@ describe('utils/boolean', () => {
     }
   })
 
-  // '' is false; the same after trimming should be too.
   it('parseBoolean reads a blank string as false', () => {
     expect(parseBoolean('   ')).toBe(false)
   })

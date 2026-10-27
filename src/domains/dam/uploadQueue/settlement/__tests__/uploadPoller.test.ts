@@ -13,9 +13,6 @@ import {
 } from '@/domains/dam/uploadQueue/settlement/uploadPollSchedule'
 import { uploadSettlementRuntime } from '@/domains/dam/uploadQueue/settlement/uploadSettlementRuntime'
 
-// The timer of the ticks of one queue, by itself: the queue is a list of the times its rows began to wait, a read
-// is a promise the test answers, and the time is the manual scheduler's.
-
 const S = 1000
 const MIN = 60 * S
 
@@ -24,10 +21,8 @@ let clock: ManualScheduler
 let visibility: ReturnType<typeof fakeVisibility>
 let poller: QueuePoller
 let mode: UploadPollMode
-/** When each tracked row began to wait. */
 let rows: number[]
 let reads: Array<{ at: number; trigger: string }>
-/** The reads still on their way, when the test holds them. */
 let onTheWay: Array<{ succeed: () => void; fail: () => void }>
 let held: boolean
 let failing: boolean
@@ -66,7 +61,6 @@ const addRow = () => {
   rows.push(clock.now())
   poller.rowAdded()
 }
-/** The times of the reads so far, in seconds. */
 const readAt = () => reads.map((read) => read.at / S)
 const range = (from: number, to: number, step: number) => {
   const values: number[] = []
@@ -249,7 +243,6 @@ describe('one read at a time', () => {
     poller.readNow('visible')
     poller.readNow('visible')
     await clock.advance(20 * S)
-    // Still the one: nothing is read beside it, however long it takes.
     expect(reads).toHaveLength(1)
 
     held = false
@@ -259,7 +252,6 @@ describe('one read at a time', () => {
     await clock.advance(1)
     expect(readAt()).toEqual([5, 27])
 
-    // And then by the age again: the row is 27 s old, its next mark is 31.
     await clock.advance(4 * S)
     expect(readAt()).toEqual([5, 27, 31])
   })
@@ -307,7 +299,6 @@ describe('a hidden tab', () => {
   it('N-P8 a row that comes while the tab is hidden is read on the return, not before', async () => {
     visibility.set(false)
     addRow()
-    // No timer is held for a tab nobody looks at.
     expect(clock.waiting()).toBe(0)
     await clock.advance(30 * S)
     expect(reads).toHaveLength(0)
@@ -332,7 +323,6 @@ describe('reads that fail', () => {
     await clock.advance(300 * S)
     expect(readAt().slice(7)).toEqual([1130])
 
-    // A failure after it starts at the foot of the ladder again.
     failing = true
     await clock.advance(75 * S)
     expect(readAt().slice(7)).toEqual([1130, 1190, 1205])
@@ -344,7 +334,6 @@ describe('reads that fail', () => {
     await clock.advance(50 * S)
     expect(readAt()).toEqual([5, 20, 50])
 
-    // The next try is due at 110.
     await clock.advance(10 * S)
     addRow()
     await clock.advance(5 * S)
@@ -372,7 +361,6 @@ describe('the notifications dying and coming alive', () => {
     await clock.advance(6 * S)
     expect(readAt()).toEqual([10, 16, 23])
 
-    // From that read on by the sparse marks.
     await clock.advance(30 * S)
     expect(readAt()).toEqual([10, 16, 23, 30])
   })
@@ -395,7 +383,6 @@ describe('a row that comes while a read is on its way', () => {
     await clock.advance(60 * S)
     const before = reads.length
 
-    // The row is 60 s old: its next read is due at 90.
     held = true
     await clock.advance(30 * S)
     expect(reads).toHaveLength(before + 1)

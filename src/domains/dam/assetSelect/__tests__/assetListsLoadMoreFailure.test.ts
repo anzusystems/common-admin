@@ -33,14 +33,12 @@ import { SORT_BY_SCORE_DATE } from '@/domains/filters/datatable/utils/datatableC
 // Not applied by importing it: each case puts it in the page, and takes it out.
 import libraryStyle from '@/styles/main.scss?inline'
 
-// "Load more" under a list of assets asks for the further page by itself as it comes into view, and its directive
-// tells it so again each time the list draws anew while the button is in view. A further page that failed while the
-// button was in view was asked for again at once, and again after each failure, with an error each time, until the
-// button was scrolled away. The two asset pickers of the image widgets, as admin-cms opens them, and the asset list
-// of admin-ugc's asset page: the real lists with their real tiles and button; the DAM is a client that records its
-// requests, and answers a list from a list of pages, each saying whether a further one follows, as the DAM does. Laid
-// out by the style of the library: the list scrolls in its column. Not drawn: the pictures, the table, the metadata
-// of the asset of the side panel and the inputs of the filter.
+// "Load more" asks for the further page by itself when it comes into view. Its
+// directive tells it again each time the list redraws while the button is in view.
+// A further page that failed while the button was in view used to be requested
+// again at once, with an error each time, until the button was scrolled away.
+// Real lists, tiles and button are used. The DAM is a recording client that answers from a list of pages.
+// The library style lays the list out. Pictures, table, side panel metadata and filter inputs are not drawn.
 
 const PAGE = 25
 const STAND_INS = [
@@ -66,16 +64,16 @@ let waits: LongWaits
 let socket: DamSocket
 let style: HTMLStyleElement
 let wrapper: VueWrapper | undefined
-/** What the DAM lists, page by page. */
 let pages: string[][]
-/** Whether the DAM fails every page after the first. */
 let furtherPagesFail: boolean
 
 const offsetOf = (request: FakeDamRequest) =>
   Number(new URL(request.url, 'https://dam.test').searchParams.get('offset'))
 const ids = (prefix: string, count: number) => Array.from({ length: count }, (_, index) => `${prefix}-${index + 1}`)
 
-/** The paging of the asset lists is one for the page: what an earlier case left of it is not this one's. */
+/**
+ * The paging of the asset lists is one per page. What an earlier case left in it must not leak into this one.
+ */
 const pagingAsNew = () => {
   let paging!: ReturnType<typeof useAssetSelectActions>['pagination']
   const probe = mount(
@@ -126,7 +124,6 @@ describe.each(lists)('"load more" under %s', (_name, profile, component, props) 
     waits = holdLongWaits()
     socket = stubDamSocket()
     forgetAlerts()
-    // admin-ugc has no user of the DAM, and its list says so.
     if (component !== 'list') signInToDam(extSystem)
     pagingAsNew()
     style = document.createElement('style')
@@ -154,7 +151,6 @@ describe.each(lists)('"load more" under %s', (_name, profile, component, props) 
   const listRequests = () => dam.requests.filter(isListRequest)
   const furtherPageRequests = () => listRequests().filter((request) => offsetOf(request) > 0)
   const listIsRead = () => vi.waitFor(() => expect(useAssetSelectStore(pinia).loader).toBe(false))
-  /** The list is open, and has its first page; the user has scrolled to the button under it, unless told not to. */
   const open = async (scrollToTheButton = true) => {
     if (component === 'list') {
       wrapper = mount(AAssetListInner, {
@@ -186,8 +182,8 @@ describe.each(lists)('"load more" under %s', (_name, profile, component, props) 
         } as never,
         global: {
           plugins: [pinia],
-          // The real transition: the style of a fullscreen dialog is for the content right under the overlay, and the
-          // stand-in of the transition came between them, so the picker was laid out off the window.
+          // The real transition is needed. The fullscreen dialog style targets the content right under the overlay.
+          // A transition stand-in sat between them, so the picker was laid out off the window.
           stubs: { ...Object.fromEntries(STAND_INS.map((name) => [name, true])), transition: false },
         },
       })
@@ -213,11 +209,10 @@ describe.each(lists)('"load more" under %s', (_name, profile, component, props) 
     return bottom > 0 && top < window.innerHeight
   }
   const errors = () => shownAlerts().filter(([color]) => color === 'error')
-  /** The list asks for its further page by itself, the button being in view, and the DAM fails it. */
   const furtherPageFailed = async (times: number) => {
     await vi.waitFor(() => expect(furtherPageRequests()).toHaveLength(times))
     await listIsRead()
-    // Long enough for the button to have asked many times over, as it did.
+    // Long enough for the old bug to repeat the request many times.
     await waits.settle(600)
   }
 
@@ -230,13 +225,11 @@ describe.each(lists)('"load more" under %s', (_name, profile, component, props) 
     expect(tilesDrawn()).toEqual(['image-1', 'image-2'])
     expect([isShown(loadMoreButton()), inView(loadMoreButton())]).toEqual([true, true])
 
-    // A press asks again: failed, it says so once more, and the button asks nothing more by itself.
     loadMoreButton().click()
     await furtherPageFailed(2)
     expect(furtherPageRequests().map(offsetOf)).toEqual([PAGE, PAGE])
     expect(errors()).toHaveLength(2)
 
-    // A press that brings the page: the button, still in view, asks by itself for the page after it, as it did.
     furtherPagesFail = false
     pages = [...pages, ['image-4']]
     loadMoreButton().click()
@@ -249,8 +242,7 @@ describe.each(lists)('"load more" under %s', (_name, profile, component, props) 
   })
 
   if (component === AAssetSelect) {
-    // As the button works: it asks as it comes into view. One that has left the view since the failure asks again
-    // as it comes back.
+    // The button asks as it comes into view. One that left the view after the failure asks again when it comes back.
     it('asks again by itself once the button has left the view and comes back into it', async () => {
       pages = [ids('image', PAGE), ['image-26']]
       await open(false)
@@ -303,8 +295,8 @@ describe.each(lists)('"load more" under %s', (_name, profile, component, props) 
       expect(errors()).toHaveLength(1)
     })
 
-    // Closed, the picker takes its button away with it; opened again, the button is drawn hidden under a list that has
-    // no page yet, and that clears what the failure left.
+    // Closing the picker removes its button. Reopened, the button is drawn
+    // hidden under a list with no page yet, which clears what the failure left.
     it('asks by itself for the further page of the picker opened again after a failure', async () => {
       await open()
       await furtherPageFailed(1)

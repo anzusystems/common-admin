@@ -34,7 +34,7 @@ describe('defineBreadcrumbs', () => {
       reads += 1
       return [{ title: `Article ${id.value} of ${later}`, routeName: '/(cms)/articles/[id]', id: id.value }]
     })
-    // Declared after the call: a getter read at once would throw here, as a page's own computed would not.
+    // Declared after the call: a getter read at once would throw here, while a page's own computed would not.
     const later = 'the desk'
     expect(reads).toBe(0)
     expect(breadcrumbs.items.value[0].title).toBe('Article 1 of the desk')

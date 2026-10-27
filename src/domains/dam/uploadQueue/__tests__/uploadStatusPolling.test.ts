@@ -36,11 +36,10 @@ import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueu
 import { useAlertsQueue } from '@/domains/system/composables/alertsQueue'
 import { commonT } from '@/plugins/i18n'
 
-// When the queue asks the DAM what became of the files it waits for: the poll of a queue, through the real store.
-// It is the only way an upload is settled where no notification comes, and it runs beside the notifications where
-// they do. Nothing of the library is replaced: the DAM is a client that records its requests, the socket a stub
-// of the global `WebSocket`, and the queue keeps its time by a clock the test moves.
-// The rhythm itself, and every rule of the settlement, are in `settlement/__tests__`.
+// Covers when the queue asks the DAM what became of the files it waits for (the queue poll), through the real store.
+// It is the only way an upload settles where no notification comes, and it runs beside notifications where they do.
+// The DAM is a recording client, the socket a stub of global `WebSocket`, and the queue time comes from a test clock.
+// The rhythm and the settlement rules are tested in `settlement/__tests__`.
 
 const QUEUE = 'poll-queue'
 const { Uploading, Processing, Uploaded, Failed, Stop } = UploadQueueItemStatus
@@ -54,7 +53,6 @@ let socket: DamSocket
 const realScheduler = uploadSettlementRuntime.scheduler
 const realVisibility = uploadSettlementRuntime.visibility
 
-/** The tab as the queue asks about it: visible, and counting who listens for it to change. Before the first row. */
 const watchedTab = () => {
   let listeners = 0
   uploadSettlementRuntime.visibility = {
@@ -79,7 +77,7 @@ const use = (profile: ConsumerProfile) => {
   useAlertsQueue().value = []
 }
 afterEach(() => {
-  // Before the clock of the next case: a timer is taken back on the clock of that moment.
+  // Runs before the clock of the next case: a timer is taken back on the clock of that moment.
   useUploadQueuesStore().stopUpload(QUEUE)
   destroyDamNotifications()
   uploadSettlementRuntime.scheduler = realScheduler
@@ -96,10 +94,11 @@ const fromTheServer = {
 }
 const notify = (name: DamNotificationNameType, data: Record<string, unknown>) =>
   useDamNotificationsEventBus().emit({ name, data } as unknown as DamNotification)
-/** Real time, for what the upload does after an answer: the clock of the queue stands meanwhile. */
+/**
+ * Real time, for what the upload does after an answer. The queue clock stands still meanwhile.
+ */
 const moment = () => new Promise<void>((resolve) => setTimeout(resolve, 50))
 const readUrls = () => dam.assetReads().map((read) => read.url)
-/** The warnings the user was shown, by their texts. */
 const warnings = () =>
   useAlertsQueue()
     .value.filter((alert) => alert.color === 'warning')
@@ -108,7 +107,6 @@ const REFRESH_FAILED = 'common.damImage.queueItem.refreshFailed'
 const ASSET_GONE = 'common.damImage.queueItem.assetGone'
 const ORIGINAL_UNREAD = 'common.damImage.queueItem.duplicateOriginalUnread'
 
-/** One file, sent whole: its row waits for the server, `asset-1` and `file-1`. */
 const sentFile = async (profile: ConsumerProfile) => {
   const store = useUploadQueuesStore()
   await store.addByFiles(QUEUE, profile.extSystem, profile.licence, [photo()], 'default')
@@ -143,7 +141,6 @@ describe.each(consumerProfiles)('the poll of an upload queue, under the $name', 
       canEditMetadata: true,
       error: { hasError: false, message: '' },
     })
-    // Nothing is left to ask about: the queue holds no timer.
     expect(clock.waiting()).toBe(0)
   })
 
@@ -172,7 +169,6 @@ describe.each(consumerProfiles)('the poll of an upload queue, under the $name', 
     dam.fileBecomes('asset-1', AssetFileProcessStatus.Stored, fromTheServer)
 
     await clock.advance(MINUTE)
-    // At 5, 10, 16, 23, 31, 40, 50 and 60 seconds.
     expect(readUrls()).toHaveLength(8)
     await clock.advance(MINUTE)
     expect(readUrls()).toHaveLength(10)
@@ -203,7 +199,6 @@ describe.each(consumerProfiles)('the poll of an upload queue, under the $name', 
     const item = await sentFile(profile)
     const readable = unreadable(profile)
 
-    // At 5 seconds, then 15 and 30 seconds after the failure before.
     await clock.advance(20 * SECOND)
     expect(readUrls()).toHaveLength(2)
     expect(item.error).toMatchObject({ hasError: false, message: '' })
@@ -237,7 +232,6 @@ describe.each(consumerProfiles)('the poll of an upload queue, under the $name', 
       status: Processing,
       error: { hasError: true, message: commonT('common.damImage.uploadErrors.processingTooLong') },
     })
-    // Not given up on: the row does not count as done, and is asked about on.
     expect(store.getQueueProcessedCount(QUEUE)).toBe(0)
     const reads = readUrls().length
     await clock.advance(10 * MINUTE)
@@ -269,8 +263,8 @@ describe.each(consumerProfiles)('the poll of an upload queue, under the $name', 
     expect(clock.waiting()).toBe(0)
   })
 
-  // The read that misses the asset for the third time may be the one the user pressed for. The row fails as it
-  // does by the poll, and no warning follows that says to try again: the row has no refresh left to press.
+  // The read that misses the asset for the third time may be the user's refresh. The row fails as it
+  // does by the poll, and no "try again" warning follows, because the row has no refresh left to press.
   it('fails the row the same when the third read to miss its asset is its refresh, without a word to try again', async () => {
     const item = await sentFile(profile)
     dam.assets.delete('asset-1')
@@ -298,11 +292,11 @@ describe.each(consumerProfiles)('the poll of an upload queue, under the $name', 
     expect(warnings()).toEqual([commonT(ASSET_GONE)])
   })
 
-  // "Try again" is said to the one who pressed, about the row pressed. Where that row ended while its refresh
-  // was on its way, by the refresh or by what overtook it, the word would be about a refresh it no longer has.
+  // "Try again" is said to the user who pressed, about the row pressed. If that row ended
+  // while its refresh was in flight, the word would refer to a refresh it no longer has.
   describe('and a refresh that fails while the row pressed ends', () => {
-    // The tick's read is the third to miss the asset and gives the row up; the refresh waits behind it, and then
-    // finds a row that is no longer asked about.
+    // The tick's read is the third to miss the asset and gives the row up. The
+    // refresh waits behind it and finds a row that is no longer asked about.
     it('says nothing when the tick it waited behind has given the row up', async () => {
       const item = await sentFile(profile)
       dam.assets.delete('asset-1')
@@ -319,19 +313,17 @@ describe.each(consumerProfiles)('the poll of an upload queue, under the $name', 
       reads.release()
       await pressed
 
-      // Three ticks and the refresh, which was answered that the asset is missing: its read found nothing to give
-      // up.
       expect(readUrls()).toHaveLength(4)
       expect(await asked.mock.results[0]!.value).toBe('missing')
       expect(warnings()).toEqual([])
     })
 
-    // Two queues wait for one asset. The press is the third miss of the row pressed, which fails by it; the other
-    // row has missed once and waits on, which is why the refresh as a whole is not said to be settled.
+    // Two queues wait for one asset. The press is the third miss of the pressed row, which fails by it.
+    // The other row has missed once and keeps waiting, so the refresh as a whole is not reported as settled.
     it('says nothing when the row pressed is given up by it while another row of the asset waits on', async () => {
       const OTHER = 'another-queue'
       const store = useUploadQueuesStore()
-      // Also when the case fails: a queue left waiting would be asked about under the cases after it.
+      // Also when the case fails: a queue left waiting would be polled during later cases.
       onTestFinished(() => store.stopUpload(OTHER))
       await store.addByCopyToLicence(QUEUE, extSystem, licence, ['asset-gone'], 'default')
       const [pressedRow] = store.getQueueItems(QUEUE)
@@ -348,8 +340,8 @@ describe.each(consumerProfiles)('the poll of an upload queue, under the $name', 
       expect(warnings()).toEqual([])
     })
 
-    // Taken out of the queue while its refresh was on its way, a row that waited is stopped. Read from its status
-    // alone here, as by a caller that does not say in which queue the row was pressed.
+    // A waiting row taken out of its queue while its refresh is in flight is stopped. Read from
+    // its status alone here, as by a caller that does not say which queue the row was pressed in.
     it('says nothing when the row pressed was stopped meanwhile, by being taken out of its queue', async () => {
       const store = useUploadQueuesStore()
       const item = await sentFile(profile)
@@ -367,8 +359,8 @@ describe.each(consumerProfiles)('the poll of an upload queue, under the $name', 
       expect(warnings()).toEqual([])
     })
 
-    // The notification of a duplicate is not kept behind the read of the refresh: it makes the row the original,
-    // and the read that then fails has nothing left to say about a row that is uploaded.
+    // The duplicate notification is not held behind the refresh read. It makes the row
+    // the original, and the failing read has nothing to say about an uploaded row.
     it('says nothing when a duplicate notification has made the row pressed the original meanwhile', async () => {
       const store = useUploadQueuesStore()
       const item = await sentFile(profile)
@@ -395,8 +387,8 @@ describe.each(consumerProfiles)('the poll of an upload queue, under the $name', 
       expect(warnings()).toEqual([])
     })
 
-    // Still being sent when it was pressed, waiting for the server when the read fails: the row has not ended,
-    // and pressing again may help.
+    // Still being sent when pressed, waiting for the server when the
+    // read fails. The row has not ended, so pressing again may help.
     it('says the state could not be loaded when the row only went on from being sent to waiting', async () => {
       const store = useUploadQueuesStore()
       const chunks = dam.hold('POST', dam.routes.chunk)
@@ -434,7 +426,6 @@ describe.each(consumerProfiles)('the poll of an upload queue, under the $name', 
       expect(item.status).toBe(Stop)
     })
 
-    // Its poll is idle by then, and goes only with the queue.
     it('a queue emptied row by row and then closed gives up its listener for the tab', async () => {
       const tab = watchedTab()
       await sentFile(profile)
@@ -466,7 +457,6 @@ describe.each(consumerProfiles)('the poll of an upload queue, under the $name', 
   })
 
   describe('and the finish request of the upload', () => {
-    /** The file is sent, and the answer to its finish request is held back. */
     const finishing = async () => {
       const store = useUploadQueuesStore()
       const finish = dam.hold('PATCH', dam.routes.finish)
@@ -515,8 +505,8 @@ describe.each(consumerProfiles)('the poll of an upload queue, under the $name', 
       expect(readUrls()).toEqual([])
     })
 
-    // The server takes a failed file nowhere from there: nothing more is to be learnt about the row, whatever
-    // becomes of the request.
+    // The server takes a failed file nowhere from there, so nothing more
+    // can be learnt about the row, whatever becomes of the request.
     it('a row its failed notification has failed, whose finish request then fails too, is not asked about', async () => {
       const { store, finish, item } = await finishing()
 
@@ -564,7 +554,6 @@ describe.each(consumerProfiles)('the poll of an upload queue, under the $name', 
       const [item] = store.getQueueItems(QUEUE)
       await vi.waitFor(() => expect(item.status).toBe(Failed))
       await clock.settle()
-      // The one kind of failed row that offers refresh.
       expect(store.refreshMayHelp(item)).toBe(true)
 
       await clock.advance(30 * MINUTE)
@@ -585,7 +574,6 @@ describe.each(consumerProfiles)('the poll of an upload queue, under the $name', 
       expect(clock.waiting()).toBe(0)
     })
 
-    /** A row the client gave up on when its finish request failed: the server may finish its file yet. */
     const givenUpAtFinish = async () => {
       dam.reply((request) =>
         request.method === 'PATCH' && dam.routes.finish.test(request.url) ? { status: 502 } : undefined
@@ -599,7 +587,6 @@ describe.each(consumerProfiles)('the poll of an upload queue, under the $name', 
       return { store, item }
     }
 
-    /** One file whose finish request ends as the case says: with an answer, or with none. */
     const finishEndsWith = async (end: () => { status: number; data?: unknown }) => {
       dam.reply((request) => (request.method === 'PATCH' && dam.routes.finish.test(request.url) ? end() : undefined))
       const store = useUploadQueuesStore()
@@ -610,8 +597,8 @@ describe.each(consumerProfiles)('the poll of an upload queue, under the $name', 
       return { store, item }
     }
 
-    // The server has answered, and said no. The request is sent once: a file the server has refused to finish it
-    // will not finish, and nothing later could say otherwise.
+    // The server answered and refused. The request is sent once:
+    // a file the server refused to finish will not finish later.
     it.each([400, 404, 422])(
       'a row whose finish request the server refused with %i is final: not asked about, and with no refresh',
       async (status) => {
@@ -637,11 +624,11 @@ describe.each(consumerProfiles)('the poll of an upload queue, under the $name', 
       }
     )
 
-    // No answer, or one that says the server itself failed: the request may have done its work all the same.
+    // No answer, or a server failure: the request may have done its work anyway.
     it.each([
       ['answered with 500', () => ({ status: 500 })],
       ['answered with 503', () => ({ status: 503 })],
-      // Not the 200 the client expects: it gives the row up without an error that says why.
+      // Not the 200 the client expects: it gives the row up without an error saying why.
       ['answered with 204', () => ({ status: 204 })],
       [
         'lost to a network error',
@@ -668,7 +655,7 @@ describe.each(consumerProfiles)('the poll of an upload queue, under the $name', 
       expect(item).toMatchObject({ status: Uploaded, canEditMetadata: true, error: { hasError: false } })
     })
 
-    // From then on nothing more can become of the file: the row has no use for refresh.
+    // From then on nothing more can become of the file, so refresh is useless for the row.
     it.each([
       [
         'a read finds its file failed',
@@ -696,7 +683,6 @@ describe.each(consumerProfiles)('the poll of an upload queue, under the $name', 
           dam.assets.delete('asset-1')
           await clock.advance(16 * SECOND)
         },
-        // Left as the client failed it: the server said nothing about the file.
         AssetFileFailReason.None,
       ],
     ])(
@@ -712,8 +698,8 @@ describe.each(consumerProfiles)('the poll of an upload queue, under the $name', 
       }
     )
 
-    // Its asset is there, but the server never had the whole file: nothing can have become of it. Only a row
-    // whose finish request went out is asked about.
+    // The asset exists, but the server never had the whole file, so nothing can
+    // have become of it. Only a row whose finish request went out is asked about.
     it('a row that failed on a chunk, before its finish request went out, is not asked about', async () => {
       dam.reply((request) =>
         request.method === 'POST' && dam.routes.chunk.test(request.url)
@@ -737,7 +723,6 @@ describe.each(consumerProfiles)('the poll of an upload queue, under the $name', 
       expect(readUrls()).toEqual([])
     })
 
-    // No asset was created: there is nothing to ask about, whatever the queue would want.
     it('a row whose start request was refused has no asset, and is not asked about', async () => {
       dam.reply((request) =>
         request.method === 'POST' && dam.routes.start.test(request.url) ? { status: 503 } : undefined
@@ -757,8 +742,8 @@ describe.each(consumerProfiles)('the poll of an upload queue, under the $name', 
   })
 })
 
-// A failed request is handed to the logger of the application (Sentry, in admin-cms). The poll asks for as long
-// as a row waits: through an outage it would hand over the same failure at every read.
+// A failed request is handed to the application logger (Sentry in admin-cms).
+// The poll keeps asking while a row waits, so during an outage it would report the same failure at every read.
 describe.each(consumerProfiles)('what is reported of the reads that fail, under the $name', (profile) => {
   const { endPoints, extSystem, licence } = profile
   const logged = vi.fn()
@@ -775,7 +760,6 @@ describe.each(consumerProfiles)('what is reported of the reads that fail, under 
     await sentFile(profile)
     const readable = unreadable(profile)
 
-    // At 5 s, then 15, 30 and 60 s after a failure.
     await clock.advance(2 * MINUTE)
     expect(readUrls()).toHaveLength(4)
     expect(reported()).toEqual([`502 ${endPoints.asset}/asset-1`])
@@ -784,7 +768,6 @@ describe.each(consumerProfiles)('what is reported of the reads that fail, under 
     readable()
     dam.fileBecomes('asset-1', AssetFileProcessStatus.Stored, fromTheServer)
     await clock.advance(5 * MINUTE)
-    // Nothing of a read that answers.
     expect(readUrls().length).toBeGreaterThan(6)
     expect(reported()).toHaveLength(1)
 
@@ -809,8 +792,6 @@ describe.each(consumerProfiles)('what is reported of the reads that fail, under 
     expect(logged.mock.calls[0]![1]).toMatchObject({ system: 'coreDam', entity: 'asset' })
   })
 
-  // The list goes to the client directly, and the report is the store's: it names the request as it went out,
-  // with the address of the client, as the reports of the other requests do.
   it('two rows: the report names the request with the address of the client it went to', async () => {
     const sentTo = { baseURL: 'https://core-dam.test/api' }
     installConsumerProfile(profile, () => {
@@ -855,7 +836,6 @@ describe.each(consumerProfiles)('what is reported of the reads that fail, under 
     expect(await store.refreshAsset('asset-1', 'default')).toBe('error')
     await clock.advance(15 * SECOND)
 
-    // The first read of the poll, and the two the user asked for; not the second of the poll.
     expect(readUrls()).toHaveLength(4)
     expect(reported()).toHaveLength(3)
   })
@@ -883,7 +863,7 @@ describe.each(consumerProfiles)('what is reported of the reads that fail, under 
   })
 })
 
-// The poll is the backup of the notifications where they come, and waits longer before it asks.
+// The poll is a backup for notifications where they exist, so it waits longer before it asks.
 describe('the rhythm of the poll, by the notification socket of admin-cms', () => {
   beforeEach(() => use(cmsConfiguration))
 
@@ -919,7 +899,8 @@ describe('the rhythm of the poll, by the notification socket of admin-cms', () =
     expect(readUrls()).toHaveLength(1)
   })
 
-  // The queue learns of the socket from the moment its first row waits, and that row is added from a component.
+  // The queue learns of the socket from the moment its first row waits.
+  // That row is added from a component.
   it('a socket that closes once the component that added the row is gone: the queue still hears of it', async () => {
     initDamNotifications().openConnection()
     socket.accept()
@@ -953,7 +934,8 @@ describe('the rhythm of the poll, by the notification socket of admin-cms', () =
   })
 })
 
-// Through pinia (`$dispose()`): the store's notification listener goes with its scope, and so must the rest.
+// Disposed through pinia (`$dispose()`). The store's notification
+// listener goes with its scope, and the rest must go too.
 describe('an upload queue store that is disposed of', () => {
   beforeEach(() => use(cmsConfiguration))
 
@@ -968,7 +950,6 @@ describe('an upload queue store that is disposed of', () => {
     useUploadQueuesStore().$dispose()
 
     expect([clock.waiting(), tab.listeners()]).toEqual([0, 0])
-    // Neither the socket nor a notification wakes it.
     socket.sockets.at(-1)!.onclose?.(new CloseEvent('close'))
     notify(DamNotificationName.AssetFileProcessed, { asset: 'asset-1', id: 'file-1' })
     await clock.advance(MINUTE)
@@ -982,7 +963,6 @@ describe('an upload queue store that is disposed of', () => {
 describe('an application that configures no notification service at all', () => {
   beforeEach(() => {
     use(ugcConfiguration)
-    // Neither `notification` nor the flag that used to switch the poll on.
     const { configs, apiTimeout, adminDomain } = ugcConfiguration.options(dam.client).coreDam!
     initCommonAdminCoreDamOptions({ configs, apiTimeout, adminDomain })
   })
@@ -1022,13 +1002,14 @@ describe('an asset copied to the licence', () => {
 
     await clock.advance(5 * SECOND)
 
-    // The image is built from the file id: without it the copied item is dropped on confirm.
+    // The image is built from the file id. Without it the copied item is dropped on confirm.
     expect(item).toMatchObject({ status: Uploaded, fileId: 'file-copy', canEditMetadata: true })
     expect(store.getQueueProcessedCount(QUEUE)).toBe(1)
     expect(clock.waiting()).toBe(0)
   })
 
-  // The widget learns it from the answer to the copy request, and tells the queue right after it has added the row.
+  // The widget learns this from the answer to the copy request.
+  // It tells the queue right after it adds the row.
   it('that the licence has already: the row becomes that asset at once, and nothing is asked about it later', async () => {
     dam.assets.set(
       'asset-there',
@@ -1051,7 +1032,7 @@ describe('an asset copied to the licence', () => {
     expect(readUrls()).toEqual([])
   })
 
-  // Its metadata is not its file: an item whose file notification is then lost must not stay processing.
+  // An item's metadata is not its file. An item whose file notification is lost must not stay processing.
   it.each([
     [
       'its metadata notification',
@@ -1115,7 +1096,6 @@ describe('a duplicate whose origin asset cannot be loaded', () => {
     event.preventDefault()
   }
 
-  /** The read of an original answers again. */
   let originReadable: () => void
 
   beforeEach(() => {
@@ -1138,7 +1118,8 @@ describe('a duplicate whose origin asset cannot be loaded', () => {
     expect(clock.waiting()).toBe(0)
   })
 
-  // The row failed for a read that failed, not for its file: nothing asks again by itself, so the row offers to.
+  // The row failed because a read failed, not because of its file.
+  // Nothing asks again by itself, so the row offers a refresh.
   it('leaves a copy the licence has already with its refresh, which settles the row from its asset', async () => {
     const store = useUploadQueuesStore()
     dam.assets.set('asset-1', damAssetWithFile('asset-1', 'file-1', AssetFileProcessStatus.Processed, fromTheServer))
@@ -1161,7 +1142,7 @@ describe('a duplicate whose origin asset cannot be loaded', () => {
     expect(store.refreshMayHelp(item)).toBe(false)
   })
 
-  // The finish request failed in the browser, the server has the file all the same and finds it a duplicate.
+  // The finish request failed in the browser, but the server has the file and finds it a duplicate.
   it('leaves an upload the client gave up on with its refresh, which makes the row the original once that can be read', async () => {
     dam.reply((request) =>
       request.method === 'PATCH' && dam.routes.finish.test(request.url) ? { status: 502 } : undefined
@@ -1180,11 +1161,8 @@ describe('a duplicate whose origin asset cannot be loaded', () => {
     await clock.advance(5 * SECOND)
     expect(dam.originReads()).toHaveLength(1)
     expect([item.status, item.isDuplicate, store.refreshMayHelp(item)]).toEqual([Failed, false, true])
-    // The poll has let it go.
     expect(clock.waiting()).toBe(0)
 
-    // Asked while the original still cannot be read, it stays as it is, with its refresh, and the one who asked
-    // is told why the refresh could not do it.
     expect(await store.refreshAsset('asset-1', 'default')).toBe('originalUnread')
     expect([item.status, store.refreshMayHelp(item)]).toEqual([Failed, true])
 
@@ -1202,8 +1180,8 @@ describe('a duplicate whose origin asset cannot be loaded', () => {
     expect(store.refreshMayHelp(item)).toBe(false)
   })
 
-  // The press itself, of the refresh a failed row of the queue offers: the file is settled, a duplicate, and the
-  // row is not, so the one who pressed is told, where the refresh said nothing and left the row as it was.
+  // The file is a settled duplicate and the row is not.
+  // The user who pressed refresh is told why.
   it('tells the one who pressed refresh that the original could not be read while it cannot, and nothing once it can', async () => {
     const store = useUploadQueuesStore()
     const item = await sentFile(cmsConfiguration)
@@ -1216,7 +1194,6 @@ describe('a duplicate whose origin asset cannot be loaded', () => {
     expect([item.status, store.refreshMayHelp(item), warnings()]).toEqual([Failed, true, []])
     const { refreshItem } = useUploadQueueItemRefresh('default')
 
-    // Failed before the press and after it, with its refresh: the row is told why.
     await refreshItem('asset-1', item)
 
     expect(warnings()).toEqual([commonT(ORIGINAL_UNREAD)])
@@ -1230,9 +1207,9 @@ describe('a duplicate whose origin asset cannot be loaded', () => {
     expect(warnings()).toHaveLength(1)
   })
 
-  // The press that fails the row: no tick has asked yet, the refresh is the read that finds the duplicate. The
-  // row keeps its refresh, which asks for the original again: what is said follows that, not the change of the
-  // state of the row.
+  // The press itself fails the row: no tick has asked yet, and refresh is the read that finds the duplicate.
+  // The row keeps its refresh, which asks for the original again.
+  // The message follows that, not the change of the row's state.
   it('tells the one whose press of refresh is what fails the row for want of the original why, as the row keeps its refresh', async () => {
     const store = useUploadQueuesStore()
     const item = await sentFile(cmsConfiguration)
@@ -1248,7 +1225,6 @@ describe('a duplicate whose origin asset cannot be loaded', () => {
     expect(warnings()).toEqual([commonT(ORIGINAL_UNREAD)])
   })
 
-  // The same press by a caller that does not say which row was pressed: told as well.
   it('says why to a caller that names no row, also when the row failed by it', async () => {
     const item = await sentFile(cmsConfiguration)
     dam.fileBecomes('asset-1', AssetFileProcessStatus.Duplicate, {}, { originAssetFile: 'file-original' })
@@ -1259,8 +1235,8 @@ describe('a duplicate whose origin asset cannot be loaded', () => {
     expect(warnings()).toEqual([commonT(ORIGINAL_UNREAD)])
   })
 
-  // A failed row keeps its status when it is taken out of the queue: only its queue tells that it is gone, and
-  // "try again" would be said about a row nobody sees any more.
+  // A failed row keeps its status when it is taken out of the queue.
+  // Only its queue shows it is gone, and "try again" would be said about a row nobody sees.
   it.each([
     ['taken out of its queue meanwhile: nothing is said', true, []],
     ['still in its queue: the state could not be loaded', false, [REFRESH_FAILED]],
@@ -1278,13 +1254,11 @@ describe('a duplicate whose origin asset cannot be loaded', () => {
     reads.release({ status: 502 })
     await pressed
 
-    // Removed or not, it is as failed as it was.
     expect(item.status).toBe(Failed)
     expect(store.getQueueItems(QUEUE)).toHaveLength(removed ? 0 : 1)
     expect(warnings()).toEqual(said.map((key) => commonT(key)))
   })
 
-  // A file that waited, not one the client gave up on: failed the same way, with the same way back.
   it('leaves an upload that waited for the server with its refresh too, until the server fails the file', async () => {
     const store = useUploadQueuesStore()
     const item = await sentFile(cmsConfiguration)
@@ -1316,7 +1290,6 @@ describe('a duplicate whose origin asset cannot be loaded', () => {
   })
 })
 
-// The request itself: it hands a row over to the server, and only a row that is still being sent.
 describe('the answer to the finish request', () => {
   const { endPoints } = ugcConfiguration
 
@@ -1347,7 +1320,7 @@ describe('the answer to the finish request', () => {
     ])
   })
 
-  // A stop while the request ran has nothing to cancel; a notification can beat the answer.
+  // A stop while the request ran leaves nothing to cancel. A notification can beat the answer.
   it.each([Stop, Uploaded, Failed])('leaves a row that is %s by then as it is', async (settled) => {
     const finish = dam.hold('PATCH', dam.routes.finish)
     const item = sending()

@@ -3,7 +3,6 @@ import { mount } from '@vue/test-utils'
 import { defineComponent, h, nextTick, ref } from 'vue'
 import { createUserAndTimeTrackingFields } from '@/domains/cached/composables/createUserAndTimeTrackingFields'
 
-// Stands in for AUserAndTimeTrackingFields and records what the factory forwards.
 const RowsStub = defineComponent({
   name: 'AUserAndTimeTrackingFields',
   props: {

@@ -18,7 +18,9 @@ const props = withDefaults(
     dataCy?: string
     readonly?: boolean
     validationScope?: ValidationScope
-    /** The DAM configuration whose forms it shows; inherited when not given. */
+    /**
+     * The DAM configuration whose forms it shows; inherited when not given.
+     */
     configName?: string
   }>(),
   {
@@ -41,8 +43,9 @@ const configAssetCustomFormElements = getDamConfigAssetCustomFormElements(props.
 if (isUndefined(configAssetCustomFormElements)) {
   throw new Error('Custom form elements must be initialised.')
 }
-// A type whose read failed beside reads that answered is not loaded: the form says so in place of its fields and draws
-// the rest, its slots too. Thrown, it took the inputs its host puts into the slots with it.
+// When the read of this type failed but other reads succeeded, the type is not loaded.
+// The form shows a notice in place of its fields and still renders the rest, including its slots.
+// Throwing here would also drop the inputs the host puts into the slots.
 const typeNotLoaded = computed(() => isUndefined(getDamConfigAssetCustomFormElements(props.extSystem, props.assetType)))
 
 const { t } = useI18n()
@@ -58,7 +61,7 @@ if (isUndefined(configExtSystem)) {
   throw new Error('AssetCustomMetadataForm: Ext system must be initialised.')
 }
 
-// The number the DAM is configured with, 0 too: no field is pinned then.
+// Uses the configured number, including 0, which pins no field.
 const pinnedCount = computed(() => {
   return configExtSystem[props.assetType]?.customMetadataPinnedAmount ?? 2
 })

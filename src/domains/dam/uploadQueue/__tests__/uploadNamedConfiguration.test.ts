@@ -17,11 +17,10 @@ import { AssetFileProcessStatus } from '@/domains/dam/types/AssetFile'
 import { UploadQueueItemStatus } from '@/domains/dam/types/UploadQueue'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
 
-// A page with two DAM configurations: `default`, as admin-cms has it, and `own`, with a client and addresses of
-// its own. A queue is under the configuration it was made with: its files are sent there, and its rows are asked
-// about there, by the poll, after a notification, by the refresh and for the original of a duplicate.
-// Nothing of the library is replaced: each configuration has a DAM client that records its requests. What is started
-// under `own` has ids of its own here, which tell its rows from those of `default`.
+// A page with two DAM configurations: `default` (as in admin-cms) and `own`, with its own client and addresses.
+// A queue stays under the configuration it was made with. Files are sent there, and rows are asked
+// about there: by the poll, after a notification, by the refresh and for the original of a duplicate.
+// Each configuration has a recording DAM client. Ids started under `own` differ from those of `default`.
 
 const { endPoints, extSystem, licence } = cmsConfiguration
 const OWN = { asset: '/own/v2/asset', image: '/own/v2/image' }
@@ -45,9 +44,9 @@ beforeEach(() => {
       own: { damClient: own.client, endPointAsset: OWN.asset, endPointImage: OWN.image },
     },
   })
-  // Its DAM has the configuration of the default one, filled before anything is added, as an application does, but
-  // for its chunks: of half a photo, where `default`'s take a photo whole. A queue under `own` that read the store of
-  // `default` would send each photo in one chunk.
+  // The DAM of `own` has the default configuration, filled before anything is
+  // added, except its chunks: half a photo, where `default`'s take a photo whole.
+  // A queue under `own` that read the store of `default` would send each photo in one chunk.
   seedDamConfigOf('own').damPrvConfig.settings.imageChunkConfig = { minSize: 1500, maxSize: 1500 }
   let started = 0
   own.reply((request) => {
@@ -75,11 +74,12 @@ afterEach(() => {
   useDamNotificationsEventBus().reset()
 })
 
-/** A notification of the socket of `own`: those of `default`'s socket concern the queues of `default` alone. */
+/**
+ * Notifications of `default`'s socket concern only the queues of `default`.
+ */
 const notify = (name: DamNotificationNameType, data: Record<string, unknown>) =>
   useDamNotificationsEventBus().emit({ name, data } as unknown as DamNotification, ['own'])
 const photo = (name: string) => new File([new Uint8Array(3000)], name, { type: 'image/jpeg' })
-/** The method and the path of every request a client was asked, in order. */
 const asked = (of: FakeDam) => of.requests.map((request) => `${request.method} ${request.url}`)
 const sendingUnderOwn = [
   `POST ${OWN.image}/licence/${licence}`,
@@ -88,7 +88,6 @@ const sendingUnderOwn = [
   `PATCH ${OWN.image}/own-file-1/uploaded`,
 ]
 
-/** One file in a queue made under `own`, sent whole: its row waits for the server to process it. */
 const uploadedUnderOwn = async () => {
   const store = useUploadQueuesStore()
   await store.addByFiles(QUEUE, extSystem, licence, [photo('photo.jpg')], 'own')
@@ -118,7 +117,6 @@ describe('a queue made under a named DAM configuration', () => {
   })
 
   describe('with two rows', () => {
-    /** Two files in the queue made under `own`, both sent whole. */
     const twoUploadedUnderOwn = async () => {
       const store = useUploadQueuesStore()
       await store.addByFiles(QUEUE, extSystem, licence, [photo('first.jpg'), photo('second.jpg')], 'own')
@@ -142,7 +140,6 @@ describe('a queue made under a named DAM configuration', () => {
       expect(asked(dam)).toEqual([])
     })
 
-    // The report of that read is the store's own: it names the request as it went out.
     it('reports that read, when it fails, with the address of its configuration', async () => {
       const logged = vi.fn()
       setApiErrorLogger(logged)
@@ -276,7 +273,6 @@ describe('the configuration of a queue that is added to again', () => {
   const refused = (known: string, other: string) =>
     `useUploadQueuesStore: the queue "${QUEUE}" has rows under the DAM configuration "${known}", none is added under "${other}".`
 
-  // Not sent under the name the queue has: that is not where the one who added them said.
   it('is the only one its rows are added under: files under another name are refused, and none is added', async () => {
     const { store } = await uploadedUnderOwn()
 
@@ -328,9 +324,9 @@ describe('the configuration of a queue that is added to again', () => {
     ])
   })
 
-  // The files of an add are put into the queue one after another, and another add may come before the first of them
-  // is there. The queue is named with the row, so the add whose row is there first has named it: the files of the
-  // first add used to be sent under the name of the second.
+  // The files of an add are put into the queue one after another, and another add may come before the first is there.
+  // The queue is named with the row, so the add whose row is there first names it.
+  // Before, the files of the first add were sent under the name of the second.
   it.each([
     ['own', 'default'],
     ['default', 'own'],
@@ -353,7 +349,7 @@ describe('the configuration of a queue that is added to again', () => {
     }
   )
 
-  // `constructor`: what every object has is no configuration the application has named.
+  // `constructor`: what every object has is not a configuration the application has named.
   it.each(['unknown', 'constructor'])(
     'is refused when the application has no configuration of that name, and no row is added: %s',
     async (name) => {
@@ -394,13 +390,11 @@ describe('what a saved detail writes back into the rows of its asset', () => {
 
     await store.updateFromDetail(saved(), 'default')
 
-    // No queue of `default` has a row of the asset: nothing is read, and the row under `own` is not written.
     expect(item.customData).toEqual({})
     expect(asked(own).slice(sendingUnderOwn.length)).toEqual([])
     expect(asked(dam)).toEqual([])
   })
 
-  // The detail is saved by then: what cannot be read back is left as it is, and nothing is thrown at the detail.
   it('is left alone, in silence, when the application has no configuration of the name', async () => {
     const { store, item } = await uploadedUnderOwn()
 

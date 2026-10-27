@@ -36,7 +36,9 @@ export function valueImports(ts, code, js = false) {
   return specifiers
 }
 
-/** @param modules {Map<string, string[]>} file -> import specifiers */
+/**
+ * @param modules {Map<string, string[]>} file -> import specifiers
+ */
 export function buildGraph(srcDir, adminDir, modules) {
   const edges = new Set()
   for (const [file, specifiers] of modules) {
@@ -48,7 +50,9 @@ export function buildGraph(srcDir, adminDir, modules) {
   return edges
 }
 
-/** Strongly connected components with more than one module, or a module importing itself. */
+/**
+ * Strongly connected components with more than one module, or a module importing itself.
+ */
 export function findCycles(edges) {
   const graph = new Map()
   for (const edge of edges) {
@@ -107,7 +111,9 @@ export function findCycles(edges) {
   return components.sort((a, b) => a[0].localeCompare(b[0]))
 }
 
-/** Edges that are new and lie inside a cycle after the change. */
+/**
+ * Edges that are new and lie inside a cycle after the change.
+ */
 export function newCycleEdges(before, after) {
   const cycles = findCycles(after)
   const member = new Map()

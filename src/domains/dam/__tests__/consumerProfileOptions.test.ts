@@ -16,9 +16,9 @@ import { useCommonAdminImageOptions } from '@/domains/dam/imageWidget/composable
 import * as imageApiCms from '@/domains/dam/imageWidget/composables/imageApiCms'
 import { commonT, i18n } from '@/plugins/i18n'
 
-// The options admin-cms and admin-ugc install the plugin with are typed literals in `support/consumerProfiles.ts`:
-// an option renamed or dropped stops that file compiling. Here they go through the plugin itself, and what the
-// library reads back is what each application relies on.
+// The plugin options of admin-cms and admin-ugc are typed literals in
+// `support/consumerProfiles.ts`. A renamed or dropped option stops that file compiling.
+// Here they go through the plugin itself, and the test checks what the library reads back.
 
 const damClient = () => ({}) as AxiosInstance
 
@@ -28,7 +28,6 @@ const install = (profile: typeof cmsConfiguration) => {
   return options
 }
 
-/** The addresses with a key that neither application sets: those of before the keys. */
 const fixedAddresses = {
   endPointConfiguration: '/adm/v1/configuration',
   endPointPubConfiguration: '/pub/v1/configuration',
@@ -108,7 +107,6 @@ describe('the plugin options of admin-ugc', () => {
       endPointAsset: '/ugc/v1/asset',
       endPointImage: '/ugc/v1/image',
       endPointRoi: '/ugc/v1/roi',
-      // Not named by the application, whose ext system has neither authors nor keywords: the defaults.
       endPointAuthor: '/adm/v1/author',
       endPointKeyword: '/adm/v1/keyword',
       ...fixedAddresses,
@@ -126,7 +124,6 @@ describe('the plugin options of admin-ugc', () => {
       addFromDamLabel: 'Vybrať z knižnice',
       replaceFromDamLabel: 'Nahradiť z knižnice',
       descriptionValidation: { required: false, min: 0, max: 2000 },
-      // Merged over the default: only `required` is the application's.
       sourceValidation: { required: false, min: 0, max: 255 },
       customUploadMetadataToImageMap: own.customUploadMetadataToImageMap,
       customAssetSelectMetadataToImageMap: own.customAssetSelectMetadataToImageMap,
@@ -155,8 +152,9 @@ describe('the plugin options of admin-ugc', () => {
   })
 })
 
-// A widget, a queue or a detail is under the DAM configuration it names. One the application has not named is
-// refused, and so is what every object has by itself: read as a configuration, it had no client.
+// A widget, queue or detail uses the DAM configuration it names. An unnamed one is refused.
+// Names every object has by itself (`constructor`, `toString`, `__proto__`)
+// are refused too. Read as a configuration, they had no client.
 describe('a DAM configuration the application has not named', () => {
   it.each(['unknown', 'constructor', 'toString', '__proto__'])('is refused: %s', (name) => {
     install(cmsConfiguration)

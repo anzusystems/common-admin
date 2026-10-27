@@ -13,8 +13,8 @@ const CONFIG = {
   translation: { subjects: {}, actions: {}, roles: {} },
 }
 
-// The config only where the config lives. Answering it to every URL is what let a page that sent
-// the editor to the group list pass here as if nothing were wrong.
+// Answer the config only at the config URL.
+// Answering every URL let a page that sent the editor to the group list pass as if nothing were wrong.
 const request = vi.fn((config: { url?: string }) =>
   config.url?.endsWith('/adm/v1/permissions/config')
     ? Promise.resolve({ status: 200, data: CONFIG })
@@ -23,10 +23,10 @@ const request = vi.fn((config: { url?: string }) =>
 const client = () => ({ request }) as unknown as AxiosInstance
 
 let mounted: VueWrapper | null = null
-// `src/test/setup.ts` installs one pinia into every mount through `config.global.plugins`, and
-// that install is what decides which instance the component's stores resolve against. A pinia set
-// active in the test alone would not be the one the component uses, so it is passed in as well --
-// mount options are applied after the global ones, so this is the instance that wins.
+// `src/test/setup.ts` installs one pinia into every mount through `config.global.plugins`,
+// which decides the instance the component's stores resolve against.
+// A pinia set active only in the test would not be the one the component uses.
+// It is also passed as a mount option, which is applied after the global ones, so it wins.
 let pinia = createPinia()
 
 const mountManage = async (props: Record<string, unknown> = {}) => {
@@ -50,8 +50,9 @@ afterEach(() => {
 
 describe('APermissionGroupManage', () => {
   it('reads the permission config, not the group list, whatever endpoint the page holds', async () => {
-    // Every page passed its permission-group endpoint here. The editor used it as the config URL,
-    // stored the list as that system's config and crashed on `Object.keys(config.config)`.
+    // Every page passed its permission-group endpoint here.
+    // The editor used it as the config URL, stored the list as that
+    // system's config and crashed on `Object.keys(config.config)`.
     const wrapper = await mountManage({ endPoint: '/adm/v1/permission-group' })
 
     const urls = request.mock.calls.map(([config]) => config.url)
@@ -93,7 +94,6 @@ describe('APermissionGroupManage', () => {
     const wrapper = await mountManage()
 
     expect(wrapper.text()).toContain('location_ui')
-    // Not readonly: this is the edit form.
     expect(wrapper.find('[data-cy="permission-allow-all-location"]').exists()).toBe(true)
   })
 

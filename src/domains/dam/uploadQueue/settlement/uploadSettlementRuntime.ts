@@ -10,8 +10,8 @@ export interface UploadSettlementVisibility {
 }
 
 /**
- * An object with writable fields: a test replaces a field, not the binding. Production code never writes here.
- * The settlement reads the fields at each use, not once when it is created.
+ * Writable fields so a test can replace a field, not the binding. Production code never writes here.
+ * The settlement reads the fields at each use, not once at creation.
  */
 export const uploadSettlementRuntime: {
   scheduler: UploadSettlementScheduler

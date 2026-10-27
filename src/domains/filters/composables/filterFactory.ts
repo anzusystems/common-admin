@@ -31,11 +31,12 @@ export type FilterStoreIdentifier = { system: string; subject: string }
 const SORT_URL_PARAM = '_sort'
 const END_FILTER_MARKER = '~'
 
-// `URLSearchParams` percent-encodes characters a URL fragment accepts verbatim, and vue-router
-// then runs `encodeURI` over the hash, which escapes the `%` a second time — `_sort=id%2Cdesc`
-// arrives as `id%252Cdesc` and the sort is silently lost. Handing these back keeps a built hash
-// stable through `router.push({ hash })`. `~` stays encoded because the end marker relies on it
-// never occurring inside a value; `&`, `=` carry the structure, `+` reads back as a space.
+// `URLSearchParams` percent-encodes characters a fragment accepts verbatim,
+// and vue-router runs `encodeURI` over the hash, double-escaping `%`.
+// So `_sort=id%2Cdesc` arrives as `id%252Cdesc` and the sort is lost.
+// Decoding these keeps the hash stable through `router.push({ hash })`.
+// `~` stays encoded because the end marker must never occur in a
+// value. `&` and `=` carry the structure. `+` reads back as a space.
 const RELAXED_IN_HASH: Record<string, string> = {
   '%2C': ',',
   '%3A': ':',
@@ -52,8 +53,8 @@ const RELAXED_IN_HASH: Record<string, string> = {
 const relaxHashEncoding = (value: string) =>
   value.replace(/%(2C|3A|2F|40|24|21|27|28|29|3B|3F)/g, (match) => RELAXED_IN_HASH[match]!)
 
-// `structuredClone` gives every array default a fresh identity, so `!==` is always true for them
-// and an array default would be written into the url on every submit.
+// `structuredClone` gives each array default a new identity, so `!==` is always true.
+// Without a deep compare, an array default would be written into the URL on every submit.
 const isSameFilterValue = (a: AllowedFilterValues, b: AllowedFilterValues): boolean => {
   if (isArray(a) && isArray(b)) {
     return a.length === b.length && a.every((item, index) => item === b[index])
@@ -79,13 +80,10 @@ const encodeFilterHash = (data: Record<string, AllowedFilterValues>, sortBy?: Da
 }
 
 /**
- * Hash for a filter link, with values equal to their default left out.
- *
- * Pair it with `router.push({ name, hash })`, which needs the leading `#` — without it vue-router
- * glues the value onto the path instead. A hash still containing `%` (diacritics, `&`, `=`) does
- * not survive that trip; check with `isRouterSafeHash` and fall back to assigning
- * `window.location.hash` after navigating. Returns an empty string when nothing differs from
- * the defaults.
+ * Hash for a filter link, leaving out values equal to their default. Returns an empty string when nothing differs.
+ * Use with `router.push({ name, hash })`. The hash needs the leading `#`, or vue-router appends it to the path.
+ * A hash containing `%` (diacritics, `&`, `=`) does not survive the push. Check
+ * `isRouterSafeHash` and fall back to setting `window.location.hash` after navigating.
  */
 export function buildFilterHash<F extends readonly MakeFilterOption<string>[]>(
   filterConfig: FilterConfig<F>,
@@ -102,7 +100,9 @@ export function buildFilterHash<F extends readonly MakeFilterOption<string>[]>(
   return hash.length === 0 ? hash : '#' + hash
 }
 
-/** Whether `router.push({ hash })` would leave the hash intact — see `buildFilterHash`. */
+/**
+ * Whether `router.push({ hash })` would leave the hash intact — see `buildFilterHash`.
+ */
 export const isRouterSafeHash = (hash: string): boolean => !hash.includes('%')
 
 const defaultRenderOptions: FilerRenderOptions = {
@@ -165,9 +165,9 @@ export function createFilter<F extends readonly MakeFilterOption<string>[]>(
     {} as FilterConfig<F>['fields']
   )
 
-  // A time interval names the field that holds its upper bound. The query builder and the selected chips
-  // read that field's config without a check, so a name that is not configured fails here, by name,
-  // instead of as a TypeError on the first query.
+  // A time interval names the field holding its upper bound.
+  // The query builder and the chips read that config unchecked.
+  // Fail here by name rather than with a TypeError on the first query.
   for (const field of Object.values(config) as FilterField[]) {
     if (field.related && !(field.related in config)) {
       throw new Error(`createFilter: "${field.name}" names related field "${field.related}", which is not configured`)
@@ -223,7 +223,6 @@ export function useFilterClearHelpers<
     filterSelected: Ref<Map<string, ValueObjectOption<string | number>[]>>
   ) => {
     if (!isClearable(name, filterConfig)) return
-    // update selected
     const config = filterConfig.fields[name as keyof FilterConfig<F>['fields']]
     const selectedFound = filterSelected.value.get(name)
     if (selectedFound && selectedFound.length === 1) {
@@ -232,7 +231,6 @@ export function useFilterClearHelpers<
       const foundIndex = selectedFound.findIndex((item) => item.value === optionValue)
       if (foundIndex !== -1) selectedFound.splice(foundIndex, 1)
     }
-    // update data
     if (config.type === 'timeInterval' && config.related) {
       filterData[name as keyof FilterData<F>] = config.default
       filterData[config.related as keyof FilterData<F>] =
@@ -311,13 +309,13 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
     storeKey = 'tableFilter_' + filterConfig.general.system + '_' + filterConfig.general.subject
   }
 
-  // Independent of `storeFiltersLocalStorage` being on: the remembered page is keyed even when
-  // filters are not persisted. A string override is what distinguishes tables sharing a subject.
+  // The page key exists even when filters are not persisted.
+  // A string override distinguishes tables sharing a subject.
   const pageStoreKey = isString(options.storeFiltersLocalStorage)
     ? options.storeFiltersLocalStorage
     : datatablePageKey(filterConfig.general.system, filterConfig.general.subject)
-  // Called from a datatable's setup, so `ADatatablePagination` picks it up. Guarded because a
-  // composable may legitimately be called outside setup, and Vue would warn.
+  // Provided so `ADatatablePagination` picks it up. Guarded because
+  // the composable may run outside setup, where Vue would warn.
   if (getCurrentInstance()) {
     provide(DatatablePageStoreKey, pageStoreKey)
   }
@@ -359,8 +357,8 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
     if (!hash) return null
     if (hash.startsWith('#')) hash = hash.substring(1)
 
-    // URLSearchParams percent-encodes `~` in values, so the marker cannot occur inside our own
-    // data — a hash without it is foreign or truncated, and null lets localStorage take over.
+    // `URLSearchParams` encodes `~` in values, so the marker never occurs in our data.
+    // A hash without it is foreign or truncated. `null` lets localStorage take over.
     const markerIndex = hash.indexOf(END_FILTER_MARKER)
     if (markerIndex === -1) return null
     hash = hash.slice(0, markerIndex)
@@ -403,9 +401,9 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
     return { filters: result, sortBy }
   }
 
-  // A submit is not a place to step back to, so it replaces the entry. `replaceState` fires no
-  // popstate, so vue-router does not run a navigation (and its guards) per submit; its `current` is
-  // patched so the router's next push, which rewrites this entry from it, keeps the hash.
+  // A submit replaces the history entry instead of adding one.
+  // `replaceState` fires no popstate, so vue-router runs no navigation or guards per submit.
+  // Its `current` is patched so the router's next push, which rewrites this entry, keeps the hash.
   const replaceHash = (hash: string) => {
     const url = window.location.pathname + window.location.search + hash
     const state = window.history.state
@@ -480,16 +478,13 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
       return false
     }
 
-    // A hash naming at least one field is authoritative: it arrives from a link, or from stepping
-    // back to an older address, and in both cases it describes the whole view. Without this reset
-    // the fields it does not mention keep whatever the module-level filter store still holds from
-    // an earlier visit, so the same link lands differently depending on how the user got to it.
-    // On a fresh page load the store is already at its defaults and this is a no-op. Local storage
-    // keeps merging, because there the absent fields were left out as equal to their default.
-    //
-    // A hash carrying only `_sort` is excluded on purpose. Unknown keys are dropped before this
-    // point, so such a hash also results from a link meant for a different table sharing the page
-    // - it must not wipe this one's filter. Only `clearable` fields are reset, as everywhere else.
+    // A hash naming at least one field describes the whole view, whether
+    // from a link or from going back. Reset the fields it omits.
+    // Otherwise they keep values from the module-level store, and the same link lands
+    // differently. Local storage still merges, since it omits fields equal to their default.
+    // A `_sort`-only hash is excluded. It can come from a link for
+    // another table on the same page and must not wipe this filter.
+    // Only `clearable` fields are reset.
     const hashDescribesThisView = source === 'hash' && !isEmptyObject(storedFromHash.filters)
     if (hashDescribesThisView) {
       clearAll(filterData, filterConfig)
@@ -518,23 +513,22 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
         updateLocationHash(stored)
       }
     }
-    // Drained either way: the flag means "the next list I land on should restore its page", so
-    // leaving it set would hand the remembered page to whichever table comes after this one.
+    // Always consumed. The flag means "the next list should restore
+    // its page". Leaving it set would pass the page to the next table.
     const restoredPage = consumeStoredPage(pageStoreKey)
     pagination.value = {
       ...pagination.value,
-      // A link need not carry the sort. Taking `null` from it would drop `order[...]` from the
-      // query, and paging without ORDER BY can repeat or skip rows.
+      // A link may omit the sort. Taking `null` would drop `order[...]` from
+      // the query, and paging without ORDER BY can repeat or skip rows.
       sortBy: storedFromHash.sortBy ?? pagination.value.sortBy,
-      // A hash replaces the view, so a link starts at the first page. A restored page still wins:
-      // the flag behind it is only ever set by the close button, which means "I am coming back to
-      // this list", and that address carries the list's own hash along with it.
+      // A link starts at the first page. A restored page still wins.
+      // Only the close button sets that flag, meaning the user returns
+      // to this list, and that address carries the list's own hash.
       page: restoredPage ?? (source === 'hash' ? 1 : pagination.value.page),
     }
     if (hashDescribesThisView) {
-      // Local storage mirrors the last applied state, so a link becomes the view the user returns
-      // to. Re-serialized rather than stored verbatim, to drop values equal to their default.
-      // A sort-only hash is not a link to this view, so it does not overwrite what is remembered.
+      // Local storage mirrors the last applied state, so a link becomes the view the user returns to.
+      // Re-serialized to drop values equal to their default. A sort-only hash does not overwrite it.
       storeFilterLocalStorage(serializeFilters(getFilterDataForStoring(), pagination, true))
     }
     if (callback) callback()
@@ -551,28 +545,20 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
 }
 
 /**
- * Provides the filter (`FilterConfigKey`, `FilterDataKey`) and `pagination` (`DatatablePaginationKey`) to the filter
- * bar and `ADatatablePagination` below this component, and wires the list to them: `getList` is
- * `fetchList(pagination, filterData, filterConfig)` debounced and resolves once that has (a refresh button can wait for
- * it; a call that a newer one replaces within the debounce resolves at once, without a load of its own), submit, reset
- * and sort go through `useFilterHelpers` (with `filterHelpersOptions`), and on mount the stored filter and the
- * remembered page are restored before the first load.
- *
- * Only for a datatable that is the parent of its filter bar and does exactly this. Write the wiring out when the first
- * load skips the stored filter, `getList` checks or adds anything, the sort is handled by hand, `fetchList` takes more
- * than the list's three arguments, or a parent renders the filter bar (the parent provides then).
- *
- * ```ts
+ * Provides the filter (`FilterConfigKey`, `FilterDataKey`) and `pagination` (`DatatablePaginationKey`)
+ * to the filter bar and `ADatatablePagination` below, and wires the list to them.
+ * `getList` is a debounced `fetchList(pagination, filterData, filterConfig)` that resolves when
+ * the load finishes. A call superseded within the debounce resolves at once without loading.
+ * Submit, reset and sort go through `useFilterHelpers` (with `filterHelpersOptions`).
+ * On mount the stored filter and remembered page are restored before the first load.
+ * Use only for a datatable that is the parent of its filter bar. Wire it by hand when the first load skips the stored
+ * filter, `getList` adds logic, sort is custom, `fetchList` takes other arguments, or a parent renders the filter bar.
+ * @example
  * const { filterData, filterConfig } = useFaqListFilter()
  * const { fetchList, listItems } = useFaqListActions()
  * const { pagination } = usePagination(SORT_BY_ID)
- * const { getList, sortByChange, submitFilterAction, resetFilterAction } = useDatatableList(
- *   filterData,
- *   filterConfig,
- *   pagination,
- *   fetchList
- * )
- * ```
+ * const { getList, sortByChange, submitFilterAction, resetFilterAction
+ * } = useDatatableList(filterData, filterConfig, pagination, fetchList)
  */
 export function useDatatableList<
   F extends readonly MakeFilterOption<string>[] = readonly MakeFilterOption<string>[],
@@ -610,8 +596,8 @@ export interface GeneralFilterOptions {
 
 export interface FilerRenderOptions {
   skip: boolean
-  // Whether the field is shown as a selected-filter chip (FiltersSelected). Default true.
-  // Optional for backward compatibility (other admins may construct FilerRenderOptions).
+  // Whether the field shows as a chip in `FiltersSelected`. Default true.
+  // Optional because other admins may construct `FilerRenderOptions`.
   selected?: boolean
   xs: number | undefined
   sm: number | undefined

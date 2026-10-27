@@ -15,13 +15,19 @@ import {
 } from '@/domains/dam/types/UploadQueue'
 import type { DocId } from '@/shared/types/common'
 
-/** What the frame of the detail of an asset and of the dialog of a single upload draws, and nothing else. */
+/**
+ * Exactly what the frame of the asset detail and the single-upload dialog renders.
+ */
 export interface AssetDetailView {
-  /** Keys the sidebar; null while an upload has no asset yet (the sidebar then is not drawn). */
+  /**
+   * Keys the sidebar. Null while an upload has no asset yet, and then the sidebar is not rendered.
+   */
   id: DocId | null
   assetType: DamAssetTypeType
   assetStatus: DamAssetStatusType
-  /** For the status props the sidebars take. */
+  /**
+   * Used for the status props of the sidebars.
+   */
   mainFile: AssetFile | null
   image: {
     src: string
@@ -33,11 +39,15 @@ export interface AssetDetailView {
     processing: boolean
     waiting: boolean
     done: boolean
-    /** As the row has them (`UploadQueueItem['progress']`): not normalised. */
+    /**
+     * As on the row (`UploadQueueItem['progress']`), not normalised.
+     */
     progress?: number | null
     remainingTime?: number | null
   }
-  /** The left side follows the region tab (which the sidebars offer by their own props). */
+  /**
+   * The left side follows the ROI tab. The sidebars offer that tab through their own props.
+   */
   roiEditorTab: boolean
   simpleMode: boolean
 }
@@ -57,8 +67,8 @@ const dominantColourOf = (mainFile: AssetFile | null | undefined) =>
     : NO_COLOUR
 
 /**
- * The picture is the grey placeholder of `AssetImage` (its last branch): no state of an upload and no file to show.
- * Only then does the box around it and its overlay take the whole area (finding 64); a picture keeps its own size.
+ * The image is the grey placeholder of `AssetImage` (its last branch): no upload state and no file.
+ * Only then do the box and its overlay fill the whole area (finding 64). An image keeps its own size.
  */
 export const pictureIsPlaceholder = (view: AssetDetailView) =>
   !view.image.uploading &&
@@ -66,7 +76,9 @@ export const pictureIsPlaceholder = (view: AssetDetailView) =>
   !view.image.waiting &&
   !(view.assetStatus === DamAssetStatus.WithFile && view.image.src)
 
-/** The detail of an asset, as it is: the picture of its detail, no state of an upload. */
+/**
+ * View of an existing asset, without upload state.
+ */
 export function assetDetailViewOfAsset(
   asset: AssetDetailItemDto | null,
   simpleAssetSidebarEnabled: boolean
@@ -94,15 +106,15 @@ export function assetDetailViewOfAsset(
       waiting: false,
       done: false,
     },
-    // The editor follows the tab whatever the kind of the asset: the tabs of another kind have no region tab.
+    // The editor follows the tab for any asset type. Other types have no ROI tab.
     roiEditorTab: true,
     simpleMode: simpleAssetSidebarEnabled && isImage,
   }
 }
 
 /**
- * The dialog of a single upload: what the row says of its asset until the upload is done, the asset the DAM read
- * after that; the preview of the row, its state and its progress.
+ * View of the single-upload dialog: the row's asset data until the upload is done, then the asset read from the DAM.
+ * Preview, state and progress come from the row.
  */
 export function assetDetailViewOfUploadItem(
   item: UploadQueueItem | null,
@@ -111,8 +123,8 @@ export function assetDetailViewOfUploadItem(
 ): AssetDetailView | null {
   if (!item) return null
   const done = item.status === UploadQueueItemStatus.Uploaded
-  // The asset of this row only: the store it is read from is shared, and holds what another dialog or a pick from
-  // the library left in it until the dialog has read its own.
+  // Only this row's asset. The store is shared and may hold an asset left
+  // by another dialog or a library pick until this dialog reads its own.
   const read = item.assetId && done && detailAsset?.id === item.assetId ? detailAsset : null
   const assetType =
     (read ? read.attributes.assetType : item.assetId ? item.assetType : undefined) || DamAssetTypeDefault

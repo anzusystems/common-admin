@@ -109,9 +109,9 @@ describe('ADatatableOrdering', () => {
     expect(wrapper.emitted('update:modelValue')?.at(-1)).toEqual([2])
   })
 
-  // The admins set `pagination.value.sortBy = ...` in place (cms DashboardStageDatatable's reset,
-  // personPositionSelectActions) and then have to reset the ordering's v-model by hand, because
-  // the watch is shallow and never sees it.
+  // Admins set `pagination.value.sortBy = ...` in place (cms
+  // DashboardStageDatatable's reset, personPositionSelectActions).
+  // They then reset the ordering's v-model by hand, because the watch is shallow and never sees it.
   it('follows a sortBy changed in place', async () => {
     const { wrapper, pagination } = mountOrdering()
     pagination.value.sortBy = { key: 'id', order: SortOrder.Asc }

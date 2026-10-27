@@ -76,7 +76,7 @@ describe('ROI loaders on a failed request', () => {
 
     wrapper.findComponent(ACropper).vm.$emit('commit', { x: 0.1, y: 0.1, width: 0.4, height: 0.3 })
     await flushPromises()
-    // The loader of the cropper's own save and read: the store's stays as the panel has it.
+    // Checks the cropper's own loader for its save and read. The store's loader stays as the panel set it.
     expect(wrapper.findComponent({ name: 'VProgressCircular' }).exists()).toBe(true)
     // The reload waits 2 s after the save.
     await vi.waitFor(() => expect(fetchImageFile).toHaveBeenCalledTimes(1), { timeout: 4000 })

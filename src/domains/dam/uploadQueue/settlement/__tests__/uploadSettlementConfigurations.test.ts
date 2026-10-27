@@ -22,11 +22,6 @@ import type {
   UploadSettlementProfile,
 } from '@/domains/dam/uploadQueue/settlement/uploadSettlementTypes'
 
-// The settlement of a store with queues of two DAM configurations, `default` and `own`: two DAMs, each of which has
-// given an asset `asset-1`. The profile says the configuration of each queue, and its readers ask the DAM of the
-// configuration of the queue they are given. A target or an event that names configurations concerns only the rows of
-// their queues. A profile without the configurations of its queues, as admin-dam's, settles as it did.
-
 const S = 1000
 const OF_DEFAULT = 'queue-of-default'
 const OF_OWN = 'queue-of-own'
@@ -51,7 +46,6 @@ afterEach(() => {
 })
 
 const configOf = (queueKey: UploadQueueKey) => (queueKey === OF_OWN ? 'own' : 'default')
-/** Each DAM has `asset-1`, its file processed, with names of its own. */
 const bothProcessed = () => {
   for (const name of ['default', 'own'] as const) {
     servers[name].assets.set(
@@ -65,10 +59,6 @@ const bothProcessed = () => {
   }
 }
 
-/**
- * The library's profile; with `configOf` its readers ask the DAM of the queue they are given, and its caches note the
- * queue of what they are told. Without it every reader asks `default`'s DAM. A copy row of `asset-1` in each queue.
- */
 const twoQueues = (withConfigOf = true) => {
   const made = libProfile(servers.default)
   const serverOf = (queueKey?: UploadQueueKey) => servers[queueKey === undefined ? 'default' : configOf(queueKey)]
@@ -176,7 +166,6 @@ describe('the settlement of rows of one asset id in the queues of two DAM config
   it('asks no DAM for a refresh or a known processed file that names a configuration with no row of the asset', async () => {
     const { ofDefault, queues } = twoQueues()
     bothProcessed()
-    // The row of `own` has left its queue.
     queues.get(OF_OWN)!.items.splice(0)
 
     const outcome = await settlement.refreshAsset({ assetId: 'asset-1', fileId: null, configNames: ['own'] })

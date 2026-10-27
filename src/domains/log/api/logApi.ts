@@ -14,9 +14,8 @@ interface LogApiParams {
 }
 
 /**
- * The backend and the endpoint both come from the caller, so these cannot be hoisted the way an
- * entity fetcher is -- every mount builds its own, which is also what gives each one its own
- * abort controller set.
+ * The caller provides the backend and the endpoint, so this cannot be hoisted like an entity fetcher.
+ * Each mount builds its own, which also gives each its own abort controller set.
  */
 export const useFetchLogList = ({ client, system, logPaths, type }: LogApiParams) =>
   useApiFetchList<Log>({

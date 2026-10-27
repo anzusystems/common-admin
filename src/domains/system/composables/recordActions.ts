@@ -3,21 +3,17 @@ import { useAlerts } from '@/domains/system/composables/alerts'
 import { handleRecordLoadError } from '@/domains/system/composables/recordPage'
 
 /**
- * The record's get-one for a detail or edit page, in the shape `useRecordPage` reads: raises `loading`, runs `load`
- * with the page's signal and answers `true` once it resolved, or what `handleRecordLoadError` says after it showed
- * why it threw: `false` leave the page, `undefined` the request was stopped or the session expired (the page stays).
- * `loading` goes down unless the load was aborted: the flag belongs to the next page by then.
- *
- * Inside `load` a bare `return` means loaded (`true`), not "stay" as in a hand-written loader, and everything thrown
- * counts as the record failing to load. So only for the record's own single request: a second awaited request, a
- * secondary request with its own error handling, an early exit meaning "stay", an own alert, an own abort check, an
- * extra loaded/ready flag or a flag kept in a store stays hand-written.
- *
- * ```ts
+ * Get-one loader for a detail or edit page, in the shape `useRecordPage`
+ * reads. Raises `loading` and runs `load` with the page's signal.
+ * Returns `true` once loaded, else the result of `handleRecordLoadError`: `false`
+ * leaves the page, `undefined` means aborted or session expired (page stays).
+ * `loading` is lowered unless the load was aborted, because the flag then belongs to the next page.
+ * A bare `return` in `load` means loaded, and anything thrown counts as a load failure.
+ * Use it only for the record's single request; anything more stays hand-written.
+ * @example
  * const fetchData = defineRecordLoader(detailLoading, async (id: IntegerId, signal) => {
  *   faq.value = await fetchFaq({ urlParams: { id }, signal })
  * })
- * ```
  */
 export const defineRecordLoader =
   <Id>(loading: Ref<boolean>, load: (id: Id, signal: AbortSignal | undefined) => Promise<void>) =>
@@ -34,20 +30,16 @@ export const defineRecordLoader =
   }
 
 /**
- * The save of a create or edit form: raises `loading`, touches `v$` and stops with `showValidationError` when it is
- * invalid, runs `save`, shows a thrown error with `showErrorsDefault`, lowers `loading`. The success alert and what
- * follows it (a callback, a route push, closing a dialog) stay in `save`.
- *
- * `loading` and `v$` are taken when the save is defined, so both must exist by then. A second validator, a check
- * before the flag goes up, a second flag, own error handling, work in `finally`, a returned value or a second
- * request stays hand-written.
- *
- * ```ts
+ * Save of a create or edit form. Raises `loading`, touches `v$` and calls `showValidationError`
+ * if invalid, runs `save`, shows errors with `showErrorsDefault`, lowers `loading`.
+ * The success alert and what follows it stay in `save`.
+ * `loading` and `v$` are captured at definition, so both must exist then. Extra validators,
+ * flags, error handling, `finally` work, return values or requests stay hand-written.
+ * @example
  * const onUpdate = defineRecordSave(saveButtonLoading, v$, async () => {
  *   faq.value = await updateFaq({ urlParams: { id: faq.value.id }, body: faq.value })
  *   showRecordWas('updated')
  * })
- * ```
  */
 export const defineRecordSave = <Args extends unknown[]>(
   loading: Ref<boolean>,

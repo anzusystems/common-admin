@@ -149,8 +149,7 @@ export const useSubjectListActions = () => {
     filterConfig: FilterConfig
   ) => {
     filterData.discriminator = 'standard'
-    // Named rather than `any`: this endpoint answers with a list and its versions beside it, which
-    // is a shape the list helpers do not cover.
+    // Explicit type: this endpoint returns a list with its versions beside it, a shape the list helpers do not cover.
     const { execute } = useApiRequest<{ data: any[]; hasNextPage: boolean; versionsData: any }>({
       client: cmsClient,
       method: 'GET',

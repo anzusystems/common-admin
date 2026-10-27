@@ -11,12 +11,14 @@ import ACachedUserChip from '@/domains/cached/components/ACachedUserChip.vue'
 import { useDamCachedUsers } from '@/domains/dam/author/composables/cachedUsers'
 import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 
-// The panel "file" of the metadata of the detail of an asset and of the dialog of a single upload. No overflow-wrap
-// of its own: the detail passes `style="overflow-wrap: normal"`, which falls through to its root.
+// "File" metadata panel of the asset detail and the single-upload dialog.
+// It sets no overflow-wrap itself. The detail passes `style="overflow-wrap: normal"`, which falls through to the root.
 
 const props = defineProps<{
   asset: AssetDetailItemDto
-  /** Who created and who changed the asset, by their chips. */
+  /**
+   * Shows creator and last modifier chips.
+   */
   showUsers: boolean
 }>()
 
@@ -34,7 +36,6 @@ const { getCachedUser } = useDamCachedUsers(useDamConfigName())
     value="file"
   >
     <VExpansionPanelText class="text-body-small">
-      <!-- all types -->
       <VRow>
         <VCol cols="3">
           {{ t('common.damImage.asset.detail.info.field.id') }}

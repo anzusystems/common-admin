@@ -39,16 +39,18 @@ import { useUploadQueueDialog } from '@/domains/dam/uploadQueue/composables/useU
 import type { DocId } from '@/shared/types/common'
 import { isNull } from '@/shared/utils/common'
 
-// The asset a widget of one image holds: an asset picked in the library without authors, whose authors the dialog of
-// its image offers in place of a source. After a read of the asset that failed, the dialog went on offering the pick
-// of the asset as it was read before. A "confirm" waiting for such a read was taken again once it had failed, on the
-// source the dialog showed by then, without the authors picked; and an image saved with a source typed there was
-// shown with the pick again at the next "edit image", whose confirm replaced that source. A confirm pressed while the asset was read
-// after that detail had closed waited without an end for a read that did not answer. And closing the detail of one
-// asset waited for the save of the detail of another. admin-cms only: admin-ugc has no authors of the DAM. The real
-// widgets with their real dialog of the image and the real dialog of the asset detail, of which only what it frames
-// is not drawn; the DAM and the backend of the images are clients that record their requests; the asset picker is a
-// stand-in that answers as the real one does.
+// Covers the asset a widget holds: an asset picked without authors,
+// whose authors the image dialog offers instead of a source.
+// Guards regressions:
+// - After a failed asset read, the dialog kept offering the pick as read before.
+// - A "confirm" waiting for such a read was retried after the
+// failure on the source shown by then, without the picked authors.
+// - An image saved with a typed source was shown with the pick again
+// at the next "edit image", and its confirm replaced that source.
+// - A confirm pressed while the asset was read after the detail closed waited forever for a read that did not answer.
+// - Closing the detail of one asset waited for the save of another's detail.
+// admin-cms only. The asset detail dialog is real, except its framing. The DAM and
+// the image backend are request-recording clients; the asset picker is a stand-in.
 
 const PickerStandIn = defineComponent({ name: 'AAssetSelect', emits: ['confirm'], setup: () => () => h('div') })
 const MEDIA = /^\/adm\/v1\/cms\/asset\//
@@ -69,7 +71,6 @@ beforeEach(() => {
   dam = createFakeDam(endPoints)
   imageApi = installConsumerImageApi(profile, installConsumerProfile(profile, dam.client))
   answerDamNames(dam)
-  // What the image and media widget asks about a picked asset first: here, it is no media.
   dam.reply((request) => (request.method === 'GET' && MEDIA.test(request.url) ? { status: 200, data: {} } : undefined))
   waits = holdLongWaits()
   forgetAlerts()
@@ -93,7 +94,6 @@ const uploadConfig = () => ({
   licenceName: 'own',
   extSystemConfig: useDamConfigStore(pinia).damConfigExtSystem.get(extSystem)!,
 })
-/** What the DAM has for an asset: `file-of-<id>`, described, in the licence of the widget, without authors. */
 const inTheDam = (id: string) =>
   dam.assets.set(
     id,
@@ -211,7 +211,6 @@ describe.each<[string, Component]>([
     authorsInput(widget).vm.$emit('update:modelValue', authors)
     await flushPromises()
   }
-  /** The asset is picked in the library of the widget, and the dialog of its image offers the authors of the DAM. */
   const pickInto = async (widget: VueWrapper, asset: string) => {
     widget.findComponent(PickerStandIn).vm.$emit('confirm', { type: 'asset', value: [listed(asset)] })
     await vi.waitFor(() =>
@@ -227,13 +226,11 @@ describe.each<[string, Component]>([
     await pickInto(widget, 'asset-9')
     return widget
   }
-  /** As above, and the image is saved without an author: the widget holds the asset on. */
   const savedWithoutAuthors = async () => {
     const widget = await pickedWithoutAuthors()
     await confirmImage(widget)
     return widget
   }
-  /** "Edit asset" of the dialog: the detail of the asset of its image is open. */
   const openDetail = async (asset: string) => {
     buttonOfDialog(useCommonAdminCoreDamOptions('default').editAssetLabel).click()
     await vi.waitFor(() => expect(useAssetDetailStore(pinia).asset?.id).toBe(asset))
@@ -243,7 +240,6 @@ describe.each<[string, Component]>([
     widget.findComponent({ name: 'AssetDetailDialogFrame' }).vm.$emit('close')
     await flushPromises()
   }
-  /** "Save" of the form of the open detail of the widget of `key`, an author picked there: the save is on its way. */
   const detailSaveOnItsWay = async (key: string) => {
     const Form = defineComponent({
       setup: () => () =>
@@ -266,7 +262,6 @@ describe.each<[string, Component]>([
     detailForm = undefined
     return detailSaves
   }
-  /** Typed into the source field of the dialog of the image. */
   const typeSource = async (text: string) => {
     const fields = Array.from(imageDialog()!.querySelectorAll<HTMLTextAreaElement>('textarea')).filter(
       (field) => field.getAttribute('aria-hidden') !== 'true'
@@ -339,8 +334,8 @@ describe.each<[string, Component]>([
     expect(offered(widget)).toEqual(['author-5'])
   })
 
-  // The form of the detail is not locked while its save runs, and the detail can be closed before the DAM answers:
-  // the read after its close waits for that save. The read of the asset of another widget does not.
+  // The detail form is not locked while its save runs, so the detail can be closed before the DAM answers.
+  // The read after the close waits for that save. The read of another widget's asset does not.
   it('reads its asset once the detail closes, while the save of the detail of another asset is on its way', async () => {
     inTheDam('asset-9')
     inTheDam('asset-10')
@@ -382,8 +377,9 @@ describe.each<[string, Component]>([
     await vi.waitFor(() => expect(readsOf('asset-9')).toHaveLength(2))
   })
 
-  // The source shown by then is one a save of the image by another widget gave it: taken again, the press saved the
-  // image with that source, and the authors picked when it was pressed were gone without a word.
+  // Guards a regression: the source shown by then is one that a save of the image by another widget gave it.
+  // If the press was taken again, it saved the image with that source
+  // and silently dropped the authors picked when it was pressed.
   it('takes no press of "confirm" that waits for the read after the detail once that read fails: nothing is saved', async () => {
     const widget = await savedWithoutAuthors()
     const other = await mountWidget('other-image', 501)
@@ -433,8 +429,8 @@ describe.each<[string, Component]>([
     expect(shownAlerts()).toEqual([])
   })
 
-  // The read is the rest of the save of the detail, the asset, its licence and the names of its authors, one after
-  // another, each with the time the application gives a request: a DAM slow but answering ran one such time out.
+  // The read is the rest of the detail save: the asset, its licence and its author names, one after another.
+  // Each request gets the application's request time, and a slow but answering DAM ran one such time out.
   it('waits for the read after the detail the time of its four requests, one after another', async () => {
     const widget = await pickedWithoutAuthors()
     await pickAuthors(widget, ['author-5'])

@@ -79,13 +79,14 @@ const isFinished = computed(() => {
   return queueTotalCount.value === queueProcessedCount.value
 })
 
-// Failed uploads, items still waiting for their metadata: "save" would send nothing and report it saved.
+// Failed uploads and items still waiting for metadata have nothing to
+// save. Without this check "save" would send nothing and report success.
 const nothingToSave = computed(() => !items.value.some(hasMetadataToSave))
-// "Save and apply" hands the widget the items settled as uploaded (a duplicate and a copy are), saved or not: a
-// failed one has its asset and file ids too, and is no image to hand over.
+// "Save and apply" hands over the items with status uploaded, saved or not. Duplicates and copies count as uploaded.
+// A failed item also has asset and file ids, but it is not an image to hand over.
 const isUploaded = (item: UploadQueueItem) => item.status === UploadQueueItemStatus.Uploaded
 const nothingToApply = computed(() => !items.value.some(isUploaded))
-// An uploaded row whose metadata did not come with its file, by a notification that is late or lost: its form is off.
+// An uploaded row whose metadata did not arrive because its notification is late or lost. Its form is disabled.
 const isUploadedWithoutForm = (item: UploadQueueItem): item is UploadQueueItem & { assetId: DocId } =>
   isUploaded(item) && !item.canEditMetadata && !isNull(item.assetId)
 
@@ -100,9 +101,10 @@ const { damClient, endPointAsset, endPointAuthor, customUploadMetadataToImageMap
 const saveButtonLoading = ref(false)
 const saveAndCloseButtonLoading = ref(false)
 
-// Known outside the dialog for as long as either save runs, from the moment it begins: its host takes no file for
-// this queue through an entry of its own meanwhile, as the "+" and the dropzone here take none. Taken back with the
-// dialog, also when it goes in the middle of a save: that save may end after another dialog has begun its own.
+// Exposed outside the dialog while either save runs, so the host
+// accepts no file for this queue through its own entry points.
+// The "+" and the dropzone here are disabled for the same reason.
+// Reset when the dialog closes, also mid-save, because that save may end after another dialog has started its own.
 watch(
   () => saveButtonLoading.value || saveAndCloseButtonLoading.value,
   (saving) => {
@@ -110,7 +112,7 @@ watch(
   },
   { flush: 'sync' }
 )
-// A save and apply that waits for the rows it reads ends there once the dialog has gone.
+// A save and apply that waits for row reads stops there once the dialog has unmounted.
 let disposed = false
 onBeforeUnmount(() => {
   disposed = true
@@ -125,7 +127,7 @@ const onStopConfirm = async () => {
 }
 
 const onSave = async () => {
-  // The spinning button still takes Enter and Space: a save that runs is not sent again.
+  // The loading button still reacts to Enter and Space. This prevents sending a running save again.
   if (saveButtonLoading.value || saveAndCloseButtonLoading.value) return
   const itemsRaw = toRaw(items.value)
   if (itemsRaw.length === 0) return
@@ -151,24 +153,27 @@ const onSaveAndApply = async () => {
   const itemsRaw = toRaw(items.value)
   if (itemsRaw.length === 0) return
   saveAndCloseButtonLoading.value = true
-  // The save skips a row without its form: its image is handed over without texts, and its asset stays unsaved. Such
-  // a row is asked about once more, as its own refresh asks. A form that comes of it is one the user has not seen:
-  // nothing is saved or handed over until the button is pressed again. Where none comes, all goes on as it did.
+  // The save skips a row without its form. Its image would be handed over without texts and its asset left unsaved.
+  // Such rows are read once more, as their refresh does.
+  // A form that arrives this way has not been seen by the user, so
+  // nothing is saved or handed over until the button is pressed again.
+  // If no form arrives, the save continues as before.
   const withoutForm = itemsRaw.filter(isUploadedWithoutForm)
   if (withoutForm.length > 0) {
     const shownFor = uploadQueueDialog.value
     await Promise.all(
       withoutForm.map((item) => uploadQueuesStore.refreshAsset(item.assetId, { queueKey: props.queueKey }))
     )
-    // Closed while the rows were read (its queue stopped and emptied with it): nothing is saved or handed over. The
-    // save went out once the read had answered, for a queue the user had left.
+    // The dialog closed during the read and its queue was stopped and emptied. Nothing is saved or handed over.
+    // Otherwise the save would go out for a queue the user has left.
     if (disposed || uploadQueueDialog.value !== shownFor) {
       saveAndCloseButtonLoading.value = false
       return
     }
-    // A row given up meanwhile for its asset gone ("Asset už neexistuje."), by this read as the one too many to miss
-    // it or by another, is not handed over: the user is told why, as by its refresh. Uploaded before the read, the row
-    // was given up by nothing earlier.
+    // A row given up meanwhile because its asset is gone ("Asset už
+    // neexistuje.") is not handed over. The user is warned, as on refresh.
+    // It may be given up by this read or by another one. A row
+    // uploaded before the read could not have been given up earlier.
     if (withoutForm.some((item) => uploadQueuesStore.isGivenUpMissing(item))) {
       showWarningT('common.damImage.queueItem.assetGone')
     }
@@ -196,12 +201,12 @@ const onSaveAndApply = async () => {
     const mappedItems = customUploadMetadataToImageMap
       ? await customUploadMetadataToImageMap(uploaded, res, damClient, props.extSystem, props.licenceId)
       : await mapUploadMetadataToImages(uploaded, res, damClient, props.extSystem, props.licenceId, endPointAuthor)
-    // The save skips a row whose metadata never came, and its image is handed over all the same, without authors.
-    // Whether its asset has any is not known: the authors of the DAM are offered only for an asset the save answered
-    // for, or those picked in the widget would replace the ones the asset has.
+    // The save skips a row whose metadata never came, but its image is still handed over, without authors.
+    // Its DAM authors are unknown. They are offered only for assets the save answered
+    // for, otherwise the widget's picked authors would replace the asset's own.
     const savedAssetIds = new Set(res.map((saved) => saved.id))
-    // No position is given here: the widget that takes the images gives each its own, after the last it has, also
-    // over one a mapping of the application may have put into the image.
+    // No position is set here. The receiving widget assigns each image a position
+    // after its last one, overriding any position an application mapping set.
     const storeItems: ImageStoreItem[] = mappedItems.map((item) => ({
       key: generateUUIDv1(),
       ...item,
@@ -211,7 +216,6 @@ const onSaveAndApply = async () => {
     }))
     emit('apply', storeItems)
   } catch (error) {
-    // The save is said above. What follows it, the images made of its answer, is said as it was before.
     showErrorsDefault(error)
   } finally {
     saveAndCloseButtonLoading.value = false
@@ -314,8 +318,11 @@ const showDetail = async (id: DocId) => {
                   {{ t('common.damImage.upload.save') }}
                 </VTooltip>
               </VBtn>
-              <!-- No file is added while a save runs: "save and apply" ends with the host closing the dialog and
-                   emptying its queue, and a file added meanwhile went with it, half uploaded and without a word. -->
+              <!--
+                No file can be added while a save runs. "Save and apply" ends
+                with the host closing the dialog and emptying its queue.
+                A file added meanwhile would be dropped half uploaded, without notice.
+              -->
               <AFileInput
                 :file-input-key="fileInputKey"
                 :accept="accept"

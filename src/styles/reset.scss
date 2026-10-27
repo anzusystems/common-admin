@@ -1,5 +1,4 @@
-// Vuetify 3's reset, which Vuetify 4 dropped and every admin put back in its own main.scss. It stays in
-// Vuetify's reset layer, below every component style.
+// Vuetify 3's reset, which Vuetify 4 dropped. It stays in Vuetify's reset layer, below every component style.
 @layer vuetify-core.reset {
   * {
     padding: 0;

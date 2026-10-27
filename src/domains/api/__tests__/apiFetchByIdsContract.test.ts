@@ -7,8 +7,6 @@ import { AnzuApiAxiosError } from '@/shared/error/AnzuApiAxiosError'
 import { AnzuApiCancelledError } from '@/shared/error/AnzuApiCancelledError'
 import { AnzuApiResponseCodeError } from '@/shared/error/AnzuApiResponseCodeError'
 
-// The third copy of the response rules, and the one nothing was holding in place.
-
 const setup = (get: ReturnType<typeof vi.fn>, over: Record<string, unknown> = {}) =>
   useApiFetchByIds<{ id: number }>({
     client: () => ({ get }) as unknown as AxiosInstance,
@@ -38,7 +36,6 @@ describe('what fetching by ids answers with', () => {
     await expect(execute([1])).resolves.toStrictEqual([{ id: 1 }])
   })
 
-  // Nothing matched the ids. That is an answer, not a broken endpoint.
   it('answers an empty array for a no-content response', async () => {
     const { execute } = setup(answering({ status: 204, data: '' }))
 
@@ -86,7 +83,6 @@ describe('what fetching by ids asks for', () => {
     expect(get.mock.calls[0][0]).toContain('filter_in[docId]=a')
   })
 
-  // The search api takes the ids flat rather than as a filter.
   it('writes the ids flat against a search endpoint', async () => {
     const get = answering({ status: 200, data: { data: [], totalCount: 0 } })
     const { execute } = setup(get, { isSearchApi: true })

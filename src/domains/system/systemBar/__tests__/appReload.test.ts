@@ -2,9 +2,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { checkForNewVersion, RELOAD_VETO_GRACE, requestAppReload } from '@/domains/system/systemBar/utils/appReload'
 import { useSystemBar } from '@/domains/system/systemBar/composables/systemBar'
 
-// The page reload the admins' route guards trigger when a new version is deployed. The veto flag is
-// module state that a browser does not let a test reload, so every case runs on fake timers and
-// ends past the veto grace, which is what clears it.
+// The page reload the admins' route guards trigger when a new version is deployed.
+// The veto flag is module state that a browser test cannot reload, so every
+// case runs on fake timers and ends past the veto grace, which clears it.
 
 const reload = vi.hoisted(() => vi.fn())
 vi.mock('@/domains/system/systemBar/utils/pageReload', () => ({ reloadPage: reload }))
@@ -40,8 +40,8 @@ describe('reload when a new version is deployed', () => {
     checkForNewVersion()
     reload.mockClear()
 
-    // Past the veto grace, so only the sessionStorage stamp stops the second call -- which is what
-    // keeps a reload that does not take from looping.
+    // Past the veto grace, so only the sessionStorage stamp stops the second call.
+    // That stamp keeps a reload that does not take from looping.
     vi.advanceTimersByTime(RELOAD_VETO_GRACE + 1_000)
 
     expect(checkForNewVersion()).toBe(false)

@@ -21,13 +21,11 @@ import type { ImageAware } from '@/domains/dam/types/ImageAware'
 import { useUploadQueueDialog } from '@/domains/dam/uploadQueue/composables/useUploadQueueDialog'
 import { isNull } from '@/shared/utils/common'
 
-// The reads of a widget of one image that has gone away before they answered: the read of its image, and what it
-// reads of an asset picked in the library. The embed dialogs of the two applications draw the form of the image in
-// their own dialog (`expandMetadata`), from the store of the dialog of the image, which is one for the page. A host
-// that is cancelled takes its widget away, and the one opened next has a widget of its own, with its image in that
-// store: the late answers of the first put its image, or its pick, there, and the second form showed it. Under
-// admin-cms. The real widgets; the DAM and the backend of the images are clients that record their requests. The
-// asset picker is a stand-in that answers as the real one does; the pictures are not drawn.
+// Guards a regression: the reads of a widget that has gone away must not write into the store.
+// The embed dialogs draw the image form from the store of the image dialog, which is one for the page.
+// A cancelled host takes its widget away, and the next opened widget has its own image in that store.
+// Late answers of the first widget put its image or pick there, and the second form showed it.
+// admin-cms only. The DAM and the image backend are request-recording clients; the asset picker is a stand-in.
 
 const profile = cmsConfiguration
 const { endPoints, extSystem, licence } = profile
@@ -64,7 +62,6 @@ describe.each<[string, Component]>([
     dam = createFakeDam(endPoints)
     imageApi = installConsumerImageApi(profile, installConsumerProfile(profile, dam.client))
     answerDamNames(dam)
-    // What the image and media widget asks about a picked asset first: of an image there is nothing to say.
     dam.reply((request) => {
       const media = request.method === 'GET' ? request.url.match(MEDIA) : null
       return media ? { status: 200, data: media[1]!.startsWith('video') ? VIDEO : {} } : undefined
@@ -89,9 +86,7 @@ describe.each<[string, Component]>([
     licenceName: 'own',
     extSystemConfig: useDamConfigStore(pinia).damConfigExtSystem.get(extSystem)!,
   })
-  /** What the store of the dialog of the image holds: what a form drawn in the page shows. */
   const shown = () => useImageMediaWidgetStore(pinia).detail
-  /** An image the entity already has, of a file of its own. */
   const stored = (id: number): ImageAware => ({
     id,
     texts: { description: `image ${id}`, source: `source ${id}` },
@@ -99,7 +94,6 @@ describe.each<[string, Component]>([
     flags: { showSource: true, internal: false, overrideInternal: false },
     position: 1,
   })
-  /** The widget as an embed dialog mounts it; `image`: the id of the image the embed has, which the backend has too. */
   const mountWidget = async (image: number | null, key: string) => {
     if (!isNull(image)) imageApi.has(stored(image))
     const mounted: VueWrapper = mount(component, {
@@ -142,12 +136,10 @@ describe.each<[string, Component]>([
     useAssetSelectStore(pinia).setSelectConfig([uploadConfig()])
     return mounted
   }
-  /** The widget goes away, as with the dialog of a host that is cancelled. */
   const takeAway = (widget: VueWrapper) => {
     widget.unmount()
     widgets = widgets.filter((one) => one !== widget)
   }
-  /** The embed opened next, of image 8: its form shows that image. */
   const nextEmbed = async () => {
     const next = await mountWidget(8, 'another-embed')
     return next

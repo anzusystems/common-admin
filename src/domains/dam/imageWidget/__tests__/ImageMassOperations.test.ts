@@ -5,8 +5,9 @@ import { defineComponent, h } from 'vue'
 import ImageMassOperations from '@/domains/dam/imageWidget/components/ImageMassOperations.vue'
 import { useImageStore } from '@/domains/dam/imageWidget/store/imageStore'
 
-// The gallery's mass operations with DAM authors on: filling authors looks their names up first,
-// and a failed lookup must be told, not dropped as an unhandled rejection with nothing filled.
+// Mass operations of the gallery with DAM authors on.
+// Filling authors looks up their names first. A failed lookup must be
+// reported, not dropped as an unhandled rejection with nothing filled.
 const fetchAuthorListByIds = vi.hoisted(() => vi.fn())
 const showErrorsDefault = vi.hoisted(() => vi.fn())
 vi.mock('@/domains/dam/author/api/authorApi', () => ({

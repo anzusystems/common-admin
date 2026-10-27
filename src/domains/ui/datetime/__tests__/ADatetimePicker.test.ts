@@ -6,16 +6,17 @@ import ADatetimePicker from '@/domains/ui/datetime/components/ADatetimePicker.vu
 import type { DatetimeUTC, DatetimeUTCNullable } from '@/shared/types/common'
 
 /**
- * The "first click" cases cover a Vuetify 4.1 regression: the calendar moves focus onto the clicked
- * day before emitting, which blurs the text field and used to re-apply its stale value over the date
- * just picked. They only hold because vitest runs these in a real browser.
+ * The "first click" cases cover a Vuetify 4.1 regression.
+ * The calendar moves focus onto the clicked day before emitting. That blurs the
+ * text field, which used to re-apply its stale value over the date just picked.
+ * The cases only hold because vitest runs them in a real browser.
  */
 
 // Weekday headers carry the __day class too, and adjacent-month days belong to another month.
 const DAY_BTN =
   '.v-date-picker-month__day:not(.v-date-picker-month__weekday):not(.v-date-picker-month__day--adjacent) .v-date-picker-month__day-btn'
 
-// 08:17 UTC — far enough from midnight to stay in February in any test TZ.
+// 08:17 UTC is far enough from midnight to stay in February in any test timezone.
 const FEBRUARY_2023 = '2023-02-08T08:17:29.000000Z'
 const UTC_SHAPE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.000000Z$/
 
@@ -25,7 +26,6 @@ interface PickerEvents {
   open: number
   close: number
   afterClear: number
-  /** The model as each `blur` / `onClose` saw it. */
   blurredWith: DatetimeUTCNullable[]
   closedWith: DatetimeUTCNullable[]
 }
@@ -84,7 +84,9 @@ const dayButton = (day: number) =>
     | HTMLElement
     | undefined
 
-/** [0] is "now", [1] is "confirm". */
+/**
+ * [0] is "now", [1] is "confirm".
+ */
 const bottomButton = (index: number) =>
   document.querySelectorAll<HTMLElement>('.a-datetime-picker__bottom-button')[index]
 
@@ -92,7 +94,9 @@ const isCalendarOpen = () => document.querySelectorAll('.a-datetime-picker-calen
 
 const nowShown = () => dayjs().format('DD.MM.YYYY HH:mm')
 
-/** The minute can roll between acting and asserting. */
+/**
+ * The minute can roll between acting and asserting.
+ */
 const nowWindow = (before: string) => [before, nowShown()]
 
 const adjacentDayButton = (day: number) =>
@@ -117,10 +121,14 @@ const UTC_MIDNIGHT_SHAPE = /^\d{4}-\d{2}-\d{2}T00:00:00\.000000Z$/
 
 const todayStored = () => dayjs().format('YYYY-MM-DD') + 'T00:00:00.000000Z'
 
-/** The day can roll between acting and asserting. */
+/**
+ * The day can roll between acting and asserting.
+ */
 const todayWindow = (before: string) => [before, todayStored()]
 
-/** From the icon inside the field, so the field holds focus — that is what the regression needs. */
+/**
+ * Opens from the icon inside the field so the field holds focus, which the regression needs.
+ */
 async function openCalendar() {
   textField().focus()
   calendarIcon()!.click()
@@ -137,7 +145,6 @@ async function typeIntoField(value: string) {
   await flushPromises()
 }
 
-/** Puts text into the field without leaving it. */
 async function typeWithoutBlur(value: string) {
   const input = textField()
   input.focus()

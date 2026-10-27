@@ -128,13 +128,13 @@ export function useAlerts() {
   }
 
   const showErrorsDefault = (error: any, duration = -1) => {
-    // A stopped request is not a failure to report: something newer asked for it to stop, or the
-    // view it belonged to is gone. It returns `true` -- handled, nothing to show -- because the
-    // callers that fall back on `if (!showErrorsDefault(e)) showUnknownError()` would otherwise toast
-    // "unknown error" every time a user typed one more character into an autocomplete.
+    // A cancelled request is not a failure: something newer stopped it, or its view is gone.
+    // Returns `true` because callers using `if (!showErrorsDefault(e)) showUnknownError()`
+    // would otherwise show "unknown error" on every autocomplete keystroke.
     if (isAnzuApiCancelledError(error)) return true
-    // Stopped by the token refresh: the session is gone and the logout is already loading, or the
-    // sign-in server did not answer -- said once, not for every request it stopped at the same time.
+    // Stopped by the token refresh. Either the session is gone and
+    // logout is loading, or the sign-in server did not answer.
+    // The latter is reported once, not for every request stopped at the same time.
     if (isInCauseChain(error, (cause) => cause instanceof SessionExpiredError)) return true
     if (isInCauseChain(error, (cause) => cause instanceof AuthUnavailableError)) {
       showAuthUnavailable(duration)

@@ -89,7 +89,6 @@ describe('useDatatableList', () => {
     expect(window.location.hash).toContain('name=xyz')
     own.pagination.value = { ...own.pagination.value, page: 3 }
     const before = fetches.length
-    // The filter bar clears its fields before it emits reset; the helper forgets the stored filter and reloads.
     list.resetFilterAction()
     await debounced()
     expect(window.location.hash).toBe('')

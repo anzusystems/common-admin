@@ -8,9 +8,9 @@ import AActionDeleteButton from '@/domains/ui/buttons/action/components/AActionD
 import { useAlerts } from '@/domains/system/composables/alerts'
 import { useAlertsQueue } from '@/domains/system/composables/alertsQueue'
 
-// Alerts are snackbars, which Vuetify puts on its overlay stack: an alert raised while a dialog is open
-// made the alert the top overlay, so Esc no longer reached the dialog, and a dialog opened after an
-// alert covered it (the old notifications sat at z-index 5000, above everything).
+// Alerts are snackbars, which Vuetify puts on its overlay stack.
+// An alert raised while a dialog was open became the top overlay, so Esc no longer reached the dialog.
+// A dialog opened after an alert covered it.
 
 let wrapper: VueWrapper | null = null
 afterEach(() => {

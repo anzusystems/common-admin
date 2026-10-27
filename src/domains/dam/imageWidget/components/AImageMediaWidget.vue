@@ -26,7 +26,7 @@ const props = withDefaults(
     queueKey: UploadQueueKey
     uploadLicence: IntegerId
     selectLicences: IntegerId[]
-    initialImage?: ImageAware | undefined // optional, if available, no need to fetch image data
+    initialImage?: ImageAware | undefined // If given, the image data is not fetched.
     configName?: string
     collab?: CollabComponentConfig
     collabStatus?: CollabStatusType
@@ -75,14 +75,14 @@ const emit = defineEmits<{
 const mediaModel = defineModel<MediaAware | null>('media', { required: true })
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const damConfigName = useDamConfigName(props.configName)
-// Declared: the read-only fallback renders the slots too, and inferred they would take its looser types.
+// Declared explicitly: the read-only fallback renders the slots too, and inferred types would be looser.
 defineSlots<{
   append?: (props: { imageMedia: ImageCreateUpdateAware | MediaAware | null }) => unknown
   preview?: (props: { imageMedia: MediaAware }) => unknown
 }>()
 const imageModel = defineModel<IntegerIdNullable>('image', { required: true })
 const status = ref<'loading' | 'ready' | 'error'>('loading')
-// Not being allowed to upload is no reason to hide the image that is already there: it is shown read-only.
+// Without upload permission the existing image is still shown, read-only.
 const uploadAllowed = ref(true)
 
 const { damClient } = useCommonAdminCoreDamOptions(damConfigName)
@@ -105,7 +105,7 @@ onMounted(async () => {
     status.value = 'error'
     return
   }
-  // As the gallery's root: the ext system of its upload licence, till a pick, a drop or "edit asset" writes another.
+  // Starts as the ext system of the upload licence, until a pick, a drop or "edit asset" sets another.
   cachedExtSystemId.value = uploadConfig.value.extSystem
   if (!isImageWidgetUploadConfigAllowed(uploadConfig.value, damConfigName)) {
     uploadAllowed.value = false
@@ -123,8 +123,8 @@ onMounted(async () => {
   }
   promises.push(getOrLoadDamConfigExtSystemByLicences(props.selectLicences))
   const { extSystem } = uploadConfig.value
-  // The custom fields of its images: every type of the ext system where it has none yet, else the image type alone
-  // where its read failed before. The types loaded are not read again.
+  // Loads custom fields for every type of the ext system if none are loaded yet.
+  // Otherwise loads only the image type if its earlier read failed. Loaded types are not read again.
   if (isUndefined(getDamConfigAssetCustomFormElements(extSystem, DamAssetType.Image))) {
     promises.push(
       loadDamConfigAssetCustomFormElements(
@@ -138,7 +138,7 @@ onMounted(async () => {
   } catch (e) {
     status.value = 'error'
   }
-  // The image type whose read failed beside types that answered is not loaded: its form would have no field.
+  // If the image type failed while other types loaded, the form would have no fields, so this is an error.
   if (isUndefined(getDamConfigAssetCustomFormElements(extSystem, DamAssetType.Image))) status.value = 'error'
   if (status.value !== 'error') status.value = 'ready'
 })
@@ -181,7 +181,7 @@ const { t } = useI18n()
       />
     </template>
   </ImageMediaWidgetInner>
-  <!-- The config fails also for a user without access to the licence: the media or image already there is still shown. -->
+  <!-- The config also fails for a user without access to the licence. The existing media or image is still shown. -->
   <div v-else-if="status === 'error'">
     <AMediaWidgetSimple
       v-if="mediaModel"

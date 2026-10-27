@@ -22,8 +22,6 @@ describe('resolveCompactText', () => {
   })
 
   it('reads a dotted path through nested objects', () => {
-    // How most entities in these admins carry their label, which until now forced an
-    // `#item-compact` slot just to reach one field.
     expect(resolveCompactText({ texts: { title: 'Prvý' } }, { compactField: 'texts.title' })).toBe('Prvý')
     expect(resolveCompactText({ a: { b: { c: 7 } } }, { compactField: 'a.b.c' })).toBe('7')
   })

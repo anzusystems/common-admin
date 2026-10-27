@@ -42,7 +42,6 @@ afterEach(() => {
   document.body.innerHTML = ''
 })
 
-/** Mounts `component` inside a parent that records clicks reaching it. */
 const mountInParent = (
   component: unknown,
   props: Record<string, unknown> = {},
@@ -179,8 +178,7 @@ describe('AActionDeleteButton', () => {
     expect(panel()).toBeNull()
   })
 
-  // The text variants used to drop `disabled` and `loading`, so the button stayed active and opened
-  // the dialog.
+  // The text variants used to drop `disabled` and `loading`, so the button stayed active and opened the dialog.
   it('does not open when disabled (text variants)', async () => {
     for (const variant of ['primary', 'secondary', 'tertiary']) {
       await open({ disabled: true, variant })
@@ -285,8 +283,9 @@ describe('AActionCloseButtonHistory', () => {
     expect(router.currentRoute.value.name).toBe('articleList')
   })
 
-  // The page to restore belongs to the page Close lands on. Landing on a page without a list left the flag for the
-  // next list, which a filtered link then opened on that page, possibly an empty one.
+  // The page to restore belongs to the page Close lands on.
+  // Landing on a page without a list left the flag for the next list,
+  // which a filtered link then opened on that page, possibly an empty one.
   it('keeps the page for the list it lands on only', async () => {
     await router.push('/')
     addRoute(router.currentRoute.value)
@@ -470,7 +469,6 @@ describe('AActionCloseButtonHistory', () => {
   it('drops the page on the navigation after a step back that landed without a list', async () => {
     await router.push('/articles/5')
     setStoredPage('cms_article', 3)
-    // No route to go back to and no fallback: a step back in the browser's history, to `/`.
     const { child } = mountInParent(AActionCloseButtonHistory, {})
     await child.find('button').trigger('click')
     await new Promise((resolve) => setTimeout(resolve, 20))
@@ -487,7 +485,6 @@ describe('AActionCloseButtonHistory', () => {
     const stop = router.beforeEach((to) => {
       if (to.name === 'home') throw new Error('guard failed')
     })
-    // No route to go back to and no fallback: a step back in the browser's history, which a guard fails.
     const { child } = mountInParent(AActionCloseButtonHistory, {})
     await child.find('button').trigger('click')
     await new Promise((resolve) => setTimeout(resolve, 20))
@@ -508,7 +505,6 @@ describe('AActionCloseButtonHistory', () => {
     })
     const older = router.push('/articles/new')
     await flushPromises()
-    // No route to go back to and no fallback: a step back in the browser's history, to the list.
     const { child } = mountInParent(AActionCloseButtonHistory, {})
     await child.find('button').trigger('click')
     await older
@@ -521,7 +517,6 @@ describe('AActionCloseButtonHistory', () => {
 
   it('leaves the errors of the navigations after a step back that landed to vue-router', async () => {
     await router.push('/articles/5')
-    // No route to go back to and no fallback: a step back in the browser's history, to `/`.
     const { child } = mountInParent(AActionCloseButtonHistory, {})
     await child.find('button').trigger('click')
     await new Promise((resolve) => setTimeout(resolve, 20))

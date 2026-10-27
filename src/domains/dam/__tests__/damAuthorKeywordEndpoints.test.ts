@@ -43,10 +43,8 @@ import { useUploadQueueItemFactory } from '@/domains/dam/uploadQueue/factory/Upl
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
 import { createFilter, createFilterStore, type MakeFilterOption } from '@/domains/filters/composables/filterFactory'
 
-// Where the authors and the keywords of DAM are asked for. The two addresses are the application's to say, in
-// its DAM configuration (`endPointAuthor`, `endPointKeyword`), as the addresses of assets and images are; left
-// unsaid they are what they always were, `/adm/v1/author` and `/adm/v1/keyword`. Nothing of the library is
-// replaced: the DAM is a client that records its requests.
+// The author and keyword addresses come from the application's DAM configuration (`endPointAuthor`, `endPointKeyword`).
+// If unset, they default to `/adm/v1/author` and `/adm/v1/keyword`.
 
 const { extSystem, licence } = cmsConfiguration
 const OWN_AUTHOR = '/own/v2/author'
@@ -56,11 +54,8 @@ let dam: FakeDam
 let pinia: Pinia
 
 const NAMES = /\/(author|keyword)(\/|$)/
-/** The method and the path of every request, without its query. */
 const asked = () => dam.requests.map((request) => `${request.method} ${request.url.split('?')[0]}`)
-/** Of those, the requests for authors and keywords. */
 const askedForNames = () => asked().filter((request) => NAMES.test(request))
-/** The DAM answers every list with nobody, and a created record with what it was sent. */
 const answerAuthorsAndKeywords = () =>
   dam.reply((request) => {
     if (!NAMES.test(request.url.split('?')[0]!)) return undefined
@@ -68,10 +63,6 @@ const answerAuthorsAndKeywords = () =>
     return { status: 200, data: { data: [], totalCount: 0 } }
   })
 type OwnAddresses = { endPointAuthor?: string; endPointKeyword?: string }
-/**
- * The configuration of admin-cms; with `own`, one that names its own addresses. With `named`, those are named by
- * a second configuration of that name, and `default` names none.
- */
 const configure = (own: OwnAddresses = {}, named?: string) => {
   pinia = createPinia()
   setActivePinia(pinia)
@@ -84,17 +75,13 @@ const configure = (own: OwnAddresses = {}, named?: string) => {
   })
   if (named) {
     initCommonAdminImageOptions({ ...image, configs: { ...image.configs, [named]: image.configs.default! } })
-    // Its DAM has the configuration of the default one: filled before the components mount, as an application does.
     seedDamConfigOf(named)
-    // The ext system its caches of names ask under, as the root of a widget under it writes it (the profile writes
-    // that of `default`).
     useExtSystemIdForCached(named).cachedExtSystemId.value = cmsConfiguration.extSystem
   }
   answerAuthorsAndKeywords()
 }
 
 const fields = [{ name: 'text', default: '' }] as const satisfies readonly MakeFilterOption<string>[]
-/** What a list is asked with: the first page, and a filter nobody has filled. */
 const listArguments = () => {
   const { filterData, filterConfig } = createFilter(fields, createFilterStore(fields), {
     system: 'dam',
@@ -154,7 +141,6 @@ describe('the addresses of authors and keywords in a DAM configuration', () => {
   })
 })
 
-// Each of these has the client of a configuration, and asks at the address that configuration names.
 describe.each([
   ['names none', {}, '/adm/v1/author', '/adm/v1/keyword'],
   ['names its own', { endPointAuthor: OWN_AUTHOR, endPointKeyword: OWN_KEYWORD }, OWN_AUTHOR, OWN_KEYWORD],
@@ -192,7 +178,6 @@ describe.each([
     expect(asked()).toEqual([`GET ${author}/ext-system/${extSystem}/search`])
   })
 
-  // The map itself; that each upload dialog hands it the address of its configuration is among the mounted cases.
   it('the map of an upload to images, by the address it is handed', async () => {
     const row = useUploadQueueItemFactory().createDefault(
       'row',
@@ -218,10 +203,10 @@ describe.each([
     expect(asked()).toEqual([`GET ${author}/ext-system/${extSystem}/search`])
   })
 
-  // The caches of the names of `default`, which a call outside a component's setup with no name gets: they ask as the
-  // default configuration says. Those of another configuration: `damNamedConfigurationCaches.test.ts`.
+  // Covers the caches of `default`, which a call outside a component's setup with no name gets.
+  // Caches of another configuration are in `damNamedConfigurationCaches.test.ts`.
   it('the caches of the names of authors and keywords', async () => {
-    // The caches live as long as the page: what an earlier case has cached is not asked for again.
+    // The caches live as long as the page, so ids cached by an earlier case are not asked for again.
     const suffix = name.replaceAll(' ', '-')
     const { addToCachedAuthors, fetchCachedAuthors } = useDamCachedAuthors()
     const { addToCachedKeywords, fetchCachedKeywords } = useDamCachedKeywords()
@@ -238,11 +223,8 @@ describe.each([
   })
 })
 
-// The components that hand the address on. Each is mounted and made to ask, and what the DAM was asked is read:
-// handed another address than the one of its configuration, the component would ask elsewhere.
 describe('the components that ask for authors and keywords, in a configuration that names its own addresses', () => {
   const QUEUE = 'names-queue'
-  /** The author the DAM knows at the application's own address, and nowhere else. */
   const knownAtOwnAddress = () =>
     dam.reply((request) =>
       request.method === 'GET' && request.url.startsWith(`${OWN_AUTHOR}/ext-system/${extSystem}/search`)
@@ -257,8 +239,6 @@ describe('the components that ask for authors and keywords, in a configuration t
     wrapper = undefined
   })
 
-  // The widgets are given their configuration by name, and ask with its client at its addresses: here one that is
-  // not the default, which names none.
   describe('the image widgets, by the configuration they are given', () => {
     const Picker = defineComponent({ emits: ['confirm'], setup: () => () => h('div') })
     const MetadataDialog = defineComponent({
@@ -269,8 +249,8 @@ describe('the components that ask for authors and keywords, in a configuration t
       },
     })
 
-    // Its DAM has the licence under another ext system than that of `default`: the names of the authors of its assets
-    // are looked up under that one. A widget that read the store of `default` would look them up under ext system 1.
+    // The DAM of this configuration has the licence under another ext system than `default`.
+    // A widget that read the store of `default` would look the author names up under ext system 1.
     const NAMED_EXT_SYSTEM = 7
     const namedLookup = `GET ${OWN_AUTHOR}/ext-system/${NAMED_EXT_SYSTEM}/search`
 
@@ -282,7 +262,6 @@ describe('the components that ask for authors and keywords, in a configuration t
       useAssetSelectStore().setSelectConfig([{ licence, extSystem, licenceName: '', extSystemConfig: {} as never }])
       dam.assets.set('asset-with', damAsset('asset-with', { licence, authors: ['author-1'] }))
       dam.assets.set('asset-without', damAsset('asset-without', { licence }))
-      // What the image and media widget asks about a picked asset first.
       dam.reply((request) =>
         request.method === 'GET' && request.url.startsWith('/adm/v1/cms/asset/') ? { status: 200, data: {} } : undefined
       )
@@ -325,7 +304,6 @@ describe('the components that ask for authors and keywords, in a configuration t
       })
       return wrapper
     }
-    /** An asset of the widget's own licence is picked in the asset select: nothing is copied. */
     const pick = async (asset: string) => {
       wrapper!.findComponent(Picker).vm.$emit('confirm', {
         type: 'asset',
@@ -354,11 +332,8 @@ describe('the components that ask for authors and keywords, in a configuration t
         await pick('asset-with')
         expect(askedForNames()).toEqual([namedLookup])
 
-        // An asset without authors: the dialog of the image offers to add them to the asset, and its save looks
-        // their names up for the source of the image.
         await pick('asset-without')
         expect(askedForNames()).toEqual([namedLookup])
-        // As the dialog of the image hands the widget what the user picks in it.
         wrapper!.findComponent(MetadataDialog).vm.$emit('update:damAuthors', ['author-2'])
         wrapper!.findComponent(MetadataDialog).vm.$emit('confirm')
         await flushPromises()
@@ -369,7 +344,6 @@ describe('the components that ask for authors and keywords, in a configuration t
           expect.stringContaining('author-1'),
           expect.stringContaining('author-2'),
         ])
-        // The confirm writes the authors into the asset, after it has looked up their names.
         expect(dam.sentTo('PATCH', dam.routes.bulkMetadata).map((request) => [request.url, dam.body(request)])).toEqual(
           [
             [
@@ -378,8 +352,7 @@ describe('the components that ask for authors and keywords, in a configuration t
             ],
           ]
         )
-        // No warning that the asset was given authors meanwhile. (The image itself is not saved here: the case has no
-        // image client, and says so as the widget says a failed save.)
+        // The image itself is not saved here: the case has no image client, so the widget reports a failed save.
         expect(shownAlerts().filter(([colour]) => colour === 'warning')).toEqual([])
       }
     )
@@ -401,8 +374,6 @@ describe('the components that ask for authors and keywords, in a configuration t
     })
   })
 
-  // Given no configuration and inside nothing that has one, they ask as the default one says. Under a named one:
-  // `damNamedConfigurationComponents.test.ts`.
   describe('the two that make a new author and a new keyword, by the default configuration', () => {
     beforeEach(() => configure({ endPointAuthor: OWN_AUTHOR, endPointKeyword: OWN_KEYWORD }))
 
@@ -442,10 +413,6 @@ describe('the components that ask for authors and keywords, in a configuration t
     })
   })
 
-  // The dialog of an upload hands the address to the library's map of an upload to images, which looks up the
-  // names of the authors for the source of each image. Here neither dialog is given a configuration, nor is inside
-  // a widget that has one: both ask as the default one says. Under a named one:
-  // `damNamedConfigurationComponents.test.ts`.
   describe('the two dialogs of an upload, on "save and apply", by the default configuration', () => {
     let waits: LongWaits
     let socket: DamSocket
@@ -465,7 +432,6 @@ describe('the components that ask for authors and keywords, in a configuration t
       useDamNotificationsEventBus().reset()
     })
 
-    /** A file is picked and sent, and a read finds it processed, with an author. */
     const uploaded = async (mountDialog: () => VueWrapper) => {
       const store = useUploadQueuesStore()
       await store.addByFiles(
@@ -491,7 +457,6 @@ describe('the components that ask for authors and keywords, in a configuration t
       accept: undefined,
       maxSizes: undefined,
     }
-    /** The image the dialog hands over has the name the own address answered for its source. */
     const expectLookedUpAtOwnAddress = () => {
       expect(wrapper!.emitted('apply')![0]).toMatchObject([[{ assetId: 'asset-1', texts: { source: 'Own Author' } }]])
       expect(askedForNames().filter((request) => !request.includes(OWN_AUTHOR))).toEqual([])

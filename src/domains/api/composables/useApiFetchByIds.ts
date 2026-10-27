@@ -17,12 +17,13 @@ export type UseApiFetchByIdsParams = {
   client: AxiosClientFn
   system: string
   entity: string
-  /** i18n scope for field-level validation failures; defaults to `system` / `entity`. */
+  /**
+   * i18n scope for field-level validation failures; defaults to `system` / `entity`.
+   */
   validationSystem?: string
   validationEntity?: string
   urlTemplate?: string
   urlParams?: UrlParams
-  /** Anything axios takes except what this helper decides: the method, the url, the body and the signal. */
   options?: Omit<AxiosRequestConfig, 'method' | 'url' | 'data' | 'signal'>
   isSearchApi?: boolean
   field?: string
@@ -32,17 +33,18 @@ export type UseApiFetchByIdsParams = {
 export type FetchByIdsParams = {
   urlTemplate?: string
   urlParams?: UrlParams
-  /** Stops this one call, leaving the instance's other calls alone. */
+  /**
+   * Stops this one call, leaving the instance's other calls alone.
+   */
   signal?: AbortSignal
 }
 
 /**
- * Ids per request. A cache drains everything queued in one go, and a thousand ids in a query string is
- * past the 8 KB request line a proxy takes by default -- the request would come back 414.
+ * Ids per request. A cache drains all queued ids at once, and a thousand ids in
+ * a query string exceed the default 8 KB proxy request line limit, giving a 414.
  */
 export const FETCH_BY_IDS_BATCH_SIZE = 100
 
-/** The `filter_in` query that fetches exactly the ids asked for, in one request. */
 const generateByIdsApiQuery = (ids: IntegerId[] | DocId[], isSearchApi: boolean, field = 'id'): string => {
   const { querySetLimit, querySetOffset, querySetOrder, queryBuild, queryAddFilter, queryAdd } = useApiQueryBuilder()
   const limit = ids.length
@@ -74,21 +76,18 @@ export const useApiFetchByIds = <T>(params: UseApiFetchByIdsParams): UseApiFetch
   const executeBatch = async (ids: DocId[] | IntegerId[], fetchParams: FetchByIdsParams): Promise<T[]> => {
     const { urlTemplate: urlTemplateOverride, urlParams: urlParamsOverride, signal } = fetchParams
 
-    // Assigned inside `run`, once, at the moment there is a url to ask for; undefined until then,
-    // which is what a failure before dispatch honestly reports.
+    // Assigned inside `run` once a url exists. It stays undefined
+    // before that, so a failure before dispatch reports no url.
     let url: string | undefined
-    // The config axios used, kept for the failures this helper raises after reading the response:
-    // they carry no config of their own, and rebuilding one describes the request as the client
-    // would send it now rather than as it was sent.
+    // The config axios used, kept for failures raised after reading the response. Those carry
+    // no config, and a rebuild would describe the request as the client would send it now.
     let dispatched: AxiosRequestConfig | undefined
 
     try {
       const res = await abortable.run((abortSignal) => {
-        // Derived inside `run`, the way the list does it: `run` opens the generation and, with
-        // `cancelPrevious`, stops the call before this one, so work done ahead of it would let a
-        // call that never dispatches leave its predecessor running. Inside the try as well, so a
-        // caller that forgot the template gets the same error class as every other failure rather
-        // than a bare `Error`.
+        // Derived inside `run` because `run` opens the generation and, with `cancelPrevious`, stops the
+        // previous call. Work done before it could leave the predecessor running if this call never dispatches.
+        // Inside the try so a missing template raises the same error class as other failures.
         const template = isDefined(urlTemplateOverride) ? urlTemplateOverride : urlTemplate
         if (isUndefined(template)) throw new AnzuFatalError(undefined, 'Url template is undefined')
 
@@ -97,16 +96,15 @@ export const useApiFetchByIds = <T>(params: UseApiFetchByIdsParams): UseApiFetch
         const requestUrl = baseUrl + generateByIdsApiQuery(ids, isSearchApi, field)
         const instance = client()
 
-        // Recorded last, when nothing between here and the call can throw any more: a client factory
-        // that fails is a request that never happened, and the report says so by naming no url.
+        // Recorded last, when nothing before the call can throw. A failing
+        // client factory means no request happened, so no url is reported.
         url = requestUrl
 
         return instance.get(requestUrl, { ...ownedByHelper(options), signal: abortSignal })
       }, signal)
 
       dispatched = res.config
-      // The url the report will name, so a message and the context beside it cannot disagree about
-      // which request failed when an interceptor rewrote it on the way out.
+      // The url the report names, so the message and context agree when an interceptor rewrote the request.
       const asSent = () => requestedUrl(client, url, options, undefined, dispatched)
       if (!isValidHTTPStatus(res.status)) throw new AnzuApiResponseCodeError(res.status)
 
@@ -119,8 +117,7 @@ export const useApiFetchByIds = <T>(params: UseApiFetchByIdsParams): UseApiFetch
 
       return readListBody<T>(res.data, res.status, asSent()).items
     } catch (err: unknown) {
-      // Built once and handed to both, the way the batch does it: half the work on the failure path,
-      // and one place that could go wrong instead of two.
+      // Built once and shared by both, as in the batch.
       const context = {
         system,
         entity,
@@ -133,8 +130,8 @@ export const useApiFetchByIds = <T>(params: UseApiFetchByIdsParams): UseApiFetch
     }
   }
 
-  // One batch after another, not side by side: with `cancelPrevious` each batch would stop the one
-  // before it. A failed batch fails the call, as a single request would.
+  // Batches run sequentially. In parallel, `cancelPrevious` would make each
+  // batch stop the one before it. A failed batch fails the whole call.
   const execute = async (ids: DocId[] | IntegerId[], fetchParams: FetchByIdsParams = {}): Promise<T[]> => {
     if (ids.length <= FETCH_BY_IDS_BATCH_SIZE) return executeBatch(ids, fetchParams)
     const items: T[] = []
@@ -152,24 +149,11 @@ export type UseApiFetchByIdsReturnType<T> = {
   execute: (ids: DocId[] | IntegerId[], params?: FetchByIdsParams) => Promise<T[]>
   abort: () => void
   /**
-   * True while this instance has a request in flight, false once the last one settles.
-   *
-   * It is here so a caller does not have to keep its own: the hand-rolled version is a ref cleared in
-   * a `finally`, and that `finally` belongs to whichever call ended -- including one that
-   * `cancelPrevious` just superseded, which turns the spinner off while the call the user is waiting
-   * for is still running. This one never dips between a superseded call and the one that replaced it.
-   *
-   * Two things to know before replacing a hand-rolled flag with it.
-   *
-   * It covers what this helper does and nothing the caller does afterwards. A flag that also spans a
-   * follow-up cached fetch, a mapping pass or a second endpoint is not the same flag, and swapping it
-   * for this one turns the spinner off too early. Keep your own where it means more than "this helper
-   * is working".
-   *
-   * It belongs to the instance, so it is only reachable if you hold the instance. A factory that
-   * builds one per call and hands back the promise alone -- `const { execute } = useX()` inside the
-   * function that calls it -- cannot expose `loading`, `abort` or `cancelPrevious` at all. Hoist the
-   * instance to where the caller lives first.
+   * True while this instance has a request in flight. Unlike a caller-cleared
+   * `finally` flag, it does not dip when `cancelPrevious` supersedes a call.
+   * It covers only this helper's work. Keep your own flag if it also spans follow-up fetches or mapping.
+   * It belongs to the instance. A factory that builds one per call cannot
+   * expose `loading`, `abort` or `cancelPrevious`, so hoist the instance first.
    */
   loading: Ref<boolean>
 }

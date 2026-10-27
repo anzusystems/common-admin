@@ -22,12 +22,13 @@ import {
   type UploadSide,
 } from '@/domains/dam/uploadQueue/presets/uploadPresets'
 
-// const CHUNK_MAX_RETRY = 6
 const CHUNK_MAX_RETRY = 4
 const CHUNK_RETRY_INTERVAL = 1000
 const CHUNK_RETRY_MULTIPLY = 3
 
-/** The text of a validation answer (422 with `fields`): one line per field, in the texts of the side. */
+/**
+ * Message for a validation error (422 with `fields`): one line per field, in the side's texts.
+ */
 export function uploadValidationMessage(error: unknown, messages: UploadMessages): string {
   if (!axios.isAxiosError(error) || !error.response || !error.response.data) return messages.unknownError()
   const data = error.response.data as Partial<AnzuApiValidationResponseData>
@@ -77,20 +78,21 @@ const sleep = (ms: number) => {
 
 const stoppedError = () => new Error('Upload stopped')
 
-// The bounds of the chunks come with the prv configuration of the DAM configuration, 0 and 0 till it is loaded: a chunk
-// sized by them is of no bytes.
+// Chunk bounds come from the DAM prv configuration and are 0 and 0 until it loads.
+// A chunk sized by them would be empty.
 const chunkBoundsLoaded = (configName: string) => {
   const { minSize, maxSize } = useDamConfigStoreOf(configName).damPrvConfig.settings.imageChunkConfig
   return minSize > 0 && maxSize > 0
 }
 
-/** One run for both sides; without a set it is the library's. Public as `useDamUpload`. */
+/**
+ * Run for either side. Without a preset it uses the library's. Public as `useDamUpload`.
+ */
 export function useUpload(
   queueItem: UploadQueueItem,
   uploadCallback?: UploadProgressCallback,
   preset?: undefined
 ): UploadRun<'library'> & { stopSpeedCheck(): void }
-/** The run of the side of the set. */
 export function useUpload<S extends UploadSide>(
   queueItem: UploadQueueItem,
   uploadCallback: UploadProgressCallback | undefined,
@@ -101,16 +103,16 @@ export function useUpload(
   uploadCallback?: UploadProgressCallback,
   preset?: UploadPreset
 ): UploadRun & { stopSpeedCheck(): void } {
-  // Made only when none is given: it reads the options of the plugin, which a side with a set of its own need not
-  // have.
-  // Without a preset, as `useUpload` is public: the library's, under `default`.
+  // The library preset is created only when none is given. It reads
+  // the plugin options, which a side with its own preset may not have.
+  // `useUpload` is public, so the fallback is the library's `default` preset.
   const set = preset ?? libraryUploadPreset('default')
   const { requests, messages, apiTimeout, loadHash, emptyFile, configName } = set[uploadPresetMembers]
   const fileSize = ref(0)
 
   const meter = useUploadMeter(uploadCallback)
   let sha: UploadHash | undefined
-  // Once the finish request went out the server may complete the file, whatever becomes of the answer.
+  // Once the finish request is sent, the server may complete the file whatever the response.
   let finishAttempted = false
   // Set by `stop()`; the queue may stop a run by the status of its row instead, and every check reads both.
   let stopRequested = false
@@ -158,7 +160,7 @@ export function useUpload(
     let attempt = 0
     do {
       attempt++
-      // A chunk of no bytes takes the upload no further: the upload fails at once, without the tries of a chunk.
+      // An empty chunk cannot advance the upload. Fail at once, without chunk retries.
       if (chunkFile.size === 0) return Promise.reject(new Error('uploadService: a chunk of no bytes'))
       try {
         await uploadChunk(chunkFile, offset)
@@ -170,7 +172,6 @@ export function useUpload(
         meter.attemptFailed()
         if (axios.isCancel(error) || stopped()) return Promise.reject(error)
         const lastAttempt = attempt >= CHUNK_MAX_RETRY
-        // Check for 400 Bad Request error on last attempt
         if (lastAttempt && axios.isAxiosError(error) && error.response?.status === 400) {
           queueItem.error.message = messages.chunkValidationFailed()
           return Promise.reject(error)
@@ -181,7 +182,7 @@ export function useUpload(
           return Promise.reject(error)
         }
 
-        // Before the work for an attempt that never happens: the loop ends here.
+        // Break before the work for an attempt that never happens.
         if (lastAttempt) break
 
         if (updateChunkSize(queueItem.progress.speed)) {
@@ -192,7 +193,7 @@ export function useUpload(
         }
 
         await sleep(sleepTime)
-        // A stop in the pause had no request to cancel.
+        // A stop during the pause had no request to cancel.
         if (stopped()) return Promise.reject(stoppedError())
         sleepTime *= CHUNK_RETRY_MULTIPLY
       }
@@ -203,13 +204,13 @@ export function useUpload(
   const stopSpeedCheck = () => meter.stop()
 
   const uploadInit = async () => {
-    // Refused before anything is asked: the DAM is not asked to create an asset no chunk can fill.
+    // Refuse before any request, so the DAM does not create an asset no chunk can fill.
     if (!chunkBoundsLoaded(configName)) {
       throw new Error(`uploadService: the chunk bounds of the DAM configuration "${configName}" are not loaded`)
     }
     const sendable = !!queueItem.file && (emptyFile === 'send' || queueItem.file.size > 0)
-    // Taken before the first await: the queue starts every item it still sees waiting, and it looks again after
-    // each file it adds.
+    // Set before the first await. The queue starts every item it
+    // still sees waiting, and rechecks after each added file.
     if (sendable) queueItem.status = UploadQueueItemStatus.Uploading
     const hash = await loadHash()
     // Stop has no request to cancel while the hash is prepared, so it is checked once the hash is here.
@@ -229,15 +230,15 @@ export function useUpload(
       requests
         .start(queueItem)
         .then((res) => {
-          // Without both identifiers there is nothing to send the chunks to, nor an asset to ask about: the
-          // upload fails here, as when the start is refused, not after a round of tries that send nothing.
+          // Without both ids there is nowhere to send chunks and no asset to ask about.
+          // Fail here like a refused start, not after a round of retries that send nothing.
           if (!res?.id || !res?.asset) {
             reject(new Error('uploadService: the start answer names no file or no asset'))
             return
           }
           queueItem.assetId = res.asset
           queueItem.fileId = res.id
-          // A stop asked for while this was on the wire; the asset it created stays on the server.
+          // Stop requested while the start request was in flight. The created asset stays on the server.
           if (stopped()) {
             reject(stoppedError())
             return
@@ -253,12 +254,12 @@ export function useUpload(
   const upload = async () => {
     meter.start(fileSize.value)
 
-    // Every way out but the finish answered stops the meter: no later second reports on a run that failed.
+    // Every exit except a successful finish stops the speed meter, so a failed run reports no later progress.
     try {
       const filesize = queueItem.file?.size
       const hash = sha
       if (isUndefined(filesize) || isUndefined(hash)) throw undefined
-      // A stop while the asset was being created had no chunk request to cancel either.
+      // A stop during asset creation had no chunk request to cancel.
       if (stopped()) throw stoppedError()
 
       let i = 0

@@ -18,7 +18,6 @@ afterEach(() => {
 })
 
 describe('ASortableListEditor — rows that arrive after mount', () => {
-  // The editor has a `loading` prop for exactly this: mount it while the request runs.
   it('rows loaded while `loading` was true are the clean baseline', async () => {
     const model = ref<Item[]>([])
     const loading = ref(true)

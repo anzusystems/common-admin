@@ -1,9 +1,8 @@
 import type { ESLint, Linter } from 'eslint'
 
 /**
- * Types for the plugin, which is javascript because eslint loads it directly from `src`. Written by
- * hand rather than generated, so it says what the plugin offers rather than what it happens to
- * return: a consumer that imports it gets a typed plugin, and the rule tests can import it at all.
+ * Hand-written types for the plugin, which is JavaScript because eslint loads it from `src`. They describe
+ * what the plugin offers, not what it happens to return, so consumers and rule tests get a typed plugin.
  */
 export declare const anzuPlugin: ESLint.Plugin
 
@@ -14,11 +13,15 @@ export interface RecommendedOptions {
   preferApiCommand?: Severity
   preferApiFetchItems?: Severity
   urlParamsMatchTemplate?: Severity
-  /** @deprecated The rule is gone with the helpers it guarded; the option is ignored. */
+  /**
+   * @deprecated The rule is gone with the helpers it guarded; the option is ignored.
+   */
   deprecatedImports?: Severity
 }
 
-/** One flat-config block: the plugin plus the rule severities the options ask for. */
+/**
+ * One flat-config block: the plugin plus the rule severities the options ask for.
+ */
 export declare function recommended(options?: RecommendedOptions): {
   plugins: Record<string, ESLint.Plugin>
   rules: Linter.RulesRecord
@@ -30,17 +33,26 @@ export interface AnzuAdminEslintOptions {
    * resolves against it.
    */
   root: string | URL
-  /** Default `.oxlintrc.json`; its enabled rules are switched off in eslint. `false` skips that. */
+  /**
+   * Default `.oxlintrc.json`; its enabled rules are switched off in eslint. `false` skips that.
+   */
   oxlintConfig?: string | false
-  /** Default `src/typed-router.d.ts`, read by `anzu/valid-route-name`. */
+  /**
+   * Default `src/typed-router.d.ts`, read by `anzu/valid-route-name`.
+   */
   typedRouter?: string
-  /** More globally registered components for `vue/no-undef-components` (inhouse: the `GMap*` family). */
+  /**
+   * More globally registered components for `vue/no-undef-components` (inhouse: the `GMap*` family).
+   */
   globalComponents?: string[]
-  /** Added to the ignored paths. */
+  /**
+   * Added to the ignored paths.
+   */
   ignores?: string[]
-  /** Default `'error'`. */
+  /**
+   * Default `'error'`.
+   */
   noExplicitAny?: 'error' | 'warn' | 'off'
-  /** Severities of the anzu rules. */
   anzu?: RecommendedOptions & { validRouteName?: Severity }
   /**
    * `configureVueProject()` of `@vue/eslint-config-typescript`, applied by the preset. `rootDir`
@@ -55,7 +67,9 @@ export interface AnzuAdminEslintOptions {
   }
 }
 
-/** The whole eslint config of an admin; `extra` configs come last. */
+/**
+ * The whole eslint config of an admin; `extra` configs come last.
+ */
 export declare function defineAnzuAdminConfig(
   options: AnzuAdminEslintOptions,
   ...extra: Linter.Config[]

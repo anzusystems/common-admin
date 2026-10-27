@@ -2,13 +2,11 @@ import type { UserAndTimeTrackingData } from '@/shared/types/UserAndTimeTracking
 import { isUndefined } from '@/shared/utils/common'
 
 /**
- * Copies the tracking fields of a saved record onto the record a form keeps editing.
- *
- * For an update that does not put its whole answer into the store: after a save the form stays
- * open, and without this it keeps showing the modification time and user from before the save.
- * Only these four fields -- the rest of the answer can differ from what the form edits (sorted
- * lists, normalised values) and replacing it is the update's own decision. A field missing from
- * the answer (a backend without user tracking) is left as it is.
+ * Copies the four tracking fields of a saved record onto the record a form keeps editing.
+ * Use it for an update that does not store its whole response. The form stays
+ * open after save and would otherwise show the old modification time and user.
+ * Only these fields: the rest of the response can differ (sorted lists,
+ * normalized values). A field missing from the response is left as is.
  */
 export const syncUserAndTimeTracking = (
   target: UserAndTimeTrackingData,

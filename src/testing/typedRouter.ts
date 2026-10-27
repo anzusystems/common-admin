@@ -1,10 +1,15 @@
-/** What the guard tests read out of an admin's generated `src/typed-router.d.ts`. */
+/**
+ * What the guard tests read out of an admin's generated `src/typed-router.d.ts`.
+ */
 export interface TypedRouterDeclaration {
-  /** Every declared route name, in declaration order. */
   names: string[]
-  /** Every declared route with its path pattern, the catch-all included. */
+  /**
+   * Every declared route with its path pattern, the catch-all included.
+   */
   paths: Array<{ name: string; path: string }>
-  /** The route names each page file defines; a page that defines none is left out. */
+  /**
+   * The route names each page file defines; a page that defines none is left out.
+   */
   pageRoutes: Map<string, string[]>
 }
 

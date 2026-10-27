@@ -4,9 +4,9 @@ import { isProxy, reactive } from 'vue'
 import { AssetFileProcessStatus } from '@/domains/dam/types/AssetFile'
 import { createFakeDam, damAssetWithFile, type FakeDam } from './support/fakeDam'
 
-// The fake DAM answers as the DAM does over the wire: with a copy. What the library does with an answer, or a test
-// with a body it sent, leaves what the DAM holds as it was. It handed out the asset it held, so a component that
-// wrote into an answer wrote into "the DAM", and a case passed through a conflict that was not there.
+// The fake DAM answers with copies, as over the wire.
+// It used to hand out the asset it held. A component writing into an answer then
+// wrote into "the DAM", and a case could pass through a conflict that was not there.
 
 const endPoints = { asset: '/adm/v1/asset', image: '/adm/v1/image' }
 
@@ -89,7 +89,6 @@ describe('the fake DAM', () => {
 
   it('keeps a body as it was sent: a test that changes it afterwards changes neither the request nor the DAM', async () => {
     const dam = withAsset()
-    // A rule that writes what it is sent into the asset, as the DAM saves it.
     dam.reply((request) => {
       if (request.method !== 'PATCH' || request.url !== '/adm/v1/asset/asset-1') return undefined
       Object.assign(dam.assets.get('asset-1')!, request.data)
@@ -115,7 +114,6 @@ describe('the fake DAM', () => {
     expect(dam.chunkOf(dam.requests.at(-1)!)).toBe('picked.jpg')
   })
 
-  // A rule may answer with what a test keeps reactive. JSON carries what it holds at that moment, as the wire does.
   it('answers a reactive value of a rule as plain data, as it is at the answer', async () => {
     const dam = withAsset()
     const kept = reactive({ authors: ['author-1'] })
@@ -128,8 +126,6 @@ describe('the fake DAM', () => {
     expect(data).toEqual({ authors: ['author-1'] })
   })
 
-  // Two entries of an answer are two objects to the library, as two parsed entries are, even where a rule built both
-  // from one asset.
   it('answers one object that two entries of an answer point to as two', async () => {
     const dam = withAsset()
     dam.reply((request) =>
@@ -156,8 +152,6 @@ describe('the fake DAM', () => {
     expect(dam.assets.get('asset-1')).toEqual(before)
   })
 
-  // A test lets the requests it holds go and holds no more of them: a read after that is answered at once, one held
-  // before still waits for its release.
   it('stops holding: a request after the stop is answered at once, one held before still waits', async () => {
     const dam = withAsset()
     const held = dam.hold('GET', dam.routes.one)

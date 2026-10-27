@@ -6,8 +6,8 @@ import { useAssetSelectStore } from '@/domains/dam/assetSelect/store/assetSelect
 import { useAssetDetailStore } from '@/domains/dam/assetDetail/store/assetDetailStore'
 import { DamAssetType } from '@/domains/dam/types/Asset'
 
-// The dialog answers what the user did last: an older list or detail response must not replace the
-// newer one, and a next page that failed must be asked for again rather than skipped.
+// The dialog answers what the user did last. An older list or detail response must not replace a newer one.
+// A next page that failed must be asked for again, not skipped.
 const deferred = <T>() => {
   let resolve!: (v: T) => void, reject!: (e: unknown) => void
   const promise = new Promise<T>((res, rej) => ((resolve = res), (reject = rej)))
@@ -94,7 +94,6 @@ describe('useAssetSelectActions races', () => {
     actions.pagination.value.page = 1
     const nextPage = actions.fetchNextPage()
     expect(api.list).toHaveLength(1)
-    // The filter is submitted while page 2 of the old one is still loading.
     actions.pagination.value.page = 1
     const list = actions.fetchAssetListDebounced()
     await vi.waitFor(() => expect(api.list).toHaveLength(2))
@@ -121,7 +120,6 @@ describe('useAssetSelectActions races', () => {
     expect(store.loader).toBe(false)
   })
 
-  // The selection is emptied, and with it the detail: a read of the detail still on its way is not the news either.
   it('gives the detail read of a click up on reset: its answer is not shown, and nothing loads meanwhile', async () => {
     const { actions, store } = setup()
     store.setList([asset('A')])
@@ -137,7 +135,6 @@ describe('useAssetSelectActions races', () => {
     expect(actions.detailLoading.value).toBe(false)
   })
 
-  // The picker with media lists another type: the list and the detail are emptied, the picker stays as it was set up.
   it('gives the detail read of a click up when asked to: its answer is not shown, and nothing loads meanwhile', async () => {
     const { actions, store } = setup()
     await actions.reset()
@@ -154,7 +151,6 @@ describe('useAssetSelectActions races', () => {
     expect(actions.detailLoading.value).toBe(false)
   })
 
-  // The asset of the active item is read again once a detail has closed, and a click made since asks for another.
   it.each([
     ['first', true],
     ['last', false],
@@ -188,7 +184,6 @@ describe('useAssetSelectActions races', () => {
     }
   )
 
-  // A click whose read is still on its way when a detail closes: the read made at that close is the later ask.
   it.each([
     ['first', true],
     ['last', false],

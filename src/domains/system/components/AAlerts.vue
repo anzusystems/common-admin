@@ -47,10 +47,13 @@ onMounted(() => {
 </script>
 
 <template>
-  <!-- VAlert inside the snackbar keeps the markup the admins' e2e tests select (`.v-alert`,
-       `.v-alert__close`, `data-cy="page-title"`). Off Vuetify's overlay stack (a private prop, pinned
-       by a test): on it, an alert becomes the top overlay and Esc no longer reaches an open dialog.
-       Attributes, not a class, reach each snackbar (the queue drops `class`). -->
+  <!--
+    VAlert inside the snackbar keeps the markup the admins' e2e tests
+    select (`.v-alert`, `.v-alert__close`, `data-cy="page-title"`).
+    Kept off Vuetify's overlay stack (a private prop, pinned by a test). On it,
+    an alert becomes the top overlay and Esc no longer reaches an open dialog.
+    Attributes, not a class, reach each snackbar, because the queue drops `class`.
+  -->
   <VSnackbarQueue
     v-model="queue"
     :total-visible="max"
@@ -88,7 +91,7 @@ onMounted(() => {
 @use 'sass:map';
 @use 'vuetify/lib/styles/settings/variables' as vars;
 
-// Above every dialog, also one opened after the alert, as the notifications before it were.
+// Above every dialog, including one opened after the alert.
 .v-snackbar[data-a-alerts-host] {
   z-index: 5000 !important;
 }

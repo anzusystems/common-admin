@@ -12,9 +12,6 @@ import {
 } from '@/shared/utils/string'
 import { useValidateSlug } from '@/shared/validators/vuelidate/common/useValidateSlug'
 
-// `stringToInt` is the most imported helper of the library: the admins feed it route params
-// (`route.params.id`), query strings and numbers read back from the API.
-
 describe('utils/string', () => {
   describe('stringToInt', () => {
     it('parses a route param', () => {

@@ -9,11 +9,14 @@ export interface PackageJsonDependencies {
 }
 
 export interface DescribeDeclaredDependenciesOptions {
-  /** The admin's sources: `import.meta.glob('/src/**\/*.{vue,ts,mts,scss}', { query: '?raw', import: 'default', eager: true })`. */
+  /**
+   * The admin's sources: `import.meta.glob('/src/**\/*.{vue,ts,mts,scss}', { query: '?raw', import: 'default', eager: true })`.
+   */
   sources: Record<string, string>
-  /** The admin's `package.json`. */
   packageJson: PackageJsonDependencies
-  /** Bare specifier prefixes that name no package: the admin's own aliases (`@/` is built in). */
+  /**
+   * Bare specifier prefixes that name no package: the admin's own aliases (`@/` is built in).
+   */
   aliases?: string[]
 }
 
@@ -143,7 +146,9 @@ const NODE_BUILTINS = new Set([
   'zlib',
 ])
 
-/** The package a bare specifier imports from, or `null` for a relative path, an alias or a `scheme:` module. */
+/**
+ * The package a bare specifier imports from, or `null` for a relative path, an alias or a `scheme:` module.
+ */
 export const packageOfSpecifier = (specifier: string, aliases: string[] = []): string | null => {
   const path = specifier.split('?')[0]!
   if (/^(?:\.|\/|@\/|#|[a-z][a-z0-9+.-]*:)/.test(path)) return null
@@ -153,7 +158,6 @@ export const packageOfSpecifier = (specifier: string, aliases: string[] = []): s
   return NODE_BUILTINS.has(name) ? null : name
 }
 
-/** `file: specifier` for every import of a package the `package.json` does not declare. */
 export function undeclaredImports(
   sources: Record<string, string>,
   packageJson: PackageJsonDependencies,
@@ -190,10 +194,10 @@ export function undeclaredImports(
 }
 
 /**
- * A package the admin imports but does not declare works as long as another dependency brings it and the
- * package manager hoists it to the top of `node_modules` (yarn's `node-modules` linker does). Its version
- * is then whatever that dependency asks for, and a strict layout -- pnpm, or yarn's own PnP -- does not
- * hoist: the build stops at the first such import.
+ * An undeclared import works while another dependency brings the package and the package
+ * manager hoists it to the top of `node_modules` (yarn's `node-modules` linker does).
+ * Its version is then whatever that dependency asks for.
+ * A strict layout (pnpm, yarn PnP) does not hoist, so the build stops at the first such import.
  */
 export function describeDeclaredDependencies({
   sources,

@@ -10,10 +10,10 @@ import { AnzuFatalError } from '@/shared/error/AnzuFatalError'
 import { createFilter, createFilterStore, type MakeFilterOption } from '@/domains/filters/composables/filterFactory'
 import { usePagination } from '@/domains/api/composables/pagination'
 
-// Stopping a request is an ordinary thing to do -- another keystroke in an autocomplete, a route
-// change while a list loads -- so it has to be tellable from a request that failed. It used to
-// arrive as a transport error, indistinguishable from a dead backend, because the branch meant to
-// catch it tested for a `DOMException` that axios does not throw.
+// Stopping a request is ordinary (another keystroke in an autocomplete, a route change during a list load),
+// so it must be distinguishable from a failed request.
+// It used to arrive as a transport error because the catching
+// branch tested for a `DOMException` that axios does not throw.
 
 const cancelled = () =>
   Object.assign(new Error('canceled'), {
@@ -40,8 +40,6 @@ const listSetup = (get: ReturnType<typeof vi.fn>, cancelPrevious = false) => {
   return { ...api, pagination, filterData, filterConfig }
 }
 
-// The same instance, with no template of its own: a call that does not bring one throws while it is
-// building its url -- the ordinary shape of a call that fails before it dispatches.
 const listSetupNoTemplate = (get: ReturnType<typeof vi.fn>, cancelPrevious = false) => {
   const store = createFilterStore(fields)
   const { filterData, filterConfig } = createFilter(fields, store, { system: 'sys', subject: 'subj' })
@@ -238,7 +236,6 @@ describe('what a superseded list call may still write', () => {
     expect(pagination.value.totalCount).toBe(99)
   })
 
-  // It still answers its own caller, though -- it succeeded, it was simply overtaken.
   it('still resolves with its own data', async () => {
     let resolveFirst: ((value: unknown) => void) | undefined
     const get = vi
@@ -268,12 +265,11 @@ describe('what a superseded list call may still write', () => {
     expect(pagination.value.totalCount).toBe(before)
   })
 
-  // "A newer call has started" has to mean the moment `execute` was called, not the moment it
-  // reached the wire. Everything a call does before dispatching -- resolving the template, rendering
-  // the filters into a query -- can throw, and a call that dies there is still the caller saying the
-  // previous query is obsolete. With the derivation sitting above `run`, the failing call opened no
-  // generation, so the older one stayed current and wrote its pagination into a screen that had
-  // already asked for something else.
+  // "A newer call has started" means the moment `execute` was called, not the moment it reached the wire.
+  // Resolving the template or rendering the filters can throw before
+  // dispatch, and such a call still marks the previous query obsolete.
+  // With the derivation above `run`, the failing call opened no
+  // generation, so the older call stayed current and wrote its pagination.
   it('supersedes the earlier call even when the newer one fails before it dispatches', async () => {
     let resolveFirst: ((value: unknown) => void) | undefined
     const get = vi.fn().mockImplementation(() => new Promise((resolve) => (resolveFirst = resolve)))
@@ -281,8 +277,6 @@ describe('what a superseded list call may still write', () => {
     const before = pagination.value.totalCount
 
     const first = execute(pagination, filterData, filterConfig, { urlTemplate: '/items' })
-    // No template on the instance and none here either: it throws while building its url, before a
-    // request of its own goes out.
     await expect(execute(pagination, filterData, filterConfig)).rejects.toBeInstanceOf(AnzuFatalError)
 
     resolveFirst?.(listPage([{ id: 1 }], 77))
@@ -291,8 +285,6 @@ describe('what a superseded list call may still write', () => {
     expect(pagination.value.totalCount).toBe(before)
   })
 
-  // The same moment, seen through `cancelPrevious`: the earlier request is not merely ignored, it is
-  // stopped -- there is nobody left to read it.
   it('stops the earlier request when the newer one fails before it dispatches', async () => {
     const signals: AbortSignal[] = []
     const get = vi.fn().mockImplementation((_url: string, config: { signal: AbortSignal }) => {
@@ -307,10 +299,9 @@ describe('what a superseded list call may still write', () => {
     expect(signals[0].aborted).toBe(true)
   })
 
-  // The window between the response arriving and the pagination being written. `run` drops the relay
-  // it set up for the caller's signal as soon as it has the response, and the write happens after
-  // that -- so an abort landing in between never reaches the call's own signal, and the call the
-  // caller just stopped went on to write. The guard reads the caller's signal directly for this.
+  // The window between the response arriving and the pagination being written.
+  // `run` drops the relay for the caller's signal once it has the response, and the write happens after that.
+  // An abort landing in between never reaches the call's own signal, so the guard reads the caller's signal directly.
   it('does not write pagination when the caller stops it after the response has arrived', async () => {
     const own = new AbortController()
     let seen: AbortSignal | undefined
@@ -330,8 +321,6 @@ describe('what a superseded list call may still write', () => {
     await Promise.resolve()
     own.abort()
 
-    // The evidence that this is the window and not the ordinary case: the call's own signal never
-    // learned about the abort.
     expect(seen?.aborted).toBe(false)
 
     await call

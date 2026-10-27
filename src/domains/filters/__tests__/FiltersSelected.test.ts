@@ -6,10 +6,9 @@ import { FilterConfigKey, FilterDataKey, FilterSelectedKey } from '@/domains/fil
 import type { FilterConfig, FilterData } from '@/domains/filters/composables/filterFactory'
 import type { ValueObjectOption } from '@/shared/types/ValueObject'
 
-// Clearing a filter puts it back to its default. On a field that already holds its default that
-// is a no-op, so the close button dropped the chip, wrote the same value back, and the chip
-// returned on the next submit - meanwhile the list stayed filtered by a window the user believed
-// they had just removed. Forum's post list defaults to a 365 day window and reaches this.
+// Clearing a filter puts it back to its default. On a field already at its default this is a no-op.
+// The close button dropped the chip and wrote the same value back, and the chip returned on the next submit.
+// The list stayed filtered by a window the user believed removed. Forum's post list (365 day default window) hits this.
 
 const FROM = '2025-09-08T22:00:00.000000Z'
 const UNTIL = '2026-09-09T21:59:59.000000Z'
@@ -92,11 +91,11 @@ describe('FiltersSelected', () => {
   })
 })
 
-// A time interval is a pair behind one chip and clearing writes the default into both, so looking
-// only at `from` was not enough. The custom dialog opens prefilled with the current range, so
-// shortening just the upper bound leaves `from` at its default while `until` moved - and the
-// button still has work to do. The state survives a reload: `from` equals its default and is left
-// out of what gets stored, so it comes back from the default on load and the pair repeats.
+// A time interval is a pair behind one chip, and clearing writes
+// the default into both. Checking only `from` is not enough.
+// The custom dialog opens prefilled with the current range, so shortening
+// only the upper bound leaves `from` at its default while `until` moved.
+// `from` equals its default and is left out of storage, so it returns from the default on reload and the pair repeats.
 function mountPair(from: string, until: string, defaultFrom: string, defaultUntil: string) {
   const filterData = reactive({ from, until }) as FilterData
   const filterConfig = reactive({

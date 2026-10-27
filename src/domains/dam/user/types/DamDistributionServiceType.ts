@@ -4,8 +4,8 @@ import { useDamConfigStoreOf } from '@/domains/dam/config/store/damConfigStore'
 import { inheritedDamConfigName } from '@/domains/dam/composables/damConfigName'
 
 /**
- * The distribution services of the prv configuration of `configName`: a name left out is the inherited one in a
- * component's setup, else `default`.
+ * Distribution services from the prv config of `configName`. If
+ * omitted, the name is inherited in component setup, else `default`.
  */
 export function useDamDistributionServiceType(configName?: string) {
   const damConfigStore = useDamConfigStoreOf(inheritedDamConfigName(configName))

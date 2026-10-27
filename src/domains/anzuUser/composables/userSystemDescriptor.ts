@@ -3,67 +3,63 @@ import type { AxiosClientFn } from '@/domains/api/utils/client'
 import type { AnzuUser } from '@/shared/types/AnzuUser'
 
 /**
- * A state a system has on top of `enabled`, shown next to it. Today only two systems have one:
- * blog's `status` (guest / waiting_approval / active / ban / gdpr_deleted) and forum's
- * `settings.banned`. Both arrive with the record -- they are `#[Serialize]` on the entity -- so
- * rendering one costs no extra call.
+ * A system state shown next to `enabled`. Today: blog's `status` and forum's `settings.banned`.
+ * Both are serialized on the entity, so rendering costs no extra call.
  */
 export interface UserSystemExtraState {
-  /** "blogger", "commenter" -- the app translates it; the library only prints it. */
+  /**
+   * "blogger", "commenter". The app translates it; the library only prints it.
+   */
   label: string
-  /** "active", "banned". */
+  /**
+   * "active", "banned".
+   */
   value: string
   tone: 'ok' | 'warn' | 'error'
 }
 
-/** `/adm/v1/anzu-user`. Absent in contentHub, which has only `/adm/users`. */
+/**
+ * `/adm/v1/anzu-user`. Absent in contentHub, which has only `/adm/users`.
+ */
 export interface AnzuUserEndpointPair {
   get: string
   put: string
   post: string
 }
 
-/** `/adm/users`. Only cms, dam and contentHub have it; it is the only path with a `PATCH`. */
+/**
+ * `/adm/users`. Only cms, dam and contentHub have it; it is the only path with a `PATCH`.
+ */
 export interface BaseUserEndpointPair extends AnzuUserEndpointPair {
   patch: string
 }
 
 /**
- * Paired GET + write paths, never loose urls.
- *
- * This is what makes the write invariant expressible: a write body is always the whole object the
- * preceding GET on the *same path* returned. The two paths return different DTOs -- `/adm/users`
- * in cms answers `CmsUserDto` and its PUT runs `updateRelations()` over seven scalars and twelve
- * collections -- so a GET from one path and a PUT to the other silently drops whatever the other
- * DTO carries.
+ * Paired GET and write paths. A write body is always the whole object the GET on the same path returned.
+ * The two paths return different DTOs. A GET from one and a PUT to the other
+ * silently drops fields, e.g. cms `CmsUserDto` with `updateRelations()`.
  */
 export interface UserSystemEndpoints {
   anzuUser: AnzuUserEndpointPair | null
   base: BaseUserEndpointPair | null
   permissionGroup: string
   /**
-   * Per system, not one constant. contentHub's is `/adm/users/current`, and the admins had this
-   * hard-coded as a single path shared by every backend.
+   * Per system. contentHub uses `/adm/users/current`.
    */
   currentUser: string
   list: string
   /**
-   * Which pair the probe reads through. A field rather than something derived, because in dam the
-   * choice is visible to the operator: `GET /adm/v1/anzu-user/{id}` has no gating at all while
-   * `GET /adm/users/{id}` sits behind `DAM_USER_READ`, so only the second can ever render "you
-   * have no access". The rule is "the probe goes the way the write goes".
+   * Which pair the probe reads through. The probe follows the write path.
+   * In dam `GET /adm/v1/anzu-user/{id}` is ungated while `GET /adm/users/{id}`
+   * needs `DAM_USER_READ`, so only the second can show "no access".
    */
   probe: 'anzuUser' | 'base'
 }
 
 /**
- * Where "manage in X" leads. A callback over the user rather than a static value: a global
- * descriptor does not know which row is being drawn.
- *
- * The return type is a discriminated union so the two cannot be confused in code either -- an
- * internal target is pushed through the router, an external one is an `<a href>` opened in a new
- * tab, and `href: null` is a configured-but-missing url, which renders disabled with a reason
- * rather than as a dead button.
+ * Where "manage in X" leads. A callback because the descriptor does not know which row is drawn.
+ * Internal targets go through the router. External ones open in a new tab.
+ * `href: null` means a missing url and renders disabled with a reason.
  */
 export type UserSystemManageTarget =
   | { kind: 'internal'; to: RouteLocationRaw }
@@ -72,43 +68,50 @@ export type UserSystemManageTarget =
 export interface UserSystemDescriptor<TSystem extends string = string, TUser extends AnzuUser = AnzuUser> {
   system: TSystem
   client: AxiosClientFn
-  /** Reaches every `useApiRequest` built for this system; see `permissionGroupApi`. */
+  /**
+   * Reaches every `useApiRequest` built for this system; see `permissionGroupApi`.
+   */
   entity: string
   /**
-   * Whether the system is switched on in this admin's configuration. Mandatory, not optional: the
-   * "disabled in configuration" state has to be *shown*, so leaving the system out of the array is
-   * not the same thing. The value is app-specific (`envConfig[system].enabled`) and the library has
-   * no way to read it.
+   * Whether the system is enabled in this admin's config (`envConfig[system].enabled`).
+   * Mandatory because the disabled state must be shown. Omitting the system from the array is not the same.
    */
   isEnabled: () => boolean
   /**
-   * Which validation profile this system's form uses. `false` means only the e-mail is required;
-   * `true` adds first name, last name, full name, avatar text and avatar colour. It is a property
-   * of the system, and it is the same for creating and for editing.
+   * Validation profile. `false`: only e-mail is required. `true`: also
+   * first name, last name, full name, avatar text and avatar colour.
+   * Same for create and edit.
    */
   requiredMetadata: boolean
   /**
-   * Whether the id is typed in. False only in cms, where the backend looks it up in SSO from the
-   * e-mail. On an edit the field is read-only regardless.
+   * Whether the id is typed in. False only in cms, where the backend looks it up in SSO by e-mail.
+   * Read-only on edit regardless.
    */
   idInput: boolean
   extraState?: (user: TUser) => UserSystemExtraState | null
-  /** Above the `enabled` switch and in the row of a bulk action. */
+  /**
+   * Above the `enabled` switch and in the row of a bulk action.
+   */
   enabledNote?: string
-  /** In the metadata repair dialog and in the owning form. */
+  /**
+   * In the metadata repair dialog and in the owning form.
+   */
   metadataNote?: string
-  /** In the confirmation dialog when an account is created here. */
+  /**
+   * In the confirmation dialog when an account is created here.
+   */
   createNote?: string
   endpoints: UserSystemEndpoints
-  /** Added in task 2: the system's name as the app translates it. */
+  /**
+   * The system's name as the app translates it.
+   */
   label?: string
-  /** Added in task 2. */
   manage?: (user: TUser) => UserSystemManageTarget
   /**
-   * Whether the current user may write this system's accounts. `false` takes away create, enable or
-   * disable, manage and the system's part of a bulk action; `undefined`, or no function, leaves it to the
-   * probe and the backend's answer, as before. Only the admin can say: the library has no current user of
-   * another system, and only the admin knows which ones it has loaded.
+   * Whether the current user may write this system's accounts. `false`
+   * removes create, enable/disable, manage and the bulk action part.
+   * `undefined` or no function leaves it to the probe and the
+   * backend. Only the admin knows the other systems' current users.
    */
   canWrite?: (action: UserSystemWriteAction) => boolean | undefined
 }
@@ -116,12 +119,8 @@ export interface UserSystemDescriptor<TSystem extends string = string, TUser ext
 export type UserSystemWriteAction = 'create' | 'update'
 
 /**
- * The erasure boundary for a heterogeneous array.
- *
- * Descriptors differ in `TUser` -- blog's `extraState` reaches for `status`, forum's for
- * `settings.banned` -- so an array of them cannot keep each one's type. Without a single place to
- * erase it, `strict: true` would demand a cast in every admin, at every call site. This does it
- * once, where the array is built.
+ * Type erasure point for the heterogeneous descriptor array.
+ * Descriptors differ in `TUser`. Erasing here avoids a cast at every call site under `strict: true`.
  */
 export type AnyUserSystemDescriptor = UserSystemDescriptor<string, AnzuUser>
 
@@ -129,15 +128,15 @@ export const defineUserSystemDescriptor = <TSystem extends string, TUser extends
   descriptor: UserSystemDescriptor<TSystem, TUser>
 ): AnyUserSystemDescriptor => descriptor as unknown as AnyUserSystemDescriptor
 
-/** False only when the descriptor says no. Not knowing is not a no. */
+/**
+ * False only when the descriptor says no. Not knowing is not a no.
+ */
 export const descriptorMayWrite = (descriptor: AnyUserSystemDescriptor, action: UserSystemWriteAction): boolean =>
   descriptor.canWrite?.(action) !== false
 
 /**
- * The pair the probe reads through, with the one invariant the type cannot state: both branches of
- * `endpoints` are nullable, so nothing stops a descriptor naming `probe: 'base'` on a system that
- * has no `/adm/users`. Every admin's descriptor test asserts this resolves for each of its
- * systems.
+ * Both `endpoints` branches are nullable, so `probe: 'base'` may name a system without `/adm/users`.
+ * Each admin's descriptor test asserts this resolves for every system.
  */
 export const resolveProbeEndpoint = (descriptor: AnyUserSystemDescriptor): AnzuUserEndpointPair => {
   const pair = descriptor.endpoints[descriptor.endpoints.probe]
@@ -150,9 +149,8 @@ export const resolveProbeEndpoint = (descriptor: AnyUserSystemDescriptor): AnzuU
 }
 
 /**
- * Metadata is written through `PATCH /adm/users/{id}` wherever that path exists: the method behind
- * it can only write e-mail, locale, avatar and person -- it has no setter for roles, permissions,
- * groups or `enabled`. That is a stronger guarantee than being careful about what goes in the body.
+ * Metadata goes through `PATCH /adm/users/{id}` where it exists.
+ * Its method has no setters for roles, permissions, groups or `enabled`.
  */
 export const resolveMetadataWrite = (
   descriptor: AnyUserSystemDescriptor
@@ -167,8 +165,8 @@ export const resolveMetadataWrite = (
 }
 
 /**
- * `enabled` has no `PATCH` anywhere: the only method that calls `setEnabled` is the full update.
- * So it goes GET + PUT, on the same path, with the whole DTO the GET returned.
+ * `enabled` has no PATCH. Only the full update calls `setEnabled`.
+ * So it is GET then PUT on the same path with the whole DTO from the GET.
  */
 export const resolveEnabledWrite = (descriptor: AnyUserSystemDescriptor): { get: string; url: string } => {
   const base = descriptor.endpoints.base
@@ -180,7 +178,9 @@ export const resolveEnabledWrite = (descriptor: AnyUserSystemDescriptor): { get:
   return { get: anzuUser.get, url: anzuUser.put }
 }
 
-/** Creating an account goes the same way a write does. */
+/**
+ * Creating an account goes the same way a write does.
+ */
 export const resolveCreateEndpoint = (descriptor: AnyUserSystemDescriptor): string => {
   const base = descriptor.endpoints.base
   if (base !== null) return base.post

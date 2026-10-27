@@ -12,8 +12,7 @@ import {
 } from '@/domains/dam/types/UploadQueue'
 import { useUploadQueueItemFactory } from '@/domains/dam/uploadQueue/factory/UploadQueueItemFactory'
 
-// The requests of an upload, each on its own: what goes where, with the endpoints handed in. They are those of
-// admin-ugc here, so that nothing passes by falling back on the `/adm/v1` defaults.
+// The endpoints are those of admin-ugc, so that falling back on the `/adm/v1` defaults cannot pass.
 
 const IMAGE = '/ugc/v1/image'
 const ASSET = '/ugc/v1/asset'
@@ -90,9 +89,8 @@ describe('the chunk request of an upload', () => {
     expect(form).toBeInstanceOf(FormData)
     expect(await (form.get('file') as File).text()).toBe('12345')
     expect(form.get('chunk')).toBe('{"offset":0,"size":5}')
-    // Left to axios: it writes the multipart type with its boundary.
+    // Left to axios, which writes the multipart content type with its boundary.
     expect(chunk.config.headers).toStrictEqual({ 'Content-Type': undefined })
-    // Stop reaches the request through the controller of the row.
     expect(chunk.config.signal).toBe(controller.signal)
   })
 
@@ -151,7 +149,6 @@ describe('the finish request of an upload', () => {
   })
 })
 
-// The library uploads images only: a row of another type is refused before anything is asked.
 describe.each([DamAssetType.Audio, DamAssetType.Video, DamAssetType.Document])('a row of the type %s', (assetType) => {
   const other = () => {
     const item = row()

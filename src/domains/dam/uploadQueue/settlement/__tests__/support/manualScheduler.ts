@@ -1,7 +1,7 @@
 import type { UploadSettlementScheduler } from '@/domains/dam/uploadQueue/settlement/uploadSettlementRuntime'
 
-// Fake timers stall the browser runner, and here nothing global is replaced: the settlement asks this scheduler
-// for the time and for its timers, and the test moves the time.
+// Fake timers stall the browser runner, so nothing global is replaced.
+// The settlement asks this scheduler for the time and for timers, and the test moves the time.
 
 interface ManualTimer {
   at: number
@@ -9,7 +9,9 @@ interface ManualTimer {
   callback: () => void
 }
 
-/** A turn of the event loop: every promise the code under test has chained by now is settled after it. */
+/**
+ * A turn of the event loop: every promise the code under test has chained by now is settled after it.
+ */
 const turn = () =>
   new Promise<void>((resolve) => {
     const channel = new MessageChannel()
@@ -48,18 +50,15 @@ export function manualScheduler(startAt = 0) {
 
   return {
     ...scheduler,
-    /** How many timers wait. */
     waiting: () => timers.size,
-    /** In how long the soonest timer is due, or `null` when none waits. */
     nextIn: () => {
       const due = nextDue(Infinity)
       return due ? due[1].at - current : null
     },
-    /** What the code under test does after an answer, with the time standing. */
     settle: turn,
     /**
-     * The time moves on by `ms`. The timers due on the way run in their order, each at its own time, and what
-     * each has started is settled before the next one runs.
+     * Moves the time on by `ms`. Due timers run in order, each at its own time.
+     * What each has started is settled before the next one runs.
      */
     advance: async (ms: number) => {
       const until = current + ms

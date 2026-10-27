@@ -8,9 +8,8 @@ import type { DamExtSystemConfig, DamPrvConfig } from '@/domains/dam/types/DamCo
 import type { IntegerId } from '@/shared/types/common'
 
 /**
- * The DAM configuration store of the configuration `name` filled as that of `default` is by now: a named
- * configuration whose DAM has the same configuration, as an application fills it before its components mount. Copies,
- * so a later write into one store does not show in the other.
+ * Fills the store of configuration `name` like `default`'s, as an application does before its
+ * components mount. The values are copies, so a later write to one store does not show in the other.
  */
 export const seedDamConfigOf = (name: string, pinia?: Pinia): DamConfigStore => {
   const from = useDamConfigStore(pinia)
@@ -29,23 +28,17 @@ export const seedDamConfigOf = (name: string, pinia?: Pinia): DamConfigStore => 
   return to
 }
 
-/** What a DAM has as its configuration, as far as the cases of named configurations tell two DAMs apart. */
 export interface DamConfigOfDam {
-  /** The ext system its licence is of. */
   extSystem: IntegerId
   licence: IntegerId
-  /** Its one custom field of an image, by the property both DAMs share, under a name of its own. */
   fieldName: string
   keywords: boolean
   authors: boolean
   chunk: { minSize: number; maxSize: number }
-  /** A distribution service of its own, by the name both DAMs share. */
   distribution: { title: string; iconPath: string }
-  /** An external provider of assets of its own, by the name both DAMs share. */
   externalProvider: string
 }
 
-/** The property of the custom field both DAMs have, and the name of their distribution service and provider. */
 export const SHARED_FIELD = 'headline'
 export const SHARED_SERVICE = 'youtube'
 export const SHARED_PROVIDER = 'provider'
@@ -98,7 +91,6 @@ const prvConfig = (of: DamConfigOfDam): DamPrvConfig =>
     },
   }) as unknown as DamPrvConfig
 
-/** The DAM configuration store of `name` filled with what the DAM `of` has, before anything mounts. */
 export const fillDamConfigOf = (name: string, of: DamConfigOfDam, pinia?: Pinia): DamConfigStore => {
   const store = useDamConfigStoreOf(name, pinia)
   store.damPrvConfig = prvConfig(of)
@@ -115,7 +107,6 @@ export const fillDamConfigOf = (name: string, of: DamConfigOfDam, pinia?: Pinia)
   return store
 }
 
-/** The DAM answers the reads of its configuration with what it has: the licence, the settings, the ext system, forms. */
 export const answerDamConfig = (dam: FakeDam, of: DamConfigOfDam) =>
   dam.reply((request) => {
     if (request.method !== 'GET') return undefined

@@ -6,11 +6,11 @@ import {
   noteImageSave,
 } from '@/domains/dam/imageWidget/utils/imageSaves'
 
-// The note of the saves of an image, which the image widgets of the app share. The wait of an opening of "edit
-// metadata" for a save of another widget is let go, and taken off the note, once that opening closes: opened and closed
-// again and again over a save that does not answer, the waits piled up. A note is kept while a save of it is on its
-// way, also with no widget of the image there (the copy of a pinned widget is drawn once its configuration has been
-// read), and dropped once nothing holds it and nothing is on its way.
+// The note of image saves is shared by the image widgets.
+// The wait of an "edit metadata" opening for another widget's save is released and removed
+// when the opening closes. Before, repeated openings over an unanswered save piled up waits.
+// A note is kept while a save of it is in flight, even with no widget (a pinned widget copy is drawn
+// after its configuration is read). It is dropped when nothing holds it and nothing is in flight.
 
 const image = { texts: { description: 'saved', source: '' }, flags: {}, dam: {} } as never
 const held = () => {
@@ -46,7 +46,6 @@ describe('the note of the saves of an image', () => {
     holdImage('default', sender, null)
     await new Promise((resolve) => setTimeout(resolve, 20))
 
-    // The copy, drawn once its configuration has been read: it reads the image before the save answers.
     const copy = Symbol('copy')
     const readAt = holdImage('default', copy, 102)
     expect(imageSavedSince('default', 102, readAt)).toBeNull()
@@ -55,7 +54,8 @@ describe('the note of the saves of an image', () => {
     expect(imageSavedSince('default', 102, readAt)).toEqual(image)
     holdImage('default', copy, null)
 
-    // Kept, the note would offer the saved image to a widget that has read the image before any save (none answered).
+    // If the note were kept, it would offer the saved image to a
+    // widget that read the image before any save (none answered).
     holdImage('default', Symbol('later'), 102)
     expect(imageSavedSince('default', 102, 0)).toBeNull()
   })

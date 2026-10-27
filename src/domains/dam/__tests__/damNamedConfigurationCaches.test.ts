@@ -26,12 +26,9 @@ import { type UploadQueueItem, UploadQueueItemStatus, UploadQueueItemType } from
 import { useLibraryUploadQueueListBinding } from '@/domains/dam/uploadQueue/components/uploadQueueBindings'
 import { useUploadQueueItemFactory } from '@/domains/dam/uploadQueue/factory/UploadQueueItemFactory'
 
-// The caches of the names of authors, keywords and users per DAM configuration: a page with `default`, as admin-cms
-// has it, and `own`, with a client, addresses and an ext system of its own (2; `default`'s is 1). What a chip, a panel
-// or a filler under `own` shows or adds goes to the cache of `own`, which asks `own`'s client at `own`'s addresses under
-// `own`'s ext system; each DAM gives a name of its own. The caches ask a second and a half after they are given an id:
-// that wait is held, and let pass inside a case where it asserts what was asked. The caches live as long as the page:
-// each case asks for ids of its own.
+// The caches ask 1.5 s after they are given an id. That wait is
+// held and let pass inside a case that asserts what was asked.
+// The caches live as long as the page, so each case uses ids of its own.
 
 const { endPoints, extSystem: EXT_DEFAULT, licence } = cmsConfiguration
 const OWN = { asset: '/own/v2/asset', image: '/own/v2/image' }
@@ -39,7 +36,9 @@ const OWN_AUTHOR = '/own/v2/author'
 const OWN_KEYWORD = '/own/v2/keyword'
 const EXT_OWN = 2
 const NAMES = /^(.*)\/(author|keyword)\/ext-system\/(\d+)\/search$/
-/** From here on a wait is held: below the 1.5 s the caches wait before they ask. */
+/**
+ * Waits from this length are held. The caches wait 1.5 s before they ask.
+ */
 const HELD_FROM_MS = 1_200
 
 let pinia: Pinia
@@ -48,7 +47,6 @@ let own: FakeDam
 let waits: LongWaits
 let wrappers: VueWrapper[] = []
 
-/** A DAM gives every author, keyword and user asked for a name of its own: `<id> of <which>`. */
 const answerNames = (of: FakeDam, which: string) =>
   of.reply((request) => {
     if (request.method !== 'GET') return undefined
@@ -93,11 +91,9 @@ beforeEach(() => {
       },
     },
   })
-  // `own`'s DAM has the configuration of the default one, under its own ext system.
   const ownStore = seedDamConfigOf('own')
   ownStore.damConfigExtSystem.set(EXT_OWN, ownStore.damConfigExtSystem.get(EXT_DEFAULT)!)
   ownStore.damConfigAssetCustomFormElements.set(EXT_OWN, ownStore.damConfigAssetCustomFormElements.get(EXT_DEFAULT)!)
-  // As the widgets under each configuration last wrote them.
   useExtSystemIdForCached('own').cachedExtSystemId.value = EXT_OWN
   useExtSystemIdForCached('default').cachedExtSystemId.value = EXT_DEFAULT
   waits = holdLongWaits(HELD_FROM_MS)
@@ -105,23 +101,20 @@ beforeEach(() => {
 afterEach(async () => {
   wrappers.forEach((wrapper) => wrapper.unmount())
   wrappers = []
-  // What a case left in the caches is asked for now, of the clients of this case.
+  // Let the ids left in the caches by a case be asked now, with the clients of this case.
   await waits.elapseAll()
   waits.restore()
 })
 
-/** The method and the path of every request for names a client was asked, in order. */
 const askedForNames = (of: FakeDam) =>
   of.requests
     .map((request) => `${request.method} ${request.url.split('?')[0]}`)
     .filter((request) => NAMES.test(request.split(' ')[1]!) || request.endsWith('/adm/v1/user'))
-/** The caches have asked: their wait is over, and their answers are in. */
 const cachesAsk = async () => {
   await waits.elapse()
   await flushPromises()
 }
 
-/** A component under `own` that hands the name to nothing by itself: what is in it has the name from it. */
 const UnderOwn = defineComponent({
   setup(_, { slots }) {
     useDamConfigName('own')
@@ -243,7 +236,6 @@ describe('what fills the caches of a named DAM configuration', () => {
     )
     await cachesAsk()
 
-    // And the users of its panel "file", by the same client.
     expect(askedForNames(own)).toEqual([`GET ${OWN_AUTHOR}/ext-system/${EXT_OWN}/search`, 'GET /adm/v1/user'])
     expect(askedForNames(dam)).toEqual([])
     expect(useDamCachedAuthors('own').getCachedAuthor('author-conflict-1')?.name).toBe('author-conflict-1 of own')
@@ -285,7 +277,6 @@ describe('what fills the caches of a named DAM configuration', () => {
       })
     )
 
-    // The actions of the list of the asset select of that configuration, as its list makes them.
     let actions: ReturnType<typeof useAssetSelectActions> | undefined
     wrappers.push(
       mount(
@@ -355,8 +346,6 @@ describe('what fills the caches of a named DAM configuration', () => {
 })
 
 describe('an author chip under a named DAM configuration', () => {
-  // It pins the name it shows in the cache of its configuration: that cache drops it neither while it fills up past its
-  // limit, nor does the chip spin then.
   it("keeps its author's name while the cache of that configuration fills up", async () => {
     const chip = await mountUnderOwn('given the name', AuthorRemoteAutocompleteCachedAuthorChip, {
       id: 'author-pinned',

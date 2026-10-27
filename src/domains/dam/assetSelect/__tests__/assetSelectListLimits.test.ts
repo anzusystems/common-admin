@@ -7,13 +7,12 @@ import { useAssetDetailStore } from '@/domains/dam/assetDetail/store/assetDetail
 import { DamAssetType } from '@/domains/dam/types/Asset'
 import { AssetSelectReturnType } from '@/domains/dam/types/AssetSelect'
 
-// The list of the asset pickers and of the asset list (admin-ugc), over its actions and its store. After a read of a
-// click that failed, the tile clicked was marked beside a panel that showed another asset or none, and the asset the
-// list remembered was the one read once a detail had closed. An asset two pages returned kept its check on one tile
-// when a click on the other took it out. A new list asked for while a list was on its way turned the loader off for
-// the pause before its read, and an empty list said there was nothing found meanwhile. A further page that failed was
-// remembered once for the page, and a button that left the view by a change of the layout alone asked again as it
-// came back. The requests are stand-ins the case answers.
+// Covers the asset pickers and the asset list (admin-ugc) through their actions and store.
+// Guards: tile marked after a failed click read, remembered asset read
+// after a detail closes, checks on an asset returned by two pages,
+// loader and empty message while a new list is requested, and a failed
+// next page being retried when its button leaves and re-enters the view.
+// The requests are stand-ins.
 const deferred = <T>() => {
   let resolve!: (v: T) => void, reject!: (e: unknown) => void
   const promise = new Promise<T>((res, rej) => ((resolve = res), (reject = rej)))
@@ -59,7 +58,6 @@ afterEach(() => {
   mounted.splice(0).forEach((wrapper) => wrapper.unmount())
   document.body.innerHTML = ''
 })
-/** The actions of one list, as each list mounts them. */
 const listActions = () => {
   let actions!: ReturnType<typeof useAssetSelectActions>
   mounted.push(mount(defineComponent({ setup: () => ((actions = useAssetSelectActions('default')), () => h('div')) })))
@@ -111,7 +109,6 @@ describe('the side panel of a list, after a read of a click that failed', () => 
     expect(store.getActiveAssetId()).toBeNull()
   })
 
-  // The detail "edit" of the panel opened showed one asset, and the list remembered another: that one was read.
   it('reads the asset the detail showed once it has closed, and marks its tile', async () => {
     const { actions, store } = await setup()
     store.setList([asset('A'), asset('B')])
@@ -178,7 +175,6 @@ describe('a new list asked for while a list is on its way', () => {
 })
 
 describe('"load more" after a further page that failed', () => {
-  /** The button of a list, in the page or in a column of its own that scrolls. */
   const button = (scrolls = false) => {
     const target = document.createElement('button')
     if (!scrolls) {
@@ -194,7 +190,6 @@ describe('"load more" after a further page that failed', () => {
     return { target, column }
   }
   const entriesOf = (target: Element) => [{ target } as unknown as IntersectionObserverEntry]
-  /** The list has a further page, asks for it, and the DAM fails it. */
   const failedOnce = async (actions: ReturnType<typeof useAssetSelectActions>) => {
     actions.pagination.value.hasNextPage = true
     const failed = actions.fetchNextPage()
@@ -226,7 +221,6 @@ describe('"load more" after a further page that failed', () => {
     expect(api.list).toHaveLength(2)
   })
 
-  // Each list remembers its own: the button of another list leaving the view and coming back takes nothing from it.
   it('is remembered by the list it failed in', async () => {
     const { actions } = await setup()
     const other = listActions()

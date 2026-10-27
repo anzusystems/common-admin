@@ -42,8 +42,8 @@ const { asset, updateUploadStore, mainFileSingleUse } = storeToRefs(assetDetailS
 const uploadQueueStore = useUploadQueuesStore()
 
 const saveButtonLoading = ref(false)
-// Saved before the server has processed the file, the form would write over what the server fills in from the file.
-// The detail is not read again by itself: once the file is processed, the user opens it anew.
+// Saving before the server has processed the file would overwrite the metadata the server extracts from it.
+// The detail is not reloaded automatically. The user reopens it after processing.
 const saveBlocked = computed(() => !isNull(asset.value) && assetMetadataMayStillChange(asset.value))
 
 const { showRecordWas, showValidationError } = useAlerts()
@@ -53,7 +53,7 @@ const v$ = useVuelidate({ $scope: ADamAssetMetadataValidationScopeSymbol, $stopP
 const { damClient, endPointAsset } = useCommonAdminCoreDamOptions(damConfigName)
 
 const onSave = async () => {
-  // The spinning button still takes Enter and Space: a save that runs is not sent again.
+  // The loading button still reacts to Enter and Space. This prevents sending a running save again.
   if (isNull(asset.value) || saveBlocked.value || saveButtonLoading.value) return
   saveButtonLoading.value = true
   v$.value.$touch()
@@ -62,17 +62,18 @@ const onSave = async () => {
     saveButtonLoading.value = false
     return
   }
-  // One copy of what is saved, taken before it is sent, and the queue is told by that copy. The form is not locked
-  // while the save runs, and the detail can be closed, or opened on another asset, before the answer: read then,
-  // the rows of the queue got what was typed since as if it were saved, or nothing at all.
+  // Snapshot the asset before sending and update the queue from that snapshot.
+  // The form is not locked during the save, and the detail can
+  // be closed or switched to another asset before the response.
+  // Reading the live state then gave the queue rows unsaved input, or nothing.
   const saved = cloneDeep(asset.value)
   const savedSingleUse = mainFileSingleUse.value
   const tellsQueue = updateUploadStore.value
-  // The rows of the queue as the save is pressed: what the user types into them while it runs is theirs.
+  // Queue rows as of pressing save. Input typed into them while the save runs must not be overwritten.
   const rowsAtSave = tellsQueue ? uploadQueueStore.noteRowsOfAsset(saved.id, damConfigName) : undefined
   try {
     const sent = updateAssetMetadata(damClient, endPointAsset, saved, props.extSystem, savedSingleUse)
-    // Kept where the host of the detail finds it: closed before the answer, the detail has its host wait for it.
+    // Registered for the host. If the detail closes before the response, the host waits for this save.
     assetDetailStore.setSaving(saved.id, sent, damConfigName)
     await sent
     if (tellsQueue) {
@@ -82,7 +83,7 @@ const onSave = async () => {
   } catch (error) {
     showMetadataSaveError(error, props.extSystem, damConfigName)
   } finally {
-    // Once the save has failed, nothing writes by its note; once it has written, the note is let go already.
+    // After a failed save nothing uses the note. After a successful write it has already been released.
     if (rowsAtSave) uploadQueueStore.forgetRowsNote(rowsAtSave)
     saveButtonLoading.value = false
   }

@@ -13,17 +13,12 @@ import {
 import type { RegionOfInterest } from '@/domains/dam/types/Roi'
 
 /**
- * A walk through the region-of-interest editor the way a person uses it, in a real browser.
- *
- * `DamAssetImageRoiSelect` is mounted whole — real stores, real ROI maths, real cropper — with the
- * mocking stopping at the HTTP boundary. The phases below follow how the editor is actually met:
- * it loads, it draws the stored region, it is dragged about, the frame around it changes shape.
- *
- * Crop *geometry* (moving, every resize grip, drawing a new box) is covered in
- * `cropperContract.test.ts`, which runs the same assertions against the old component too. What is
- * here instead is everything that only shows up once the editor is assembled: the loader, the
- * stored region being applied on ready, re-rendering the same zone over and over, and the saves
- * that each finished gesture sends.
+ * A walk through the region-of-interest editor as a person uses it, in a real browser.
+ * `DamAssetImageRoiSelect` is mounted whole with real stores,
+ * ROI maths and cropper. Mocking stops at the HTTP boundary.
+ * Crop geometry is covered in `cropperContract.test.ts`. This file covers what only
+ * shows once the editor is assembled: the loader, the stored region applied on ready,
+ * repeated re-rendering of the same zone, and the saves sent by each finished gesture.
  */
 
 const savedRegions: RegionOfInterest[] = []
@@ -82,14 +77,11 @@ const makeRoi = (): RegionOfInterest =>
 interface Editor {
   wrapper: VueWrapper
   frame: HTMLElement
-  /** Puts a fresh picture in the store, which re-keys the editor and rebuilds it. */
   reload: () => void
-  /** Waits out the loader the editor shows while it saves and reloads. */
   settle: () => Promise<void>
   hasCropper: () => boolean
   hasSpinner: () => boolean
   canvasCount: () => number
-  /** The crop in source pixels, measured off the page rather than asked of the component. */
   crop: () => [number, number, number, number]
   ratio: () => number
   cropInsideImage: () => boolean
@@ -167,17 +159,17 @@ const mountEditor = async (
 
   const settle = async () => {
     // A finished gesture saves, and saving puts the editor back into its loading state a tick later.
-    // Give that a moment to start before waiting for it to finish, or this returns on the cropper
-    // that is about to be taken away.
+    // Wait for that to start before waiting for it to finish, or
+    // this returns on the cropper that is about to be removed.
     await wait(200)
     const deadline = Date.now() + 8000
     while (!frame.querySelector('cropper-canvas')) {
       if (Date.now() > deadline) throw new Error('the editor never came back')
       await wait(40)
     }
-    // The canvas comes before the picture is loaded and fitted into it; a fixed pause could end mid-fit when the
-    // browser was busy, and the crop then measured against a picture still moving. Wait until picture and
-    // selection hold still.
+    // The canvas appears before the picture is loaded and fitted. A fixed pause could end mid-fit
+    // when the browser was busy, and the crop was then measured against a moving picture.
+    // Wait until picture and selection hold still.
     const geometry = () => {
       const picture = frame.querySelector('cropper-image')?.getBoundingClientRect()
       const selection = frame.querySelector('cropper-selection') as
@@ -282,9 +274,9 @@ describe('DAM region editor — loading', () => {
     editor.destroy()
   })
 
-  // The stored region is 60% × 60%, which a 16:9 crop cannot be — the ratio wins and it becomes the
-  // widest 16:9 box with that height. Getting the default 80% box instead would mean the region
-  // never reached the cropper.
+  // The stored region is 60% x 60%, which a 16:9 crop cannot be. The
+  // ratio wins and it becomes the widest 16:9 box with that height.
+  // Getting the default 80% box instead would mean the region never reached the cropper.
   it('draws the stored region, not the default crop', async () => {
     const editor = await mountEditor()
     expect(editor.crop()).toEqual([0, 0, 640, 360])
@@ -336,8 +328,8 @@ describe('DAM region editor — what gets applied', () => {
     editor.destroy()
   })
 
-  // Both cropper versions end a gesture on pointer-up whether or not anything moved, so a click
-  // does save — it just saves the region that was already there.
+  // Both cropper versions end a gesture on pointer-up whether or not anything
+  // moved. A click therefore saves the region that was already there.
   it('saves the unchanged region when the crop box is merely clicked', async () => {
     const editor = await mountEditor()
     const face = editor.find(FACE)

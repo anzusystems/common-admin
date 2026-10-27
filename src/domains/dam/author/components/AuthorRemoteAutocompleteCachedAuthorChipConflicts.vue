@@ -26,10 +26,8 @@ const clickClose = () => {
 const { getCachedAuthor, addToCachedAuthors, fetchCachedAuthors, pinCachedAuthor, unpinCachedAuthor } =
   useDamCachedAuthors(useDamConfigName())
 
-// As the author chip reads it. An author the server did not return is settled too: it has only its id to show,
-// until a later ask for it finds it.
+// An author the server did not return also counts as settled. It shows only its id until a later request finds it.
 const { cached, loaded, unresolved } = useCachedItem(() => getCachedAuthor(props.id), {
-  // The name the chip shows stays in the cache while it shows it.
   id: () => props.id,
   pin: pinCachedAuthor,
   unpin: unpinCachedAuthor,
@@ -49,7 +47,7 @@ const displayTitle = computed(() => {
 
 const { t } = useI18n()
 
-// Named by its author, once the name has come: every "+" of the conflicts was "Add author" alone.
+// Labelled with the author name once loaded. Otherwise every "+" read only "Add author".
 const addLabel = computed(() =>
   displayTitle.value.length > 0
     ? t('common.damImage.author.button.addConflictNamed', { name: displayTitle.value })
@@ -58,9 +56,11 @@ const addLabel = computed(() =>
 </script>
 
 <template>
-  <!-- The "+" adds the author, and is named so, by the author. Drawn here as the chip draws its close: the chip names
-       its close by a key it translates without parameters, and a name could not go into it. The chip is not closable;
-       its close is named all the same, as the rule of the library for chips asks. -->
+  <!--
+    The "+" is drawn here because the chip labels its close with a key
+    translated without parameters, so the author name cannot go in.
+    The chip is not closable. The "+" is still labelled, as the library's chip rule requires.
+  -->
   <VChip
     size="small"
     close-label="common.damImage.author.button.addConflict"

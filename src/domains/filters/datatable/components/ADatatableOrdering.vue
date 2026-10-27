@@ -130,8 +130,7 @@ watch(modelValue, (newValue, oldValue) => {
   props.paginationUpdateCustomCb(found, pagination)
 })
 
-// A getter, not the ref: the admins also set `pagination.value.sortBy` in place, which a shallow
-// watch of the ref never sees.
+// A getter, not the ref. Admins set `pagination.value.sortBy` in place, which a shallow watch of the ref misses.
 watch(
   () => ({ key: pagination.value.sortBy?.key, order: pagination.value.sortBy?.order }),
   (newValue, oldValue) => {

@@ -35,8 +35,8 @@ export interface AssetMetadataBulkItem {
   mainFileOverrideInternal: boolean | null
 }
 
-// What a save sends. Whether the main file is internal is set in the DAM itself: a save from here leaves the two
-// as they are, and reads them from the answer.
+// What a save sends. Whether the main file is internal is set in the DAM itself.
+// A save from here leaves those two fields unchanged and reads them from the answer.
 type AssetMetadataBulkItemBody = Omit<AssetMetadataBulkItem, 'mainFileInternal' | 'mainFileOverrideInternal'>
 
 export declare type AssetCustomData = Record<string, any>
@@ -51,8 +51,8 @@ export const useFetchAssetList = (client: () => AxiosInstance, endPoint: string,
   })
 
 /**
- * `options.report: false`: a failure of this read is not handed to the api error logger. For the upload queue,
- * which asks for the same asset again and again and reports only the first failure of a streak.
+ * `options.report: false` keeps a failure of this read out of the api error logger.
+ * Used by the upload queue, which polls the same asset repeatedly and reports only the first failure of a streak.
  */
 export const fetchAsset = (
   client: () => AxiosInstance,
@@ -71,7 +71,9 @@ export const fetchAsset = (
   return execute({ urlParams: { id }, report: options.report })
 }
 
-/** `endPoint`: as a configuration names it (`endPointCmsAsset`); `/adm/v1/cms/asset` by default. */
+/**
+ * `endPoint`: as configured (`endPointCmsAsset`). Defaults to `/adm/v1/cms/asset`.
+ */
 export const fetchAssetAsCmsMedia = <T extends DamMediaFromDam>(
   client: () => AxiosInstance,
   id: DocId,
@@ -162,7 +164,7 @@ export const fetchAssetListByIds: (
           const final = []
           for (let i = 0; i < responses.length; i++) {
             const list = responses[i]!.data?.data
-            // Not "none of them exists": the upload queue counts the assets an answer does not carry.
+            // Reject instead of treating it as "none exist": the upload queue counts the assets missing from an answer.
             if (!Array.isArray(list)) return reject(responses)
             final.push(...list)
           }
@@ -188,7 +190,7 @@ const metadataBulkUpdate = (client: () => AxiosInstance, endPoint: string) => ({
   options: { validateStatus: (status: number) => status === HTTP_STATUS_OK },
 })
 
-// For a caller that builds on the answer: it has to be the list of the saved assets.
+// For callers that build on the answer. It must be the list of saved assets.
 const useMetadataBulkUpdate = <B>(client: () => AxiosInstance, endPoint: string) =>
   useApiFetchItems<AssetMetadataBulkItem, B[]>({ ...metadataBulkUpdate(client, endPoint), shape: 'array' })
 
@@ -197,10 +199,10 @@ const useMetadataBulkCommand = <B>(client: () => AxiosInstance, endPoint: string
   useApiCommand<B[]>(metadataBulkUpdate(client, endPoint))
 
 /**
- * A save of metadata refused by validation. Its `fields` are as the helpers make them; `requestFields` keep the keys
- * of the request, such as `[0].customData.title`, whose index is the place of the asset in its batch, not a row on
- * the screen. `assetTypes` are the types of the assets of that batch, in its order: a custom field is named by the
- * form of the type of its asset.
+ * A metadata save refused by validation. `fields` are as the helpers build them.
+ * `requestFields` keep the request keys, such as `[0].customData.title`.
+ * The index is the asset's position in its batch, not a screen row.
+ * `assetTypes` are the types of that batch's assets, in order. A custom field is named by the form of its asset's type.
  */
 class AssetMetadataValidationError extends AnzuApiValidationError {
   requestFields: ValidationError[]
@@ -214,8 +216,8 @@ class AssetMetadataValidationError extends AnzuApiValidationError {
 }
 
 /**
- * Ten at a time, one batch after the other. The server saves a batch whole or not at all: a batch that fails stops
- * those after it, the ones before it stay saved, and saving again is safe.
+ * Ten at a time, sequentially. The server saves a batch whole or not at all.
+ * A failing batch stops the later ones, earlier ones stay saved, and saving again is safe.
  */
 const saveMetadataInBatches = async <B, R>(
   execute: (params: { body: B[] }) => Promise<R>,
@@ -227,7 +229,7 @@ const saveMetadataInBatches = async <B, R>(
     try {
       answers.push(await execute({ body: bodies.slice(offset, offset + BULK_METADATA_LIMIT) }))
     } catch (error) {
-      // The helper makes a refusal by validation of the error of axios, which it keeps as the cause.
+      // The helper builds the validation error from the axios error and keeps it as the cause.
       if (isAnzuApiValidationError(error) && axios.isAxiosError(error.cause)) {
         throw new AssetMetadataValidationError(error.cause, assetTypes.slice(offset, offset + BULK_METADATA_LIMIT))
       }
@@ -238,7 +240,9 @@ const saveMetadataInBatches = async <B, R>(
   return answers
 }
 
-/** What the bulk save sends: an item with an asset whose metadata the user may edit. */
+/**
+ * Items the bulk save sends: those with an asset whose metadata the user may edit.
+ */
 export const hasMetadataToSave = (item: UploadQueueItem): item is UploadQueueItem & { assetId: DocId } =>
   !isNull(item.assetId) && item.canEditMetadata
 
@@ -255,7 +259,7 @@ function listItemsToMetadataBulkItems(
         authors: item.authors,
         described: true,
         customData: item.customData,
-        // Never null: a row whose switch is not known yet is saved as off, which is what the DAM makes of null.
+        // Never null. A row whose switch is not known yet is saved as off, which is how the DAM treats null.
         mainFileSingleUse: mainFileSingleUseOverride ?? item.mainFileSingleUse ?? false,
       })
     }
@@ -266,7 +270,9 @@ function listItemsToMetadataBulkItems(
 
 const { showErrorsDefault, showUnknownError, showApiValidationError } = useAlerts()
 
-/** A field of a refused save of metadata, as the forms name it. */
+/**
+ * A field of a refused metadata save, named as the forms name it.
+ */
 const metadataFieldName = (
   key: string,
   assetTypes: Array<DamAssetTypeType | undefined>,
@@ -291,9 +297,9 @@ const metadataFieldName = (
 }
 
 /**
- * What a failed save of metadata tells the user, by the kind of the failure: the one place that says it. A refusal
- * by validation names its fields as the forms of `extSystem` do in the DAM configuration `configName`, a field refused
- * for several assets once.
+ * The single place that tells the user about a failed metadata save, by kind of failure.
+ * A validation refusal names its fields as the `extSystem` forms do in DAM
+ * configuration `configName`. A field refused for several assets is listed once.
  */
 export const showMetadataSaveError = (error: unknown, extSystem: IntegerId, configName: string) => {
   if (error instanceof AssetMetadataValidationError) {
@@ -312,7 +318,7 @@ export const showMetadataSaveError = (error: unknown, extSystem: IntegerId, conf
   if (!showErrorsDefault(error)) showUnknownError()
 }
 
-// `extSystem` is no longer read here: the caller names the fields of a refusal, through `showMetadataSaveError`.
+// Callers name the fields of a refusal through `showMetadataSaveError`, so `extSystem` is not needed here.
 export const updateAssetMetadata = async (
   client: () => AxiosInstance,
   endPoint: string,
@@ -333,7 +339,7 @@ export const updateAssetMetadata = async (
   await saveMetadataInBatches(execute, [data], [asset.attributes.assetType])
 }
 
-// As `updateAssetMetadata`: the caller names the fields of a refusal, through `showMetadataSaveError`.
+// Callers name the fields of a refusal through `showMetadataSaveError`.
 export const updateAssetAuthors = async (client: () => AxiosInstance, endPoint: string, asset: AssetDetailItemDto) => {
   const data: Partial<AssetMetadataBulkItem> = {
     id: asset.id,

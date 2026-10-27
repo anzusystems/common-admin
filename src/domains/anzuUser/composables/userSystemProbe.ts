@@ -20,15 +20,8 @@ import type { AnzuUser } from '@/shared/types/AnzuUser'
 import type { IntegerId } from '@/shared/types/common'
 
 /**
- * How an app refreshes a session for one system, and retries.
- *
- * The probe cannot do this itself: a first 401 is ambiguous -- expired session or no account --
- * and the only way to tell them apart is to refresh and ask again, with the session this admin
- * refreshes (its `createRefreshSession`, shared with its refresh interceptor). Without this hook a
- * panel would show an expired token as "no account here", which is exactly the confusion decision
- * 16 forbids.
- *
- * Returns true when the refresh succeeded and the call is worth repeating.
+ * Refreshes a system's session; returns true when the call is worth retrying.
+ * A first 401 may be an expired session or no account. Only a refresh and retry tells them apart (decision 16).
  */
 export type UserSystemRefreshHook = (system: string) => Promise<boolean>
 
@@ -37,15 +30,9 @@ export { USER_PROBE_ENTITY }
 export const UserSystemRefreshHookKey: InjectionKey<UserSystemRefreshHook> = Symbol('UserSystemRefreshHook')
 
 /**
- * The status the backend answered with, or null when nothing ever answered.
- *
- * Read off the axios failure the mapped error kept as its cause, not off the class. Going by class
- * alone misses exactly the answers that exist *because* the backend replied with a body: a
- * validation failure is `AnzuApiValidationError`, a dependency conflict is
- * `AnzuApiDependencyExistsError`, and both are 422s that have to be reported as such. Reported as
- * "the system did not answer" they would send the operator looking for an outage instead of at the
- * account whose stored data no longer validates -- which, with legacy rows, is the failure that
- * happens most.
+ * The backend status, or null when nothing answered.
+ * Read from the axios cause, not the error class. `AnzuApiValidationError`
+ * and `AnzuApiDependencyExistsError` are 422s and must be reported as such.
  */
 export const probeStatusFromError = (error: unknown): number | null => {
   if (error instanceof AnzuApiResponseCodeError) return error.code
@@ -68,20 +55,15 @@ export interface UserSystemProbeResult {
 
 export interface UserSystemProbeParams {
   descriptor: AnyUserSystemDescriptor
-  /** Usually injected once per page; passing it explicitly is for tests and one-off panels. */
+  /**
+   * Usually injected once per page; passing it explicitly is for tests and one-off panels.
+   */
   refreshHook?: UserSystemRefreshHook | undefined
 }
 
 /**
- * One system's answer about one user.
- *
- * Reads through `endpoints[probe].get`, never a hard-coded path: in dam the choice is visible to
- * the operator, because `/adm/v1/anzu-user/{id}` has no gating there while `/adm/users/{id}` sits
- * behind `DAM_USER_READ` -- only the second can ever render "you have no access".
- *
- * Note for the app: a probe answering 404 is an expected result here, not a failure. The default
- * api error logger skips it; a logger of the app's own still receives it and should filter on
- * `status === 404 && entity === USER_PROBE_ENTITY`, or every absent account writes a line into the log.
+ * Reads through `endpoints[probe].get`, never a hard-coded path (dam gates only `/adm/users/{id}`).
+ * A 404 here is expected. A custom app error logger should skip `status === 404 && entity === USER_PROBE_ENTITY`.
  */
 export const useUserSystemProbe = (params: UserSystemProbeParams): UserSystemProbeResult => {
   const { descriptor, refreshHook } = params
@@ -91,11 +73,8 @@ export const useUserSystemProbe = (params: UserSystemProbeParams): UserSystemPro
 
   let generation = 0
   /**
-   * The helper's abort handle for the request that is in flight.
-   *
-   * The generation token alone already stops a stale answer from being written; this is what stops
-   * the request itself. Leaving a page mid-search would otherwise leave up to eighteen calls
-   * running against backends nobody is waiting for any more.
+   * Aborts the in-flight request. The generation token only drops stale answers.
+   * Without this, leaving mid-search leaves up to eighteen calls running.
    */
   let abortInFlight: (() => void) | null = null
 
@@ -111,7 +90,7 @@ export const useUserSystemProbe = (params: UserSystemProbeParams): UserSystemPro
   }
 
   const probe = async (id: IntegerId) => {
-    // A system switched off in configuration is a state to show, not a call to make.
+    // A system disabled in config is shown as a state, not called.
     if (!descriptor.isEnabled()) {
       axes.value = {
         load: UserSystemLoad.Loaded,
@@ -162,8 +141,7 @@ export const useUserSystemProbe = (params: UserSystemProbeParams): UserSystemPro
 
       let status = probeStatusFromError(error)
 
-      // The one retry the classification depends on. Only after it has happened is a 401 a verdict
-      // rather than a question.
+      // A 401 is only a verdict after this refresh and retry.
       if (status === HTTP_STATUS_UNAUTHORIZED && refreshHook) {
         const refreshed = await refreshHook(descriptor.system).catch(() => false)
         if (token !== generation) return

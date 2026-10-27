@@ -4,12 +4,10 @@ import type { CropRect } from '@/domains/dam/cropper/utils/cropperTypes'
 import type { RegionOfInterest } from '@/domains/dam/types/Roi'
 
 /**
- * The region-of-interest conversion, on its own.
- *
- * It used to need a mounted cropper: the region went through the displayed picture's natural size on
- * its way to a crop and back. That size cancelled out of every sum it appeared in — a detail
- * rendition is a scaled copy of the original — so the conversion is now plain arithmetic over the
- * source dimensions, and can be tested as such.
+ * The region-of-interest conversion on its own.
+ * It used to need a mounted cropper, because the region went through the displayed picture's
+ * natural size. That size cancelled out of every sum (a detail rendition is a scaled copy of
+ * the original), so the conversion is plain arithmetic over the source dimensions.
  */
 
 const roi = (over: Partial<RegionOfInterest> = {}): RegionOfInterest =>
@@ -93,9 +91,9 @@ describe('cropToRegion', () => {
     expect(region.pointY).toBe(0)
   })
 
-  // The conversion this replaced tried to correct a crop that overran the edge, and subtracted a
-  // pixel count times a hundred from a fraction: a 0.6px rounding overshoot on a 600px image turned
-  // a stored 0.401 into 0.301. Nothing overruns here, so there is nothing to correct.
+  // The previous conversion tried to correct a crop overrunning the edge and subtracted a pixel count times
+  // a hundred from a fraction. A 0.6px rounding overshoot on a 600px image turned a stored 0.401 into 0.301.
+  // Nothing overruns now, so there is nothing to correct.
   it('does not mangle a region that sits flush against the far edge', () => {
     const region = cropToRegion(crop({ x: 0.6, y: 0.6, width: 0.4, height: 0.4 }), roi(), WIDTH, HEIGHT)
     expect(region.pointX).toBe(480)
@@ -133,8 +131,6 @@ describe('the round trip', () => {
   })
 
   it('is the same whatever size the picture on screen happens to be', () => {
-    // The old conversion read the displayed picture's natural size; this one cannot, so there is
-    // nothing left for a different rendition to change.
     const stored = roi({ pointX: 160, pointY: 120, percentageWidth: 0.35, percentageHeight: 0.2625 })
     const crop = regionToCrop(stored, WIDTH, HEIGHT)
     expect(cropToRegion(crop, roi(), WIDTH, HEIGHT)).toMatchObject(cropToRegion(crop, roi(), WIDTH, HEIGHT))

@@ -4,9 +4,8 @@ import { useAuthHelpers } from '@/domains/auth/composables/defineAuth'
 import { isUndefined } from '@/shared/utils/common'
 
 /**
- * Whether a component guarded by an optional ACL may show itself. No ACL means no guard, so a component
- * that takes one keeps its old behaviour for callers that pass none. The check never throws (see
- * `canSafeHelper`).
+ * Whether a component guarded by an optional ACL may show itself.
+ * No ACL means no guard, so callers that pass none keep the old behaviour. Never throws (see `canSafeHelper`).
  */
 export function useAclAllowed(
   acl: MaybeRefOrGetter<RegisteredAclValue | RegisteredAclValue[] | undefined>,

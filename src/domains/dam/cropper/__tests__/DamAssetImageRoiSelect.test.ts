@@ -6,12 +6,9 @@ import { LANDSCAPE_IMAGE_URL as LANDSCAPE_IMAGE } from '@/domains/dam/cropper/__
 import { centerOf, drag, nextFrame, wait } from '@/domains/dam/cropper/__tests__/support/cropperHarness'
 
 /**
- * The cropper in the place it actually ships: the DAM's region-of-interest editor.
- *
- * This is the wiring `ACropperjs` used to carry and `ACropper` now does — a stored region is pushed
- * into the cropper once it reports ready, and dragging the crop box saves a new one. Mocking stops
- * at the HTTP boundary, so the geometry, the `ready`/`cropend` callbacks and the ROI maths are all
- * the real thing.
+ * The cropper in its real place: the DAM region-of-interest editor.
+ * A stored region is pushed into the cropper once it is ready, and dragging the crop box saves a new one.
+ * Mocking stops at the HTTP boundary, so geometry, the `ready` / `cropend` callbacks and the ROI maths are real.
  */
 
 const updateRoi = vi.fn()
@@ -63,8 +60,8 @@ const roi = () =>
   }) as never
 
 const mountRoiSelect = async (extraProps: { readonly?: boolean } = {}) => {
-  // A pinia of this test's own, installed on the mount as well: the shared setup registers one
-  // globally, and the stores seeded here have to be the very ones the component resolves.
+  // The test uses its own pinia, installed on the mount too. The shared setup registers
+  // one globally, and the seeded stores must be the ones the component resolves.
   const pinia = createPinia()
   setActivePinia(pinia)
 
@@ -140,7 +137,6 @@ describe('DamAssetImageRoiSelect', () => {
     const canvas = view.host.querySelector('cropper-canvas') as HTMLElement
     const scale = canvas.getBoundingClientRect().width / LANDSCAPE_IMAGE.naturalWidth
 
-    // pointX 120, pointY 90, 40% x 30% of an 800x600 image.
     expect(selection.x).toBeCloseTo(120 * scale, 0)
     expect(selection.y).toBeCloseTo(90 * scale, 0)
     expect(selection.width).toBeCloseTo(0.4 * LANDSCAPE_IMAGE.naturalWidth * scale, 0)
@@ -167,8 +163,7 @@ describe('DamAssetImageRoiSelect', () => {
 
   it('saves the region once the user finishes dragging the crop box', async () => {
     const view = await mountRoiSelect()
-    // Read before the drag: saving puts the view back into its loading state, which takes the
-    // cropper out of the DOM again.
+    // Read before the drag: saving puts the view back into its loading state, which removes the cropper from the DOM.
     const scale =
       (view.host.querySelector('cropper-canvas') as HTMLElement).getBoundingClientRect().width /
       LANDSCAPE_IMAGE.naturalWidth

@@ -6,11 +6,11 @@ import { ImageWidgetUploadConfigKey } from '@/domains/dam/imageWidget/utils/imag
 import { useImageMediaWidgetStore } from '@/domains/dam/imageWidget/store/imageMediaWidgetStore'
 import { useUploadQueueDialog } from '@/domains/dam/uploadQueue/composables/useUploadQueueDialog'
 
-// The lock of the field, when the save of the image answers a confirm whose dialog has been closed meanwhile and
-// opened again for another image. That dialog stays open, and holds the lock: the answer does not give it back in a
-// room with other editors, where the close or the confirm of that dialog does. Alone in the room the editor holds no
-// lock, and the saved image goes to the buffer of the room with the answer, as it did. The form `expandMetadata`
-// draws in the page is no dialog opened since: there the answer gives the lock back as before.
+// Field lock when the image save answers a confirm whose dialog was closed and reopened for another image.
+// The reopened dialog stays open and holds the lock. In a room with other editors
+// the answer does not give the lock back; the dialog's close or confirm does.
+// Alone in the room the editor holds no lock, and the saved image goes to the room buffer with the answer.
+// The inline form drawn by `expandMetadata` is no reopened dialog: there the answer gives the lock back.
 
 const released = vi.fn()
 const acquired = vi.fn()
@@ -43,7 +43,6 @@ vi.mock('@/domains/dam/imageWidget/composables/commonAdminImageOptions', () => (
         dam: { damId: 'file-7', licenceId: 1, regionPosition: 0, internal: false },
         position: 1,
       })),
-      // The image is saved under the next id, once the case lets the save answer.
       updateImage: vi.fn(
         (_client: unknown, id: number, data: object) =>
           new Promise((resolve) => saves.answer.push(() => resolve({ ...data, id: id + 1 })))
@@ -125,7 +124,6 @@ const mountWidget = async (
   return { wrapper, model, dialog: wrapper.findComponent({ name: 'ImageDetailDialogMetadata' }) }
 }
 type Dialog = Awaited<ReturnType<typeof mountWidget>>['dialog']
-/** The dialog of the widget is opened for an image, as "edit metadata" of its menu opens it. */
 const openFor = async (dialog: Dialog, shown: object) => {
   useImageMediaWidgetStore().setDetail(shown as never)
   dialog.vm.$emit('update:modelValue', true)
@@ -135,7 +133,6 @@ const close = async (dialog: Dialog) => {
   dialog.vm.$emit('close')
   await flushPromises()
 }
-/** "Confirm" is pressed, and the save of the image is on its way. */
 const confirm = async (dialog: Dialog) => {
   dialog.vm.$emit('confirm')
   await flushPromises()

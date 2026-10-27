@@ -16,18 +16,22 @@ import { objectDeletePropertyByPath, objectGetValueByPath, objectSetValueByPath 
 const props = withDefaults(
   defineProps<{
     client: AxiosClientFn
-    /** Which backend's permission vocabulary to draw. Never a global -- see `permissionConfigActions`. */
+    /**
+     * Which backend's permission vocabulary to draw. Never a global, see `permissionConfigActions`.
+     */
     system: string
     entity?: string | undefined
     endPoint?: string | undefined
     /**
-     * The grants the subject already has from roles and groups. Undefined means "this model is a
-     * group, not a user": the origin column then reads every explicit grant as coming from the
-     * group itself rather than from the user.
+     * Grants the subject already has from roles and groups.
+     * Undefined means the model is a group, not a user. The origin
+     * column then attributes every explicit grant to the group itself.
      */
     resolvedPermissions?: Permissions | undefined
     roles?: string[]
-    /** One component for detail and edit (decision 27). Readonly drops the grant column. */
+    /**
+     * One component for detail and edit (decision 27). Readonly drops the grant column.
+     */
     readonly?: boolean
   }>(),
   {
@@ -44,8 +48,8 @@ const modelValue = defineModel<Permissions>({ required: true })
 const { t } = useI18n()
 const { showWarning } = useAlerts()
 
-// A clone, because every mutation below writes a whole object back through `modelValue`: editing
-// the model in place would not re-trigger the parent's watchers that guard unsaved changes.
+// A clone, because every mutation writes a whole object back through `modelValue`.
+// Editing in place would not trigger the parent's unsaved-changes watchers.
 const permissions = computed(() => cloneDeep(modelValue.value))
 
 /* eslint-disable vue/no-setup-props-reactivity-loss */
@@ -90,12 +94,9 @@ const isExplicitRestrictiveGrant = (subject: string, action: string) => {
 }
 
 /**
- * "Allow everything in this subject", but it refuses to undo a deliberate restriction: an action
- * someone explicitly set to deny or owner-only is left alone and counted, and the count is
- * reported. Silently widening those is the one way this button could grant access nobody asked
- * for.
+ * Allows every action in the subject, except actions explicitly set to deny or owner-only.
+ * Those are left alone and their count is reported, so the button never widens a deliberate restriction.
  */
-// Called with a subject from the template's own loop over `permissionConfig.config`.
 const allowAllActions = (subject: string) => {
   let keptRestrictiveGrantCount = 0
   for (const action of Object.keys(permissionConfig.value.config[subject]!)) {

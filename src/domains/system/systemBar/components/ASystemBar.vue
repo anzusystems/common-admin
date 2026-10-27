@@ -102,9 +102,10 @@ const { pause, resume } = useIntervalFn(() => {
 
 const { isWindowActive } = useUserActivity()
 
-// Only one retry is ever pending. Untracked, an unmount left it scheduled to start a fetch that
-// the unmount hook could no longer abort; so is the one a new check replaces, as a return to the window starts one
-// while a retry of the previous is still pending.
+// Only one retry is pending at a time. Untracked, a retry left
+// scheduled after unmount starts a fetch that cannot be aborted.
+// A new check also replaces a pending retry, since returning to
+// the window starts one while a previous retry may be pending.
 let retryTimer: ReturnType<typeof setTimeout> | undefined = undefined
 
 const checkNewVersionWithRetry = (attempt = 1, maxAttempts = 3) => {

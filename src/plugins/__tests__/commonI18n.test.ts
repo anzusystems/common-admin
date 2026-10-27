@@ -9,8 +9,7 @@ import { useValidate } from '@/shared/validators/vuelidate/useValidate'
 import messagesEn from '@/locales/en'
 import messagesSk from '@/locales/sk'
 
-// The library translates through the admin's instance (plugin option `i18n`). It used to keep an
-// instance of its own that every admin had to fill and switch by hand, next to its own.
+// The library translates through the admin's instance (plugin option `i18n`).
 const adminI18n = () =>
   createI18n({
     legacy: false,
@@ -89,7 +88,6 @@ describe('the library translates through the admin i18n', () => {
     createApp({}).use(AnzuSystemsCommonAdmin, { i18n, languages: { available: ['sk', 'en'], default: 'sk' } })
     const settings = modifyLanguageSettings(['sk', 'en'], 'sk')
     settings.addMessages('en', messagesEn)
-    // Loaded, not chosen: nothing switches yet.
     expect(i18n.global.locale.value).toBe('sk')
     settings.setLanguage('en')
     expect(i18n.global.locale.value).toBe('en')

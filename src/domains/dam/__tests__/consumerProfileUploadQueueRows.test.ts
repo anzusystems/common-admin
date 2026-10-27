@@ -20,11 +20,6 @@ import { UploadQueueItemStatus } from '@/domains/dam/types/UploadQueue'
 import UploadQueueEditable from '@/domains/dam/uploadQueue/components/UploadQueueEditable.vue'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
 
-// The list of rows inside the queue dialog, under each of the two applications: what a press of a button of a row
-// does to the queue and asks of the DAM, what the form of a row consists of, and where the mass operations are
-// drawn. The real list with its real rows over the real queue; the DAM is a client that records its requests, and
-// only the long waits (of the poll, and of a row before it offers refresh) are taken out of real time.
-
 const QUEUE = 'rows-queue'
 
 let pinia: Pinia
@@ -47,7 +42,7 @@ describe.each(consumerProfiles)('the rows of an upload queue under the $name', (
     setActivePinia(pinia)
     dam = createFakeDam(endPoints)
     installConsumerProfile(profile, dam.client)
-    // The inputs of keywords and authors show names, which the page's caches ask the DAM for.
+    // The keyword and author inputs show names, which the page caches ask the DAM for.
     answerDamNames(dam)
     waits = holdLongWaits()
     socket = stubDamSocket()
@@ -74,8 +69,8 @@ describe.each(consumerProfiles)('the rows of an upload queue under the $name', (
       props: { queueKey: QUEUE, extSystem, massOperations: false, ...props },
       global: {
         plugins: [pinia],
-        // The picture of a row would ask the image server; the inputs of keywords and authors would ask the DAM
-        // for names to offer; the mass operations are a form of their own (`uploadQueueMassOperationsSidebar`).
+        // The picture would ask the image server and the keyword and author inputs would ask the DAM for names.
+        // The mass operations are a separate form (`uploadQueueMassOperationsSidebar`).
         stubs: { AssetImage: true, AFormRemoteAutocompleteWithCached: true, AssetQueueSelectedSidebar: true },
       },
     })
@@ -86,7 +81,6 @@ describe.each(consumerProfiles)('the rows of an upload queue under the $name', (
     await flushPromises()
     return queue().getQueueItems(QUEUE)
   }
-  /** One file, sent whole, in a mounted list: its row waits for the server. */
   const oneProcessing = async () => {
     await mountList()
     const [item] = await pick('photo.jpg')
@@ -108,7 +102,7 @@ describe.each(consumerProfiles)('the rows of an upload queue under the $name', (
     rows()
       [index].findAll('button')
       .find((button) => button.text() === uiText('common.damImage.image.button.editAsset'))!
-  // The fields the user types into; a growing text field has a hidden twin that measures it.
+  // A growing text field has a hidden twin that measures it. The twin is not a field the user types into.
   const fieldsOf = (index: number) =>
     rows()
       [index].findAll<HTMLInputElement | HTMLTextAreaElement>('input[type="text"], textarea')
@@ -121,12 +115,11 @@ describe.each(consumerProfiles)('the rows of an upload queue under the $name', (
       const chunks = dam.hold('POST', dam.routes.chunk)
       await mountList()
       await pick('a.jpg', 'b.jpg', 'c.jpg')
-      // Two files at a time.
       await vi.waitFor(() => expect(chunks.waiting).toHaveLength(2))
       await flushPromises()
       expect(rows()).toHaveLength(3)
       const firstChunk = dam.sentTo('POST', dam.routes.chunk).find((request) => dam.chunkOf(request) === 'a.jpg')!
-      // Two files are sent side by side: which of them the DAM named first is not for a test to assume.
+      // Two files are sent side by side, so the test cannot assume which one the DAM named first.
       const cancelledFile = queue().getQueueItems(QUEUE)[0].fileId
 
       await cancelOf(0).trigger('click')
@@ -137,7 +130,6 @@ describe.each(consumerProfiles)('the rows of an upload queue under the $name', (
       expect(titles()).toEqual(['b.jpg', 'c.jpg'])
       expect(rows()).toHaveLength(2)
       expect([queue().getQueueTotalCount(QUEUE), queue().getQueueProcessedCount(QUEUE)]).toEqual([2, 0])
-      // The file that was cancelled is never finished.
       chunks.release()
       await vi.waitFor(() => expect(dam.sentTo('PATCH', dam.routes.finish)).toHaveLength(2))
       expect(cancelledFile).not.toBeNull()
@@ -166,7 +158,6 @@ describe.each(consumerProfiles)('the rows of an upload queue under the $name', (
 
   describe('remove', () => {
     it('takes a failed row out of the queue once the user confirms, and not before', async () => {
-      // The DAM refuses to start the first file, told by its size: two files are started side by side.
       dam.reply((request) =>
         request.method === 'POST' &&
         dam.routes.start.test(request.url) &&
@@ -191,7 +182,6 @@ describe.each(consumerProfiles)('the rows of an upload queue under the $name', (
 
       await removeOf(0).trigger('click')
       await flushPromises()
-      // The question is drawn into the body.
       const question = document.body.querySelector<HTMLElement>('[data-cy="delete-panel"]')!
       expect(question.textContent).toContain(damText('queueItem.removeFromQueue'))
       expect(titles()).toEqual(['a.jpg', 'b.jpg'])
@@ -201,7 +191,6 @@ describe.each(consumerProfiles)('the rows of an upload queue under the $name', (
 
       expect(titles()).toEqual(['b.jpg'])
       expect(rows()).toHaveLength(1)
-      // The file that is still being sent goes on.
       expect(chunks.waiting).toHaveLength(1)
       expect((chunks.waiting[0]!.request.config.signal as AbortSignal).aborted).toBe(false)
     })
@@ -226,12 +215,10 @@ describe.each(consumerProfiles)('the rows of an upload queue under the $name', (
       const item = await oneProcessing()
       expect(refreshOf(0).exists()).toBe(false)
 
-      // The queue has asked by then as well, and was told the file is not done.
       await waits.elapse()
       await vi.waitFor(() => expect(refreshOf(0).exists()).toBe(true))
       expect(item.status).toBe(UploadQueueItemStatus.Processing)
 
-      // Pressed too early, it says so and stays.
       const readsBefore = dam.assetReads().length
       await refreshOf(0).trigger('click')
       await vi.waitFor(() =>
@@ -251,7 +238,6 @@ describe.each(consumerProfiles)('the rows of an upload queue under the $name', (
       expect(fieldsOf(0).map((field) => field.element.value)).toContain('from the server')
       expect(fieldsOf(0).some((field) => field.element.disabled)).toBe(false)
       expect([refreshOf(0).exists(), removeOf(0).exists()]).toEqual([false, false])
-      // Every read of the asset went to the address of the application.
       expect(dam.assetReads().every((read) => read.url.startsWith(`${endPoints.asset}/`))).toBe(true)
       expect(dam.assetReads().every((read) => read.url.includes('asset-1'))).toBe(true)
       expect(toForeignPrefix().filter((request) => !/\/(author|keyword)\//.test(request.url))).toEqual([])
@@ -274,8 +260,8 @@ describe.each(consumerProfiles)('the rows of an upload queue under the $name', (
       await vi.waitFor(() => expect(item.status).toBe(UploadQueueItemStatus.Uploaded))
     })
 
-    // Only an application with the notification socket has such a row: its file notification settles it, and
-    // the metadata is left to a notification of its own, which can be lost.
+    // Only an application with the notification socket has such a row.
+    // Its file notification settles the row, and the metadata is left to a separate notification that can be lost.
     if (profile.notifications) {
       it('is offered on an uploaded row whose metadata never came, and loads it from the DAM of the application', async () => {
         const item = await oneProcessing()
@@ -304,8 +290,6 @@ describe.each(consumerProfiles)('the rows of an upload queue under the $name', (
   })
 
   describe('the form of a row', () => {
-    // admin-cms: the two custom fields of its ext system, the keywords and authors of the DAM, and the
-    // single-use switch. admin-ugc: its two custom fields and nothing else.
     it('has the fields of the application: its custom fields, and keywords, authors and the switch only where it has them', async () => {
       await oneProcessing()
 

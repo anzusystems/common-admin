@@ -7,9 +7,8 @@ import AssetImageMetaIcons from '@/domains/dam/assetDetail/components/AssetImage
 import { ICON_RSS, ICON_TTS } from '@/domains/dam/assetDetail/utils/assetImageIconsConfig'
 import { type AssetFileProperties, DamAssetType } from '@/domains/dam/types/Asset'
 
-// The icon of a synthesized audio (TTS) among the meta icons of an asset. The backend says `ttsAudio` to every
-// admin; the icon is shown only where the application asks for it (admin-dam), so admin-cms and admin-ugc see the
-// icons they always saw.
+// The backend sends `ttsAudio` to every admin.
+// The icon is shown only where the application asks for it (admin-dam). admin-cms and admin-ugc keep their usual icons.
 
 let wrapper: VueWrapper | undefined
 afterEach(() => {

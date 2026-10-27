@@ -14,10 +14,9 @@ const { t } = useI18n()
 const router = useRouter()
 const { preservePageForLanding } = useDatatablePageStore()
 
-// A mistyped or stale record address lands here, so the way back to the list it came from is worth a
-// button of its own. A step back, so the browser's Back does not return to this page; the home route
-// when the app has no previous entry -- a tab opened on the bad address, where `router.back()` would
-// leave the application.
+// Steps back so the browser's Back does not return to this page.
+// Falls back to the home route when there is no previous entry, for example a
+// tab opened on the bad address. There `router.back()` would leave the app.
 const goBack = () => {
   if (typeof router.options.history.state.back === 'string') {
     preservePageForLanding(router)

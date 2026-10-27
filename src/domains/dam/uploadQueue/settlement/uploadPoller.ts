@@ -8,29 +8,41 @@ import {
 import { uploadSettlementRuntime } from '@/domains/dam/uploadQueue/settlement/uploadSettlementRuntime'
 
 export interface QueuePollerDeps {
-  /** The age of the youngest tracked row of the queue in ms, or `null` when the queue tracks nothing. */
+  /**
+   * The age of the youngest tracked row of the queue in ms, or `null` when the queue tracks nothing.
+   */
   youngestAgeMs(): number | null
   mode(): UploadPollMode
-  /** One read of all the tracked rows of the queue. A rejection is a failed read. */
+  /**
+   * One read of all the tracked rows of the queue. A rejection is a failed read.
+   */
   read(trigger: 'tick' | 'visible'): Promise<void>
 }
 
 export interface QueuePoller {
-  /** A row began to be tracked: the next read comes no later than its first mark. */
+  /**
+   * A row started being tracked. The next read happens no later than its first mark.
+   */
   rowAdded(): void
-  /** The tab is visible again: a read at once. */
+  /**
+   * The tab is visible again. Read immediately.
+   */
   readNow(trigger: 'visible'): void
-  /** The tab was hidden, the mode changed or the queue tracks nothing any more: the timer is set anew. */
+  /**
+   * Re-arms the timer after the tab is hidden, the mode changes or the queue stops tracking rows.
+   */
   reschedule(): void
   stop(): void
 }
 
-/** The timer of the ticks of one queue. What a tick reads is up to `deps.read`. */
+/**
+ * Tick timer of one queue. What a tick reads is decided by `deps.read`.
+ */
 export function createQueuePoller(deps: QueuePollerDeps): QueuePoller {
   let nextAt: number | null = null
   let timer: { handle: unknown } | null = null
   let inFlight = false
-  // A sooner read asked for while one was on its way.
+  // An earlier read requested while another read is in flight.
   let earlierAt: number | null = null
   let followUp = false
   let lastReadEndedAt: number | null = null
@@ -47,7 +59,7 @@ export function createQueuePoller(deps: QueuePollerDeps): QueuePoller {
     timer = null
   }
 
-  // The queue tracks nothing: no plan is kept for rows that are gone, and a later failure starts the ladder anew.
+  // The queue tracks nothing. Drop the plan for removed rows so a later failure restarts the error ladder.
   const goIdle = () => {
     disarm()
     nextAt = null
@@ -59,7 +71,7 @@ export function createQueuePoller(deps: QueuePollerDeps): QueuePoller {
   const arm = () => {
     disarm()
     if (stopped || inFlight || nextAt === null) return
-    // A hidden tab reads nothing; the planned time stays for its return.
+    // A hidden tab does not read. The planned time is kept for when the tab returns.
     if (!uploadSettlementRuntime.visibility.isVisible()) return
     timer = { handle: scheduler().setTimeout(onTimer, Math.max(0, nextAt - scheduler().now())) }
   }
@@ -112,7 +124,7 @@ export function createQueuePoller(deps: QueuePollerDeps): QueuePoller {
   const rowAdded = () => {
     if (stopped) return
     const candidate = scheduler().now() + firstDelay(deps.mode())
-    // A new row only ever brings the read closer.
+    // A new row can only move the read earlier.
     if (inFlight) {
       earlierAt = sooner(earlierAt, candidate)
       return
@@ -141,9 +153,9 @@ export function createQueuePoller(deps: QueuePollerDeps): QueuePoller {
   }
 
   const reschedule = () => {
-    // A read on its way plans the next one itself, with the mode of that moment.
+    // An in-flight read schedules the next one itself, using the mode current at that time.
     if (stopped || inFlight) return
-    // Before the hidden tab: a queue that empties while nobody looks keeps no plan for the return.
+    // Checked before the hidden-tab check. A queue that empties while hidden must not keep a plan for the return.
     const age = deps.youngestAgeMs()
     if (age === null) {
       goIdle()
@@ -153,13 +165,13 @@ export function createQueuePoller(deps: QueuePollerDeps): QueuePoller {
       disarm()
       return
     }
-    // A wait of the error ladder stands: the rhythm of a mode would plan by a read that failed.
+    // An error-ladder wait is kept. The mode rhythm would schedule relative to the failed read.
     if (consecutiveFailures === 0) {
       const now = scheduler().now()
       const mode = deps.mode()
       const sinceRead = lastReadEndedAt === null ? null : now - lastReadEndedAt
-      // What would have been planned under the mode of now: by the last read, or by the first mark of a row that
-      // came after it. Never later than what is planned already.
+      // The time the current mode would plan: from the last read, or from the first mark of a row added after it.
+      // Never later than the time already planned.
       const candidate =
         sinceRead === null || age < sinceRead
           ? now - age + firstDelay(mode)

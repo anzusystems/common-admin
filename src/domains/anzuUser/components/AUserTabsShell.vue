@@ -20,39 +20,36 @@ import { OTHER_SYSTEMS_TAB } from '@/domains/anzuUser/utils/userTabs'
 const props = withDefaults(
   defineProps<{
     userId: IntegerId
-    /** Which tab carries the owning form, i.e. gets the slot. */
+    /**
+     * Which tab carries the owning form, i.e. gets the slot.
+     */
     owner: string
     /**
-     * The tabs, in the order they are drawn, plus "other systems" appended by this component.
-     *
-     * A prop and not something derived from the descriptor array, because the list depends on the
-     * route rather than on what the admin owns: admin-inhouse owns four systems and has two tabs,
-     * since the system is part of the path.
+     * The tabs in draw order. This component appends "other systems".
+     * A prop, not derived from descriptors, because it depends on the route. admin-inhouse
+     * owns four systems but has two tabs, since the system is part of the path.
      */
     ownedTabs: string[]
-    /** Every system this admin can reach. The "other systems" tab lists the ones not in a tab. */
+    /**
+     * Every system this admin can reach. The "other systems" tab lists the ones not in a tab.
+     */
     descriptors: AnyUserSystemDescriptor[]
     /**
-     * "After a 401, refresh once and try again."
-     *
-     * The library cannot decide this for itself: the mechanism exists only in the apps, and each
-     * one does it differently -- inhouse `refreshSession`, cms and contentHub their own
-     * `refresh-token` call. Without it an expired token renders as "no account in this system",
-     * which is the one confusion decision 16 forbids. Every panel this shell draws gets it.
+     * After a 401, refresh once and retry.
+     * Each app refreshes differently (inhouse `refreshSession`, cms and contentHub a
+     * `refresh-token` call), so the library cannot do it. Without it an expired token shows as "no
+     * account in this system", which decision 16 forbids. Every panel in this shell receives it.
      */
     refreshHook?: UserSystemRefreshHook | undefined
     readonly?: boolean
     /**
-     * Whether the owning form holds edits that have not been saved.
-     *
-     * It drives two things. The dot on the owning tab, so the operator can see it from the other
-     * tabs -- the Save button itself is visible everywhere, by decision, because a button that
-     * disappeared would read as "this is read-only". And the guard below, which is the only thing
-     * standing between unsaved work and the button in a panel that leaves the page: switching a tab
-     * is not navigation, so nothing else ever asks.
+     * Whether the owning form has unsaved edits.
+     * It drives the dot on the owning tab. The Save button stays visible
+     * everywhere, because a hidden button would read as read-only.
+     * It also drives the leave guard. Switching tabs is not navigation,
+     * so nothing else asks before a panel button leaves the page.
      */
     unsavedChanges?: boolean
-    /** Query key for the deep link. */
     tabQueryKey?: string
   }>(),
   {
@@ -64,7 +61,9 @@ const props = withDefaults(
 )
 
 const emit = defineEmits<{
-  /** After an account was created in another system, so a page can react if it wants to. */
+  /**
+   * After an account was created in another system, so a page can react if it wants to.
+   */
   (e: 'created', descriptor: AnyUserSystemDescriptor): void
 }>()
 
@@ -86,8 +85,8 @@ const isValidTab = (value: unknown): value is string => typeof value === 'string
 
 onMounted(() => {
   const fromUrl = route.query[props.tabQueryKey]
-  // An unknown tab -- a system dropped out of the configuration since the link was sent -- is
-  // ignored without a word and the owning tab opens. An error here would help nobody.
+  // An unknown tab, for example a system removed from the configuration
+  // since the link was sent, is ignored silently and the owning tab opens.
   activeTab.value = isValidTab(fromUrl) ? fromUrl : props.owner
 })
 
@@ -99,10 +98,9 @@ watch(activeTab, (value) => {
 })
 
 /**
- * Registered here rather than in the page, because this is the component the leaving happens from:
- * an internal "manage in X" is a router link inside a panel, and `onBeforeRouteLeave` has to be
- * bound somewhere inside the route. An external one opens a new tab and leaves this page standing,
- * so it needs no guard at all.
+ * Registered here, not in the page, because an internal "manage in X" link inside a
+ * panel leaves from here and `onBeforeRouteLeave` must be bound inside the route.
+ * An external link opens a new tab and needs no guard.
  */
 const unsavedSource = computed(() => props.unsavedChanges)
 const { hasUnsavedChanges, dirtyLabels, promptOpen, resolvePrompt } = useUnsavedChangesGuard({
@@ -114,28 +112,22 @@ const ownedPanels = ref<InstanceType<typeof AUserSystemPanel>[]>([])
 
 /**
  * Creating this person's account in another system.
- *
- * Handled here rather than by the page, because the panel that offers it is here and the whole
- * operation is the library's: read the owning system's record, copy the metadata, post it. The
- * page would only be passing it through.
+ * Handled here because the panel offering it lives here and the
+ * operation belongs to the library. The page would only pass it through.
  */
 const writes = useUserCrossSystemWrites()
 const { createAnzuUser } = useAnzuUserFactory()
 const { showError, showRecordWas } = useAlerts()
 
-// Only when there is one: the panel's own `inject` default is `undefined`, and providing that
-// explicitly would say "there is a hook" to anything that merely checks for the key.
+// Provide only when present. Providing `undefined` explicitly would signal a hook to code that only checks for the key.
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 if (!isUndefined(props.refreshHook)) provide(UserSystemRefreshHookKey, props.refreshHook)
 
 const ownerDescriptor = computed(() => bySystem.value.get(props.owner))
 /**
  * The owning system's record as the server holds it, not as the form does.
- *
- * Read when the panels are, so the owning tab costs nothing, and read again before each POST: a
- * switch flipped in the form and not saved must not be copied into another system, where in blog
- * and forum it would mean a working public account. That is the whole point of the fix commit this
- * rule comes from.
+ * Read together with the panels, so the owning tab costs nothing, and read again before each POST. An unsaved
+ * switch in the form must not be copied, because in blog and forum it would mean a working public account.
  */
 const sourceUser = ref<AnzuUser | null>(null)
 const creatingSystem = ref<string | null>(null)
@@ -146,7 +138,9 @@ const loadSource = async () => {
   sourceUser.value = await writes.readSourceUser(descriptor, props.userId)
 }
 
-/** Copying a person into another system copies whether they are switched on. Roles stay empty. */
+/**
+ * Copying a person into another system copies whether they are switched on. Roles stay empty.
+ */
 const createEnabled = computed(() => sourceUser.value?.enabled === true)
 
 const onCreate = async (descriptor: AnyUserSystemDescriptor, metadata: BaseUser) => {
@@ -159,26 +153,21 @@ const onCreate = async (descriptor: AnyUserSystemDescriptor, metadata: BaseUser)
       showError(t('common.userSystem.create.sourceUnreadable', { system: labelFor(owner.system) }))
       return
     }
-    // The dialog has already promised one of two sentences -- created ready to use, or created
-    // switched off -- from the copy read when the panels were. If the server no longer says that,
-    // the promise was wrong, and in blog and forum the difference is a working public account. The
-    // commonest way to get here is that first read having failed, which leaves `sourceUser` null
-    // and the dialog saying "disabled" about an account that is on. Nothing is written until the
-    // corrected row has been confirmed again.
+    // The dialog already promised "created ready to use" or "created switched off" from the earlier read. If the
+    // server now disagrees, the promise was wrong, and in blog and forum that means a working public account.
+    // Usually the first read failed, leaving `sourceUser` null and the dialog saying "disabled"
+    // for an enabled account. Nothing is written until the corrected row is confirmed again.
     if (source.enabled !== createEnabled.value) {
       sourceUser.value = source
       showError(t('common.userSystem.create.sourceChanged'))
       return
     }
-    // The create right may have gone while the source was read; nothing is offered then, so nothing is said.
+    // The create right may have been lost while the source was read. Nothing is offered then, so nothing is reported.
     if (!descriptorMayWrite(descriptor, 'create')) return
-    // From the library factory, never assembled by hand: a body of base fields alone would have the
-    // backend fill in `ROLE_USER`, leaving an account with a role nobody granted.
-    //
-    // The metadata is the dialog's, not the source's: the form was validated against the target's
-    // profile and the operator may have filled in what the source leaves empty -- blog fills
-    // `person` for nobody, and a system that requires it would get a record its own form refuses
-    // to save. The id and `enabled` still come from the fresh read.
+    // Built by the library factory, never by hand. A body of base fields
+    // alone makes the backend add `ROLE_USER`, a role nobody granted.
+    // Metadata comes from the dialog, validated against the target's profile. The source may leave fields empty
+    // (blog never fills `person`) that the target requires. The id and `enabled` come from the fresh read.
     const body = createAnzuUser(descriptor.system)
     body.id = source.id
     body.email = metadata.email
@@ -187,8 +176,8 @@ const onCreate = async (descriptor: AnyUserSystemDescriptor, metadata: BaseUser)
     body.enabled = source.enabled
     const result = await writes.createInSystem(descriptor, body)
     if (result.outcome !== BulkOutcome.Done) {
-      // Silence here read as success: the row was re-probed, still said "absent", and nothing
-      // explained why. The per-admin pages this replaces reported every write.
+      // Without this message the failure looked like success: the
+      // re-probed row still said "absent" with no explanation.
       showError(labelFor(descriptor.system) + ': ' + t('common.userSystem.bulk.outcome.' + result.outcome))
       return
     }
@@ -203,14 +192,9 @@ const onCreate = async (descriptor: AnyUserSystemDescriptor, metadata: BaseUser)
 
 /**
  * Called by the page after the owning form saved.
- *
- * `VWindowItem` takes only `hasContent` from `useLazy` and hides the panel with `v-show`, so once a
- * panel is mounted it is never unmounted and never re-fetches on its own. Without this the panel
- * would keep showing what it read before the save -- and the create-in-another-system action,
- * which reads from it, would copy that stale snapshot.
- *
- * Deliberately not a refetch on every tab activation: that would turn cheap tab switching into
- * eight calls each time, which is the cost the pseudo-tab was dropped to avoid.
+ * `VWindowItem` hides panels with `v-show`, so a mounted panel never re-fetches by itself. Without
+ * this it shows pre-save data, and create-in-another-system would copy that stale snapshot.
+ * Not a refetch on every tab activation: that would cost eight calls per tab switch.
  */
 const refresh = () => {
   void loadSource()
@@ -218,14 +202,12 @@ const refresh = () => {
   ownedPanels.value.forEach((panel) => panel?.refresh())
 }
 
-// Read alongside the panels, on the first activation of a tab that is not the owning one -- so the
-// owning tab still costs no foreign call at all.
+// Read on the first activation of a non-owning tab, so the owning tab makes no foreign call.
 watch(
   activeTab,
   (value) => {
-    // `isValidTab` first: before the mount hook settles it, the model is an empty string, and
-    // treating that as "not the owning tab" would fetch on the owning tab too -- the one call this
-    // whole lazy arrangement exists to avoid.
+    // `isValidTab` first: before mount settles, the model is an empty string.
+    // Treating it as a non-owning tab would fetch on the owning tab too.
     if (!isValidTab(value) || value === props.owner) return
     if (isNull(sourceUser.value)) void loadSource()
   },
@@ -238,9 +220,8 @@ defineExpose({ refresh })
 <template>
   <div>
     <!--
-      No tab navigates. Every one of them redraws the content, and what leaves the page is the
-      Manage button inside a panel -- which is an anchor. `VTab` renders `role="tab"` and could not
-      carry a navigation semantically.
+      No tab navigates. Tabs only switch content, and leaving the page is done by the Manage
+      anchor inside a panel. `VTab` renders `role="tab"` and cannot carry navigation semantically.
     -->
     <VTabs
       v-model="activeTab"
@@ -276,8 +257,8 @@ defineExpose({ refresh })
         <!-- The owning system of the current route: the full form. -->
         <slot v-if="tab === owner" />
         <!--
-          Another system this admin owns, but whose route is not open: a probe with a summary and a
-          Manage button, exactly like any other system. No tab takes the operator anywhere.
+          Another system this admin owns whose route is not open: a probe
+          with a summary and a Manage button, like any other system.
         -->
         <AUserSystemPanel
           v-else-if="!isUndefined(bySystem.get(tab))"
@@ -292,10 +273,7 @@ defineExpose({ refresh })
         />
       </VWindowItem>
       <VWindowItem :value="OTHER_SYSTEMS_TAB">
-        <!--
-          Lazy by construction: `VWindowItem` renders its content on first activation, so opening a
-          user costs no foreign calls at all.
-        -->
+        <!-- `VWindowItem` renders content on first activation, so opening a user makes no foreign calls. -->
         <AUserOtherSystemsTable
           ref="otherSystems"
           :descriptors="otherDescriptors"

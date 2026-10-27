@@ -22,10 +22,10 @@ import {
 import UploadQueueItemEditable from '@/domains/dam/uploadQueue/components/UploadQueueItemEditable.vue'
 import { useUploadQueueItemFactory } from '@/domains/dam/uploadQueue/factory/UploadQueueItemFactory'
 
-// A row of the queue with the values a host other than the library's dialog hands it (admin-dam's): its slots,
-// where cancel is offered, the duplicate line, the form of a duplicate, the scope its fields report to, how its
-// keywords and authors look switched off, the edit button of a duplicate, and refresh worked out by the host. The
-// row is the real one under the configuration of admin-cms; only its twenty seconds of waiting are held.
+// A row with the values a non-library host (admin-dam's) hands
+// it: slots, where cancel is offered, duplicate line and form,
+// validation scope, disabled keywords and authors, duplicate edit button, host-computed refresh.
+// The row is the real one under the admin-cms configuration; only its twenty-second wait is held.
 
 const { endPoints, extSystem, licence } = cmsConfiguration
 const { Waiting, Uploading, Processing, Uploaded, Failed } = UploadQueueItemStatus
@@ -34,9 +34,7 @@ const HOST_SCOPE = Symbol('host-validation-scope')
 let pinia: Pinia
 let waits: LongWaits
 let wrapper: VueWrapper | undefined
-/** What the host collects of the validation of the row under its own scope. */
 let hostValidation: { value: { $touch: () => void; $invalid: boolean } } | undefined
-/** The scope the host collects under. */
 let hostScope: symbol = HOST_SCOPE
 
 beforeEach(() => {
@@ -53,7 +51,6 @@ afterEach(() => {
   waits.restore()
 })
 
-/** A row of a picked file that has its asset, in the given state, with what its host hands it besides. */
 const mountRow = async (
   status: UploadQueueItemStatusType,
   parts: Partial<UploadQueueItem> = {},
@@ -90,7 +87,7 @@ const mountRow = async (
   })
   wrapper = mount(Host, {
     attachTo: document.body,
-    // What the keyword and author inputs render asks the DAM for names to offer.
+    // The keyword and author inputs ask the DAM for names to offer when rendered.
     global: { plugins: [pinia], stubs: { AFormRemoteAutocompleteWithCached: true } },
   })
   await flushPromises()
@@ -131,7 +128,6 @@ describe('the slots of a row', () => {
     expect(overlay.element.parentElement!.classList.contains('position-relative')).toBe(true)
     expect(overlay.element.compareDocumentPosition(error.element) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     expect([wrapper!.find('.host-edit').text(), editButton()]).toEqual(['edit asset-1', undefined])
-    // A failed row has remove offered; the host's slot is told so, and the library's own button is not drawn.
     expect([wrapper!.find('.host-remove').text(), removeButton().exists()]).toEqual(['remove asset-1 3 true', false])
   })
 
@@ -184,7 +180,6 @@ describe('a row with the values of admin-dam', () => {
     expect(fields().every((field) => field.element.disabled)).toBe(disabled)
   })
 
-  // A required custom field left empty: the host that collects under the scope the row reports to sees it.
   it.each([
     ['reports its fields to the scope its host hands it', { validationScope: HOST_SCOPE }, HOST_SCOPE],
     ['reports them to the scope of the library by default', {}, ADamAssetMetadataValidationScopeSymbol],
@@ -223,7 +218,7 @@ describe('a row with the values of admin-dam', () => {
   })
 })
 
-// An edit button of another text than the library's: a host that hides it on a duplicate hides its own too.
+// A host that hides the edit button on a duplicate must hide its own button too, not only the library's.
 describe('the edit button of a duplicate', () => {
   const ownEdit = { edit: () => h('button', { class: 'host-edit' }, 'Edit more') }
 
@@ -246,7 +241,6 @@ describe('the edit button of a duplicate', () => {
   })
 })
 
-// Refresh as its host works it out, in every state a row is in; without it, the row's own rule.
 describe('the refresh a row offers', () => {
   type State = [string, UploadQueueItemStatusType, Partial<UploadQueueItem>, Record<string, unknown>, boolean]
   const states: State[] = [
@@ -274,7 +268,6 @@ describe('the refresh a row offers', () => {
     await mountRow(status, parts, { ...props, refreshOffered: true })
 
     expect(await offered()).toBe(true)
-    // Remove comes with it.
     expect(removeButton().exists()).toBe(true)
   })
 
@@ -282,11 +275,9 @@ describe('the refresh a row offers', () => {
     await mountRow(status, parts, { ...props, refreshOffered: false })
 
     expect(await offered()).toBe(false)
-    // Remove only on a failed row, as ever.
     expect(removeButton().exists()).toBe(status === Failed)
   })
 
-  // Not even named: a host that does not hand the property leaves the row to its own rule.
   it('is offered by the row itself twenty seconds after it uploaded without its metadata, the property not named at all', async () => {
     const item = await mountRow(Uploaded, { canEditMetadata: false })
     expect(Object.keys(row().props()).includes('refreshOffered')).toBe(true)

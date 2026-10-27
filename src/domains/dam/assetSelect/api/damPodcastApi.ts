@@ -8,7 +8,7 @@ import { DAM_END_POINT_PODCAST } from '@/domains/dam/api/damEndPoints'
 
 const ENTITY = 'podcast'
 
-// `endPoint`: the address of the podcasts the caller goes by; the default one where it gives none.
+// `endPoint`: the caller's podcast endpoint. The default is used when not given.
 
 export const fetchDamPodcastListByIds = (
   client: () => AxiosInstance,

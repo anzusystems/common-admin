@@ -42,8 +42,9 @@ const meta = ref({ description: '', source: '' })
 
 const resolvedSrc = ref('')
 const resImage = ref<null | ImageCreateUpdateAware>(null)
-// The id of the image this input has just created. Its model changes to that id, and the fields are filled from the
-// answer to the create: the image is not read again. Any other change of the id is read as before.
+// Id of the image this input just created. The model changes to it, and
+// fields are filled from the create response, so the image is not read again.
+// Any other id change triggers a read.
 let createdImageId: IntegerIdNullable = null
 
 const isValid = ref(true)
@@ -128,7 +129,7 @@ const submit = async () => {
     resImage.value = imageRes
     if (!data.id) createdImageId = imageRes.id
     modelValue.value = imageRes.id
-    // What the read of the created image used to put into the fields, from the answer to its create.
+    // Fills the fields from the create response instead of reading the created image.
     if (!data.id) await reload(imageRes, imageRes.id, true)
     return Promise.resolve({ asset: asset, image: imageRes })
   } catch (e) {

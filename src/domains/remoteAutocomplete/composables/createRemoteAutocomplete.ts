@@ -41,14 +41,18 @@ export interface RemoteInnerFilter {
  * its fetched list across a model reset and prefetches once, so a changed scope has to remount it.
  */
 export interface RemoteAutocompleteScope<P> {
-  /** The scope, `undefined` while unset. Also the key of the inner autocomplete: a change remounts it. */
+  /**
+   * The scope, `undefined` while unset. Also the key of the inner autocomplete: a change remounts it.
+   */
   of: (props: P) => unknown
-  /** The field is disabled while the scope is unset, when this says the scope is required. */
+  /**
+   * The field is disabled while the scope is unset, when this says the scope is required.
+   */
   requiredWhen?: (props: P) => boolean
   /**
-   * The form autocomplete clears its model (`[]` when `multiple`, else `null`) when the scope changes from
-   * a set value, as the scoped wrappers did (default `true`). A filter never does: its value outlives a
-   * sibling filter's change.
+   * The form autocomplete clears its model (`[]` when `multiple`, else
+   * `null`) when the scope changes from a set value. Default `true`.
+   * A filter never does: its value outlives a sibling filter's change.
    */
   reset?: boolean
 }
@@ -57,33 +61,45 @@ export interface CreateRemoteAutocompleteOptions<
   T extends IntegerId | DocId,
   PO extends ComponentObjectPropsOptions = Record<never, never>,
 > {
-  /** The component's name, for devtools and warnings. */
+  /**
+   * The component's name, for devtools and warnings.
+   */
   name: string
   /**
    * The component's own props, read by the options below and not passed to the autocomplete. Declared,
    * so they are reactive and booleans are cast.
    */
   props?: PO
-  /** Called in the component's setup, as the wrappers did; with the component's props when it has `props`. */
+  /**
+   * Called in the component's setup, with the component's props when it has `props`.
+   */
   useSelectActions: (props: ExtractPropTypes<PO>) => RemoteSelectActions<T>
-  /** Called in the component's setup; provided as the inner filter of the autocomplete. */
+  /**
+   * Called in the component's setup; provided as the inner filter of the autocomplete.
+   */
   useInnerFilter: () => RemoteInnerFilter
   /**
-   * Inner filter fields that follow the props, written in setup -- before the autocomplete's first fetch
-   * -- and again on every change. Every key is written each time: return `null` for an unset one.
+   * Inner filter fields that follow the props. Written in setup, before the first fetch, and on every change.
+   * Every key is written each time: return `null` for an unset one.
    */
   filterFromProps?: (props: ExtractPropTypes<PO>) => Record<string, unknown>
   scope?: RemoteAutocompleteScope<ExtractPropTypes<PO>>
   filterByField: string
   filterSortBy?: DatatableSortBy
   prefetch?: 'hover' | 'focus' | 'mounted' | false
-  /** Props of the autocomplete this one sets unless its caller does, e.g. `{ clearable: true }`. */
+  /**
+   * Props of the autocomplete this one sets unless its caller does, e.g. `{ clearable: true }`.
+   */
   defaults?: Record<string, unknown>
-  /** A model value of `0` reaches the autocomplete as `null`: nothing selected. */
+  /**
+   * A model value of `0` reaches the autocomplete as `null`: nothing selected.
+   */
   zeroIsEmpty?: boolean
 }
 
-/** What a caller can set on a form remote autocomplete; anything else falls through to it as well. */
+/**
+ * What a caller can set on a form remote autocomplete; anything else falls through to it as well.
+ */
 export interface RemoteAutocompleteProps<M> {
   modelValue: M
   label?: string | undefined
@@ -107,7 +123,9 @@ export interface RemoteAutocompleteProps<M> {
   minSearchText?: string | undefined
 }
 
-/** What a caller can set on a filter remote autocomplete; anything else falls through to it as well. */
+/**
+ * What a caller can set on a filter remote autocomplete; anything else falls through to it as well.
+ */
 export interface FilterRemoteAutocompleteProps {
   name: string
   filterSortBy?: DatatableSortBy
@@ -132,8 +150,7 @@ export type RemoteAutocompleteComponent<M, P = unknown> = DefineSetupFnComponent
 
 export type FilterRemoteAutocompleteComponent<P = unknown> = DefineSetupFnComponent<FilterRemoteAutocompleteProps & P>
 
-// A value the caller leaves `undefined` falls back to the default, as a prop default of the wrappers
-// this replaces did, instead of overriding it.
+// A value the caller leaves `undefined` falls back to the default instead of overriding it.
 const defined = (attrs: Record<string, unknown>) =>
   Object.fromEntries(Object.entries(attrs).filter(([, value]) => value !== undefined))
 
@@ -162,8 +179,8 @@ const base = <T extends IntegerId | DocId, PO extends ComponentObjectPropsOption
   }
   const scoped = () => {
     if (!scope) return {}
-    // Past the caller's attrs: an unset required scope disables the field whatever the caller says. Left
-    // out otherwise, so the caller's `disabled`, or its absence (the collab lock), goes through.
+    // Applied after the caller's attrs: an unset required scope always disables the field.
+    // Otherwise left out, so the caller's `disabled`, or its absence (the collab lock), goes through.
     return { key: scopeKey(), ...(scope.requiredWhen?.(props) && scopeKey() === undefined ? { disabled: true } : {}) }
   }
   return {
@@ -181,13 +198,11 @@ const base = <T extends IntegerId | DocId, PO extends ComponentObjectPropsOption
 }
 
 /**
- * `M` is the model's type: by default one id, several, or `null`; a caller that binds a value which
- * may be `undefined` needs `T | T[] | null | undefined`.
- *
- * A remote autocomplete of one entity, which an admin wrote as a component of its own for each: the
- * entity's select actions and inner filter, the field it searches by, and the props it sets. The
- * caller's props, listeners and slots all reach `AFormRemoteAutocomplete`, and win over `defaults`.
- *
+ * A remote autocomplete for one entity: its select actions, inner filter, search field and default props.
+ * The caller's props, listeners and slots reach `AFormRemoteAutocomplete` and win over `defaults`.
+ * `M` is the model type: one id, several, or `null`. A caller binding
+ * a possibly `undefined` value needs `T | T[] | null | undefined`.
+ * @example
  * In an SFC's plain `<script lang="ts">`:
  * ```ts
  * export default createRemoteAutocomplete({
@@ -238,7 +253,9 @@ export function createRemoteAutocomplete<
   }) as unknown as RemoteAutocompleteComponent<M, ExtractPublicPropTypes<PO>>
 }
 
-/** `createRemoteAutocomplete` for a filter: the caller's `name` picks the filter field. */
+/**
+ * `createRemoteAutocomplete` for a filter: the caller's `name` picks the filter field.
+ */
 export function createFilterRemoteAutocomplete<
   T extends IntegerId | DocId = IntegerId,
   PO extends ComponentObjectPropsOptions = Record<never, never>,

@@ -46,7 +46,6 @@ describe('close button (navigateBack) after a submit', () => {
     await wait()
     navigateBack(router)
     await wait(100)
-    // what the remounted list would do
     const again = createFilter(fields, createFilterStore(fields), { system: 'sys', subject: 'close' })
     useFilterHelpers(again.filterData, again.filterConfig).loadStoredFilters(usePagination('id').pagination)
     expect(location.hash).toBe('#name=b&_sort=id,desc~')

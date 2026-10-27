@@ -7,9 +7,6 @@ import { AnzuApiResponseCodeError } from '@/shared/error/AnzuApiResponseCodeErro
 import { AnzuFatalError } from '@/shared/error/AnzuFatalError'
 import { createFilter, createFilterStore, type MakeFilterOption } from '@/domains/filters/composables/filterFactory'
 
-// The batch helper reads every page of a list, so the ways it can stop early are the ways it can
-// quietly return half the data. Each of these pins one of them.
-
 const fields = [{ name: 'name', default: '' }] as const satisfies readonly MakeFilterOption<string>[]
 
 const setup = (get: ReturnType<typeof vi.fn>) => {
@@ -47,9 +44,9 @@ afterEach(() => {
 })
 
 describe('an infinite list', () => {
-  // The mode has to be read from what the response said. Recognising it by "no totalCount" looks
-  // equivalent and is not: an infinite page carries `totalCount: 0` to clear the counted mode's
-  // leftovers, so that reading takes the counted branch, computes zero pages, and stops after one.
+  // The mode must be read from what the response said, not from a missing `totalCount`.
+  // An infinite page carries `totalCount: 0` to clear counted-mode leftovers. Detecting
+  // by absence takes the counted branch, computes zero pages and stops after one.
   it('walks every page until the answer says there are no more', async () => {
     const get = vi
       .fn()
@@ -110,8 +107,7 @@ describe('a counted list', () => {
     expect(get).toHaveBeenCalledTimes(1)
   })
 
-  // They all went out together, so there is no sequence to stop -- an empty one among them simply
-  // contributes nothing.
+  // All pages are sent together, so there is no sequence to stop. An empty page contributes nothing.
   it('keeps the other pages when one of them comes back empty', async () => {
     const get = vi
       .fn()
@@ -135,8 +131,8 @@ describe('a list that says nothing about its shape', () => {
 })
 
 describe('which page a failure names', () => {
-  // The counted branch sends every page before any of them answers, so a single shared variable
-  // holding "the page we are on" settles on the last one and names the wrong page for the failure.
+  // The counted branch sends every page before any answers. A single shared "current
+  // page" variable ends on the last page and names the wrong one for a failure.
   it('names the page that actually failed, not the last one dispatched', async () => {
     const logged = vi.fn()
     setApiErrorLogger(logged)
@@ -176,9 +172,9 @@ describe('which page a failure names', () => {
 })
 
 describe('what happens to the pages still in flight when one fails', () => {
-  // The counted branch sends a page set at once. When one of them fails the rest are work nobody is
-  // waiting for, and the window to stop them is narrow: the call's controller leaves the instance's
-  // set as soon as the call settles, so a later `abort()` would have nothing left to reach them by.
+  // When one page of the counted branch fails, the sibling requests must be stopped.
+  // The window is narrow: the call's controller leaves the instance's
+  // set once the call settles, so a later `abort()` cannot reach them.
   it('stops the siblings rather than leaving them running', async () => {
     const signals: AbortSignal[] = []
     const get = vi.fn().mockImplementation((url: string, config: { signal: AbortSignal }) => {
@@ -199,19 +195,16 @@ describe('what happens to the pages still in flight when one fails', () => {
     expect(signals.every((signal) => signal.aborted)).toBe(true)
   })
 
-  // The same window, for a page that answered rather than one that failed to. Reading the pages only
-  // after `Promise.all` had settled meant a broken body was not noticed while any sibling was still
-  // outstanding -- and a sibling that never answers makes that never, so the call hung on a failure
-  // it was already holding.
+  // Pages must be checked as they answer, not after `Promise.all` settles.
+  // Otherwise a broken body goes unnoticed while any sibling is outstanding.
+  // If a sibling never answers, the call hangs on a failure it already holds.
   it('does not wait for a page that never answers to notice one that answered wrongly', async () => {
     const signals: AbortSignal[] = []
     const get = vi.fn().mockImplementation((url: string, config: { signal: AbortSignal }) => {
       signals.push(config.signal)
       if (url.includes('offset=0')) return Promise.resolve(counted([1], 5))
-      // Page two answers, and what it answers with is not a list.
       if (url.includes('offset=1')) return Promise.resolve({ status: 200, data: { totalCount: 5 } })
 
-      // Every other page is a server that never gets back to us.
       return new Promise(() => {})
     })
     const { execute, filterData, filterConfig } = setup(get)
@@ -222,11 +215,10 @@ describe('what happens to the pages still in flight when one fails', () => {
   })
 })
 
-// The rule the other three helpers follow: the field says which url was requested, so a call that
-// failed before any page went out has none. The base url is not an answer -- nobody asked for it.
-// The walk ends on a page shorter than the one asked for, so a page size of zero has no ending at
-// all: every page satisfies "not shorter than zero". Against a real client that is not a hang but an
-// unbounded stream of requests.
+// The `url` field says which url was requested, so a call that failed
+// before any page went out has none. The base url is not an answer.
+// The walk ends on a page shorter than requested. With page size zero no page
+// is ever shorter, so against a real client it sends unbounded requests.
 describe('a page size that could never end the walk', () => {
   it('refuses it instead of walking forever', async () => {
     const get = vi.fn()
@@ -267,9 +259,8 @@ describe('a batch that dies before a page goes out', () => {
     expect(logged.mock.calls[0][1].url).toBeUndefined()
   })
 
-  // The same rule for the step the fix first missed: the query is rendered per page, inside `get`,
-  // after the base url is known. A filter config that will not render is still a request that never
-  // happened, and the batch used to name the base url for it while the list helper named nothing.
+  // The query is rendered per page inside `get`, after the base url is known.
+  // A filter config that will not render means no request happened, so no url is reported.
   it('reports no url when the filter config will not render', async () => {
     const logged = vi.fn()
     setApiErrorLogger(logged)
@@ -282,7 +273,6 @@ describe('a batch that dies before a page goes out', () => {
       entity: 'test',
       urlTemplate: '/items',
     })
-    // A config that throws where the query is rendered, which is inside `get`, per page.
     const broken = { ...filterConfig, fields: null } as unknown as typeof filterConfig
 
     await expect(execute(filterData, broken)).rejects.toBeTruthy()
@@ -292,15 +282,13 @@ describe('a batch that dies before a page goes out', () => {
   })
 })
 
-// What the backend actually sends. `bigTable` is on by default, and with it the counted envelope's
-// `totalCount` is `offset + limit + 1` -- a look-ahead saying "there is at least one more page" --
-// corrected to the real total only on the page that comes back short. Dividing that by the page size
-// answers 2 for every list, so a batch over 5000 rows fetched 200 of them and resolved as finished.
-// It is the failure this helper exists to prevent, on the default configuration, and it was invisible
-// until someone read the backend.
+// Real backend behaviour: `bigTable` is on by default. The counted envelope's `totalCount`
+// is then `offset + limit + 1`, a look-ahead meaning "at least one more page".
+// It is corrected to the real total only on the page that comes back short.
+// Dividing it by the page size gives 2 for every list, so a batch over 5000 rows fetched 200 and resolved as finished.
 describe('the count the backend actually sends', () => {
-  // The real shape: { data, totalCount: offset + limit + 1, bigTable: true }, corrected on the last
-  // page because that is where the repository takes the branch that computes a true total.
+  // Real shape: `{ data, totalCount: offset + limit + 1, bigTable: true }`. The
+  // count is corrected on the last page, where the repository computes a true total.
   const bigTable = (rows: number[], offset: number, limit: number) => ({
     status: 200,
     data: {
@@ -326,8 +314,6 @@ describe('the count the backend actually sends', () => {
     expect(items[4999]).toStrictEqual({ id: 5000 })
   })
 
-  // The same envelope on a list that really does end early: the repository corrected the count, and
-  // the walk must not go asking for pages that are not there.
   it('stops where the corrected count says the list ends', async () => {
     const get = vi.fn().mockResolvedValueOnce(bigTable([1, 2, 3], 0, 100))
     const { execute, filterData, filterConfig } = setup(get)
@@ -338,12 +324,10 @@ describe('the count the backend actually sends', () => {
   })
 })
 
-// A backend is free to answer with fewer rows than the limit asked for, and several cap it. The
-// page count came from the requested size, so it worked out to too few pages -- and the offsets
-// stepped over the rows in between. The call resolved with a fraction of the list and no error,
-// which is the one failure this helper exists to prevent.
-// The batch had no cancellation test of its own: the family's contract has to hold here too, and
-// here it reaches further than elsewhere -- one call is many requests.
+// A backend may answer with fewer rows than the limit, and several cap it.
+// The page count came from the requested size, so too few pages were fetched and
+// offsets skipped rows. The call resolved with part of the list and no error.
+// The batch also needs the family's cancellation contract, and one call here is many requests.
 describe('stopping a batch', () => {
   it('supersedes the earlier call when asked to, pages and all', async () => {
     const signals: AbortSignal[] = []
@@ -406,14 +390,12 @@ describe('a backend that caps the page size', () => {
 
     expect(items).toHaveLength(25)
     expect(items.map((item) => item.id)).toStrictEqual(Array.from({ length: 25 }, (_unused, i) => i + 1))
-    // And it stepped by what the server gives, not by what was asked for.
     expect(asked.some((url) => url.includes('offset=10'))).toBe(true)
     expect(asked.some((url) => url.includes('offset=20'))).toBe(true)
   })
 
-  // The infinite walk addresses its pages the same way, so it loses rows the same way. The first fix
-  // hardened only the counted branch, and this is what the other one was still doing: six rows, five
-  // asked for, two given -- page two asked for offset 5 and rows 3, 4 and 5 were never fetched.
+  // The infinite walk addresses pages the same way and can lose rows the same way.
+  // Six rows, five asked for, two given: page two asked for offset 5, so rows 3 to 5 were never fetched.
   it('reads the whole list when it walks page by page', async () => {
     const asked: string[] = []
     const rows = [1, 2, 3, 4, 5, 6]
@@ -433,9 +415,9 @@ describe('a backend that caps the page size', () => {
     expect(asked.some((url) => url.includes('offset=4'))).toBe(true)
   })
 
-  // Once the page size is a guess, the pages go one at a time rather than all at once: the count is
-  // derived from a number the server has already contradicted, so a wrong guess costs requests one by
-  // one instead of a burst of them, and an empty page ends the walk where the arithmetic would not.
+  // Once the page size is a guess, pages go one at a time.
+  // The count derives from a number the server already contradicted. A wrong guess then
+  // costs requests one by one instead of a burst, and an empty page ends the walk.
   it('walks one page at a time once the size had to be guessed', async () => {
     const inFlight: string[] = []
     let mostAtOnce = 0
@@ -457,7 +439,6 @@ describe('a backend that caps the page size', () => {
     expect(mostAtOnce).toBe(1)
   })
 
-  // A server that stops early still ends the walk, rather than the page count deciding when to stop.
   it('stops at the first empty page rather than at the count it derived', async () => {
     const get = vi.fn().mockImplementation((url: string) => {
       const offset = Number(/offset=(\d+)/.exec(url)?.[1] ?? 0)
@@ -475,7 +456,6 @@ describe('a backend that caps the page size', () => {
     expect(get).toHaveBeenCalledTimes(3)
   })
 
-  // An honest backend keeps the parallel dispatch it always had.
   it('still sends the pages together when the first one was full', async () => {
     let mostAtOnce = 0
     let inFlight = 0
@@ -496,7 +476,6 @@ describe('a backend that caps the page size', () => {
     expect(mostAtOnce).toBeGreaterThan(1)
   })
 
-  // The ordinary case must not be mistaken for a cap: a list shorter than one page is complete.
   it('does not mistake a short list for a capped page', async () => {
     const get = vi.fn().mockResolvedValueOnce(counted([1, 2, 3], 3))
     const { execute, filterData, filterConfig } = setup(get)
@@ -515,8 +494,6 @@ describe('a page that breaks the contract', () => {
     await expect(execute(filterData, filterConfig)).rejects.toBeInstanceOf(AnzuApiResponseCodeError)
   })
 
-  // A server that breaks on page three is not "finished" -- half a list handed back as if it were
-  // whole is worse than an error.
   it('fails on a later page too, rather than returning what it has', async () => {
     const get = vi
       .fn()

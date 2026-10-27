@@ -14,16 +14,15 @@ interface LogActionsParams {
   logPaths: LogPaths
   type: LogTypeType
   /**
-   * Lets an ancestor own the flag, the way `usePagination` takes an external pagination ref --
-   * the card that shows the spinner sits above the table that does the fetching.
+   * Lets an ancestor own the flag, like `usePagination` takes an external pagination ref.
+   * The card that shows the spinner sits above the table that fetches.
    */
   loading?: Ref<boolean>
 }
 
 /**
- * Everything here is per instance, unlike the module-level refs the admins used to keep: the
- * views are remounted on every system/type change, and a `finally` belonging to the instance
- * that just went away would otherwise clear the new one's loading flag.
+ * Everything here is per instance. The views remount on every system or type change.
+ * With module-level refs, a `finally` of the unmounted instance would clear the new instance's loading flag.
  */
 export function useLogListActions(params: LogActionsParams) {
   const { showErrorsDefault } = useAlerts()
@@ -33,10 +32,10 @@ export function useLogListActions(params: LogActionsParams) {
   const listLoading = params.loading ?? ref(false)
   const datatableHiddenColumns = ref<Array<string>>([])
 
-  // Aborting is not enough on its own: axios rejects a cancelled request with `CanceledError`,
-  // which is an axios error rather than a `DOMException` named `AbortError`, so it slips past the
-  // helper's swallow and arrives here as a normal failure. Without this token the user would get
-  // an error alert for an action they took themselves.
+  // Aborting is not enough. axios rejects a cancelled request with
+  // `CanceledError`, not a `DOMException` named `AbortError`.
+  // So it slips past the helper's swallow and arrives as a normal failure.
+  // Without this token the user would get an error alert for their own action.
   let generation = 0
   const isCurrent = (token: number) => token === generation
 
@@ -47,16 +46,14 @@ export function useLogListActions(params: LogActionsParams) {
   ) => {
     const token = ++generation
     listLoading.value = true
-    // `execute` writes the counts into the ref it is handed, inside the call -- before
-    // anything out here could decide to discard them. It gets a copy, and the counts are
-    // committed to the real one only if this call is still the current one.
+    // `execute` writes the counts into the ref it gets during the call, before we can discard them.
+    // So it gets a copy. The counts go to the real ref only if this call is still current.
     const scratch = ref<Pagination>({ ...pagination.value })
     try {
       const items = await execute(scratch, filterData, filterConfig)
       if (!isCurrent(token)) return
       listItems.value = items
-      // Reading the scratch ref is the whole point -- these are the counts the helper just wrote
-      // into it, and this is the one moment they are known to belong to the current request.
+      // Read the scratch ref here. Only now are its counts known to belong to the current request.
       /* eslint-disable vue/no-ref-object-reactivity-loss */
       pagination.value = {
         ...pagination.value,
@@ -75,7 +72,9 @@ export function useLogListActions(params: LogActionsParams) {
     }
   }
 
-  /** Invalidates whatever is in flight, then cancels it. Order matters: the token first. */
+  /**
+   * Invalidates whatever is in flight, then cancels it. Order matters: the token first.
+   */
   const cancel = () => {
     generation++
     abort()
@@ -99,7 +98,9 @@ export function useLogDetailActions(params: LogActionsParams) {
   let generation = 0
   const isCurrent = (token: number) => token === generation
 
-  /** `true` once loaded, `false` when the page should leave, `undefined` when superseded or stopped. */
+  /**
+   * `true` once loaded, `false` when the page should leave, `undefined` when superseded or stopped.
+   */
   const fetchData = async (id: string): Promise<boolean | undefined> => {
     const token = ++generation
     detailLoading.value = true

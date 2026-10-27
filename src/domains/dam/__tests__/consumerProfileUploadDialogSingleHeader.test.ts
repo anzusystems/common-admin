@@ -15,10 +15,6 @@ import UploadQueueDialogSingle from '@/domains/dam/uploadQueue/components/Upload
 import { useUploadQueueDialog } from '@/domains/dam/uploadQueue/composables/useUploadQueueDialog'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
 
-// The title of the dialog of one uploaded file, under each of the two applications: "done" once the file is no longer
-// on its way, as before, and in the colour the dialog says an error in when the file was refused or failed, not in
-// the colour of a success. The real dialog over the real queue; the DAM is a client that records its requests.
-
 const QUEUE = 'single-dialog-header'
 const { Processing, Uploaded, Failed } = UploadQueueItemStatus
 
@@ -46,7 +42,6 @@ describe.each(consumerProfiles)('the title of the dialog of one uploaded file un
       initDamNotifications().openConnection()
       socket.accept()
     }
-    // As the widget leaves it when it opens the dialog of its queue.
     useUploadQueueDialog().uploadQueueDialog.value = QUEUE
   })
   afterEach(() => {
@@ -62,7 +57,6 @@ describe.each(consumerProfiles)('the title of the dialog of one uploaded file un
   })
 
   const item = () => useUploadQueuesStore(pinia).getQueueItems(QUEUE)[0]!
-  /** A file is picked: the widget queues it and opens the dialog of its queue. */
   const pickOne = async () => {
     await useUploadQueuesStore(pinia).addByFiles(QUEUE, extSystem, licence, [photo()], 'default')
     wrapper = mount(UploadQueueDialogSingle, {
@@ -87,7 +81,6 @@ describe.each(consumerProfiles)('the title of the dialog of one uploaded file un
     })
     await flushPromises()
   }
-  /** The title in the toolbar of the dialog, which is drawn into the body, within the place the frame gives it. */
   const title = () =>
     document.body.querySelector<HTMLElement>('.dam-image-detail .v-toolbar .text-label-large > .text-label-large')!
   const colours = () => [...title().classList].filter((name) => name === 'text-error' || name.startsWith('text-green'))

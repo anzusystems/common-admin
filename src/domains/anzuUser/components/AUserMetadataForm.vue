@@ -13,31 +13,36 @@ import type { BaseUser } from '@/shared/types/AnzuUser'
 const props = withDefaults(
   defineProps<{
     /**
-     * The system's validation profile (`requiredMetadata`). The cross-system repair form passes
-     * `true` outright: it writes to nine places at once, and a loose form could put an empty name
-     * into cms -- a record cms's own form would then refuse to save.
+     * The system's validation profile (`requiredMetadata`).
+     * The cross-system repair form always passes `true`. It writes to many systems, and a loose
+     * form could put an empty name into cms, which cms's own form would then refuse to save.
      */
     required?: boolean
     /**
-     * Whether the id is typed in at all. False only in cms, whose backend resolves it from SSO.
-     * With `isEdit` this makes three states, which one `readonly` could not express: not drawn,
-     * editable, or shown read-only.
+     * Whether the id is entered at all. False only in cms, whose backend resolves it from SSO.
+     * With `isEdit` this gives three states that `readonly` alone cannot: not drawn, editable, or read-only.
      */
     idInput?: boolean
     isEdit?: boolean
     readonly?: boolean
     /**
-     * Random colour on an empty value, as all four admins do today. Deliberately not passed by the
-     * cross-system repair form: it is always strict, so it would invent a colour on open and mark
-     * it as a change in every system at once.
+     * Random colour on an empty value, as all four admins do.
+     * Deliberately not passed by the cross-system repair form. It is strict, so
+     * it would invent a colour on open and mark it as a change in every system.
      */
     randomColor?: boolean
-    /** The system's `metadataNote` -- the same sentence the cross-system dialog shows. */
+    /**
+     * The system's `metadataNote` -- the same sentence the cross-system dialog shows.
+     */
     note?: string | undefined
-    /** i18n namespace for the field labels; the backend identity does not belong here. */
+    /**
+     * i18n namespace for the field labels; the backend identity does not belong here.
+     */
     scopeSystem?: string
     scopeSubject?: string
-    /** Vuelidate scope. Omitted means the page's own collector picks these rules up. */
+    /**
+     * Vuelidate scope. Omitted means the page's own collector picks these rules up.
+     */
     validationScope?: string | symbol | false | undefined
   }>(),
   {
@@ -79,12 +84,9 @@ const derivedAvatarText = () => {
 }
 
 /**
- * A dirty flag, not a checkbox: the two derived fields stay ordinary inputs that recompute while
- * nobody has touched them, and stop the moment somebody does.
- *
- * The flags are seeded from the data rather than starting clean. A stored value that differs from
- * what the names would produce was set on purpose -- the cms fixtures carry `Anzu` + `User 1` with
- * a full name of `Anzu User1` -- and renaming the person must not silently overwrite it.
+ * Dirty flags: the derived fields recompute until someone edits them, then stop.
+ * Flags are seeded from the data. A stored value that differs from the derived one was set on purpose
+ * (cms fixtures have `Anzu` + `User 1` with full name `Anzu User1`), and renaming must not overwrite it.
  */
 const fullNameTouched = ref(false)
 const avatarTextTouched = ref(false)
@@ -97,24 +99,18 @@ const seedTouchedFlags = () => {
 onMounted(seedTouchedFlags)
 
 /**
- * Re-seeded whenever the record itself is replaced, not only when its id changes.
- *
- * The id is not enough: the metadata repair dialog swaps between two systems' records *for the
- * same person*, so the id never moves. Without this the flags would still describe the record
- * before the swap, and a deliberate full name in the newly chosen source would be overwritten by
- * one derived from its names -- silently discarding the very value the operator picked as the
- * source of truth.
- *
- * Declared before the derive watcher below so it runs first: the flags are up to date before
- * anything decides whether to recompute.
+ * Re-seeded whenever the record is replaced, not only when its id changes.
+ * The metadata repair dialog swaps between two systems' records for the same person, so the
+ * id stays the same. Stale flags would overwrite the chosen source's deliberate full name.
+ * Declared before the derive watcher so the flags are updated first.
  */
 watch(
   () => user.value,
   () => seedTouchedFlags()
 )
 
-// Keyed on the names themselves rather than on an array, whose identity is new on every read --
-// that alone would make this fire on any object replacement, including one that changed nothing.
+// Keyed on the names as a string, not an array. A new array on every read
+// would fire on any object replacement, even one that changed nothing.
 watch(
   () => `${user.value.person.firstName}\u0000${user.value.person.lastName}`,
   (next, previous) => {
@@ -147,15 +143,12 @@ watch(
             sm="3"
           >
             <!--
-              Three states, not two. Not drawn where the backend resolves the id itself; a plain
-              field while creating; read-only once the record exists, because it is the primary key
-              every other system looks this person up by.
+              Three states: not drawn where the backend resolves the id; editable while creating; read-only
+              once the record exists, because every other system looks the person up by this key.
             -->
             <!--
-              `.number` is not decoration and it is not inert on a component: Vue applies model
-              modifiers inside `emit`, so without it the field hands back the string "42" against a
-              declared `IntegerIdNullable`, and that string is what the create body carries. Every
-              admin that draws this field binds it the same way.
+              `.number` is required. Vue applies model modifiers inside `emit`, so without it the field
+              returns the string "42" for an `IntegerIdNullable`, and the create body carries that string.
             -->
             <AFormTextField
               v-if="idInput && !isEdit && !readonly"
@@ -233,8 +226,8 @@ watch(
               :value="user.person.fullName"
             />
             <!--
-              `@update:model-value` only fires on a real edit: assigning from the watcher above goes
-              through the model, not through the field, so recomputing never marks the field touched.
+              `@update:model-value` fires only on a real edit. The watcher assigns
+              through the model, so recomputing never marks the field touched.
             -->
             <AFormTextField
               v-else

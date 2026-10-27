@@ -29,9 +29,8 @@ const open = defineModel<boolean>('open', { required: true })
 const { t } = useI18n()
 const store = useUserCrossSystemStore()
 
-// The form's own collector. Without it the strict rules only showed asterisks: nothing asked them
-// before writing, and a source with an empty name or colour -- blog's `person` is empty for most
-// accounts, cms never required a colour -- was written as blank into every ticked system.
+// The form's own collector, so the strict rules are checked before writing. Without it an empty
+// name or colour from the source (common in blog and cms) was written blank to every ticked system.
 const v$ = useVuelidate()
 
 const records = computed(() => {
@@ -46,25 +45,20 @@ const records = computed(() => {
 const sourceSystem = ref<string | null>(null)
 const target = ref<BaseUser | null>(null)
 /**
- * Which systems the write goes to. Ticked by default, and untickable one by one -- the same shape
- * as the enable/disable dialog, because an operator who knows one system's value is deliberately
- * different needs a way to leave it out that is not "abort the whole repair".
+ * Target systems. Ticked by default and untickable one by one, like the enable/disable
+ * dialog, so an operator can skip a system whose value is intentionally different.
  */
 const selected = ref<string[]>([])
 /**
- * The dialog stays open after confirm and shows the run, exactly as the enable/disable one does.
- *
- * Closing on confirm is what made a failed repair invisible: the outcomes went into the shared log
- * with nothing rendering them, so a 422 on one system looked the same as a repair that worked.
+ * The dialog stays open after confirm and shows the run, like the enable/disable one.
+ * Closing on confirm hid failures: a 422 on one system looked like a successful repair.
  */
 const showingLog = ref(false)
 
 /**
- * The pre-fill comes from the first system in the configured order that has a record -- never from
- * whichever answered first, since the fan-out is parallel and that would differ every run.
- *
- * And the source is not hidden: it is named here and can be changed, so the order in the config is
- * a default rather than a rule nobody can see.
+ * Pre-fill from the first system in configured order that has a record, not
+ * the first to answer. The fan-out is parallel, so that would differ per run.
+ * The source is shown and can be changed.
  */
 watch(
   open,
@@ -101,16 +95,19 @@ const mayUpdate = (system: string) => {
 
 const allDiffering = computed(() => (target.value === null ? [] : systemsNeedingWrite(target.value, records.value)))
 
-/** Only the systems whose stored value differs and that may be written. Nothing else is offered, let alone written to. */
+/**
+ * Only systems whose value differs and that may be written.
+ */
 const differing = computed(() => allDiffering.value.filter(mayUpdate))
 
-/** Differing, but the operator may not write them: listed so the repair does not look complete. */
+/**
+ * Differing, but the operator may not write them: listed so the repair does not look complete.
+ */
 const differingWithoutRight = computed(() => allDiffering.value.filter((system) => !mayUpdate(system)))
 
-/** What confirm would actually write to: the differing systems that are still ticked. */
 const affected = computed(() => differing.value.filter((system) => selected.value.includes(system)))
 
-// Everything that differs, ticked, whenever the set changes -- on open and on a source switch.
+// Re-tick everything that differs whenever the set changes: on open and on a source switch.
 watch(
   differing,
   (systems) => {
@@ -155,7 +152,9 @@ const confirm = async () => {
   emit('confirm', { target: target.value, systems: affected.value })
 }
 
-/** The same value again, to the systems it did not reach. 403 included: rights may have been granted since. */
+/**
+ * Retries the same value on systems it did not reach, 403 included: rights may have been granted since.
+ */
 const retryFailed = () => {
   if (target.value === null) return
   emit('confirm', { target: target.value, systems: failed.value.map((entry) => entry.system) })
@@ -174,8 +173,8 @@ const retryFailed = () => {
       </ADialogToolbar>
       <VCardText v-if="target && !showingLog">
         <!--
-          Two ids behind one e-mail. Writing under either of them would put this person's metadata
-          on somebody else's account, and no admin can delete an AnzuUser afterwards.
+          Two ids share one e-mail. Writing under either could put this person's
+          metadata on someone else's account, and no admin can delete an AnzuUser.
         -->
         <VAlert
           v-if="store.identityConflict"
@@ -195,12 +194,10 @@ const retryFailed = () => {
           data-cy="repair-source"
         />
         <!--
-          Always strict, whatever the target systems' own profiles say: this writes to up to nine
-          places at once, and a loose form could put an empty name into cms -- a record cms's own
-          form would then refuse to save.
-
-          `randomColor` is deliberately not passed. The form is strict, so it would invent a colour
-          the moment the dialog opens and mark it as a change in every system at once.
+          Always strict, whatever the target profiles say. It writes to many systems, and a loose
+          form could put an empty name into cms, which cms's form would then refuse to save.
+          `randomColor` is deliberately not passed: the strict form would
+          invent a colour on open and mark it as a change everywhere.
         -->
         <AUserMetadataForm
           v-model:user="target"

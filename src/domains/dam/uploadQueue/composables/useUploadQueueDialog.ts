@@ -3,18 +3,19 @@ import type { UploadQueueKey } from '@/domains/dam/types/UploadQueue'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
 
 const uploadQueueDialog = ref<UploadQueueKey | null>(null)
-// The queue whose dialog is saving right now. "Save and apply" ends with the queue emptied: its host takes no file
-// for that queue meanwhile, through an entry of its own, as the dialog takes none through its "+" and its dropzone.
+// Queue whose dialog is saving now. "Save and apply" ends with the queue emptied.
+// Meanwhile the host accepts no file for that queue, as the dialog accepts none through "+" and its dropzone.
 const uploadQueueDialogSaving = ref<UploadQueueKey | null>(null)
 const uploadQueueSidebar = ref(false)
-// The upload dialogs drawn now, by their queue: two widgets of one queue key each draw theirs.
+// Count of upload dialogs drawn per queue. Two widgets with one queue key each draw their own.
 const dialogsDrawn = new Map<UploadQueueKey, number>()
 
 /**
- * For an upload dialog, from its setup: drawn till it is unmounted. Gone with its widget (the editor sent out of the
- * article during an upload), the last dialog of its queue forgets that dialog named: the app kept the name, and the next
- * widget of that queue opened the dialog at once. Not while another dialog of the queue is still drawn: the name closed
- * that one as well. The queue itself is left as it is.
+ * Call from an upload dialog's setup. It counts as drawn until unmounted.
+ * When the last dialog of a queue unmounts with its widget (e.g. the editor leaves the article during an
+ * upload), the open-dialog name is cleared. Otherwise the next widget of that queue opened the dialog at once.
+ * Not while another dialog of the queue is drawn, because clearing
+ * the name would close it too. The queue itself is not changed.
  */
 export function useUploadQueueDialogDrawn(queueKey: UploadQueueKey) {
   dialogsDrawn.set(queueKey, (dialogsDrawn.get(queueKey) ?? 0) + 1)
@@ -32,11 +33,10 @@ export function useUploadQueueDialog() {
   }
 
   /**
-   * Before files or the copy of an asset are added to the queue `queueKey` from outside its dialog. A queue no dialog
-   * names holds only the rows a dialog that went away with its widget left there (the editor sent out of the article
-   * during an upload), and the dialog opened for the new file showed the first of them, the old file, and its "save and
-   * apply" handed the widget that one. Such a queue is stopped first: the uploads of its rows stop, and an asset an
-   * upload has made stays in the DAM.
+   * Call before adding files or an asset copy to queue `queueKey` from outside its dialog.
+   * A queue no dialog names holds only rows left by a dialog that unmounted with its widget.
+   * The new dialog then showed the old file and "save and apply" handed it to the widget.
+   * So such a queue is stopped first. Its uploads stop, and assets already created stay in the DAM.
    */
   const stopQueueLeftBehind = (queueKey: UploadQueueKey) => {
     if (uploadQueueDialog.value !== queueKey) useUploadQueuesStore().stopUpload(queueKey)

@@ -13,9 +13,10 @@ import {
   FilterSubmitResetCounterKey,
 } from '@/domains/filters/utils/filterInjectionKeys'
 
-// Lookups of a filter field by a name taken from configuration (`noUncheckedIndexedAccess`, #119). Each
-// used to read `.default`, `.apiName` or `.titleT` off `undefined` when the name was wrong, so a typo in a
-// filter definition surfaced as a TypeError far from it. Now each fails where the name is given, by name.
+// Lookups of a filter field by a name from configuration (`noUncheckedIndexedAccess`, #119).
+// Each used to read `.default`, `.apiName` or `.titleT` off
+// `undefined` on a wrong name, giving a TypeError far from the typo.
+// Now each fails where the name is given, by name.
 
 vi.mock('@/domains/collab/composables/commonAdminCollabOptions', () => ({
   useCommonAdminCollabOptions: () => ({ collabOptions: ref({ enabled: false }) }),
@@ -49,7 +50,6 @@ describe('a time interval pair', () => {
       { name: 'until' as const, default: null },
     ]
     const { filterConfig, filterData } = createFilter(fields, createFilterStore(fields))
-    // The default is read only for an empty value, so the data has the key and the config does not.
     ;(filterData as Record<string, unknown>).to = null
     const { resolveTimeIntervalFilter } = useApiQueryBuilder()
     expect(() => resolveTimeIntervalFilter('from', 'to', filterData, filterConfig, true, false)).toThrow(

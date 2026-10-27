@@ -7,10 +7,9 @@ withDefaults(
   defineProps<{
     readonly?: boolean
     /**
-     * The system's `enabledNote`. A static string from the descriptor rather than a slot: a slot
-     * would have to be filled by every admin separately, could drift from the wording in the bulk
-     * dialog, and -- worst -- could be forgotten in admin-blog, which is the one place the sentence
-     * matters most. The slot below stays as an escape hatch for more than a line of text.
+     * The system's `enabledNote`. A descriptor string rather than a slot, so every admin shows the
+     * same wording as the bulk dialog and admin-blog, where it matters most, cannot forget it.
+     * The slot below remains for content longer than a line.
      */
     note?: string | undefined
   }>(),
@@ -28,9 +27,8 @@ const { t } = useI18n()
 <template>
   <div>
     <!--
-      Outside `AUserMetadataForm` on purpose: that one mirrors `BaseUserDto`, which has no
-      `enabled`, and is also used by the cross-system metadata repair -- which must not write this
-      field and would otherwise have to hide it.
+      Outside `AUserMetadataForm` on purpose. That form mirrors `BaseUserDto`, which has no
+      `enabled`, and the cross-system metadata repair uses it and must not write this field.
     -->
     <ARow
       v-if="readonly"

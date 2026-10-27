@@ -37,9 +37,13 @@ const props = withDefaults(
     clearable?: boolean
     dataCy?: string
     validationScope?: ValidationScope
-    /** While disabled: the chips of the keywords (today's library), or the input switched off. */
+    /**
+     * How it looks while disabled: keyword chips (current library behaviour), or the input switched off.
+     */
     disabledAs?: DamFieldsDisabledAs
-    /** The DAM configuration to work under. Left out: that of the component it is in, else `default`. */
+    /**
+     * DAM configuration to use. Defaults to the parent component's, else `default`.
+     */
     configName?: string
   }>(),
   {
@@ -110,7 +114,7 @@ const searchChange = (newValue: string) => {
 }
 
 const { addManualToCachedKeywords } = useDamCachedKeywords(damConfigName)
-// The cache of its configuration, which the inner input takes once.
+// The inner input reads this cache only once.
 const useCachedOfName = () => useCachedKeywordsForRemoteAutocomplete(damConfigName)
 
 const afterCreate = (keyword: DamKeyword) => {
@@ -253,8 +257,10 @@ const showAdd = computed(() => {
           </template>
         </VListItem>
       </template>
-      <!-- Only the close of the slot's chip: its other props (`onMousedown`) would keep a press on the chip from
-        opening the list, as it does. -->
+      <!--
+        Pass only the chip's close. Its other props (`onMousedown`)
+        would stop a press on the chip from opening the list.
+      -->
       <template #chip="{ props: chipSlotProps, item: chipSlotItem }">
         <KeywordRemoteAutocompleteCachedKeywordChip
           v-if="chipSlotItem"
@@ -287,7 +293,7 @@ const showAdd = computed(() => {
 .a-keywords-append-item {
   position: sticky;
   bottom: 0;
-  // The menu's own surface: a white bar sat in the dark theme's menu.
+  // Use the menu surface color. A white bar showed in the dark theme.
   background-color: rgb(var(--v-theme-surface));
   transform: translateY(8px);
 }

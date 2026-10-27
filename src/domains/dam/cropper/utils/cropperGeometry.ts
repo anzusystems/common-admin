@@ -1,8 +1,6 @@
 /**
- * The geometry behind `ACropper`: how big the canvas is, where the initial crop box lands, and how a
- * crop box is kept inside the image. cropper.js v1 did all of this internally and v2 does none of
- * it, so it has to live somewhere — and here, away from the DOM, it can be tested directly rather
- * than through a mounted component.
+ * Geometry for `ACropper`: canvas size, initial crop box, and keeping the crop inside the image.
+ * cropper.js v1 did this internally and v2 does not. Kept away from the DOM so it can be tested directly.
  */
 import { getAdjustedSizes } from 'cropperjs'
 
@@ -19,21 +17,18 @@ export interface Rect {
 }
 
 /**
- * Which edge of the selection stays put while the other one moves. Resizing from the west handle
- * pins the east edge, resizing from the north-east corner pins the south-west one, and the side
- * handles grow symmetrically around the perpendicular centre — this mirrors how cropper.js v2
- * computes a resize, and it is what lets a clamped selection stop at the image border instead of
- * sliding along it.
- *
- * `fit` is the anchor-less case (a programmatic `setData`, a plain move, a re-fit after the
- * container changed): the box may be as large as the image allows anywhere, and is slid back into
- * view afterwards, which is what cropper.js v1's `limitCropBox` did.
+ * Which edge of the selection stays fixed while the other moves. This mirrors how cropper.js v2
+ * computes a resize, and lets a clamped selection stop at the image border instead of sliding.
+ * `fit` is the case without an anchor (programmatic `setData`, a move, a re-fit after resize). The
+ * box may be as large as the image allows and is slid back into view, like v1's `limitCropBox`.
  */
 export type AnchorSide = 'start' | 'center' | 'end' | 'fit'
 
 export type Anchor = [AnchorSide, AnchorSide]
 
-/** Anchors per cropper.js action name. Anything missing is treated as a plain "fit it in" clamp. */
+/**
+ * Anchors per cropper.js action name. Missing actions get a plain "fit" clamp.
+ */
 export const RESIZE_ANCHORS: Readonly<Record<string, Anchor>> = {
   'n-resize': ['center', 'end'],
   's-resize': ['center', 'start'],
@@ -43,7 +38,7 @@ export const RESIZE_ANCHORS: Readonly<Record<string, Anchor>> = {
   'nw-resize': ['end', 'end'],
   'se-resize': ['start', 'start'],
   'sw-resize': ['end', 'start'],
-  // Drawing a brand new selection grows it away from the point the drag started at.
+  // A new selection grows away from the drag start point.
   select: ['start', 'start'],
 }
 
@@ -52,8 +47,8 @@ export const isUsableAspectRatio = (aspectRatio: number): boolean => Number.isFi
 const clamp = (value: number, min: number, max: number): number => Math.min(Math.max(value, min), max)
 
 /**
- * The largest box of `aspectRatio` that fits inside `size`. With no usable ratio the size is
- * returned untouched, which is how a free-form crop behaves.
+ * The largest box of `aspectRatio` that fits in `size`. Without a
+ * usable ratio the size is returned unchanged, as for a free-form crop.
  */
 export const fitAspectRatio = (size: Size, aspectRatio: number): Size => {
   if (!isUsableAspectRatio(aspectRatio)) return { width: size.width, height: size.height }
@@ -63,10 +58,9 @@ export const fitAspectRatio = (size: Size, aspectRatio: number): Size => {
 }
 
 /**
- * The box the crop starts out as: cropper.js v1's `autoCropArea` applied to the aspect-fitted
- * image, centred. Because `fitAspectRatio` scales linearly this is the same rectangle whether it is
- * computed in natural pixels or in displayed ones — which is why the crop data a user sees does not
- * depend on how wide their window happens to be.
+ * The initial crop: v1's `autoCropArea` applied to the aspect-fitted image, centred.
+ * `fitAspectRatio` scales linearly, so the result is the same in natural
+ * or displayed pixels. Crop data does not depend on window width.
  */
 export const initialSelectionRect = (bounds: Size, aspectRatio: number, coverage: number): Rect => {
   const fitted = fitAspectRatio(bounds, aspectRatio)
@@ -81,20 +75,20 @@ export const initialSelectionRect = (bounds: Size, aspectRatio: number, coverage
 }
 
 /**
- * Grows a box to the given ratio, by calling the very function cropper.js' `$change` will call on
- * it. Doing it here first means a rectangle is already the shape the library will make it *before*
- * it is measured against the image: a crop that names a new height keeps its old width through the
- * clamp otherwise, and cropper.js then widens it to suit the ratio — straight past the image edge.
- *
- * The guard is not redundant. `getAdjustedSizes` has no notion of a free-form crop and answers a
- * `NaN` ratio with a `NaN` dimension.
+ * Grows a box to the ratio with the same function cropper.js' `$change`
+ * uses. The box then has its final shape before it is clamped to the image.
+ * Otherwise a crop with a new height keeps its old width through
+ * the clamp, and cropper.js widens it past the image edge.
+ * The guard is needed: `getAdjustedSizes` returns `NaN` for a `NaN` ratio.
  */
 export const coverAspectRatio = (size: Size, aspectRatio: number): Size =>
   isUsableAspectRatio(aspectRatio)
     ? getAdjustedSizes({ width: size.width, height: size.height, aspectRatio }, 'cover')
     : { width: size.width, height: size.height }
 
-/** How much room an axis has left once the anchored edge is held still. */
+/**
+ * How much room an axis has while the anchored edge stays fixed.
+ */
 const availableAlong = (start: number, length: number, boundsStart: number, boundsLength: number, side: AnchorSide) => {
   const boundsEnd = boundsStart + boundsLength
   if (side === 'start') return Math.max(0, boundsEnd - Math.max(start, boundsStart))
@@ -103,7 +97,9 @@ const availableAlong = (start: number, length: number, boundsStart: number, boun
   return boundsLength
 }
 
-/** Where the axis ends up once its length is known and the anchored edge has to stay put. */
+/**
+ * Where the axis starts once its length is known and the anchored edge stays fixed.
+ */
 const placeAlong = (start: number, length: number, newLength: number, side: AnchorSide) => {
   if (side === 'end') return start + length - newLength
   if (side === 'center') return start + length / 2 - newLength / 2
@@ -111,19 +107,17 @@ const placeAlong = (start: number, length: number, newLength: number, side: Anch
 }
 
 /**
- * Keeps `rect` inside `bounds` the way cropper.js v1's `viewMode: 1` did: a selection that has
- * grown past an edge is shrunk rather than pushed, so the edge the user is not dragging stays where
- * they put it, and a selection that is merely out of position is slid back in whole.
- *
- * `anchor` says which edges the current gesture is holding still. Leaving it out (a programmatic
- * `setData`, the initial layout, a re-fit after a resize) caps the size at the bounds, keeps the
- * top-left corner it was given and slides the result into view — what v1's `limitCropBox` did.
+ * Keeps `rect` inside `bounds` like v1's `viewMode: 1`. A selection past an edge is shrunk, not pushed,
+ * so the edge not being dragged stays put. A selection only out of position is slid back whole.
+ * `anchor` gives the edges the gesture holds fixed. Without it (programmatic
+ * `setData`, initial layout, re-fit after resize) the size is capped at the bounds,
+ * the top-left corner is kept and the result slid into view, like v1's `limitCropBox`.
  */
 export const clampRectInside = (rect: Rect, bounds: Rect, aspectRatio: number, anchor?: Anchor): Rect => {
   const [anchorX, anchorY] = anchor ?? ['fit', 'fit']
 
-  // Measure the rectangle cropper.js would end up with, not the one that was asked for. A rectangle
-  // already in the right proportion — which is everything a drag produces — is untouched by this.
+  // Measure the rectangle cropper.js will produce, not the requested one. A
+  // rectangle already in proportion, such as any drag result, is unchanged.
   const asked = { ...rect, ...coverAspectRatio(rect, aspectRatio) }
 
   const maxWidth = availableAlong(asked.x, asked.width, bounds.x, bounds.width, anchorX)
@@ -131,7 +125,7 @@ export const clampRectInside = (rect: Rect, bounds: Rect, aspectRatio: number, a
 
   let { width, height } = asked
   if (isUsableAspectRatio(aspectRatio)) {
-    // Shrink both axes by the same factor, otherwise the crop silently changes shape at the border.
+    // Scale both axes by the same factor, or the crop changes shape at the border.
     const scale = Math.min(1, width > 0 ? maxWidth / width : 1, height > 0 ? maxHeight / height : 1)
     width *= scale
     height *= scale
@@ -158,14 +152,10 @@ export const rectsAreClose = (a: Rect, b: Rect, epsilon = 0.01): boolean =>
   Math.abs(a.height - b.height) < epsilon
 
 /**
- * The box the cropper canvas takes. This is the frame, not the picture: cropper.js v1 let its
- * container fill the width it was given and then centred the image inside it, so a source narrower
- * than the container sat between two shaded margins rather than stretching to fill them. The height
- * comes from the image at its displayed size, which is its natural size unless that is wider than
- * the space available — v1 never enlarged a source either, its `<img>` being capped at `max-width`.
- *
- * The image is fitted into this box with `contain`, so image pixels and canvas pixels differ by one
- * uniform scale factor and an offset.
+ * The canvas box. This is the frame, not the picture. Like v1, it fills the given width
+ * and the image is centred inside, so a narrow source sits between shaded margins.
+ * Height comes from the displayed image size: natural size, unless wider than the space. Sources are never enlarged.
+ * The image is fitted with `contain`, so image and canvas pixels differ by one scale factor and an offset.
  */
 export const canvasSizeFor = (natural: Size, availableWidth: number, minWidth: number, minHeight: number): Size => {
   const width = Math.max(availableWidth, minWidth)

@@ -2,8 +2,8 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import type { MakeFilterOption } from '@/domains/filters/composables/filterFactory'
 import { resetAnzuUserListFilters, useAnzuUserListFilter } from '@/domains/anzuUser/filter/anzuUserFilter'
 
-// The shared list carries three fields, and the two admins with the biggest lists need more than
-// three. What stops those extras living in the shared list is that the same question is a different
+// The shared list carries three fields, but the two admins with the biggest lists need more.
+// The extras cannot live in the shared list because the same question is a different
 // query per backend: cms asks for permission groups with `memberOf`, dam with `custom`.
 
 const damExtras = [
@@ -31,7 +31,6 @@ describe('the shared user list filter', () => {
     const { filterConfig } = useAnzuUserListFilter('dam', damExtras)
 
     expect(Object.keys(filterConfig.fields)).toContain('lastName')
-    // `person.lastName`, not `lastName`: the column the backend filters on is nested.
     expect(filterConfig.fields.lastName.apiName).toBe('person.lastName')
     expect(filterConfig.fields.permissionGroups.variant).toBe('custom')
   })
@@ -54,7 +53,6 @@ describe('the shared user list filter', () => {
     const cmsAgain = useAnzuUserListFilter('cms', cmsExtras)
 
     expect(Object.keys(weather.filterData)).not.toContain('allowedSites')
-    // And the same list gets its own value back rather than a fresh store.
     expect(cmsAgain.filterData.allowedSites).toEqual([7])
   })
 })

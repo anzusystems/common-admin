@@ -11,10 +11,6 @@ import {
 } from '@/domains/anzuUser/composables/userSystemDescriptor'
 import { useUserCrossSystemStore } from '@/domains/anzuUser/store/userCrossSystemStore'
 
-// The screen the cross-system work is for. What matters here is not the layout but the two answers
-// it gives after a search that found nobody: whether creating an account may be offered at all, and
-// what the dialog tells the operator is about to happen.
-
 const emptyList = () => ({ status: 200, data: { data: [], totalCount: 0 } })
 
 const notFound = () =>
@@ -99,10 +95,10 @@ afterEach(() => {
 
 describe('after a search that found nobody', () => {
   it('offers to create an account when an address belongs to nobody', async () => {
-    // An address search cannot prove absence -- a system holding the same person under a different
-    // address answers nothing -- so refusing here would put the whole create flow out of reach of
-    // the search people actually use. What makes it safe is that the dialog asks for the id and
-    // runs its own authoritative fan-out on it before writing.
+    // An address search cannot prove absence: a system holding
+    // the same person under a different address answers nothing.
+    // Refusing here would block the create flow for the search people actually use.
+    // It is safe because the dialog asks for the id and runs its own authoritative fan-out before writing.
     const backends = ['weather', 'blog'].map((system) => ({
       system,
       get: vi.fn().mockResolvedValue(emptyList()),
@@ -128,8 +124,8 @@ describe('after a search that found nobody', () => {
   })
 
   it('refuses after an id search one system could not answer, and offers a retry instead', async () => {
-    // A record that could not be read is not a record that does not exist, and no admin can delete
-    // an AnzuUser -- a duplicate identity created on that guess could never be taken back.
+    // A record that could not be read is not a record that does not exist.
+    // No admin can delete an AnzuUser, so a duplicate identity created on that guess cannot be taken back.
     const backends = [
       {
         system: 'weather',
@@ -183,19 +179,17 @@ describe('after a search that found nobody', () => {
     await open.trigger('click')
     await flushPromises()
 
-    // Decision 21 is written about this exact flow, and the sentence it asks for is the system's
-    // own: in blog and forum an account here is an account on the public web.
+    // In blog and forum an account here is an account on the public web, so the dialog shows the system's own sentence.
     expect(document.body.textContent).toContain('V blogu je to ten istý účet')
-    // Nobody to copy from, so it is created switched off -- and the dialog says which of the two.
     expect(document.body.textContent).toContain('The account is created disabled')
   })
 })
 
 describe('leaving the page', () => {
   it('does not keep the last person on screen for the next visit', async () => {
-    // The store outlives a closed dialog on purpose, so a running bulk action is not lost with it.
-    // It is not meant to outlive the page: coming back through the menu showed the previous
-    // person's rows and live toggles under an empty search box.
+    // The store outlives a closed dialog on purpose, so a running bulk action is not lost.
+    // It must not outlive the page: coming back through the menu showed the
+    // previous person's rows and live toggles under an empty search box.
     const found = {
       id: 42,
       email: 'jozef@sme.sk',
@@ -241,9 +235,8 @@ describe('leaving the page while work is still out', () => {
   })
 
   it('keeps the bulk lock while a run is still writing, so a second one cannot start (B13)', async () => {
-    // `cancel()` stops the probes, not the writes: the PUTs of a run go on after the page is gone,
-    // and a reset that released the lock let a second run start against the same account while
-    // the first was unfinished.
+    // `cancel()` stops the probes, not the writes. The PUTs of a run continue after the page is gone.
+    // A reset that released the lock let a second run start against the same account while the first was unfinished.
     const puts: Array<(value: unknown) => void> = []
     const request = vi.fn((config: { method: string }) =>
       config.method === 'PUT'
@@ -270,7 +263,6 @@ describe('leaving the page while work is still out', () => {
     await search(wrapper, '42')
     expect(wrapper.get('[data-cy="cross-system-bulk-disable"]').attributes('disabled')).toBeDefined()
 
-    // The run ends and releases the lock itself.
     puts[0]!({ status: 200, data: person({ enabled: false }) })
     await flushPromises()
     expect(store.bulkRunning).toBe(false)
@@ -278,9 +270,9 @@ describe('leaving the page while work is still out', () => {
   })
 
   it('does not put a person created after the page was left back on it', async () => {
-    // The create dialog is not persistent: click outside, use the menu, and the POST is still out.
-    // The search that follows it takes a fresh generation `cancel()` cannot stop, and refilled the
-    // store the unmount had just emptied -- that person's rows and live buttons on the next visit.
+    // The create dialog is not persistent: click outside, use the menu, and the POST is still pending.
+    // The search that follows takes a fresh generation that `cancel()` cannot stop.
+    // It refilled the store the unmount had just emptied, so the next visit showed that person's rows and live buttons.
     let created = false
     let releasePost: (value: unknown) => void = () => {}
     const request = vi.fn((config: { method: string }) => {

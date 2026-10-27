@@ -10,9 +10,8 @@ import { AssetFileProcessStatus } from '@/domains/dam/types/AssetFile'
 import { UploadQueueItemStatus, UploadQueueItemType } from '@/domains/dam/types/UploadQueue'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
 
-// The upload as admin-ugc has it: no notification ever comes, and a file the server has processed is found by
-// asking for its asset. Nothing of the library is replaced here: the requests go to a client that records them,
-// and only the long waits between two reads are taken out of real time.
+// The upload as admin-ugc has it: no notification ever comes, and a processed file is found by asking for its asset.
+// Requests go to a recording client, and only the long waits between reads are taken out of real time.
 
 const { extSystem, licence, endPoints } = ugcConfiguration
 const QUEUE = 'ugc-queue'
@@ -69,7 +68,6 @@ describe('an uploaded file no notification ever announces', () => {
     await vi.waitFor(() => expect(item.status).toBe(UploadQueueItemStatus.Processing))
     expect(store.getQueueProcessedCount(QUEUE)).toBe(0)
 
-    // The server is done with the file; the queue learns it the next time it asks.
     dam.fileBecomes('asset-1', AssetFileProcessStatus.Processed, fromTheServer, { links: damImageLinks('file-1') })
     await waits.elapse()
     await vi.waitFor(() => expect(item.status).toBe(UploadQueueItemStatus.Uploaded))
@@ -91,11 +89,9 @@ describe('an uploaded file no notification ever announces', () => {
     })
     expect(store.getQueueProcessedCount(QUEUE)).toBe(store.getQueueTotalCount(QUEUE))
 
-    // It was asked for under the configured asset endpoint, by the asset of the row.
     const reads = dam.assetReads()
     expect(reads.length).toBeGreaterThan(0)
     expect(reads.every((read) => read.url.startsWith('/ugc/v1/asset/') && read.url.includes('asset-1'))).toBe(true)
-    // And once settled, no more.
     await waits.elapseAll()
     expect(dam.assetReads()).toHaveLength(reads.length)
 

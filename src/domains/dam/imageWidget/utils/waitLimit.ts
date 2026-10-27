@@ -1,17 +1,15 @@
 import { coreDamOptions } from '@/plugins/pluginOptions'
 import { isNumber } from '@/shared/utils/common'
 
-/** What a wait that has run out answers. */
 export const WAIT_RAN_OUT = Symbol('wait ran out')
 
 const DEFAULT_LIMIT_SECONDS = 30
 
 /**
- * `wait`, for at most the time the application gives a request to the DAM (`apiTimeout` of the DAM configuration
- * `configName`, else the root `coreDam.apiTimeout`, in seconds; 30 where it gives none), once for each of the `requests`
- * it is made of, one after another. What a widget waits for may be a request of another widget, or several in a row,
- * and a client without a time limit of its own never ends a request that does not answer: the widget waited on,
- * without an end.
+ * Limits `wait` to the DAM request timeout per each of `requests` in sequence:
+ * `apiTimeout` of config `configName`, else `coreDam.apiTimeout`, else 30 seconds.
+ * The awaited work may be another widget's requests, and a client without its
+ * own timeout never ends an unanswered request, so the widget waited forever.
  */
 export const withinWaitLimit = <T>(
   wait: Promise<T>,

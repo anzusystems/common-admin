@@ -2,20 +2,19 @@ import { describe, expect, it } from 'vitest'
 import { globKeyToSrcPath } from '@/testing/typedRouter'
 
 export interface DescribeAlertHostOptions {
-  /** The admin's components: `import.meta.glob(['/src/**\/*.vue', '!/src/test/**'], { query: '?raw', import: 'default', eager: true })`. */
+  /**
+   * The admin's components: `import.meta.glob(['/src/**\/*.vue', '!/src/test/**'], { query: '?raw', import: 'default', eager: true })`.
+   */
   sources: Record<string, string>
-  /** The component with the layout switch, which mounts `<AAlerts />`. */
   host?: string
 }
 
 /**
- * Where the alerts land.
- *
- * `AAlerts` is the host every `showError` / `showWarning` renders into. It is mounted once, outside the
- * layout switch: by `ALayoutSwitch`, or next to the admin's own `<component :is="layout">`. A host inside a
- * layout took the alerts it was showing away with it when the route switched layouts -- a start-up
- * error raised under the loader vanished the moment the drawer replaced it -- and a layout without one
- * had nowhere to show them at all.
+ * `AAlerts` is the host every `showError` / `showWarning` renders into. It is mounted once, outside
+ * the layout switch: by `ALayoutSwitch`, or next to the admin's own `<component :is="layout">`.
+ * A host inside a layout takes its alerts away when the route switches layouts.
+ * A start-up error raised under the loader vanished when the drawer replaced it.
+ * A layout without a host has nowhere to show alerts.
  */
 export function describeAlertHost({ sources, host = 'src/layouts/AppLayout.vue' }: DescribeAlertHostOptions): void {
   const bySrcPath = new Map(Object.entries(sources).map(([path, source]) => [globKeyToSrcPath(path), source]))
@@ -26,7 +25,6 @@ export function describeAlertHost({ sources, host = 'src/layouts/AppLayout.vue' 
       expect(source).toBeDefined()
       const template = source!.slice(source!.indexOf('<template>'))
 
-      // `ALayoutSwitch` mounts it itself, before the layout it switches.
       if (/<ALayoutSwitch\b/.test(template)) {
         expect(template.match(/<ALayoutSwitch\b/g)).toHaveLength(1)
         expect(template).not.toMatch(/<AAlerts/)
@@ -49,7 +47,9 @@ export function describeAlertHost({ sources, host = 'src/layouts/AppLayout.vue' 
   })
 }
 
-/** The `@layer` statement an admin's index.html opens with: the library's layer sits between Vuetify's overrides and its utilities. */
+/**
+ * The `@layer` statement an admin's index.html opens with: the library's layer sits between Vuetify's overrides and its utilities.
+ */
 export const CSS_LAYER_ORDER = [
   'vuetify-core',
   'vuetify-components',
@@ -70,7 +70,6 @@ export const CSS_SUBLAYER_ORDER = {
   'vuetify-final': ['transitions', 'trumps'],
 } as const
 
-/** The statements an admin's index.html opens its first `<style>` with, one per line. */
 export const CSS_LAYER_STATEMENTS: readonly string[] = [
   `@layer ${CSS_LAYER_ORDER.join(', ')};`,
   ...Object.entries(CSS_SUBLAYER_ORDER).map(
@@ -90,8 +89,6 @@ export const CSS_LAYER_STATEMENTS: readonly string[] = [
  */
 export function describeCssLayerOrder({ indexHtml }: { indexHtml: string | undefined }): void {
   describe('the cascade layer order in index.html', () => {
-    // What the browser does not apply as a style of the page: comments, and the contents of <noscript>
-    // and <template>.
     const html = (indexHtml ?? '')
       .replace(/<!--[\s\S]*?-->/g, '')
       .replace(/<(noscript|template)\b[\s\S]*?<\/\1\s*>/gi, '')
@@ -100,7 +97,6 @@ export function describeCssLayerOrder({ indexHtml }: { indexHtml: string | undef
         .exec(statement ?? '')?.[1]
         ?.split(',')
         .map((layer) => layer.trim())
-    // The `@layer a, b;` statements a stylesheet opens with, up to its first other rule.
     const leadingStatements = (css: string) =>
       /^(?:\s*@layer\s[^;{]*;)*/.exec(css.replace(/\/\*[\s\S]*?\*\//g, ''))![0].match(/@layer\s[^;{]*;/g) ?? []
 

@@ -95,7 +95,7 @@ const props = withDefaults(
     queueKey: UploadQueueKey
     uploadLicence: IntegerId
     selectLicences: IntegerId[]
-    initialImage?: ImageAware | undefined // optional, if available, no need to fetch image data
+    initialImage?: ImageAware | undefined // If given, the image data is not fetched.
     configName?: string
     collab?: CollabComponentConfig
     collabStatus?: CollabStatusType
@@ -104,7 +104,7 @@ const props = withDefaults(
     readonly?: boolean
     dataCy?: string | undefined
     expandOptions?: boolean
-    expandMetadata?: boolean // only one at once, use in dialogs
+    expandMetadata?: boolean // Only one per page at a time, for use in dialogs.
     disableOnClickMenu?: boolean
     width?: number | undefined
     maxWidth?: number | undefined
@@ -146,7 +146,6 @@ const mediaModel = defineModel<MediaAware | null>('media', { required: true })
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const damConfigName = useDamConfigName(props.configName)
 
-// Collaboration
 const { collabOptions } = useCommonAdminCollabOptions()
 const { collabReconnecting } = useCollabState()
 
@@ -182,8 +181,8 @@ if (collabOptions.value.enabled && isDefined(props.collab)) {
       lockRequestPending.value = false
       collabFieldLockReallyLocked.value = false
     } else if (lockRequestPending.value) {
-      // The answer to a release sent before a request still out says nothing about that request, whose own answer
-      // decides: a refused release read as the lock held let a drop upload before its request was answered.
+      // A release answer sent before a pending request says nothing about that request. Only its own answer decides.
+      // Reading a refused release as the lock held let a drop upload before its request was answered.
       return
     } else if (data.status === CollabFieldLockStatus.Success && data.type === CollabFieldLockType.Release) {
       collabFieldLockReallyLocked.value = false
@@ -192,44 +191,46 @@ if (collabOptions.value.enabled && isDefined(props.collab)) {
     }
   })
 }
-// What the field holds, both halves: an image or a media, and the other editors have to know which. Read from the
-// models only where they already hold it: an assignment to a `v-model` model shows there after the parent renders,
-// so the paths that just assigned send what they assigned.
+// Other editors need both the image and the media.
+// A `v-model` assignment reaches the models only after the parent
+// renders, so paths that just assigned send the assigned value directly.
 const collabValue = (): ImageMediaCollabValue => ({ image: imageModel.value, media: mediaModel.value })
 const lockedLocal = ref(false)
-// The turn of the lock of the field this widget took last, by a request or a release. Another widget of the same field
-// may have taken one since: the widget drawn in place of this one once it is gone.
+// Lock turn this widget took last, by request or release.
+// A widget of the same field drawn in place of this one may have taken a turn since.
 let ownLockTurn = 0
 const takeLockTurn = () => {
   if (isDefined(props.collab)) ownLockTurn = takeFieldLockTurn(props.collab.room, props.collab.field)
 }
 const lockTurnTakenSince = () =>
   isDefined(props.collab) && lastFieldLockTurn(props.collab.room, props.collab.field) !== ownLockTurn
-// Asked for once per lock. A drop asks again for a lock not confirmed yet: a refused request left every later drop
-// waiting on a lock never granted. A refusal does not forget the lock either: a timed-out request answers the same,
-// and the server may have granted it, so it is still released. Never asked while a request is out: a second one
-// could answer after the first, and one sent by the click that closes the menu raced its release on the server.
+// Requested once per lock. A drop asks again for an unconfirmed
+// lock, otherwise one refusal left every later drop waiting forever.
+// A refusal still keeps the lock for release: a timed-out request
+// answers the same way and the server may have granted it.
+// Never requested while one is pending: a second answer could arrive after the
+// first, and a request from the menu-closing click raced its release on the server.
 const lockRequestPending = ref(false)
 const acquireFieldLockLocal = (again = false) => {
   if (props.collabStatus === CollabStatus.Inactive) return
   if (lockedLocal.value === true && (!again || lockRequestPending.value || collabFieldLockReallyLocked.value)) return
-  // What an earlier answer left says nothing about this lock: the wait for it waits for this answer.
+  // An earlier answer says nothing about this lock. Waiters wait for this answer.
   collabFieldLockReallyLocked.value = false
   lockRequestPending.value = true
   acquireFieldLock.value()
   takeLockTurn()
   lockedLocal.value = true
 }
-// A lock taken while the room was active is released in an inactive one too: the room turned inactive because the
-// other editor left, and the server still holds it for whoever comes back.
+// A lock taken while the room was active is released in an inactive room too.
+// The room turns inactive when the other editor leaves, and the server still holds the lock for whoever returns.
 const releaseFieldLockLocal = () => {
   if (lockedLocal.value === false) return
   releaseFieldLock.value(collabValue())
   takeLockTurn()
   lockedLocal.value = false
 }
-// One release per lock: the server refuses a second one, and its refusal read as the lock still held. An inactive
-// room keeps the value for the editors who join, lock or not.
+// One release per lock: the server refuses a second one, and the refusal reads as the lock still held.
+// An inactive room still gets the value for editors who join, lock or not.
 const releaseFieldLockWith = (value: ImageMediaCollabValue) => {
   if (lockedLocal.value === false && props.collabStatus !== CollabStatus.Inactive) return
   releaseFieldLock.value(value)
@@ -255,8 +256,8 @@ const { imageClient, imageApi } = imageOptions
 const { widgetImageToDamImageUrl, damImageIdToDamImageUrl } = useImageActions(imageOptions)
 const uploadQueuesStore = useUploadQueuesStore()
 const { uploadQueueDialog, stopQueueLeftBehind } = useUploadQueueDialog()
-// Before the immediate watcher below: with expandMetadata it writes the detail while setup runs. Not the form an open
-// dialog of another widget shows: a widget drawn late, once its configuration was read, emptied that form.
+// Must run before the immediate watcher below, which writes the detail during setup with `expandMetadata`.
+// Keeps a form shown by another widget's open dialog: a late-drawn widget used to empty it.
 const imageMediaWidgetStore = useImageMediaWidgetStore()
 imageMediaWidgetStore.resetUnlessShown()
 const { detail } = storeToRefs(imageMediaWidgetStore)
@@ -270,8 +271,8 @@ const metadataDialogSaving = ref(false)
 const metadataDialogLoading = ref(false)
 const fileInputDialog = ref(false)
 
-// The authors of the DAM the dialog of the image offers are those of an asset this widget has read itself, for the
-// image that dialog shows, or draws in the page with `expandMetadata`.
+// DAM authors offered in the image dialog come from an asset this widget read
+// itself for that image, also for the inline form with `expandMetadata`.
 const {
   damAuthorsAsset,
   offerDamAuthorsOf,
@@ -291,8 +292,7 @@ const {
   () => props.readonly
 )
 
-// What the widget's open dialog, or its form in the page, shows is in the store of the dialog: no other widget empties
-// it meanwhile.
+// Marks the store as shown by this widget while its dialog or inline form is open, so no other widget empties it.
 watch(
   () => metadataDialog.value || props.expandMetadata,
   (shows) => imageMediaWidgetStore.setShownBy(thisWidget, shows),
@@ -313,17 +313,17 @@ const imageMediaLoaded = computed(() => {
   return !isNull(resImageMedia.value)
 })
 
-// What "edit metadata" has put into the dialog: a copy of the image or the media of the widget, as it was then.
+// Copy of the widget's image or media that "edit metadata" put into the dialog.
 let ownInDialog: typeof detail.value = null
-// What a pick or an upload of this widget has put into the dialog last. The store of the dialog is the page's: what
-// it shows may be what another widget's dialog, opened over this one, shows.
+// What this widget's last pick or upload put into the dialog.
+// The dialog store is page-wide, so it may show another widget's dialog opened over this one.
 let pickInDialog: typeof detail.value = null
-// What the dialog shows its loading for: a pick whose asset is being read, or "edit metadata" waiting for a save of the
-// image by another widget, or for a read of the asset the widget holds. Its answer is put into the dialog only while
-// the dialog still loads for it: not once the editor has closed it, nor once the store of the dialog, which is the
-// page's, holds what another dialog shows. The answer of a pick replaced the form of the dialog of another widget,
-// opened meanwhile, and what the editor had typed there was lost. The dialog that loads for it then closes: it shows
-// that form too, and its confirm would save it here.
+// What the dialog shows loading for: a pick being read, or "edit metadata"
+// waiting for another widget's save or for a read of the held asset.
+// The answer is applied only while the dialog still loads for it,
+// not after close or once the page-wide store shows another dialog.
+// Otherwise a pick answer replaced another widget's dialog form and lost the typed
+// input. The loading dialog then closes, since its confirm would save that form here.
 let loadingInDialog: symbol | null = null
 const answerTakenFor = (opening: symbol) => {
   if (disposed || loadingInDialog !== opening) return false
@@ -333,20 +333,20 @@ const answerTakenFor = (opening: symbol) => {
   metadataDialog.value = false
   return false
 }
-// How many saves of the image it holds the page had seen answered when the widget read that image.
+// Number of answered page saves of the held image at the time the widget read it.
 let resImageReadAt = 0
-// The marks of the saves of images the widget has on their way.
+// Marks of this widget's image saves in flight.
 const ownImageSaves = new Set<symbol>()
-// The wait of an opening of "edit metadata" for a save of another widget: let go once the dialog closes.
+// Cancels the "edit metadata" wait for another widget's save. Called when the dialog closes.
 let cancelSaveWait: (() => void) | null = null
-// What the dialog is opened for: the image or the medium the widget holds, the asset picked, the uploaded image. Its
-// title says it from the start, the same while the dialog loads, waits and saves.
+// Type the dialog is opened for: held image or medium, picked asset, or uploaded image.
+// Sets the title from the start, so it stays the same while loading, waiting and saving.
 const dialogType = ref<DamAssetTypeType>(DamAssetType.Image)
 const actionEditMeta = async () => {
   dialogType.value = type.value ?? DamAssetType.Image
   const heldId = () => (isImageCreateUpdateAware(resImageMedia.value) ? resImageMedia.value.id : undefined)
-  // Another widget of the page is saving the image (the widget this one was drawn in place of, its save still on its
-  // way): the dialog shows its loading till that save is over.
+  // Another widget is saving the image, for example the one this
+  // widget replaced. The dialog shows loading until that save ends.
   const id = heldId()
   const othersSaves = isNumber(id) ? imageSavesOfOthersOver(damConfigName, id, ownImageSaves) : null
   if (othersSaves) {
@@ -360,9 +360,8 @@ const actionEditMeta = async () => {
     if (!answerTakenFor(thisOpening)) return
     loadingInDialog = null
     metadataDialogLoading.value = false
-    // That save has not answered in time: the dialog closes, and the user is told the request timed out. It loaded
-    // till the editor closed it. Shown, what the widget read before that save would go out with the confirm over what
-    // the save may yet write.
+    // The other save timed out: the dialog closes and the user is told. Before, it loaded until the editor closed it.
+    // Showing the earlier read would let the confirm overwrite what that save may still write.
     if (over === WAIT_RAN_OUT) {
       othersSaves.cancel()
       metadataDialog.value = false
@@ -370,8 +369,8 @@ const actionEditMeta = async () => {
       return
     }
   }
-  // The widget holds the asset of the image's file, picked without authors: the dialog shows its loading while that
-  // asset is read anew, and what the read finds goes into the dialog with the image. Never for a medium.
+  // The held asset was picked without authors: the dialog loads while it is read
+  // again, and the result goes into the dialog with the image. Never for a medium.
   const heldAnew = readHeldAnew(
     isImageCreateUpdateAware(resImageMedia.value) ? resImageMedia.value.dam.damId : undefined
   )
@@ -386,8 +385,8 @@ const actionEditMeta = async () => {
     loadingInDialog = null
     metadataDialogLoading.value = false
   }
-  // Saved by another widget of the page after this one read it: the widget takes the image as that save left it. It
-  // offered the texts it had read, and its confirm saved them back over the saved ones.
+  // Another widget saved the image after this one read it: take the image as saved.
+  // Otherwise the dialog offered stale texts and its confirm overwrote the saved ones.
   const savedId = heldId()
   const saved = isNumber(savedId) ? imageSavedSince(damConfigName, savedId, resImageReadAt) : null
   if (saved) void reloadImage(saved, null, true)
@@ -397,10 +396,10 @@ const actionEditMeta = async () => {
   metadataDialog.value = true
 }
 
-// With `expandMetadata` the form of the image is in the page once the image is read, with no "edit metadata" to wait
-// for a save of the image by another widget, or to take what such a save wrote: the form does both, as that opening
-// does. It showed the texts read before that save took effect, and the confirm of its host saved them back over the
-// saved ones. Once the wait runs out the form shows what was read, and the user is told the request timed out.
+// With `expandMetadata` the form is inline, with no "edit metadata" opening to
+// wait for another widget's save or take its result, so the form does both.
+// Otherwise it showed texts read before that save, and the host's confirm overwrote the saved ones.
+// When the wait runs out the form shows the read data and the user is told the request timed out.
 const showReadInForm = async () => {
   const heldId = () => (isImageCreateUpdateAware(resImageMedia.value) ? resImageMedia.value.id : undefined)
   const id = heldId()
@@ -419,7 +418,6 @@ const showReadInForm = async () => {
       othersSaves.cancel()
       showErrorT('error.apiTimedOut.message')
     }
-    // The widget has been given another image meanwhile: that one is shown.
     if (heldId() !== id) return
   }
   const saved = isNumber(id) ? imageSavedSince(damConfigName, id, resImageReadAt) : null
@@ -433,11 +431,11 @@ const actionLibrary = () => {
 
 const { cachedExtSystemId } = useExtSystemIdForCached(damConfigName)
 
-// this ref is updating only when the lock was really success or failure using sockets, needed for drop files
+// Updated only when the socket confirms lock success or failure. Needed for file drops.
 const collabFieldLockReallyLocked = ref(false)
 
-// Cancelling must settle the promise, not just clear the timer — `onDrop` awaits it. A Set
-// because overlapping drops each have their own wait.
+// Cancelling must settle the promise, not only clear the timer, because `onDrop` awaits it.
+// A Set because overlapping drops each have their own wait.
 const LOCK_WAIT_CANCELLED = Symbol('lock wait cancelled')
 type PendingLockWait = { timer: ReturnType<typeof setTimeout>; reject: (reason: unknown) => void }
 const pendingLockWaits = new Set<PendingLockWait>()
@@ -450,11 +448,10 @@ onBeforeUnmount(() => {
     wait.reject(LOCK_WAIT_CANCELLED)
   })
   pendingLockWaits.clear()
-  // What held the lock of the field goes with the widget (its menu, a dialog, the picker, a pick being read, a drop
-  // waiting for the lock), and nothing gave it back: the server keeps a lock till it is released or the editor leaves
-  // the room, and the field stayed locked for the other editors. Given back with what the field has, unless a save or
-  // a delete of the widget is on its way, which gives it back at its end, or the widget drawn in its place has taken a
-  // turn of the lock since.
+  // Whatever held the field lock goes with the widget. The server keeps a lock until
+  // release or until the editor leaves, so the field stayed locked for others.
+  // Released with the current value, unless a save or delete in flight releases
+  // it at its end, or the replacing widget has taken a lock turn since.
   if (!metadataDialogSaving.value && !deletePending.value && !lockTurnTakenSince()) releaseFieldLockLocal()
   imageMediaWidgetStore.setShownBy(thisWidget, false)
   holdImage(damConfigName, thisWidget, null)
@@ -496,24 +493,24 @@ const waitForFieldLockIsReallyAcquired = async () => {
   return checkLock()
 }
 
-// The drop that is uploaded once the lock of the field comes: one, as the upload dialog shows one file while it saves
-// all it is given. Each drop that waited used to queue its file.
+// The single drop uploaded once the field lock arrives. The upload
+// dialog shows one file but saves all it gets, so only one is kept.
 let dropInWait: symbol | null = null
 
 const onDrop = async (files: File[]) => {
   if (props.readonly) return
-  // The dropzone has turned every file away, and said so: there is nothing to ask the lock of the field for.
+  // The dropzone rejected every file and reported it, so no lock is requested.
   if (files.length === 0) return
-  // The lock an earlier drop asked for is still on its way: this one is not taken.
+  // An earlier drop's lock request is still pending, so this drop is ignored.
   if (!isNull(dropInWait) && lockRequestPending.value) return
-  // As a click on the dropzone: the field is another editor's.
+  // Same as a click on the dropzone: another editor holds the field.
   if (isLocked.value) {
     showErrorT('common.damImage.error.unableToLock')
     return
   }
   acquireFieldLockLocal(true)
   const config = imageWidgetUploadConfig.value!
-  // After a refusal this drop has asked again, as before: it takes the place of the one still waiting.
+  // After a refusal this drop asks again and replaces the one still waiting.
   const thisDrop = Symbol('drop')
   dropInWait = thisDrop
   try {
@@ -521,23 +518,24 @@ const onDrop = async (files: File[]) => {
     // The lock can resolve after the widget is gone; uploading into it is worse than dropping.
     if (disposed) return
     if (dropInWait !== thisDrop) return
-    // Turned read-only while the lock was awaited: the lock goes back and nothing is uploaded.
+    // Turned read-only while waiting for the lock: release it and upload nothing.
     if (props.readonly) {
       if (pendingLockWaits.size === 0 && !clickMenuOpened.value && !anyWidgetDialogOpened.value) releaseFieldLockLocal()
       return
     }
     cachedExtSystemId.value = config.extSystem
-    // The widget holds one image, and its upload dialog shows one file: of several dropped at once the first is
-    // uploaded, and the user is told. The others used to be uploaded too, unseen, and left without an image.
+    // The widget holds one image and the upload dialog shows one file,
+    // so only the first dropped file is uploaded and the user is warned.
+    // Otherwise the extra files were uploaded unseen and left without an image.
     if (files.length > 1) showWarningT('common.damImage.upload.onlyOneFile')
     stopQueueLeftBehind(props.queueKey)
     uploadQueuesStore.addByFiles(props.queueKey, config.extSystem, config.licence, files.slice(0, 1), damConfigName)
     uploadQueueDialog.value = props.queueKey
   } catch (e) {
     if (disposed || e === LOCK_WAIT_CANCELLED) return
-    // A request that timed out may have been granted after all, and nothing else would release it. Only when nothing
-    // else waits for or holds it: refused, this release reads as the lock held, and another drop still waiting uploaded
-    // without its lock, or a menu opened meanwhile lost the one it asked for.
+    // A timed-out request may have been granted, and nothing else would release it.
+    // Released only when nothing else waits for or holds the lock. A refused release reads as the lock
+    // held, so another waiting drop uploaded without its lock, or a menu opened meanwhile lost its lock.
     if (pendingLockWaits.size === 0 && !clickMenuOpened.value && !anyWidgetDialogOpened.value) releaseFieldLockLocal()
     showErrorT('common.damImage.error.unableToLock')
   } finally {
@@ -577,7 +575,7 @@ const onCopyToLicence = (data: DamImageCopyToLicenceResponse) => {
 
 const onFileInput = (files: File[]) => {
   if (props.readonly) return
-  // The input has turned every file away, and said so: a dialog over a queue without a row would only load.
+  // The input rejected every file and reported it. A dialog over a queue without a row would only show loading.
   if (files.length === 0) return
   const config = imageWidgetUploadConfig.value!
   cachedExtSystemId.value = config.extSystem
@@ -591,9 +589,9 @@ const { uploadSizes, uploadAccept } = useDamAcceptTypeAndSizeHelper(
   imageWidgetUploadConfig.value.extSystemConfig
 )
 
-// The id of the image this widget has just created. Its model changes to that id, and what the widget shows is the
-// answer to the create: read again, the preview fell back to the placeholder meanwhile, and a read that failed said
-// an error after a save that went through. Any other change of the id is read as before.
+// Id of the image this widget just created. The model changes to it, and the widget shows the create response.
+// Reading it again made the preview fall back to the placeholder, and a failed read
+// showed an error after a successful save. Any other id change triggers a read.
 let createdImageId: IntegerIdNullable = null
 
 const reloadImage = async (
@@ -618,7 +616,7 @@ const reloadImage = async (
     return
   }
   if (newImageId) {
-    // Counted as the read is sent: a save answered after that may have taken effect only after the read.
+    // Counted when the read is sent: a save answered later may have taken effect after the read.
     const readAt = holdImage(damConfigName, thisWidget, newImageId)
     try {
       resImageMedia.value = await imageApi.fetchImage(imageClient, newImageId)
@@ -626,8 +624,8 @@ const reloadImage = async (
     } catch (error) {
       showErrorsDefault(error)
     }
-    // The widget is gone: with `expandMetadata` its image would be put into the store of the dialog, which is the
-    // page's, and by now shows the image of the next widget.
+    // The widget is gone. With `expandMetadata` it would write its image into
+    // the page-wide dialog store, which now shows the next widget's image.
     if (disposed) return
     if (isImageCreateUpdateAware(resImageMedia.value)) {
       if (isNumber(props.damWidth) && isNumber(props.damHeight)) {
@@ -667,15 +665,15 @@ const reloadMedia = (newMedia: MediaAware | null) => {
   resImageMedia.value = null
 }
 
-// `release` false: a menu or dialog still open holds the lock, and its close or confirm releases it. Alone, the editor
-// holds none, and the value goes to the buffer here or nowhere.
+// `release` false: an open menu or dialog holds the lock and releases it on close or confirm.
+// Otherwise the editor holds no lock, and the value reaches the buffer only here.
 const reset = (release = true) => {
   resolvedSrc.value = imagePlaceholderPath
   resImageMedia.value = null
   holdImage(damConfigName, thisWidget, null)
   imageModel.value = null
   mediaModel.value = null
-  // Not the form the open dialog of another widget shows.
+  // Keeps the form shown by another widget's open dialog.
   imageMediaWidgetStore.resetUnlessShown(thisWidget)
   if (release || props.collabStatus === CollabStatus.Inactive) releaseFieldLockWith({ image: null, media: null })
 }
@@ -683,8 +681,7 @@ const reset = (release = true) => {
 watch(
   [() => props.initialImage, imageModel, mediaModel],
   async ([newImage, newImageId, newMedia], [oldImage, oldImageId, oldMedia]) => {
-    // Used up by every run, also one that ends at the media: left standing, it would keep a later change to that id
-    // from being read.
+    // Cleared on every run, also one that ends with media. Otherwise a later change to that id would not be read.
     const created = createdImageId
     createdImageId = null
     if (!isNull(newMedia) && JSON.stringify(newMedia) !== JSON.stringify(oldMedia)) {
@@ -708,9 +705,9 @@ watch(
 const assetSelectStore = useAssetSelectStore()
 const { getDamConfigExtSystem } = useDamConfigState(undefined, damConfigName)
 
-// The picker closes itself as it answers, and the widget's next dialog opens only once the asset is fetched or
-// copied: till then the pick counts as an open dialog, or the close watcher gave the lock up with the old value. Each
-// pick on its way counts: the end of one whose dialog the editor had closed gave the lock up under a later one.
+// The picker closes as it answers, and the next dialog opens only after the asset is fetched or copied.
+// Until then the pick counts as an open dialog, or the close watcher released the lock with the old value.
+// Counts every pending pick: one whose dialog was closed released the lock under a later pick.
 const assetPicksPending = ref(0)
 const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
   if (props.readonly) return
@@ -720,8 +717,9 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
     await pickAsset(data, thisPick)
   } finally {
     assetPicksPending.value--
-    // Ended early (no main file, the media not loaded), the pick left the dialog loading: the next upload or edit
-    // showed only a spinner. Whatever it loaded is loaded by now. Unless the dialog loads for what has opened it since.
+    // A pick that ended early (no main file, media not loaded) left the
+    // dialog loading, so the next upload or edit showed only a spinner.
+    // Cleared unless the dialog now loads for something opened since.
     if (loadingInDialog === thisPick) {
       loadingInDialog = null
       metadataDialogLoading.value = false
@@ -739,9 +737,9 @@ const pickAsset = async (data: AssetSelectReturnData, thisPick: symbol) => {
   const selectedAsset = data.value[0]
   if (!selectedAsset.mainFile) return
   dialogType.value = selectedAsset.attributes.assetType
-  // What the asset is to the widget is known once it is read: the dialog shows its loading till then, and while an
-  // image is copied into the licence of the upload, as that of the image widget does. Nothing was shown, and a dialog
-  // of another widget opened meanwhile was covered by this one.
+  // The asset's role is known only after it is read. The dialog shows loading
+  // until then and during the copy into the upload licence, like the image widget.
+  // Otherwise nothing was shown, and this dialog covered another widget's dialog opened meanwhile.
   metadataDialog.value = true
   let mediaDataFromDam: DamMediaFromDam | null = null
   try {
@@ -749,13 +747,10 @@ const pickAsset = async (data: AssetSelectReturnData, thisPick: symbol) => {
   } catch (e) {
     showErrorsDefault(e)
   }
-  // The widget is gone: nothing of its pick is put into the store of the dialog, which is the page's. Nor when the
-  // dialog no longer loads for this pick.
+  // Nothing is written to the page-wide dialog store if the widget is gone or the dialog no longer loads for this pick.
   if (!answerTakenFor(thisPick)) return
-  // Nothing to show: the dialog closes.
   if (!mediaDataFromDam) return void (metadataDialog.value = false)
   if (selectedAsset.attributes.assetType === DamAssetType.Video && assetFileIsVideoFile(selectedAsset.mainFile)) {
-    // video
     metadataDialog.value = true
     const mediaData: MediaAware = {
       extService: 'damVideo',
@@ -783,7 +778,6 @@ const pickAsset = async (data: AssetSelectReturnData, thisPick: symbol) => {
     selectedAsset.podcasts.length > 0 &&
     assetFileIsAudioFile(selectedAsset.mainFile)
   ) {
-    // podcast audio
     metadataDialog.value = true
     const mediaData: MediaAware = {
       extService: 'damPodcast',
@@ -807,8 +801,7 @@ const pickAsset = async (data: AssetSelectReturnData, thisPick: symbol) => {
     }
     imageMediaWidgetStore.setDetail(mediaData)
   } else if (selectedAsset.attributes.assetType === DamAssetType.Image) {
-    // image
-    // An asset already in the licence of the upload is taken as it is.
+    // An asset already in the upload licence is used as is.
     if (
       copyToLicenceEnabled !== false &&
       !isUndefined(data.copyToLicence) &&
@@ -822,23 +815,22 @@ const pickAsset = async (data: AssetSelectReturnData, thisPick: symbol) => {
       } catch (e) {
         showErrorsDefault(e)
       }
-      // A widget that is gone, or a dialog that no longer loads for the pick, opens no upload dialog: the copy of a
-      // widget that is gone went on in the upload dialog of the widget drawn in its place, which asked for the lock of
-      // the field only then.
+      // A gone widget, or a dialog no longer loading for this pick, opens no upload dialog.
+      // Otherwise the copy continued in the replacing widget's upload dialog, which requested the field lock only then.
       if (!answerTakenFor(thisPick)) return
-      // The upload dialog shows the copy, and takes the place of the dialog of the image.
+      // The upload dialog shows the copy and replaces the image dialog.
       metadataDialogLoading.value = false
       metadataDialog.value = false
       if (copyRes) onCopyToLicence(copyRes)
       return
     }
     metadataDialog.value = true
-    // The authors are offered once the pick still has the dialog: the read of a pick the dialog has left offered those
-    // of its asset in the dialog of the pick shown since.
+    // Authors are offered only if the pick still owns the dialog. Otherwise
+    // a left pick's read offered its authors in a later pick's dialog.
     let authorsToOffer: AssetDetailItemDto | null = null
     try {
       const assetRes = await fetchAsset(damClient, endPointAsset, selectedAsset.id)
-      // As the image widget: the texts are the application's to make of the asset, where it has a mapping of its own.
+      // Like the image widget: if the application has its own mapping, it builds the texts from the asset.
       if (customAssetSelectMetadataToImageMap) {
         const mapped = customAssetSelectMetadataToImageMap(assetRes)
         description = mapped.description
@@ -848,8 +840,8 @@ const pickAsset = async (data: AssetSelectReturnData, thisPick: symbol) => {
           description = assetRes.metadata.customData.description.trim()
         }
         if (assetRes.authors.length > 0) {
-          // Under the ext system of the licence of the asset, as every name of the authors of the DAM the widgets
-          // write; that of the picker where the licence does not tell.
+          // Under the ext system of the asset's licence, like all DAM author names the
+          // widgets write. Falls back to the picker's when the licence does not resolve.
           const authorsRes = await fetchAuthorListByIds(
             damClient,
             endPointAuthor,
@@ -859,8 +851,8 @@ const pickAsset = async (data: AssetSelectReturnData, thisPick: symbol) => {
           source = authorsRes.map((author) => author.name).join(', ')
         } else if (assetRes.authors.length === 0) {
           const configExtSystem = getDamConfigExtSystem(imageWidgetUploadConfig.value!.extSystem)
-          // Not while the server may yet fill in its metadata from the file: saving the authors marks the asset
-          // described, and the server then fills in nothing.
+          // Not while the server may still fill metadata from the file: saving
+          // authors marks the asset described, and the server then fills nothing.
           if (configExtSystem?.[DamAssetType.Image]?.authors?.enabled && !assetMetadataMayStillChange(assetRes)) {
             authorsToOffer = assetRes
           }
@@ -883,7 +875,7 @@ const pickAsset = async (data: AssetSelectReturnData, thisPick: symbol) => {
     imageMediaWidgetStore.setDetail(image)
     pickInDialog = detail.value
   } else {
-    // Of no kind the widget takes (an audio in no podcast, a video whose file is no video): nothing to show.
+    // Not a kind the widget accepts (audio not in a podcast, video without a video file): nothing to show.
     metadataDialog.value = false
   }
   metadataDialogLoading.value = false
@@ -918,16 +910,16 @@ const onEditAsset = async (assetFileId: DocId) => {
       props.queueKey,
       async () => {
         const assetRes = await fetchAssetByFileId(damClient, endPointAsset, assetFileId)
-        // A licence the client cannot resolve: the ext system of the widget's upload licence, which its root loaded.
+        // Falls back to the ext system of the widget's upload licence,
+        // loaded by its root, when the licence cannot be resolved.
         const shownUnder = (await getExtSystemByLicence(assetRes.licence)) ?? imageWidgetUploadConfig.value!.extSystem
-        // Before the detail shows the asset: it reads the configuration of its ext system as it draws, and threw
-        // without it.
+        // Must load before the detail shows the asset: it reads the ext
+        // system configuration while rendering and threw without it.
         await loadAssetDetailExtSystem(damClient, shownUnder, assetRes.attributes.assetType, damConfigName)
         extSystem = shownUnder
         return assetRes
       },
-      // Only for the asset the detail shows: an answer it no longer waits for must not change the ext system its
-      // configuration asks for names under.
+      // Only for the asset the detail still shows: a stale answer must not change the ext system used for name lookups.
       () => {
         if (extSystem) cachedExtSystemId.value = extSystem
       }
@@ -940,18 +932,18 @@ const onEditAsset = async (assetFileId: DocId) => {
 const onMetadataDialogClose = () => {
   imageMediaWidgetStore.setDetail(null)
   metadataDialog.value = false
-  // What it was loading for is not shown once it is closed: the answer of a pick being read went into the store of the
-  // dialog all the same, over the form of a dialog of another widget opened meanwhile.
+  // Nothing is applied once the dialog is closed. Otherwise a pending
+  // pick answer overwrote another widget's dialog form opened meanwhile.
   loadingInDialog = null
   metadataDialogLoading.value = false
-  // The wait of the opening it was loading for, for a save of another widget, is taken off that save.
+  // Cancels this opening's wait for another widget's save.
   cancelSaveWait?.()
 }
 
 const tryMediaConfirm = async () => {
   if (!isMediaAware(detail.value)) return
-  // Not taken while the save of an image of this widget is on its way, as a second confirm of that image is not: the
-  // answer of that save sets the image, and took away the media confirmed meanwhile. The button spins till then.
+  // Ignored while this widget's image save is in flight, like a second image confirm. That save's
+  // answer sets the image and dropped the media confirmed meanwhile. The button spins until then.
   if (metadataDialogSaving.value) return
   metadataDialogSaving.value = true
   try {
@@ -972,34 +964,33 @@ const tryMediaConfirm = async () => {
 
 const tryImageConfirm = async () => {
   if (!isImageCreateUpdateAware(detail.value)) return
-  // The asset of a detail that has just closed is still being read. What the dialog offers may change by that read,
-  // and with it what its form asks for: the confirm waits for the read, and is then taken again by the form.
+  // The asset of a just-closed detail is still being read, and the read may change
+  // what the form requires. The confirm waits for it, then the form confirms again.
   const confirmAgain = () => detailDialogMetadataComponent.value?.confirm()
   if (holdConfirmForDetailAssetRead(metadataDialogSaving.value, confirmAgain)) return
-  // Pressed again while the save of the first press runs (the button of a host is not disabled meanwhile, and Enter
-  // reaches the one of the dialog), it is not taken: the image would be created, or updated, a second time.
+  // Ignores a second press during the save: a host button is not disabled meanwhile and
+  // Enter reaches the dialog button. Otherwise the image is created or updated twice.
   if (metadataDialogSaving.value) return
-  // A confirm is for the image it was pressed on. While it waits for an answer the dialog can be closed, and opened
-  // again for another image or for a media, and the widget can go away with its page. Until the image is sent to be
-  // saved, the confirm goes on after each wait only for a widget that is still there, and only while the dialog still
-  // shows that image. It went on with whatever the dialog showed by then: that image was saved without a press, and
-  // its dialog closed, and for a media an image without its fields was sent to be created.
+  // A confirm belongs to the image it was pressed on. During waits the dialog
+  // may close and reopen for another image or media, or the widget may unmount.
+  // Until the save is sent, each step continues only if the widget exists and the dialog still shows that image.
+  // Otherwise another image was saved without a press, or an image without fields was created for a media.
   const pressedOn = detail.value
   const confirmIsOver = () => disposed || detail.value !== pressedOn
-  // Nor are the authors sent by a widget that has turned read-only meanwhile.
+  // Authors are also not sent if the widget turned read-only meanwhile.
   const authorsSendIsOver = () => confirmIsOver() || props.readonly
   metadataDialogSaving.value = true
-  // The dialog shows the source of the image of the asset the widget holds, not the pick (a read of it failed): once
-  // saved, the image has a source of its own, and the asset is let go.
+  // The dialog shows the source from the held asset, not the pick (its read
+  // failed). Once saved, the image has its own source and the asset is released.
   const letGoHeld = letGoOnceSavedWithSource(pressedOn)
   try {
     const authorsAsset = damAuthorsAsset.value
     if (authorsAsset) {
       if (authorsAsset.authors.length > 0) {
-        // The asset was read at its pick, and may have been given authors elsewhere since: the write replaces them
-        // with those picked here. It is read again first. A read that fails saves nothing. Once it has authors nothing
-        // is written either: the pick goes, an empty source takes their names, the user is told till they close the
-        // message, and the dialog stays.
+        // The asset was read at pick time and may have gained authors
+        // since. The write would replace them, so it is read again first.
+        // A failed read saves nothing. If it now has authors nothing is written: the pick is dropped,
+        // an empty source takes their names, a persistent message is shown, and the dialog stays.
         let givenMeanwhile: string | null
         try {
           givenMeanwhile = await authorsGivenMeanwhile(authorsAsset)
@@ -1014,10 +1005,10 @@ const tryImageConfirm = async () => {
           showWarningT('common.damImage.image.meta.authorsGivenMeanwhile', -1)
           return
         }
-        // Their names become the source of the image once the DAM has taken the authors, and wait aside till then.
-        // Written before, they stayed in the source, which the dialog does not show, after a write the DAM refused,
-        // and a confirm with the pick emptied saved them with the image.
-        // Under the ext system of the licence of the asset, as the read before the write names authors given since.
+        // Author names go into the image source only after the DAM accepts the authors, and are held aside until then.
+        // Written earlier, they stayed in the hidden source after a refused
+        // write, and a confirm with the pick cleared saved them with the image.
+        // Looked up under the ext system of the asset's licence, like the read before the write.
         const authorsRes = await fetchAuthorListByIds(
           damClient,
           endPointAuthor,
@@ -1025,42 +1016,38 @@ const tryImageConfirm = async () => {
             assetSelectStore.requireSelectedSelectConfig().extSystem,
           authorsAsset.authors
         )
-        // Nothing is written and nothing said: the authors are not sent for a dialog the user has left, nor by a
-        // widget that is gone or read-only.
+        // Silently stops if the dialog was left or the widget is gone or read-only.
         if (authorsSendIsOver()) return
         const source = authorsRes.map((author) => author.name).join(', ')
         try {
           await updateAssetAuthors(damClient, endPointAsset, authorsAsset)
         } catch (e) {
-          // The authors refused by validation are named as the forms name them. The image is not saved.
+          // Names the authors refused by validation as the forms name them. The image is not saved.
           showMetadataSaveError(e, assetSelectStore.requireSelectedSelectConfig().extSystem, damConfigName)
           return
         }
-        // The DAM has the authors, and the image is not saved.
+        // The DAM already has the authors. The image is not saved.
         if (confirmIsOver()) return
         pressedOn.texts.source = source
         offerNoDamAuthors()
       }
     }
     const image = imageFieldsOf(pressedOn)
-    // An update is noted for the other widgets of the page, also when this one is gone by its answer.
+    // The save is noted for the other widgets of the page, even if this widget is gone by the time it answers.
     const res = image.id
       ? await noteImageSave(damConfigName, image.id, ownImageSaves, imageApi.updateImage(imageClient, image.id, image))
       : await imageApi.createImage(imageClient, image)
-    // The widget is gone: nothing of the answer is written. The store of the dialog is the page's, and by now the
-    // next widget's: its form was emptied, and then showed the image saved here.
+    // The widget is gone, so nothing of the answer is written.
+    // The dialog store is shared by the page and may already belong to the
+    // next widget. Writing here emptied its form and then showed this image.
     if (disposed) return
     letGoHeld()
-    // The save went through, and the widget takes its image. The dialog is this confirm's to close while it shows the
-    // image the confirm was pressed on, or none. It is closed as well when "edit metadata" has opened it since: what
-    // it shows is a copy of the image or the media the widget had before this save, and its confirm would put that
-    // over the image saved here. The dialog of another pick or upload, opened since, stays as it is, with the lock of
-    // the field, which its own close or confirm gives back. The form `expandMetadata` draws in the page is no such
-    // dialog: it shows the image of the widget, the saved one from here on. With the dialog closed meanwhile, what the
-    // store of the dialog shows by then is no longer this widget's to empty: it is what another widget's open dialog
-    // shows. A dialog opened since that still loads for a pick (or for "edit metadata") stays open as well: what it
-    // loads for fills it, with the id saved here. Closed here, it left the widget loading for that pick, whose answer
-    // opened the dialog again, or closed an "edit metadata" opened meanwhile, which showed only the spinner.
+    // This confirm closes the dialog if it shows the pressed image or nothing, or if "edit
+    // metadata" reopened it. That copy is stale and its confirm would overwrite this save.
+    // A dialog of another pick or upload stays open and keeps the field lock. A dialog still
+    // loading for a pick or "edit metadata" also stays open. Closing it broke that load.
+    // If the dialog was closed meanwhile, the store may show another widget's dialog, so it is not emptied.
+    // The `expandMetadata` form is not a dialog. It shows the widget's image, now the saved one.
     const ownDialogOpen = metadataDialog.value
     const shown = detail.value
     const dialogOfAnotherPick =
@@ -1072,19 +1059,18 @@ const tryImageConfirm = async () => {
     imageModel.value = res.id
     mediaModel.value = null
     if (!dialogOfAnotherPick && (ownDialogOpen || props.expandMetadata)) imageMediaWidgetStore.setDetail(null)
-    // That dialog was opened while this image was being created, for a widget that had no image: the image its pick or
-    // upload put there takes the id created here, and its confirm updates this image. It created a second one, and
-    // this one was left unused. Only that image: one another widget has put into the store since is that widget's.
+    // A dialog of another pick or upload opened during a create gets the created
+    // id. Otherwise its confirm created a second image and left this one unused.
+    // Only the pick of this widget is updated. An image another widget put in the store belongs to that widget.
     if (dialogOfAnotherPick && !image.id && shown === pickInDialog && isImageCreateUpdateAware(shown)) {
       if (isUndefined(shown.id)) shown.id = res.id
     }
-    // Before the dialog's close is seen, so this release, with what was just assigned, is the one that goes. Alone,
-    // the editor holds no lock, and the value goes to the buffer here or nowhere. While the menu of the widget or
-    // another of its dialogs (that of another pick, the picker, the upload) holds the field, the lock stays with it,
-    // and gives it back as it closes; the other editors are sent the saved image now. Released here, a picker opened
-    // since lost its lock, and what it put into the field later went to nobody. Not while the dialog of another pick
-    // or upload is open: it sets what the field ends with, also under the id saved here (it is given that id when
-    // this was a create), and the other editors, who read an image again only when its id changes, kept this one.
+    // Runs before the dialog close is observed, so this release with the saved value is the one
+    // sent. When the editor is alone there is no lock and the value goes to the buffer here.
+    // While the menu or another dialog holds the field, the lock
+    // stays with it. Releasing here broke a picker opened since.
+    // Not while a dialog of another pick or upload is open. It sets the final
+    // value under this id, and other editors reload only when the id changes.
     if (props.collabStatus === CollabStatus.Inactive || (!clickMenuOpened.value && !anyWidgetDialogOpened.value)) {
       releaseFieldLockWith({ image: res.id, media: null })
     } else if (lockedLocal.value && !dialogOfAnotherPick) {
@@ -1096,12 +1082,10 @@ const tryImageConfirm = async () => {
     showErrorsDefault(e)
   } finally {
     metadataDialogSaving.value = false
-    // A dialog closed while this confirm ran left the lock of the field to it (see the watchers): given back once it
-    // is over, when nothing else of the widget holds it. Saved, the image went with it above; otherwise the field
-    // keeps what it had. A widget that is gone gives it back too, with what its field has: it wrote nothing of the
-    // answer. The server keeps a lock till it is released or the editor leaves the room, and the field stayed locked
-    // for the other editors. Unless the widget drawn in its place has taken a turn of the lock since: the release
-    // would free the lock that one holds.
+    // A dialog closed during this confirm left the lock to it. It is released here once nothing else holds it.
+    // A disposed widget also releases with its current field value.
+    // The server keeps locks until release or leaving the room.
+    // Skipped if the replacement widget has taken the lock since, because the release would free its lock.
     if (disposed ? !lockTurnTakenSince() : !clickMenuOpened.value && !anyWidgetDialogOpened.value) {
       releaseFieldLockLocal()
     }
@@ -1114,14 +1098,13 @@ const onMetadataDialogConfirm = async () => {
   await tryImageConfirm()
 }
 
-// Till the delete is answered, neither the menu's close nor a dialog's gives the lock up: the menu closes on the click,
-// and its release went out with the image still there, the reset's own skipped as for a lock already given back. Nor
-// while a confirm of the dialog runs: closed before its save answered, the dialog gave the lock back with what the
-// field had before, and the release of the answer, as for a lock already given back, never sent the saved image to the
-// other editors.
+// While a delete is pending, closing the menu or a dialog does not release the
+// lock. The menu closes on the click and released with the image still there.
+// Same while a dialog confirm runs. Otherwise the lock went back with
+// the old value and the saved image never reached other editors.
 const deletePending = ref(false)
 const onImageMediaDelete = async () => {
-  // The widget's own image: the store's detail is shared, empty unless a dialog loaded it, or another widget's.
+  // Use the widget's own image. The store detail is shared and may be empty or another widget's.
   const imageId = imageModel.value
   if (props.callDeleteApiOnRemove && !isNull(imageId)) {
     deletePending.value = true
@@ -1134,9 +1117,8 @@ const onImageMediaDelete = async () => {
     } finally {
       deletePending.value = false
     }
-    // Gone, the widget gives the lock back with what its field has, as it does at the end of a confirm: unless the
-    // widget drawn in its place has taken a turn of the lock since. The release of the reset freed the lock that one
-    // held, under its open menu.
+    // A disposed widget releases the lock with its field value, unless the replacement widget has taken the lock since.
+    // Otherwise the release freed the lock held by that widget's open menu.
     if (disposed ? !lockTurnTakenSince() : !clickMenuOpened.value && !anyWidgetDialogOpened.value)
       releaseFieldLockLocal()
     return
@@ -1160,7 +1142,7 @@ const onAssetUploadConfirm = (items: ImageCreateUpdateAware[]) => {
   if (!isNull(imageModel.value)) {
     items[0].id = imageModel.value
   }
-  // The image of an upload comes with its source: the authors of an asset picked before are not offered with it.
+  // An upload brings its own source, so authors of a previously picked asset are not offered.
   offerNoDamAuthors()
   dialogType.value = DamAssetType.Image
   imageMediaWidgetStore.setDetail(items[0])
@@ -1228,7 +1210,8 @@ watch(
   clickMenuOpened,
   (newValue, oldValue) => {
     if (newValue === oldValue) return
-    // Opened: a lock a refused drop left unconfirmed is asked for again, here and not in the click, which also closes.
+    // On open, a lock left unconfirmed by a refused drop is requested again. It
+    // is done here, not in the click handler, because the click also closes.
     if (newValue) return void acquireFieldLockLocal(true)
     if (anyWidgetDialogOpened.value || deletePending.value || metadataDialogSaving.value) return
     releaseFieldLockLocal()
@@ -1240,8 +1223,8 @@ watch(
   anyWidgetDialogOpened,
   (newValue, oldValue) => {
     if (newValue === oldValue) return
-    // Opened by a button of `expandOptions`, with no menu to ask for the lock, the dialog asks; opened from the menu,
-    // only for a lock not confirmed yet.
+    // Opened from an `expandOptions` button there is no menu to request the lock, so
+    // the dialog does. Opened from the menu, it requests only an unconfirmed lock.
     if (newValue) return void acquireFieldLockLocal(true)
     if (deletePending.value || metadataDialogSaving.value) return
     releaseFieldLockLocal()
@@ -1249,13 +1232,10 @@ watch(
   { immediate: false }
 )
 
-// Read-only, the widget draws none of its dialogs and menus (`!readonly`): those open close as their cancel does,
-// nothing is saved, and the lock of the field goes back once none holds it. A dialog left open kept the lock for the
-// other editors unseen, and came back by itself once the widget could be edited again. The dialog of a save on its
-// way is left to that save, which closes it and gives the lock back as it ends; one the save leaves open (it failed)
-// closes then. With `expandMetadata` the form is in the page and no dialog is closed: the form of a pick not yet
-// confirmed stays, for its host to confirm once the widget can be edited again. It was emptied, while the widget went
-// on showing the pick.
+// When read-only, open dialogs and menus close as on cancel and the lock is released
+// once none holds it. A dialog left open kept the lock unseen and reappeared on edit.
+// A dialog with a save in progress is left to that save, which closes it. If the save fails, it closes then.
+// With `expandMetadata` the in-page form is kept for its host to confirm later. Emptying it lost the pick still shown.
 watch([() => props.readonly, metadataDialogSaving], ([readonly]) => {
   if (!readonly) return
   clickMenuOpened.value = false
@@ -1263,9 +1243,10 @@ watch([() => props.readonly, metadataDialogSaving], ([readonly]) => {
   if (metadataDialog.value && !metadataDialogSaving.value && !props.expandMetadata) onMetadataDialogClose()
 })
 
-// A lost connection took this editor's locks on the server: counted still, the lock was never asked for again and the
-// server refused its release. When the room is active again, a menu or dialog still open asks for it anew, as does one
-// opened while the editor was alone, once the other editor arrives, and one whose ask was refused or went unanswered.
+// A lost connection drops this editor's locks on the server. Kept as
+// held, the lock was never requested again and its release was refused.
+// On reconnect, an open menu or dialog requests the lock again. This includes
+// one opened while alone and one whose request was refused or unanswered.
 watch(collabReconnecting, (reconnecting) => {
   if (!reconnecting) return
   lockedLocal.value = false

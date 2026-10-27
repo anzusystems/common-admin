@@ -7,7 +7,9 @@ import { usePermissionConfigActions } from '@/domains/permission/config/composab
 const props = withDefaults(
   defineProps<{
     client: AxiosClientFn
-    /** Roles are per backend: they come from that system's `/adm/v1/permissions/config`. */
+    /**
+     * Roles are per backend: they come from that system's `/adm/v1/permissions/config`.
+     */
     system: string
     entity?: string | undefined
     endPoint?: string | undefined
@@ -57,7 +59,7 @@ const { t } = useI18n()
     autocomplete="off"
     data-cy="user-roles"
   >
-    <!-- The chip the autocomplete draws itself, with its close named for what it does: it removes the role. -->
+    <!-- Custom chip so its close button is labelled as removing the role. -->
     <template #chip="{ props: chipProps }">
       <VChip
         v-bind="chipProps"

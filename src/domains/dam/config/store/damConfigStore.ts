@@ -75,37 +75,41 @@ const damConfigStoreSetup = () => {
   }
 }
 
-/** The DAM configuration store of the configuration `default`. */
+/**
+ * The DAM configuration store of the configuration `default`.
+ */
 export const useDamConfigStore = defineStore('commonAdminDamConfigStore', damConfigStoreSetup)
 
-/** A DAM configuration store, of `default` or of another name: its `$id` is the name's. */
+/**
+ * A DAM configuration store of `default` or another name. Its `$id` is per name.
+ */
 export type DamConfigStore = Omit<ReturnType<typeof useDamConfigStore>, '$id'> & { readonly $id: string }
 
 interface DamConfigStoreHotData {
   namedDamConfigDefinitions?: Map<string, typeof useDamConfigStore>
   damConfigStoreSetup?: typeof damConfigStoreSetup
 }
-// Kept across the hot updates of this module (development only): each version writes its setup there, and they share
-// the definitions of the named stores, which the importers of the first version go on making.
+// Kept across hot updates (development only). Each version writes its setup here and they
+// share the named store definitions, which importers of the first version keep creating.
 // @ts-ignore vue-tsc v3 --build mode bug: import.meta.hot type not resolved for this file
 const hotData: DamConfigStoreHotData | undefined = import.meta.hot?.data
 if (hotData) hotData.damConfigStoreSetup = damConfigStoreSetup
 
-// One definition per configuration name, made when the name is first asked for: the store of each name is its own,
-// and two names never share one.
+// One definition per configuration name, created on first use. Names never share a store.
 const namedDefinitions = hotData?.namedDamConfigDefinitions ?? new Map<string, typeof useDamConfigStore>()
 if (hotData) hotData.namedDamConfigDefinitions = namedDefinitions
 
 /**
- * The DAM configuration store of the DAM configuration `configName`: for `default` the store of `useDamConfigStore()`,
- * for any other name a store of its own, with the same members. What a named configuration loads with its client goes
- * there; an application whose named client cannot read it fills this store before its components mount.
+ * DAM configuration store of `configName`. For `default` the
+ * `useDamConfigStore()` store, else a separate store with the same members.
+ * A named configuration loads into it. An app whose named client
+ * cannot load it fills this store before its components mount.
  */
 export function useDamConfigStoreOf(configName = 'default', pinia?: Pinia): DamConfigStore {
   if (configName === 'default') return useDamConfigStore(pinia)
   let definition = namedDefinitions.get(configName)
   if (!definition) {
-    // The setup of the latest version of this module, where it was hot updated.
+    // Uses the setup of the latest hot-updated version of this module.
     definition = defineStore(
       'commonAdminDamConfigStore:' + configName,
       hotData?.damConfigStoreSetup ?? damConfigStoreSetup
@@ -122,8 +126,8 @@ if (import.meta.hot) {
   const hot = import.meta.hot
   const acceptDefault = acceptHMRUpdate(useDamConfigStore, hot)
   hot.accept((newModule: unknown) => {
-    // A named store's definition is made at run time, not exported: the new module could not hand its store a new
-    // setup. While one exists, made by this version of the module or an earlier one, the page is loaded anew.
+    // Named store definitions are created at runtime, not exported, so the new
+    // module cannot give them a new setup. Reload the page while any exists.
     if (namedDefinitions.size > 0) {
       window.location.reload()
       return

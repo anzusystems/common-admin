@@ -5,9 +5,13 @@ import AAlerts from '@/domains/system/components/AAlerts.vue'
 
 const props = withDefaults(
   defineProps<{
-    /** The layouts by the name pages give in `definePage({ meta: { layout } })`. */
+    /**
+     * The layouts by the name pages give in `definePage({ meta: { layout } })`.
+     */
     layouts: Record<string, Component>
-    /** Until the first route resolves, and for a route without `meta.layout`. */
+    /**
+     * Until the first route resolves, and for a route without `meta.layout`.
+     */
     defaultLayout?: string
   }>(),
   {
@@ -28,8 +32,7 @@ watch(
   }
 )
 
-// A name the map does not have renders the page without a layout, as an unregistered global
-// component did, rather than hiding it behind the loader.
+// A name missing from the map renders the page without a layout, rather than hiding it behind the loader.
 const current = computed(() => {
   const name = routeLayout.value || props.defaultLayout
   const found = props.layouts[name]
@@ -39,9 +42,11 @@ const current = computed(() => {
 </script>
 
 <template>
-  <!-- The one alerts host, outside the layout switch. A host inside a layout takes the alerts it is
-       showing away with it when the route switches layouts: a start-up error raised while the loader
-       was up vanished the moment the drawer replaced it. -->
+  <!--
+    The single alerts host, outside the layout switch.
+    A host inside a layout drops its alerts when the route switches layouts,
+    e.g. a start-up error vanished when the drawer replaced the loader.
+  -->
   <AAlerts />
   <component
     :is="current"

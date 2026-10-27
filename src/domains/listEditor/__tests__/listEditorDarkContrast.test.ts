@@ -1,5 +1,4 @@
 import { afterEach, describe, expect, it } from 'vitest'
-// The list editors' styles (tokens, badges, the nested caret) ship with the component.
 import '@/domains/listEditor/components/ANestedSortableListEditor.vue'
 
 const SURFACE_DARK: [number, number, number] = [26, 26, 26]
@@ -20,7 +19,6 @@ const rgba = (css: string): [number, number, number, number] => {
   const [r, g, b, a = 1] = css.match(/[\d.]+/g)!.map(Number)
   return [r!, g!, b!, a]
 }
-// Composite over the dark surface, then the WCAG contrast ratio.
 const over = ([r, g, b, a]: [number, number, number, number], bg: [number, number, number]) =>
   [r, g, b].map((c, i) => c * a + bg[i]! * (1 - a)) as [number, number, number]
 const luminance = (rgb: [number, number, number]) => {

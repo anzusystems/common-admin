@@ -25,9 +25,9 @@ export default defineConfigWithVueTs(
     ],
   },
   {
-    // `@/lib` is the public entry. A module of the library that imports it back pulls every export into
-    // its own graph (a cycle through the entry), which per-module output then ships to each consumer
-    // of that module: import from the module that defines the name instead.
+    // `@/lib` is the public entry. A library module that imports it creates
+    // a cycle through the entry and pulls every export into its graph.
+    // Per-module output then ships all of it to each consumer of that module. Import from the defining module instead.
     name: 'app/no-public-entry',
     files: ['src/**/*.{ts,vue}'],
     rules: {
@@ -114,13 +114,11 @@ export default defineConfigWithVueTs(
   // oxlint automatically stops eslint from running it.
   ...(await buildFromOxlintConfigFile('.oxlintrc.json')),
   {
-    // The only eslint rules that fight oxfmt. Measured, not assumed: with this block
-    // removed, eslint reports 145 warnings here, and they fall on these same rules and no
-    // others.
-    //
-    // html-self-closing is configured rather than switched off, because only its `void`
-    // half conflicts: oxfmt writes `<img />` where the rule's default demands `<img>`.
-    // With `void: 'any'` the formatter keeps that half and eslint keeps `<VBtn></VBtn>`.
+    // The only eslint rules that conflict with oxfmt. Measured: without
+    // this block eslint reports 145 warnings, all on these rules.
+    // `html-self-closing` is configured, not disabled, because only its `void`
+    // part conflicts: oxfmt writes `<img />` but the rule's default wants `<img>`.
+    // With `void: 'any'` eslint still enforces `<VBtn></VBtn>`.
     name: 'app/owned-by-oxfmt',
     rules: {
       'vue/html-closing-bracket-newline': 'off',

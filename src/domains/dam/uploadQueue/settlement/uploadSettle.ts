@@ -26,58 +26,90 @@ import { isArray, isNull, isObject, isUndefined } from '@/shared/utils/common'
 
 export interface UploadTrackState {
   queueKey: UploadQueueKey
-  /** When the row began to wait for the server, in the time of the scheduler. */
+  /**
+   * When the row started waiting for the server, in scheduler time.
+   */
   eligibleSince: number
-  /** The client gave the row up on its finish request; the server may have finished the file all the same. */
+  /**
+   * The client failed the row on its finish request. The server may still have finished the file.
+   */
   clientFailed: boolean
-  /** Successful reads in a row that did not carry the asset of the row, or its file among the slots. */
+  /**
+   * Consecutive successful reads that did not include the row's asset, or its file among the slots.
+   */
   misses: number
-  /** Failed reads in a row. */
   readFailures: number
   /**
-   * A failed read of the row was written down, or one that found no asset was let be reported, and no read has
-   * brought its asset since: the next ones are not.
+   * A failed read or a missing asset was already reported, and no read has found the asset since.
+   * Further failures are not reported.
    */
   reported: boolean
 }
 
 export interface UploadRowNotice {
-  /** The row has waited longer than a processing should take. */
+  /**
+   * The row has waited longer than processing should take.
+   */
   slow: boolean
-  /** The reads of the row keep failing. */
   readWarning: boolean
-  /** Which of the two the settlement has written into `row.error`. */
+  /**
+   * Which of the two notices the settlement wrote into `row.error`.
+   */
   shown: 'slow' | 'readWarning' | null
-  /** The text it wrote then. A row whose message is another one by now carries somebody else's error. */
+  /**
+   * The text written then. If the row's message differs now, the error belongs to someone else.
+   */
   text: string | null
 }
 
-/** What a read is to do for one target. */
+/**
+ * What a read should do for one target.
+ */
 export interface UploadReadIntent {
-  /** The state an event carried: it stands when the read itself shows no final state. */
+  /**
+   * State carried by the event. It applies when the read shows no final state.
+   */
   hint: 'processed' | null
-  /** When the row settles as processed, load its metadata as well. */
+  /**
+   * When the row settles as processed, load its metadata as well.
+   */
   metadata: boolean
-  /** The metadata notification: the metadata may come before the final state. */
+  /**
+   * Set by the metadata notification. Metadata may arrive before the final state.
+   */
   early: boolean
-  /** A read that tells a row with `settleOn: 'never'` its file is processed. */
+  /**
+   * The read tells a row with `settleOn: 'never'` that its file is processed.
+   */
   seen: boolean
 }
 
-/** What the settlement remembers about rows. Every key is `toRaw(row)`. */
+/**
+ * What the settlement remembers about rows. Every key is `toRaw(row)`.
+ */
 export interface UploadSettleMemory {
   tracked: WeakMap<UploadQueueItem, UploadTrackState>
-  /** The last write an event made into the row; a read that started before it is stale. Never cleared. */
+  /**
+   * The last write an event made into the row. A read started before it is stale. Never cleared.
+   */
   revision: WeakMap<UploadQueueItem, number>
   metadataLoaded: WeakSet<UploadQueueItem>
-  /** Failed rows an event has brought back: their next read loads the metadata. */
+  /**
+   * Failed rows revived by an event. Their next read loads the metadata.
+   */
   reviveWithMetadata: WeakSet<UploadQueueItem>
-  /** Failed rows a refresh may still change: given up by the client and asked about, or left without their original. */
+  /**
+   * Failed rows a refresh may still change: given up by the client, or left without their duplicate's original.
+   */
   refreshMayHelp: WeakSet<UploadQueueItem>
-  /** Rows failed by the read that was one too many to find no asset, as long as the server settles them by nothing else. */
+  /**
+   * Rows failed because too many reads found no asset, while the server settles them by nothing else.
+   */
   givenUpMissing: WeakSet<UploadQueueItem>
   notices: WeakMap<UploadQueueItem, UploadRowNotice>
-  /** One counter for the revisions and the starts of the reads. */
+  /**
+   * Shared counter for revisions and read starts.
+   */
   clock: number
 }
 
@@ -99,9 +131,13 @@ export interface UploadSettleRow {
 }
 
 export interface UploadSettleOptions {
-  /** A row stopped being tracked, by a write or by the store. */
+  /**
+   * A row stopped being tracked, by a settlement write or by the store.
+   */
   onUntrack?(queueKey: UploadQueueKey): void
-  /** The settlement was disposed of: what a read of an original brings after that is written nowhere. */
+  /**
+   * The settlement was disposed. Results of an original read that arrive later are not written.
+   */
   isDisposed?(): boolean
 }
 
@@ -113,9 +149,9 @@ export const isFinalFileStatus = (
   status === AssetFileProcessStatus.Failed
 
 /**
- * The state a read gives the file of the target. An asset carries the state of its main file alone: a final state
- * it shows stands, otherwise the state the event carried, when it carried one. Of another file (a slot beside the
- * main one) the asset says nothing, and only what the event carried stands.
+ * The file state a read gives the target.
+ * An asset reports only its main file state. A final state from the asset wins, otherwise the event state applies.
+ * For another file (a slot) the asset says nothing, so only the event state applies.
  */
 export const resolveReadStatus = (
   asset: AssetDetailItemDto,
@@ -131,13 +167,13 @@ export const clearRowError = (row: UploadQueueItem) => {
   row.error = { hasError: false, message: '', assetFileFailReason: AssetFileFailReasonDefault }
 }
 
-// Empty as the mass operations of the queue understand it.
+// "Empty" as the queue's mass operations define it.
 export const isEmptyMetadataValue = (value: unknown) =>
   isUndefined(value) || isNull(value) || value === '' || (isArray(value) && !value.length)
 
 /**
- * The first load of the metadata of a row. What the user has put into the row before it (a mass operation of the
- * queue) stays: only the empty lists and the empty custom fields are filled.
+ * First metadata load of a row. Values the user set earlier (via a queue mass operation) stay.
+ * Only empty lists and empty custom fields are filled.
  */
 export function mergeLoadedMetadata(
   queue: UploadQueue,
@@ -157,7 +193,7 @@ export function mergeLoadedMetadata(
     }
   }
   row.customData = customData
-  // Not fields of a mass operation: the server's.
+  // Not mass-operation fields. These come from the server.
   row.mainFileSingleUse = asset.mainFileSingleUse
   row.mainFileInternal = asset.mainFileInternal
   const authorSuggestions = asset.metadata.authorSuggestions ?? {}
@@ -170,8 +206,8 @@ export function mergeLoadedMetadata(
 }
 
 /**
- * What a read asset gives a row without a change of its state. `hadMetadata`: the metadata of the row was loaded
- * once, whether or not it has its form now.
+ * Applies a read asset to a row without changing its state.
+ * `hadMetadata`: the row's metadata was loaded once, whether or not the form is shown now.
  */
 export function decorateRow(
   row: UploadQueueItem,
@@ -181,27 +217,27 @@ export function decorateRow(
   hadMetadata: boolean
 ) {
   row.assetStatus = asset.attributes.assetStatus
-  // Only when the row is the main file: a slot would take a preview describing another.
+  // Only for the main-file row. A slot row would get a preview of another file.
   if (!isNull(row.fileId) && row.fileId !== mainFile.id) return
   if (mainFile.links?.image_detail) row.imagePreview = mainFile.links.image_detail
-  // Not on a mass-edit row, nor on one that has or had its metadata: there the switches are form fields the user
-  // may have set, also on a row a failure took the form of and which gets it back.
+  // Skip mass-edit rows and rows that have or had metadata. There these switches are form fields the user may have set.
+  // This includes a row that lost its form on failure and gets it back.
   if (!row.canEditMetadata && !hadMetadata && role !== UploadRowRole.MassEdit) {
     row.mainFileSingleUse = asset.mainFileSingleUse
     row.mainFileInternal = asset.mainFileInternal
   }
 }
 
-// Both ways of settling a duplicate mark the row through here.
+// Both duplicate policies mark the row through here.
 const markAsDuplicate = (row: UploadQueueItem) => {
   row.isDuplicate = true
-  // Once, before anything may write the original over `assetId`.
+  // Set once, before anything can overwrite `assetId` with the original.
   row.uploadedAssetId ??= row.assetId
 }
 
 /**
- * The writes of the settlement: a read asset or a known state into the rows of the queues. No timers and no reads
- * of its own, but for the original of a duplicate.
+ * Settlement writes: a read asset or a known state into queue rows.
+ * No timers and no reads of its own, except reading a duplicate's original.
  */
 export function createUploadSettle(
   profile: UploadSettlementProfile,
@@ -211,8 +247,8 @@ export function createUploadSettle(
   const policyOf = (row: UploadQueueItem) => profile.policyFor(profile.roleOf(row))
 
   /**
-   * Whether the target concerns the row of the queue `queueKey`: by `matches` of the profile, and only in a queue of a
-   * configuration the target names, where the profile says the configurations of the queues (`configOf`).
+   * Whether the target concerns a row of queue `queueKey`, by the profile's `matches`.
+   * When the profile provides `configOf`, only queues of a configuration the target names match.
    */
   const concerns = (
     queueKey: UploadQueueKey,
@@ -224,18 +260,20 @@ export function createUploadSettle(
     profile.matches(row, target, purpose)
 
   /**
-   * The target once for each configuration it names, where it names several and the profile says the configurations
-   * of its queues: what is read for it is read for each by itself, by a queue of that configuration, and written into
-   * its rows alone. Otherwise the target itself.
+   * Splits the target per named configuration when it names several and the profile provides `configOf`.
+   * Each copy is read separately, by a queue of that configuration, and written only into its rows.
+   * Otherwise returns the target itself.
    */
   const byConfiguration = (target: UploadSettlementTarget): UploadSettlementTarget[] => {
     const names = profile.configOf ? [...new Set(target.configNames ?? [])] : []
     return names.length > 1 ? names.map((name) => ({ ...target, configNames: [name] })) : [target]
   }
 
-  // The queues whose rows were given names since the caches last fetched.
+  // Queues whose rows got names since the caches last fetched.
   const namedQueues = new Set<UploadQueueKey>()
-  /** Where the names of the rows of the queue go: a profile with `configOf` is told the queue, one without as before. */
+  /**
+   * Where the row names go. A profile with `configOf` is given the queue key, one without is not.
+   */
   const cachesOf = (
     queueKey: UploadQueueKey
   ): Pick<UploadSettlementProfile['caches'], 'addAuthors' | 'addKeywords'> => {
@@ -251,7 +289,9 @@ export function createUploadSettle(
       addKeywords: (ids) => profile.caches.addKeywords(ids, queueKey),
     }
   }
-  /** The caches fetch: those of each queue given names since, or once without a queue for a profile without `configOf`. */
+  /**
+   * Fetches caches for each queue that got names, or once without a queue for a profile without `configOf`.
+   */
   const fetchNames = () => {
     const queueKeys = [...namedQueues]
     namedQueues.clear()
@@ -266,7 +306,9 @@ export function createUploadSettle(
     }
   }
 
-  /** The rows of all the queues, as they are now. */
+  /**
+   * All queue rows at this moment.
+   */
   const rows = (): UploadSettleRow[] => {
     const all: UploadSettleRow[] = []
     for (const [queueKey, queue] of profile.queues()) {
@@ -275,7 +317,7 @@ export function createUploadSettle(
     return all
   }
 
-  // A stopped row is written by nothing. Asked anew after every wait: the row may be stopped meanwhile.
+  // Nothing writes into a stopped row. Check again after every await: the row may have been stopped meanwhile.
   const isStopped = (row: UploadQueueItem) => row.status === UploadQueueItemStatus.Stop
 
   const isLive = (row: UploadQueueItem) => {
@@ -286,8 +328,8 @@ export function createUploadSettle(
     return false
   }
 
-  // A row marked as a duplicate is settled and read-only. A row that became its original is an editable row like
-  // any other, and is not barred from anything.
+  // A row marked as a duplicate is settled and read-only.
+  // A row that became its original is a normal editable row.
   const isMarkedDuplicate = (row: UploadQueueItem) => row.isDuplicate && policyOf(row).duplicate === 'markDuplicate'
   const isDisposed = () => options.isDisposed?.() === true
 
@@ -295,14 +337,18 @@ export function createUploadSettle(
     decorateRow(row, asset, mainFile, profile.roleOf(row), memory.metadataLoaded.has(toRaw(row)))
 
   const revisionOf = (row: UploadQueueItem) => memory.revision.get(toRaw(row)) ?? 0
-  /** An event has written into the row: a read that started before this is stale for it. */
+  /**
+   * An event wrote into the row. Reads started before this are stale for it.
+   */
   const bump = (row: UploadQueueItem) => {
     const mark = ++memory.clock
     memory.revision.set(toRaw(row), mark)
     return mark
   }
   const isStale = (row: UploadQueueItem, startedAt: number) => startedAt <= revisionOf(row)
-  /** The mark of a read that starts now. */
+  /**
+   * Mark of a read starting now.
+   */
   const startRead = () => ++memory.clock
 
   const trackStateOf = (row: UploadQueueItem) => memory.tracked.get(toRaw(row))
@@ -314,7 +360,9 @@ export function createUploadSettle(
     options.onUntrack?.(state.queueKey)
   }
 
-  /** Whether a refresh may still change a failed row; the store is told when that changes. */
+  /**
+   * Whether a refresh may still change a failed row. The store is notified on change.
+   */
   const setRefreshMayHelp = (queueKey: UploadQueueKey, row: UploadQueueItem, mayHelp: boolean) => {
     const raw = toRaw(row)
     if (memory.refreshMayHelp.has(raw) === mayHelp) return
@@ -333,17 +381,17 @@ export function createUploadSettle(
     return notice
   }
   const dropNotice = (row: UploadQueueItem) => memory.notices.delete(toRaw(row))
-  // Whether the message of the row is still the text the settlement wrote into it. The store writes into
-  // `row.error` as well (an upload that failed), and that error is not the settlement's to take away.
+  // Whether the row message is still the text the settlement wrote.
+  // The store also writes `row.error` (failed upload), and the settlement must not clear that error.
   const showsOwnText = (row: UploadQueueItem) => {
     const notice = memory.notices.get(toRaw(row))
     return !!notice?.shown && row.error.message === notice.text
   }
 
   /**
-   * Writes into `row.error` the one of the two texts of the settlement that holds, or takes its own text away:
-   * only its own, and only while it is still what the row says.
-   * `clear` takes away an error the settlement did not write as well: the row has settled as processed.
+   * Writes the applicable settlement text into `row.error`, or removes its own text.
+   * Only its own text, and only while the row still shows it.
+   * `clear` also removes an error the settlement did not write, because the row settled as processed.
    */
   const syncNotice = (row: UploadQueueItem, { clear = false }: { clear?: boolean } = {}) => {
     const notice = noticeOf(row)
@@ -370,7 +418,7 @@ export function createUploadSettle(
     if (clear) {
       clearRowError(row)
     } else if (showsOwnText(row)) {
-      // The text goes. The flag goes with it, unless the row has failed since: then the flag is the failure's.
+      // Remove the text. Also clear the flag, unless the row has failed since. Then the flag belongs to the failure.
       if (row.status === UploadQueueItemStatus.Failed) row.error = { ...row.error, message: '' }
       else clearRowError(row)
     }
@@ -393,16 +441,16 @@ export function createUploadSettle(
     intent: UploadReadIntent
   ) => {
     const raw = toRaw(row)
-    // The client marks an upload failed when one of its requests fails, and the server may have finished it all the
-    // same. Such a row lost its form with the failure, and gets it back here, with its metadata.
+    // The client marks an upload failed when one of its requests fails, but the server may still finish it.
+    // Such a row lost its form on failure and gets it back here, with its metadata.
     const wasFailed = row.status === UploadQueueItemStatus.Failed || memory.reviveWithMetadata.has(raw)
     row.status = UploadQueueItemStatus.Uploaded
-    // A copy to the licence knows only its asset, and the image is built from the file id.
+    // A licence copy knows only its asset. The image is built from the file id.
     if (isNull(row.fileId)) row.fileId = mainFile.id
     decorate(row, asset, mainFile)
     const notice = noticeOf(row)
     if (policyOf(row).metadata === 'load' && !isMarkedDuplicate(row) && (intent.metadata || wasFailed)) {
-      // Loaded once, and never into a row whose form is on: it keeps what the user has typed since.
+      // Loaded once, and never into a row with the form shown, so user input is kept.
       if (!row.canEditMetadata && !memory.metadataLoaded.has(raw)) loadMetadata({ queueKey, queue, row }, asset)
       row.canEditMetadata = true
       notice.readWarning = false
@@ -422,7 +470,7 @@ export function createUploadSettle(
     failReason: AssetFileFailReasonType
   ) => {
     row.status = UploadQueueItemStatus.Failed
-    // Without the old text: the row prints a message over the reason, and the old one is not why.
+    // Drop the old text. The row shows a message for the reason, and the old text is not the cause.
     row.error = { hasError: true, message: '', assetFileFailReason: failReason }
     row.canEditMetadata = false
     dropNotice(row)
@@ -433,7 +481,9 @@ export function createUploadSettle(
     profile.hooks.onRowFinal(queueKey, row)
   }
 
-  /** A failure the caller knows of, without a read. */
+  /**
+   * A failure known by the caller, without a read.
+   */
   const settleKnownFailed = (target: UploadSettlementTarget, failReason: AssetFileFailReasonType) => {
     for (const entry of rows()) {
       if (entry.row.status === UploadQueueItemStatus.Stop || !concerns(entry.queueKey, entry.row, target, 'settle')) {
@@ -445,8 +495,8 @@ export function createUploadSettle(
   }
 
   /**
-   * The state of a `processed` event, written at once into the rows that settle on the event. Also what a tick
-   * does for a slot row whose file the list of slots shows processed.
+   * Applies a `processed` event immediately to rows that settle on the event.
+   * A tick also uses it for a slot row whose file the slot list shows processed.
    */
   const settleProcessedByEvent = (target: UploadSettlementTarget) => {
     for (const { queueKey, row } of rows()) {
@@ -456,7 +506,7 @@ export function createUploadSettle(
       if (row.status === UploadQueueItemStatus.Failed) memory.reviveWithMetadata.add(raw)
       memory.givenUpMissing.delete(raw)
       row.status = UploadQueueItemStatus.Uploaded
-      // A row the client gave up on, which had its metadata by then, gets the form back as the user left it.
+      // A row the client gave up on that already had metadata gets its form back as the user left it.
       if (!isMarkedDuplicate(row) && memory.metadataLoaded.has(raw)) row.canEditMetadata = true
       noticeOf(row).slow = false
       syncNotice(row, { clear: true })
@@ -467,7 +517,9 @@ export function createUploadSettle(
     }
   }
 
-  /** A `processed` event for the rows whose state it does not change. */
+  /**
+   * Handles a `processed` event for rows whose state it does not change.
+   */
   const announceProcessed = (target: UploadSettlementTarget) => {
     for (const { queueKey, row } of rows()) {
       if (row.status === UploadQueueItemStatus.Stop || policyOf(row).settleOn !== 'never') continue
@@ -488,8 +540,8 @@ export function createUploadSettle(
         concerns(queueKey, row, target, 'settle')
     )
 
-  // The row stays, marked: settled first, completed from the original file afterwards, so the wait for that file
-  // does not hold an upload slot.
+  // The row stays and is marked. It is settled first and completed from the original file later.
+  // This way the wait for that file does not hold an upload slot.
   const markDuplicates = async (
     target: UploadSettlementTarget,
     originFileId: DocIdNullable,
@@ -519,7 +571,7 @@ export function createUploadSettle(
     }
     if (!file || isDisposed()) return
     for (const { row, mark } of marked) {
-      // Only a row nothing has written into meanwhile, and which is still there.
+      // Only rows still present and not written into meanwhile.
       if (!isLive(row) || row.status === UploadQueueItemStatus.Stop || !row.isDuplicate) continue
       if (revisionOf(row) !== mark) continue
       row.fileId = file.id
@@ -529,8 +581,8 @@ export function createUploadSettle(
     }
   }
 
-  // The row becomes the original: its asset and file are replaced, and it takes the metadata of the original.
-  // Answers whether the original could not be read and a row is left that a refresh may still help.
+  // The row becomes the original: its asset and file are replaced and it takes the original's metadata.
+  // Returns whether the original could not be read and a row remains that a refresh may still help.
   const becomeOriginals = async (
     target: UploadSettlementTarget,
     originFileId: DocIdNullable,
@@ -538,9 +590,10 @@ export function createUploadSettle(
     eligible: (row: UploadQueueItem) => boolean
   ): Promise<boolean> => {
     if (!originFileId || assetType !== DamAssetType.Image) return false
-    // Noted before the original is asked for. After the wait only a row no event has written into meanwhile, which
-    // is still in its queue and not stopped, is written: the caller that knows of a duplicate is outside the order
-    // of the reads, and a later event must not be undone by an earlier answer.
+    // Recorded before requesting the original. After the await, only rows still in
+    // their queue, not stopped and not written by an event meanwhile are written.
+    // The caller that reports a duplicate is outside the read
+    // ordering, so an earlier answer must not undo a later event.
     const candidates = duplicateRows(target, 'becomeOriginal', eligible).map((entry) => ({
       ...entry,
       mark: revisionOf(entry.row),
@@ -557,22 +610,22 @@ export function createUploadSettle(
       if (isDisposed()) return false
       let leftWithout = false
       for (const { queueKey, row } of untouched()) {
-        // Noted before the row is let go: one the client gave up on keeps its way back.
+        // Read before untracking, so a row the client gave up on keeps its way back.
         const mightHelp = memory.refreshMayHelp.has(toRaw(row))
-        // Whatever its state: the next tick would only try the same read again.
+        // Untrack regardless of state. The next tick would only retry the same read.
         untrack(row)
         // Only a row still waiting for this answer fails: a settled one must not be flipped back to failed.
         const failsHere = row.status === UploadQueueItemStatus.Processing
         if (failsHere) {
           row.status = UploadQueueItemStatus.Failed
-          // Without a text the settlement had written into it: that is no longer what is wrong with the row.
+          // Drop a text the settlement wrote. It no longer describes what is wrong with the row.
           row.error = { ...row.error, hasError: true, message: showsOwnText(row) ? '' : row.error.message }
           row.canEditMetadata = false
           dropNotice(row)
           profile.hooks.onRowFinal(queueKey, row)
         }
-        // Failed for a read that failed, not for its file: the refresh of the row asks for the original again.
-        // Not a row that had failed before by the word of the server, which no refresh takes back.
+        // Failed because a read failed, not the file. A row refresh requests the original again.
+        // Not for a row the server had already failed, which no refresh can undo.
         if (failsHere || mightHelp) {
           setRefreshMayHelp(queueKey, row, true)
           leftWithout = true
@@ -618,9 +671,10 @@ export function createUploadSettle(
   }
 
   /**
-   * A duplicate file, for every row that passes `matches(…, 'settle')`, each by the policy of its role.
-   * `eligible` leaves out the rows a read is stale for. Answers whether a row is left without the original of
-   * its duplicate, which could not be read: a refresh may still help it.
+   * Handles a duplicate file for every row passing `matches(…, 'settle')`, by the policy of its role.
+   * `eligible` excludes rows the read is stale for.
+   * Returns whether a row is left without its duplicate's original
+   * because it could not be read. A refresh may still help it.
    */
   const settleDuplicate = async (
     target: UploadSettlementTarget,
@@ -628,8 +682,8 @@ export function createUploadSettle(
     assetType: DamAssetTypeType | null,
     eligible: (row: UploadQueueItem) => boolean = () => true
   ) => {
-    // Both begin at once, not one after the wait of the other: what each notes of its rows is noted now. The original
-    // is read once for each configuration the target names, by a queue of it.
+    // Both start at once, not one after the other, so each records its rows now.
+    // The original is read once per configuration the target names, by a queue of that configuration.
     const targets = byConfiguration(target)
     const [, leftWithout] = await Promise.all([
       markDuplicates(target, originFileId, assetType, eligible),
@@ -642,7 +696,9 @@ export function createUploadSettle(
     return leftWithout
   }
 
-  /** A duplicate the caller knows of, without a read of its asset. Never rejects. */
+  /**
+   * A duplicate known by the caller, without reading its asset. Never rejects.
+   */
   const settleKnownDuplicate = async (
     target: UploadSettlementTarget,
     originFileId: DocIdNullable,
@@ -655,12 +711,14 @@ export function createUploadSettle(
     }
   }
 
-  /** The metadata notification: the metadata and the form, whatever the state of the file. */
+  /**
+   * Metadata notification: loads the metadata and the form, regardless of the file state.
+   */
   const tryLoadMetadata = ({ queueKey, queue, row }: UploadSettleRow, asset: AssetDetailItemDto) => {
     if (policyOf(row).metadata !== 'load' || row.canEditMetadata) return
-    // A marked duplicate is settled, and has no metadata of its own to miss.
+    // A marked duplicate is settled and has no metadata of its own to load.
     if (isMarkedDuplicate(row)) return
-    // Nor has a row whose file failed, but the one that failed for want of this very metadata.
+    // Skip a row whose file failed, except one that failed for lack of this metadata.
     if (row.status === UploadQueueItemStatus.Failed && profile.metadataGate?.(queueKey, row) !== 'load') return
     if (!memory.metadataLoaded.has(toRaw(row))) loadMetadata({ queueKey, queue, row }, asset)
     row.canEditMetadata = true
@@ -670,9 +728,9 @@ export function createUploadSettle(
   }
 
   /**
-   * One read asset into every row it concerns. `startedAt` is the mark of the read: a row an event has written
-   * into since keeps the state the event gave it. Answers as `settleDuplicate` does: whether a row is left
-   * without the original of its duplicate.
+   * Applies one read asset to every row it concerns. `startedAt` is the read mark.
+   * A row written by an event since keeps the event's state.
+   * Returns like `settleDuplicate`: whether a row is left without its duplicate's original.
    */
   const applyAssetRead = async (
     asset: AssetDetailItemDto,
@@ -686,12 +744,12 @@ export function createUploadSettle(
     let leftWithout = false
     for (const entry of rows()) {
       const { queueKey, row } = entry
-      // The read of a duplicate's original was awaited: the row may have left its queue meanwhile.
+      // The duplicate's original read was awaited. The row may have left its queue meanwhile.
       if (duplicateSettled && !isLive(row)) continue
       if (isStopped(row)) continue
 
-      // The state of the file and what completes the row, unless an event has written into the row since this
-      // read was sent: the event knows more than this answer.
+      // Apply the file state and row details unless an event wrote
+      // into the row after this read started. The event is newer.
       if (!isStale(row, startedAt) && mainFile && concerns(queueKey, row, target, 'decorate')) {
         const maySettle = concerns(queueKey, row, target, 'settle')
         if (status === AssetFileProcessStatus.Processed) {
@@ -702,7 +760,7 @@ export function createUploadSettle(
             settleProcessed(entry, asset, mainFile, intent)
           }
         } else if (status === AssetFileProcessStatus.Duplicate && maySettle) {
-          // Once for all the rows of the target: the original is read once.
+          // Once for all rows of the target. The original is read only once.
           if (!duplicateSettled) {
             duplicateSettled = true
             leftWithout = await settleDuplicate(
@@ -719,9 +777,9 @@ export function createUploadSettle(
         }
       }
 
-      // Into such a row as well: the metadata is no state of the file. It is loaded once, whenever it comes, and a
-      // row the event has failed or marked as a duplicate is refused there. Otherwise a `processed` event that
-      // overtakes the read of the metadata notification would leave the row uploaded without its form for good.
+      // Applied to such a row as well, because metadata is not file state. It loads once, whenever it arrives.
+      // Rows the event failed or marked as duplicate are refused there.
+      // Otherwise a `processed` event that overtakes the metadata read would leave the row uploaded without its form.
       if (intent.early && concerns(queueKey, row, target, 'metadata')) tryLoadMetadata(entry, asset)
     }
     profile.hooks.onAssetRead?.(asset)
@@ -729,8 +787,8 @@ export function createUploadSettle(
   }
 
   /**
-   * An uploaded row still without its metadata, which its refresh would load. It is no longer tracked, and the reads
-   * that find no asset are counted for it as for a row that waits.
+   * An uploaded row without its metadata, which a refresh would load.
+   * It is no longer tracked, but reads that find no asset are still counted for it.
    */
   const awaitsMetadata = (row: UploadQueueItem) =>
     row.status === UploadQueueItemStatus.Uploaded &&
@@ -739,9 +797,9 @@ export function createUploadSettle(
     !isMarkedDuplicate(row)
 
   /**
-   * The asset of a row was missing from as many reads as it takes, of a tracked row or of one a refresh may still
-   * help: a row still processing fails, an uploaded row still without its metadata fails with `assetGone`, any
-   * other (a row the client gave up on, one left without the original of its duplicate) is only left alone.
+   * The row's asset was missing from enough reads, for a tracked row or one a refresh may still help.
+   * A processing row fails. An uploaded row without metadata fails with `assetGone`.
+   * Any other row (given up by the client, or left without its duplicate's original) is left alone.
    */
   const giveUpOnMissing = ({ queueKey, row }: Pick<UploadSettleRow, 'queueKey' | 'row'>) => {
     // There is no asset a refresh could read.

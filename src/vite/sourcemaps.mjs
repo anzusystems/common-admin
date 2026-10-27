@@ -5,14 +5,10 @@ const LIBRARY_DIST_FILE = /[\\/]node_modules[\\/]@anzusystems[\\/]common-admin[\
 const SOURCE_MAPPING_URL = /\/\/# sourceMappingURL=([^\s'"]+)\s*$/
 
 /**
- * Feeds the source maps common-admin publishes into the admin's build.
- *
- * Vite ignores `sourceMappingURL` in files it loads from node_modules, so without this the admin's
- * maps end at `dist/common-admin.js` and Sentry shows the library minified. Loading the file
- * together with its map lets the bundler chain them: frames resolve to the library's `.vue` and
- * `.ts` sources. Does nothing unless the build emits source maps.
- *
- * @returns {import('vite').Plugin}
+ * Feeds common-admin's published source maps into the admin's build.
+ * Vite ignores `sourceMappingURL` in node_modules files, so Sentry would show the library minified.
+ * Loading the file with its map lets the bundler chain them to the `.vue` and `.ts` sources.
+ * Does nothing unless the build emits source maps.
  */
 export function commonAdminSourcemaps() {
   let enabled = false

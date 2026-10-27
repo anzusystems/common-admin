@@ -2,28 +2,35 @@ import type { ImageCreateUpdateAware } from '@/domains/dam/types/ImageAware'
 import type { IntegerId } from '@/shared/types/common'
 import { cloneDeep } from '@/shared/utils/common'
 
-// The saves of an image by the image widgets of the page. A widget drawn again elsewhere (the pin of a sidebar widget
-// in admin-cms) is a second widget of the same image, drawn while the save of the widget it replaced may still be on
-// its way: it read the image before that save took effect, and "edit metadata" offered the texts it had read, whose
-// confirm saved them back over the saved ones. The widget of several images (a gallery) holds each of its images, and
-// its save is noted for each of them.
-// The note of an image lives while a widget holds the image or a save of it is on its way: the copy may be drawn only
-// once its configuration has been read, and a widget of the image drawn on the article opened again reads the image as
-// well before that save took effect.
+// Tracks image saves across the page's image widgets.
+// A re-rendered widget (sidebar pin in admin-cms) may read the image before the
+// previous widget's save lands, and "edit metadata" then saved stale texts back.
+// A gallery widget holds and notes each of its images.
+// A note lives while a widget holds the image or a save is pending, since the copy
+// may mount late, and a reopened article may also read before the save lands.
 interface SavesOfImage {
-  /** The widgets that hold the image. */
   holders: Set<symbol>
-  /** The saves on their way, each by its mark. */
+  /**
+   * Pending saves, by mark.
+   */
   onTheirWay: Set<symbol>
-  /** How many have been answered. */
+  /**
+   * Number of answered saves.
+   */
   answered: number
-  /** The image as the save answered last has it. */
+  /**
+   * The image as returned by the last answered save.
+   */
   saved: ImageCreateUpdateAware | null
-  /** What waits for saves on their way to be over: let go once it may go. */
+  /**
+   * Waiters for pending saves to finish; each runs once `mayGo` allows.
+   */
   waiting: Array<{ mayGo: () => boolean; go: () => void }>
 }
 const saves = new Map<string, SavesOfImage>()
-/** The images each widget holds, by the keys of their notes. */
+/**
+ * Images held by each widget, by note key.
+ */
 const held = new Map<symbol, Set<string>>()
 
 const keyOf = (config: string, id: IntegerId) => JSON.stringify([config, id])
@@ -36,15 +43,17 @@ const savesOf = (key: string) => {
   return of
 }
 
-/** Dropped once no widget holds the image and no save of it is on its way. */
+/**
+ * Drops the note once no widget holds the image and no save is pending.
+ */
 const dropUnheld = (key: string, of: SavesOfImage) => {
   if (of.holders.size > 0 || of.onTheirWay.size > 0 || saves.get(key) !== of) return
   saves.delete(key)
 }
 
 /**
- * The widget `holder` holds the images `ids`, and no other: as it reads them, takes those it is given, or goes. The
- * answer is how many saves of each of them have been answered by then, by its id.
+ * Sets the images `holder` holds to exactly `ids`, on read, on receive, or on unmount (empty).
+ * Returns the answered save count per id at that moment.
  */
 export const holdImages = (config: string, holder: symbol, ids: IntegerId[]) => {
   const keys = new Map(ids.map((id) => [id, keyOf(config, id)]))
@@ -68,15 +77,14 @@ export const holdImages = (config: string, holder: symbol, ids: IntegerId[]) => 
 }
 
 /**
- * The widget `holder` holds the image `id`, or none: as it reads the image, takes one it is given, or goes. The answer
- * is how many saves of that image have been answered by then.
+ * Single-image form of `holdImages`; `null` holds none. Returns the answered save count of that image.
  */
 export const holdImage = (config: string, holder: symbol, id: IntegerId | null) =>
   id === null ? (holdImages(config, holder, []), 0) : holdImages(config, holder, [id]).get(id)!
 
 /**
- * The save of the image a widget has sent: the other widgets of the image know it is on its way and, once it is
- * answered, what it saved. `own`: the marks of the saves the widget has on their way, which it does not wait for.
+ * Notes a sent image save so other widgets of the image know it is pending and, once answered, what it saved.
+ * `own`: marks of the widget's own pending saves, which it does not wait for.
  */
 export const noteImageSave = async <T extends ImageCreateUpdateAware>(
   config: string,
@@ -107,9 +115,8 @@ export const noteImageSave = async <T extends ImageCreateUpdateAware>(
 }
 
 /**
- * The save of several images at once, as the widget of several images saves them: noted for each image `ids` names, as
- * `noteImageSave` notes one, with that image as the answer has it. An image the answer does not have counts as not
- * saved.
+ * Notes a multi-image save per id in `ids`, as `noteImageSave` does, using each image from the answer.
+ * An image missing from the answer counts as not saved.
  */
 export const noteImagesSave = async <T extends ImageCreateUpdateAware>(
   config: string,
@@ -123,15 +130,15 @@ export const noteImagesSave = async <T extends ImageCreateUpdateAware>(
       if (!image) throw new Error('not in the answer')
       return image
     })
-    // Said by the save itself, to its widget.
+    // The error is reported by the save itself to its widget.
     noteImageSave(config, id, own, one).catch(() => undefined)
   })
   return save
 }
 
 /**
- * Once no save of the image by another widget is on its way (`own`: the widget's own): `over`, and `cancel`, which lets
- * the wait go at once and takes it off the note, for an opening that has closed. `null` when none is on its way.
+ * Waits until no other widget's save of the image is pending (`own`: the widget's own saves).
+ * Returns `over` and `cancel`, which ends the wait and removes it, for a closed opening. `null` if none is pending.
  */
 export const imageSavesOfOthersOver = (config: string, id: IntegerId, own: Set<symbol>) => {
   const of = saves.get(keyOf(config, id))
@@ -150,7 +157,9 @@ export const imageSavesOfOthersOver = (config: string, id: IntegerId, own: Set<s
   return { over, cancel }
 }
 
-/** The image as the save answered last has it, when it has been answered since `answeredBefore` of them were. */
+/**
+ * The last saved image, if a save was answered after `answeredBefore` answers.
+ */
 export const imageSavedSince = (config: string, id: IntegerId, answeredBefore: number) => {
   const of = saves.get(keyOf(config, id))
   return !of || !of.saved || of.answered === answeredBefore ? null : cloneDeep(of.saved)

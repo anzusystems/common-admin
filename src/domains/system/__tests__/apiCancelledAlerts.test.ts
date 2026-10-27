@@ -3,10 +3,9 @@ import { AnzuApiCancelledError } from '@/shared/error/AnzuApiCancelledError'
 import { AnzuApiResponseCodeError } from '@/shared/error/AnzuApiResponseCodeError'
 import { useAlerts } from '@/domains/system/composables/alerts'
 
-// The cancellation model is only additive if the fleet's error handling already knows what a stopped
-// request is. It did not: `showErrorsDefault` fell through to `false`, and the callers that end with
-// `if (!showErrorsDefault(e)) showUnknownError()` -- one of them in this library -- turned every
-// superseded autocomplete request into an "unknown error" toast.
+// `showErrorsDefault` used to fall through to `false` for a stopped request.
+// Callers ending with `if (!showErrorsDefault(e)) showUnknownError()`, one of them in this
+// library, then turned every superseded autocomplete request into an "unknown error" toast.
 
 vi.mock('@/domains/system/composables/alertsQueue', () => ({ pushAlert: vi.fn() }))
 

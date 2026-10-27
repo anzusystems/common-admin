@@ -22,32 +22,22 @@ import { isInCauseChain } from '@/shared/error/isInCauseChain'
 export type ApiErrorContext = {
   system: string
   entity: string
-  /** The url actually requested, parameters substituted and query included -- not the template. */
+  /**
+   * The url actually requested, with parameters substituted and query included. Not the template.
+   */
   url?: string
   /**
-   * The status the backend answered with, when it answered at all. Absent for a transport failure,
-   * where there is no response.
-   *
-   * It is here so an application can decide what is worth writing down without the call sites having
-   * to: a 404 that a caller probes for, for instance. Those used to be silenced per call, which made
-   * whether a failure was recorded depend on which call made it. The switch is the application's now,
-   * and this is what it needs to use it.
-   *
-   * Two statuses are not the application's to decide, and the library keeps them: 401 and 403. They
-   * are not an endpoint failing its contract, they are the session -- nobody is logged in, or this
-   * user may not -- and every admin in the fleet already branches on them and acts. Everything else
-   * reaches the logger and is filtered here, on this field.
+   * The status the backend answered with. Absent for a transport failure.
+   * The application's logger uses it to decide what to record, for example a 404 that a caller probes for.
+   * The library itself handles 401 and 403, because they concern the
+   * session and not the endpoint. Every other status reaches the logger.
    */
   status?: number
   /**
-   * The i18n scope a field-level validation failure is reported under, when it is not the same as
-   * the backend above.
-   *
-   * `AnzuApiValidationError` turns the server's field names into `<system>.<entity>.model.<field>`
-   * translation keys. For a component shared by nine backends those two are different questions:
-   * *which* backend failed -- which is what the report needs -- and *whose labels* name its fields,
-   * which for a shared form is always the library's own `common.*`. Left unset, the two stay one
-   * value, exactly as before.
+   * The i18n scope for field-level validation errors, when it differs from the backend above.
+   * `AnzuApiValidationError` builds `<system>.<entity>.model.<field>` translation keys. A component
+   * shared by several backends reports which backend failed but uses the library's `common.*` labels.
+   * If unset, the backend value is used.
    */
   validationSystem?: string
   validationEntity?: string
@@ -56,17 +46,17 @@ export type ApiErrorContext = {
 export type ApiErrorLogger = (error: Error, context: ApiErrorContext) => void
 
 /**
- * What the user probe calls itself in the error context.
- *
- * A 404 here is an answer, not a failure -- it is how a system says "no account of yours". The
- * default logger skips it; an app's own logger still receives it, so it filters on this together
- * with the status rather than on the url, which would also silence a real detail read of the same
- * path. The validation scope stays the user's, so a field error would still name a real label.
- * Defined here, not beside the probe, so the default logger can know it without an import cycle.
+ * Entity name of the user probe in the error context.
+ * A 404 from the probe means the user has no account, so the default logger skips it. App loggers
+ * should filter on this and the status, not the url, which would also silence a real detail read.
+ * The validation scope stays the user's, so field errors still resolve real labels.
+ * Defined here to avoid an import cycle with the default logger.
  */
 export const USER_PROBE_ENTITY = 'anzuUserProbe'
 
-/** What reporting does until an application says otherwise; exported so a test can put it back. */
+/**
+ * Default error reporting. Exported so tests can restore it.
+ */
 export const defaultApiErrorLogger: ApiErrorLogger = (error, context) => {
   if (context.status === 404 && context.entity === USER_PROBE_ENTITY) return
   console.error('Api error: ' + (context.url ?? ''), error)
@@ -75,29 +65,21 @@ export const defaultApiErrorLogger: ApiErrorLogger = (error, context) => {
 let logger: ApiErrorLogger | null = defaultApiErrorLogger
 
 /**
- * Replaces the logger the api helpers report unexpected failures through, or turns reporting off
- * with `null`.
- *
- * It is one switch for the whole family rather than a flag on each instance, which is what it
- * replaces: whether a failure was written down used to depend on which helper made the call and how
- * that instance happened to be constructed.
- *
- * An application that wants these where it can see them passes its own:
- * `setApiErrorLogger((e, ctx) => Sentry.captureException(e, { extra: ctx }))`.
+ * Replaces the logger the api helpers report unexpected failures through. `null` turns reporting off.
+ * One global switch for all helpers, so reporting does not depend on which helper made the call.
+ * @example setApiErrorLogger((e, ctx) => Sentry.captureException(e, { extra: ctx }))
  */
 export const setApiErrorLogger = (fn: ApiErrorLogger | null): void => {
   logger = fn
 }
 
-// Only the failures nobody planned for. A validation or forbidden answer is the backend saying
-// something the caller asked about and will show; writing those down as well would be noise that
-// teaches people to ignore the log.
+// Only unplanned failures. Validation and forbidden errors are shown to the user by the caller.
+// Logging them too would be noise.
 const LOGGED = [AnzuApiAxiosError, AnzuFatalError, AnzuApiResponseCodeError]
 
 /**
- * The HTTP status the backend answered with, read off whichever class carries it: the axios response
- * of an `AnzuApiAxiosError`, or the `code` of an `AnzuApiResponseCodeError` (a response axios let
- * through). `undefined` when nothing answered -- a timeout, a network failure, a cancel.
+ * HTTP status from the axios response of `AnzuApiAxiosError` or the `code` of `AnzuApiResponseCodeError`.
+ * `undefined` when nothing answered: timeout, network failure, cancel.
  */
 export const apiErrorStatus = (error: unknown): number | undefined => {
   if (error instanceof AnzuApiResponseCodeError) return error.code
@@ -107,46 +89,33 @@ export const apiErrorStatus = (error: unknown): number | undefined => {
 }
 
 /**
- * Whether `report` hands this error, once mapped, to the logger: not a timeout, a 401 or a 403, nor
- * anything while reporting is off. For a caller that reports only the first failure of a series: a
- * failure dropped here has told nobody, and the series begins with the first one that was written.
- * What the application's own logger does with it is the application's.
+ * Whether `report` passes this error to the logger. False for a timeout, 401, 403, or while reporting is off.
+ * Lets a caller that reports only the first failure of a series start the series at the first logged one.
  */
 export const apiErrorIsReported = (error: unknown): boolean => {
   const status = apiErrorStatus(error)
-  // Neither of these is an unplanned failure. A 401 is "nobody is logged in", which every admin
-  // branches on before sending the user to the login page -- writing it down would mean an "Api
-  // error" for every unauthenticated start of the app. A 403 is "this user may not", which the
-  // caller shows. Both are the session rather than an endpoint breaking its contract.
-  //
-  // By status rather than by class, because the class only keeps it quiet on one of the two paths: a
-  // rejected 403 becomes `AnzuApiForbiddenError`, which is outside `LOGGED`, while one that arrives
-  // fulfilled -- as `options.validateStatus` allows -- becomes an `AnzuApiResponseCodeError`, which
-  // is inside it. Left to the class, the policy would hold or not depending on how the caller
-  // configured axios.
-  //
-  // It is the one thing the `status` field above does not leave to the application, and deliberately:
-  // an app that wanted its own unauthenticated starts in the log would be asking for noise it cannot
-  // act on, while an app that wants 404 or 409 filtered has the field to do it with.
+  // 401 and 403 are session states, not endpoint failures. Every
+  // admin checks for 401 on startup, so logging it adds noise.
+  // Checked by status, not by class. A rejected 403 becomes `AnzuApiForbiddenError` (not in `LOGGED`).
+  // A fulfilled 403 allowed by `options.validateStatus` becomes `AnzuApiResponseCodeError` (in `LOGGED`).
+  // This is not configurable on purpose. Apps can filter other statuses like 404 or 409 via the `status` field.
   if (status === HTTP_STATUS_UNAUTHORIZED || status === HTTP_STATUS_FORBIDDEN) return false
-  // The same as a 401, stopped before it went out: the refresh found the session gone.
+  // Same as a 401, caught before the request: the refresh found the session gone.
   if (isInCauseChain(error, (cause) => cause instanceof SessionExpiredError)) return false
 
   return logger !== null && LOGGED.some((cls) => error instanceof cls)
 }
 
 /**
- * Reports an error once, after it has been mapped, and hands it back so the caller can throw it.
- *
- * After, not during: an error the helper raised itself -- a body that never arrived, a status it
- * refuses -- is already an `Anzu*` class by the time it reaches the mapping, so a logger placed
- * inside the mapping would never see the two cases it exists for.
+ * Reports a mapped error once and returns it so the caller can throw it.
+ * Runs after mapping because errors the helper raises itself are
+ * already `Anzu*` classes and would bypass a logger inside the mapping.
  */
 export const report = <E>(error: E, context: ApiErrorContext): E => {
   if (logger !== null && apiErrorIsReported(error)) {
     try {
-      // Filled in here rather than by the caller: the status belongs to the failure, and only the
-      // mapped error knows it -- the helper that built the context has not looked at the error yet.
+      // Status is added here because only the mapped error knows it.
+      // The caller built the context before looking at the error.
       logger(error as unknown as Error, { ...context, status: apiErrorStatus(error) })
     } catch {
       // A logger that throws must not replace the failure the caller is waiting for.
@@ -157,30 +126,27 @@ export const report = <E>(error: E, context: ApiErrorContext): E => {
 }
 
 /**
- * Turns whatever axios rejected with into one of the Anzu error classes.
- *
- * There used to be a copy of this inside each helper. The order of the checks is what decides which
- * class a failure becomes, so four copies were four chances for the same failure to arrive under
- * different names depending on which helper made the call.
+ * Turns whatever axios rejected with into an Anzu error class.
+ * Shared by all helpers. The order of checks decides the class,
+ * so separate copies would map the same failure differently.
  */
 export const mapApiError = (err: unknown, context: ApiErrorContext): AnzuError => {
   const { system, entity } = context
   const labelSystem = context.validationSystem ?? system
   const labelEntity = context.validationEntity ?? entity
-  // The predicates below are typed against `Error` / `AxiosError` and each begins by checking what
-  // it was handed, so narrowing here only satisfies their signatures.
+  // Casts only satisfy the predicate signatures. Each predicate checks its input itself.
   const error = err as Error
   const axiosError = err as AxiosError
 
-  // Already mapped -- including the errors a helper raised about its own contract. Wrapping it again
-  // would bury the class the caller branches on.
+  // Already mapped, including contract errors raised by a helper.
+  // Wrapping again would hide the class the caller branches on.
   if (isAnzuError(err)) return err
 
-  // Before everything else, because it is not a failure: the caller stopped this request.
+  // Checked first because a cancelled request is not a failure. The caller stopped it.
   if (axiosErrorIsCancelled(err)) return new AnzuApiCancelledError(error)
 
-  // The rendered url, not `config.url`: that one is relative, carries no params, and would become
-  // this error's `message` -- the only url in the family that never went through `requestedUrl`.
+  // Use the rendered url, not `config.url`. `config.url` is relative and has no params.
+  // It would become this error's `message`, unlike every other error that uses `requestedUrl`.
   if (axiosErrorResponseIsForbidden(axiosError)) return new AnzuApiForbiddenError(axiosError, context.url)
 
   if (axiosErrorResponseHasValidationData(axiosError)) {

@@ -28,7 +28,6 @@ const { t } = useI18n()
 const store = useUserCrossSystemStore()
 
 const selected = ref<string[]>([])
-/** The dialog shows the list first and the log after the operator confirms. */
 const showingLog = ref(false)
 
 interface Row {
@@ -38,13 +37,10 @@ interface Row {
 }
 
 /**
- * Which systems can be ticked, decided by the probe and not by ACL.
- *
- * This is a cross-system surface: no current user is loaded for the other backends, so `<Acl>`
- * would return false everywhere and quietly tick nothing. Not selectable are the systems the probe
- * can speak for -- 403, 404, switched off in configuration -- plus the ones that did not answer at
- * all, because acting on those would be a guess. "May read but may not write" cannot be seen from
- * here and ends up as a 403 in the log.
+ * Which systems can be ticked is decided by the probe, not by ACL.
+ * No current user is loaded for the other backends, so `<Acl>` would return false everywhere.
+ * Not selectable: systems the probe reports as 403, 404 or switched off, and systems that did not answer.
+ * Read-but-not-write cannot be seen here and ends up as a 403 in the log.
  */
 const rows = computed<Row[]>(() =>
   props.descriptors.map((descriptor) => {
@@ -65,8 +61,7 @@ const rows = computed<Row[]>(() =>
             : t('common.userSystem.state.unavailable')
       return { descriptor, selectable: false, reason }
     }
-    // Already where the action would take it. A no-op PUT would still run `updateRelations()` in
-    // cms over seven scalars and twelve collections -- risk for nothing.
+    // Already in the target state. A no-op PUT would still run `updateRelations()` in cms over many fields, so skip it.
     if (props.action === BulkAction.Enable && result.axes.enabled === true) {
       return { descriptor, selectable: false, reason: t('common.userSystem.bulk.alreadyInState') }
     }
@@ -79,9 +74,8 @@ const rows = computed<Row[]>(() =>
 
 const selectableSystems = computed(() => rows.value.filter((row) => row.selectable).map((row) => row.descriptor.system))
 
-// Everything that can be acted on, ticked. Blog and forum included: in practice a departing
-// employee is switched off there too in almost every case, so leaving them out would mean an extra
-// click nearly always. The note in their row stays -- as information, not as a reason to untick.
+// Tick everything actionable, blog and forum included. A departing employee is almost always switched off there too.
+// Their row note stays as information, not as a reason to untick.
 watch(
   open,
   (value) => {
@@ -96,11 +90,8 @@ const titleKey = computed(() => `common.userSystem.bulk.${props.action}.title`)
 const confirmKey = computed(() => `common.userSystem.bulk.${props.action}.confirm`)
 
 /**
- * This run's lines only.
- *
- * The log outlives a run on purpose, so without the filter the dialog would show a metadata repair's
- * failures and offer to retry them -- as an enable or a disable, against whichever account is on
- * screen now.
+ * Only this run's entries. The log outlives a run, so without the filter the dialog would offer
+ * to retry other actions' failures, such as a metadata repair, against the account on screen.
  */
 const currentLog = computed(() =>
   store.bulkLog.filter((entry) => entry.action === props.action && entry.subjectId === store.resolvedId)
@@ -110,7 +101,7 @@ const failed = computed(() =>
   currentLog.value.filter((entry) => entry.outcome !== BulkOutcome.Done && entry.outcome !== BulkOutcome.Pending)
 )
 
-// What can be acted on now: a right that arrived or went while the dialog was open counts.
+// Re-check selectability: a right may have been granted or revoked while the dialog was open.
 const actionable = computed(() => selected.value.filter((system) => selectableSystems.value.includes(system)))
 
 const run = () => {
@@ -119,7 +110,9 @@ const run = () => {
   emit('run', actionable.value)
 }
 
-/** Retries everything that failed, 403 included: the operator may have been granted the right meanwhile. */
+/**
+ * Retries everything that failed, 403 included: the operator may have been granted the right meanwhile.
+ */
 const retryFailed = () => {
   emit(
     'run',
@@ -192,8 +185,8 @@ const labelFor = (descriptor: AnyUserSystemDescriptor) => descriptor.label ?? de
       <VCardText v-else>
         <div class="text-label-large mb-2">{{ t('common.userSystem.bulk.log') }}</div>
         <!--
-          `polite`, never `assertive`: nine systems finishing one after another would flood a screen
-          reader. Focus deliberately stays where it is when the dialog switches to this view.
+          `polite`, not `assertive`: nine systems finishing in sequence would flood a screen reader.
+          Focus deliberately stays put when the dialog switches to this view.
         -->
         <div
           aria-live="polite"

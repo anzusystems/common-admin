@@ -5,8 +5,9 @@ import {
 import type { UploadSettlementScheduler } from '@/domains/dam/uploadQueue/settlement/uploadSettlementRuntime'
 
 /**
- * For the tests of a store that are not about time: a wait as long as a notification's (2 s at most) is over in
- * the next microtask, a longer one never. So an event is written at once, and no tick ever comes.
+ * For store tests that are not about time. A wait up to a notification's
+ * length (2 s) ends in the next microtask, a longer one never.
+ * So an event is written at once and no tick ever comes.
  */
 export function immediateScheduler(): UploadSettlementScheduler {
   if (UPLOAD_POLL_SCHEDULE.dense.marksMs[0]! <= UPLOAD_NOTIFY_METADATA_DELAY_MS) {

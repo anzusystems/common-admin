@@ -8,10 +8,8 @@ import en from '@/locales/en'
 import sk from '@/locales/sk'
 import { createAnzuVuetify } from '@/plugins/commonVuetifyConfig'
 
-// Each author the DAM suggests under a name that several authors have is a chip with a "+" that adds that author.
-// Every "+" was named "Add author" for a screen reader: of several, nothing said which author each one adds. The chips
-// are mounted as an admin mounts them, with the Vuetify of the library over the i18n of the admin; the names of the
-// authors are in the cache already.
+// Every "+" was named "Add author" for a screen reader, so nothing said which author each one adds.
+// The chips are mounted with the library Vuetify over the admin i18n. The author names are already cached.
 
 let app: App | undefined
 let host: HTMLElement | undefined
@@ -29,7 +27,6 @@ const author = (id: string, name: string, identifier = '') => ({
   flags: { reviewed: true },
 })
 
-/** Chips of these authors in an admin of that language; answers the ids their "+" ask to add. */
 const mountChips = async (locale: string, ids: string[]) => {
   const { addManualToCachedAuthors } = useDamCachedAuthors()
   addManualToCachedAuthors(author('author-1', 'Ján Novák') as never)
@@ -66,7 +63,6 @@ describe('the "+" of the chip of an author conflict', () => {
     expect(added).toEqual(['author-1'])
   })
 
-  // Two authors of the same name differ by their identifier, as their chips show it.
   it('names the "+" of two authors of the same name apart, as their chips show them', async () => {
     const added = await mountChips('sk', ['author-1', 'author-2'])
 

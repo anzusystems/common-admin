@@ -56,9 +56,10 @@ export function modifyLanguageSettings(
     if (configAvailableLanguages.includes(code) || code === 'xx') {
       // current.value = code
       storedSettings.value = code
-      // Only a language whose messages are loaded: the admins load one language at a time and reload
-      // after a switch, and in between the page would show raw keys. addMessages switches it later.
-      // Not `availableLocales`: it also lists the instance's starting locale, messages or not.
+      // Only switch to a language whose messages are loaded. Admins load one language at
+      // a time and reload after a switch, so the page would show raw keys in between.
+      // `addMessages` switches it later. Not `availableLocales`: it
+      // also lists the starting locale, with or without messages.
       // @ts-ignore
       if (code === 'xx' || Object.keys(i18n.global.getLocaleMessage(code) ?? {}).length > 0) {
         // @ts-ignore

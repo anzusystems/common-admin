@@ -16,17 +16,15 @@ import {
 } from '@/domains/system/composables/routeHistory'
 
 // `navigateBack` never hands back the route the user is already on.
-//
-// The history is filled from a `beforeEach` guard, which records the route being LEFT — and that
-// guard also runs for a navigation a later guard then cancels. The route we stayed on is therefore
-// the last entry often enough to matter, and `router.push` of the current path resolves to nothing:
-// no error, no log, a close button that visibly does not work. Callers used to have to name their
-// own route in `skipRouteNames` to avoid it; now they do not.
+// History is filled from a `beforeEach` guard, which records the route
+// being left. That guard also runs for navigations a later guard cancels.
+// So the route we stayed on is often the last entry, and `router.push` of the current
+// path resolves to nothing: no error, no log, a close button that does nothing.
 
 const { addRoute, clearHistory, history, navigateBack, setBlacklistedRoutes } = useRouteHistory()
 
-// `name` is deliberately optional here: vue-router route names are, and the nameless case is the
-// one the walk gets wrong if the current-route test is applied to its result instead of inside it.
+// `name` is optional because vue-router route names are.
+// The nameless case breaks the walk if the current-route test is applied to its result instead of inside it.
 type RouteName = string | symbol | undefined
 
 const visit = (name: RouteName, fullPath: string) =>
@@ -85,9 +83,9 @@ describe('navigateBack', () => {
   })
 
   it('walks by name even when the caller passes no options at all', () => {
-    // There is no longer a second, positional way through: `navigateBack` always asks what the
-    // entry IS, never where it sits. That branch had no user and was the shape the silent no-op
-    // lived in -- one cancelled navigation and `stepsBack: 1` was the route we never left.
+    // `navigateBack` always asks what the entry is, never where it sits.
+    // A positional branch used to allow a silent no-op: after one
+    // cancelled navigation, `stepsBack: 1` was the route we never left.
     visit('/records', '/records')
     visit('/records/[id]', '/records/1')
 
@@ -108,10 +106,9 @@ describe('navigateBack', () => {
 
 describe('a current route with no name', () => {
   it('is walked past, not stopped at', () => {
-    // A route name is optional in vue-router, so the only way to recognise a nameless current route
-    // is its path. Test that after the walk instead of inside it and the walk stops at the nameless
-    // entry, its result is discarded, and a perfectly good older destination one line up is never
-    // reached -- the user lands on the fallback for no reason.
+    // A route name is optional in vue-router, so a nameless current route is recognised only by its path.
+    // Testing that after the walk instead of inside it stops the walk at the nameless entry and discards its result.
+    // A good older destination is then never reached, and the user lands on the fallback.
     visit('/records', '/records')
     visit(undefined, '/plain-current')
 
@@ -135,9 +132,10 @@ describe('a current route with no name', () => {
 
 describe('a current route named by a symbol', () => {
   it('is recognised as the same route at a different url', () => {
-    // vue-router route names are `string | symbol | undefined`, so the current route is compared
-    // with `===` rather than by string membership. Another url of the SAME symbol-named route is
-    // another record of the same kind -- not somewhere to hand the user back to.
+    // vue-router route names are `string | symbol | undefined`, so the
+    // current route is compared with `===` rather than by string membership.
+    // Another url of the same symbol-named route is another record
+    // of the same kind, not a place to hand the user back to.
     const record = Symbol('record')
     visit('/records', '/records')
     visit(record, '/records/1')
@@ -149,9 +147,9 @@ describe('a current route named by a symbol', () => {
   })
 })
 
-// The route a Close lands on ends the history: what came after it, the route just left included, is
-// behind the user. Kept, a Close on a record reached by a link to another record went back to that one,
-// and its Close back again, never to the list.
+// The route a Close lands on ends the history: what came after it, including the route just left, is behind the user.
+// If kept, a Close on a record reached by a link to another record went
+// back to that one, and its Close went back again, never to the list.
 describe('a Close through the router', () => {
   const page = defineComponent(() => () => null)
   // Runs before the history records the route being left, as a leave guard does.
@@ -180,7 +178,6 @@ describe('a Close through the router', () => {
     return router.currentRoute.value.fullPath
   }
 
-  // A record, and from it a link to another one: a user chip, say.
   const onLinkedRecord = async () => {
     const router = makeRouter()
     await router.push('/records')
@@ -252,8 +249,9 @@ describe('a Close through the router', () => {
   })
 
   it('drops what a full history holds after the route the Close pushed out of it', async () => {
-    // Ten routes are the most it keeps (`MAX_HISTORY`): another record, then ten of one kind, the last
-    // of which the Close leaves. Recording that one pushes the other record out at the front.
+    // Ten routes are the most it keeps (`MAX_HISTORY`): another record,
+    // then ten of one kind, the last of which the Close leaves.
+    // Recording that one pushes the other record out at the front.
     const router = makeRouter()
     await router.push('/users/2')
     for (let id = 1; id <= 10; id++) await router.push(`/records/${id}`)
@@ -292,7 +290,6 @@ describe('a Close through the router', () => {
   })
 
   it('falls back on an empty history and keeps what its navigation recorded', async () => {
-    // A tab opened straight on the record.
     const router = makeRouter()
     await router.push('/records/1')
     expect(history.value).toEqual([])
@@ -302,9 +299,9 @@ describe('a Close through the router', () => {
   })
 })
 
-// Route names are vue-router's `RouteRecordName`, which a typed router narrows to its own names, so a
-// stale name in `skipRouteNames` or `fallbackRouteName` is a type error in the admin. The history keeps
-// only what going back needs; the full route objects made reading it hit TS2589.
+// Route names are vue-router's `RouteRecordName`, which a typed router narrows to its own names.
+// A stale name in `skipRouteNames` or `fallbackRouteName` is therefore a type error in the admin.
+// The history keeps only what going back needs; full route objects made reading it hit TS2589.
 describe('types', () => {
   it('takes route names as vue-router types them', () => {
     expectTypeOf<NavigateBackOptions['skipRouteNames']>().toEqualTypeOf<RouteRecordName[] | undefined>()

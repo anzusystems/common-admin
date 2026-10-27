@@ -3,13 +3,12 @@ import type { FakeDam } from '@/domains/dam/__tests__/support/fakeDam'
 import { useDamCachedAuthors } from '@/domains/dam/author/composables/cachedAuthors'
 import { useDamCachedKeywords } from '@/domains/dam/keyword/composables/cachedKeywords'
 
-// The names of the authors and keywords a row of the queue is given. The row holds ids; the inputs of the row
-// read the names from two caches, which ask the DAM for them after a pause of their own. The two paths are fixed
-// in the library, whatever endpoints the application has configured.
+// Names of the authors and keywords of a queue row. The row holds ids. Its inputs
+// read names from two caches, which ask the DAM after a pause of their own.
+// The two paths are fixed in the library, whatever endpoints the application configures.
 
 export const DAM_NAMES = /^\/adm\/v1\/(author|keyword)\/ext-system\/(\d+)\/search\?(.*)$/
 
-/** The DAM knows every author and keyword asked for. */
 export const answerDamNames = (dam: FakeDam) =>
   dam.reply((request) => {
     const match = request.method === 'GET' ? request.url.match(DAM_NAMES) : null
@@ -22,8 +21,9 @@ export const answerDamNames = (dam: FakeDam) =>
 export const damNameLookups = (dam: FakeDam) => dam.requests.filter((request) => DAM_NAMES.test(request.url))
 
 /**
- * The caches have asked for everything queued. They are shared by the whole file and ask through whatever client
- * is configured at that moment: left alone, a lookup of one case goes out in the next.
+ * The caches have asked for everything queued. They are shared by the
+ * whole file and use whatever client is configured at that moment.
+ * Left alone, a lookup from one case goes out in the next.
  */
 export const damNamesAsked = async () => {
   const { toFetchCachedAuthors } = useDamCachedAuthors()
@@ -32,6 +32,6 @@ export const damNamesAsked = async () => {
     timeout: 8000,
     interval: 50,
   })
-  // The request itself, once the queue is drained.
+  // Wait for the request itself after the queue drains.
   await new Promise((resolve) => setTimeout(resolve, 50))
 }

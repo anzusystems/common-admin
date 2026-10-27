@@ -34,11 +34,11 @@ import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueu
 import { useAlertsQueue } from '@/domains/system/composables/alertsQueue'
 import { commonT } from '@/plugins/i18n'
 
-// What "Refresh" says when it could not settle a row, and when it says it. Why, by the cause: the read failed, the
-// asset no longer exists, or the original of a duplicate could not be read. When: while pressing again may still
-// help the row as the read left it, not by whether its state changed. And an uploaded row still without its
-// metadata whose asset is gone: its misses count as those of any row, and at the limit it fails. Through the real
-// store, as in `uploadStatusPolling.test.ts`.
+// Covers what "Refresh" says when it cannot settle a row, by cause:
+// read failed, asset gone, or original of a duplicate unreadable.
+// It says it while pressing again may still help the row, not by whether its state changed.
+// An uploaded row without metadata whose asset is gone counts misses like any row and fails at the limit.
+// Uses the real store, as in `uploadStatusPolling.test.ts`.
 
 const QUEUE = 'refresh-queue'
 const { Processing, Uploaded, Failed } = UploadQueueItemStatus
@@ -72,7 +72,6 @@ const fromTheServer = {
 }
 const notify = (name: DamNotificationNameType, data: Record<string, unknown>) =>
   useDamNotificationsEventBus().emit({ name, data } as unknown as DamNotification)
-/** The warnings the user was shown, by their texts. */
 const warnings = () =>
   useAlertsQueue()
     .value.filter((alert) => alert.color === 'warning')
@@ -84,7 +83,7 @@ describe.each(consumerProfiles)('what the refresh of a row says, under the $name
 
   beforeEach(() => use(profile))
   afterEach(() => {
-    // Before the clock of the next case: a timer is taken back on the clock of that moment.
+    // Runs before the clock of the next case: a timer is taken back on the clock of that moment.
     useUploadQueuesStore().stopUpload(QUEUE)
     destroyDamNotifications()
     uploadSettlementRuntime.scheduler = realScheduler
@@ -92,7 +91,6 @@ describe.each(consumerProfiles)('what the refresh of a row says, under the $name
     useDamNotificationsEventBus().reset()
   })
 
-  /** One file, sent whole: its row waits for the server, `asset-1` and `file-1`. */
   const sentFile = async () => {
     const store = useUploadQueuesStore()
     await store.addByFiles(QUEUE, extSystem, licence, [photo()], 'default')
@@ -101,7 +99,6 @@ describe.each(consumerProfiles)('what the refresh of a row says, under the $name
     await clock.settle()
     return item!
   }
-  /** Its file is processed, and its metadata has not come: the form stays disabled, and refresh would load it. */
   const uploadedWithoutMetadata = async () => {
     const item = await sentFile()
     dam.fileBecomes('asset-1', AssetFileProcessStatus.Processed, fromTheServer)
@@ -130,7 +127,6 @@ describe.each(consumerProfiles)('what the refresh of a row says, under the $name
       expect(warnings()).toEqual(said(ASSET_GONE))
     })
 
-    // The row pressed fails by the press, for want of the original; its refresh stays, and asks for it again.
     it('the original of its duplicate could not be read: says so to the row it failed, which keeps its refresh', async () => {
       const store = useUploadQueuesStore()
       const item = await sentFile()
@@ -174,10 +170,8 @@ describe.each(consumerProfiles)('what the refresh of a row says, under the $name
       dam.assets.delete('asset-1')
 
       notify(DamNotificationName.AssetMetadataProcessed, { asset: 'asset-1' })
-      // At 2 s, then 15 and 30 s after a miss.
       await clock.advance(50 * SECOND)
 
-      // The read of its processed notification, and three.
       expect(dam.assetReads()).toHaveLength(4)
       expect(item).toMatchObject({ status: Failed, error: { hasError: true, message: commonT(ASSET_GONE) } })
       expect(warnings()).toEqual([])
@@ -201,8 +195,8 @@ describe.each(consumerProfiles)('what the refresh of a row says, under the $name
       expect(warnings()).toEqual([])
     })
 
-    // A duplicate notification fails the row while its refresh read is on its way, the original being unreadable:
-    // the read answers about the file as it was before, and the row, failed, shows what became of it.
+    // A duplicate notification fails the row while its refresh read is in flight, because the original is unreadable.
+    // The read answers about the file as it was before. The failed row shows what became of it.
     it.each<[string, FakeDamAnswer | undefined]>([
       ['the file is not processed yet', undefined],
       ['the read failed', { status: 502 }],
@@ -230,7 +224,6 @@ describe.each(consumerProfiles)('what the refresh of a row says, under the $name
       }
     )
 
-    // The finish request failed in the browser, and the server fails the file while the refresh asks.
     it('that loses its refresh while the read is on its way is not told to try again', async () => {
       dam.reply((request) =>
         request.method === 'PATCH' && dam.routes.finish.test(request.url) ? { status: 502 } : undefined
@@ -256,8 +249,9 @@ describe.each(consumerProfiles)('what the refresh of a row says, under the $name
   })
 })
 
-// A host whose rows settle on the event (admin-dam): the processed notification makes the row uploaded, without its
-// form, while the refresh read is on its way. The read answers about the file as it was before.
+// A host whose rows settle on the event (admin-dam): the processed notification
+// makes the row uploaded, without its form, while the refresh read is in flight.
+// The read answers about the file as it was before.
 describe('the refresh of a row of a bound list that turns uploaded while it reads', () => {
   beforeEach(() => setActivePinia(createPinia()))
 
@@ -287,7 +281,6 @@ describe('the refresh of a row of a bound list that turns uploaded while it read
   )
 })
 
-// A host's list: whether a refresh may still help its failed row is the host's word.
 describe('the refresh of a failed row of a bound list', () => {
   beforeEach(() => setActivePinia(createPinia()))
 

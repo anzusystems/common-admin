@@ -103,10 +103,9 @@ const { showValidationError } = useAlerts()
 
 const onClear = () => {
   clearField()
-  // Clearing means "back to the default", which is not always "everything" - a pair with an
-  // absolute default keeps its window. Since the value then does not change, neither watcher runs,
-  // so the display and the chip are re-derived here. Showing "everything" while the query still
-  // carries the old window would make the control lie about what the list contains.
+  // Clearing restores the default, and an absolute default keeps
+  // its window. The value does not change, so no watcher runs.
+  // Re-derive the display and the chip here, or the control shows "everything" while the query still has the window.
   syncDisplayToValue(filterData[props.nameFrom])
   updateSelected(filterData[props.nameFrom])
 }
@@ -171,7 +170,9 @@ const onEditInterval = (clear = false) => {
   dialogCustom.value = true
 }
 
-/** What the control shows is derived from the value, never assumed. */
+/**
+ * What the control shows is derived from the value, never assumed.
+ */
 const syncDisplayToValue = (newValue: AllowedFilterValues) => {
   if (isArray(newValue) || isBoolean(newValue)) return
   displayFromTo.value = false
@@ -194,10 +195,9 @@ const syncDisplayToValue = (newValue: AllowedFilterValues) => {
 
 watch(modelValue, syncDisplayToValue, { immediate: true })
 
-// Reset clears every field back to its default and wipes the chips. For a pair whose default is
-// null that is the whole story, but an absolute default survives the reset - the value does not
-// change, so no watcher runs, and the control would keep showing a range with no chip beside it.
-// The wrapper bumps this counter after clearing, which is the one signal that a reset happened.
+// Reset restores defaults and wipes chips. For an absolute default the value
+// does not change, so no watcher runs and the range would show without a chip.
+// The wrapper bumps this counter after clearing. It is the only signal that a reset happened.
 watch(submitResetCounter, () => {
   syncDisplayToValue(filterData[props.nameFrom])
   updateSelected(filterData[props.nameFrom])

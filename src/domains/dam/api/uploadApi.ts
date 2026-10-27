@@ -65,8 +65,8 @@ export const damUploadFinish = (
     }
     imageUploadFinish(client, endPointImage, item, sha)
       .then((res) => {
-        // Only an item still sending. One stopped while the finish request ran, which has nothing to cancel, stays
-        // stopped; one its notification has settled meanwhile stays settled.
+        // Only an item still uploading. One stopped while the finish request ran stays stopped.
+        // One whose notification settled it meanwhile stays settled.
         if (item.status === UploadQueueItemStatus.Uploading) item.status = UploadQueueItemStatus.Processing
         resolve(res)
       })

@@ -89,9 +89,9 @@ describe('AAnzuUserDatatable', () => {
   })
 
   it('names the permission groups instead of leaving the column empty', async () => {
-    // Left to the call sites, this column was blank in every one of the nine new lists. The
-    // library has the cache -- keyed per system, because id 42 in weather and id 42 in blog are
-    // different rows -- so it draws them itself.
+    // The library draws this column itself. It has the cache, keyed per
+    // system, because id 42 in weather and id 42 in blog are different rows.
+    // Left to the call sites, the column was blank in every list.
     const { wrapper } = await mountDatatable()
     // `defineCached` debounces its batch by 1.5s, so the default one-second wait is too short.
     await vi.waitFor(() => expect(wrapper.text()).toContain('Editori'), { timeout: 6000 })

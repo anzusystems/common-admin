@@ -62,31 +62,38 @@ export const i18n = createI18n<[MessageSchema], string, false>({
   },
 })
 
-/** The admin's instance as the plugin takes it: composition mode (`legacy: false`), any message schema. */
+/**
+ * The admin's instance as the plugin takes it: composition mode (`legacy: false`), any message schema.
+ */
 // oxlint-disable-next-line typescript/no-explicit-any -- the admin's own message schema
 export type CommonAdminI18n = I18n<any, any, any, string, false>
 
 let installed: CommonAdminI18n | undefined
 
-/** Takes the admin's instance (the plugin's `i18n` option); the library translates through it from then on. */
+/**
+ * Takes the admin's instance (the plugin's `i18n` option); the library translates through it from then on.
+ */
 export const setCommonAdminI18n = (instance: CommonAdminI18n): void => {
   installed = instance
 }
 
 /**
- * The instance the library translates through: the admin's own, once the plugin has it. Before that --
- * the library's tests and playground -- the library's instance above.
- *
- * Read when a text is translated, not when a module loads: a validator or an alert module imported
- * before the plugin is installed would otherwise keep the wrong instance for good.
+ * The instance the library translates through: the admin's own once
+ * the plugin has it, otherwise the library's (tests and playground).
+ * Read at translation time, not at module load. A module imported before
+ * the plugin is installed would otherwise keep the wrong instance.
  */
 export const commonI18n = (): CommonAdminI18n => installed ?? (i18n as unknown as CommonAdminI18n)
 
 type Translate = (key: string, ...args: unknown[]) => string
 
-/** `t` of `commonI18n()`, resolved on every call. */
+/**
+ * `t` of `commonI18n()`, resolved on every call.
+ */
 export const commonT: Translate = (key, ...args) => (commonI18n().global.t as unknown as Translate)(key, ...args)
 
-/** `te` of `commonI18n()`, resolved on every call. */
+/**
+ * `te` of `commonI18n()`, resolved on every call.
+ */
 export const commonTe = (key: string, locale?: string): boolean =>
   (commonI18n().global.te as (key: string, locale?: string) => boolean)(key, locale)

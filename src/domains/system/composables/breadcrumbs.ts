@@ -22,9 +22,9 @@ export const defaultOptions: BreadcrumbOptions = {
 }
 
 /**
- * The breadcrumbs of a page for `AActionbar`. `items` is a getter, wrapped in a `computed` here: read only when
- * the actionbar renders and again when what it reads changes, as `computed(() => [...])` written by the page.
- * A `ComputedRef` the page already has is kept as it is.
+ * Breadcrumbs of a page for `AActionbar`. A getter `items` is wrapped
+ * in a `computed`, so it is read only when the actionbar renders.
+ * An existing `ComputedRef` is kept as it is.
  */
 export function defineBreadcrumbs(
   items: (() => Array<BreadcrumbItem>) | ComputedRef<Array<BreadcrumbItem>>,

@@ -266,19 +266,21 @@ export function useCollabRoom(
         .emit('joinCollabRoom', room, options, (error, response: CollabAccessRoomCallbackTypes) => {
           if (error) {
             markRoomInactiveOnFailedClaim()
-            /* No cleanup leave here, though a timed-out join can leave the server holding a
-             * membership this client never hears about: a leave is not tied to the join it cleans up,
-             * so it could remove the membership of a remount that succeeded in the meantime. Marking
-             * inactive keeps the failure on the safe side — the stale membership is released on
-             * disconnect. Closing it properly needs a generation the server can compare. A caller that
-             * leaves after a timeout itself passes an `ackTimeout` past the server's own run. */
+            /*
+             * No cleanup leave here, though a timed-out join can leave
+             * a server membership this client never hears about.
+             * A leave is not tied to its join, so it could remove the membership of a remount that succeeded meanwhile.
+             * Marking inactive is the safe side; the stale membership is released on
+             * disconnect. A proper fix needs a generation the server can compare.
+             * A caller that leaves after a timeout passes an `ackTimeout` longer than the server's own run.
+             */
             return void reject(CollabAccessRoomStatus.Failed)
           }
           if (isCollabSuccessAccessRoomCallback(response)) {
             if (isNewestWrite()) {
               collabRoomInfoState.set(room, response.room)
-              // Joined where others are: the room's state was gathered from its moderator. What this editor wrote
-              // alone before, never gathered, stayed, and went out later as the room's state over newer values.
+              // Joined a room with others: its state was gathered from the moderator.
+              // Data written alone earlier was never gathered, and would later go out as room state over newer values.
               if (response.room.status === CollabStatus.Active) collabFieldDataBufferState.delete(room)
             }
             return void resolve(response.status)
@@ -300,15 +302,14 @@ export function useCollabRoom(
   }
 
   /**
-   * Resolves once the server has acknowledged the leave, so a caller that re-joins the same room can
-   * serialise the two. Never rejects: every existing caller invokes it without handling the result,
-   * mostly from unmount hooks. A missing ack resolves on the timeout rather than hanging; a caller
-   * that joins again behind it passes an `ackTimeout` past the server's own run, as for the join.
+   * Resolves once the server acknowledges the leave, so a caller re-joining the same room can serialise the two.
+   * Never rejects, because callers (mostly unmount hooks) ignore the result. A missing ack resolves on the timeout.
+   * A caller that joins again afterwards passes an `ackTimeout` longer than the server's own run.
    */
   const leaveCollabRoom = ({ ackTimeout = ACK_TIMEOUT }: CollabJoinAckOptions = {}): Promise<void> => {
     return new Promise((resolve) => {
       if (!collabOptions.value.enabled || isUndefined(collabSocket.value)) return void resolve()
-      // Nobody gathers it any more: kept, it went out as the room's state when this editor was next alone in it.
+      // Nobody gathers this buffer any more. If kept, it would go out as room state the next time this editor is alone.
       collabFieldDataBufferState.delete(room)
       const isNewestWrite = claimRoomInfoWrite(room)
       collabSocket.value

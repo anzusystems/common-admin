@@ -11,15 +11,14 @@ import {
 } from '@/domains/dam/types/AssetFile'
 import type { DocId } from '@/shared/types/common'
 
-// The DAM as the upload sees it from the browser: the axios client an application hands the library in its
-// options. Nothing of the library is replaced, so a test built on this holds on to requests and answers only.
+// The DAM as the upload sees it from the browser: the axios client an application passes in its options.
+// Nothing of the library is replaced. Tests built on this only hold requests and answer them.
 
 export type FakeDamMethod = 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE'
 
 export interface FakeDamRequest {
   method: FakeDamMethod
   url: string
-  /** A copy of what was handed to axios: a JSON text, a `FormData`, or nothing. */
   data: unknown
   config: AxiosRequestConfig
 }
@@ -27,13 +26,15 @@ export interface FakeDamRequest {
 export interface FakeDamAnswer {
   status: number
   /**
-   * Goes to the library as JSON carries it (`copyOf`): a reactive value as it is at the answer, without its
-   * `undefined` fields and functions, a `Date` as its text, and one object two entries point to as two.
+   * Goes to the library as JSON carries it (`copyOf`): reactive values as at the answer, no
+   * `undefined` fields or functions, a `Date` as text, and one object referenced twice as two.
    */
   data?: unknown
 }
 
-/** Answers a request, or leaves it (`undefined`) to the rules after it and to the DAM's own answers. */
+/**
+ * Answers a request, or returns `undefined` to leave it to later rules and the DAM's own answers.
+ */
 export type FakeDamRule = (
   request: FakeDamRequest
 ) => FakeDamAnswer | Promise<FakeDamAnswer> | undefined | Promise<undefined>
@@ -100,7 +101,6 @@ const link = (file: DocId, name: string): AssetFileLink => ({
   type: 'image',
 })
 
-/** The links of a processed image; the queue shows a settled row with `image_detail`. */
 export const damImageLinks = (file: DocId): AssetFileLinks => ({
   image_list: link(file, 'list'),
   image_table: link(file, 'table'),
@@ -135,7 +135,6 @@ export const damAsset = (id: DocId, parts: Partial<AssetDetailItemDto> = {}): As
   ...parts,
 })
 
-/** An asset whose main image file is in the given state: what a read of it answers. */
 export const damAssetWithFile = (
   id: DocId,
   file: DocId,
@@ -149,10 +148,9 @@ const escape = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 const settled = (status: number) => status >= 200 && status < 300
 
 /**
- * What goes over the wire is a copy: an answer the library changes leaves the DAM as it was, and so does a body a
- * test changes after sending it. A JSON text is a copy already; a form is copied field by field. Anything else is
- * copied as the wire does, through JSON and back: `structuredClone` refuses a Vue proxy a test may answer with,
- * and keeps two entries of an answer that point to one object one object, which no answer of the DAM ever is.
+ * What goes over the wire is a copy. A JSON text is a copy already, a form is copied field by field.
+ * Anything else goes through JSON and back. `structuredClone` refuses a Vue proxy a test may answer
+ * with, and it keeps two entries pointing to one object as one object, which no DAM answer does.
  */
 const copyOf = (data: unknown): unknown => {
   if (data === undefined || data === null || typeof data === 'string') return data
@@ -166,10 +164,8 @@ const copyOf = (data: unknown): unknown => {
 
 export function createFakeDam(endPoints: FakeDamEndPoints) {
   const requests: FakeDamRequest[] = []
-  /** Requests nothing answered: a path the test did not expect the upload to ask for. */
   const unanswered: FakeDamRequest[] = []
   const rules: FakeDamRule[] = []
-  /** What a read of an asset answers, by its id. */
   const assets = new Map<DocId, AssetDetailItemDto>()
   let started = 0
 
@@ -204,7 +200,7 @@ export function createFakeDam(endPoints: FakeDamEndPoints) {
     if (method === 'PATCH' && (match = url.match(routes.finish))) {
       const file = match[1]
       const finished = [...assets.values()].find((one) => one.mainFile?.id === file)
-      // All chunks are in; what the server has made of the file since is not taken back.
+      // All chunks are in. Later changes the server made to the file status are not reverted.
       if (finished?.mainFile?.fileAttributes.status === AssetFileProcessStatus.Uploading) {
         finished.mainFile.fileAttributes.status = AssetFileProcessStatus.Uploaded
       }
@@ -220,7 +216,7 @@ export function createFakeDam(endPoints: FakeDamEndPoints) {
       return found ? { status: 200, data: found } : { status: 404 }
     }
     if ((match = url.match(routes.byIds))) {
-      // Under the licence the read names, as the DAM reads them: an asset of another licence is not there.
+      // Reads are scoped to the licence in the URL, as in the DAM. An asset of another licence is not found.
       const licence = Number(match[1])
       const found = match[2]!
         .split(',')
@@ -254,11 +250,11 @@ export function createFakeDam(endPoints: FakeDamEndPoints) {
     // As axios does: a request dispatched on an aborted signal rejects before it goes out.
     if (signal?.aborted) return Promise.reject(cancelledError())
     requests.push(request)
-    // And one whose signal aborts on the way rejects as cancelled, answered or not.
+    // A request whose signal aborts in flight rejects as cancelled, answered or not.
     const cancelled = new Promise<never>((_, reject) => {
       signal?.addEventListener('abort', () => reject(cancelledError()))
     })
-    // Every answer, the DAM's own, a rule's or a held one's, is copied: none hands out an asset the DAM holds.
+    // Every answer is copied, so none hands out an asset the DAM holds.
     const answered = answer(request).then((one) => {
       const response = { status: one.status, statusText: '', data: copyOf(one.data), headers: {}, config: sent }
       // As axios settles an answer: by the `validateStatus` of the request, where it has one.
@@ -294,12 +290,10 @@ export function createFakeDam(endPoints: FakeDamEndPoints) {
 
   return {
     endPoints,
-    /** The `damClient` of the plugin options. */
     client: () => instance,
     requests,
     unanswered,
     assets,
-    /** Answers ahead of the DAM's own; the latest rule is asked first. Returns what takes it away again. */
     reply: (rule: FakeDamRule) => {
       rules.unshift(rule)
       return () => {
@@ -307,7 +301,6 @@ export function createFakeDam(endPoints: FakeDamEndPoints) {
         if (index >= 0) rules.splice(index, 1)
       }
     },
-    /** A request of the given kind waits until the test lets it answer: the DAM's own answer unless one is given. */
     hold: (method: FakeDamMethod, route: RegExp) => {
       const waiting: Array<{ request: FakeDamRequest; release: (given?: FakeDamAnswer) => void }> = []
       const holds: FakeDamRule = (request) => {
@@ -322,7 +315,6 @@ export function createFakeDam(endPoints: FakeDamEndPoints) {
             },
           }
           waiting.push(held)
-          // A request cancelled meanwhile no longer waits for an answer.
           const signal = request.config.signal as AbortSignal | undefined
           signal?.addEventListener('abort', () => {
             const index = waiting.indexOf(held)
@@ -333,9 +325,7 @@ export function createFakeDam(endPoints: FakeDamEndPoints) {
       rules.unshift(holds)
       return {
         waiting,
-        /** Lets every request held so far answer. */
         release: (given?: FakeDamAnswer) => [...waiting].forEach((held) => held.release(given)),
-        /** Holds no request of the kind from now on; those held so far still wait for `release`. */
         stop: () => {
           const index = rules.indexOf(holds)
           if (index >= 0) rules.splice(index, 1)
@@ -343,8 +333,8 @@ export function createFakeDam(endPoints: FakeDamEndPoints) {
       }
     },
     /**
-     * The file of an asset, as the DAM reports it from now on. Returns it as a read would: a copy. A test changes
-     * the DAM further through `assets`.
+     * Sets the file of an asset as the DAM reports it from now on. Returns
+     * a copy, as a read would. Further changes go through `assets`.
      */
     fileBecomes: (
       id: DocId,
@@ -362,16 +352,13 @@ export function createFakeDam(endPoints: FakeDamEndPoints) {
     },
     routes,
     sentTo,
-    /** Reads of assets by their ids, one by one or several at once: what a poll, a notification and a refresh do. */
     assetReads: () => [...sentTo('GET', routes.one), ...sentTo('GET', routes.byIds)],
-    /** Reads of the asset a file belongs to: the original of a duplicate. */
     originReads: () => sentTo('GET', routes.byFile),
     /**
-     * The name of the file a chunk request carries: that of the file picked. Two files are sent side by side, and
-     * which of them is first to ask is not for a test to assume.
+     * The name of the picked file a chunk request carries. Two files
+     * are sent side by side, so tests must not assume which asks first.
      */
     chunkOf: (request: FakeDamRequest) => ((request.data as FormData).get('file') as File).name,
-    /** The text a JSON request carried, parsed. */
     body: (request: FakeDamRequest) => JSON.parse(request.data as string) as unknown,
   }
 }

@@ -21,11 +21,6 @@ import cs from '@/locales/cs'
 import en from '@/locales/en'
 import sk from '@/locales/sk'
 
-// The mass operations of the queue dialog, under each of the two applications: a scratch form beside the rows,
-// whose values the user copies into the rows, one field at a time or all at once. The real form over the real
-// queue; what the copying does to a list of rows of every kind is in `uploadQueueMassOperations.test.ts`. The rows
-// are copies to the licence, which send nothing; no request of the DAM is part of what is asked here.
-
 const QUEUE = 'mass-operations'
 
 let pinia: Pinia
@@ -36,7 +31,6 @@ let wrapper: VueWrapper | undefined
 describe.each(consumerProfiles)('the mass operations of an upload queue under the $name', (profile) => {
   const { endPoints, extSystem, licence } = profile
   const isCms = profile === cmsConfiguration
-  /** The custom fields of the application's images: the first is left empty on the scratch form in every case. */
   const [untouched, typedInto] = isCms ? ['title', 'description'] : ['description', 'author']
 
   beforeEach(() => {
@@ -54,7 +48,6 @@ describe.each(consumerProfiles)('the mass operations of an upload queue under th
     useDamNotificationsEventBus().reset()
   })
 
-  /** A queue of three rows, and the scratch form beside them. */
   const mountBesideRows = async (count = 3) => {
     const store = useUploadQueuesStore(pinia)
     await store.addByCopyToLicence(
@@ -67,7 +60,7 @@ describe.each(consumerProfiles)('the mass operations of an upload queue under th
     wrapper = mount(AssetQueueSelectedSidebar, {
       attachTo: document.body,
       props: { queueKey: QUEUE, extSystem },
-      // What the inputs of keywords and authors render asks the DAM for names to offer.
+      // The keyword and author inputs ask the DAM for names to offer, so they are stubbed.
       global: { plugins: [pinia], stubs: { AFormRemoteAutocompleteWithCached: true } },
     })
     await flushPromises()
@@ -79,10 +72,6 @@ describe.each(consumerProfiles)('the mass operations of an upload queue under th
       input: field.find<HTMLInputElement | HTMLTextAreaElement>('input, textarea:not([aria-hidden="true"])'),
     }))
   const customField = (label: string) => customFields().find((field) => field.label === label)!
-  /**
-   * The two buttons on the line of a field: the one that fills the rows where it is empty, the one that replaces it.
-   * Each is found by its accessible name, which says what it does and to which field.
-   */
   const onTheLine = (line: Element, field: string) => {
     const button = (name: string) =>
       line.querySelector<HTMLButtonElement>(
@@ -90,16 +79,13 @@ describe.each(consumerProfiles)('the mass operations of an upload queue under th
       )!
     return { fillEmpty: button('fillOneEmptyField'), replace: button('replaceOneField') }
   }
-  /** Beside a custom field, which is named by its label. */
   const beside = (field: DOMWrapper<Element>, label: string) => onTheLine(field.element.closest('.d-flex')!, label)
-  // The inputs of keywords and authors sit in a box of their own, beside their two buttons.
   const besideList = (input: VueWrapper, label: string) =>
     onTheLine(input.element.closest('[style*="min-width"]')!.parentElement!, label)
   const KEYWORDS = damText('asset.model.keywords')
   const AUTHORS = damText('asset.model.authors')
   const keywords = () => wrapper!.findComponent(KeywordRemoteAutocompleteWithCached)
   const authors = () => wrapper!.findComponent(AuthorRemoteAutocompleteWithCached)
-  /** The words of the tooltip of the button of that name, as a pointer over the button opens them. */
   const tooltipOf = async (name: string) => {
     const button = wrapper!.findAllComponents({ name: 'VBtn' }).find((one) => one.attributes('aria-label') === name)!
     const tooltip = button.findComponent({ name: 'VTooltip' })
@@ -127,7 +113,6 @@ describe.each(consumerProfiles)('the mass operations of an upload queue under th
     expect(wrapper!.text()).toContain(damText('asset.massOperations.description'))
   })
 
-  // First set, point 7: who cannot see the icons hears which field each of the two buttons beside it acts on.
   it('names the two buttons beside each field by what they do and by the field', async () => {
     await mountBesideRows()
     const fields = [...(isCms ? [KEYWORDS, AUTHORS] : []), untouched, typedInto]
@@ -136,12 +121,10 @@ describe.each(consumerProfiles)('the mass operations of an upload queue under th
     expect(names.filter((name) => name.includes(': ')).sort()).toEqual(
       fields.flatMap((field) => [`Fill empty field: ${field}`, `Replace everywhere: ${field}`]).sort()
     )
-    // The name without the field is the name of none of them any more; the tooltips keep it.
     expect(names).not.toContain(damText('asset.massOperations.fillOneEmpty'))
     expect(names).not.toContain(damText('asset.massOperations.replaceOne'))
   })
 
-  // What is seen stays as it was: the tooltip of each button says what it does, and no field.
   it('keeps the tooltips of those buttons short, without the field', async () => {
     await mountBesideRows()
     const fields = [...(isCms ? [KEYWORDS, AUTHORS] : []), untouched, typedInto]
@@ -155,8 +138,8 @@ describe.each(consumerProfiles)('the mass operations of an upload queue under th
     )
   })
 
-  // A custom field is shown to the user under its name; its property is what the DAM knows it by, and what a row
-  // keeps it under. The configurations of the tests name every field as its property.
+  // A custom field is shown under its name. The DAM knows it by its property, and a row keeps it under that property.
+  // The test configurations name every field as its property.
   it('names the buttons of a custom field by the name it is shown under, and writes it under its property', async () => {
     const elements = useDamConfigStore(pinia).damConfigAssetCustomFormElements.get(extSystem)![DamAssetType.Image]
     elements.find((element) => element.property === typedInto)!.name = 'Shown to the user'
@@ -229,7 +212,6 @@ describe.each(consumerProfiles)('the mass operations of an upload queue under th
 
       await atTheBottom('fillAllEmpty').trigger('click')
 
-      // A field the user never touched on the form is not written at all.
       expect([first.customData, second.customData]).toEqual([{ [typedInto]: 'for all' }, { [typedInto]: 'of the row' }])
     })
 
@@ -255,16 +237,13 @@ describe.each(consumerProfiles)('the mass operations of an upload queue under th
 
       expect(customFields().map((field) => field.input.element.value)).toEqual(['', ''])
       expect(first.customData).toEqual({ [typedInto]: 'of the row' })
-      // Nothing is left on the form to write.
       await atTheBottom('replaceAll').trigger('click')
       expect(first.customData).toEqual({ [typedInto]: 'of the row' })
     })
   })
 
-  // admin-ugc has neither: its rows are never given keywords or authors by this form.
   if (isCms) {
     describe('the keywords and the authors of the DAM', () => {
-      /** The user picks them in the two inputs of the form. */
       const pickOnTheForm = async () => {
         keywords().vm.$emit('update:modelValue', ['keyword-form'])
         authors().vm.$emit('update:modelValue', ['author-form'])
@@ -310,9 +289,9 @@ describe.each(consumerProfiles)('the mass operations of an upload queue under th
         ])
       })
 
-      // Today's behaviour, pinned as it is: "replace all" writes the two lists as they are on the form, also when
-      // the user picked nothing there, while a custom field left untouched is not written. A form with one custom
-      // field filled thus takes the keywords and authors off every row.
+      // Pins current behaviour: "replace all" writes both lists as they are on the form, also when nothing is picked.
+      // A custom field left untouched is not written. So a form with one
+      // custom field filled takes the keywords and authors off every row.
       it('are taken off every row by "replace all" when the form has none picked', async () => {
         const [first, second] = await mountBesideRows(2)
         first.keywords = ['keyword-row']
@@ -356,7 +335,7 @@ describe.each(consumerProfiles)('the mass operations of an upload queue under th
   })
 })
 
-// The components are mounted in English; the two names are in three languages, and each is to say the field.
+// The components are mounted in English. The two names exist in three languages, and each must name the field.
 describe('the names of the two buttons beside a field of the mass operations', () => {
   const languages = createI18n({ legacy: false, locale: 'en', messages: { sk, en, cs } })
 

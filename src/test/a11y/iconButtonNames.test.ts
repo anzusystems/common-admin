@@ -42,7 +42,6 @@ const slotOf = (el: ElementNode) => {
   return slot?.type === NodeTypes.DIRECTIVE && slot.arg?.type === NodeTypes.SIMPLE_EXPRESSION ? slot.arg.content : null
 }
 
-// What the button shows as its own content, overlays and icons left out.
 const content = (children: TemplateChildNode[]): TemplateChildNode[] =>
   children.flatMap((child) => {
     if (child.type === NodeTypes.COMMENT) return []
@@ -92,12 +91,13 @@ const unnamed = (source: string): number[] => {
   return lines
 }
 
-// A closable chip's close button is named by `close-label`, Vuetify's "Close" without one. In the library closing a
-// chip removes a value, and its close says so. A chip in the `#chip` slot of an autocomplete is made closable by the
-// autocomplete (`closable-chips`), and one that draws its chips itself names their close "Close". So is a chip of a
-// component of the library drawn in such a slot, and every chip of a component named a chip (`…Chip`): `holdsEveryChip`
-// holds their whole template to the rule. A chip at the root of a template takes the attributes of its caller,
-// `closable` among them, and is held to it too.
+// The close button of a closable chip is named by `close-label`. Without it Vuetify says
+// "Close". In the library, closing a chip removes a value, and the name must say so.
+// An autocomplete makes chips in its `#chip` slot closable (`closable-chips`). A component that draws its
+// chips itself names their close "Close". The same holds for library components drawn in such a slot and
+// for every chip of a component named `…Chip`: `holdsEveryChip` holds their whole template to the rule.
+// A chip at the root of a template takes the attributes of its
+// caller, `closable` among them, and is held to the rule too.
 const AUTOCOMPLETES = new Set(['VAutocomplete', 'VSelect', 'VCombobox'])
 const templateOf = (source: string) => {
   const start = source.indexOf('<template')
@@ -131,7 +131,6 @@ const closeUnnamed = (source: string, holdsEveryChip = false): number[] => {
   visit(template.nodes, holdsEveryChip)
   return lines
 }
-// The components a template draws in a `#chip` slot (Vuetify's own, `V…`, aside).
 const componentsInChipSlots = (source: string): string[] => {
   const template = templateOf(source)
   if (!template) return []

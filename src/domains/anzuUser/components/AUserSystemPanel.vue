@@ -16,13 +16,17 @@ const props = withDefaults(
     descriptor: AnyUserSystemDescriptor
     userId: IntegerId
     /**
-     * On a viewing page there is no Create. A write action on a read-only screen would be the first
-     * in the fleet; Manage stays, because it only leads somewhere.
+     * On a viewing page there is no Create, because no read-only screen offers a write action.
+     * Manage stays because it only navigates.
      */
     readonly?: boolean
-    /** Whether the account about to be created would be switched on. */
+    /**
+     * Whether the account about to be created would be switched on.
+     */
     createEnabled?: boolean
-    /** What the owning system holds, to prefill the create form. */
+    /**
+     * What the owning system holds, to prefill the create form.
+     */
     source?: BaseUser | null
     creating?: boolean
   }>(),
@@ -50,12 +54,9 @@ const { axes, user, probe, cancel } = useUserSystemProbe({ descriptor: props.des
 const label = computed(() => props.descriptor.label ?? props.descriptor.system)
 
 /**
- * The buttons are decided by the probe's answer, never by `<Acl>` -- except that the admin's descriptor
- * can say the current user may not write there (`canWrite`).
- *
- * On a cross-system surface there is no current user loaded for the other backends, so `can()`
- * would throw and `<Acl>` would silently render nothing at all. The probe is the only signal there
- * is -- which is also why its 401 handling has to be right.
+ * The buttons depend on the probe's answer, not on `<Acl>`, except that the descriptor can deny writing (`canWrite`).
+ * On a cross-system surface no current user is loaded for other backends, so `can()` would throw and
+ * `<Acl>` would render nothing. The probe is the only signal, so its 401 handling must be right.
  */
 const showManage = computed(
   () =>
@@ -88,8 +89,8 @@ const run = () => probe(props.userId)
 
 onMounted(run)
 
-// The panel is mounted once and never re-created -- `VWindowItem` hides it with `v-show` -- so a
-// new id has to reach it this way.
+// The panel is never re-created because `VWindowItem` hides it
+// with `v-show`. A new id has to reach it through this watcher.
 watch(() => props.userId, run)
 
 onBeforeUnmount(cancel)

@@ -52,15 +52,9 @@ import { useUploadQueueDialog } from '@/domains/dam/uploadQueue/composables/useU
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
 import { createFilter, createFilterStore, type MakeFilterOption } from '@/domains/filters/composables/filterFactory'
 
-// A page with two DAM configurations: `default`, as admin-cms has it, and `own`, with a client and addresses of its
-// own. A component is under `own` when it is given the name, or when it is inside a component that is: each case
-// here runs both ways where the component takes the name. What it asks then goes to the client and the addresses
-// of `own`, and nothing to those of `default`. Nothing of the library is replaced: each configuration has a DAM
-// client that records its requests. The caches of the names of authors, keywords and users are one per
-// configuration (`damNamedConfigurationCaches.test.ts`), and ask a second and a half after they are given an id: often
-// during the case after the one that gave it. That wait is held here with the long ones, and let pass only once a case
-// is over: no cache asks anything during a case, each starts with nothing left to ask for, and what each client is said
-// to have been asked is all it was asked.
+// The caches of names ask 1.5 s after they are given an id, often during the next case.
+// That wait is held and let pass only once a case is over. So no cache asks
+// during a case, and each client's recorded requests are all it was asked.
 
 const { endPoints, extSystem, licence } = cmsConfiguration
 const OWN = { asset: '/own/v2/asset', image: '/own/v2/image' }
@@ -68,7 +62,9 @@ const OWN_AUTHOR = '/own/v2/author'
 const OWN_KEYWORD = '/own/v2/keyword'
 const QUEUE = 'named-components'
 const NAMES = /\/(author|keyword|user)(\/|$)/
-/** From here on a wait is held: below the 1.5 s the caches of the page wait before they ask for their names. */
+/**
+ * Waits from this length are held. The caches wait 1.5 s before they ask for names.
+ */
 const HELD_FROM_MS = 1_200
 const { Processing, Uploaded } = UploadQueueItemStatus
 
@@ -79,7 +75,6 @@ let waits: LongWaits
 let socket: DamSocket
 let wrapper: VueWrapper | undefined
 
-/** A DAM makes the names it is sent, and knows of no other, nor of any user. */
 const answerNames = (of: FakeDam) =>
   of.reply((request) => {
     if (!NAMES.test(request.url.split('?')[0]!)) return undefined
@@ -88,7 +83,6 @@ const answerNames = (of: FakeDam) =>
     return { status: 200, data: { data: [], totalCount: 0 } }
   })
 
-/** `default` as admin-cms has it, and `own` beside it, with what the case adds to `own`. */
 const configure = (ofOwn: Partial<CommonAdminCoreDamConfig> = {}) => {
   const { coreDam, image } = installConsumerProfile(cmsConfiguration, dam.client)
   initCommonAdminCoreDamOptions({
@@ -106,12 +100,9 @@ const configure = (ofOwn: Partial<CommonAdminCoreDamConfig> = {}) => {
     },
   })
   initCommonAdminImageOptions({ ...image, configs: { ...image.configs, own: image.configs.default! } })
-  // Its DAM has the configuration of the default one, filled before the components mount, as an application does,
-  // but for its chunks: of half a photo, where `default`'s take a photo whole. An upload under `own` that read the
-  // store of `default` would send each photo in one chunk.
+  // Only the chunks differ from `default`: half a photo, where `default` takes a photo whole.
+  // An upload under `own` that read the store of `default` would send each photo in one chunk.
   seedDamConfigOf('own', pinia).damPrvConfig.settings.imageChunkConfig = { minSize: 1500, maxSize: 1500 }
-  // The ext system its caches of names ask under, as the root of a widget under it writes it (the profile writes that
-  // of `default`).
   useExtSystemIdForCached('own').cachedExtSystemId.value = extSystem
 }
 
@@ -122,7 +113,6 @@ beforeEach(() => {
   own = createFakeDam(OWN)
   answerNames(dam)
   answerNames(own)
-  // What is started under `own` has ids of its own: the cases tell its rows by them.
   let started = 0
   own.reply((request) => {
     if (request.method !== 'POST' || !own.routes.start.test(request.url)) return undefined
@@ -146,7 +136,7 @@ afterEach(async () => {
   wrapper = undefined
   useUploadQueueDialog().uploadQueueDialog.value = null
   useUploadQueuesStore().stopUpload(QUEUE)
-  // The caches ask for what the case gave them now, of the clients of this case.
+  // Let the caches ask for what the case gave them now, with the clients of this case.
   await waits.elapseAll()
   waits.restore()
   socket.restore()
@@ -154,7 +144,6 @@ afterEach(async () => {
   useDamNotificationsEventBus().reset()
 })
 
-/** The method and the path of every request a client was asked, in order, without the query. */
 const asked = (of: FakeDam) => of.requests.map((request) => `${request.method} ${request.url.split('?')[0]}`)
 const photo = (name: string) => new File([new Uint8Array(3000)], name, { type: 'image/jpeg' })
 const sendingUnderOwn = [
@@ -165,7 +154,6 @@ const sendingUnderOwn = [
 ]
 
 const fields = [{ name: 'text', default: '' }] as const satisfies readonly MakeFilterOption<string>[]
-/** What a list is asked with: the first page, and a filter nobody has filled. */
 const listArguments = () => {
   const { filterData, filterConfig } = createFilter(fields, createFilterStore(fields), {
     system: 'dam',
@@ -174,7 +162,6 @@ const listArguments = () => {
   return [usePagination('id').pagination, filterData, filterConfig] as const
 }
 
-/** A component under `own` that hands the name to nothing by itself: what is in it has the name from it. */
 const UnderOwn = defineComponent({
   setup(_, { slots }) {
     useDamConfigName('own')
@@ -184,7 +171,6 @@ const UnderOwn = defineComponent({
 })
 const ways = ['given the name', 'inside a component under it'] as const
 type Way = (typeof ways)[number]
-/** Mounts the component under `own` in one of the two ways, and answers the component itself. */
 const mountUnderOwn = (
   way: Way,
   component: Component,
@@ -200,7 +186,6 @@ const mountUnderOwn = (
   return wrapper.findComponent(component)
 }
 
-/** The inner input of the inputs of names, which asks the DAM for names to offer: what it is handed to search by. */
 const Input = defineComponent({
   name: 'NameInputStandIn',
   props: { fetchItemsMinimal: { type: Function, default: undefined } },
@@ -209,7 +194,6 @@ const Input = defineComponent({
     return () => h('div', { class: 'name-input' }, slots['append-item']?.())
   },
 })
-/** The inner input of the filters of names. */
 const FilterInput = defineComponent({
   name: 'NameFilterStandIn',
   props: {
@@ -312,8 +296,6 @@ describe('the names of authors and keywords, under a named DAM configuration', (
     })
   })
 
-  // The grant is the configuration's (`keywordCreateAcl`, `authorCreateAcl`): the one the input is under decides,
-  // not the default one, which names none here.
   describe('made new behind the grant the configuration names', () => {
     beforeEach(() => {
       configure({ keywordCreateAcl: 'dam_keyword_create', authorCreateAcl: 'dam_author_create' })
@@ -414,7 +396,6 @@ describe('the asset select, under a named DAM configuration', () => {
     expect(asked(dam)).toEqual([])
   })
 
-  // A list of the select has no name of its own: it is inside the select, and reads under the name of that.
   it.each<[string, Component, string]>([
     ['of tiles', AssetSelectListTiles, 'AssetSelectTilesItem'],
     ['in a table', AssetSelectListTable, 'AssetSelectTableRowItem'],
@@ -430,9 +411,6 @@ describe('the asset select, under a named DAM configuration', () => {
   })
 })
 
-// The list of assets as a page mounts it, whole: the list itself, its filter, and the tiles or the table of what it
-// lists. Only the bar, the rows, the metadata of the picked asset, the detail, the queue dialog and the inputs of the
-// filter are stand-ins. It is given the name; what is in it has the name from it.
 describe('the list of assets of a page, given the name of a DAM configuration', () => {
   const isListRequest = (request: FakeDamRequest) =>
     request.method === 'GET' && request.url.startsWith(`${OWN.asset}/licence/${licence}/search?`)
@@ -519,10 +497,6 @@ describe('the list of assets of a page, given the name of a DAM configuration', 
   })
 })
 
-// The two selects an application mounts, whole and opened: the select, its filter and the tiles or the table of what
-// it lists are real; only the bar, the rows, the metadata of the picked asset and the inputs of the filter are
-// stand-ins. The select is given the name, and what is in it has the name from it: the select reads its licence,
-// its filter asks for the list, and its list reads the asset clicked.
 describe.each<[string, Component, Record<string, unknown>]>([
   ['the asset select', AAssetSelect, { assetType: DamAssetType.Image }],
   ['the asset and media select', AAssetSelectMedia, { preselectAssetType: DamAssetType.Image }],
@@ -532,8 +506,6 @@ describe.each<[string, Component, Record<string, unknown>]>([
     request.method === 'GET' && request.url.startsWith(`${OWN.asset}/licence/${licence}/search?`)
 
   it('reads its licence, lists its assets and reads the one clicked by the client of that configuration', async () => {
-    // The page does not know the licence under `own` yet: the select asks for it, at an address no configuration
-    // names.
     useDamConfigStoreOf('own', pinia).damConfigLicenceExtSystem.delete(licence)
     own.reply((request) => {
       if (request.method === 'GET' && request.url === LICENCE) {
@@ -596,7 +568,6 @@ describe.each<[string, Component, Record<string, unknown>]>([
   })
 })
 
-/** One file in the queue made under `own`, sent whole: its row waits for the server to process it. */
 const uploadedUnderOwn = async () => {
   const store = useUploadQueuesStore()
   await store.addByFiles(QUEUE, extSystem, licence, [photo('photo.jpg')], 'own')
@@ -634,7 +605,6 @@ describe('the detail of an asset, under a named DAM configuration', () => {
 })
 
 describe('an upload, under a named DAM configuration', () => {
-  /** The asset select of a widget: what is picked in it is handed over by the test. */
   const Picker = defineComponent({ emits: ['confirm'], setup: () => () => h('div') })
   const ABOUT_PICKED = '/adm/v1/cms/asset/'
   const widgets: Array<[string, Component, Record<string, unknown>]> = [
@@ -679,8 +649,6 @@ describe('an upload, under a named DAM configuration', () => {
     return wrapper
   }
 
-  // The widget of several images hands its files to the queue through its limit dialog, which has no name of its
-  // own: it is inside the widget.
   it.each(widgets)('%s sends a dropped file to its addresses, by its client', async (_name, widget, props) => {
     mountWidget(widget, props)
     await flushPromises()
@@ -694,7 +662,6 @@ describe('an upload, under a named DAM configuration', () => {
     expect(asked(dam)).toEqual([])
   })
 
-  // An asset of another licence is copied to the licence of the widget, and its row waits for the copy.
   it.each(widgets)('%s has a picked asset copied, and asks about the copy, there', async (_name, widget, props) => {
     own.reply((request) =>
       request.method === 'PATCH' && request.url === `${OWN.image}/copy-to-licence`
@@ -717,8 +684,6 @@ describe('an upload, under a named DAM configuration', () => {
       'own-asset-copy',
       damAssetWithFile('own-asset-copy', 'own-file-copy', AssetFileProcessStatus.Processed, { licence })
     )
-    // What the image and media widget asks about a picked asset first: an address no configuration names, asked
-    // by the client of the configuration the widget is under.
     own.reply((request) =>
       request.method === 'GET' && request.url.startsWith(ABOUT_PICKED) ? { status: 200, data: {} } : undefined
     )
@@ -761,9 +726,7 @@ describe('an upload, under a named DAM configuration', () => {
       accept: undefined,
       maxSizes: undefined,
     }
-    /** A file is sent under `own`, the dialog is open, and a read finds the file processed, with an author. */
     const uploaded = async (mountDialog: () => VueWrapper) => {
-      // The author of the file is known at the address of `own`, and nowhere else.
       own.reply((request) =>
         request.method === 'GET' && request.url.startsWith(`${OWN_AUTHOR}/ext-system/${extSystem}/search`)
           ? { status: 200, data: { data: [{ id: 'author-1', name: 'Own Author' }], totalCount: 1 } }
@@ -780,7 +743,6 @@ describe('an upload, under a named DAM configuration', () => {
       await flushPromises()
       return subject
     }
-    /** Saved at the address of `own`, and the image handed over has the name that address answered as its source. */
     const expectSavedAndMappedUnderOwn = (subject: VueWrapper) => {
       expect(subject.emitted('apply')![0]).toMatchObject([
         [{ assetId: 'own-asset-1', texts: { source: 'Own Author' } }],

@@ -8,10 +8,6 @@ import { AssetFileFailReason } from '@/domains/dam/types/AssetFile'
 import { UploadQueueItemStatus } from '@/domains/dam/types/UploadQueue'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
 
-// An upload the browser cannot get through: what its row looks like, and that the queue goes on with the files
-// behind it. The real store and the real upload; the DAM is a client that records its requests and refuses the
-// ones a case names. The pauses between the tries of a chunk are let pass at once.
-
 const QUEUE = 'failing-queue'
 const { Waiting, Uploading, Failed } = UploadQueueItemStatus
 
@@ -24,7 +20,7 @@ afterEach(() => {
   useDamNotificationsEventBus().reset()
 })
 
-// Each of its own size: two files are sent side by side, and a start request says of its file only the size.
+// Each file has its own size. Two files are sent side by side, and a start request carries only the size of its file.
 const FIRST_SIZE = 3000
 const photos = (...names: string[]) =>
   names.map((name, index) => new File([new Uint8Array(FIRST_SIZE + index)], `${name}.jpg`, { type: 'image/jpeg' }))
@@ -44,7 +40,6 @@ describe.each(consumerProfiles)('a file the browser cannot send, under the $name
     useUploadQueuesStore()
       .getQueueItems(QUEUE)
       .map((item) => item.status)
-  /** Three files; the requests of the first that match are refused, the other files are held while being sent. */
   const firstFileRefused = async (refused: (request: FakeDamRequest) => boolean) => {
     const store = useUploadQueuesStore()
     dam.hold('POST', dam.routes.chunk)
@@ -58,7 +53,6 @@ describe.each(consumerProfiles)('a file the browser cannot send, under the $name
   const aFailedRow = {
     canEditMetadata: false,
     isDuplicate: false,
-    // Nothing is said about why: the row shows its general error.
     error: { hasError: true, message: '', assetFileFailReason: AssetFileFailReason.None },
   }
 
@@ -72,13 +66,13 @@ describe.each(consumerProfiles)('a file the browser cannot send, under the $name
 
     expect(first).toMatchObject({ ...aFailedRow, assetId: null, fileId: null })
     expect(statuses()).toEqual([Failed, Uploading, Uploading])
-    // A failed row counts as done.
     expect([store.getQueueTotalCount(QUEUE), store.getQueueProcessedCount(QUEUE)]).toEqual([3, 1])
   })
 
-  // An answer that says "created" and does not name the file, or the asset: there is nothing to send the chunks
-  // to, or nothing to ask about afterwards. With the file named and the asset not, every chunk and the finish
-  // used to go out, for a row no read could ever settle.
+  // An answer that says "created" but does not name the file or the asset
+  // leaves nothing to send chunks to, or nothing to ask about afterwards.
+  // Before, with the file named and the asset missing, every
+  // chunk and the finish went out for a row no read could settle.
   it.each([
     ['the id of the file', { asset: 'asset-without-a-file' }],
     ['the id of the asset', { id: 'file-without-an-asset' }],
@@ -102,7 +96,6 @@ describe.each(consumerProfiles)('a file the browser cannot send, under the $name
       expect(first).toMatchObject({ ...aFailedRow, assetId: null, fileId: null })
       expect(statuses()).toEqual([Failed, Uploading, Uploading])
       expect([store.getQueueTotalCount(QUEUE), store.getQueueProcessedCount(QUEUE)]).toEqual([3, 1])
-      // Of the three files, the chunks of the two behind it are on their way; of the first, nothing.
       expect(
         dam
           .sentTo('POST', dam.routes.chunk)
@@ -110,8 +103,6 @@ describe.each(consumerProfiles)('a file the browser cannot send, under the $name
           .sort()
       ).toEqual(['b.jpg', 'c.jpg'])
       expect(dam.sentTo('PATCH', dam.routes.finish)).toEqual([])
-      // No pause between tries that send nothing: of the waits let pass, only the seconds of the speed meter of
-      // the two files that are being sent, none of the three and nine seconds of a retry.
       expect(waits.passed.filter((length) => length > 1000)).toEqual([])
     }
   )
@@ -126,7 +117,6 @@ describe.each(consumerProfiles)('a file the browser cannot send, under the $name
     expect(dam.requests.filter((request) => request.url === `${endPoints.image}/${first.fileId}/chunk`)).toHaveLength(4)
     expect(statuses()).toEqual([Failed, Uploading, Uploading])
     expect([store.getQueueTotalCount(QUEUE), store.getQueueProcessedCount(QUEUE)]).toEqual([3, 1])
-    // It was never finished.
     expect(dam.sentTo('PATCH', dam.routes.finish)).toEqual([])
   })
 

@@ -271,11 +271,12 @@ describe('list-editor delete-mode — nested (ANested) parity', () => {
     expect(handle!.unsavedCount).toBe(1)
   })
 
-  // Regression for the LinkedList immediate flow: the component removes the row in its own `onDeleted`
-  // (trackDeleted:false), then the consumer's `@deleted` handler removes it again as a server-confirmed
-  // change (`acceptChanges` around `deleteItem`, after its backend
-  // DELETE). That second removal of the now-gone baseline key must NOT resurrect a tombstone — an
-  // immediate delete leaves ZERO unconfirmed changes.
+  // Regression for the LinkedList immediate flow. The component
+  // removes the row in its own `onDeleted` (`trackDeleted: false`).
+  // The consumer's `@deleted` handler then removes it again as a server-confirmed
+  // change (`acceptChanges` around `deleteItem`, after the backend DELETE).
+  // That second removal of the already-gone baseline key must not resurrect
+  // a tombstone. An immediate delete leaves zero unconfirmed changes.
   it('immediate + a consumer accepted delete (LinkedList flow) leaves no phantom unconfirmed change', async () => {
     const model = ref<NestedTree<Row>>(tree())
     let handle: EditorHandle | null = null
@@ -291,7 +292,6 @@ describe('list-editor delete-mode — nested (ANested) parity', () => {
             'onUpdate:modelValue': (v: NestedTree<Row>) => (model.value = v),
             compactField: 'title',
             deleteMode: 'immediate',
-            // Backend delete already done, then the row is removed again as a server-confirmed change.
             onDeleted: (vi: { raw: Row }) =>
               handle?.acceptChanges(() => handle?.deleteItem(vi.raw.id, { trackDeleted: false }), [vi.raw.id]),
           })

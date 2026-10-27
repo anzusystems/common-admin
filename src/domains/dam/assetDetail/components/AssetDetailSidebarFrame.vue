@@ -7,9 +7,9 @@ import AssetDetailSidebarActionsTeleportTarget from '@/domains/dam/assetDetail/c
 import type { UploadQueueKey } from '@/domains/dam/types/UploadQueue'
 import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 
-// The frame of the sidebar of the detail of an asset and of the dialog of a single upload: its tabs, the regions of
-// interest, and the target the buttons of the info tab are teleported to. What is above the content and in the info
-// tab is each sidebar's own.
+// Shared sidebar frame of the asset detail and the single-upload
+// dialog: tabs, ROIs and the teleport target for the info tab buttons.
+// Content above the tabs and inside the info tab belongs to each sidebar.
 
 const props = withDefaults(
   defineProps<{

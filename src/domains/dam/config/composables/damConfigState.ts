@@ -23,24 +23,23 @@ import type {
 import { cloneDeep, isNull, isUndefined } from '@/shared/utils/common'
 import type { AxiosInstance } from 'axios'
 
-// The types of asset whose custom fields are not loaded, by the custom fields of an ext system the loader stored: their
-// read failed beside reads that answered. Those stay `[]` there, as the store has always held them, and are read again
-// where they are needed. By the stored object, not by the ext system: one an application writes into the store itself
-// has every type loaded.
+// Asset types whose custom fields failed to load while other reads succeeded, keyed by the stored config object.
+// Those types stay `[]` in the store and are re-read where needed.
+// Keyed by object, not ext system: a config an app writes into the store itself has every type loaded.
 const customFormTypesNotLoaded = new WeakMap<object, ReadonlySet<DamAssetTypeType>>()
 
 /**
- * Loads into and reads from the DAM configuration store of `configName` (`useDamConfigStoreOf`); a name left out is
- * the inherited one in a component's setup, else `default`. Without a client nothing loads. It loads from the
- * addresses that configuration sets (`endPointConfiguration`, `endPointPubConfiguration`, `endPointAssetLicence`,
- * `endPointAssetCustomForm`), the default ones where it sets none or the plugin is not configured yet. Once the plugin
- * has set the options, a configuration the application has not got throws, as the caches of names do.
+ * Loads into and reads from the DAM configuration store of `configName` (`useDamConfigStoreOf`).
+ * Without a name, uses the inherited one in component setup, else `default`.
+ * Without a client nothing loads. Uses that configuration's endpoints (`endPointConfiguration`,
+ * `endPointPubConfiguration`, `endPointAssetLicence`, `endPointAssetCustomForm`), or defaults.
+ * After the plugin sets options, an unknown configuration throws, as the name caches do.
  */
 export function useDamConfigState(client: undefined | (() => AxiosInstance) = undefined, configName?: string) {
   const name = inheritedDamConfigName(configName)
   checkDamConfigName(name)
   const damConfigStore = useDamConfigStoreOf(name)
-  // Read when a request is made.
+  // Read at request time.
   const endPoints = () => damEndPointsOf(name)
 
   function onConfigError(error: Error) {
@@ -168,9 +167,8 @@ export function useDamConfigState(client: undefined | (() => AxiosInstance) = un
           const loadedResponses: CustomDataFormElement[][] = []
           const failedTypes: DamAssetTypeType[] = []
 
-          // A read that answers is loaded, also when it brings no field: an ext system may have none for a type, or
-          // for any, and that is its configuration. Counted as failed, an ext system without a custom field never
-          // had one, and whatever waits for it said it could not be loaded.
+          // A successful read counts as loaded even with no fields. An ext system may have none for a type.
+          // Counting it as failed made such ext systems report that fields could not be loaded.
           results.forEach((result, index) => {
             if (result.status === 'fulfilled') {
               loadedTypes.push(types[index]!)
@@ -180,8 +178,8 @@ export function useDamConfigState(client: undefined | (() => AxiosInstance) = un
             failedTypes.push(types[index]!)
           })
 
-          // A read that failed beside reads that answered with no field: nothing tells an ext system without a field
-          // from one whose fields are in the very part that failed. Not loaded, as before.
+          // Some reads failed and the rest returned no fields. The missing
+          // fields may be in the failed part, so treat as not loaded.
           const anyField = loadedResponses.some((fields) => fields.length > 0)
           if (types.length > 0 && (loadedTypes.length === 0 || (failedTypes.length > 0 && !anyField))) {
             throw new Error('Unable to load asset custom form config. Incorrect response body.')
@@ -220,9 +218,9 @@ export function useDamConfigState(client: undefined | (() => AxiosInstance) = un
         config[type] = responses[index]!
       })
 
-      // Not loaded: the types whose read failed now, and those not loaded before that were not read again. A type the
-      // stored object holds loaded is not marked by a read of it that failed: two reads go at once (two widgets of a
-      // page), and the one that failed may answer last.
+      // Not loaded: types that failed now, plus previously unloaded types not re-read.
+      // A failed read does not unmark a type already loaded. Two reads can
+      // run at once (two widgets), and the failed one may answer last.
       const notLoadedBefore = storedConfig ? customFormTypesNotLoaded.get(storedConfig) : undefined
       const failedNotLoaded = failedTypes.filter((type) => !storedConfig || !!notLoadedBefore?.has(type))
       const notLoaded = new Set(
@@ -272,9 +270,8 @@ export function useDamConfigState(client: undefined | (() => AxiosInstance) = un
   }
 
   /**
-   * The custom fields of the assets of the ext system, by type of asset; `undefined` while they are not loaded. With
-   * `assetType`, `undefined` also while the fields of that type are not: their read failed beside reads that answered,
-   * and the type holds `[]` till it is read again.
+   * Custom fields of the ext system's assets by asset type. `undefined` while not loaded.
+   * With `assetType`, also `undefined` while that type's read failed. The type holds `[]` until re-read.
    */
   function getDamConfigAssetCustomFormElements(extSystemId: IntegerId, assetType?: DamAssetTypeType) {
     const config = damConfigStore.damConfigAssetCustomFormElements.get(extSystemId)

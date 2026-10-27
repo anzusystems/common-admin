@@ -3,10 +3,9 @@ import { createPinia, setActivePinia } from 'pinia'
 import { useFilterBookmarkStore } from '@/domains/filters/bookmarks/store/bookmarksStore'
 import { type UserAdminConfig, UserAdminConfigLayoutType } from '@/domains/filters/bookmarks/types/UserAdminConfig'
 
-// The bookmark cache is what the filter bar reads its saved filters out of, and the manage dialog
-// is what writes them. The bar reads this map straight and never fetches for itself, so what the
-// cache does with a failure, with two answers in flight at once, and with a write of its own is
-// the part worth pinning.
+// The filter bar reads saved filters from this cache and never fetches for itself.
+// The manage dialog writes them.
+// Pinned here: failure handling, two answers in flight, and the cache's own writes.
 
 const identifier = {
   user: 7,
@@ -19,10 +18,8 @@ const bookmark = (id: number, customName: string): UserAdminConfig =>
 
 const fetcher = (execute: () => Promise<UserAdminConfig[]>) => () => ({ execute }) as never
 
-// Answers in the order the call asked for, the way the endpoint does, rather than in whatever order
-// the test happened to write the rows down. The store reads the highest position across all of them,
-// so the order no longer changes the answer -- which is exactly what this double is here to keep
-// true if someone changes either side.
+// Answers in the order the call asked for, like the endpoint, not in the order the test lists the rows.
+// The store reads the highest position across all rows, so the order must not change the answer.
 const orderedFetcher = (rows: UserAdminConfig[]) => () =>
   ({
     execute: async (pagination: { value: { sortBy: { key: string; order: string } | null } }) => {
@@ -64,17 +61,17 @@ describe('the bookmark cache', () => {
       }),
       true
     )
-    // Its own answer, not the store-wide flag: that one is shared with every other fetch the store
-    // serves, so a caller cannot tell from it whether ITS request is the one that died.
+    // Use the call's own answer, not the store-wide flag.
+    // That flag is shared with every other fetch, so a caller cannot tell from it whether its own request failed.
     expect(failed).toBeNull()
     expect(store.error).toBe(true)
 
-    // The filter bar reads this map straight and never fetches for itself, so dropping the entry
-    // would blank the bookmarks on screen the moment a background refresh failed.
+    // The filter bar reads this map directly and never fetches.
+    // Dropping the entry would blank the bookmarks on screen when a background refresh fails.
     expect(store.bookmarks.get(key)?.items.map((item) => item.customName)).toEqual(['First'])
 
-    // A refetch is asked for because something is known to have changed, so a failed one is not a
-    // reason to keep serving what it was going to replace.
+    // A refetch is requested because something is known to have changed.
+    // A failed one is no reason to keep serving the data it was meant to replace.
     const retry = vi.fn(async () => [bookmark(1, 'Renamed')])
     const items = await store.getBookmarks(identifier, fetcher(retry))
 
@@ -86,8 +83,8 @@ describe('the bookmark cache', () => {
     const store = useFilterBookmarkStore()
     const key = store.generateKey(identifier.layoutType, identifier.systemResource)
 
-    // Two forced refetches for the same key, the first one slower: the bookmark dialog asks for one
-    // on every entry to its manage tab, and the tabs switch faster than a request comes back.
+    // Two forced refetches for the same key, the first one slower.
+    // The dialog forces one on every entry to its manage tab, and tabs switch faster than a request returns.
     let releaseOlder = () => {}
     const older = store.getBookmarks(
       identifier,
@@ -109,8 +106,8 @@ describe('the bookmark cache', () => {
     releaseOlder()
     await older
 
-    // The filter bar renders straight out of this map, so an overtaken answer landing late would
-    // put it back to what it showed a refresh ago.
+    // The filter bar renders straight from this map.
+    // A late overtaken answer would put it back to an older state.
     expect(store.bookmarks.get(key)?.items.map((item) => item.customName)).toEqual(['Fresh'])
   })
 
@@ -122,16 +119,14 @@ describe('the bookmark cache', () => {
     )
     const key = store.generateKey(identifier.layoutType, identifier.systemResource)
 
-    // `addOne` pushes into the cached array on purpose, so that a filter bar already on screen
-    // shows the new bookmark at once. A caller holding what it was handed must not have rows
-    // appear in it from the outside -- the manage dialog keeps that array as its editor's model,
-    // and a row arriving there reads as something the user added and has not saved.
+    // `addOne` pushes into the cached array on purpose, so a filter bar on screen shows the new bookmark at once.
+    // A caller holding the returned array must not see rows appear in it.
+    // The manage dialog uses that array as its editor model, and a new row would read as unsaved user work.
     store.addOne(key, bookmark(2, 'Second'))
 
     expect(items?.map((item) => item.id)).toEqual([1])
     expect(store.bookmarks.get(key)?.items.map((item) => item.id)).toEqual([1, 2])
 
-    // The same for a read served out of the cache.
     const cached = await store.getBookmarks(
       identifier,
       fetcher(async () => [])
@@ -150,8 +145,8 @@ describe('the bookmark cache', () => {
 
     store.removeOne(key, 2)
 
-    // In place, because the filter bar renders straight out of this map: a bookmark whose delete
-    // went through must stop being offered without waiting for anything to be refetched.
+    // Removed in place because the filter bar renders straight from this map.
+    // A deleted bookmark must stop being offered without waiting for a refetch.
     expect(store.bookmarks.get(key)?.items.map((item) => item.id)).toEqual([1])
   })
 
@@ -162,7 +157,6 @@ describe('the bookmark cache', () => {
       fetcher(async () => [bookmark(1, 'First')])
     )
 
-    // What a save that wrote something and could not finish refreshing says.
     store.markStale(store.generateKey(identifier.layoutType, identifier.systemResource))
 
     const retry = vi.fn(async () => [bookmark(1, 'Renamed')])
@@ -198,8 +192,8 @@ describe('the bookmark cache', () => {
     failOlder()
     await older
 
-    // The newer answer is the current one, and it worked: marking the entry stale or raising the
-    // error flag here would send the next reader back to the server for nothing.
+    // The newer answer is current and succeeded.
+    // Marking the entry stale or raising the error flag would send the next reader to the server for nothing.
     expect(store.error).toBe(false)
     const after = vi.fn(async () => [bookmark(1, 'Refetched')])
     const served = await store.getBookmarks(identifier, fetcher(after))
@@ -215,8 +209,8 @@ describe('the bookmark cache', () => {
       fetcher(async () => [bookmark(1, 'First')])
     )
 
-    // A refresh goes out, and while it is out the user creates a bookmark on the other tab. The
-    // rows that refresh is carrying were read before that happened.
+    // A refresh is out, and meanwhile the user creates a bookmark on the other tab.
+    // The rows the refresh carries were read before that.
     let release = () => {}
     const refresh = store.getBookmarks(
       identifier,
@@ -231,8 +225,8 @@ describe('the bookmark cache', () => {
     release()
     await refresh
 
-    // The server has it; letting the older answer land would take it out of the bar until something
-    // forced another fetch.
+    // The server has the new bookmark.
+    // Letting the older answer land would remove it from the bar until another fetch is forced.
     expect(store.bookmarks.get(key)?.items.map((item) => item.id)).toEqual([1, 99])
   })
 
@@ -240,7 +234,7 @@ describe('the bookmark cache', () => {
     const store = useFilterBookmarkStore()
     const key = store.generateKey(identifier.layoutType, identifier.systemResource)
 
-    // Nothing cached yet: this is the filter bar's own first load. `addOne` has nothing to add to.
+    // Nothing is cached yet: this is the filter bar's first load, so `addOne` has nothing to add to.
     let release = () => {}
     const first = store.getBookmarks(
       identifier,
@@ -254,8 +248,8 @@ describe('the bookmark cache', () => {
     release()
     await first
 
-    // Discarding this answer would leave the bar with no bookmarks at all, and it does not fetch
-    // again for itself. Missing the one just created until the next refresh is the smaller loss.
+    // Discarding this answer would leave the bar with no bookmarks, and it does not fetch again by itself.
+    // Missing the just-created one until the next refresh is the smaller loss.
     expect(store.bookmarks.get(key)?.items.map((item) => item.id)).toEqual([1])
   })
 
@@ -267,9 +261,9 @@ describe('the bookmark cache', () => {
       fetcher(async () => [bookmark(1, 'First'), bookmark(2, 'Second')])
     )
 
-    // The mirror of the added-while-out case. The dialog cannot reach it today -- it refuses to
-    // start a save while a refresh is out, and finishes with a fetch of its own -- but the rule
-    // belongs to the store, which is where the next caller will find it.
+    // Mirror of the added-while-out case.
+    // The dialog cannot reach it today: it refuses to save while a refresh is out and finishes with its own fetch.
+    // The rule belongs to the store, where the next caller will find it.
     let release = () => {}
     const refresh = store.getBookmarks(
       identifier,
@@ -289,9 +283,9 @@ describe('the bookmark cache', () => {
 
   it('reports the highest position in use, not how many rows there are', async () => {
     const store = useFilterBookmarkStore()
-    // What a save that deleted a row leaves behind: the manage tab renumbers only the rows it
-    // sends, so the row created while another was pending deletion keeps the position it was
-    // given and the sequence has a gap.
+    // A save that deleted a row leaves a gap.
+    // The manage tab renumbers only the rows it sends, so a row
+    // created while another was pending deletion keeps its position.
     const withGap = [
       { ...bookmark(1, 'First'), position: 1 },
       { ...bookmark(3, 'Third'), position: 2 },
@@ -300,8 +294,8 @@ describe('the bookmark cache', () => {
 
     const stats = await store.fetchBookmarkStats(identifier, orderedFetcher(withGap))
 
-    // Counting rows would hand the next bookmark position 4, which the last row already holds --
-    // and the list has no second key to order two rows on the same position by.
+    // Counting rows would give the next bookmark position 4, which the last row already holds.
+    // The list has no second key to order two rows on the same position.
     expect(stats).toEqual({ count: 3, maxPosition: 4 })
   })
 
@@ -315,8 +309,8 @@ describe('the bookmark cache', () => {
       })
     )
 
-    // `Infinity` is what the cap is compared against, so a count that failed blocks the add rather
-    // than creating a bookmark past a limit nobody could check.
+    // `Infinity` is what the cap is compared against.
+    // A failed count blocks the add instead of creating a bookmark past a limit nobody could check.
     expect(stats.count).toBe(Infinity)
     expect(store.error).toBe(true)
   })
@@ -326,8 +320,8 @@ describe('the bookmark cache', () => {
 
     const stats = await store.fetchBookmarkStats(identifier, orderedFetcher([]))
 
-    // The caller adds one to the highest position, so an empty list has to answer zero -- not
-    // `undefined`, which would make the first bookmark's position `NaN`.
+    // The caller adds one to the highest position, so an empty list must answer zero.
+    // `undefined` would make the first position `NaN`.
     expect(stats).toEqual({ count: 0, maxPosition: 0 })
   })
 })

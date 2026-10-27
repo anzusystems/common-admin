@@ -20,13 +20,6 @@ import { type UploadQueueItem, UploadQueueItemStatus } from '@/domains/dam/types
 import { useLibraryUploadQueueListBinding } from '@/domains/dam/uploadQueue/components/uploadQueueBindings'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
 
-// A page with two DAM configurations of two DAMs, `default` and `own`, each of which has given an asset `a-1`: a copy
-// of it into the licence waits in a queue of each configuration. What happens in one DAM concerns only the rows of the
-// queues of its configuration: the poll of a queue, the refresh of a row, a duplicate a widget knows of, the save of a
-// detail. The names of a row go to the caches of its configuration. Nothing of the library is replaced: each DAM is a
-// client that records its requests. The poll and the caches wait for longer than a case: they are held, and let pass
-// where a case asserts what they did.
-
 const { endPoints, extSystem, licence } = cmsConfiguration
 const OWN = { asset: '/own/v2/asset', image: '/own/v2/image' }
 const OWN_AUTHOR = '/own/v2/author'
@@ -35,7 +28,9 @@ const OF_DEFAULT = 'scope-of-default'
 const OF_OWN = 'scope-of-own'
 const ASSET = 'a-1'
 const NAMES = /\/(author|keyword)\/ext-system\/\d+\/search$/
-/** From here on a wait is held: below the 1.5 s the caches wait before they ask. */
+/**
+ * Waits from this length are held. The caches wait 1.5 s before they ask.
+ */
 const HELD_FROM_MS = 1_200
 const { Processing, Uploaded } = UploadQueueItemStatus
 const { Processed, Uploading } = AssetFileProcessStatus
@@ -46,7 +41,6 @@ let own: FakeDam
 let waits: LongWaits
 let wrapper: VueWrapper | undefined
 
-/** A DAM knows every name it is asked for. */
 const answerNames = (of: FakeDam) =>
   of.reply((request) => {
     const [path, query] = request.url.split('?')
@@ -93,12 +87,9 @@ afterEach(async () => {
   useDamNotificationsEventBus().reset()
 })
 
-/** The paths of the reads of the asset a DAM was asked, in order. */
 const readsOf = (of: FakeDam) => of.assetReads().map((request) => request.url)
-/** The paths of the reads of names a DAM was asked, in order. */
 const namesAsked = (of: FakeDam) =>
   of.requests.map((request) => request.url.split('?')[0]!).filter((path) => NAMES.test(path))
-/** `a-1` in the DAM `of`, its file in the state given, with names of its own: `<what>-<tag>`. */
 const assetIn = (
   of: FakeDam,
   tag: string,
@@ -111,7 +102,6 @@ const assetIn = (
     authors: [`author-${tag}`],
     metadata: { customData, authorSuggestions: {}, keywordSuggestions: {} },
   })
-/** What a row has of its asset. */
 const fieldsOf = (row: UploadQueueItem) => ({
   status: row.status,
   keywords: [...row.keywords],
@@ -120,7 +110,6 @@ const fieldsOf = (row: UploadQueueItem) => ({
 })
 const untouched = { status: Processing, keywords: [], authors: [], customData: {} }
 
-/** A copy of `a-1` into the licence in the queue of each configuration: each waits for its DAM. */
 const rowsOfA1 = async () => {
   const store = useUploadQueuesStore()
   await store.addByCopyToLicence(OF_DEFAULT, extSystem, licence, [ASSET], 'default')
@@ -221,7 +210,6 @@ describe('rows of one asset id in the queues of two DAM configurations', () => {
 })
 
 describe('the save of a detail of one asset id under two DAM configurations', () => {
-  /** A component under `own` that hands the name to nothing by itself: what is in it has the name from it. */
   const UnderOwn = defineComponent({
     setup(_, { slots }) {
       useDamConfigName('own')
@@ -229,7 +217,6 @@ describe('the save of a detail of one asset id under two DAM configurations', ()
       return () => slots.default?.()
     },
   })
-  /** The asset `a-1` of `of` as a detail has saved it. */
   const savedIn = (of: FakeDam, tag: string) => assetIn(of, tag, Processed, { title: `saved in ${tag}` })
 
   it('writes what the detail saved under one configuration only into the rows of its queues', async () => {

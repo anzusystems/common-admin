@@ -13,17 +13,12 @@ import { AnzuApiForbiddenError } from '@/shared/error/AnzuApiForbiddenError'
 import { AnzuApiResponseCodeError } from '@/shared/error/AnzuApiResponseCodeError'
 import { AnzuApiTimeoutError } from '@/shared/error/AnzuApiTimeoutError'
 
-// The request that copies picked assets to the licence of a widget: how many assets a request, and what comes
-// back for all of them. The rows of the upload queue are made from its answer. The copy path is the image
-// endpoint's, which is what the widgets hand in.
-
 const END_POINT = '/adm/v1/image'
 const COPY = /\/copy-to-licence$/
 
 let dam: FakeDam
 beforeEach(() => {
   dam = createFakeDam({ asset: '/adm/v1/asset', image: END_POINT })
-  // The DAM answers each asset it was sent, copied.
   dam.reply((request) =>
     request.method === 'PATCH' && COPY.test(request.url)
       ? { status: 200, data: (dam.body(request) as DamImageCopyToLicenceRequest).map(copied) }
@@ -43,7 +38,6 @@ const copied = (item: DamImageCopyToLicenceRequest[number]): DamImageCopyToLicen
 const picked = (count: number): DamImageCopyToLicenceRequest =>
   Array.from({ length: count }, (_, index) => ({ asset: `asset-${index}`, targetAssetLicence: 100001 }))
 const sent = () => dam.requests.map((request) => dam.body(request) as DamImageCopyToLicenceRequest)
-/** What the copy of 45 assets rejects with when the second of its three requests is answered as told. */
 const failureOf = (second: FakeDamRule) => {
   let request = 0
   dam.reply((asked) => (++request === 2 ? second(asked) : undefined))
@@ -52,7 +46,6 @@ const failureOf = (second: FakeDamRule) => {
     (error: unknown) => error
   )
 }
-/** What the alert the widgets hand a failed copy to makes of it. */
 const shown = (error: unknown) => {
   useAlerts().showErrorsDefault(error)
   return useAlertsQueue().value.map((alert) => alert.color)
@@ -97,21 +90,20 @@ describe('the copy of assets to a licence', () => {
     expect(outcome).toBe('rejected')
   })
 
-  // An answer that is a success and not "ok" carries no list of what was copied. Taken for an empty answer, its
-  // assets were missing from the result and nothing said so.
+  // A success status other than "ok" carries no list of copied assets.
+  // It was taken for an empty answer, so assets went missing from the result without any error.
   it.each([201, 202, 204])(
     'is refused as a whole when one of its requests is answered with %i: a success that is not "ok"',
     async (status) => {
       const failure = await failureOf(() => ({ status }))
 
-      // With the status, as the failure of a request the widgets hand to the user.
       expect(failure).toBeInstanceOf(AnzuApiResponseCodeError)
       expect((failure as AnzuApiResponseCodeError).code).toBe(status)
       expect(shown(failure)).toEqual(['error'])
     }
   )
 
-  // Rejected with the bare error of axios, a failed copy passed the alert of the widgets without a word.
+  // Rejected with the bare axios error, a failed copy passed the widgets' alert without any message.
   it.each<[string, FakeDamRule, new (...args: never[]) => Error]>([
     ['is answered with 500', () => ({ status: 500 }), AnzuApiAxiosError],
     ['is answered with 404', () => ({ status: 404 }), AnzuApiAxiosError],
@@ -147,7 +139,6 @@ describe('the copy of assets to a licence', () => {
   })
 })
 
-// A failed copy is written down as every other request of the family is; a stopped one is no failure.
 describe('the failure of a copy, for the api error logger', () => {
   afterEach(() => {
     // Module state shared by every file this worker runs.

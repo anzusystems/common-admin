@@ -58,8 +58,8 @@ describe('applyLogTypeVisibility', () => {
     AUDIT_ONLY.forEach((name) => {
       expect(filter.filterConfig.fields[name].exclude, name).toBe(true)
       expect(filter.filterConfig.fields[name].render.skip, name).toBe(true)
-      // The third flag is the one that is easy to forget: without it the chip stays in the bar,
-      // advertising a filter that is not being sent, and its close button destroys the value.
+      // Without the third flag the chip stays in the bar.
+      // It advertises a filter that is not sent, and its close button destroys the value.
       expect(filter.filterConfig.fields[name].render.selected, name).toBe(false)
     })
   })

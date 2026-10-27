@@ -112,8 +112,8 @@ const customSortOptions = [
   },
 ]
 
-// The pagination is shared by every asset select, so a dialog can open on a sort chosen in another one.
-// The ordering then adopts it, and that adoption must not reach the parent as a change -- it would fetch again.
+// Pagination is shared by every asset select, so a dialog can open with a sort chosen in another one.
+// The ordering then adopts it. That adoption must not be emitted as a change, or the parent would fetch again.
 const onSortUpdate = (option: DatatableOrderingOption, pagination: Ref<Pagination>) => {
   const current = pagination.value.sortBy
   if (current?.key === option.sortBy?.key && current?.order === option.sortBy?.order) return

@@ -6,22 +6,19 @@ export const isAnzuApiCancelledError = (error: unknown): error is AnzuApiCancell
 }
 
 /**
- * A request the caller stopped, told apart from a request that failed.
- *
- * Axios reports it as a `CanceledError` -- an axios error carrying `code: 'ERR_CANCELED'`, not the
- * `DOMException` an `AbortController`-shaped check would look for, which is why such a check never
- * fires.
+ * A request the caller stopped, as opposed to one that failed.
+ * Axios reports it as a `CanceledError` with `code: 'ERR_CANCELED'`, not
+ * as a `DOMException`. An `AbortController`-style check never fires.
  */
 export const axiosErrorIsCancelled = (error: unknown) =>
-  // Both, because they answer for different things. `isCancel` reads an internal marker axios puts
-  // on the error it constructs; the code check catches a cancellation that arrived as a plain
-  // object -- rebuilt across a boundary, or handed over by a test.
+  // Both checks are needed. `isCancel` reads an internal marker on errors axios constructs.
+  // The code check catches a cancellation that arrives as a plain
+  // object, rebuilt across a boundary or passed in by a test.
   axios.isCancel(error) || (axios.isAxiosError(error) && error.code === 'ERR_CANCELED')
 
 /**
- * A stopped request is an ordinary outcome -- another keystroke in an autocomplete, a route change
- * while a list is loading -- so it needs a class of its own. Reported as a transport failure it
- * would raise an error at the user for something the user did.
+ * A stopped request is a normal outcome, such as another autocomplete keystroke or a route change during loading.
+ * Reported as a transport failure, it would show the user an error for their own action.
  */
 export class AnzuApiCancelledError extends AnzuError {
   constructor(cause: unknown = undefined) {

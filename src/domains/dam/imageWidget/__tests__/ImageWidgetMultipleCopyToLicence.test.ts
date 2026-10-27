@@ -7,8 +7,6 @@ import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueu
 import { useUploadQueueDialog } from '@/domains/dam/uploadQueue/composables/useUploadQueueDialog'
 import type { DamImageCopyToLicenceResponseItem } from '@/domains/dam/types/Asset'
 
-// Copying several assets to the widget's licence: the refused ones are one message, and with
-// nothing copied there is no queue to show.
 const copyToLicence = vi.hoisted(() => vi.fn())
 const showErrorT = vi.hoisted(() => vi.fn())
 vi.mock('@/domains/dam/api/damImageApi', () => ({

@@ -18,9 +18,10 @@ import en from '@/locales/en'
 import sk from '@/locales/sk'
 import { createAnzuVuetify } from '@/plugins/commonVuetifyConfig'
 
-// The chips of the library that an admin can make closable: a chip at the root of its component takes the `closable`
-// of its caller, and the chip of a cached user takes it from Vuetify's defaults. Their close removes what the chip
-// stands for, and says so: "Remove", where Vuetify says "Close". A caller names it otherwise as it likes.
+// Chips of the library that an admin can make closable. A chip at the root of its component
+// takes `closable` from its caller. The chip of a cached user takes it from Vuetify's defaults.
+// Their close removes what the chip stands for, so it is named "Remove"
+// instead of Vuetify's "Close". A caller can name it otherwise.
 
 vi.mock('vue-router', async (importOriginal) => ({
   ...(await importOriginal<object>()),
@@ -35,7 +36,6 @@ afterEach(() => {
   app = host = undefined
 })
 
-/** The chip as an admin mounts it, with the Vuetify of the library translating through its i18n. */
 const mountIn = async (locale: string, render: () => ReturnType<typeof h>) => {
   const i18n = createI18n({ legacy: false, locale, fallbackLocale: false, messages: { sk, en, cs } })
   host = document.createElement('div')

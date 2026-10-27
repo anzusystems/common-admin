@@ -21,10 +21,10 @@ import { type UploadQueueItem, UploadQueueItemStatus } from '@/domains/dam/types
 import { useUploadQueueItemRefresh } from '@/domains/dam/uploadQueue/composables/uploadQueueItemRefresh'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
 
-// What a row of the queue is given from the asset the DAM answers with, field by field, whichever way that asset
-// came to be read: by the poll, on a notification, on the row's refresh. Nothing of the library is replaced: the
-// DAM is a client that records its requests, the notifications are events on the real bus, and only the long
-// waits between two reads are taken out of real time.
+// Covers what a queue row gets from the asset the DAM answers with, field
+// by field, however the asset was read: poll, notification or refresh.
+// The DAM is a recording client, notifications are events on the real
+// bus, and only the long waits between reads are taken out of real time.
 
 const QUEUE = 'apply-queue'
 
@@ -39,8 +39,8 @@ const use = (profile: ConsumerProfile) => {
   answerDamNames(dam)
 }
 const nameLookups = () => damNameLookups(dam)
-// A name is asked for once in the whole file, whatever the case: one that waits for the lookup needs ids nobody
-// has asked for, on a second attempt of the case too.
+// A name is asked for once in the whole file. A case that waits for the
+// lookup needs ids nobody has asked for, also on a retry attempt of the case.
 let attempts = 0
 const neverAsked = (...ids: string[]) => {
   attempts++
@@ -59,8 +59,8 @@ const notify = (name: DamNotificationNameType, data: Record<string, unknown>) =>
 // The metadata notification may come to be read with a delay of its own.
 const SOON = { timeout: 5000 }
 
-// One asset with everything a row takes. Of the names the DAM suggests for authors and keywords: one it knows
-// nobody by (an empty object, by which the queue recognises it), one it knows one by, one it knows two by.
+// One asset with everything a row takes. For author and keyword name suggestions: one nobody
+// is known by (an empty object, which the queue recognises), one with one match, one with two.
 const nobody = {} as unknown as string[]
 const everything: Partial<AssetDetailItemDto> = {
   keywords: ['keyword-1'],
@@ -102,7 +102,6 @@ const suggestions = () => {
 }
 const theSuggestions = { newAuthorNames: ['New Author'], newKeywordNames: ['new keyword'] }
 
-/** A file, sent whole: its row has the asset and the file the start request answered, `asset-1` and `file-1`. */
 const uploadedFile = async (profile: ConsumerProfile) => {
   const store = useUploadQueuesStore()
   await store.addByFiles(
@@ -116,7 +115,6 @@ const uploadedFile = async (profile: ConsumerProfile) => {
   await vi.waitFor(() => expect(item.status).toBe(UploadQueueItemStatus.Processing))
   return item
 }
-/** An asset copied to the licence: its row has the asset `asset-1`, and no file. */
 const copiedAsset = async (profile: ConsumerProfile) => {
   const store = useUploadQueuesStore()
   await store.addByCopyToLicence(QUEUE, profile.extSystem, profile.licence, ['asset-1'], 'default')
@@ -175,7 +173,7 @@ describe('what a processed asset gives a row, under the CMS configuration', () =
 
     expect(item).toMatchObject({
       assetId: 'asset-1',
-      // A copy learns its file here; an upload has had it since its start request.
+      // A copy learns its file here. An upload has had it since its start request.
       fileId: asset.mainFile!.id,
       isDuplicate: false,
       duplicateAssetId: null,
@@ -226,8 +224,8 @@ describe('what a processed asset gives a row, under the CMS configuration', () =
     expect(suggestions()).toEqual(theSuggestions)
   })
 
-  // The read the notification asks for says what became of the file as well: a file notification that is lost
-  // does not leave the row waiting.
+  // The read asked for by the notification also reports the file
+  // status, so a lost file notification does not leave the row waiting.
   it('the metadata notification for a file processed by then: the row is uploaded too', async () => {
     const item = await uploadedFile(cmsConfiguration)
     processed()
@@ -246,8 +244,7 @@ describe('what a processed asset gives a row, under the CMS configuration', () =
     expect(dam.assetReads()).toHaveLength(reads)
   })
 
-  // The row stops being the asset that was uploaded: it is the original from here on, and what is saved from it
-  // is saved to the original.
+  // The row stops being the uploaded asset and becomes the original. What is saved from it goes to the original.
   it.each([
     ['an uploaded file', uploadedFile],
     ['a copy to the licence', copiedAsset],
@@ -306,7 +303,6 @@ describe('what a processed asset gives a row, under the CMS configuration', () =
     }
     expect(asked('author')).toEqual({
       path: '/adm/v1/author/ext-system/1/search',
-      // The author of the asset, and the two the DAM cannot tell apart.
       ids: [author, oneOfTwo, otherOfTwo],
     })
     expect(asked('keyword')).toEqual({ path: '/adm/v1/keyword/ext-system/1/search', ids: [keyword] })
@@ -314,8 +310,9 @@ describe('what a processed asset gives a row, under the CMS configuration', () =
   })
 })
 
-// admin-ugc's ext system has neither authors nor keywords. Were an asset of its to carry one, the names would be
-// asked for under `/adm/v1`: those two paths are fixed, whatever endpoints the application has configured.
+// admin-ugc's ext system has no authors or keywords. If an asset
+// carried one, the names would be requested under `/adm/v1`.
+// Those two paths are fixed, whatever endpoints the application configures.
 describe('what a processed asset gives a row, under the UGC configuration', () => {
   beforeEach(() => use(ugcConfiguration))
 

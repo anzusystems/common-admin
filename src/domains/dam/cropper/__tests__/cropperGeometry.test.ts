@@ -13,10 +13,9 @@ import {
 } from '@/domains/dam/cropper/utils/cropperGeometry'
 
 /**
- * The arithmetic `ACropper` is built on. It is tested here rather than only through a mounted
- * component because these are the rules that decide where a crop box may sit — and a rounding
- * mistake in them shows up as a region of interest saved a few pixels off, which nobody notices
- * until the published image is wrong.
+ * The arithmetic `ACropper` is built on, tested directly.
+ * These rules decide where a crop box may sit. A rounding mistake shows up as a region of
+ * interest saved a few pixels off, which goes unnoticed until the published image is wrong.
  */
 
 const IMAGE: Rect = { x: 0, y: 0, width: 800, height: 600 }
@@ -84,8 +83,8 @@ describe('coverAspectRatio', () => {
     expect(coverAspectRatio({ width: 640, height: 600 }, NaN)).toEqual({ width: 640, height: 600 })
   })
 
-  // This is the shape cropper.js v2's own `$change` imposes; anything that measures a rectangle
-  // against the image has to measure the grown one or the clamp is applied to the wrong box.
+  // This is the shape cropper.js v2 imposes in its own `$change`. Anything measuring a rectangle
+  // against the image must measure the grown one, or the clamp is applied to the wrong box.
   it('matches what cropper.js does to a height-only change', () => {
     expect(coverAspectRatio({ width: 640, height: 600 }, AR_16_9)).toEqual({
       width: 1066.6666666666665,
@@ -93,9 +92,9 @@ describe('coverAspectRatio', () => {
     })
   })
 
-  // Pinned against the real thing rather than a remembered copy of it: `$change` runs every
-  // rectangle through `getAdjustedSizes(..., 'cover')`, and a drift between the two would put the
-  // clamp back to measuring a box cropper.js is about to replace.
+  // Pinned against the real library, not a copy: `$change` runs
+  // every rectangle through `getAdjustedSizes(..., 'cover')`.
+  // Drift between the two would make the clamp measure a box cropper.js is about to replace.
   it('agrees with cropper.js getAdjustedSizes(cover) across a spread of boxes', () => {
     const ratios = [AR_16_9, 1, 0.75, 3, 0.4]
     const boxes = [
@@ -263,8 +262,6 @@ describe('clampRectInside while resizing', () => {
   })
 
   it('lets a side resize use the whole perpendicular span, sliding if it has to', () => {
-    // An off-centre box resized from the top may become as wide as the image and shifts to fit,
-    // exactly as cropper.js v1's limitCropBox did.
     const result = clampRectInside(
       { x: 500, y: 100, width: 800, height: 450 },
       IMAGE,
@@ -286,12 +283,10 @@ describe('clampRectInside while resizing', () => {
   it('never returns a rectangle that leaves the bounds, whatever the anchor', () => {
     const anchors = Object.keys(RESIZE_ANCHORS)
     const candidates: Rect[] = [
-      // Already in proportion — what a drag produces.
       { x: -500, y: -500, width: 2000, height: 1125 },
       { x: 790, y: 590, width: 400, height: 225 },
       { x: -10, y: 300, width: 100, height: 56.25 },
       { x: 400, y: -300, width: 900, height: 506.25 },
-      // Out of proportion — what a partial `setData` produces, and what cropper.js would grow.
       { x: 0, y: 0, width: 640, height: 600 },
       { x: 0, y: 0, width: 800, height: 20 },
       { x: 400, y: 300, width: 100, height: 600 },
@@ -318,9 +313,9 @@ describe('clampRectInside while resizing', () => {
 })
 
 describe('clampRectInside with a rectangle that is not yet in proportion', () => {
-  // A `setData` naming one dimension arrives with the other still at its old value. Clamping that
-  // rectangle as given would pass, and cropper.js would then widen it past the image to suit the
-  // ratio — so the growth has to happen first and be clamped along with everything else.
+  // A `setData` naming one dimension arrives with the other at its old value.
+  // Clamping that rectangle as given would pass, and cropper.js would then widen it past the
+  // image to fit the ratio. So the growth must happen first and be clamped with everything else.
   it('grows the rectangle to the ratio before measuring it against the image', () => {
     const result = clampRectInside({ x: 0, y: 0, width: 640, height: 600 }, IMAGE, AR_16_9)
     expect(result.width).toBeLessThanOrEqual(800)
@@ -344,8 +339,8 @@ describe('clampRectInside with a rectangle that is not yet in proportion', () =>
 })
 
 describe('canvasSizeFor', () => {
-  // The canvas is the frame the image is centred in, not the image itself — cropper.js v1 let its
-  // container fill the width it was given and shaded whatever the picture did not cover.
+  // The canvas is the frame the image is centred in, not the image itself. cropper.js v1
+  // let its container fill the given width and shaded whatever the picture did not cover.
   it('takes the full width available and the image height for a source wider than the container', () => {
     expect(canvasSizeFor({ width: 800, height: 600 }, 640, 200, 100)).toEqual({ width: 640, height: 480 })
   })
@@ -355,7 +350,6 @@ describe('canvasSizeFor', () => {
   })
 
   it('never enlarges a small source to fill the height', () => {
-    // 240x180 in a 640 wide frame keeps its own 180px height rather than growing to 480.
     expect(canvasSizeFor({ width: 240, height: 180 }, 640, 200, 100).height).toBe(180)
   })
 

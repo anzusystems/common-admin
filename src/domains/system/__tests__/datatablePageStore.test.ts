@@ -1,11 +1,10 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { datatablePageKey, useDatatablePageStore } from '@/domains/system/store/datatablePageStore'
 
-// The remembered page used to live in a single global ref shared by every datatable, so it leaked
-// across entities: paging list B to page 5, closing any detail (which sets the preserve flag) and
-// then opening list A reopened A on page 5 — a page the user had never been on there. The page is
-// now keyed per table; the preserve flag stays global because it means "the next list I land on
-// should restore its page", which is exactly what the close button expresses.
+// The remembered page used to live in one global ref shared by every datatable.
+// Paging list B to page 5, closing any detail (which sets the preserve flag) and opening list A reopened A on page 5.
+// The page is now keyed per table. The preserve flag stays global: it means "the
+// next list I land on restores its page", which is what the close button expresses.
 
 const listA = datatablePageKey('cms', 'article')
 const listB = datatablePageKey('cms', 'faq')
@@ -13,7 +12,7 @@ const listB = datatablePageKey('cms', 'faq')
 const { setStoredPage, setPreservePage, consumeStoredPage } = useDatatablePageStore()
 
 beforeEach(() => {
-  // Drain a flag left over from a previous case; the store is a module singleton.
+  // Drains a flag left from a previous case; the store is a module singleton.
   consumeStoredPage(listA)
   setStoredPage(listA, 1)
   setStoredPage(listB, 1)
@@ -49,7 +48,6 @@ describe('useDatatablePageStore', () => {
     setStoredPage(listB, 5)
     setPreservePage()
 
-    // Used to return 5: both lists read the same global slot.
     expect(consumeStoredPage(listA)).toBe(1)
   })
 
@@ -69,7 +67,6 @@ describe('useDatatablePageStore', () => {
 })
 
 describe('preservePageForLanding', () => {
-  // A router that only takes the listeners and resolves what it is given.
   const fakeRouter = () =>
     ({
       afterEach: () => () => undefined,

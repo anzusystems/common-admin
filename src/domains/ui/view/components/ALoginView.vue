@@ -18,10 +18,10 @@ withDefaults(
 
 const { t } = useI18n()
 
-// The sign-in page takes the place of the admin's own `/login` in the browser history: left there, Back from the
-// admin after the sign-in showed the sign-in page to a user who is signed in. A press the browser takes for a tab, a
-// window or a download of its own (with Ctrl, Cmd, Shift or Alt, the middle button) goes on as a link does.
-// Without an address the button is no link, and a press does nothing, as before.
+// The sign-in page replaces the admin's `/login` in browser history.
+// Otherwise Back after sign-in shows the sign-in page to a signed-in user.
+// Modified clicks (Ctrl, Cmd, Shift, Alt, middle button) proceed as a normal link.
+// Without an address the button is not a link and a press does nothing.
 const onLoginClick = (event: MouseEvent) => {
   const link = event.currentTarget
   if (!(link instanceof HTMLAnchorElement) || !link.href) return

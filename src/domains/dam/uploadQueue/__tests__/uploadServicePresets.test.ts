@@ -39,12 +39,10 @@ import { NEW_LINE_MARK } from '@/domains/system/composables/alerts'
 import { commonT } from '@/plugins/i18n'
 import { coreDamOptions } from '@/plugins/pluginOptions'
 
-// One run of the upload service for both sides, under the set each side hands it: the library's own, which
-// `useUpload` makes when it is given none, and admin-dam's, which `adminDamUploadPreset` makes from what the
-// application hands in. Those inputs stand in for admin-dam's after step K3: the library's three requests at the
-// address of the type of the row under the application's client, and its own texts, timeout and hash. The client is
-// a fake DAM that records what it is sent; the pauses and the second of the speed meter are taken out of real time.
-// Sentry is replaced by its module, so that what the requests report to it is recorded.
+// Runs the upload service for both sides, each with its own preset: the library's (made
+// by `useUpload` when none is given) and admin-dam's (made by `adminDamUploadPreset`).
+// The inputs stand in for admin-dam's after step K3. The client is a fake DAM that records requests.
+// Sentry is mocked to record what the requests report.
 
 const sentry = vi.hoisted(() => ({ logError: vi.fn(), logMessage: vi.fn() }))
 vi.mock('@/domains/system/composables/sentry', () => ({ useSentry: () => sentry }))
@@ -61,7 +59,6 @@ const ADMIN_DAM_END_POINTS: Record<DamAssetTypeType, string> = {
   [DamAssetType.Video]: '/adm/v1/video',
   [DamAssetType.Document]: '/adm/v1/document',
 }
-/** admin-dam's texts, each its own here, so that a row shows whose text it got. */
 const APP_TEXTS: UploadMessages = {
   unknownError: () => 'admin-dam: unknown error',
   size: () => 'admin-dam: size',
@@ -77,7 +74,8 @@ let waits: LongWaits
 
 beforeEach(() => {
   setActivePinia(createPinia())
-  // No options of the plugin: whatever reads them throws. The library's side installs them; admin-dam's does without.
+  // No plugin options are set, so anything that reads them throws.
+  // The library's side installs them; admin-dam's does without.
   coreDamOptions.value = undefined
   waits = holdLongWaits(10_000, { passFrom: 1_000 })
 })
@@ -86,8 +84,8 @@ afterEach(() => {
 })
 
 /**
- * admin-dam's requests after step K3 (`fileApi.ts`): the library's, at the address of the type of the row. Its
- * finish there also calls `startProcessing`, which the service does not read; it is left out here.
+ * admin-dam's requests after step K3 (`fileApi.ts`): the library's, at the address of the row type.
+ * Its finish also calls `startProcessing`, which the service does not read, so it is left out.
  */
 const adminDamRequests = (client: () => AxiosInstance): UploadRunRequests => ({
   start: (item) =>
@@ -105,7 +103,6 @@ const adminDamRequests = (client: () => AxiosInstance): UploadRunRequests => ({
     ),
   finish: (item, sha) => damFileUploadFinish(client, ADMIN_DAM_END_POINTS[item.assetType], item, sha),
 })
-/** admin-dam's hash, a static import of the application there. It keeps what it is fed. */
 const appHash = (fed: ArrayBuffer[] = []): UploadHash => ({
   update: (data) => fed.push(data),
   digest: () => APP_DIGEST,
@@ -142,7 +139,6 @@ const chunksSent = () => dam.sentTo('POST', dam.routes.chunk).length
 const finishesSent = () => dam.sentTo('PATCH', dam.routes.finish).length
 const chunkParts = () =>
   dam.sentTo('POST', dam.routes.chunk).map((request) => (request.data as FormData).get('file') as File)
-/** Every chunk request is answered by what the test says, from the first attempt on; `undefined` is the DAM's own. */
 const chunkAnswers = (
   answer: (attempt: number, request: FakeDamRequest) => FakeDamAnswer | Promise<FakeDamAnswer> | undefined
 ) => {
@@ -171,7 +167,6 @@ describe('the set of admin-dam', () => {
   })
 
   it('uploads a file of any type to the addresses of the application, and reads no option of the plugin', async () => {
-    // A read of the options would throw.
     expect(() => useCommonAdminCoreDamOptions('default')).toThrow()
     dam = createFakeDam({ asset: ADMIN_DAM_ASSET, image: ADMIN_DAM_END_POINTS[DamAssetType.Video] })
     const item = row(new File([BYTES], 'clip.mp4', { type: 'video/mp4' }), DamAssetType.Video)
@@ -191,8 +186,9 @@ describe('the set of admin-dam', () => {
     expect(dam.unanswered).toEqual([])
   })
 
-  // The types are checked by `lint:tsc`: a run is of the side of its set; without one, an explicit `undefined` too,
-  // it is the library's; and there is no run of admin-dam's side without the set of admin-dam.
+  // Types are checked by `lint:tsc`: a run has the side of its set;
+  // without a set, even with an explicit `undefined`, it is the library's.
+  // There is no admin-dam run without the admin-dam set.
   it('makes a run of its own side, and there is none of that side without it', () => {
     const item = row()
     const run = useUpload(item, undefined, adminDamSet())
@@ -201,8 +197,8 @@ describe('the set of admin-dam', () => {
     expectTypeOf(run).toExtend<UploadRun<'adminDam'>>()
     expect(run[uploadSide]).toBe('adminDam')
 
-    // Never called, so that only the types speak: without a set the run is the library's, whose set reads the
-    // options of the plugin, and those are not set here. A call would throw for that whatever the types allowed.
+    // Never called, so only the types are tested. Without a set the run is the library's,
+    // whose set reads the plugin options, and those are not set here. A call would throw.
     const libraryRun = () => useUpload(item, undefined, undefined)
     expectTypeOf<ReturnType<typeof libraryRun>[typeof uploadSide]>().toEqualTypeOf<'library'>()
     // @ts-expect-error -- a run of admin-dam needs the set of admin-dam
@@ -223,7 +219,7 @@ describe('the set of admin-dam', () => {
     expect(dam.body(dam.sentTo('PATCH', dam.routes.finish)[0])).toEqual({ checksum: APP_DIGEST })
   })
 
-  // Z27: admin-dam's own requests named no type, and the browser sent its chunks as "application/octet-stream".
+  // Z27: admin-dam's own requests named no type, so the browser sent chunks as "application/octet-stream".
   it('sends each chunk as a file of the name and type of the one picked, as the library does', async () => {
     const run = useUpload(row(), undefined, adminDamSet())
 
@@ -264,8 +260,8 @@ describe('the set of admin-dam', () => {
   })
 
   describe('and the timeout of the application', () => {
-    // The size the chunks of an upload reached outlives it (`damUploadChunkSize.ts`). Clamped to bounds of 0 it is
-    // 0, and the next upload starts from the configuration again.
+    // The chunk size an upload reached outlives it (`damUploadChunkSize.ts`).
+    // Clamped to bounds of 0 it is 0, and the next upload starts from the configuration again.
     const forgetChunkSize = () => {
       chunkSizeIs(0)
       useDamUploadChunkSize().updateChunkSize(1)
@@ -273,9 +269,9 @@ describe('the set of admin-dam', () => {
     beforeEach(forgetChunkSize)
     afterEach(forgetChunkSize)
 
-    // At 200 bytes a second a chunk of 1000 takes 5 s: too short for 30 s, which aims at 7.5 s (1500 bytes), and for
-    // 120 s, which aims at 30 s (all 3000 at once). Without a timeout the chunks are sized against 30 s; for `null`
-    // that is the library's rule (Z32): admin-dam's own service took `null` for 0 s, and every chunk for the smallest.
+    // At 200 bytes a second a chunk of 1000 takes 5 s: too short for 30 s (aims at 7.5 s) and for 120 s (aims at 30 s).
+    // Without a timeout, chunks are sized against 30 s. For `null` this is the library's rule
+    // (Z32): admin-dam's own service took `null` as 0 s and sized every chunk to the smallest.
     it.each<[number | null | undefined, number[]]>([
       [30, [1500, 1500]],
       [120, [3000]],
@@ -295,7 +291,7 @@ describe('the set of admin-dam', () => {
   })
 })
 
-// B5: whether a file of no bytes is sent is what goes to the backend, and stays with each side.
+// B5: whether a file of no bytes is sent goes to the backend, and stays with each side.
 describe('a file of no bytes', () => {
   const empty = () => row(new File([], 'empty.jpg', { type: 'image/jpeg' }))
 
@@ -324,7 +320,6 @@ describe('a file of no bytes', () => {
   })
 })
 
-// Z12: one function, with the texts of the side it is handed.
 describe('the text of a validation answer', () => {
   const answered = (status: number, data: unknown) =>
     new axios.AxiosError('Request failed', axios.AxiosError.ERR_BAD_REQUEST, undefined, undefined, {
@@ -344,7 +339,7 @@ describe('the text of a validation answer', () => {
   })
 
   it.each([
-    // Shaped as an answer with fields, only not an error of axios: it is not read as one.
+    // Shaped like an answer with fields but not an axios error, so it must not be read as one.
     ['what is no error of axios', { response: { data: { error: 'validation_failed', fields: { size: ['x'] } } } }],
     ['an error of axios with no answer', new axios.AxiosError('Network Error', axios.AxiosError.ERR_NETWORK)],
     ['an answer with no fields', answered(422, { error: 'validation_failed' })],
@@ -353,8 +348,9 @@ describe('the text of a validation answer', () => {
   })
 })
 
-// Z2: admin-dam sends its chunks with the library's request after step K3, and the request checks a chunk before
-// it sends it. The run below never hands it a size or an offset of this kind; only the request does the checking.
+// Z2: admin-dam sends chunks with the library's request after
+// step K3, and the request validates a chunk before sending.
+// The run never hands it such a size or offset, so only the request does the check.
 describe('the chunk request both sets send with', () => {
   beforeEach(() => {
     dam = createFakeDam({ asset: ADMIN_DAM_ASSET, image: ADMIN_DAM_END_POINTS[DamAssetType.Image] })
@@ -387,10 +383,8 @@ type Run = Pick<UploadRun, 'uploadInit' | 'upload' | 'stop' | 'finishAttempted'>
 interface Side {
   name: string
   endPoints: { asset: string; image: string }
-  /** What the side has set up by the time a file is sent. */
   install: () => void
   run: (item: UploadQueueItem, report?: UploadProgressCallback) => Run
-  /** The text a chunk answered "bad request" four times leaves in its row. */
   chunkRefused: () => string
 }
 
@@ -428,10 +422,9 @@ describe.each(sides)('under $name', (side) => {
   }
 
   describe('what a chunk request reports to Sentry (Z2)', () => {
-    // Its request refused a chunk of no bytes before it went out, and reported it as invalid, after the asset had
-    // been created. The upload is refused before that now.
+    // Its request used to refuse a chunk of no bytes before sending and report it as
+    // invalid, after the asset was created. The upload is now refused before that.
     it('a chunk of no bytes is not sent, nor tried: nothing is reported', async () => {
-      // As the store is before the DAM configuration is loaded.
       chunkSizeIs(0)
 
       await expect(side.run(row()).uploadInit()).rejects.toThrow('are not loaded')
@@ -464,12 +457,10 @@ describe.each(sides)('under $name', (side) => {
 
     beforeEach(() => {
       reports = []
-      // The second of the meter and the pauses before a retry are held, and let pass by the test.
       waits.restore()
       waits = holdLongWaits(SECOND)
     })
 
-    /** What axios tells of a chunk on its way: half of it, and a moment later all of it. */
     const onItsWay = async (request: FakeDamRequest) => {
       const progress = request.config.onUploadProgress!
       const { size } = (request.data as FormData).get('file') as File
@@ -478,8 +469,8 @@ describe.each(sides)('under $name', (side) => {
       progress({ loaded: size, total: size } as never)
     }
     /**
-     * The held waits pass, round by round, until the upload is over. Only once the run is started: one of them is the
-     * time the library gives rusha to load.
+     * The held waits pass round by round until the upload is over. Only once the run
+     * is started, because one of them is the time the library gives rusha to load.
      */
     const toTheEnd = async (uploading: Promise<string>) => {
       let ended: string | undefined
@@ -488,7 +479,6 @@ describe.each(sides)('under $name', (side) => {
       return ended
     }
 
-    /** What comes before upload() in a case. */
     type BeforeUpload = (item: UploadQueueItem, run: Run) => Promise<void>
     const failed = async (beforeUpload: BeforeUpload) => {
       const item = row()
@@ -498,8 +488,8 @@ describe.each(sides)('under $name', (side) => {
       expect(await toTheEnd(outcome(run.upload()))).toBe('rejected')
     }
 
-    // No chunk of these is answered, and a try that failed leaves the meter nothing to tell of
-    // (`uploadMeter.test.ts`): its second is all there is to see.
+    // No chunk is answered here, and a failed try leaves the meter nothing
+    // to report (`uploadMeter.test.ts`). Only its second is visible.
     it.each<[string, BeforeUpload]>([
       ['upload() is called without uploadInit()', async () => undefined],
       [
@@ -544,8 +534,8 @@ describe.each(sides)('under $name', (side) => {
         async (item, run) => {
           chunkAnswers(() => ({ status: 500 }))
           await run.uploadInit()
-          // Emptied once the upload started, as an upload is not started without its bounds: at any speed the size of
-          // its chunk is taken back into them, to 0.
+          // Emptied once the upload started: an upload does not start without
+          // bounds, so at any speed the chunk size is taken back into them, to 0.
           chunkSizeIs(0)
           item.progress.speed = 1
         },
@@ -561,7 +551,7 @@ describe.each(sides)('under $name', (side) => {
           await run.uploadInit()
         },
       ],
-      // stop() cancels the chunk on its way: the answer the DAM would give never reaches the meter.
+      // stop() cancels the chunk on its way, so the DAM's answer never reaches the meter.
       [
         'it is stopped by stop() while a chunk is on its way',
         async (_item, run) => {
@@ -579,7 +569,7 @@ describe.each(sides)('under $name', (side) => {
       expect(waits.lengths()).not.toContain(SECOND)
     })
 
-    // Its chunk was answered, so the meter has a speed: a second left running would report the whole file.
+    // The chunk was answered, so the meter has a speed. A second left running would report the whole file.
     it('leaves no second of the meter waiting, and reports no more, when its finish is refused', async () => {
       await failed(async (_item, run) => {
         chunkAnswers(async (_attempt, request) => {
@@ -599,9 +589,10 @@ describe.each(sides)('under $name', (side) => {
     })
   })
 
-  // Z5: a run is stopped by the status of its row (as the queue stops it) or by its own stop(), and every point
-  // where it looks reads both. stop() also cancels the chunk on its way; a stop that lands while a chunk is
-  // answered therefore ends that chunk under stop(), and the one after it under the status of the row.
+  // Z5: a run is stopped by the status of its row (as the queue
+  // stops it) or by its own stop(). Every check point reads both.
+  // stop() also cancels the chunk on its way. A stop during a chunk answer
+  // ends that chunk under stop() and the next under the row status.
   describe.each<[string, (item: UploadQueueItem, run: Run) => void]>([
     [
       'by the status of its row',
@@ -616,7 +607,6 @@ describe.each(sides)('under $name', (side) => {
     const stopIt = () => stopWay(item, run)
 
     beforeEach(() => {
-      // The pause before a retry is held, and let pass by the test.
       waits.restore()
       waits = holdLongWaits(SECOND)
       item = row()
@@ -657,7 +647,6 @@ describe.each(sides)('under $name', (side) => {
 
     it('while its first chunk is read: the chunk is not sent', async () => {
       await run.uploadInit()
-      // Up to the read of the first chunk nothing is waited for.
       const uploading = run.upload()
       stopIt()
 
@@ -690,7 +679,6 @@ describe.each(sides)('under $name', (side) => {
       chunks.release({ status: 503 })
       await waits.settle()
 
-      // No pause before another try is asked for.
       expect(waits.lengths()).toEqual([])
       expect(await uploading).toBe('rejected')
       expect(chunksSent()).toBe(1)

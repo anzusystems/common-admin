@@ -45,7 +45,6 @@ const picked = (count: number) =>
     (_, index) => new File([new Uint8Array(100)], `picked-${index + 1}.jpg`, { type: 'image/jpeg' })
   )
 
-/** The dialog of a widget whose queue already has the given number of rows, handed the picked files. */
 const pick = async (queued: number, files: File[]) => {
   const store = useUploadQueuesStore()
   // Rows that wait for the server and send nothing: copies to the licence.

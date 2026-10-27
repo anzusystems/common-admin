@@ -21,9 +21,11 @@ const loadingComputed = computed(() => {
 </script>
 
 <template>
-  <!-- Opt-in: the loader already blocks the mouse, and `inert` also drops focus without restoring
-       it — a cost on cards whose filter sits under it. `|| undefined` because DOM without an
-       `inert` property would take the attribute, and `inert="false"` still reads as inert. -->
+  <!--
+    Opt-in: the loader already blocks the mouse, and `inert` also drops
+    focus without restoring it, which hurts cards with a filter under it.
+    `|| undefined` because `inert="false"` still counts as inert in DOMs without an `inert` property.
+  -->
   <VCard
     :title="title"
     variant="flat"

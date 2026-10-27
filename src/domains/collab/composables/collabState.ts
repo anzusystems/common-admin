@@ -21,9 +21,10 @@ let collabRoomInfoWriteCounter = 0
 const collabRoomInfoWriteSeq = new Map<CollabRoom, number>()
 const collabFieldLocksState = reactive(new Map<CollabRoom, Map<CollabFieldName, CollabFieldLock>>())
 const collabFieldDataBufferState = reactive(new Map<CollabRoom, Map<CollabFieldName, CollabFieldData>>())
-// Plain, not reactive: fields whose lock request timed out. The server may have granted it after all, and it tells only
-// the others about a grant, so the lock map never shows this editor holding it. Kept till a release is confirmed: a
-// later request can be refused while the slow one still holds the field on the server, and granted after.
+// Plain, not reactive: fields whose lock request timed out. The server may still have granted it.
+// The server notifies only other clients of a grant, so the lock map never shows this editor holding it.
+// Kept until a release is confirmed. A later request can be
+// refused while the slow one still holds the field, then granted.
 const collabFieldLocksUnanswered = new Map<CollabRoom, Set<CollabFieldName>>()
 
 /**

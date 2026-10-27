@@ -31,11 +31,11 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 
-// "Show all" and "hide" are one choice for every form on the page, as it has been.
+// "Show all" and "hide" are one shared choice for every form on the page.
 const { showAll, hideRequests } = useCustomDataForm()
 
-// What fails behind "show all" is shown whatever that choice is, in the form it fails in, and stays
-// open once the user has fixed it (it would close under the cursor otherwise).
+// A failing field behind "show all" is shown regardless of that choice, in its own form.
+// It stays open after the user fixes it, so it does not close under the cursor.
 const hiddenError = ref(false)
 const revealed = ref(false)
 const onHiddenError = (isError: boolean) => {
@@ -43,7 +43,7 @@ const onHiddenError = (isError: boolean) => {
   if (isError) revealed.value = true
 }
 const hiddenVisible = computed(() => showAll.value || revealed.value)
-// Not while something in it fails: such a form stays open when another one hides, and cannot hide itself.
+// A form with a failing field stays open when another form hides, and cannot hide itself.
 watch(hideRequests, () => {
   revealed.value = hiddenError.value
 })

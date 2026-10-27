@@ -6,9 +6,9 @@ import {
   usePermissionGroupListFilter,
 } from '@/domains/permission/group/filter/permissionGroupFilter'
 
-// The per-admin versions kept one filter store at module scope, which was correct while an admin
-// spoke to a single backend. admin-inhouse has four, and one shared store means a title typed in
-// the weather list is the filter the brick list opens with.
+// The per-admin versions kept one filter store at module scope. That was fine while an admin spoke to a single backend.
+// admin-inhouse has four, so a shared store would make a title
+// typed in the weather list the filter the brick list opens with.
 
 beforeEach(() => {
   resetPermissionGroupListFilters()
@@ -33,8 +33,8 @@ describe('permission group list filter', () => {
   it('names storage per system, and never under the key the per-admin views use', () => {
     expect(permissionGroupFilterStorageKey('weather')).toBe('commonPermissionGroup_weather')
     expect(permissionGroupFilterStorageKey('brick')).not.toBe(permissionGroupFilterStorageKey('weather'))
-    // What `useFilterHelpers` would derive on its own, and what the old views still store under
-    // while both versions are on screen (rule 8.0).
+    // This is what `useFilterHelpers` would derive on its own, and what the old
+    // views still store under while both versions are on screen (rule 8.0).
     expect(permissionGroupFilterStorageKey('weather')).not.toBe('tableFilter_common_permissionGroup')
   })
 

@@ -31,8 +31,8 @@ describe('Acl with an AllowOwner grant and no subject', () => {
   })
 })
 
-// Hidden is the right answer to a check that throws, but nothing said so: an AllowOwner grant without a
-// subject, or data the check cannot read, looked exactly like a missing permission.
+// Hidden is the right result for a check that throws, but an `AllowOwner` grant without a
+// subject, or unreadable data, looked like a missing permission. Development now says so.
 describe('Acl whose check throws', () => {
   it('says so in development, once per permission', () => {
     // Its own permission: a warning is given once per page load, and the test above has had its own.

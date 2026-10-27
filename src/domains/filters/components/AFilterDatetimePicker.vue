@@ -70,19 +70,18 @@ const { clearOne } = useFilterClearHelpers()
 const clearField = () => {
   clearOne(props.name, filterData, filterConfig)
   filterSelected.value.delete(props.name)
-  // `clearOne` writes the value the picker was about to emit, so its own emit is skipped as
-  // unchanged and the model setter below never runs - the bookkeeping has to happen here.
+  // `clearOne` writes the value the picker was about to emit, so the picker skips its emit as unchanged.
+  // The model setter never runs, so the bookkeeping happens here.
   filterConfig.touched = true
   emit('change')
 }
 
 const updateSelected = () => {
-  // Unlike its siblings this component has no watcher on `filterData`, so `updateSelected` only
-  // ever runs from the model setter - which `ADatetimePicker` suppresses for a programmatic
-  // change. Deleting the chip here would be dead code. The gap that does exist is the opposite
-  // one: a datetime restored from a hash or local storage never shows a chip at all. Adding the
-  // watcher is not mechanical - it makes `clearField` recreate the chip for a non-empty default,
-  // and starts showing datetime chips on eight lists that have none today.
+  // This component has no watcher on `filterData`, so `updateSelected` runs only from the model setter.
+  // `ADatetimePicker` suppresses that for programmatic changes, so deleting the chip here would be dead code.
+  // Known gap: a datetime restored from a hash or local storage shows no chip.
+  // Adding the watcher makes `clearField` recreate the chip for a non-empty
+  // default and adds datetime chips to eight lists that have none.
   if (!isString(modelValue.value) || modelValue.value.length === 0) return
   filterSelected.value.set(props.name, [{ title: dateTimePretty(modelValue.value), value: modelValue.value }])
 }

@@ -90,8 +90,8 @@ const isOpened = ref(false)
 
 const onBlur = () => {
   props.v?.$touch()
-  // The picker commits a typed value in a watcher that runs after this event, so releasing the lock
-  // here would hand the room the previous value - and clearing `isFocused` would skip the change.
+  // The picker commits a typed value in a watcher that runs after this event.
+  // Releasing the lock now would send the previous value, and clearing `isFocused` would skip the change.
   nextTick(() => {
     isFocused.value = false
     emit('blur', isUndefined(props.modelValue) ? null : props.modelValue)

@@ -15,10 +15,10 @@ import ImageMassOperations from '@/domains/dam/imageWidget/components/ImageMassO
 import { useImageStore } from '@/domains/dam/imageWidget/store/imageStore'
 import type { ImageStoreItem } from '@/domains/dam/types/ImageAware'
 
-// The mass operations of a gallery, under each of the two applications: a scratch form above the images, whose
-// values the user copies into them, one field at a time or all at once. Beside each field two buttons that are
-// icons: who cannot see them hears what each does, and to which field. The real form over the real image store; the
-// DAM is a client that records its requests, asked only for the names of the authors picked.
+// Gallery mass operations under both applications: a scratch form above the
+// images whose values the user copies into them, per field or all at once.
+// Each field has two icon buttons, so their labels must say what they do and for which field.
+// The real form runs over the real image store. The DAM is a recording client, asked only for names of picked authors.
 
 let pinia: Pinia
 let dam: FakeDam
@@ -51,7 +51,6 @@ describe.each(consumerProfiles)('the mass operations of a gallery under the $nam
     assetId: `asset-of-${file}`,
     ...parts,
   })
-  /** The form above a gallery of the given images. */
   const mountOver = async (gallery: ImageStoreItem[]) => {
     useImageStore(pinia).setImages(gallery)
     wrapper = mount(ImageMassOperations, {
@@ -61,7 +60,6 @@ describe.each(consumerProfiles)('the mass operations of a gallery under the $nam
     })
     await flushPromises()
   }
-  /** The form above a gallery of two images: the first has its texts, the second has none. */
   const mountAbove = (offersDamAuthors: boolean) =>
     mountOver([
       image('file-1', {
@@ -74,9 +72,7 @@ describe.each(consumerProfiles)('the mass operations of a gallery under the $nam
   const images = () => useImageStore(pinia).images
   const DESCRIPTION = damText('image.model.texts.description')
   const AUTHORS = damText('asset.model.authors')
-  /** The source as the application names it: admin-ugc has a word of its own. */
   const source = () => useCommonAdminCoreDamOptions('default').sourceLabel
-  /** The names of the buttons that are icons: each says what it does, a colon, and its field. */
   const names = () =>
     wrapper!
       .findAll('button[aria-label]')
@@ -85,7 +81,6 @@ describe.each(consumerProfiles)('the mass operations of a gallery under the $nam
   const named = (name: string) => wrapper!.find<HTMLButtonElement>(`button[aria-label="${name}"]`)
   const fillEmpty = (field: string) => damText('asset.massOperations.fillOneEmptyField', { field })
   const replace = (field: string) => damText('asset.massOperations.replaceOneField', { field })
-  /** The words of the tooltip of the button of that name, as a pointer over the button opens them. */
   const tooltipOf = async (name: string) => {
     const button = wrapper!.findAllComponents({ name: 'VBtn' }).find((one) => one.attributes('aria-label') === name)!
     const tooltip = button.findComponent({ name: 'VTooltip' })
@@ -135,7 +130,6 @@ describe.each(consumerProfiles)('the mass operations of a gallery under the $nam
       expect(all).not.toContain(damText('asset.massOperations.replaceOne'))
     })
 
-    // What is seen stays as it was: the tooltip of each button says what it does, and no field.
     it('keeps the tooltips of those buttons short, without the field', async () => {
       await mountAbove(offersDamAuthors)
       const fields = [DESCRIPTION, secondField()]
@@ -158,7 +152,6 @@ describe.each(consumerProfiles)('the mass operations of a gallery under the $nam
 
       await named(replace(DESCRIPTION)).trigger('click')
       expect(images().map((one) => one.texts.description)).toEqual(['for all', 'for all'])
-      // The other field of the images is left alone.
       expect(images().map((one) => one.texts.source)).toEqual(['kept', ''])
     })
 
@@ -194,7 +187,6 @@ describe.each(consumerProfiles)('the mass operations of a gallery under the $nam
   if (isCms) {
     describe('the authors, above a gallery some rows of which show their source', () => {
       const texts = (source: string) => ({ description: '', source })
-      /** Two rows that offer the authors of the DAM, six that show their source; the name of each says its state. */
       const mountOverBoth = () =>
         mountOver([
           // Its stored source is not shown: the authors are, in its place.
@@ -220,7 +212,6 @@ describe.each(consumerProfiles)('the mass operations of a gallery under the $nam
         ['source missing', [], undefined],
         ['source of spaces', [], '   '],
       ]
-      /** The authors of the DAM and the source each row holds, shown or not. */
       const held = () => images().map((one) => [one.key, one.damAuthors, one.texts.source])
       const pickAuthors = async (authors: string[]) => {
         wrapper!.findComponent(AuthorRemoteAutocompleteWithCached).vm.$emit('update:modelValue', authors)
@@ -231,7 +222,6 @@ describe.each(consumerProfiles)('the mass operations of a gallery under the $nam
           .findAll('button')
           .find((button) => button.text() === text)!
           .trigger('click')
-      /** Whatever a press started has had the time to ask the DAM and to write. */
       const settled = async () => {
         await flushPromises()
         await new Promise((resolve) => setTimeout(resolve, 50))

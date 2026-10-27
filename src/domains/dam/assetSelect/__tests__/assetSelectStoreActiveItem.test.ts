@@ -3,16 +3,17 @@ import { createPinia, setActivePinia } from 'pinia'
 import { useAssetSelectStore } from '@/domains/dam/assetSelect/store/assetSelectStore'
 import type { AssetSearchListItemDto } from '@/domains/dam/types/Asset'
 
-// The active item of the list is the one of the asset clicked last, wherever a list read anew has it. What a user
-// reaches of it is in `consumerProfileAssetListUpload.test.ts` and `consumerProfileImageWidgetLibrary.test.ts`, on
-// the tiles. Here are two orders of pages the server and the timing make, not the user.
+// The active item is the last clicked asset, wherever a list read anew has it.
+// User-level behavior is covered in `consumerProfileAssetListUpload.test.ts`
+// and `consumerProfileImageWidgetLibrary.test.ts`.
+// This file covers two page orders caused by the server and timing.
 
 const asset = (id: string) => ({ id }) as AssetSearchListItemDto
 const items = () => useAssetSelectStore().assetListItems.map((item) => [item.asset.id, item.active])
 
 describe('assetSelectStore active item', () => {
-  // The pages are cut by an offset: an asset added to the DAM meanwhile moves the rest, and the next page begins
-  // with the last asset of the page before.
+  // Pages are cut by offset. An asset added to the DAM meanwhile shifts the rest,
+  // so the next page starts with the last asset of the previous page.
   it('stays the one item it is when a further page repeats its asset', () => {
     setActivePinia(createPinia())
     const store = useAssetSelectStore()
@@ -36,7 +37,7 @@ describe('assetSelectStore active item', () => {
     ])
   })
 
-  // A page asked for before the list was emptied can be added to the emptied list, ahead of the list read anew.
+  // A page requested before the list was emptied can arrive after the reset and be added ahead of the list read anew.
   it('is none once the list alone was reset, and is the item clicked next, at whatever place', () => {
     setActivePinia(createPinia())
     const store = useAssetSelectStore()

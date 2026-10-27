@@ -11,10 +11,8 @@ import { createFilter, createFilterStore, type MakeFilterOption } from '@/domain
 import { usePagination } from '@/domains/api/composables/pagination'
 import { isNull } from '@/shared/utils/common'
 
-// What a list answer has to look like, and what the pagination beside it is allowed to say.
-//
-// The shape guards this replaces tested for a metadata key and nothing else, so `{ totalCount: 1 }`
-// counted as a list and the caller was handed `undefined` typed as an array.
+// The old shape guards only checked for a metadata key, so `{ totalCount:
+// 1 }` counted as a list and the caller got `undefined` typed as an array.
 
 const fields = [{ name: 'name', default: '' }] as const satisfies readonly MakeFilterOption<string>[]
 
@@ -66,12 +64,10 @@ describe('what counts as a list body', () => {
     expect(pagination.value.hasNextPage).toBe(true)
   })
 
-  // What the paginators do with the field, which is the only reason its value matters. They pick the
-  // mode with `isNull`: a non-null value means an infinite list. Writing `false` for a counted one
-  // therefore says "infinite, with no next page" -- `ADatatablePagination.vue:62` disables Last,
-  // `:67` disables Next on every page, and `:73` renders the rows on screen where the total belongs.
-  // The tests above pinned `false` and so confirmed it, which is why this one reads the value the way
-  // a consumer does rather than asserting it directly.
+  // Paginators pick the mode with `isNull`, so a non-null value means an infinite list.
+  // Writing `false` for a counted list therefore means "infinite, no next page": `ADatatablePagination.vue:62`
+  // disables Last, `:67` disables Next on every page, and `:73` renders the row count where the total belongs.
+  // The test reads the value the way a consumer does instead of asserting `false` directly.
   it('leaves a counted list readable as a counted list', async () => {
     const { execute, pagination, filterData, filterConfig } = setup(
       answering({ status: 200, data: { data: [{ id: 1 }], totalCount: 4000 } })
@@ -87,11 +83,9 @@ describe('what counts as a list body', () => {
     expect(nextDisabled).toBe(false)
   })
 
-  // One response must not be readable two ways, and which field decides is not a free choice: the
-  // backend's infinite envelope carries `hasNextPage`, `data` AND `totalCount`, while the counted one
-  // carries `totalCount`, `data` and `bigTable` and never `hasNextPage`. So a response carrying both
-  // is an infinite list, every time, and reading the count first would turn every infinite list in
-  // the fleet into a counted one -- with a number that is not a total but a look-ahead sentinel.
+  // The next-page marker must win. The infinite envelope carries `hasNextPage`, `data` and
+  // `totalCount`. The counted one carries `totalCount`, `data` and `bigTable`, never `hasNextPage`.
+  // Reading the count first would turn every infinite list into a counted one, with a look-ahead sentinel as the total.
   it('lets the next-page marker win when a response carries both', async () => {
     const { execute, pagination, filterData, filterConfig } = setup(
       answering({ status: 200, data: { data: [{ id: 1 }], totalCount: 26, hasNextPage: true } })
@@ -104,8 +98,8 @@ describe('what counts as a list body', () => {
     expect(pagination.value.totalCount).toBe(0)
   })
 
-  // The array is the list. Metadata says which kind of list it is, and a well-formed array is not
-  // worth discarding because the number beside it is missing or of the wrong type.
+  // The array is the list. A well-formed array is not discarded
+  // because the count beside it is missing or has the wrong type.
   it.each([
     ['no metadata at all', { data: [{ id: 1 }] }],
     ['a count that is not a number', { data: [{ id: 1 }], totalCount: 'nine' }],
@@ -138,15 +132,13 @@ describe('what counts as a list body', () => {
     // Left alone, these keep answering for the query before this one.
     expect(pagination.value.totalCount).toBe(0)
     expect(pagination.value.currentViewCount).toBe(0)
-    // Still a counted list: nothing about the answer said it had become anything else.
     expect(pagination.value.hasNextPage).toBeNull()
   })
 
-  // A 204 says the list is empty, not which kind of list it is -- so it clears the field of whichever
-  // mode the pagination is already in. For an infinite list that is `false`, which is what the 204
-  // means there: nothing after this. Writing `null` for both puts an infinite list into counted mode,
-  // where `ASubjectSelect` reads a next page as available and its autoload fires again on the same
-  // 204, and `ADatatablePagination` offers Next and Last on an empty page.
+  // A 204 says the list is empty, not which mode it is in, so it clears the field of the current mode.
+  // For an infinite list that is `false`. Writing `null` would switch it to counted
+  // mode: `ASubjectSelect` would see a next page and autoload again on the same
+  // 204, and `ADatatablePagination` would offer Next and Last on an empty page.
   it('leaves an infinite list saying there is nothing after this', async () => {
     const { execute, pagination, filterData, filterConfig } = setup(answering({ status: 204, data: '' }))
     pagination.value = { ...pagination.value, hasNextPage: true, currentViewCount: 7 }
@@ -164,9 +156,8 @@ describe('what counts as a list body', () => {
   })
 })
 
-// What `options` is not allowed to decide. The type says so, but a type says nothing at runtime and
-// javascript callers exist: `data` in particular used to survive the spread whenever no body was
-// passed, so a caller could put a body on a GET through the back door and skip the serialisation.
+// The types forbid these keys in `options`, but JavaScript callers can pass them anyway.
+// `data` used to survive the spread when no body was passed, which put a body on a GET and skipped serialisation.
 describe('what a caller cannot reach in and set', () => {
   it('strips the method, the url, the body and the signal out of options', async () => {
     const get = vi.fn().mockResolvedValue({ status: 200, data: { data: [], totalCount: 0 } })
@@ -181,7 +172,6 @@ describe('what a caller cannot reach in and set', () => {
       urlTemplate: '/items',
       options: {
         params: { keep: 'this' },
-        // None of these may survive; a javascript caller can pass them even though the type forbids it.
         method: 'DELETE',
         url: '/somewhere-else',
         data: { smuggled: true },
@@ -202,9 +192,8 @@ describe('what a caller cannot reach in and set', () => {
 })
 
 describe('what reaches the log', () => {
-  // The failure carries the url it was called with, the way an axios failure does. A fixture that
-  // hard-codes one is claiming a request that was never made, and since the config axios kept is
-  // what the report renders, it would be believed.
+  // The failure carries the url it was called with, like an axios failure. A hard-coded
+  // fixture url would claim a request that never happened, and the report would show it.
   const failing = (over: Record<string, unknown> = {}) =>
     vi.fn().mockImplementation((url: string) => Promise.reject(axiosError(over, url)))
   const axiosError = (over: Record<string, unknown> = {}, url = '/items') =>
@@ -219,15 +208,14 @@ describe('what reaches the log', () => {
 
     expect(logged).toHaveBeenCalledTimes(1)
     expect(logged.mock.calls[0][1]).toMatchObject({ system: 'test', entity: 'test' })
-    // The query too, not just the path: naming the template instead of the request is the failure
-    // this assertion exists to catch, and `/items` alone cannot tell them apart.
+    // Assert the query too. Naming the template instead of the request is
+    // the failure being caught, and `/items` alone cannot tell them apart.
     expect(logged.mock.calls[0][1].url).toContain('/items?')
     expect(logged.mock.calls[0][1].url).toContain('limit=')
   })
 
-  // The error a helper raises about its own contract is the signal that a call site has not been
-  // migrated. Mapping cannot log it -- it is already an Anzu error by then -- which is why the
-  // reporting happens after.
+  // A contract error raised by the helper itself signals a call site that was not migrated.
+  // Mapping cannot log it because it is already an Anzu error by then, so reporting happens after mapping.
   it('writes down the contract errors the helper raises itself', async () => {
     const logged = vi.fn()
     setApiErrorLogger(logged)
@@ -238,10 +226,8 @@ describe('what reaches the log', () => {
     expect(logged).toHaveBeenCalledTimes(1)
   })
 
-  // Axios appends `options.params` itself when it sends, so a url recorded before the call is not
-  // the one that went out -- and a report naming a url nobody can find in the network tab is worse
-  // than no url. This is the failure the helper raised itself: axios succeeded and kept no config of
-  // its own, so the url has to be rendered from what the call asked for.
+  // Axios appends `options.params` when it sends, so a url recorded before the call is not the one that went out.
+  // For an error the helper raised itself, axios kept no config, so the url is rendered from what the call asked for.
   it('names the url as it was actually requested, query and all', async () => {
     const logged = vi.fn()
     setApiErrorLogger(logged)
@@ -249,11 +235,9 @@ describe('what reaches the log', () => {
     const { filterData, filterConfig } = createFilter(fields, store, { system: 'sys', subject: 'subj' })
     const { pagination } = usePagination('id')
     const { execute } = useApiFetchList<{ id: number }>({
-      // `getUri` included: the helper asks axios to build the url it reports, so a double without
-      // it is not standing in for an axios instance.
+      // The double needs `getUri`. The helper asks axios to build the reported url.
       client: () =>
         ({
-          // A body that is not a list: the helper refuses it, and that error carries no axios config.
           get: vi.fn().mockResolvedValue({ status: 200, data: { totalCount: 1 } }),
           getUri: (config: unknown) => axios.getUri(config as never),
         }) as unknown as AxiosInstance,
@@ -268,10 +252,9 @@ describe('what reaches the log', () => {
     expect(logged.mock.calls[0][1].url).toContain('scope=archive')
   })
 
-  // A client carries a `baseURL` and can carry default `params`, and axios merges both in when it
-  // sends. Asking it for the url only when the call brought `params` of its own meant the report
-  // named a relative path for one failure and an absolute url for the next -- the same request,
-  // described two ways, and neither matching what a reader would search the network tab for.
+  // Axios merges the client `baseURL` and default `params` when it sends.
+  // Asking for the url only when the call had its own `params` made reports
+  // inconsistent: a relative path for one failure and an absolute url for the next.
   it('names the client baseURL and its default params even when the call adds none', async () => {
     const logged = vi.fn()
     setApiErrorLogger(logged)
@@ -293,9 +276,8 @@ describe('what reaches the log', () => {
     expect(logged.mock.calls[0][1].url).toContain('lang=sk')
   })
 
-  // And that rendering is handed the call's own config, not just its params: a request that
-  // serialises its params itself is asking for a url the defaults do not produce, and rendering it
-  // the default way would print `ids[]=1&ids[]=2` for a request that went out as `ids=1+2`.
+  // The rendering gets the call's own config. A request with custom params serialisation
+  // would otherwise print `ids[]=1&ids[]=2` for a request sent as `ids=1+2`.
   it('renders the params the way the call itself serialises them', async () => {
     const logged = vi.fn()
     setApiErrorLogger(logged)
@@ -321,22 +303,19 @@ describe('what reaches the log', () => {
     expect(logged.mock.calls[0][1].url).not.toContain('ids%5B%5D')
   })
 
-  // The url is described after the request failed, and by then the client may not be the one that
-  // sent it: the factory can hand back a new instance, its defaults can have moved on, and a request
-  // interceptor can have rewritten the url on the way out. Axios keeps the config it actually sent
-  // on the error, so that is what gets rendered -- a reconstruction is only used when there is
-  // nothing kept.
+  // The url is described after the failure, when the client may have changed:
+  // a new instance, moved defaults, or an interceptor that rewrote the url.
+  // Axios keeps the config it sent on the error, so that is
+  // rendered. A reconstruction is used only when nothing was kept.
   it('names the request as axios sent it, not as the client would build it now', async () => {
     const logged = vi.fn()
     setApiErrorLogger(logged)
     const instance = axios.create({ baseURL: 'https://sent.test/v1' })
     instance.get = vi.fn().mockImplementation(() => {
-      // What the request looked like once axios was done with it, interceptors included.
       const failure = axiosError({
         response: { status: 500 },
         config: { baseURL: 'https://sent.test/v1', url: '/items', params: { page: 2 } },
       })
-      // ...and the client moves on before anyone describes the failure.
       instance.defaults.baseURL = 'https://moved-on.test/v9'
 
       return Promise.reject(failure)
@@ -356,9 +335,9 @@ describe('what reaches the log', () => {
     expect(logged.mock.calls[0][1].url).toBe('https://sent.test/v1/items?page=2')
   })
 
-  // `getUri` merges the instance's defaults under the config it is handed, so rendering a config
-  // axios kept through the caller's own client lets a default added since the request appear in a
-  // url that never carried it. That is why the rendering goes through an instance with no defaults.
+  // `getUri` merges the instance's defaults under the config it receives.
+  // Rendering through the caller's client would show a default added after the request
+  // in a url that never had it. So rendering uses an instance with no defaults.
   it('does not let a default added after the request appear in the url it names', async () => {
     const logged = vi.fn()
     setApiErrorLogger(logged)
@@ -387,14 +366,13 @@ describe('what reaches the log', () => {
     expect(logged.mock.calls[0][1].url).toBe('https://sent.test/v1/items')
   })
 
-  // A failure the helper raises after reading the response is not an axios error and carries no
-  // config, but the response it read does -- and that config is the request as it went out, past any
-  // interceptor. Rebuilding one instead describes the request as the client would send it now.
+  // A failure the helper raises after reading the response is not an axios error and has no config.
+  // The response it read does, and that config is the request as sent, interceptors included.
+  // Rebuilding it would describe the request as the client would send it now.
   it('names the request as sent even when the helper is what refused it', async () => {
     const logged = vi.fn()
     setApiErrorLogger(logged)
     const instance = axios.create({ baseURL: 'https://api.test/v1' })
-    // A request interceptor rewrote the url on the way out; the body that came back is not a list.
     instance.get = vi.fn().mockResolvedValue({
       status: 200,
       data: { totalCount: 1 },
@@ -413,14 +391,13 @@ describe('what reaches the log', () => {
     await expect(execute(pagination, filterData, filterConfig)).rejects.toBeInstanceOf(AnzuApiResponseCodeError)
 
     expect(logged.mock.calls[0][1].url).toBe('https://api.test/v1/rewritten-by-interceptor?page=3')
-    // The message too, not only the context. They are read side by side in a report, and a message
-    // naming the url before the interceptor next to a context naming the one after it describes two
-    // requests for one failure.
+    // Check the message too. Report readers see message and context together, and a message
+    // with the pre-interceptor url next to a context with the final one describes two requests.
     expect((logged.mock.calls[0][0] as Error).message).toContain('https://api.test/v1/rewritten-by-interceptor?page=3')
   })
 
-  // A call that never reached the wire requested no url, and the field says which url was requested.
-  // Neither the client root nor the path it was about to build is an answer to that.
+  // A call that never reached the wire requested no url. Neither
+  // the client root nor the path about to be built is an answer.
   it('names no url at all when the call failed before it dispatched', async () => {
     const logged = vi.fn()
     setApiErrorLogger(logged)
@@ -438,8 +415,8 @@ describe('what reaches the log', () => {
     expect(logged.mock.calls[0][1].url).toBeUndefined()
   })
 
-  // It runs inside the catch on every failure path, so an exception in it would replace the error
-  // the caller is waiting for with one about building a diagnostic string.
+  // Url building runs in the catch on every failure path. An exception
+  // in it would replace the error the caller is waiting for.
   it('never lets url building replace the failure it was describing', async () => {
     const logged = vi.fn()
     setApiErrorLogger(logged)
@@ -484,8 +461,8 @@ describe('what reaches the log', () => {
   })
 })
 
-// Tested directly, unlike `readListBody`, which this file drives through `useApiFetchList` because
-// it also pins what gets written to pagination. Nothing is written here.
+// Tested directly, unlike `readListBody`, which is driven through
+// `useApiFetchList` because it also writes pagination. Nothing is written here.
 describe('what counts as an array body', () => {
   it('hands back the array it was given, by reference', () => {
     const rows = [{ id: 1 }]

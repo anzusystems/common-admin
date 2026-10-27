@@ -16,9 +16,9 @@ interface CacheItem<T = UserAdminConfig> {
   lastUsed: number
   items: T[]
   /**
-   * The entry is known to be behind the server. It keeps its rows -- the filter bar reads them
-   * straight out of this map and dropping them would blank it on screen -- but the next reader is
-   * sent to the server instead of being handed them as current.
+   * The entry is known to be behind the server. It keeps its rows because
+   * the filter bar reads them directly and dropping them would blank it.
+   * The next reader is sent to the server instead.
    */
   stale?: boolean
 }
@@ -29,10 +29,9 @@ export const MAX_BOOKMARK_ITEMS = 8
 export const useFilterBookmarkStore = defineStore('commonAdminFilterBookmarkStore', () => {
   const bookmarks = ref(new Map<string, CacheItem>())
   const error = ref(false)
-  // A forced refetch can be asked for again before the first one has answered -- the bookmark
-  // dialog does exactly that on every entry to its manage tab. Only the newest answer per key is
-  // allowed to become the cache; an older one landing after it would put the filter bar back to
-  // what it showed two refreshes ago.
+  // A forced refetch can be requested again before the first
+  // answers, as the bookmark dialog does on every manage tab entry.
+  // Only the newest answer per key becomes the cache, or an older one could restore an outdated filter bar.
   const fetchSequence = new Map<string, number>()
 
   function generateKey(layoutType: UserAdminConfigLayoutTypeType, systemResource: string) {
@@ -95,16 +94,14 @@ export const useFilterBookmarkStore = defineStore('commonAdminFilterBookmarkStor
         bookmarks.value.set(key, { lastUsed: now, items })
       }
     } catch (e) {
-      // An overtaken answer says nothing about the newer one that replaced it, failure included.
+      // An overtaken answer, including a failure, says nothing about the newer request.
       if (fetchSequence.get(key) === sequence) {
         error.value = true
-        // A forced refetch is asked for because something is known to have changed, so a failed one
-        // leaves nothing to trust in the cache either.
+        // A forced refetch means something changed, so after a failed one the cache cannot be trusted either.
         markStale(key)
       }
-      // `null`, not an empty array: "there are no bookmarks" and "this request died" are different
-      // answers, and the caller can only tell them apart if they look different. The `error` flag is
-      // one per store, so it cannot say which request it belongs to.
+      // `null`, not an empty array, so the caller can tell "no bookmarks" from "request failed".
+      // The store has one `error` flag, so it cannot say which request failed.
       return null
     }
 
@@ -112,23 +109,18 @@ export const useFilterBookmarkStore = defineStore('commonAdminFilterBookmarkStor
       removeOldestBookmark()
     }
 
-    // A copy, never the array the cache holds. `addOne` pushes into that one so the filter bar
-    // picks the new bookmark up on the spot, and a caller that keeps what it was handed -- the
-    // manage dialog keeps it as its editor's model -- would otherwise get that row pushed into its
-    // list from the outside, where it reads as something the user added and never saved.
+    // Return a copy, never the cached array. `addOne` pushes into the cached array so the filter bar updates at once.
+    // A caller that keeps the array, like the manage dialog's editor
+    // model, would otherwise get an unsaved row pushed into it.
     return [...items]
   }
 
   /**
-   * What a new bookmark needs to know: how many there are, which is what the cap is checked
-   * against, and the highest position in use, which is what it has to sort after.
-   *
-   * The two are not the same number. Positions go dense only when the manage dialog saves an
-   * order -- it renumbers exactly the rows it sends -- so a row created while another was pending
-   * deletion leaves a gap behind, and from then on the count is lower than the highest position.
-   * Deriving a new position from the count would then hand it one already in use: two rows on the
-   * same position, which the list has no second key to order by, or with more than one deletion a
-   * position below a row created earlier.
+   * Returns the bookmark count, which the cap is checked against, and
+   * the highest position in use, which a new bookmark sorts after.
+   * These differ. Positions are renumbered only when the manage dialog saves
+   * an order, so a row created while another is pending deletion leaves a gap.
+   * Deriving the position from the count would then reuse a taken position. The list has no second sort key for ties.
    */
   async function fetchBookmarkStats(
     identifier: {
@@ -151,11 +143,9 @@ export const useFilterBookmarkStore = defineStore('commonAdminFilterBookmarkStor
 
     try {
       const { execute } = useApiFetch()
-      // The page is capped one above the maximum a user may have, so a list long enough to hide the
-      // real highest position is also one the count refuses to add to. Read across the rows rather
-      // than off the last one: taking the last would tie this to the sort order asked for above,
-      // and flipping that would quietly turn the highest position into the lowest -- with nothing
-      // to show for it, since the order the bar draws comes from a different call.
+      // The page is capped one above the user's maximum, so a list long enough
+      // to hide the highest position is also one the count refuses to add to.
+      // Take the max across rows, not the last row, so this does not depend on the sort order requested above.
       const res = await execute(pagination, filterData, filterConfig)
       return {
         count: res.length,
@@ -163,17 +153,14 @@ export const useFilterBookmarkStore = defineStore('commonAdminFilterBookmarkStor
       }
     } catch (e) {
       error.value = true
-      // `Infinity` keeps what a failed count has always done: refuse the add rather than create a
-      // bookmark past a cap nobody could check.
+      // `Infinity` refuses the add when the count fails, rather than creating a bookmark past an unchecked cap.
       return { count: Infinity, maxPosition: 0 }
     }
   }
 
   /**
-   * A write straight into what is cached is newer than any answer already on its way, so it counts
-   * as an answer of its own. Without this an in-flight fetch -- issued before the write, so its
-   * rows know nothing about it -- would come back and overwrite the cache, taking the write with
-   * it, and only the next forced fetch would bring it back.
+   * A direct write to the cache is newer than any in-flight fetch, so it counts as an answer.
+   * Otherwise a fetch issued before the write would return and overwrite the cache, losing the write.
    */
   function supersedeInFlight(key: string) {
     fetchSequence.set(key, (fetchSequence.get(key) ?? 0) + 1)
@@ -181,18 +168,17 @@ export const useFilterBookmarkStore = defineStore('commonAdminFilterBookmarkStor
 
   function addOne(key: string, data: UserAdminConfig) {
     const cached = bookmarks.value.get(key)
-    // Nothing cached means nothing to add to and nothing to protect: superseding here would throw
-    // away the answer of a fetch already on its way and leave the bar with no bookmarks at all,
-    // which is worse than it missing the one just created until the next refresh brings it.
+    // Nothing cached means nothing to update. Superseding here
+    // would discard an in-flight fetch and leave the bar empty.
+    // Missing the new bookmark until the next refresh is the lesser problem.
     if (!cached) return
     cached.items.push(data)
     supersedeInFlight(key)
   }
 
   /**
-   * Drop one bookmark from what is cached, in place, the way `addOne` adds one -- so a delete that
-   * went through stops being offered by a filter bar that is already on screen. It reads this map
-   * straight and does not fetch again for itself.
+   * Removes one bookmark from the cache in place, like `addOne`, so a
+   * filter bar already on screen stops offering it. It does not refetch.
    */
   function removeOne(key: string, id: IntegerId) {
     const cached = bookmarks.value.get(key)
@@ -202,9 +188,8 @@ export const useFilterBookmarkStore = defineStore('commonAdminFilterBookmarkStor
   }
 
   /**
-   * Say that what is cached under this key is behind the server -- after a write whose refresh did
-   * not happen, or one that failed. The rows stay readable for whoever is already showing them; the
-   * next read goes to the server.
+   * Marks the cache under this key as behind the server, after a write whose refresh did not happen or failed.
+   * Cached rows stay readable. The next read goes to the server.
    */
   function markStale(key: string) {
     const cached = bookmarks.value.get(key)

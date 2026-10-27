@@ -36,13 +36,12 @@ afterEach(() => {
 })
 
 describe('the mass operations form of the upload dialog', () => {
-  // A scratch form: its values are copied into the selected items, it is not what the dialog saves. Its
-  // keyword and author inputs are kept out of the dialog's validation, and so are its custom fields.
+  // A scratch form: its values are copied into the selected items, and it is not what the dialog saves.
+  // Its keyword and author inputs and its custom fields are kept out of the dialog's validation.
   it('does not block the save of the queue with a required custom field left empty', async () => {
     let touchAndRead!: () => boolean
     const Dialog = defineComponent({
       setup() {
-        // The configuration the form reads its elements from, in the pinia the components use.
         const config = useDamConfigStore().damConfigAssetCustomFormElements
         config.set(EXT_SYSTEM, {
           [DamAssetType.Image]: [requiredText],
@@ -51,7 +50,6 @@ describe('the mass operations form of the upload dialog', () => {
           [DamAssetType.Document]: [],
         })
         forget = () => config.delete(EXT_SYSTEM)
-        // As `UploadQueueDialog` validates: everything below it.
         const v$ = useVuelidate({ $stopPropagation: true })
         touchAndRead = () => {
           v$.value.$touch()

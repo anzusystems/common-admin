@@ -15,19 +15,19 @@ import {
 } from '@/domains/dam/keyword/composables/cachedKeywords'
 import { coreDamOptions } from '@/plugins/pluginOptions'
 
-// The caches of names under a DAM configuration name while the options of the plugin come and go: they are set when
-// the plugin is installed, after the modules that ask for a cache are loaded, and set again by a test or a hot update.
-// The caches live as long as the page: each case asks under names of its own.
+// The plugin options are set at install time, after the modules that ask for a cache are loaded.
+// A test or a hot update can set them again. The caches live as long as the page, so each case uses names of its own.
 
 const EXT = 2
 const NAMES = /^\/(\w+)\/(author|keyword)\/ext-system\/(\d+)\/search$/
 const UNKNOWN = "Composable can't be used without properly configured common admin."
-/** From here on a wait is held: below the 1.5 s the caches wait before they ask. */
+/**
+ * Waits from this length are held. The caches wait 1.5 s before they ask.
+ */
 const HELD_FROM_MS = 1_200
 
 let waits: LongWaits
 
-/** A DAM gives every author, keyword and user asked for a name of its own: `<id> of <which>`. */
 const namingDam = (which: string) => {
   const dam = createFakeDam({ asset: `/${which}/asset`, image: `/${which}/image` })
   dam.reply((request) => {
@@ -58,7 +58,6 @@ const configOf = (dam: FakeDam, which: string) => ({
   endPointAuthor: `/${which}/author`,
   endPointKeyword: `/${which}/keyword`,
 })
-/** The options of the plugin with `default` and the configurations given. */
 const setOptions = (configs: Record<string, FakeDam>) =>
   initCommonAdminCoreDamOptions({
     configs: Object.fromEntries(
@@ -82,7 +81,6 @@ describe('the caches of names under a named DAM configuration', () => {
     const users = useDamCachedUsers('early')
     expect(() => useDamCachedAuthorsForRemoteAutocomplete('early')).not.toThrow()
     expect(() => useCachedKeywordsForRemoteAutocomplete('early')).not.toThrow()
-    // A name the options then leave out: its first request checks it.
     const never = useDamCachedAuthors('never')
 
     const early = namingDam('early')
@@ -132,7 +130,6 @@ describe('the caches of names under a named DAM configuration', () => {
       expect(() => use('gone')).toThrow(UNKNOWN)
     }
 
-    // Back in the options, the name has the caches it had.
     setOptions({ gone: namingDam('gone') })
     expect(useDamCachedAuthors('gone').cachedAuthors).toBe(authors.cachedAuthors)
     expect(useDamCachedKeywords('gone').cachedKeywords).toBe(keywords.cachedKeywords)

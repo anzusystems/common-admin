@@ -4,18 +4,15 @@ import type { RegionOfInterest } from '@/domains/dam/types/Roi'
 import { ref } from 'vue'
 
 /**
- * The image and the region of interest `ADamAssetImageRoiSelect` shows: filled by the panel of regions beside it,
- * the library's in its asset detail, an admin's own in a detail of its own (exported as `useDamImageRoiStore`). One
- * store for both: admin-dam defined one of its own under the same id, and whichever was created first lacked the
- * members of the other. The two times are an admin's to read: `forceReloadRoiPreviews()` and `forceReloadCropper()`
- * only set a new one (admin-dam draws its previews of the regions anew by `timestampRoiPreviews`).
- * `ADamAssetImageRoiSelect` reads neither: it draws the cropper anew when `imageFile` changes, so after a rotation an
- * admin sets the file read anew (`setImageFile`).
- * `cropperBusy` is the cropper's own, apart from `loader`, which stays the panel's: on from the save of a region till
- * no save of it is on its way and the read of the file the DAM redraws two seconds after the latest answered one is
- * over (applied, dropped or failed), and off when the cropper goes. A panel offers no refresh of the regions while it is on: its read, sent before the redraw, would take
- * the place of the cropper's. After the cropper's read the previews of the regions are drawn anew
- * (`forceReloadRoiPreviews()`).
+ * Image and region of interest shown by `ADamAssetImageRoiSelect`. Filled by the region panel:
+ * the library's in its asset detail, or an admin's own (exported as `useDamImageRoiStore`).
+ * One store for both. admin-dam had its own store under the same
+ * id, and whichever was created first lacked the other's members.
+ * `forceReloadRoiPreviews()` and `forceReloadCropper()` only set new timestamps for admins to read.
+ * `ADamAssetImageRoiSelect` redraws on `imageFile` change, so after a rotation call `setImageFile`.
+ * `cropperBusy` is separate from the panel's `loader`. It is on from a region save until
+ * no save is pending and the post-save read is over, and off when the cropper goes.
+ * While on, the panel offers no refresh, since its read would replace the cropper's.
  */
 export const useImageRoiStore = defineStore('commonAdminDamImageRoiStore', () => {
   const imageFile = ref<null | AssetFileImage>(null)

@@ -16,26 +16,28 @@ import type { ImageAware } from '@/domains/dam/types/ImageAware'
 import type { IntegerId } from '@/shared/types/common'
 import { isNull, isString } from '@/shared/utils/common'
 
-// The two applications that use the DAM upload of this library, as the library sees them: the `coreDam` and
-// `image` options each installs the plugin with, and what is in the DAM configuration store by the time a file
-// is added. The literals mirror `admin-cms/src/main.ts` and `admin-ugc/src/main.ts`; what those read from their
-// environment or translate has a stand-in here; admin-ugc's two metadata maps are copied from its source. A test of
-// the upload runs under both.
+// The two applications that use the DAM upload, as the library sees them: the `coreDam` and `image`
+// options each installs the plugin with, and the DAM configuration store when a file is added.
+// The literals mirror `admin-cms/src/main.ts` and `admin-ugc/src/main.ts`. Values those read from the
+// environment or translate have stand-ins here. The admin-ugc metadata maps are copied from its source.
+// Upload tests run under both.
 
 type ConsumerPluginOptions = Required<Pick<PluginOptions, 'coreDam' | 'image'>>
 
 export interface ConsumerProfile {
   name: 'CMS configuration' | 'UGC configuration'
-  /** The paths the application's DAM requests go to. */
   endPoints: { asset: string; image: string; roi: string }
-  /** The paths of the other application: nothing of this one may be asked there. */
+  /**
+   * The paths of the other application. Nothing may be requested there.
+   */
   foreignPrefix: string
-  /** Whether the application opens the notification socket. */
   notifications: boolean
   extSystem: IntegerId
   licence: IntegerId
   options: (damClient: () => AxiosInstance) => ConsumerPluginOptions
-  /** The DAM configuration as it is in `useDamConfigStore` when the upload starts. Needs an active pinia. */
+  /**
+   * The DAM configuration as in `useDamConfigStore` when the upload starts. Needs an active pinia.
+   */
   seedDamConfig: () => void
 }
 
@@ -88,8 +90,8 @@ const seed = (
   store.damConfigExtSystem.set(extSystem, extSystemConfig)
 }
 
-// admin-cms: everything by default. The library loads the configuration from `/adm/v1/...` when a widget mounts;
-// here it is written straight into the store, in the shape those requests give it.
+// admin-cms: everything default. The library loads the configuration from `/adm/v1/...` when a widget mounts.
+// Here it is written straight into the store, in the shape those requests return.
 export const cmsConfiguration: ConsumerProfile = {
   name: 'CMS configuration',
   endPoints: { asset: '/adm/v1/asset', image: '/adm/v1/image', roi: '/adm/v1/roi' },
@@ -150,10 +152,10 @@ export const cmsConfiguration: ConsumerProfile = {
 const notAnImageRequest = (): Promise<ImageAware> =>
   Promise.reject(new Error('The image API is not part of the upload.'))
 
-// admin-ugc's two maps from DAM metadata to the texts of an image, as they are in its
-// `domains/blog/image/composables/customMetadataToImageMap.ts`: the texts come from the two custom fields of what
-// the bulk save answered (not from the rows), a row without its asset or its file is left out, and no author is
-// looked up.
+// admin-ugc's two maps from DAM metadata to image texts, copied from
+// its `domains/blog/image/composables/customMetadataToImageMap.ts`.
+// Texts come from the two custom fields of the bulk save answer, not from the
+// rows. A row without its asset or file is left out. No author is looked up.
 const customUploadMetadataToImageMap: UploadMetadataToImageMapFn = async (
   queueItems,
   bulkItems,
@@ -199,8 +201,8 @@ const customAssetSelectMetadataToImageMap: AssetSelectMetadataToImageMapFn = (as
   source: isString(assetRes.metadata.customData?.author) ? assetRes.metadata.customData.author.trim() : '',
 })
 
-// admin-ugc: its own endpoints, no socket, and a configuration the application writes itself (ext system 4, two
-// custom fields, no authors and no keywords) before it mounts an inner widget.
+// admin-ugc: its own endpoints, no socket. The application writes the configuration itself
+// before it mounts an inner widget: ext system 4, two custom fields, no authors, no keywords.
 export const ugcConfiguration: ConsumerProfile = {
   name: 'UGC configuration',
   endPoints: { asset: '/ugc/v1/asset', image: '/ugc/v1/image', roi: '/ugc/v1/roi' },
@@ -284,15 +286,15 @@ export const ugcConfiguration: ConsumerProfile = {
 export const consumerProfiles: ConsumerProfile[] = [cmsConfiguration, ugcConfiguration]
 
 /**
- * What the plugin does with the application's options at install, and what the application, the library and the
- * widget have set up by the time the first file is added. Needs an active pinia.
+ * Reproduces what the plugin does with the application's options at install, and
+ * the state set up by the time the first file is added. Needs an active pinia.
  */
 export function installConsumerProfile(profile: ConsumerProfile, damClient: () => AxiosInstance) {
   const options = profile.options(damClient)
   initCommonAdminCoreDamOptions(options.coreDam)
   initCommonAdminImageOptions(options.image)
   profile.seedDamConfig()
-  // The widget writes it when a file is picked or dropped: the names of authors and keywords are asked for by it.
+  // The widget writes this when a file is picked or dropped, and it is needed to ask for author and keyword names.
   useExtSystemIdForCached().cachedExtSystemId.value = profile.extSystem
   return options
 }

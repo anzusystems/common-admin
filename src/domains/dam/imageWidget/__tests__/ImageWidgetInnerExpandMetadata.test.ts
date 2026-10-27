@@ -81,8 +81,7 @@ describe('ImageWidgetInner with expandMetadata', () => {
   })
 })
 
-// `readonly` used to be declared and never read: whoever passed it still got the edit, library and
-// upload buttons and the dropzone.
+// `readonly` was declared but never read, so the edit, library and upload buttons and the dropzone stayed active.
 describe('ImageWidgetInner readonly', () => {
   it('keeps the image but offers none of the controls that change it', async () => {
     const pinia = createPinia()

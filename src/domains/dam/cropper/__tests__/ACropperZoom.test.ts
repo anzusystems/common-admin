@@ -3,15 +3,11 @@ import { mountCropper, pinch, V2_ADAPTER, wait } from '@/domains/dam/cropper/__t
 import { LANDSCAPE_IMAGE } from '@/domains/dam/cropper/__tests__/support/cropperImages'
 
 /**
- * Zooming the picture, which is now a two-finger gesture and nothing else.
- *
- * cropper.js v1 offered wheel zoom and pinch zoom separately; the one caller turned the wheel off
- * and left pinch on, so that is what this does. The wheel is deliberately given back to the page:
- * cropper.js v2's canvas calls `preventDefault()` on every wheel event it sees, which would stop a
- * DAM user scrolling a dialog with the cursor over the picture.
- *
- * The geometry underneath is the interesting part — once the picture is bigger than the frame it
- * sits in, the crop has to stay on the part of it that is actually visible.
+ * Zooming is a two-finger gesture only.
+ * The one caller turned wheel zoom off and pinch zoom on. The wheel is left to the
+ * page because the cropper.js v2 canvas calls `preventDefault()` on every wheel
+ * event, which would stop scrolling a dialog with the cursor over the picture.
+ * Once the picture is bigger than its frame, the crop must stay on the visible part.
  */
 
 const AR_16_9 = 16 / 9
@@ -90,9 +86,9 @@ describe('ACropper zooming', () => {
     cropper.destroy()
   })
 
-  // cropper.js emits `transform` before it commits the new matrix, so anything that re-measures the
-  // picture on that event has to wait a tick — otherwise pinching out judges the crop against the
-  // larger picture it has just replaced and leaves it hanging over the edge of the new one.
+  // cropper.js emits `transform` before it commits the new matrix, so re-measuring on that event must wait a tick.
+  // Otherwise pinching out judges the crop against the larger picture
+  // just replaced, and leaves it hanging over the edge of the new one.
   it('pulls the crop back in when the picture is pinched out from under it', async () => {
     const cropper = await mountCropper({
       adapter: V2_ADAPTER,

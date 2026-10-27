@@ -19,21 +19,19 @@ const props = withDefaults(
     system: string
     /**
      * The permission-group endpoint, which is not the user one.
-     *
-     * There is deliberately no `entity` prop here. `entity` names a *resource*, not a system, and
-     * it is what a server validation failure is filed under -- so the group autocomplete, the role
-     * list and the permission editor each use their own, and passing the user's down would file a
-     * group's error under the user's labels.
+     * There is deliberately no `entity` prop. `entity` names the resource that server validation
+     * errors are filed under. Passing the user's down would file group errors under user labels.
      */
     permissionGroupEndPoint?: string
     /**
-     * One component for detail and edit (decision 27). Two parallel components drift: a field
-     * added to the editable one and forgotten in the other is a silent divergence with nothing to
-     * fail.
+     * One component for detail and edit (decision 27). Two components drift:
+     * a field added to one and forgotten in the other fails silently.
      */
     readonly?: boolean
     isEdit?: boolean
-    /** From the system's descriptor. */
+    /**
+     * From the system's descriptor.
+     */
     requiredMetadata?: boolean
     idInput?: boolean
     randomColor?: boolean
@@ -65,9 +63,9 @@ const { resolvePermissions } = usePermissionActions({
 /* eslint-enable vue/no-setup-props-reactivity-loss */
 
 /**
- * What the account would end up with if saved now: the grants of the groups currently ticked, plus
- * the ones set on the user. Recomputed locally so ticking a group shows its effect without a round
- * trip -- the server's own `resolvedPermissions` describes the record as it was loaded.
+ * Grants the account would have if saved now: those of the ticked groups plus the user's own.
+ * Computed locally so ticking a group shows its effect without a round
+ * trip. The server's `resolvedPermissions` reflects the record as loaded.
  */
 const resolvedPermissions = computed(() => resolvePermissions(user.value))
 </script>
@@ -109,8 +107,7 @@ const resolvedPermissions = computed(() => resolvePermissions(user.value))
       >
         <!--
           The system's own fields: autocompletes over that backend's entities, which the library
-          cannot build. The same `readonly` reaches them, so the app swaps its autocompletes for
-          chips inside.
+          cannot build. They get the same `readonly`, so the app can swap autocompletes for chips.
         -->
         <slot
           name="systemFields"
@@ -142,7 +139,6 @@ const resolvedPermissions = computed(() => resolvePermissions(user.value))
         v-if="$slots.actions"
         cols="12"
       >
-        <!-- Impersonation and anything else the app hangs off this form. -->
         <slot
           name="actions"
           :user="user"

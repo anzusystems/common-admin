@@ -3,8 +3,8 @@ import { mount } from '@vue/test-utils'
 import { h, nextTick, reactive } from 'vue'
 import ACachedChip from '@/domains/cached/components/ACachedChip.vue'
 
-// ACachedChip calls useRouter() on setup — stub the router so it mounts without a
-// real router instance.
+// `ACachedChip` calls `useRouter()` on setup.
+// The stub lets it mount without a real router instance.
 vi.mock('vue-router', () => ({
   useRouter: () => ({ push: vi.fn() }),
   useRoute: () => ({}),
@@ -16,8 +16,8 @@ interface CachedEntry {
   _unresolved?: boolean
 }
 
-// reactive so `getCachedFn(id)` reads are tracked by the component's `cached`
-// computed — mutating an entry re-resolves the chip without remounting.
+// The cache is reactive so `getCachedFn(id)` reads are tracked by the component's `cached` computed.
+// Mutating an entry re-resolves the chip without remounting.
 const mountChip = (
   cache: Record<number, CachedEntry>,
   props: Record<string, unknown> = {},
@@ -38,7 +38,6 @@ const mountChip = (
 const unresolvedSlot = { unresolved: ({ id }: { id: number }) => h('span', { class: 'placeholder' }, `none:${id}`) }
 
 describe('ACachedChip', () => {
-  // U-13: a cached id renders its resolved name, not the bare id.
   it('renders the resolved name, not the raw id, when the id is in the cache', () => {
     const cache = reactive<Record<number, CachedEntry>>({
       7: { name: 'Resolved Seven', _loaded: true },
@@ -48,15 +47,12 @@ describe('ACachedChip', () => {
     expect(wrapper.text()).not.toContain('7')
   })
 
-  // U-13: the documented escape hatch — fallbackIdText surfaces the raw id when the
-  // entry is unresolved.
   it('renders the id only when fallbackIdText is set', () => {
     const cache = reactive<Record<number, CachedEntry>>({})
     const wrapper = mountChip(cache, { fallbackIdText: true })
     expect(wrapper.text()).toContain('7')
   })
 
-  // U-14: spinner shows while unresolved, then clears once the id resolves.
   it('shows a spinner while unresolved then clears it once the id resolves', async () => {
     const cache = reactive<Record<number, CachedEntry>>({})
     const wrapper = mountChip(cache)
@@ -69,8 +65,6 @@ describe('ACachedChip', () => {
     expect(wrapper.text()).toContain('Seven')
   })
 
-  // U-14: an entry that is present but still loading (`_loaded: false`) does NOT
-  // count as resolved — the spinner persists.
   it('keeps spinning while the cache entry is _loaded:false', async () => {
     const cache = reactive<Record<number, CachedEntry>>({ 7: { _loaded: false } })
     const wrapper = mountChip(cache)
@@ -78,7 +72,7 @@ describe('ACachedChip', () => {
     expect(wrapper.find('.v-progress-circular').exists()).toBe(true)
   })
 
-  // An item the fetch could not resolve has only its placeholder: an empty name drew an empty chip.
+  // An item the fetch could not resolve has only a placeholder with an empty name. An empty name drew an empty chip.
   it('shows the id of an item that could not be loaded, without a spinner', () => {
     const cache = reactive<Record<number, CachedEntry>>({ 7: { name: '', _loaded: false, _unresolved: true } })
     const wrapper = mountChip(cache)
@@ -94,7 +88,6 @@ describe('ACachedChip', () => {
     expect(wrapper.findComponent({ name: 'VTooltip' }).exists()).toBe(true)
   })
 
-  // A cache whose id means nothing to a reader (a doc id next to a count) draws its own placeholder.
   it('draws the unresolved slot in place of the id, with the id and the tooltip kept', () => {
     const cache = reactive<Record<number, CachedEntry>>({ 7: { name: '', _loaded: false, _unresolved: true } })
     const wrapper = mountChip(cache, {}, unresolvedSlot)

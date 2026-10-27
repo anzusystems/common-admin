@@ -11,13 +11,12 @@ import {
 } from '@/domains/anzuUser/composables/userSystemDescriptor'
 import type { AnzuUser } from '@/shared/types/AnzuUser'
 
-// The write invariant, pinned.
-//
-// An omitted field is not neutral, it is destructive: `UserDto` defaults `roles` to `[ROLE_USER]`,
-// `enabled` to true and both permission collections to empty, and `updateAnzuUser` writes all four
-// unconditionally. A body of "just the field I am changing" resets the roles, wipes the grants,
-// detaches the groups and switches a disabled account back on. On `/adm/users` in cms it goes
-// further: that PUT also runs `updateRelations()` over seven scalars and twelve collections.
+// The write invariant. An omitted field is destructive: `UserDto` defaults `roles`
+// to `[ROLE_USER]`, `enabled` to true and both permission collections to empty,
+// and `updateAnzuUser` writes all four unconditionally.
+// A body with only the changed field resets the roles, wipes the
+// grants, detaches the groups and re-enables a disabled account.
+// On `/adm/users` in cms that PUT also runs `updateRelations()` over seven scalars and twelve collections.
 
 const anzuUserOnly: UserSystemEndpoints = {
   anzuUser: { get: '/adm/v1/anzu-user/:id', put: '/adm/v1/anzu-user/:id', post: '/adm/v1/anzu-user' },
@@ -66,7 +65,9 @@ const descriptorFor = (request: ReturnType<typeof vi.fn>, endpoints: UserSystemE
     endpoints,
   })
 
-/** The helper serialises the body, so a test reading it has to parse it back. */
+/**
+ * The helper serialises the body, so a test reading it has to parse it back.
+ */
 const sentBody = (request: ReturnType<typeof vi.fn>, call: number) => JSON.parse(request.mock.calls[call][0].data)
 
 const httpError = (status: number, data: Record<string, unknown> = {}) =>
@@ -77,10 +78,8 @@ const httpError = (status: number, data: Record<string, unknown> = {}) =>
   })
 
 /**
- * What a 422 really looks like: `ValidationExceptionHandler` answers
- * `{ error: 'validation_failed', fields, contextId }`. An empty body is not a 422 any backend
- * sends, and a fixture with one would map to a different error class than production does -- which
- * is how a test can certify the opposite of what happens.
+ * A real 422: `ValidationExceptionHandler` answers `{ error: 'validation_failed', fields, contextId }`.
+ * An empty body is not a 422 any backend sends. Such a fixture would map to a different error class than in production.
  */
 const validationError = () =>
   httpError(422, { error: 'validation_failed', contextId: 'x', fields: { 'avatar.color': ['invalid'] } })
@@ -103,7 +102,6 @@ describe('switching an account on or off', () => {
     const body = sentBody(request, 1)
     expect(write.method.toUpperCase()).toBe('PUT')
     expect(body.enabled).toBe(false)
-    // Everything the caller is not changing has to survive the round trip.
     expect(body.roles).toEqual(['ROLE_EDITOR'])
     expect(body.permissions).toEqual({ weather_location_ui: 2 })
     expect(body.permissionGroups).toEqual([7, 9])
@@ -225,8 +223,8 @@ describe('writing metadata', () => {
   })
 
   it('names the fields somebody else changed between the search and the write', async () => {
-    // Decision 24: the operator's value still wins -- that is what they asked for -- but the record
-    // moved under them, and the log line says which fields rather than letting it pass unnoticed.
+    // Decision 24: the operator's value still wins, because that is what they asked for.
+    // The record changed meanwhile, so the log line names the fields instead of letting it pass unnoticed.
     const request = vi
       .fn()
       .mockResolvedValueOnce({ status: 200, data: stored({ email: 'somebody-else@sme.sk' }) })
@@ -237,7 +235,6 @@ describe('writing metadata', () => {
       42,
       stored({ email: 'jozef.novy@sme.sk' }),
       undefined,
-      // What the search showed. The stored value now matches neither this nor the target.
       stored()
     )
 
@@ -296,10 +293,10 @@ describe('the bulk log', () => {
   })
 
   it('does not carry a failed metadata repair into an enable or a disable run', async () => {
-    // The repair writes into this same log, the retry button acts on whatever the log calls failed,
-    // and the overview always performs the *currently selected* enable or disable. Unscoped, a 422
-    // on a repair would come back as "retry" on a screen whose button disables the account -- in
-    // blog and forum the switch whose own row warns that it closes the public account as well.
+    // The repair writes into this same log, and the retry button acts on whatever the log calls failed.
+    // The overview always performs the currently selected enable or disable.
+    // Unscoped, a 422 on a repair would show "retry" on a screen whose button disables the account.
+    // In blog and forum that also closes the public account.
     const { useUserCrossSystemStore: useStore, BulkAction, BulkOutcome: Outcome } = await storeModule()
     const store = useStore()
 
@@ -322,7 +319,6 @@ describe('the bulk log', () => {
     store.setBulkEntry('cms', Outcome.Forbidden)
     store.finishBulk()
 
-    // What a new search does first.
     store.resetResults()
 
     expect(store.bulkLog).toEqual([])

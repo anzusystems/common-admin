@@ -13,17 +13,21 @@ import { useCachedItem } from '@/domains/cached/composables/useCachedItem'
 const props = withDefaults(
   defineProps<{
     id: IntegerIdNullable | undefined
-    /** The admin's cache getter, e.g. `getCachedUser` of its `useCachedUsers()`. */
+    /**
+     * The admin's cache getter, e.g. `getCachedUser` of its `useCachedUsers()`.
+     */
     getCachedFn: (id: IntegerIdNullable | undefined) => CachedItem<AnzuUserMinimal> | undefined
     routeName?: string | undefined
     externalUrlTemplate?: string | undefined
     /**
-     * The label, for a cache whose users carry a better one than `person.fullName` (a nickname). `any`,
-     * because it reads the admin's own user, which `AnzuUserMinimal` does not describe.
+     * Label for caches whose users carry a better one than `person.fullName`, such as a nickname.
+     * `any` because it reads the admin's own user type, which `AnzuUserMinimal` does not describe.
      */
     titleFn?: ((user: CachedItem<any>) => string) | undefined
     disableClick?: boolean
-    /** The name of the close, where Vuetify's defaults make the chip closable: "Remove", unless the admin names it. */
+    /**
+     * Label of the close button when Vuetify defaults make the chip closable. Defaults to "Remove".
+     */
     closeLabel?: string
   }>(),
   {
@@ -37,11 +41,11 @@ const props = withDefaults(
 
 const { t } = useI18n()
 const router = useRouter()
-// 0 counts as no id, as it does in `defineCached`: a blank factory record carries it.
+// 0 counts as no id, as in `defineCached`. A blank factory record carries it.
 const { cached, loaded, unresolved } = useCachedItem(() => (props.id ? props.getCachedFn(props.id) : undefined))
 
-// Optional chaining on purpose: each admin maps its own users into the cache, and a mapper that
-// leaves the name or the e-mail out falls through to the next label instead of throwing.
+// Optional chaining on purpose. Each admin maps its own users into the cache.
+// A mapper that omits the name or e-mail falls through to the next label instead of throwing.
 const text = computed(() => {
   const user = cached.value
   if (!user) return ''

@@ -21,7 +21,9 @@ const props = withDefaults(
     configName?: string
     showRefresh?: boolean
     refreshDisabled?: boolean
-    /** Which of the two buttons saves, while it does. */
+    /**
+     * Which of the two buttons is saving.
+     */
     saving?: 'save' | 'saveAndApply' | null
   }>(),
   {

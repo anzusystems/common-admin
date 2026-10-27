@@ -3,13 +3,12 @@ import { coreDamOptions } from '@/plugins/pluginOptions'
 import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
 import { isUndefined } from '@/shared/utils/common'
 
-// Not exported from `src/lib.ts`: the components an application mounts take the name as their `configName`.
+// Not exported from `src/lib.ts`. Components an application mounts take the name as `configName`.
 export const DamConfigNameKey: InjectionKey<string> = Symbol('anzu:dam-config-name')
 
 /**
- * The name of the DAM configuration a component works under: its own `configName` when it is given one, else that of
- * the nearest component above it that has one, else `default`. Handed on to the components below. Read once, in
- * `setup`, as the options of the configuration are.
+ * DAM configuration name of a component: its own `configName`, else the nearest ancestor's, else `default`.
+ * Provided to child components. Read once in `setup`, like the configuration options.
  */
 export function useDamConfigName(explicit?: string): string {
   const name = explicit ?? inject(DamConfigNameKey, undefined) ?? 'default'
@@ -19,9 +18,9 @@ export function useDamConfigName(explicit?: string): string {
 }
 
 /**
- * The name a public composable works under when its caller names none: in a component's setup the name of the nearest
- * ancestor that has one (as `useDamConfigName` inherits it), anywhere else `default`. A component's own `configName`
- * is not seen here: it passes it. It hands nothing on.
+ * Name a public composable uses when the caller gives none: in
+ * component setup the nearest ancestor's, elsewhere `default`.
+ * It does not see the component's own `configName` and provides nothing to children.
  */
 export function inheritedDamConfigName(explicit?: string): string {
   if (explicit !== undefined) return explicit
@@ -30,9 +29,9 @@ export function inheritedDamConfigName(explicit?: string): string {
 }
 
 /**
- * Throws for a configuration name the application has not got, once the plugin has set the options. Before that every
- * name passes: what asks under it checks it then. `default` always passes: its caches are there from the start, in an
- * application without the DAM too.
+ * Throws for an unknown configuration name once the plugin has set
+ * options. Before that every name passes and is checked on use.
+ * `default` always passes: its caches exist from the start, even in apps without DAM.
  */
 export function checkDamConfigName(configName: string) {
   if (configName === 'default' || isUndefined(coreDamOptions.value)) return

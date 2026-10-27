@@ -48,7 +48,6 @@ const mountEditor = () => {
 type RowProps = { vi: { key: number }; callbacks: { openMoveToPosition: (vi: unknown) => void } }
 const rowProps = (row: { props: () => unknown }) => row.props() as RowProps
 
-// Open the row's "Move to position" action, type a 1-based position into the dialog, confirm.
 const moveViaDialog = async (key: number, position: number) => {
   const row = rowProps(wrapper!.findAllComponents(LeNestedRow).find((r) => rowProps(r).vi.key === key)!)
   row.callbacks.openMoveToPosition(row.vi)

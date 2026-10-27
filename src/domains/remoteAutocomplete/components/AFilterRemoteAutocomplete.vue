@@ -126,9 +126,8 @@ const allItems = computed<ValueObjectOption<T>[]>(() => {
   return Array.from(itemsMap.values())
 })
 
-// The requests of the component on their way (items by their ids, a search, a prefetch): its spinner is on while
-// any of them runs, and goes off with the last. Each turned it off as it ended: a read by ids hid the spinner of a
-// search still running, and the reverse.
+// Counts running requests (by ids, search, prefetch). The spinner stays on until the last one ends.
+// A single flag let a read by ids hide the spinner of a search still running, and the reverse.
 const requestsRunning = ref(0)
 const loading = computed(() => requestsRunning.value > 0)
 
@@ -220,8 +219,7 @@ const singleItemSelectedTitle = computed(() => {
   return undefined
 })
 
-// The clear of the field empties the search with `null` first: an empty search. A field without focus at that
-// moment read its length and threw.
+// Clearing the field first emits a `null` search. Reading its length threw when the field had no focus.
 const onSearchUpdate = (query: string | null) => {
   const text = query ?? ''
   if (!filterConfigCurrent.value.multiple && !isFocused.value && text.length === 0) return // vuetify fix
@@ -231,7 +229,9 @@ const onSearchUpdate = (query: string | null) => {
 
 const { clearOne } = useFilterClearHelpers()
 
-/** The value of the filter its watcher (below) saw last. */
+/**
+ * The value of the filter its watcher (below) saw last.
+ */
 let watchedValue: unknown
 
 const clearField = () => {
@@ -239,14 +239,12 @@ const clearField = () => {
   filterSelected.value.delete(props.name)
 }
 
-// The clear of the field empties the filter in one go, with the model Vuetify has emptied, so the watcher of the
-// filter asks for the list once, for an empty search, and takes only its newest answer. The clear asked again itself,
-// with the search typed before, and wrote that answer whenever it came; a filter of several values was asked a
-// third time, for its default set only after that answer.
-// A filter of one value cleared onto the default it held does not change, and its watcher does nothing: the field
-// and the chips would stay empty while the filter keeps that value. Its item is put back, as the watcher puts one.
-// A clear that ends on a value (a default of the filter) asks for the list for an empty search here, through the
-// counter: the watcher asks for it only for an empty value, and the list stayed as the search before left it.
+// Clearing empties the filter in one step, so the filter watcher
+// fetches once for an empty search and keeps only the newest answer.
+// A single-value filter cleared onto its own default does not
+// change, so its watcher does nothing. Its item is restored here.
+// A clear that ends on a default value fetches the empty search here
+// through the counter, because the watcher only fetches for an empty value.
 const onClickClear = () => {
   clearField()
   const value = filterData[props.name]
@@ -308,9 +306,8 @@ const onSelectedUpdate = (newValue: any) => {
   emit('change')
 }
 
-// The close of a chip, where an admin makes the chips closable (`closable-chips`): its value goes out of the filter,
-// as when it is unticked in the list, and a filter of one value is cleared as by the clear of the field (the chip
-// slot draws its value as a chip too). The chip only hid itself, and the value went on filtering.
+// Closing a chip (`closable-chips`) removes its value from the filter, like unticking it in the list.
+// A single-value filter is cleared like the field's clear, since the chip slot draws its value as a chip too.
 const onChipCloseClick = (closedItem: ValueObjectOption<T>) => {
   if (!isArray(selected.value)) {
     selected.value = null

@@ -1,11 +1,10 @@
 /**
  * Which auto-imported names a piece of code uses without binding them itself.
- *
- * Every unit is its own module in one program without lib, without module resolution and without
- * the generated `auto-imports.d.ts`, so the checker can only bind a name to a declaration in the
- * same unit: an import, a local, a parameter, … — what unimport would otherwise have supplied. The
- * value and the type meaning are resolved separately (`interface ref {}` does not bind `ref()`,
- * a type parameter does not shadow a value, class and enum bind both).
+ * Each unit is its own module in one program without lib, module resolution or the generated `auto-imports.d.ts`.
+ * So the checker can bind a name only to a declaration in the same unit (an import,
+ * a local, a parameter). Anything else is what unimport would have supplied.
+ * Value and type meanings resolve separately: `interface ref {}` does not bind
+ * `ref()`, a type parameter does not shadow a value, class and enum bind both.
  */
 
 // Positions where an identifier is a name, not a reference.
@@ -85,11 +84,8 @@ function referenceKind(ts, node) {
 }
 
 /**
- * `templateTypes` of a unit are type names a compiled template uses (`as IntegerId`, typed slot
- * props); they count as unbound when the unit does not bind them at its top level.
- *
- * @param units {{ id: string, code: string, js?: boolean, templateTypes?: Iterable<string> }[]}
- * @returns {Map<string, { value: Set<string>, type: Set<string>, problems: string[] }>}
+ * `templateTypes` are type names a compiled template uses (`as IntegerId`, typed slot props).
+ * They count as unbound when the unit does not bind them at its top level.
  */
 export function findUnboundReferences(ts, units, names) {
   const files = new Map(units.map((u) => [u.id, u]))

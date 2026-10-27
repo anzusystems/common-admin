@@ -8,9 +8,9 @@ import cs from '@/locales/cs'
 import en from '@/locales/en'
 import sk from '@/locales/sk'
 
-// The general file input of the library, of one file, under a drop of several: the first is taken, and the user is
-// told so. It said it in a text of the DAM image widgets (`common.damImage.upload.onlyOneFile`); it has its own among
-// the texts of the upload of the system, the same words.
+// The general file input with one file, under a drop of several, takes the first and tells the user.
+// The message used to reuse the DAM image widget text
+// `common.damImage.upload.onlyOneFile`. It now has its own key with the same words.
 
 const carrying = (files: File[]) => {
   const transfer = new DataTransfer()

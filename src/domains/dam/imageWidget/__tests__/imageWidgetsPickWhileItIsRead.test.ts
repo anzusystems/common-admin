@@ -8,12 +8,11 @@ import { ImageWidgetUploadConfigKey } from '@/domains/dam/imageWidget/utils/imag
 import { useUploadQueueDialog } from '@/domains/dam/uploadQueue/composables/useUploadQueueDialog'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
 
-// A pick in the library of a widget of one image: the widget reads the picked asset before its dialog shows the image.
-// The widget of an image or a media showed nothing while it read, and the editor could open the dialog of another
-// widget meanwhile; the answer then covered that dialog with this one and replaced its form through the store of the
-// dialog, which is one for the page: what the editor had typed there was lost. The dialog shows its loading at once
-// now, in both widgets, and the answer is put into it only while it still loads for that pick. The dialog of the image
-// and the collaboration are stand-ins; the reads of the asset answer when the case lets them.
+// A widget reads the picked asset before its dialog shows the
+// image. The editor could open another widget's dialog meanwhile.
+// The answer then covered that dialog and replaced its form through
+// the page-wide dialog store, losing what the editor typed.
+// The dialog now shows loading at once, and the answer is applied only while it still loads for that pick.
 
 const released = vi.fn()
 const held = vi.hoisted(() => ({
@@ -74,9 +73,7 @@ const image = {
   dam: { damId: 'file-7', licenceId: 1, regionPosition: 0, internal: false },
   position: 1,
 }
-/** What the editor has typed in the form of the dialog of the other widget. */
 const typed = { ...image, texts: { description: 'typed by the editor', source: 'Agency' } }
-/** An asset as the list of the picker has it. */
 const listed = (id: string, assetType = 'image', more: object = {}) => ({
   id,
   licence: 1,
@@ -146,7 +143,7 @@ const mountOf = async (component: Component, field: string) => {
   })
   mounted.push(wrapper)
   await flushPromises()
-  // Found anew each time: once another widget is mounted with stand-ins of its own, this one draws them anew.
+  // Found anew each time: once another widget is mounted with its own stand-ins, this one draws them anew.
   return {
     dialog: () => wrapper.findComponent({ name: 'ImageDetailDialogMetadata' }),
     picker: () => wrapper.findComponent({ name: isImageWidget ? 'AAssetSelect' : 'AAssetSelectMedia' }),
@@ -154,7 +151,6 @@ const mountOf = async (component: Component, field: string) => {
 }
 type Widget = Awaited<ReturnType<typeof mountOf>>
 
-/** The asset is confirmed in the picker of the widget, which closes; its read is on its way. */
 const pick = async (widget: Widget, asset: object) => {
   widget.picker().vm.$emit('update:modelValue', true)
   await flushPromises()
@@ -171,7 +167,6 @@ const answerReads = async (how: 'answer' | 'fail' = 'answer') => {
 const shown = () => useImageMediaWidgetStore().detail
 const isOpen = (widget: Widget) => widget.dialog().props('modelValue') as boolean
 const loads = (widget: Widget) => widget.dialog().props('loading') as boolean
-/** The dialog of the widget is opened for its image, and the editor types in its form. */
 const openAndType = async (widget: Widget) => {
   useImageMediaWidgetStore().setDetail(structuredClone(typed))
   widget.dialog().vm.$emit('update:modelValue', true)
@@ -222,8 +217,8 @@ describe.each<[string, Component]>([
     expect(shown()).toEqual(typed)
   })
 
-  // The store of the dialog is the page's: what it holds by the answer is another dialog's form. The dialog that
-  // loaded for the pick closes: it shows that form too, and its confirm would save it as the image of this widget.
+  // The dialog store is page-wide, so what it holds after the answer is another dialog's form.
+  // The dialog that loaded for the pick closes. Otherwise its confirm would save that form as this widget's image.
   it('never replaces the form of the dialog of another widget opened over it while it loads, and closes', async () => {
     const widget = await mountOf(component, 'listingImage')
     const another = await mountOf(ImageWidgetInner, 'socialImage')
@@ -258,7 +253,6 @@ describe.each<[string, Component]>([
       await answerReads()
       if (when === 'after') {
         await firstAnswers()
-        // And whatever that answer has gone on to read.
         await answerReads()
       }
 
@@ -267,16 +261,15 @@ describe.each<[string, Component]>([
     }
   )
 
-  // An image of another licence is copied into the licence of the upload, and the upload dialog shows the copy. The
-  // dialog loads till then, so that nothing else is opened meanwhile: nothing was shown, and the upload dialog covered
-  // a dialog of another widget opened since, whose form its "Save and apply" replaced.
+  // An image of another licence is copied into the licence of the upload, and the upload dialog shows the copy.
+  // The dialog loads until then so that nothing else opens. Before, the upload dialog covered
+  // a dialog of another widget opened since, and its "Save and apply" replaced that form.
   describe('copied into the licence of the upload', () => {
     const queueKey = 'listingImage'
     const copyOnItsWay = async () => {
       const queued = vi.spyOn(useUploadQueuesStore(), 'addByCopyToLicence').mockResolvedValue(undefined as never)
       const widget = await mountOf(component, queueKey)
       await pick(widget, listed('asset-9', 'image', { licence: 2 }))
-      // The image and media widget learns what the asset is first.
       if (component === ImageMediaWidgetInner) await answerReads()
       expect(held.copies).toHaveLength(1)
       return { widget, queued }

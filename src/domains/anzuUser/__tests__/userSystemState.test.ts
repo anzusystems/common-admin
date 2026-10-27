@@ -27,8 +27,6 @@ describe('probe classification', () => {
   })
 
   it('never reads 403 as "no account here"', () => {
-    // The prototype this replaces left `userExists` at null on any non-404 and offered Create in a
-    // system the operator cannot even read.
     const result = classifyProbeStatus(403)
 
     expect(result.access).toBe(UserSystemAccess.Forbidden)
@@ -48,7 +46,6 @@ describe('probe classification', () => {
   })
 
   it('has no case for 422, which belongs to writes', () => {
-    // A detail GET loads a record and returns it; it does not validate a body.
     expect(classifyProbeStatus(422).access).toBe(UserSystemAccess.Unavailable)
     expect(classifyProbeStatus(422).presence).toBe(UserSystemPresence.Unknown)
   })

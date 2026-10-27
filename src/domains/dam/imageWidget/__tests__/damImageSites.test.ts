@@ -15,11 +15,6 @@ import type { ImageAware, ImageCreateUpdateAware } from '@/domains/dam/types/Ima
 import { DamMediaType, type MediaAware } from '@/domains/dam/types/MediaAware'
 import type { IntegerIdNullable } from '@/shared/types/common'
 
-// Two places outside the widgets that make the image of the CMS for a file of the DAM by hand (IM7, IM8 and IM9 of
-// the design), under each of the two applications: what the public input saves and what it previews, and the image
-// the detail of a media shows. The real components; the DAM and the image API are clients that record their
-// requests (admin-ugc brings its own image API, which records what it is handed).
-
 // A file of the DAM is named by a UUID: the public input takes nothing else.
 const FILE = '0f6b8f6a-5d2c-4c1e-9a7b-3e2d1c0b9a81'
 const OTHER_FILE = '7c1d2e3f-4a5b-4c6d-8e7f-90a1b2c3d4e5'
@@ -44,10 +39,8 @@ describe.each(consumerProfiles)('the image of the CMS outside the widgets under 
     wrapper = undefined
   })
 
-  // A licence of the same user, other than the one of the upload.
   const otherLicence = licence + 1
 
-  /** The asset of the file, as the DAM answers it. */
   const damHas = (mainFileInternal: boolean | null, file = FILE, ofLicence = licence) =>
     dam.assets.set(
       `asset-of-${file}`,
@@ -58,9 +51,7 @@ describe.each(consumerProfiles)('the image of the CMS outside the widgets under 
     )
 
   describe('the public input (IM8, IM9)', () => {
-    /** The model of the dialog that holds the input. */
     let model: IntegerIdNullable = null
-    // As the embed dialog of admin-cms uses it: a model of the image id, and `submit` when the dialog confirms.
     const mountInput = async (modelValue: IntegerIdNullable) => {
       model = modelValue
       wrapper = mount(AImagePublicInput, {
@@ -115,7 +106,6 @@ describe.each(consumerProfiles)('the image of the CMS outside the widgets under 
         ],
       ])
       expect(model).toBe(done!.image.id)
-      // The image it has just created is not read again (finding 36): the fields show what the create answered.
       expect(images.calls.map(([call]) => call)).toEqual(['createImage'])
       expect([input().element.value, ...texts().map((field) => (field.element as HTMLTextAreaElement).value)]).toEqual([
         FILE,
@@ -124,7 +114,6 @@ describe.each(consumerProfiles)('the image of the CMS outside the widgets under 
       ])
     })
 
-    // Only that once: an id the model is changed to afterwards is read, also the one of the image it created.
     it('reads the image its model is changed to after it created one, as before', async () => {
       damHas(true)
       damHas(false, OTHER_FILE)
@@ -188,8 +177,6 @@ describe.each(consumerProfiles)('the image of the CMS outside the widgets under 
       ])
     })
 
-    // The file typed in place of the one of the image: what is saved is of the asset of that file, whose licence is
-    // neither the first the input may pick from nor the one of the application.
     it('updates a saved image with the file typed in its place, of the licence of that file', async () => {
       damHas(true, OTHER_FILE)
       damHas(false, FILE, otherLicence)
@@ -223,7 +210,6 @@ describe.each(consumerProfiles)('the image of the CMS outside the widgets under 
       ])
     })
 
-    // The image it previews is the original of the file, whatever the licence or the region.
     it.each([
       ['its id', FILE],
       ['the address of its original', `https://image-original.test/image/original/${FILE}.jpg`],
@@ -260,7 +246,6 @@ describe.each(consumerProfiles)('the image of the CMS outside the widgets under 
       },
       extService: 'damVideo',
     })
-    // As the image and media widget opens it.
     const mountDetail = async (detail: MediaAware) => {
       useImageMediaWidgetStore(pinia).setDetail(detail)
       wrapper = mount(ImageDetailDialogMetadata, {

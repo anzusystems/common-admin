@@ -29,7 +29,9 @@ import type { AnzuUser, BaseUser } from '@/shared/types/AnzuUser'
 import { cloneDeep, isNull, isUndefined } from '@/shared/utils/common'
 
 const props = defineProps<{
-  /** Order matters twice: the order of the rows, and the priority when pre-filling. */
+  /**
+   * Order matters twice: the order of the rows, and the priority when pre-filling.
+   */
   descriptors: AnyUserSystemDescriptor[]
   refreshHook?: UserSystemRefreshHook | undefined
 }>()
@@ -44,9 +46,8 @@ const store = useUserCrossSystemStore()
 const { createAnzuUser } = useAnzuUserFactory()
 const writes = useUserCrossSystemWrites()
 
-// A collector for the metadata form inside the create dialog. Without one its rules register
-// against whatever ancestor happens to have an instance, and the dialog's confirm could not ask
-// whether the fields it is about to send are valid.
+// Collector for the metadata form in the create dialog. Without it the rules register
+// on some ancestor, and the dialog cannot validate the fields before sending.
 const v$ = useVuelidate()
 
 /* eslint-disable vue/no-setup-props-reactivity-loss */
@@ -79,7 +80,9 @@ const differences = computed(() => findMetadataDifferences(records.value))
 
 const foundAnywhere = computed(() => records.value.size > 0)
 
-/** The bulk actions only write where the person was found; offer them when at least one of those may be written. */
+/**
+ * Bulk actions only write where the person was found, so offer them when at least one of those systems is writable.
+ */
 const anyFoundWritable = computed(() =>
   props.descriptors.some((item) => records.value.has(item.system) && descriptorMayWrite(item, 'update'))
 )
@@ -88,17 +91,12 @@ const searchDone = computed(() => store.phase === CrossSystemPhase.Done)
 const searchedByEmail = computed(() => isEmailTerm(store.searchTerm))
 
 /**
- * When creating an account may be offered after a search that found nobody.
- *
- * By id: only when every relevant probe answered an authoritative 404. A record that could not be
- * read is not a record that does not exist, and no admin can delete an AnzuUser, so a duplicate
- * identity created on a guess cannot be taken back.
- *
- * By e-mail: always, because an address search cannot prove absence at all -- a system holding the
- * same person under a different address answers nothing, which is why the second round exists.
- * What makes it safe is that the dialog asks for the id and runs its own authoritative fan-out on
- * it before writing anything; refusing here would put the flow decision 21 describes out of reach
- * of the search people actually use, since the id is the thing they do not know yet.
+ * When to offer creating an account after a search that found nobody.
+ * By id: only if every relevant probe returned an authoritative 404. An
+ * unreadable record may exist, and a duplicate identity cannot be deleted.
+ * By e-mail: always. An address search cannot prove absence, and the dialog
+ * asks for the id and runs its own authoritative check before writing.
+ * Refusing here would block the decision 21 flow for the search people actually use, since they do not know the id yet.
  */
 const canOfferCreateAnywhere = computed(
   () =>
@@ -108,7 +106,9 @@ const canOfferCreateAnywhere = computed(
     props.descriptors.some((item) => item.isEnabled() && descriptorMayWrite(item, 'create'))
 )
 
-/** A conflict is not a state to act from: writes would land on somebody else's account. */
+/**
+ * A conflict is not a state to act from: writes would land on somebody else's account.
+ */
 const blockedByConflict = computed(() => store.identityConflict !== null)
 
 const labelFor = (descriptor: AnyUserSystemDescriptor) => descriptor.label ?? descriptor.system
@@ -128,11 +128,8 @@ const extraStateFor = (descriptor: AnyUserSystemDescriptor) => {
 const EXTRA_STATE_COLOR = { ok: 'success', warn: 'warning', error: 'error' } as const
 
 /**
- * A failed row action says so.
- *
- * The bulk dialog has its log; a single row had nothing -- a 403 on Vypnúť left a spinner, an
- * unchanged row and silence, and the api helpers only write to the logger. The per-admin pages this
- * replaces put every write through `showErrorsDefault`.
+ * Report a failed row action to the user.
+ * Without this a 403 on Vypnúť leaves a spinner and an unchanged row, because the api helpers only write to the logger.
  */
 const reportOutcome = (label: string, outcome: BulkOutcomeType) => {
   if (outcome === BulkOutcome.Done) return
@@ -155,7 +152,9 @@ const withRowBusy = async (system: string, run: () => Promise<void>) => {
   }
 }
 
-/** After every write the touched row is read again -- otherwise it keeps showing the old state. */
+/**
+ * The touched row is read again after every write. Otherwise it keeps showing the old state.
+ */
 const toggleOne = async (descriptor: AnyUserSystemDescriptor, enabled: boolean) => {
   const id = store.resolvedId
   if (isNull(id)) return
@@ -173,27 +172,26 @@ const createFromSource = async (descriptor: AnyUserSystemDescriptor, metadata: B
   if (isUndefined(sourceSystem)) return
 
   await withRowBusy(descriptor.system, async () => {
-    // Read fresh from the server, never from the search results or a form's store: a switch flipped
-    // and not saved would otherwise be copied into a system where it means a working public account.
+    // Read from the server, never from search results or a form's store.
+    // An unsaved switch would otherwise be copied into a system where it means a working public account.
     const source = await writes.readSourceUser(sourceSystem, id)
     if (isNull(source)) {
       showError(t('common.userSystem.create.sourceUnreadable', { system: labelFor(sourceSystem) }))
       return
     }
-    // The same promise the panel makes: the dialog has already said whether this account will be
-    // switched on, taken from the search result. If the server no longer agrees, somebody changed
-    // it in between, and in blog and forum the difference is a working public account.
+    // The dialog already told the operator whether the account will be switched on, based on the search result.
+    // If the server disagrees now, someone changed it. In blog and forum that means a working public account.
     if (source.enabled !== sourceEnabled.value) {
-      // Re-read rather than patch the record: the chip draws from the probe's axes, and replacing
-      // only the user left it showing the old state next to a toggle already showing the new one.
+      // Re-read instead of patching the record. The chip uses the probe's axes, so
+      // replacing only the user leaves the chip stale next to an updated toggle.
       await refreshSystem(sourceSystem.system)
       showError(t('common.userSystem.create.sourceChanged'))
       return
     }
-    // The create right may have gone while the source was read; nothing is offered then, so nothing is said.
+    // The create right may have been lost while the source was read. Nothing is offered then, so nothing is reported.
     if (!descriptorMayWrite(descriptor, 'create')) return
-    // Metadata from the dialog, which was validated against the target's profile: the source may
-    // leave `person` empty -- blog fills it for nobody -- where the target requires it.
+    // Metadata comes from the dialog, which was validated against the target's profile.
+    // The source may leave `person` empty (blog never fills it) where the target requires it.
     const body = createAnzuUser(descriptor.system)
     body.id = source.id
     body.email = metadata.email
@@ -207,7 +205,9 @@ const createFromSource = async (descriptor: AnyUserSystemDescriptor, metadata: B
   })
 }
 
-/** The record the create form is prefilled from: the first configured system that has one. */
+/**
+ * The record the create form is prefilled from: the first configured system that has one.
+ */
 const prefillSource = computed(() => {
   const first = props.descriptors.find((item) => records.value.has(item.system))
   return isUndefined(first) ? null : (records.value.get(first.system) ?? null)
@@ -219,8 +219,6 @@ const sourceEnabled = computed(() => {
   return store.results.get(first.system)?.user?.enabled === true
 })
 
-/* ---- bulk ---- */
-
 const bulkOpen = ref(false)
 const bulkAction = ref<BulkActionType>(BulkAction.Disable)
 const repairOpen = ref(false)
@@ -230,7 +228,9 @@ const openBulk = (action: BulkActionType) => {
   bulkOpen.value = true
 }
 
-/** The one place every bulk write passes through, retries included: a system the descriptor refuses is not written. */
+/**
+ * Every bulk write passes through here, retries included. A system the descriptor refuses is not written.
+ */
 const writableSystems = (systems: string[]) =>
   systems.filter((system) => {
     const descriptor = props.descriptors.find((item) => item.system === system)
@@ -263,8 +263,7 @@ const runRepair = async (payload: { target: BaseUser; systems: string[] }) => {
   const systems = writableSystems(payload.systems)
   if (systems.length === 0) return
   store.startBulk(BulkAction.Metadata, systems, id)
-  // What the search showed is captured before anything is written, so the comparison is against the
-  // values the operator was actually looking at rather than against a row a sibling write refreshed.
+  // Captured before any write, so the comparison uses the values the operator saw, not a row a sibling write refreshed.
   const seenBefore = new Map(records.value)
   await Promise.allSettled(
     systems.map(async (system) => {
@@ -285,8 +284,6 @@ const runRepair = async (payload: { target: BaseUser; systems: string[] }) => {
   store.finishBulk()
 }
 
-/* ---- create where nobody was found ---- */
-
 const createAnywhereOpen = ref(false)
 const createAnywhereSystem = ref<string | null>(null)
 const createAnywhereUser = ref<AnzuUser>(createAnzuUser())
@@ -294,13 +291,14 @@ const createAnywhereChecking = ref(false)
 const createAnywhereConflict = ref<string[]>([])
 const createAnywhereError = ref<string | null>(null)
 
-/** Set when the page goes away, so work that finishes afterwards does not refill it. */
+/**
+ * Set when the page goes away, so work that finishes afterwards does not refill it.
+ */
 let left = false
 
 const openCreateAnywhere = () => {
-  // The first system that is switched on, not the first one listed: a system disabled in the
-  // configuration is not among the options, and preselecting it would POST through a client with
-  // no base URL.
+  // Pick the first enabled system, not the first listed. A system disabled in the configuration
+  // is not an option, and preselecting it would POST through a client with no base URL.
   createAnywhereSystem.value =
     props.descriptors.find((item) => item.isEnabled() && descriptorMayWrite(item, 'create'))?.system ?? null
   createAnywhereUser.value = createAnzuUser(createAnywhereSystem.value ?? '')
@@ -311,13 +309,9 @@ const openCreateAnywhere = () => {
 
 /**
  * Before creating, the typed id is looked up across the systems.
- *
- * cms, dam and contentHub skip the SSO lookup for a numeric id, and the validators check the id and
- * the e-mail separately rather than as a pair -- so a typo creates an account with one person's id
- * and another's e-mail, and every later fan-out then follows the wrong identity.
- *
- * The check has to be authoritative too: if a probe answers 401, 403 or nothing, creating is not
- * allowed, because whether that id belongs to somebody is unknown.
+ * cms, dam and contentHub skip the SSO lookup for a numeric id, and the validators check id and e-mail separately. A
+ * typo would create an account with one person's id and another's e-mail, and later fan-outs follow the wrong identity.
+ * If a probe answers 401, 403 or nothing, creating is blocked, because the id's owner is unknown.
  */
 const confirmCreateAnywhere = async () => {
   const id = createAnywhereUser.value.id
@@ -325,9 +319,8 @@ const confirmCreateAnywhere = async () => {
   createAnywhereConflict.value = []
   createAnywhereError.value = null
   if (isNull(system)) return
-  // The id is checked here and not only by the form, because everything below depends on the
-  // fan-out having run: a term the search refuses probes nothing, and the empty result that leaves
-  // behind would otherwise read as "this id belongs to nobody".
+  // The id is checked here, not only by the form. A term the search refuses probes
+  // nothing, and that empty result would read as "this id belongs to nobody".
   if (isNull(id) || isUndefined(id) || !Number.isInteger(id) || id <= 0) {
     createAnywhereError.value = t('common.userSystem.create.invalidId')
     return
@@ -360,9 +353,9 @@ const confirmCreateAnywhere = async () => {
     const result = await writes.createInSystem(descriptor, body)
     reportOutcome(labelFor(descriptor), result.outcome)
     if (result.outcome !== BulkOutcome.Done) return
-    // The dialog is not persistent: the operator can click outside it and use the menu while the
-    // POST is still out. The search after it takes a fresh generation that `cancel()` cannot stop,
-    // and would put the new person back into a store the unmount just emptied.
+    // The dialog is not persistent, so the operator can navigate away while the POST is pending.
+    // The following search takes a fresh generation that `cancel()`
+    // cannot stop, and would refill the store the unmount just emptied.
     if (left) return
     createAnywhereOpen.value = false
     await search(String(id))
@@ -372,17 +365,17 @@ const confirmCreateAnywhere = async () => {
 }
 
 /**
- * The chosen target's own profile, not a blanket strict one.
- *
- * The repair dialog is strict on purpose -- it writes to nine places at once -- but this creates
- * one account in one system, and the plan asks for that system's profile. Strict here would demand
- * an avatar colour for a blog account that does not require one.
+ * Uses the chosen target's own profile, not a blanket strict one.
+ * The repair dialog is strict because it writes to nine systems. This creates one account
+ * in one system, and strict would demand an avatar colour that blog does not require.
  */
 const createAnywhereRequiredMetadata = computed(
   () => props.descriptors.find((item) => item.system === createAnywhereSystem.value)?.requiredMetadata ?? true
 )
 
-/** What is special about having an account in the chosen system -- for blog and forum, a public one. */
+/**
+ * What is special about an account in the chosen system. For blog and forum it is a public one.
+ */
 const createAnywhereNote = computed(
   () => props.descriptors.find((item) => item.system === createAnywhereSystem.value)?.createNote
 )
@@ -393,9 +386,9 @@ const createSystemOptions = computed(() =>
     .map((item) => ({ value: item.system, title: labelFor(item) }))
 )
 
-// The store is there so a closed dialog does not take a running bulk action with it -- not to keep
-// a person on screen across navigation. Coming back through the menu showed the last one's rows and
-// live buttons under an empty search box.
+// The store exists so a closed dialog does not stop a running bulk action, not to keep a person across navigation.
+// Without this reset, returning through the menu showed the last
+// person's rows and live buttons under an empty search box.
 onBeforeUnmount(() => {
   left = true
   cancel()
@@ -432,9 +425,8 @@ defineExpose({
           </ABtnPrimary>
         </div>
         <!--
-          The two rounds are named while they run. Between them a row is neither present nor absent,
-          and calling it "no account here" would invite a Create for an account that exists under
-          another address.
+          The two rounds are named while they run. Between them a row is neither present nor absent.
+          Showing "no account here" would invite a Create for an account that exists under another address.
         -->
         <div
           v-if="store.phase === CrossSystemPhase.MatchingEmail"
@@ -536,8 +528,7 @@ defineExpose({
             />
           </template>
           <!--
-            Create is offered on a row only when the person exists somewhere -- that is the only way
-            their global id is known.
+            Create is offered only when the person exists somewhere. That is the only way their global id is known.
           -->
           <AUserCreateInSystemButton
             v-else-if="

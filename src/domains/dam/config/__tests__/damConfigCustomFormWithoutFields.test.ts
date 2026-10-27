@@ -9,11 +9,11 @@ import { useDamConfigStore } from '@/domains/dam/config/store/damConfigStore'
 import AImageWidget from '@/domains/dam/imageWidget/components/AImageWidget.vue'
 import ImageWidgetInner from '@/domains/dam/imageWidget/components/ImageWidgetInner.vue'
 
-// The configuration of the custom fields of an ext system is read by four requests, one for each type of asset. A
-// read that answered with no field was counted with those that failed, so an ext system that has no custom field at
-// all was one whose configuration could not be loaded: nothing was written for it, the read rejected, and whatever
-// waits for that configuration said the DAM configuration failed to load. A read that answers is the configuration,
-// also when it is empty; only when none of the four answers is there nothing to go by.
+// The custom field configuration of an ext system is read by four requests, one per asset type.
+// A read that answered with no fields was counted as failed. An ext system with no custom fields then had
+// nothing written, the read rejected, and waiting code reported that the DAM configuration failed to load.
+// A read that answers is the configuration, also when empty.
+// Only when none of the four answers is there nothing to use.
 
 const { endPoints, extSystem, licence } = cmsConfiguration
 const CUSTOM_FORM = /^\/adm\/v1\/asset-custom-form\/ext-system\/(\d+)\/type\/(\w+)\/element\?/
@@ -55,7 +55,6 @@ describe('the configuration of the custom fields of an ext system', () => {
     signOutOfDam()
   })
 
-  /** The DAM answers the reads of the configuration as given, by the type of asset. */
   const configurationIsRead = (answer: (type: string) => { status: number; data?: unknown }) =>
     dam.reply((request) => {
       const read = request.method === 'GET' ? request.url.match(CUSTOM_FORM) : null
@@ -87,7 +86,7 @@ describe('the configuration of the custom fields of an ext system', () => {
     expect(loaded()).toEqual({ image: [title], audio: [], video: [], document: [] })
   })
 
-  // The fields of the type that failed may be the only ones it has: the form would be drawn without them.
+  // The failed type may be the only one with fields, so the form would be drawn without them.
   it('is not loaded when a read of it fails and the others answer with no field', async () => {
     configurationIsRead((type) => (type === 'image' ? { status: 500 } : withoutFields))
 
@@ -104,8 +103,9 @@ describe('the configuration of the custom fields of an ext system', () => {
     expect(loaded()).toBeUndefined()
   })
 
-  // The outer widgets wait for that configuration before they draw: over an ext system without a custom field the
-  // image widget said that the configuration of the DAM could not be loaded, and drew no widget.
+  // The outer widgets wait for this configuration before drawing.
+  // Over an ext system without custom fields, the image widget reported
+  // that the DAM configuration could not be loaded and drew nothing.
   it('lets the image widget be drawn over an ext system that has no custom field', async () => {
     configurationIsRead(() => withoutFields)
     signInToDam(extSystem)

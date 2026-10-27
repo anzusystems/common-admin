@@ -24,7 +24,9 @@ const props = withDefaults(
 )
 
 const emit = defineEmits<{
-  /** `shown`: the asset the detail showed when it closed; none when it was closed from its loader, or had none. */
+  /**
+   * `shown`: the asset the detail showed when it closed. Null when closed from its loader or when it showed none.
+   */
   (e: 'close', shown: AssetDetailItemDto | null): void
 }>()
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
@@ -39,16 +41,17 @@ const { simpleAssetSidebarEnabled } = useCommonAdminCoreDamOptions(damConfigName
 
 const view = computed(() => assetDetailViewOfAsset(asset.value, simpleAssetSidebarEnabled))
 
-// What the detail shows while its button closes it. Noted before the store is emptied: its host cannot ask the store.
+// The asset shown when the close button is pressed.
+// Captured before the store is emptied, because the host cannot read it from the store.
 let shownAtClose: AssetDetailItemDto | null = null
 const closeDialog = () => {
   shownAtClose = loading.value ? null : asset.value
   assetDetailStore.close()
   shownAtClose = null
 }
-// The store closes the detail by itself as well, after a read that failed: the host is told of either close, once.
-// Only a change that takes this detail away is its close. Until its host has drawn again this dialog still sees what
-// follows, the next opening of its host or of another.
+// The store also closes the detail itself after a failed read. The host is told of either close, once.
+// Only a change that removes this detail counts as its close.
+// Until the host re-renders, this dialog still sees the next opening of its host or of another host.
 const stopTellingHost = watch(
   dialog,
   (_now, before) => {
@@ -56,9 +59,9 @@ const stopTellingHost = watch(
   },
   { flush: 'sync' }
 )
-// A host that goes away with its detail open would leave its key in the store, which is the page's: the next host with
-// that key drew the detail at once, over a page that had not asked for it. The detail is closed with its host, and its
-// read on its way given up. That host is not told: it is going away.
+// The store is page-wide. A host unmounted with its detail open would leave its key in the store.
+// The next host with that key then showed the detail at once, unasked.
+// So the detail is closed with its host and its pending read is dropped. The host is not told because it is unmounting.
 onBeforeUnmount(() => {
   stopTellingHost()
   if (dialog.value === props.queueKey) assetDetailStore.close()

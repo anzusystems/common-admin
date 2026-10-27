@@ -38,7 +38,6 @@ describe('customRef tracking', () => {
     expect(editorRef.value.hasUnsaved).toBe(true)
     await flushPromises()
     expect(editorRef.value.hasUnsaved).toBe(true)
-    // slot v-model on raw.title writes through the reactive row in place
     model.value[0].title = 'A'
     await flushPromises()
     expect(editorRef.value.hasUnsaved).toBe(false)

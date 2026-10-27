@@ -14,12 +14,6 @@ import { AssetFileFailReason, AssetFileProcessStatus } from '@/domains/dam/types
 import { type UploadQueueItem, UploadQueueItemStatus } from '@/domains/dam/types/UploadQueue'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
 
-// What the queue does with the answer when it asks for the asset of a row that waits for the server: the poll,
-// with no notification anywhere. The two kinds of row that wait: a file that was sent (either application) and
-// an asset copied to the licence (admin-cms only), which was never sent and is known by its asset alone.
-// Nothing of the library is replaced: the DAM is a client that records its requests, and only the long waits
-// between two reads are taken out of real time.
-
 const QUEUE = 'poll-queue'
 
 let dam: FakeDam
@@ -38,7 +32,6 @@ const use = (profile: ConsumerProfile) => {
   waits = holdLongWaits()
 }
 
-/** A file, sent whole. Its row has the asset and the file the start request answered. */
 const uploadedFile = async (profile: ConsumerProfile) => {
   const store = useUploadQueuesStore()
   await store.addByFiles(
@@ -52,7 +45,6 @@ const uploadedFile = async (profile: ConsumerProfile) => {
   await vi.waitFor(() => expect(item.status).toBe(UploadQueueItemStatus.Processing))
   return item
 }
-/** An asset copied to the licence. Its row has the asset, and no file until it is settled. */
 const copiedAsset = async (profile: ConsumerProfile) => {
   const store = useUploadQueuesStore()
   await store.addByCopyToLicence(QUEUE, profile.extSystem, profile.licence, ['asset-1'], 'default')
@@ -65,7 +57,6 @@ const rows: Array<[string, ConsumerProfile, (profile: ConsumerProfile) => Promis
   ['an asset copied to the licence under the CMS configuration', cmsConfiguration, copiedAsset],
 ]
 
-/** Time passes until the queue has asked for the asset once more. */
 const nextRead = async () => {
   const before = dam.assetReads().length
   await waits.elapse()
@@ -93,7 +84,7 @@ describe.each(rows)('what a read of the asset applies to %s', (_name, profile, w
 
     expect(item).toMatchObject({
       assetId: 'asset-1',
-      // The image is built from the file: a copy learns it here.
+      // The image is built from the file, so a copy learns it here.
       fileId: processed.mainFile!.id,
       isDuplicate: false,
       customData: { description: 'from the server' },
@@ -203,7 +194,6 @@ describe.each(rows)('what a read of the asset applies to %s', (_name, profile, w
   it('a duplicate whose original cannot be read: the row fails', async () => {
     const item = await waitingRow(profile)
 
-    // No asset has the file the duplicate names.
     dam.fileBecomes('asset-1', AssetFileProcessStatus.Duplicate, {}, { originAssetFile: 'file-gone' })
     await nextRead()
     await vi.waitFor(() => expect(item.status).toBe(UploadQueueItemStatus.Failed))

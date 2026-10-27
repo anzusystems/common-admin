@@ -40,45 +40,43 @@ const props = withDefaults(
     endPoint?: string | undefined
     detailRoute: (user: AnzuUser) => RouteLocationRaw
     editRoute: (user: AnzuUser) => RouteLocationRaw
-    /** Already-evaluated ACL of the owning system. */
+    /**
+     * Already-evaluated ACL of the owning system.
+     */
     canUpdate?: boolean
-    /** The permission-group endpoint, which is not the user one. */
+    /**
+     * The permission-group endpoint, which is not the user one.
+     */
     permissionGroupEndPoint?: string
     /**
      * Extra columns the app draws through `#systemColumns`, appended after the shared ones.
-     *
-     * A bare key takes its header from the library's own `common.anzuUser.model.*`, which holds
-     * eight keys and none of any system's -- so a system column passes its title already
-     * translated, out of the namespace that has it.
+     * A bare key takes its header from `common.anzuUser.model.*`, which has
+     * no system keys. So a system column passes its title already translated.
      */
     systemColumns?: Array<string | { key: string; title: string }>
     /**
-     * Signing in as somebody else, as a switchable feature.
-     *
-     * A callback rather than a path, because there is more than one mechanism: cms posts to
-     * `/adm/users/{id}/impersonate` and gets a JWT with an impersonation claim, blog opens the
-     * public site through `window.open`. Only the cms one reaches a shared component -- blog's
-     * hangs off its product user, which is a different view -- so one prop is enough for now.
-     * Left unset, nothing is drawn.
+     * Optional impersonation. Left unset, nothing is drawn.
+     * A callback rather than a path, because the mechanisms differ: cms posts to `/adm/users/{id}/impersonate` and
+     * gets a JWT, blog opens the public site with `window.open`. Only the cms one reaches this shared component.
      */
     impersonate?: ((user: AnzuUser) => void) | undefined
     canImpersonate?: boolean
     /**
      * Filter fields this system adds to the shared three.
-     *
-     * A parameter and not part of the shared list, because the same filter is not the same query
-     * everywhere: cms asks for permission groups with `memberOf`, dam with `custom`, and
-     * `allowedSites` exists only in cms. A plain field needs nothing more -- the generic renderer
-     * draws it -- while one that wants a remote autocomplete comes in through `#filter.<name>`.
+     * Not part of the shared list because the same filter is a different query per system:
+     * cms uses `memberOf`, dam uses `custom`, and `allowedSites` exists only in cms.
+     * A plain field is drawn by the generic renderer. A field that
+     * needs a remote autocomplete comes in through `#filter.<name>`.
      */
     filterFields?: readonly MakeFilterOption[]
     /**
-     * Saved filters, which are stored per user, so both are needed for the button to appear. cms
-     * and dam have them on the list this replaces; the other three admins do not.
+     * Saved filters are stored per user, so both props are needed for the button to appear. Only cms and dam use them.
      */
     filterClient?: (() => AxiosInstance) | undefined
     filterUserId?: IntegerIdNullable | undefined
-    /** Where the filter files its saved bookmarks. */
+    /**
+     * Where the filter files its saved bookmarks.
+     */
     filterStore?: FilterStoreIdentifier | undefined
   }>(),
   {
@@ -123,11 +121,9 @@ const { translatePermission } = usePermissionConfigActions({
 
 /**
  * Group titles for the column, resolved against this system's own cache.
- *
- * Drawn here rather than left to a slot: a group is a group in every admin, the library already
- * has the cache -- keyed per system, because id 42 in weather and id 42 in blog are different rows
- * -- and leaving it to the call sites is how the column ends up empty in every one of them. An app
- * that wants its own chip still overrides through the slot.
+ * Drawn here rather than left to a slot, so the column is not left empty in every app.
+ * The cache is keyed per system because the same id is a different group in each backend.
+ * An app can still override the chip through the slot.
  */
 const { addToCachedPermissionGroups, fetchCachedPermissionGroups, getCachedPermissionGroup } =
   useCachedPermissionGroups({
@@ -175,9 +171,9 @@ const systemColumnKeys = computed(() =>
   props.systemColumns.map((column) => (typeof column === 'string' ? column : column.key))
 )
 
-// `#filter.allowedSites` here becomes `#item.allowedSites` inside the filter, which is the name
-// `AFilterWrapper` renders a field's own widget under. The prefix is what keeps a field slot apart
-// from this table's own `item.*` columns.
+// `#filter.allowedSites` here becomes `#item.allowedSites` inside the
+// filter. That is the name `AFilterWrapper` renders a field's widget under.
+// The prefix keeps field slots apart from this table's own `item.*` columns.
 const slots = useSlots()
 const FILTER_SLOT_PREFIX = 'filter.'
 const filterSlotNames = computed(() =>

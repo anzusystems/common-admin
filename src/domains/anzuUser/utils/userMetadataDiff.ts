@@ -1,12 +1,9 @@
 import type { BaseUser } from '@/shared/types/AnzuUser'
 
 /**
- * The six fields the cross-system view compares.
- *
- * `email` is in the list and is also the reason the e-mail search runs twice: if a person is
- * `jozko@sme.sk` in weather and `j.mrkvicka@sme.sk` in blog, a search by e-mail finds weather and
- * blog answers nothing -- which looks exactly like "no account here". The second round, by the id
- * the first round found, is what turns that silence into the inconsistency it actually is.
+ * The six compared fields.
+ * `email` is why e-mail search runs twice: a system with a different
+ * address answers nothing. The id round reveals that as an inconsistency.
  */
 export const USER_METADATA_FIELDS = [
   'email',
@@ -61,18 +58,15 @@ export const writeMetadataField = (user: BaseUser, field: UserMetadataField, val
 
 export interface MetadataDifference {
   field: UserMetadataField
-  /** System to the value it holds, for every system that answered with a record. */
+  /**
+   * System to the value it holds, for every system that answered with a record.
+   */
   values: Map<string, string>
 }
 
 /**
- * Which of the six fields the systems disagree about.
- *
- * Blog is compared on `person.*` like everything else, and its own root `firstName`/`lastName`
- * columns are deliberately left out of this: those are the byline under an article, the blog's slug
- * and the public API, not back-office metadata. That blog's `person` is empty for most bloggers and
- * will therefore read as different is correct -- the back-office identity really is unset there,
- * and the first repair fills it in.
+ * Blog is compared on `person.*`. Its root `firstName`/`lastName` are the public byline and are excluded.
+ * Blog's empty `person` reads as different on purpose; the first repair fills it.
  */
 export const findMetadataDifferences = (records: Map<string, BaseUser>): MetadataDifference[] => {
   const differences: MetadataDifference[] = []
@@ -91,12 +85,8 @@ export const findMetadataDifferences = (records: Map<string, BaseUser>): Metadat
 }
 
 /**
- * Which record the repair form is pre-filled from: the first system in the configured order that
- * has one.
- *
- * Never "whichever answered first" -- the fan-out is parallel, so that would be a different answer
- * on every run. The order is a default rather than a hidden rule: the dialog names the source and
- * lets it be changed.
+ * Prefill source: the first system in configured order with a record.
+ * Not the first to answer, since the fan-out is parallel. The dialog names the source and lets it be changed.
  */
 export const pickPrefillSource = (order: string[], records: Map<string, BaseUser>): string | null => {
   for (const system of order) {
@@ -105,7 +95,9 @@ export const pickPrefillSource = (order: string[], records: Map<string, BaseUser
   return null
 }
 
-/** Systems whose stored value differs from the one about to be written. Nothing else is touched. */
+/**
+ * Systems whose stored value differs from the one about to be written. Nothing else is touched.
+ */
 export const systemsNeedingWrite = (
   target: BaseUser,
   records: Map<string, BaseUser>,

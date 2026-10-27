@@ -1,9 +1,8 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import '@/styles/components/table.scss'
 
-// The library styled a row of its datatables as `a-datatable__row--active`, which nothing of the library, admin-dam or
-// the admins sets, in a light colour also in the dark theme. Taken out: such a row has no background of its own.
-// The row the side panel of an asset list shows is framed by a class of its own (`asset-list-table__item--active`).
+// `a-datatable__row--active` is removed: nothing sets it, and it used a light colour in the dark theme too.
+// Such a row has no background of its own. The asset list side panel row uses `asset-list-table__item--active`.
 
 function render(html: string) {
   const host = document.createElement('div')

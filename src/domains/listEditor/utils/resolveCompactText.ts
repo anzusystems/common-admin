@@ -8,9 +8,8 @@ export function resolveCompactText<TItem extends Record<string, any>>(
   options: { compactField?: string | null }
 ): string {
   if (!options.compactField) return ''
-  // A dotted path reads through nested objects (`texts.title`), which is how most entities in
-  // these admins carry their label. A key without a dot behaves exactly as it always did, and a
-  // path that runs into a missing or non-object step yields '' rather than throwing.
+  // A dotted path reads through nested objects (`texts.title`), which is how most entities carry their label.
+  // A path that hits a missing or non-object step yields '' instead of throwing.
   let v: unknown = raw
   for (const segment of options.compactField.split('.')) {
     if (v === null || typeof v !== 'object') return ''

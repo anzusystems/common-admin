@@ -5,8 +5,8 @@ import {
   useCommonAdminCoreDamOptions,
 } from '@/domains/dam/composables/commonAdminCoreDamOptions'
 
-// The ROI editor is offered by the grant the configured endpoint checks: admin-ugc saves through `/ugc/v1/roi`, which
-// checks none, and has no DAM user to check one against.
+// The ROI editor is offered based on the grant the configured endpoint checks.
+// admin-ugc saves through `/ugc/v1/roi`, which checks no grant and has no DAM user to check one against.
 
 const damClient = () => ({}) as AxiosInstance
 

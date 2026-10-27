@@ -28,11 +28,10 @@ import { useUploadQueueItemFactory } from '@/domains/dam/uploadQueue/factory/Upl
 import DamDistributionServiceSelect from '@/domains/dam/user/components/DamDistributionServiceSelect.vue'
 import DamExternalProviderAssetSelect from '@/domains/dam/user/components/DamExternalProviderAssetSelect.vue'
 
-// The exported components that read the DAM configuration store, under a named configuration: given its name as
-// `configName`, or inside a component under it. Each reads the store of that name, whose ext system 4 has another
-// custom form, no keywords, another distribution service and another provider than that of `default`; none of them
-// asks anything. `own`'s store is filled first: on a library with one store for every name, what both read would be
-// the last fill, `default`'s.
+// Components that read the DAM configuration store under a named
+// configuration, given as `configName` or by a parent component.
+// The store of `own` differs from `default` in ext system 4's custom form, keywords, distribution service and provider.
+// `own` is filled first. With one store for every name, both would read the last fill, `default`'s.
 
 const { endPoints } = cmsConfiguration
 const CONTENT_QUEUE = 'named-content'
@@ -77,7 +76,6 @@ afterEach(() => {
   useUploadQueuesStore().stopUpload(CONTENT_QUEUE)
 })
 
-/** A component under `own` that hands the name to nothing by itself: what is in it has the name from it. */
 const UnderOwn = defineComponent({
   setup(_, { slots }) {
     useDamConfigName('own')
@@ -175,7 +173,6 @@ describe.each(ways)('an exported component under a named DAM configuration, %s',
 
     expect(subject.findComponent(KeywordRemoteAutocompleteWithCached).exists()).toBe(false)
     expect(subject.findComponent(AuthorRemoteAutocompleteWithCached).exists()).toBe(false)
-    // The panel of the images, open from the start, fills their fields.
     expect(subject.text()).toContain(ofOwn.fieldName)
     expect(subject.text()).not.toContain(ofDefault.fieldName)
     askedNothing()
@@ -211,8 +208,8 @@ describe.each(ways)('an exported component under a named DAM configuration, %s',
   })
 })
 
-// The form of the dialog of one uploaded file takes the rules of its own `configName`, which it hands on, not the name
-// of the component above it: given `own` under none, it follows `own`.
+// The form of the dialog of one uploaded file uses the rules of
+// its own `configName`, not the name of the component above it.
 describe('the form of the dialog of one uploaded file, given the name of a DAM configuration', () => {
   it('has neither keywords nor authors, as that configuration says', async () => {
     await useUploadQueuesStore().addByCopyToLicence(CONTENT_QUEUE, EXT, LICENCE, ['asset-1'], 'own')

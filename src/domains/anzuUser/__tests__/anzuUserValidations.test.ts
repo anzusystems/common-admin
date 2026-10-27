@@ -8,8 +8,8 @@ import {
 } from '@/domains/anzuUser/composables/anzuUserValidations'
 import type { BaseUser } from '@/shared/types/AnzuUser'
 
-// Decision 29: how strict the form is, is a property of the system, and the same one for creating
-// and for editing. Two profiles only -- e-mail alone, or the full set.
+// Decision 29: form strictness is a property of the system and is the same for create and edit.
+// There are two profiles only: e-mail alone, or the full set.
 
 const user = (over: Partial<BaseUser> = {}): BaseUser => ({
   id: 1,
@@ -105,7 +105,6 @@ describe('user metadata validation profiles', () => {
     const cmsCreating = validate(user({ id: null }), { idInput: false, isEdit: false })
     expect(cmsCreating.user.id.$invalid).toBe(false)
 
-    // On an edit it is a primary key on display.
     const editing = validate(user({ id: null }), { idInput: true, isEdit: true })
     expect(editing.user.id.$invalid).toBe(false)
   })

@@ -11,13 +11,10 @@ defineProps<{
   client: AxiosClientFn
   system: string
   /**
-   * Where the grants editor reads the permission config -- `GET /adm/v1/permissions/config` when
-   * left out, which every backend has.
-   *
-   * Named for what it is, and deliberately not `endPoint`: a page holding the permission-group
-   * endpoint passed it here as `endPoint`, the editor fetched the group list as its config and
-   * crashed -- and, the config store being keyed by system, left that system's user pages broken
-   * until reload. A stray `end-point` now falls through as an attribute and changes nothing.
+   * Where the grants editor reads the permission config. Defaults to `GET /adm/v1/permissions/config`.
+   * Deliberately not named `endPoint`: a page once passed the permission-group endpoint as `endPoint`.
+   * The editor then fetched the group list as config and crashed, and
+   * the per-system config store left user pages broken until reload.
    */
   permissionConfigEndPoint?: string | undefined
 }>()
@@ -52,8 +49,8 @@ const { t } = useI18n()
       <VRow>
         <VCol cols="12">
           <!--
-            A group has no resolved permissions of its own: `resolvedPermissions` is left undefined
-            so the origin column reads every grant as the group's own rather than a user's.
+            A group has no resolved permissions of its own. `resolvedPermissions`
+            stays undefined so the origin column reads every grant as the group's own.
           -->
           <APermissionEditor
             v-model="permissionGroup.permissions"

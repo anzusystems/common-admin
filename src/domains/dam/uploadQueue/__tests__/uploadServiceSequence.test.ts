@@ -9,9 +9,8 @@ import { UploadQueueItemStatus, UploadQueueItemType } from '@/domains/dam/types/
 import { useUpload } from '@/domains/dam/uploadQueue/composables/uploadService'
 import { useUploadQueueItemFactory } from '@/domains/dam/uploadQueue/factory/UploadQueueItemFactory'
 
-// One file sent in several chunks, request by request: the real upload service, the real requests and the real
-// hash, against a client that records what it is sent. The chunk size comes from the DAM configuration, as in an
-// application; here it is fixed at 1024 bytes, so that a file of 3000 goes out in three.
+// One file sent in several chunks, request by request, with the real service, requests and hash.
+// The chunk size comes from the DAM configuration; it is fixed at 1024 bytes so a file of 3000 goes out in three.
 
 const { endPoints } = ugcConfiguration
 const CHUNK = 1024
@@ -31,7 +30,6 @@ beforeEach(() => {
   dam = createFakeDam(endPoints)
   installConsumerProfile(ugcConfiguration, dam.client)
   useDamConfigStore().damPrvConfig.settings.imageChunkConfig = { minSize: CHUNK, maxSize: CHUNK }
-  // The speed is measured once a second: that second is held here, and let pass by the test.
   waits = holdLongWaits(SECOND)
 })
 afterEach(() => {
@@ -73,7 +71,6 @@ describe('a file sent in three chunks', () => {
       '{"offset":1024,"size":1024}',
       '{"offset":2048,"size":952}',
     ])
-    // Each chunk is a file of the name and type of the one picked, with its own share of the bytes.
     const parts = [0, 1, 2].map((index) => chunkForm(index).get('file') as File)
     expect(parts.map((part) => [part.name, part.type, part.size])).toEqual([
       ['photo.jpg', 'image/jpeg', 1024],
@@ -85,7 +82,6 @@ describe('a file sent in three chunks', () => {
 
     const finish = dam.sentTo('PATCH', dam.routes.finish)[0]
     expect(dam.body(finish)).toEqual({ checksum: await sha1(bytes) })
-    // The finish request leaves the row waiting for the server.
     expect(item.status).toBe(UploadQueueItemStatus.Processing)
     expect(dam.unanswered).toEqual([])
   })
@@ -97,7 +93,6 @@ describe('a file sent in three chunks', () => {
       reports.push({ percent, speed, remaining })
     )
     const chunks = dam.hold('POST', dam.routes.chunk)
-    // What axios tells of a chunk on its way: half of it, then, a moment later, all of it.
     const sendChunk = async () => {
       const [held] = chunks.waiting
       const progress = held.request.config.onUploadProgress!
@@ -109,7 +104,6 @@ describe('a file sent in three chunks', () => {
     }
     const chunksSent = () => dam.sentTo('POST', dam.routes.chunk).length
 
-    /** The meter's wait is over. It is the only wait of the upload while chunks go out, and it is a second. */
     const aSecondPasses = async () => {
       expect(waits.lengths()).toEqual([SECOND])
       await waits.elapse()
@@ -118,7 +112,6 @@ describe('a file sent in three chunks', () => {
     await uploadInit()
     const uploading = upload()
     await vi.waitFor(() => expect(chunksSent()).toBe(1))
-    // Nothing was measured yet: nothing is reported.
     await aSecondPasses()
     expect(reports).toEqual([])
 
@@ -128,14 +121,13 @@ describe('a file sent in three chunks', () => {
     await sendChunk()
     await vi.waitFor(() => expect(chunksSent()).toBe(3))
     await aSecondPasses()
-    // After each report the meter waits a second again.
     expect(waits.lengths()).toEqual([SECOND])
     await sendChunk()
     await uploading
 
     expect(reports.map((report) => Math.round(report.percent))).toEqual([34, 68])
-    // The second that was running when the last chunk went out still reports, the whole file by then; no other
-    // does: once the file is out the meter asks for no further second.
+    // The second running when the last chunk went out still reports, with the whole file
+    // by then. No other does: once the file is out the meter asks for no further second.
     expect(waits.lengths()).toContain(SECOND)
     await waits.elapse()
     expect(waits.lengths()).not.toContain(SECOND)

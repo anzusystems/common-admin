@@ -12,8 +12,8 @@ import { useDamConfigStore } from '@/domains/dam/config/store/damConfigStore'
 import { DamAssetType } from '@/domains/dam/types/Asset'
 import type { DamExtSystemConfig } from '@/domains/dam/types/DamConfig'
 
-// The custom fields of an asset: the first few are always shown ("pinned"), the rest sits behind "show all". How
-// many are pinned is a setting of the DAM, per ext system and asset type.
+// Custom fields of an asset: the first few are always shown ("pinned"), the rest sit behind "show all".
+// The pinned count is a DAM setting per ext system and asset type.
 
 const EXT_SYSTEM = 1
 const FIELDS = ['title', 'description', 'headline', 'source']
@@ -47,7 +47,6 @@ afterEach(() => {
   useCustomDataForm().showAll.value = false
 })
 
-/** The form of an image, in an ext system whose image settings are the given ones. */
 const mountForm = async (image: Record<string, unknown> | undefined) => {
   const store = useDamConfigStore()
   store.damConfigExtSystem.set(EXT_SYSTEM, (image ? { image } : {}) as unknown as DamExtSystemConfig)
@@ -85,7 +84,6 @@ describe('the pinned custom fields of an asset', () => {
     expect(await mountForm({ customMetadataPinnedAmount: amount })).toEqual({ pinned, behindShowAll, hasToggle })
   })
 
-  // No field pinned is a setting like any other: every field is behind "show all" then.
   it('are none when the DAM is configured with 0', async () => {
     expect(await mountForm({ customMetadataPinnedAmount: 0 })).toEqual({
       pinned: [],

@@ -27,7 +27,9 @@ const props = defineProps<{
   system: string
   type: LogTypeType
   logPaths: LogPaths
-  /** Same mapper the view uses. Needed here so the actions cell stays a real link. */
+  /**
+   * Same mapper the view uses. Needed here so the actions cell stays a real link.
+   */
   detailRoute: (log: Log) => RouteLocationRaw
 }>()
 
@@ -44,9 +46,9 @@ if (isUndefined(filterConfig) || isUndefined(filterData)) {
   throw new Error('[ALogDatatable] Incorrect provide/inject config.')
 }
 
-// Read once on purpose. Every one of these is fixed for the lifetime of this instance: the page
-// remounts the whole view through a `:key` when the system or the type changes, precisely because
-// `useApiFetchList` closes over its client and url, and reacting here could not undo that.
+// Read once on purpose. These are fixed for this instance's lifetime.
+// The page remounts the view via `:key` on system or type change,
+// because `useApiFetchList` closes over its client and url.
 /* eslint-disable vue/no-setup-props-reactivity-loss */
 const { t } = useI18n()
 const { fetchList, listItems, datatableHiddenColumns, cancel } = useLogListActions({
@@ -57,8 +59,8 @@ const { fetchList, listItems, datatableHiddenColumns, cancel } = useLogListActio
   loading,
 })
 
-// Neither the url hash nor local storage: the filter is kept per view in memory by the registry
-// in `logFilter`, and nothing about a log listing is worth persisting across a reload.
+// No url hash and no local storage. The `logFilter` registry keeps the filter per view in memory.
+// Nothing about a log listing is worth persisting across a reload.
 const { resetFilter, submitFilter, loadStoredFilters } = useFilterHelpers(filterData, filterConfig, {
   storeFiltersLocalStorage: false,
   populateUrlParams: false,
@@ -67,8 +69,8 @@ const { resetFilter, submitFilter, loadStoredFilters } = useFilterHelpers(filter
 const { pagination } = usePagination(SORT_BY_ID)
 provide(DatatablePaginationKey, pagination)
 
-// Keyed by type, not by system: the sets differ between app and audit, and a column hidden in
-// audit must not disappear from the app table.
+// Keyed by type, not by system. The column sets differ between app and audit.
+// A column hidden in audit must not disappear from the app table.
 const { columnsVisible, columnsAll, columnsHidden } = createDatatableColumnsConfig(
   [
     { key: 'id' },
@@ -99,14 +101,14 @@ const onRowClick = (_event: unknown, { item }: { item: DatatableItem }) => {
 }
 
 onMounted(() => {
-  // Reads nothing back -- both persistences are off -- but it is what restores the page a user
-  // was on when they close a detail, which `AActionCloseButtonHistory` flags for the next list.
+  // Both persistences are off, so it reads nothing back.
+  // It still restores the page a user was on after closing a detail,
+  // which `AActionCloseButtonHistory` flags for the next list.
   loadStoredFilters(pagination, getList)
 })
 
-// Everything above reads its props once, which is only correct while the page remounts this view
-// through a `:key`. Nothing would otherwise report a page that forgot: the table would keep
-// querying the old endpoint with the old columns under a new url, quietly.
+// The code above reads props once, which is only correct while the page remounts this view via `:key`.
+// Otherwise the table would silently keep querying the old endpoint with the old columns.
 if (isDevelopment()) {
   watch(
     () => [props.system, props.type],
@@ -120,9 +122,9 @@ if (isDevelopment()) {
 }
 
 onBeforeUnmount(() => {
-  // Both, and in this order. `cancel()` only invalidates what is already in flight; a debounce
-  // still pending would fire after unmount, bump the generation past that invalidation and start
-  // a request the token would then consider current.
+  // Both calls, in this order. `cancel()` only invalidates requests already in flight.
+  // A pending debounce would fire after unmount, bump the generation past
+  // that invalidation and start a request the token treats as current.
   getList.cancel()
   cancel()
 })
@@ -174,9 +176,8 @@ defineExpose({
       <template #item.actions="{ item }: { item: DatatableItem }">
         <div class="d-flex justify-end">
           <!--
-            `:to`, not a click handler: an anchor is what makes middle-click and open-in-new-tab
-            work on a list people open several entries from, and it is what the smoke spec scrapes
-            to find a row id.
+            `:to`, not a click handler. An anchor makes middle-click and open-in-new-tab work.
+            The smoke spec also scrapes it to find a row id.
           -->
           <VBtn
             :to="detailRoute(item)"

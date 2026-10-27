@@ -22,10 +22,10 @@ import { useUploadQueueDialog } from '@/domains/dam/uploadQueue/composables/useU
 import { useAlertsQueue } from '@/domains/system/composables/alertsQueue'
 import { DamAssetType } from '@/domains/dam/types/Asset'
 
-// A copy of picked assets to the licence of a widget that fails: each of the three widgets that copy says so
-// once and adds nothing, and a copy that was stopped says nothing. The request is the real one, against a DAM
-// that answers as told, and the alert is the real one: a failed copy used to reach it as the bare error of axios,
-// which it let pass without a word. And where each of them sends the copy, for it to succeed.
+// A failed copy of picked assets to the widget's licence: each
+// of the three copying widgets reports it once and adds nothing.
+// A stopped copy reports nothing. The request and the alert are real, against a DAM that answers as told.
+// A failed copy used to reach the alert as a bare axios error, which it let pass silently.
 
 const connection = vi.hoisted(() => ({
   client: null as null | (() => unknown),
@@ -91,7 +91,6 @@ const stopped: FakeDamRule = (request) => {
   throw new axios.CanceledError(undefined, undefined, request.config as never)
 }
 
-/** An image the picker hands over, of the given licence. */
 const pickedOf = (id: string, licence: number) => ({
   id,
   licence,
@@ -222,7 +221,6 @@ describe('an asset picked to be copied that is already in the licence of the upl
       assetConflicts: [],
     })),
   })
-  /** An asset of the licence of the upload, as the DAM has it: with its description and its author. */
   const inTheDam = (id: string) =>
     dam.assets.set(
       id,
@@ -270,7 +268,6 @@ describe('an asset picked to be copied that is already in the licence of the upl
   // under that licence and its ext system (the licence browsed when confirming is another one, of another ext system),
   // and the copies once the dialog of the queue is used.
   describe('in the gallery, picked together with assets of another licence', () => {
-    /** The gallery, its pick confirmed while another licence, of another ext system, is browsed; it stays mounted. */
     const confirmMixed = async (copyAnswers: FakeDamRule) => {
       dam.reply((request) => (request.method === 'PATCH' && COPY.test(request.url) ? copyAnswers(request) : undefined))
       // The names of authors only under the ext system of the licence of the upload; under another one, none.
@@ -318,7 +315,6 @@ describe('an asset picked to be copied that is already in the licence of the upl
       await flushPromises()
       return { wrapper, queueKey }
     }
-    /** An image the dialog of the queue hands over for a row of the queue. */
     const fromTheDialog = (assetId: string) => ({
       key: assetId,
       texts: { description: `copied ${assetId}`, source: '' },

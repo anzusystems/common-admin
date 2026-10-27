@@ -318,11 +318,9 @@ describe('useRecordPage', () => {
     await router.push('/records/3')
     wrapper = mount(page, { global: { plugins: [router] } })
 
-    // Record 3 fails once ...
     const failed = mountRecordPage(router, detailOptions())
     expect(await failed.api.leave()).toBe(true)
     failed.wrapper.unmount()
-    // ... is opened again and loads, and record 8 is opened from it and fails.
     await router.push('/records/3')
     const loaded = mountRecordPage(router, detailOptions())
     await router.push('/records/8')
@@ -339,10 +337,9 @@ describe('useRecordPage', () => {
     await router.push('/records')
     await router.push('/records/3')
     await router.push('/records/8')
-    // The app stays: with the last app using it unmounted, the router would reset to its start.
+    // The app stays mounted: with the last app using it unmounted, the router would reset to its start.
     wrapper = mount(page, { global: { plugins: [router] } })
 
-    // Record 8 fails and goes back to record 3 ...
     const second = mountRecordPage(router, detailOptions())
     expect(await second.api.leave()).toBe(true)
     second.wrapper.unmount()

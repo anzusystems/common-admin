@@ -1,17 +1,14 @@
 #!/usr/bin/env node
 /**
  * Replaces unplugin-auto-import in an admin with explicit imports, and checks the result.
- *
  *   node scripts/codemods/explicit-imports/run.mjs /path/to/admin [--keep-dts] [--deps-from /path/to/admin]
- *
- * Before touching a file it records what unimport injects today, the template bindings and the
- * runtime props of every component and the import graph; after the edit it requires that unimport
- * would inject nothing, that no template reference changed its target except `_ctx.X` becoming
- * `$setup.X` for a name it now imports, that no prop gained a `Boolean` or `Function` type and that
- * no new import cycle appeared. Exceptions come from `scripts/explicit-imports.allowlist.json` in
- * the admin. The manifest goes to `scripts/explicit-imports.manifest.json`; the exit code is 1 when
- * anything is left unexplained. Run it before unplugin-auto-import is removed: it uses the admin's
- * unimport, Vue compiler and TypeScript.
+ * It records what unimport injects, the template bindings, the runtime
+ * props of every component and the import graph before editing.
+ * After the edit it requires: unimport injects nothing; no template reference changed its target except `_ctx.X`
+ * to `$setup.X` for a newly imported name; no prop gained a `Boolean` or `Function` type; no new import cycle.
+ * Exceptions come from `scripts/explicit-imports.allowlist.json` in the admin. The manifest
+ * goes to `scripts/explicit-imports.manifest.json`. Exit code 1 when anything is unexplained.
+ * Run it before unplugin-auto-import is removed: it uses the admin's unimport, Vue compiler and TypeScript.
  */
 import { execFileSync, spawnSync } from 'node:child_process'
 import { existsSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
@@ -229,7 +226,6 @@ for (const file of files) {
   const now = after.get(file)
   if (!now) continue
   const entry = manifestFiles[key]
-  // unimport would inject nothing any more
   for (const name of [...now.detect.script, ...now.detect.template]) {
     violation('residualInjections', key, name, `unimport would still inject ${name}`)
   }

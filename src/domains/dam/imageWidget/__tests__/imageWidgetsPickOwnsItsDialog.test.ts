@@ -7,13 +7,11 @@ import { useImageMediaWidgetStore } from '@/domains/dam/imageWidget/store/imageM
 import { ImageWidgetUploadConfigKey } from '@/domains/dam/imageWidget/utils/imageWidgetInkectionKeys'
 import { useUploadQueueDialog } from '@/domains/dam/uploadQueue/composables/useUploadQueueDialog'
 
-// What a pick in the library of a widget of one image may still do once its dialog has gone to something else, and
-// what may empty the store of the image dialog, which the page shares. The read of a pick the dialog no longer loads
-// for offered the authors of its asset in the dialog of the pick shown since; the answer of the widget's own save
-// closed the dialog of a pick still read and left it loading; the end of a pick whose dialog was closed gave the lock
-// of the field up under a later pick; a widget drawn late, or the delete of the image and media widget, emptied the
-// form of another widget's open dialog. The dialog of the image and the collaboration are stand-ins; the reads, the
-// save and the delete answer when the case lets them.
+// Guards a pick whose dialog has gone to something else, and what may empty the shared store of the image dialog.
+// Past bugs: the read of a stale pick offered authors in the dialog of a later pick. The
+// widget's own save answer closed the dialog of a pick still being read. The end of a pick
+// with a closed dialog released the field lock under a later pick. A late-drawn widget, or
+// the delete of the image and media widget, emptied another widget's open dialog form.
 
 const released = vi.fn()
 const changed = vi.fn()
@@ -49,7 +47,6 @@ vi.mock('@/domains/dam/imageWidget/composables/commonAdminImageOptions', () => (
     },
   }),
 }))
-// An asset of the DAM is described and has no authors: the dialog offers the authors of the DAM for its image.
 vi.mock('@/domains/dam/api/damAssetApi', async (importOriginal) => ({
   ...(await importOriginal<object>()),
   fetchAsset: (_client: unknown, _endPoint: string, id: string) =>
@@ -78,7 +75,6 @@ const image = {
   dam: { damId: 'file-7', licenceId: 1, regionPosition: 0, internal: false },
   position: 1,
 }
-/** What the editor has typed in the form of the dialog of another widget. */
 const typed = { ...image, texts: { description: 'typed by the editor', source: 'Agency' } }
 const listed = (id: string) => ({
   id,
@@ -147,7 +143,7 @@ const mountOf = async (component: Component, field: string, more: object = {}) =
   })
   mounted.push(wrapper)
   await flushPromises()
-  // Found anew each time: once another widget is mounted with stand-ins of its own, this one draws them anew.
+  // Found anew each time: once another widget is mounted with its own stand-ins, this one draws them anew.
   return {
     wrapper,
     dialog: () => wrapper.findComponent({ name: 'ImageDetailDialogMetadata' }),
@@ -208,9 +204,10 @@ describe.each<[string, Component]>([
     expect([widget.dialog().props('showDamAuthors'), widget.dialog().props('damAuthors')]).toEqual([true, ['author-1']])
   })
 
-  // The widget's own save answers while the dialog, closed after its confirm, loads for a pick: the dialog is the
-  // pick's. Closed by that answer, it left the widget loading for the pick, whose answer opened the dialog again (the
-  // image and media widget), or closed an "edit metadata" opened meanwhile, which showed only the spinner.
+  // The widget's own save answers while the dialog, closed after
+  // its confirm, loads for a pick. The dialog belongs to the pick.
+  // Closing it on that answer left the widget loading, and the pick's answer then reopened the dialog (image
+  // and media widget). Or it closed an "edit metadata" dialog opened meanwhile, which showed only the spinner.
   it('stays loading for the pick when its own save answers, then shows the pick; nothing is left loading', async () => {
     const widget = await mountOf(component, 'listingImage')
     useImageMediaWidgetStore().setDetail(structuredClone(image))

@@ -54,7 +54,7 @@ const props = withDefaults(
     defaultValue: null,
     errorMessages: undefined,
     lastMinuteMoment: false,
-    // Not set, the text field follows a readonly `VForm` around it; the calendar and clearing follow only this prop.
+    // When unset, the text field follows a readonly `VForm` around it. The calendar and clearing follow only this prop.
     readonly: undefined,
   }
 )
@@ -199,7 +199,7 @@ const onTextFieldBlur = () => {
     emit('blur')
     return
   }
-  // keep seconds from original model
+  // Keeps the seconds from the original model.
   const seconds = parseModel(props.modelValue, props.type, props.lastMinuteMoment)?.second() ?? 0
   const reparsed = parseTyped(filtered, props.type, seconds)
   if (!isNull(reparsed)) {
@@ -245,9 +245,8 @@ const onTextFieldFocus = () => {
   emit('focus')
 }
 
-// The calendar icon is a button: Enter and Space open and close the calendar as a click does. Its menu takes only the
-// arrows from the keyboard. The keyup of that Enter stays on the icon: the Enter of the field would report it left a
-// second time.
+// The calendar icon is a button. Enter and Space toggle the calendar like a click. Its menu takes only the arrow keys.
+// The keyup of that Enter stays on the icon. Otherwise the field's Enter handler would report leaving a second time.
 const togglePicker = () => {
   pickerOpened.value = !pickerOpened.value
 }

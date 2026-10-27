@@ -222,7 +222,9 @@ export interface Props<TItem extends Record<string, any>> {
   loading?: boolean
   error?: string | null
 
-  /** Heading above the list. A ready translated string, like every text prop here. */
+  /**
+   * Heading above the list. A ready translated string, like every text prop here.
+   */
   title?: string | null
 
   /**
@@ -241,17 +243,20 @@ export interface Props<TItem extends Record<string, any>> {
   showChangeParent?: boolean
   showExpandToggle?: boolean
 
-  /** Label of the add button. A ready translated string; omit it for the library's own wording. */
+  /**
+   * Label of the add button. A ready translated string; omit it for the library's own wording.
+   */
   addLabel?: string | null
-  /** Heading of the empty state. A ready translated string. */
+  /**
+   * Heading of the empty state. A ready translated string.
+   */
   emptyTitle?: string | null
 
   disableRowClick?: boolean
   disableDeleteConfirm?: boolean
   /**
-   * Disable unsaved-state tracking — no dirty markers, never reads as unsaved. For a list that is a
-   * VIEW of data owned elsewhere (a display cache rebuilt from a parent's field, say): nothing in
-   * such a component can ever clear an amber row, so it must not raise one. Mirrors `AListEditor`.
+   * Disables unsaved-state tracking: no dirty markers, never reads as unsaved.
+   * For a list that is a view of data owned elsewhere, where nothing can clear an amber row. Mirrors `AListEditor`.
    */
   disableUnsaved?: boolean
   deleteConfirmTitle?: string | null
@@ -552,8 +557,7 @@ const viewItemsDecorated = computed<DecoratedNestedViewItem<TItem>[]>(() => {
     // Amber = controller dirty OR reorder-session moved. readonly suppresses it
     // (read-only views can't be unsaved; also dodges a mount-before-load baseline). (QA 85050 sweep)
     const dirty = props.readonly ? false : controller.isUnsaved(vi.key)
-    // `disableUnsaved` suppresses only the amber marker — the validation rail still shows, since
-    // hiding dirty state should not hide a real error.
+    // `disableUnsaved` hides only the amber marker. The validation rail still shows real errors.
     const unsaved = props.disableUnsaved || props.readonly ? false : dirty || moved
     const cached = decoratorCache.get(vi.key)
     if (
@@ -613,8 +617,8 @@ const { editingKeys, editingSnapshots, clearEditing, beginEdit, cancelEdit, comm
     rowsContainer,
     rowSelector: '.a-le-row-wrapper',
     isInlineEdit,
-    // markDirty=false: restoring the pre-edit snapshot on cancel must not flag the
-    // node dirty (it would otherwise be resent by partial-multi saves).
+    // `markDirty=false`: restoring the snapshot on cancel must not
+    // mark the node dirty, or partial-multi saves would resend it.
     restoreSnapshot: (key, data) => controller.updateItem(key, data, false),
     watchKeys: () => {
       const keys: ListEditorKey[] = []
@@ -1119,11 +1123,11 @@ const {
       if (deferred) sessionDeferredDeletes.value.add(vi.key)
       else sessionImmediateDeletes.value.add(vi.key)
     }
-    // Controller owns removal (mirrors the flat editors): a deferred saved-row delete is tombstoned
-    // (counts as unsaved); immediate skips it (already deleted on the backend). Runs before the
-    // `deleted` emit so a consumer's handler still receives `vi.raw`.
-    // Immediate: the backend already dropped the row and does not renumber the siblings, so neither does
-    // the editor — their positions keep matching the server's and nothing reads as unsaved.
+    // The controller owns removal, as in the flat editors, and runs
+    // before the `deleted` emit so a handler still gets `vi.raw`.
+    // Deferred: a saved row is tombstoned and counts as unsaved.
+    // Immediate: the backend already deleted it and does not renumber siblings, so the
+    // editor does not either. Positions match the server and nothing reads as unsaved.
     if (deferred) controller.deleteItem(vi.key, { trackDeleted: true })
     else controller.deleteItem(vi.key, { trackDeleted: false, renumber: false })
     emit('deleted', vi)
@@ -1136,8 +1140,8 @@ const onDeleteClick = async (vi: NestedViewItem<TItem>) => {
   await triggerDeleteClick(vi)
 }
 
-// In-flight guard: a second click while the consumer's save is pending must not send a duplicate.
-// A rejected save keeps the row open and still reaches the app's error handler, as before the guard.
+// Blocks a second click while the consumer's save is pending, so no duplicate is sent.
+// A rejected save keeps the row open and still reaches the app's error handler.
 const savingKeys = ref<Set<ListEditorKey>>(new Set())
 const onSaveClick = async (vi: NestedViewItem<TItem>) => {
   if (savingKeys.value.has(vi.key)) return
@@ -1493,10 +1497,10 @@ const rowCallbacks = {
 
 const rootViewItems = computed(() => viewItemsDecorated.value.filter((v) => v.parentKey === null))
 
-// `acceptChanges` re-baselines ONLY what its own op changed, not the whole tree: other pending
-// edits/moves must survive and keep arming the leave guard. Siblings the op merely renumbered stay
-// pending (`meta.dirty`) -- the server may not have renumbered them, so the page's save still has to
-// send theirs.
+// `acceptChanges` re-baselines only what its op changed. Other
+// pending edits and moves must keep arming the leave guard.
+// Siblings the op only renumbered stay dirty, since the server may
+// not have renumbered them and the page's save must send them.
 const nodesByKey = (): Map<ListEditorKey, NestedTreeNode<TItem>> => {
   const out = new Map<ListEditorKey, NestedTreeNode<TItem>>()
   const walk = (nodes: NestedTreeNode<TItem>[]) => {
@@ -1510,9 +1514,10 @@ const nodesByKey = (): Map<ListEditorKey, NestedTreeNode<TItem>> => {
 }
 const pendingKeys = (): Set<ListEditorKey> => new Set([...nodesByKey().keys()].filter((k) => controller.isUnsaved(k)))
 /**
- * Runs a tree mutation the server has already made -- a row created or saved through a dialog -- and
- * adopts as saved only the rows it added or edited, plus `keys` (pass the row's key; a deleted one is
- * no longer in the tree to be found). Siblings it only renumbered and other pending work stay unsaved.
+ * Runs a tree mutation the server already made, such as a row created or saved through a dialog.
+ * Adopts as saved only the rows it added or edited, plus `keys`. Pass
+ * the row's key for a delete, since it is no longer in the tree.
+ * Renumbered siblings and other pending work stay unsaved.
  */
 const acceptChanges = (op: () => void, keys: ListEditorKey[] = []) => {
   const existing = new Set(nodesByKey().keys())
@@ -1521,8 +1526,8 @@ const acceptChanges = (op: () => void, keys: ListEditorKey[] = []) => {
   nextTick(() => {
     const nodes = nodesByKey()
     const accepted = [...new Set([...keys, ...[...pendingKeys()].filter((k) => !before.has(k))])]
-    // A created row the op renumbered -- into a gap an immediate delete left -- sits where the server
-    // did not store it: adopted as saved, but its position stays pending for the page's save.
+    // A created row the op renumbered into a gap left by an immediate delete is not where the server stored it.
+    // It is adopted as saved, but its position stays pending for the page's save.
     const renumbered = accepted.filter((k) => !existing.has(k) && nodes.get(k)?.meta.dirty)
     controller.acceptRows(accepted)
     const adopted = nodesByKey()
@@ -1540,11 +1545,9 @@ useUnsavedSection(() =>
     : []
 )
 
-// Expose the controller handle plus acceptChanges and reorder/expand controls. Entries after the
-// spread override controller methods where the component adds to them (`commit` also clears the moved
-// markers, `viewItems` is this component's expand-aware list).
-// Reveal for a blocked save: open invalid rows AND expand the offender's ancestor chain so a
-// collapsed nested row becomes visible. Shared by the exposed validateAll + scope reveal-on-touch.
+// Reveal for a blocked save: open invalid rows and expand the
+// offender's ancestors so a collapsed nested row becomes visible.
+// Shared by the exposed `validateAll` and the scope's reveal-on-touch.
 const revealNestedInvalid = (): boolean =>
   validateAllAndReveal(controller, (key) => {
     let ancestor = controller.findNode(key).parent
@@ -2027,8 +2030,8 @@ defineExpose<NestedSortableListEditorExtras & NestedListEditorHandle<TItem>>({
       background: rgb(0 0 0 / 8%);
     }
 
-    // Black at 54% is invisible on a dark surface (1.12:1). `:where` adds no specificity, so the primary
-    // tint of an editing / expanded row above still wins.
+    // Black at 54% is invisible on a dark surface (1.12:1). `:where` adds no
+    // specificity, so the primary tint of an editing or expanded row still wins.
     :where(.v-theme--dark) & {
       color: rgb(255 255 255 / 70%);
 

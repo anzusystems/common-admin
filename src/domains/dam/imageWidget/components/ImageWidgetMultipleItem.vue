@@ -63,7 +63,7 @@ const removeItem = () => {
   emit('removeItem', props.index)
 }
 
-// Typed by the user: the source is the user's, no pick's, also where its text is the names a pick wrote there.
+// A typed source belongs to the user, not to a pick. This holds even when the text equals the names a pick wrote.
 const onSourceTyped = () => {
   if (isNull(image.value) || isUndefined(image.value)) return
   imageStore.forgetSourceOfPick(image.value)

@@ -47,8 +47,8 @@ const onFilesInput = (files: File[]) => {
   modelValue.value = false
 }
 
-// Opens the file choice straight away, as a click on the input would. The input lives in the dialog, so the dialog
-// opens first; the choice still comes within the same click, which the browser requires.
+// Opens the file picker like a click on the input. The input lives in the dialog, so the dialog opens first.
+// The picker must still open within the same click, which the browser requires.
 const activate = async () => {
   modelValue.value = true
   await nextTick()

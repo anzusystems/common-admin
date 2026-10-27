@@ -12,37 +12,57 @@ import { useDamCachedAuthors } from '@/domains/dam/author/composables/cachedAuth
 import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
 import { useAlerts } from '@/domains/system/composables/alerts'
 
-/** How the keywords and authors of a row look while they cannot be edited: their chips, or a switched-off input. */
+/**
+ * How a row's keywords and authors look while not editable: as chips, or as a disabled input.
+ */
 export type DamFieldsDisabledAs = 'chips' | 'input'
 
-/** The suggestions of a queue, which the name chips of its rows mark as "new". */
+/**
+ * The suggestions of a queue. Name chips of its rows mark them as "new".
+ */
 export type UploadQueueSuggestionsLookup = (queueKey: UploadQueueKey) => UploadQueue['suggestions'] | undefined
 
-/** Provided by an application whose queues are not the library's store. Without it the chips read that store. */
+/**
+ * Provided by an application whose queues are not in the library store. Without it the chips read that store.
+ */
 export const UploadQueueSuggestionsKey: InjectionKey<UploadQueueSuggestionsLookup> =
   Symbol.for('anzu:UploadQueueSuggestions')
 
-/** Today's library: the suggestions in its store, which is asked for only when a chip needs them. */
+/**
+ * Default: the suggestions in the library store. The store is resolved only when a chip needs them.
+ */
 export const libraryUploadQueueSuggestions: UploadQueueSuggestionsLookup = (queueKey) =>
   useUploadQueuesStore().getQueue(queueKey)?.suggestions
 
-/** What the list of a queue asks of its host. Without it the list works over the library's store, as today. */
+/**
+ * What a queue list needs from its host. Without it the list uses the library store.
+ */
 export interface UploadQueueListBinding {
   items(): UploadQueueItem[]
-  /** `queueKey` is the one in the row's event. */
+  /**
+   * `queueKey` is the one from the row's event.
+   */
   cancel(item: UploadQueueItem, index: number, queueKey: UploadQueueKey): void
-  /** For the library's default "remove from queue". */
+  /**
+   * Used by the library's default "remove from queue".
+   */
   remove(index: number): void
   refresh(item: UploadQueueItem): Promise<UploadRefreshOutcome>
   refreshMayHelp(item: UploadQueueItem): boolean
-  /** A warning of a refresh, through the host's own alerts. */
+  /**
+   * Shows a refresh warning through the host's own alerts.
+   */
   warn(key: UploadRefreshWarningKey): void
-  /** Hands the keywords and authors of the rows to the name caches and asks for them, once when the list mounts. */
+  /**
+   * Passes the rows' keywords and authors to the name caches and fetches them, once when the list mounts.
+   */
   prime(items: UploadQueueItem[]): void
   mainFileSingleUseEnabled: boolean
 }
 
-/** Today's list of the library: its store, its caches, its alerts, its options. It follows the key as it changes. */
+/**
+ * Default list binding: the library store, caches, alerts and options. It follows the key as it changes.
+ */
 export function useLibraryUploadQueueListBinding(
   queueKey: MaybeRefOrGetter<UploadQueueKey>,
   configName: string
@@ -57,7 +77,7 @@ export function useLibraryUploadQueueListBinding(
     items: () => uploadQueuesStore.getQueueItems(toValue(queueKey)),
     cancel: (item, index, itemQueueKey) => uploadQueuesStore.stopItemUpload(itemQueueKey, item, index),
     remove: (index) => uploadQueuesStore.removeByIndex(toValue(queueKey), index),
-    // A row offers refresh only with its asset; the rows of the configuration of its queue are settled by it.
+    // A row offers refresh only with its asset. Rows of its queue's configuration are settled by the refresh.
     refresh: (item) => uploadQueuesStore.refreshAsset(item.assetId!, { queueKey: toValue(queueKey) }),
     refreshMayHelp: (item) => uploadQueuesStore.refreshMayHelp(item),
     warn: (key) => showWarningT(key),
@@ -73,19 +93,25 @@ export function useLibraryUploadQueueListBinding(
   }
 }
 
-/** What the mass operations of a queue ask of their host. Without it they work over the library's store. */
+/**
+ * What a queue's mass operations need from their host. Without it they use the library store.
+ */
 export interface UploadQueueMassOperationsBinding {
   assetTypes(): DamAssetTypeType[]
   fillCustomDataValue(
     data: { assetType: DamAssetTypeType; elementProperty: string; value: CustomDataValue },
     forceReplace?: boolean
   ): void
-  /** Into which rows is the host's: every row in the library. */
+  /**
+   * The host decides which rows are filled. The library fills every row.
+   */
   fillKeywords(value: DocId[], forceReplace?: boolean): void
   fillAuthors(value: DocId[], forceReplace?: boolean): void
 }
 
-/** Today's: the asset types of the library's store and `useUploadQueueMassOperations`. */
+/**
+ * Default binding: the asset types of the library store and `useUploadQueueMassOperations`.
+ */
 export function useLibraryUploadQueueMassOperationsBinding(
   queueKey: MaybeRefOrGetter<UploadQueueKey>
 ): UploadQueueMassOperationsBinding {

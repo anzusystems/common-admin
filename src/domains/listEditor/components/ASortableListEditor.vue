@@ -214,7 +214,9 @@ export interface Props<TItem extends Record<string, any>> {
   loading?: boolean
   error?: string | null
 
-  /** Heading above the list. A ready translated string, like every text prop here. */
+  /**
+   * Heading above the list. A ready translated string, like every text prop here.
+   */
   title?: string | null
 
   /**
@@ -231,17 +233,20 @@ export interface Props<TItem extends Record<string, any>> {
   showEditButton?: boolean
   showAddAfterAction?: boolean
 
-  /** Label of the add button. A ready translated string; omit it for the library's own wording. */
+  /**
+   * Label of the add button. A ready translated string; omit it for the library's own wording.
+   */
   addLabel?: string | null
-  /** Heading of the empty state. A ready translated string. */
+  /**
+   * Heading of the empty state. A ready translated string.
+   */
   emptyTitle?: string | null
 
   disableRowClick?: boolean
   disableDeleteConfirm?: boolean
   /**
-   * Disable unsaved-state tracking — no dirty markers, never reads as unsaved. For a list that is a
-   * VIEW of data owned elsewhere (a display cache rebuilt from a parent's field, say): nothing in
-   * such a component can ever clear an amber row, so it must not raise one. Mirrors `AListEditor`.
+   * Disables unsaved-state tracking: no dirty markers, never reads as unsaved.
+   * For a list that is a view of data owned elsewhere, where nothing can clear an amber row. Mirrors `AListEditor`.
    */
   disableUnsaved?: boolean
   deleteConfirmTitle?: string | null
@@ -362,8 +367,8 @@ defineSlots<{
 }>()
 
 const modelProp = defineModel<TItem[]>({ required: true })
-// The v-model prop lags an emitted write until the parent re-renders; reads in the same tick must see
-// the write, or a second write (or the reorder-Cancel reconciliation) clobbers the first.
+// The v-model prop lags an emitted write until the parent re-renders. Same-tick reads must see the write.
+// Otherwise a second write or the reorder-Cancel reconciliation overwrites the first.
 let pendingWrite: TItem[] | null = null
 let wroteDuringLoad = false
 watch(modelProp, () => (pendingWrite = null), { flush: 'sync' })
@@ -418,9 +423,10 @@ const controllerOptions: ListEditorStateBindings<TItem> = {
 // on every remount); else this component owns the controller — today's behaviour, unchanged.
 const stateEntry = props.editor ? null : useListEditorStateEntry<TItem>(props.stateKey, controllerOptions)
 const controller = props.editor ?? stateEntry?.handle ?? useListEditorController<TItem>(controllerOptions)
-// Rows that arrive while `loading` are the loaded state, not user adds — but only when the editor was
-// clean when loading began (`loading` also covers a save of pending work, which must stay pending).
-// A controller passed in (`:editor`, `state-key`) can hold pending edits across a remount: not clean then.
+// Rows arriving while `loading` are the loaded state, not user
+// adds, but only if the editor was clean when loading began.
+// `loading` also covers saving pending work, which must stay pending.
+// A controller passed in (`:editor`, `state-key`) can keep pending edits across a remount, so it is not clean then.
 let cleanAtLoadStart = props.loading && !controller.hasUnsaved.value
 watch(
   () => props.loading,
@@ -746,10 +752,9 @@ const viewItemsDecorated = computed<DecoratedViewItem<TItem>[]>(() => {
     const expanded = expandedKeys.value.has(vi.key)
     const loading = props.loadingKeys?.has(vi.key) ?? false
     const moved = movedKeys.value.has(vi.key)
-    // readonly → no amber markers (can't have unsaved changes; also dodges a
-    // mount-before-load empty baseline). (QA 85050 sweep)
-    // `disableUnsaved` suppresses only the amber marker — the validation rail still shows, since
-    // hiding dirty state should not hide a real error.
+    // Readonly shows no amber markers. It cannot have unsaved changes,
+    // and this avoids an empty baseline from mounting before load.
+    // `disableUnsaved` hides only the amber marker. The validation rail still shows real errors.
     const unsaved = props.disableUnsaved || props.readonly ? false : controller.isUnsaved(vi.key)
     const dirty = unsaved
     // `editing` → the controller reads amber (not red) while the row is being filled in. (QA 85050 b7)
@@ -1074,8 +1079,8 @@ const onDeleteClick = async (vi: ListViewItem<TItem>) => {
   await triggerDeleteClick(vi)
 }
 
-// In-flight guard: a second click while the consumer's save is pending must not send a duplicate.
-// A rejected save keeps the row open and still reaches the app's error handler, as before the guard.
+// Blocks a second click while the consumer's save is pending, so no duplicate is sent.
+// A rejected save keeps the row open and still reaches the app's error handler.
 const savingKeys = ref<Set<ListEditorKey>>(new Set())
 const onSaveClick = async (vi: ListViewItem<TItem>) => {
   if (savingKeys.value.has(vi.key)) return

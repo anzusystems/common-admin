@@ -55,8 +55,8 @@ const { t } = useI18n()
 const router = useRouter()
 const { cached, loaded, unresolved } = useCachedItem(() => props.getCachedFn(props.id as any))
 
-// An item the fetch could not resolve has only its placeholder to show: its id, and no link to a
-// detail that would not load either.
+// An item the fetch could not resolve shows only its id placeholder.
+// It gets no link, because its detail would not load either.
 const linkDisabled = computed(() => props.disableClick || unresolved.value)
 
 const containerClassComputed = computed(() => {

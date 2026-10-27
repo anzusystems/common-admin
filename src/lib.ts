@@ -1329,7 +1329,6 @@ export {
   damFileTypeFix,
   localTimeShiftInSeconds,
   useSystemBar,
-  // V2 FILTERS
   AFilterWrapper,
   AFilterWrapperSidebar,
   AFilterWrapperSubjectSelect,
@@ -1392,9 +1391,7 @@ export {
   type ApiClientSetup,
   type ApiClientRequestInterceptor,
   type ApiClientResponseInterceptor,
-  // A wrapper around a helper has to be able to name what it returns and what it takes. Without
-  // these the fleet can call the family but cannot write a function that hands one on, which is the
-  // shape the admins are being moved towards.
+  // Exported so admins can write wrappers that name what the helper takes and returns.
   type UseApiRequestParams,
   type ExecuteRequestParams,
   type UseApiRequestReturnType,
@@ -1482,13 +1479,11 @@ export {
   DEFAULT_LOG_PATHS,
   type LogPaths,
   type LogTimeWindow,
-  // PERMISSIONS / PERMISSION GROUPS
   APermissionGroupDatatable,
   APermissionGroupDetail,
   APermissionGroupManage,
   usePermissionGroupActions,
   type PermissionGroupActionsParams,
-  // ANZU USER
   AAnzuUserDatatable,
   AAnzuUserForm,
   AUserCopyPermissionsDialog,
@@ -1508,7 +1503,6 @@ export {
   type BaseUserEndpointPair,
   type UserSystemExtraState,
   type UserSystemManageTarget,
-  // CROSS-SYSTEM USER VIEW
   AUserTabsShell,
   OTHER_SYSTEMS_TAB,
   USER_PROBE_ENTITY,
@@ -1527,7 +1521,6 @@ export type { CachedAnzuUsersParams } from '@/domains/anzuUser/composables/cache
 export { syncUserAndTimeTracking } from '@/shared/utils/userAndTimeTracking'
 export type { UserAndTimeTrackingData, UserAndTimeTrackingUsers } from '@/shared/types/UserAndTimeTracking'
 
-// DAM upload core (step 5)
 // Named without "image": admin-dam sends them to the endpoint of each asset type.
 export {
   imageUploadStart as damFileUploadStart,
@@ -1562,7 +1555,6 @@ export type {
   UploadQueueSettlementProfile,
 } from '@/domains/dam/uploadQueue/core/uploadQueueCoreTypes'
 
-// DAM upload components (step 5)
 export { default as ADamAssetImage } from '@/domains/dam/assetDetail/components/AssetImage.vue'
 export { default as ADamAssetImageMetaIcons } from '@/domains/dam/assetDetail/components/AssetImageMetaIcons.vue'
 export { default as ADamAssetFileFailReasonChip } from '@/domains/dam/assetDetail/components/AssetFileFailReasonChip.vue'

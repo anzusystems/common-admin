@@ -34,7 +34,6 @@ afterEach(() => {
 
 type Hook = (this: { warn: (message: string) => void }, options: { dir: string }, bundle: object) => void
 
-// One watch cycle: the files a build wrote, then the plugin's `writeBundle`.
 function setup() {
   const plugin = devCopyToAdmins()
   ;(plugin.configResolved as (config: object) => void)({ root: library })
@@ -109,8 +108,9 @@ describe('devCopyToAdmins', () => {
   })
 
   it('never writes through a pnpm hard link into the store', () => {
-    // pnpm: the package is a symlink into the virtual store, and every file there is a hard link to
-    // the global content-addressable store -- written in place, it would change it for every project.
+    // pnpm: the package is a symlink into the virtual store, and every
+    // file there is a hard link to the global content-addressable store.
+    // Written in place, it would change the file for every project.
     const store = join(root, 'store')
     write(join(store, 'common-admin.js'), 'published')
     write(join(store, 'package.json'), '{"name":"@anzusystems/common-admin","version":"2.0.0"}')

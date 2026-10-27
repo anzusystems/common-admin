@@ -3,52 +3,57 @@ import type { UploadProgressCallback } from '@/domains/dam/uploadQueue/presets/u
 import { isNull } from '@/shared/utils/common'
 
 const TICK_MS = 1_000
-// Holds the answer to at least one chunk of the size the upload aims at (a quarter of the timeout, 7.5 s at 30 s),
-// and follows a change of speed within it.
+// Covers the response to at least one target-size chunk (a quarter of
+// the timeout, 7.5 s at 30 s), and still tracks speed changes within it.
 const WINDOW_MS = 10_000
-// A shorter stretch without an answer of the server shows mostly what the browser took into its buffers: Chromium
-// tells how far the body is at most every 100 ms, axios passes it on at most every 333 ms.
+// A shorter span without a server response mostly measures browser buffering.
+// Chromium reports body progress at most every 100 ms, and axios forwards it at most every 333 ms.
 const MIN_SPAN_MS = 500
 
 interface MeterPoint {
   at: number
-  /** Bytes of the file sent by then: the chunks the server answered, and the share of the one on its way. */
+  /**
+   * File bytes sent by then: the answered chunks plus the sent share of the chunk in flight.
+   */
   sent: number
-  /** The server answered a chunk here. */
+  /**
+   * The server answered a chunk at this point.
+   */
   answered: boolean
 }
 
 /**
- * How far one upload is, how fast it goes and how long it still takes, from one curve: the bytes of its file sent
- * over time, from the request of its first chunk to the answer to its last. It reports once a second, the first at
- * once, and only once it has a speed and either bytes came since its last report or the answer to a chunk that is
- * whole on its way is awaited; the whole file once it is out, also without a speed; without `report` it reports
- * nothing and asks for no second.
+ * Progress, speed and remaining time of one upload, from one curve: file
+ * bytes sent over time, from the first chunk request to the last answer.
+ * Reports once a second, the first immediately. It reports only with a known speed and
+ * when bytes moved since the last report or an answer to a fully sent chunk is awaited.
+ * Once the file is out it reports the whole file, also without a
+ * speed. Without `report` it reports nothing and starts no timer.
  */
 export function useUploadMeter(report: UploadProgressCallback | undefined) {
   let points: MeterPoint[] = []
   let fileSize = 0
-  // Bytes of the chunks the server answered.
   let received = 0
-  // Bytes sent by the last point; after a failed try, what the server has.
+  // Bytes sent at the last point. After a failed try, what the server has.
   let sent = 0
-  // The share last reported: it never goes back.
+  // The share last reported. It never decreases.
   let shown = 0
-  // Bytes came since the last report. A chunk that stands on its way reports nothing: a speed falling with every
-  // second of silence would make the time left hours and the next chunk, sized by the speed, small.
+  // Bytes moved since the last report. A stalled chunk reports nothing.
+  // Otherwise the speed would fall each silent second, the time left would
+  // grow to hours and the next chunk, sized by speed, would be small.
   let moved = false
   let sendingOver = false
-  // The speed last reported: the whole file is reported at it when no speed can be read by then, as when the clock
-  // went back before the answer to the last chunk.
+  // The speed last reported. The whole file is reported at it when no speed
+  // can be read, e.g. when the clock went back before the last chunk's answer.
   let reportedSpeed = 0
   let timer: ReturnType<typeof setTimeout> | undefined
-  // The try whose progress counts, and where the curve is once its chunk is whole on its way. A report of a try that
-  // has ended comes too late to be on the curve.
+  // The try whose progress counts, and the curve position once its chunk is
+  // fully sent. Progress from an ended try arrives too late for the curve.
   let current: { end: number } | undefined
 
   const now = () => {
     const at = Date.now()
-    // The clock went back: nothing measured before can be set against it.
+    // The clock went back: earlier measurements cannot be compared with it.
     if (points.length && at < points.at(-1)!.at) points = []
     return at
   }
@@ -57,10 +62,10 @@ export function useUploadMeter(report: UploadProgressCallback | undefined) {
     if (bytes > sent) moved = true
     sent = bytes
     points.push({ at, sent: bytes, answered })
-    // One point stays before the window: its edge is read between two.
+    // Keep one point before the window, so its edge can be interpolated between two points.
     while (points.length > 2 && points[1]!.at <= at - WINDOW_MS) points.shift()
   }
-  // Where the curve was as the millisecond `at` began: of the points that share it, the first.
+  // The curve value at the start of millisecond `at`: of points sharing it, the first.
   const sentAt = (at: number) => {
     const next = points.findIndex((point) => point.at >= at)
     if (next === -1) return points.at(-1)!.sent
@@ -69,20 +74,23 @@ export function useUploadMeter(report: UploadProgressCallback | undefined) {
     const after = points[next]!
     return before.sent + ((after.sent - before.sent) * (at - before.at)) / (after.at - before.at)
   }
-  /** Bytes a second over the window up to now, or up to the last answer once the file is out. */
+  /**
+   * Bytes per second over the window up to now, or up to the last answer once the file is out.
+   */
   const speed = () => {
     const end = sendingOver ? points.at(-1)?.at : now()
     if (points.length < 2 || end === undefined) return null
     const from = Math.max(points[0]!.at, end - WINDOW_MS)
     const span = end - from
-    // No point is later than the end: the last one says where the curve is, also among several of one millisecond.
+    // No point is later than the end, so the last one is the
+    // current curve value, also when several share one millisecond.
     const bytes = points.at(-1)!.sent - sentAt(from)
     const answered = points.some((point) => point.answered && point.at > from)
     return span > 0 && bytes > 0 && (span >= MIN_SPAN_MS || answered) ? (bytes * 1000) / span : null
   }
 
-  // The wait for the answer to a chunk that is whole on its way is the server's time. The speed goes on counting it:
-  // the next chunk is sized right after the answer, and not by what the browser took alone.
+  // Waiting for the answer to a fully sent chunk is server time. The speed keeps counting
+  // it, so the next chunk is sized after the answer and not by browser buffering alone.
   const answerAwaited = () => !!current && sent >= current.end
 
   const tick = () => {
@@ -97,12 +105,16 @@ export function useUploadMeter(report: UploadProgressCallback | undefined) {
   }
 
   return {
-    /** The reports of a file of the given size begin. */
+    /**
+     * Starts reporting for a file of the given size.
+     */
     start(size: number) {
       fileSize = size
       if (report) tick()
     },
-    /** Before each request of a chunk: the curve goes on from what the server has, and the try reports into it. */
+    /**
+     * Call before each chunk request. The curve continues from what the server has, and the try reports into it.
+     */
     attempt(chunkSize: number) {
       const thisTry = { end: received + chunkSize }
       current = thisTry
@@ -110,32 +122,35 @@ export function useUploadMeter(report: UploadProgressCallback | undefined) {
       return (event: Pick<AxiosProgressEvent, 'loaded' | 'total'>) => {
         if (current !== thisTry) return
         let onItsWay = event.loaded
-        // `total` is the whole multipart body; what goes on the curve is its share of the chunk, and all of the chunk
-        // once the body is out: of numbers past 2^53 the division makes a little less.
+        // `total` is the whole multipart body. The curve gets its share of the chunk, and the whole
+        // chunk once the body is out, since the division gives slightly less for numbers past 2^53.
         if (event.total) onItsWay = event.loaded >= event.total ? chunkSize : (event.loaded * chunkSize) / event.total
         mark(received + Math.min(Math.max(onItsWay, 0), chunkSize))
       }
     },
-    /** The server answered the chunk of the try. */
+    /**
+     * The server answered the try's chunk.
+     */
     chunkDone(chunkSize: number) {
       current = undefined
       received += chunkSize
       mark(received, true)
     },
     /**
-     * A try failed: the server took none of its bytes, and neither its time nor the pause after it counts. Until the
-     * next try has a speed nothing is reported, and the row keeps what it was told last.
+     * A try failed. The server kept none of its bytes, and neither its time nor the pause after it counts.
+     * Nothing is reported until the next try has a speed, so the row keeps its last values.
      */
     attemptFailed() {
       current = undefined
       points = []
       sent = received
     },
-    /** Z9: the second that runs reports the whole file, and no further one is asked for. */
+    /**
+     * The running second reports the whole file, and no further second is scheduled.
+     */
     lastChunkSent() {
       sendingOver = true
     },
-    /** Z10: no further report. */
     stop() {
       clearTimeout(timer)
       timer = undefined

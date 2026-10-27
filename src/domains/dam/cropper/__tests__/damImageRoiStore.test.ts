@@ -9,11 +9,11 @@ import { initCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonA
 import { useDamConfigStore } from '@/domains/dam/config/store/damConfigStore'
 import { useImageRoiStore } from '@/domains/dam/cropper/store/imageRoiStore'
 
-// The image and the region of interest the cropper of the regions (`ADamAssetImageRoiSelect`) shows. The library's
-// own panel of regions fills the store in its asset detail; admin-dam fills it from a panel of its own, beside that
-// cropper, and defined the store again for it, under the same id: Pinia keeps one store per id, so whichever of the
-// two definitions was used first made the store, and the other got it without its own members. The library's store
-// has every member now, under an id of its own, and is exported for an admin to fill.
+// The image and region of interest shown by the region cropper (`ADamAssetImageRoiSelect`).
+// The library's region panel fills the store in its asset detail. admin-dam fills it from its own
+// panel beside the cropper and defined the store again under the same id. Pinia keeps one store per
+// id, so whichever definition ran first made the store and the other got it without its own members.
+// The library store now has every member, under its own id, and is exported for an admin to fill.
 
 const MEMBERS = [
   'imageFile',
@@ -42,8 +42,8 @@ const freshPinia = () => {
   setActivePinia(pinia)
 }
 
-// A definition of an admin's own under the library's id, with admin-dam's members: what Pinia hands the other caller
-// when the store is made by one definition and asked for by the other.
+// An admin's own definition under the library's id, with admin-dam's members. It shows what
+// Pinia hands the other caller when one definition makes the store and the other asks for it.
 const useDefinitionOfAnAdmin = defineStore('commonAdminDamImageRoiStore', () => {
   const imageFile = ref<unknown>(null)
   const loader = ref(false)
@@ -91,8 +91,8 @@ describe('the store of the region of interest', () => {
     expect(asked.forceReloadCropper).toBeTypeOf('function')
   })
 
-  // Until admin-dam uses the export, it keeps its own definition under the old id: a store apart, which no longer
-  // takes the place of the library's.
+  // Until admin-dam uses the export, it keeps its own definition under the
+  // old id. That is a separate store and no longer replaces the library's.
   it('is apart from a store an admin defines under the id the library used to have', () => {
     freshPinia()
     const useOwnOfAnAdmin = defineStore('damImageRoiStore', () => ({ ownOnly: ref(true) }))

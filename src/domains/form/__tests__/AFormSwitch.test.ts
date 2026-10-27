@@ -21,7 +21,6 @@ const mountSwitch = (props: Record<string, unknown>, formReadonly?: boolean) => 
   return wrapper
 }
 
-// A readonly switch does not change when clicked.
 const changesOnClick = async (wrapper: VueWrapper) => {
   await wrapper.find('input').trigger('click')
   return (wrapper.findComponent(AFormSwitch).emitted('update:modelValue') ?? []).length > 0

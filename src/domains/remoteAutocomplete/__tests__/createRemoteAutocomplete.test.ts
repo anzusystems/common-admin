@@ -8,7 +8,6 @@ import {
 } from '@/domains/remoteAutocomplete/composables/createRemoteAutocomplete'
 import { FilterInnerConfigKey, FilterInnerDataKey } from '@/domains/filters/utils/filterInjectionKeys'
 
-// The base autocompletes are stubbed: what matters is what the generated component hands them.
 const seen: {
   props: Record<string, unknown>
   slots: string[]
@@ -26,7 +25,6 @@ const stub = (name: string) =>
         slots: Object.keys(slots),
         innerConfig: inject(FilterInnerConfigKey),
         innerData: inject(FilterInnerDataKey),
-        // What the autocomplete's first fetch, in its own setup, would see.
         innerDataAtSetup: { ...(inject(FilterInnerDataKey) as Record<string, unknown>) },
       })
       return () => h('div', { class: name }, slots.default?.())
@@ -87,7 +85,7 @@ describe('createRemoteAutocomplete', () => {
     expect(got.innerConfig).toBe(innerFilter.filterConfig)
     expect(got.innerData).toBe(innerFilter.filterData)
     expect(useSelectActions).toHaveBeenCalledTimes(1)
-    // Without `props` of its own it passes nothing: an admin composable may take an optional argument.
+    // Without its own `props` it passes nothing, because an admin composable may take an optional argument.
     expect(useSelectActions).toHaveBeenCalledWith()
   })
 

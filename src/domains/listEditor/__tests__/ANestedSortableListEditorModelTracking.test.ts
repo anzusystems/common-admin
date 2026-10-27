@@ -58,7 +58,6 @@ describe('nested: immediate delete of the last row + a consumer accepted delete,
     await actions.get(2)!.delete()
     await flushPromises()
     expect(handle.hasUnsaved).toBe(false)
-    // what a `v-model="raw.title"` in the #item slot does
     model.value.children[0].data.title = 'A edited'
     await flushPromises()
     expect(handle.isUnsaved(1)).toBe(true)

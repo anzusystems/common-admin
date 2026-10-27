@@ -19,9 +19,9 @@ import type { ValueObjectOption } from '@/shared/types/ValueObject'
 import { AnzuFatalError } from '@/shared/error/AnzuFatalError'
 import { syncUserAndTimeTracking } from '@/shared/utils/userAndTimeTracking'
 
-// The record store is shared by every page, and a request is not aborted when its page goes: only the
-// latest fetch may write the record, or reset it on failure. A store reset (a page's teardown, a create
-// page's mount) counts as newer too.
+// The record store is shared by every page, and a request is not aborted when its page goes.
+// Only the latest fetch may write the record or reset it on failure. A
+// store reset (page teardown, create page mount) also counts as newer.
 let fetchGeneration = 0
 
 export interface PermissionGroupActionsParams {
@@ -29,11 +29,10 @@ export interface PermissionGroupActionsParams {
   system: string
   entity?: string
   /**
-   * i18n scope for a server-side validation failure, which is a different question from which
-   * backend answered. `AnzuApiValidationError` builds `<system>.<entity>.model.<field>` keys, so
-   * the pair has to name the namespace the *labels* live under. It defaults to `common` +
-   * `permissionGroup`, which is where the shared form's own fields are; an admin whose form carries
-   * system fields as well passes its own pair, and keeps the base keys beside them.
+   * i18n scope for server-side validation errors, separate from which backend answered.
+   * `AnzuApiValidationError` builds `<system>.<entity>.model.<field>`
+   * keys, so the pair must name the namespace of the labels.
+   * Defaults to `common` + `permissionGroup`. An admin whose form has extra system fields passes its own pair.
    */
   validationSystem?: string
   validationEntity?: string
@@ -41,9 +40,8 @@ export interface PermissionGroupActionsParams {
 }
 
 /**
- * Everything below is per instance. The admins kept `listLoading`, `detailLoading` and
- * `datatableHiddenColumns` at module scope, which is a single set of flags shared by every caller
- * -- fine for one list on one backend, wrong for a library a page may instantiate twice.
+ * All state below is per instance. Module-scope loading flags and
+ * hidden columns would be shared when a page instantiates this twice.
  */
 export const usePermissionGroupActions = (params: PermissionGroupActionsParams) => {
   const { client, system, entity = PERMISSION_GROUP_ENTITY, endPoint = PERMISSION_GROUP_ENDPOINT } = params
@@ -72,9 +70,9 @@ export const usePermissionGroupActions = (params: PermissionGroupActionsParams) 
   const permissionGroupList = ref<PermissionGroup[]>([])
   const loadingPermissionGroupList = ref(false)
 
-  // Same reason as in `useLogListActions`: axios rejects an aborted request with `CanceledError`,
-  // which reaches the catch like any other failure. Without a token the user gets an error alert
-  // for a navigation they performed themselves.
+  // axios rejects an aborted request with `CanceledError`, which reaches the catch like any other failure.
+  // Without the generation token the user gets an error alert for
+  // their own navigation. Same reason as in `useLogListActions`.
   let listGeneration = 0
 
   const fetchPermissionGroupList = async (
@@ -133,7 +131,9 @@ export const usePermissionGroupActions = (params: PermissionGroupActionsParams) 
   }
 
   const loadingDeletePermissionGroup = ref(false)
-  /** Resolves true when the row is gone, so the caller can decide where to navigate. */
+  /**
+   * Resolves true when the row is gone, so the caller can decide where to navigate.
+   */
   const deletePermissionGroup = async (id: IntegerId): Promise<boolean> => {
     try {
       loadingDeletePermissionGroup.value = true
@@ -182,7 +182,9 @@ export const usePermissionGroupActions = (params: PermissionGroupActionsParams) 
   }
 
   const loadingCreatePermissionGroup = ref(false)
-  /** Resolves the created row, so the caller can route to its detail; null on failure. */
+  /**
+   * Resolves the created row, so the caller can route to its detail; null on failure.
+   */
   const createPermissionGroup = async (): Promise<PermissionGroup | null> => {
     try {
       loadingCreatePermissionGroup.value = true

@@ -20,7 +20,7 @@ describe('mass operations of the upload queue: a custom value', () => {
     return items.map((one) => one.customData.title)
   }
 
-  // `null` is a value that was emptied, as a cleared number and as the API returns it.
+  // `null` is an emptied value, such as a cleared number, and is how the API returns it.
   it('fills what is empty: never set, an empty text, null, or an empty list', () => {
     expect(
       fill([
@@ -50,7 +50,6 @@ describe('mass operations of the upload queue: a custom value', () => {
     ).toEqual(['filled', 'kept'])
   })
 
-  // Z24: a field of several values, as the keywords and the authors; an edit of one row changes no other.
   it.each([
     ['fills', false, {}],
     ['replaces', true, { tags: ['kept'] }],
@@ -76,8 +75,6 @@ describe('mass operations of the upload queue: a custom value', () => {
   })
 })
 
-// The same rule for the keywords and the authors of the rows: what is empty is filled, the rest is kept unless
-// everything is to be replaced.
 const lists: Array<['keywords' | 'authors', 'replaceEmptyKeywords' | 'replaceEmptyAuthors']> = [
   ['keywords', 'replaceEmptyKeywords'],
   ['authors', 'replaceEmptyAuthors'],
@@ -112,8 +109,8 @@ describe.each(lists)('mass operations of the upload queue: %s', (field, operatio
     ])
   })
 
-  // Unlike a custom value, which is written to the rows of its own asset type only. The library queues images
-  // only, so the two rules meet no row they would disagree on.
+  // Unlike custom values, which go only to rows of their own asset type.
+  // The library queues images only, so the two rules never disagree on a row.
   it('go into the rows of every asset type', () => {
     expect(fill([row(DamAssetType.Image, []), row(DamAssetType.Audio, []), row(DamAssetType.Video, ['kept'])])).toEqual(
       [['filled-1', 'filled-2'], ['filled-1', 'filled-2'], ['kept']]
@@ -129,7 +126,7 @@ describe.each(lists)('mass operations of the upload queue: %s', (field, operatio
     expect(item[other]).toEqual([])
   })
 
-  // Z24: each row a copy of its own, and none the list it was filled with; an edit of one changes no other.
+  // Each row gets its own copy, so an edit of one row changes no other.
   it('hand every filled row a list of its own', () => {
     const items = [row(DamAssetType.Image, []), row(DamAssetType.Image, [])]
     const value = ['filled-1', 'filled-2']

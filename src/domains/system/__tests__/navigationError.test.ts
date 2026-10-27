@@ -8,7 +8,7 @@ vi.mock('@/domains/system/systemBar/utils/appReload', () => ({ requestAppReload:
 const logError = vi.fn()
 vi.mock('@/domains/system/composables/sentry', () => ({ useSentry: () => ({ logError }) }))
 
-// Without a handler a failed navigation only reaches the console: the click does nothing visible.
+// Without a handler a failed navigation only reaches the console, so the click does nothing visible.
 
 const routerAt = (currentRoute: unknown) => ({ currentRoute: { value: currentRoute } }) as unknown as Router
 const loaded = { path: '/records', fullPath: '/records' }

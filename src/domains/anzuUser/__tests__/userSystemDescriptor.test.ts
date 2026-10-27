@@ -11,10 +11,11 @@ import {
   type UserSystemEndpoints,
 } from '@/domains/anzuUser/composables/userSystemDescriptor'
 
-// Which path carries which operation is the descriptor's job to state, because the two paths are
-// not interchangeable: `/adm/users` in cms answers `CmsUserDto` and its PUT runs
-// `updateRelations()` over seven scalars and twelve collections, while `/adm/v1/anzu-user` answers
-// the entity and does not. A GET on one and a write to the other drops whatever the other carries.
+// The descriptor states which path carries which operation, because the two paths are not interchangeable.
+// `/adm/users` in cms answers `CmsUserDto` and its PUT runs
+// `updateRelations()` over seven scalars and twelve collections.
+// `/adm/v1/anzu-user` answers the entity and does not.
+// A GET on one and a write to the other drops whatever the other carries.
 
 const client = () => ({}) as unknown as AxiosInstance
 

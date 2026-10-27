@@ -23,11 +23,8 @@ import { AnzuApiResponseCodeError } from '@/shared/error/AnzuApiResponseCodeErro
 import { AnzuApiTimeoutError } from '@/shared/error/AnzuApiTimeoutError'
 import { AnzuApiValidationError } from '@/shared/error/AnzuApiValidationError'
 
-// The one request of the upload that writes what the user typed: the metadata of the rows of a queue, saved in
-// bulk. What is sent for a row, which rows are sent, and in how many requests. The endpoint is the one handed in:
-// admin-ugc's here.
-// Whether the main file is internal is not the library's to say: the request carries neither of the two
-// `internal` fields, and what the DAM answers about them is read.
+// Whether the main file is internal is not the library's decision.
+// The request carries neither `internal` field, and the DAM's answer about them is read.
 
 const ASSET = '/ugc/v1/asset'
 
@@ -66,7 +63,6 @@ describe('the bulk save of the metadata of a queue', () => {
     expect(saves().map((request) => `${request.method} ${request.url}`)).toEqual([
       'PATCH /ugc/v1/asset/metadata-bulk-update',
     ])
-    // Nothing else: neither `mainFileInternal` nor `mainFileOverrideInternal` is sent.
     expect(sent()).toEqual([
       {
         id: 'asset-1',
@@ -77,11 +73,9 @@ describe('the bulk save of the metadata of a queue', () => {
         mainFileSingleUse: true,
       },
     ])
-    // What the DAM answered, for the caller to build the images from.
     expect(answer).toEqual(sent())
   })
 
-  // The answer carries the asset as the DAM has it after the save, the `internal` state of its main file with it.
   it.each([
     ['is internal', true, true],
     ['is not', false, false],
@@ -109,11 +103,10 @@ describe('the bulk save of the metadata of a queue', () => {
     expect(answer[0]).toHaveProperty('mainFileInternal', mainFileInternal)
     expect(images).toHaveLength(1)
     expect(images[0].dam).toEqual({ damId: 'file-1', regionPosition: 0, licenceId: 1, internal })
-    // The switches of the CMS image are another matter, and stay off.
     expect(images[0].flags).toEqual({ showSource: true, internal: false, overrideInternal: false })
   })
 
-  // Never null (finding 36): the DAM makes "off" of null, and both dialogs of the queue now send the same.
+  // Never null (finding 36): the DAM treats null as "off", and both queue dialogs send the same.
   it.each([
     ['is not known yet, as off', null, false],
     ['is switched off', false, false],
@@ -141,7 +134,7 @@ describe('the bulk save of the metadata of a queue', () => {
       row(null),
       row('asset-failed', { status: UploadQueueItemStatus.Failed, canEditMetadata: false }),
       row('asset-waiting-for-metadata', { canEditMetadata: false }),
-      // A row still waiting for its file is saved once it has its form: the form decides, not the status.
+      // A row still waiting for its file is saved once it has its form. The form decides, not the status.
       row('asset-also-editable', { status: UploadQueueItemStatus.Processing }),
     ]
 
@@ -155,7 +148,6 @@ describe('the bulk save of the metadata of a queue', () => {
     const holding = dam.hold('PATCH', dam.routes.bulkMetadata)
 
     const saving = bulkUpdateAssetsMetadata(dam.client, ASSET, rows)
-    // The second request waits for the answer to the first.
     await new Promise((resolve) => setTimeout(resolve, 50))
     expect(saves()).toHaveLength(1)
     holding.release()
@@ -212,7 +204,6 @@ describe('the save of the metadata of one asset', () => {
       keywords: ['keyword-1'],
       authors: ['author-1'],
       metadata: { customData: { title: 'typed' }, authorSuggestions: {}, keywordSuggestions: {} },
-      // Not what is sent: the switch comes from the caller.
       mainFileSingleUse: false,
       mainFileInternal: true,
       mainFileOverrideInternal: true,
@@ -221,7 +212,6 @@ describe('the save of the metadata of one asset', () => {
     await updateAssetMetadata(dam.client, ASSET, asset, 4, true)
 
     expect(saves().map((request) => request.url)).toEqual(['/ugc/v1/asset/metadata-bulk-update'])
-    // Nothing else here either: the `internal` state the asset was read with is not sent back.
     expect(sent()).toEqual([
       {
         id: 'asset-1',
@@ -241,8 +231,7 @@ describe('the save of the metadata of one asset', () => {
   })
 })
 
-// What the dialog of an image saves when the user picks the authors of the DAM in it. The request is as it was
-// before the save went through the helper the other saves share: its method, its path and its body, to the letter.
+// The request must stay identical to the one before the save went through the shared helper: method, path and body.
 describe('the save of the authors of one asset', () => {
   const asset = () =>
     damAsset('asset-1', {
@@ -276,8 +265,9 @@ describe('the save of the authors of one asset', () => {
     expect(saves()[0].data).toBe('[{"id":"asset-1","authors":["author-1","author-2"],"described":true}]')
   })
 
-  // The save used to say a refusal itself, and the widget said it once more. With no custom form loaded for the
-  // ext system it threw while saying it, and its promise was never settled: "Confirm" of the dialog spun for good.
+  // The save used to report a refusal itself, and the widget reported it again.
+  // With no custom form loaded for the ext system, it threw while reporting.
+  // The promise never settled and "Confirm" of the dialog spun forever.
   it.each([
     ['with the custom forms of the ext system loaded', true],
     ['with no custom form loaded', false],
@@ -306,10 +296,9 @@ describe('the save of the authors of one asset', () => {
   })
 })
 
-// What a failed save is made into: an error of a kind the alert of errors knows, which the dialogs and the detail
-// say as it is. Written down only when nobody planned it: not a request of nobody signed in, of a user who may not,
-// or one the server refused by validation.
-// The bulk save of a queue builds on its answer, the two others read nothing of it.
+// A failed save is turned into an error of a kind the alert of errors knows. Only unplanned
+// failures are converted, not nobody signed in, a user without permission, or a validation refusal.
+// The bulk save of a queue builds on the answer. The other two read nothing from it.
 describe.each([
   ['the bulk save of a queue', () => bulkUpdateAssetsMetadata(dam.client, ASSET, [row('asset-1')]), true],
   [
@@ -398,7 +387,6 @@ describe.each([
 
     const failure = await failureOf(() => answer)
 
-    // The save went out and failed, whether it was written down or not.
     expect(saves()).toHaveLength(1)
     expect(failure).toBeInstanceOf(Error)
     expect(logged).toHaveBeenCalledTimes(written)
@@ -420,7 +408,6 @@ describe('a save refused by validation, as the user is told it', () => {
     status: 422,
     data: { contextId: 'context', error: 'validation_failed', fields: { [key]: ['error_field_empty'] } },
   })
-  /** The fields the one alert names, each before what is wrong with it. */
   const fieldsSaid = () => {
     expect(shownAlerts()).toHaveLength(1)
     const [[colour, text]] = shownAlerts() as Array<[string, string]>
@@ -442,7 +429,7 @@ describe('a save refused by validation, as the user is told it', () => {
   })
   afterEach(() => setApiErrorLogger(defaultApiErrorLogger))
 
-  // The server names the place of the asset in the request it refused, and the second request starts again at 0.
+  // The server names the position of the asset within the refused request. The second request starts again at 0.
   it('names a custom field by the form of the type of its asset, in the batch the server refused', async () => {
     const rows = [
       ...Array.from({ length: 10 }, (_, index) => row(`image-${index}`)),

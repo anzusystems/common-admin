@@ -1,10 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { createDamImage, imageFieldsOf } from '@/domains/dam/imageWidget/utils/damImage'
 
-// The one function that makes the image of the CMS for a file of the DAM. Each of its nine callers is pinned where
-// it is used (`damImageSites.test.ts`, `metadataToImageMap.test.ts`, the tests of the three widgets); here is what the
-// function itself promises them.
-
 const FILE = '0f6b8f6a-5d2c-4c1e-9a7b-3e2d1c0b9a81'
 
 describe('the image of the CMS for a file of the DAM', () => {
@@ -30,8 +26,6 @@ describe('the image of the CMS for a file of the DAM', () => {
     })
   })
 
-  // What a mapping of the application hands in place of a text goes on as handed: the caller that wants it empty
-  // says so. Only a text nobody names is empty.
   it('keeps a text as it is handed, also one that is no text', () => {
     const file = { fileId: FILE, licenceId: 7 }
 
@@ -46,7 +40,6 @@ describe('the image of the CMS for a file of the DAM', () => {
     expect(createDamImage({ fileId: FILE, licenceId: 7, internal }).dam.internal).toBe(false)
   })
 
-  // A caller that gives none has an image without the key, as when it built the object by hand.
   it('has a position and an id where they are given, 0 included', () => {
     const image = createDamImage({ fileId: FILE, licenceId: 7 }, {}, { position: 0, id: 0 })
 
@@ -57,7 +50,6 @@ describe('the image of the CMS for a file of the DAM', () => {
   })
 })
 
-// Finding 36: what a widget hands the image API of an image it carries more with.
 describe('what the image API is sent of an image', () => {
   const image = createDamImage({ fileId: FILE, licenceId: 7 }, { description: 'Harbour at dawn', source: 'Jana' })
 

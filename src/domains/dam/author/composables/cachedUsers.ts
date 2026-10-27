@@ -19,7 +19,7 @@ const mapIdToMinimal = (id: IntegerId): AnzuUserMinimal => {
   }
 }
 
-// The cache of the users of a DAM configuration: it asks with that configuration's client, at its `endPointUser`.
+// User cache per DAM configuration. It uses that configuration's client and `endPointUser`.
 const defineCachedUsers = (configName: string) =>
   defineCached<IntegerId, DamUser, AnzuUserMinimal>(
     mapFullToMinimal,
@@ -30,22 +30,23 @@ const defineCachedUsers = (configName: string) =>
     },
     'id',
     1000,
-    // A user missing from the table stays missing, instead of being asked for on every page showing it.
+    // A user missing from the table is not requested again on every page that shows it.
     { retryNotFound: false }
   )
 
-// One cache per configuration name, made when the name is first asked for; that of `default` with the module.
+// One cache per configuration name, created on first use. The `default` one is created with the module.
 const caches = new Map([['default', defineCachedUsers('default')]])
 
 /**
- * The cache of the users of the DAM configuration `configName`.
- * A name left out is the inherited one while a component sets up, renders or runs a lifecycle hook (not after an
- * `await` there), else `default`. Once the plugin has set the options, a configuration the application has not got
- * throws on every call and gets no cache; a name asked for before that gets one, and its first request checks it.
+ * User cache of the DAM configuration `configName`.
+ * Without a name, uses the inherited one during component setup,
+ * render or a lifecycle hook (not after an `await`), else `default`.
+ * After the plugin sets options, an unknown configuration throws
+ * on every call. Before that, the first request checks it.
  */
 export const useDamCachedUsers = (configName?: string) => {
   const name = inheritedDamConfigName(configName)
-  // On every call: options set again (a test, a hot update) may have left the name out.
+  // Checked on every call: options set again (a test, a hot update) may have removed the name.
   checkDamConfigName(name)
   let named = caches.get(name)
   if (!named) {

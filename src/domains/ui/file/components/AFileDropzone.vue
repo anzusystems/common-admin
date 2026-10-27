@@ -172,8 +172,8 @@ $class-name-root: 'a-file-dropzone';
       outline: 2px dashed #bacfd4;
     }
 
-    // After `--possibility`, here and under the dark theme: a zone with the file over it has both classes, and of two
-    // rules of the same weight the later one is drawn.
+    // Must come after `--possibility`, here and under the dark theme. A zone with
+    // a file over it has both classes, and the later rule of equal weight wins.
     &--over:not(&--disabled) {
       background-color: #dcedc8;
       outline: 2px dashed #7cb342;

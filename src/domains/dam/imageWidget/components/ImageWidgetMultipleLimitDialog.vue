@@ -37,7 +37,7 @@ if (isUndefined(imageWidgetUploadConfig) || isUndefined(imageWidgetUploadConfig.
 }
 
 const uploadQueuesStore = useUploadQueuesStore()
-// The queue of the widget this dialog belongs to: its files go where the widget's own do.
+// Uses the queue of this dialog's widget, so its files go where the widget's own files go.
 const damConfigName = useDamConfigName()
 
 const uploadQueueTotalCount = computed(() => {

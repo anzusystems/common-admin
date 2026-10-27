@@ -6,8 +6,8 @@ import type { IntegerId } from '@/shared/types/common'
 import { isUndefined } from '@/shared/utils/common'
 
 /**
- * The rules of the asset type in the ext system, by the DAM configuration store of `configName`: a name left out is
- * the inherited one in a component's setup, else `default`.
+ * Asset type rules of the ext system from the DAM configuration store of `configName`.
+ * Without a name, uses the inherited one in component setup, else `default`.
  */
 export const useDamAuthorAssetTypeConfig = (assetType: DamAssetTypeType, extSystem: IntegerId, configName?: string) => {
   const { getDamConfigExtSystem } = useDamConfigState(undefined, inheritedDamConfigName(configName))

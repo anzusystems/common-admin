@@ -24,9 +24,10 @@ import { useUploadQueueDialog } from '@/domains/dam/uploadQueue/composables/useU
 import type { DocId } from '@/shared/types/common'
 import { isNull } from '@/shared/utils/common'
 
-// "Edit image" of a widget of one image that holds the asset of its file, picked without authors, pressed while the
-// asset is read after its detail "edit asset" has closed: that read serves the dialog too, as the newer answer. The
-// asset was read twice in a row, the second time as soon as the first had answered. admin-cms only.
+// Guards a regression: "Edit image" pressed while the asset is read after the "edit asset" detail closed.
+// That read also serves the dialog as the newer answer, but the asset was
+// read twice in a row, the second time right after the first answered.
+// admin-cms only.
 
 const QUEUE = 'held-one-read'
 const PickerStandIn = defineComponent({ name: 'AAssetSelect', emits: ['confirm'], setup: () => () => h('div') })
@@ -139,10 +140,6 @@ describe.each<[string, Component]>([
     return input.exists() ? (input.props('modelValue') as DocId[]) : null
   }
 
-  /**
-   * Asset 9, without authors, picked and saved with its image: the widget holds it. Its dialog opened again, the detail
-   * "edit asset" of it opened and closed, and the read of the asset after that close held: `reads`.
-   */
   const detailClosedReadHeld = async (givenInTheDetail: DocId[] = []) => {
     dam.assets.set(
       'asset-9',
@@ -196,7 +193,7 @@ describe.each<[string, Component]>([
     expect(loading()).toBe(true)
     reads.release()
     await flushPromises()
-    // A read made anew would be held too: it is let answer, and counted.
+    // A read made anew would be held too, so it is released and counted.
     reads.release()
     reads.stop()
     await vi.waitFor(() => expect(loading()).toBe(false))

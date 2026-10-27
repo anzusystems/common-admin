@@ -28,13 +28,12 @@ import {
 } from '@/domains/dam/uploadQueue/settlement/uploadSettlementTypes'
 import { isNull } from '@/shared/utils/common'
 
-// Nothing of the library is replaced for the settlement: it is handed a profile, and everything it reaches the
-// outside through is in that profile. Here are the two profiles the stores hand it, over a server that records
-// what it was asked.
+// Nothing of the library is replaced. The settlement gets a
+// profile that holds everything it reaches the outside through.
+// Here are the two store profiles, over a server that records what it was asked.
 
 let rowSequence = 0
 
-/** A row whose file is all sent and which waits for the server: `asset-1`, `file-1`. */
 export const queueRow = (overrides: Partial<UploadQueueItem> = {}): UploadQueueItem => ({
   ...useUploadQueueItemFactory().createDefault(
     'row_' + ++rowSequence,
@@ -67,7 +66,9 @@ export const previewOf = (fileId: DocId): AssetFileLink => ({
   type: AssetFileLinkType.Image,
 })
 
-/** A file as the DAM answers it. Without a status it has no `fileAttributes` at all, as some fixtures of the stores. */
+/**
+ * Without a status the file has no `fileAttributes` at all, as in some store fixtures.
+ */
 export const damFile = (
   id: DocId,
   status?: AssetFileProcessStatusType,
@@ -88,7 +89,6 @@ export const damFile = (
     _resourceName: 'imageFile',
   }) as unknown as AssetFile
 
-/** Of the names the DAM suggests: one it knows nobody by (an empty object), one it knows two by. */
 const nobody = {} as unknown as string[]
 export const serverMetadata = {
   keywords: ['keyword-1'],
@@ -101,7 +101,6 @@ export const serverMetadata = {
   mainFileSingleUse: true,
   mainFileInternal: true,
 }
-/** What a row has of `serverMetadata` once it is loaded into it. */
 export const loadedMetadata = {
   keywords: ['keyword-1'],
   authors: ['author-1'],
@@ -132,7 +131,6 @@ export const damAsset = (
 
 type RequestKind = 'asset' | 'assets' | 'slots' | 'originAsset' | 'originFile'
 
-/** What stands in for the DAM: answers the readers of a profile and records what they asked. */
 export function fakeDamServer() {
   const assets = new Map<DocId, AssetDetailItemDto>()
   const slots = new Map<DocId, AssetFileNullable[]>()
@@ -142,7 +140,6 @@ export function fakeDamServer() {
   const failingLicences = new Set<IntegerId>()
   const failingAssets = new Set<DocId>()
   const requests: Array<{ kind: RequestKind; ids: DocId[]; licenceId?: IntegerId }> = []
-  // Whether each request was let report a failure of it, beside `requests` and in its order.
   const told: Array<{
     kind: RequestKind
     ids: DocId[]
@@ -155,7 +152,6 @@ export function fakeDamServer() {
   let mostRunning = 0
   const garbledLicences = new Set<IntegerId>()
 
-  // The answer is what the server knows when it is asked; a held answer is on its way until it is released.
   const answer = async <T>(
     kind: RequestKind,
     ids: DocId[],
@@ -234,7 +230,6 @@ export function fakeDamServer() {
     originFiles,
     requests,
     readers,
-    /** The main file of the asset is in this state from now on. */
     fileBecomes: (
       assetId: DocId,
       status: AssetFileProcessStatusType,
@@ -259,12 +254,7 @@ export function fakeDamServer() {
       garbledLicences.clear()
     },
     failLicence: (licenceId: IntegerId) => failingLicences.add(licenceId),
-    /** Every request that names this asset fails. */
     failAsset: (assetId: DocId) => failingAssets.add(assetId),
-    /**
-     * Whether each read of an asset, of a list of assets or of a list of slots was let report a failure of it, in
-     * the order they were asked. Of the given kind, or of the given asset, when one is named.
-     */
     letReport: (only?: RequestKind | { asset: DocId }) =>
       told
         .filter((one) => one.kind === 'asset' || one.kind === 'assets' || one.kind === 'slots')
@@ -273,17 +263,13 @@ export function fakeDamServer() {
           return typeof only === 'string' ? one.kind === only : one.ids.includes(only.asset)
         })
         .map((one) => one.report),
-    /** The queue each request of the given kind was said to be for, in the order they were asked. */
     queuesOf: (kind: RequestKind) => told.filter((one) => one.kind === kind).map((one) => one.queueKey),
-    /** The bulk read of the licence answers with something that is no list. */
     garbleList: (licenceId: IntegerId) => garbledLicences.add(licenceId),
-    /** The answers from now on are on their way until `release`. */
     hold: () => (held = true),
     release: () => {
       held = false
       waiting.splice(0).forEach((resolve) => resolve())
     },
-    /** How many requests were on their way at once, at most. */
     mostRunning: () => mostRunning,
     asked: (kind: RequestKind) => requests.filter((request) => request.kind === kind),
   }
@@ -329,7 +315,7 @@ export function fakeVisibility() {
 const recorder = () => {
   const calls = {
     final: [] as string[],
-    // What the store was told of a refresh: the key of the row, with `+` when one may help and `-` when not.
+    // What the store was told of a refresh: the row key, with `+` when a refresh may help and `-` when not.
     refreshMayHelp: [] as string[],
     processedSeen: [] as string[],
     metadataLoaded: [] as string[],
@@ -362,7 +348,6 @@ export const TEXT = {
   missing: 'unknown error',
 }
 
-/** As the store of the library: a reactive map of queues, every row matched by its asset alone. */
 export function libProfile(server: FakeDamServer) {
   const queues = reactive(new Map<UploadQueueKey, UploadQueue>())
   const connection = fakeConnection()
@@ -391,7 +376,6 @@ export function libProfile(server: FakeDamServer) {
     },
     connection,
   }
-  /** The row as the store holds it: reactive, in its queue. */
   const add = (queueKey: UploadQueueKey, row: UploadQueueItem) => {
     if (!queues.has(queueKey)) queues.set(queueKey, emptyQueue())
     const items = queues.get(queueKey)!.items
@@ -409,7 +393,6 @@ const DAM_POLICIES: Record<UploadRowRoleType, UploadSettlePolicy> = {
   [UploadRowRole.Copy]: { reader: 'asset', settleOn: 'read', duplicate: 'becomeOriginal', metadata: 'load' },
 }
 
-// The matching of the DAM application's store, as it stands there.
 const damNotificationMatches = (
   row: UploadQueueItem,
   assetId: DocId,
@@ -424,12 +407,10 @@ const damNotificationMatches = (
   return isNull(fileId) || row.fileId === fileId
 }
 
-/** As the store of the DAM application: an object of queues, rows of four roles, slots matched by their file. */
 export function damProfile(server: FakeDamServer) {
   const queues = reactive<Record<UploadQueueKey, UploadQueue>>({})
   const connection = fakeConnection()
   const { calls, caches, hooks } = recorder()
-  /** The rows the gate lets take their metadata although they failed. */
   const gateOpen = new Set<string>()
   const profile: UploadSettlementProfile = {
     queues: () => Object.entries(queues),
@@ -469,7 +450,6 @@ export function damProfile(server: FakeDamServer) {
   return { profile, queues, connection, calls, gateOpen, add }
 }
 
-/** What of a row a settlement writes, to compare two rows or one row at two times. */
 export const settledState = (row: UploadQueueItem) => ({
   status: row.status,
   isDuplicate: row.isDuplicate,

@@ -134,7 +134,7 @@ const imagesReady = ref(props.modelValue.length === 0)
 const listEditor = ref<{ commit: (rows?: ImageStoreItem[]) => void; cancelReorderMode: () => void } | null>(null)
 
 const imageStore = useImageStore()
-// One store for every widget: whatever the previous one left is not this entity's.
+// The store is shared by all widgets. Leftovers from the previous one do not belong to this entity.
 imageStore.reset()
 watch(
   () => props.readonly,
@@ -145,16 +145,15 @@ watch(
 )
 const { images, maxPosition } = storeToRefs(imageStore)
 
-// The widget among the widgets of the page that save images (`imageSaves.ts`), and the marks of its own saves on
-// their way.
+// Identity of this widget among the image-saving widgets (`imageSaves.ts`), and marks of its own pending saves.
 const thisWidget = Symbol('image widget multiple')
 const ownImageSaves = new Set<symbol>()
-// The wait of the rows for saves of their images by other widgets: let go once the widget goes.
+// Cancels waiting on other widgets' saves when this widget unmounts.
 let cancelSaveWaits: (() => void) | null = null
 
 /**
- * Once no other widget of the page has a save of any of the images `ids` on its way (the widget this one was drawn in
- * place of, its save still on its way), or once the wait has run out: then the user is told the request timed out.
+ * Resolves once no other widget has a pending save of any of `ids`, such as the
+ * widget this one replaced. On timeout the user is told the request timed out.
  */
 const savesOfOthersOver = async (ids: IntegerId[]) => {
   const waits = ids
@@ -169,8 +168,8 @@ const savesOfOthersOver = async (ids: IntegerId[]) => {
   if (!unmounted) showErrorT('error.apiTimedOut.message')
 }
 
-// The load of the images of the entity: rows added while it is on its way (a pick, an upload) wait for it, and come
-// after the images it loads. Added before, the load put its images in their place, and they were gone without a word.
+// Rows added while the entity images load wait for the load and
+// come after them. Otherwise the load replaced them silently.
 let imagesLoaded: Promise<void> = Promise.resolve()
 
 const fetchImagesOnLoad = async () => {
@@ -179,12 +178,11 @@ const fetchImagesOnLoad = async () => {
   }
   try {
     imagesLoading.value = true
-    // Counted as the read is sent: a save answered after that may have taken effect only after the read.
+    // Counted when the read is sent: a save answered later may have taken effect after the read.
     const readAt = holdImages(damConfigName, thisWidget, props.modelValue)
     const read = await imageApi.fetchImageListByIds(imageClient, props.modelValue)
-    // The rows come once the saves of these images by other widgets are over, each image as the save answered last
-    // left it when one has answered since the read was sent. Read before such a save took effect, a row had the old
-    // texts, and the save of this widget wrote them back over the saved ones.
+    // Rows wait until other widgets' saves of these images are over, using the latest saved state.
+    // Otherwise a row had old texts and this widget's save wrote them back over the saved ones.
     await savesOfOthersOver(read.map((image) => image.id))
     if (unmounted) return
     const imagesRes = read
@@ -207,7 +205,7 @@ const fetchImagesOnLoad = async () => {
     try {
       assetsRes = await fetchAssetListByFileIdsMultipleLicences(damClient, endPointAsset, groupedIds)
     } catch (e) {
-      // Read-only shows the images without their DAM authors: a user refused the upload is often refused the assets.
+      // Read-only shows images without DAM authors. A user without upload rights is often refused the assets.
       if (!props.readonly) throw e
     }
 
@@ -219,7 +217,7 @@ const fetchImagesOnLoad = async () => {
         return {
           key: generateUUIDv1(),
           ...imageRes,
-          // Each row its own copy: the rows of one asset (an image twice in the entity) shared the array.
+          // Each row gets its own copy. Rows of the same asset shared the array.
           damAuthors: found ? [...found.authors] : [],
           showDamAuthors: found ? found.authors.length === 0 : false,
           assetId: found ? found.id : undefined,
@@ -251,20 +249,21 @@ const { uploadQueueDialog, stopQueueLeftBehind } = useUploadQueueDialog()
 
 const onFileInput = (files: File[]) => {
   if (props.readonly) return
-  // The input has turned every file away, and said so: the queue dialog would open over nothing new.
+  // The input rejected every file and reported it. Opening the queue dialog would show nothing new.
   if (files.length === 0) return
   const config = imageWidgetUploadConfig.value
   if (isUndefined(config)) return
   cachedExtSystemId.value = config.extSystem
-  // The queue dialog is opened by `afterLimitDialogAdd`, once files are queued: over the limit none is, until the
-  // user agrees to the first of them. The rows a queue no dialog names holds are not counted: they go first.
+  // `afterLimitDialogAdd` opens the queue dialog once files are
+  // queued. Over the limit nothing is queued until the user agrees.
+  // Rows of a queue no dialog shows are not counted. They go first.
   stopQueueLeftBehind(props.queueKey)
   limitDialogComponent.value?.check(files)
 }
 
 const onDrop = (files: File[]) => {
   if (props.readonly) return
-  // As the input: the dropzone has turned every file away, and said so.
+  // Same as the input: the dropzone rejected every file and reported it.
   if (files.length === 0) return
   const config = imageWidgetUploadConfig.value
   if (isUndefined(config)) return
@@ -313,10 +312,10 @@ const afterLimitDialogAdd = () => {
 }
 
 /**
- * The images of picked assets, without their position. Each asset is read under the licence it is in, and its authors
- * under the ext system of that licence: what was picked outlives a change of the licence browsed, and under another
- * licence the DAM leaves an asset out of its answer without a word. `readUnder`: the licence all of the assets are in
- * and its ext system, where the caller knows them.
+ * Images of picked assets, without position. Each asset is read under
+ * its own licence, and its authors under that licence's ext system.
+ * The browsed licence can change after picking, and the DAM silently omits assets of another licence.
+ * `readUnder`: the licence of all assets and its ext system, when the caller knows them.
  */
 const assetSelectConfirmMap = async (
   items: AssetSearchListItemDto[],
@@ -335,7 +334,7 @@ const assetSelectConfirmMap = async (
       idsByLicence.set(licence, [item.id])
     }
   })
-  // A licence that cannot be read does not keep the others from being read.
+  // A licence that fails to read does not stop the others.
   const failures: unknown[] = []
   for (const [licence, ids] of idsByLicence) {
     try {
@@ -365,8 +364,8 @@ const assetSelectConfirmMap = async (
       })
       if (authorIdsToFetch.size > 0) {
         const licenceConfig = assetSelectStore.selectConfig.find((config) => config.licence === licence)
-        // Under the ext system of the licence, as every name of the authors of the DAM the widgets write; that of
-        // the picker where the licence does not tell.
+        // Uses the licence's ext system, as for every DAM author name the widgets
+        // write. Falls back to the picker's when the licence does not tell.
         const authorsRes = await fetchAuthorListByIds(
           damClient,
           endPointAuthor,
@@ -384,8 +383,7 @@ const assetSelectConfirmMap = async (
       failures.push(e)
     }
   }
-  // Said once, however many of them failed. A read the DAM refuses comes as the bare error of axios, which the
-  // default says nothing of.
+  // Reported once for all failures. A DAM refusal arrives as a bare axios error that the default handler ignores.
   if (failures.length > 0 && !showErrorsDefault(failures[0])) showUnknownError()
 
   return items.map((asset) => {
@@ -422,8 +420,8 @@ const assetSelectConfirmMap = async (
         { position: 0 }
       ),
       damAuthors: authorIds,
-      // Only for an asset that was read: of one that was not, nobody knows whether it has authors, and those picked
-      // in its row would replace them in the DAM. Its row has the source, as one whose asset was not returned at load.
+      // Only for assets that were read. For an unread asset its authors are unknown, and authors
+      // picked in the row would replace them in the DAM. Its row shows the source instead.
       showDamAuthors: assetMetadataMap.has(asset.id) && authorIds.length === 0,
       assetId: asset.id,
     }
@@ -440,14 +438,13 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
   if (props.readonly) return
   if (data.type !== 'asset' || data.value.length === 0) return
   const picked = data.value.filter((asset) => !isNull(asset.mainFile))
-  // Copied: the picked assets of another licence than the one of the upload. One already in it is taken as it is, at
-  // once; the copies come in once the dialog of the queue is used.
+  // Picked assets from a licence other than the upload licence are copied. Assets
+  // already in it are used at once. Copies are added when the queue dialog is used.
   const toCopy =
     copyToLicenceEnabled !== false && !isUndefined(data.copyToLicence)
       ? picked.filter((asset) => asset.licence !== data.copyToLicence)
       : []
-  // A widget that is gone by the answer adds nothing: the store of the images is the next widget's by then. Nor one
-  // that has turned read-only meanwhile.
+  // A widget that unmounted or became read-only adds nothing. The image store belongs to the next widget by then.
   const addingIsOver = () => unmounted || props.readonly
   if (toCopy.length === 0) {
     const images = await assetSelectConfirmMap(picked)
@@ -460,9 +457,8 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
     endPointImage,
     toCopy.map((asset) => ({ asset: asset.id, targetAssetLicence: data.copyToLicence! }))
   )
-  // Read while the copy runs, under the licence they are in, the one of the upload, and its ext system: not the one
-  // browsed. They are added before the dialog of the queue opens: used before they were read, it put the copies
-  // before them.
+  // Read during the copy under their own licence (the upload's) and its ext system, not the browsed one.
+  // Added before the queue dialog opens. Otherwise using the dialog first put the copies before them.
   const asTheyAre = picked.filter((asset) => !toCopy.includes(asset))
   const config = imageWidgetUploadConfig.value
   const imagesAsTheyAre =
@@ -500,14 +496,13 @@ const {
   customAssetSelectMetadataToImageMap,
 } = useCommonAdminCoreDamOptions(damConfigName)
 
-// Whether the detail was opened by "edit asset" of a row, until it closes. Not so the detail a row of the queue
-// dialog opens, which is drawn here as well: nothing is read when that one closes.
+// True while the detail was opened by "edit asset" of a row. Not for the detail
+// opened from the queue dialog, which is drawn here too and reads nothing on close.
 let detailOfRow = false
-// The reads of assets whose detail has closed, those of one asset in a row, by that asset: the save of the widget waits
-// for them. The reads of another asset do not wait for these: closing the detail of one asset waited for the save of
-// the detail of another one, and the read after it.
+// Reads of assets whose detail closed, keyed by asset. The widget save waits for them.
+// Reads of other assets do not wait on these. Otherwise closing one detail waited for another asset's save and read.
 const detailAssetReads = new Map<DocId, Promise<void>>()
-// Such a read may end once the widget is gone, and the images in the store are the next widget's by then.
+// Such a read may finish after unmount, when the store belongs to the next widget.
 let unmounted = false
 onBeforeUnmount(() => {
   unmounted = true
@@ -523,16 +518,16 @@ const onEditAsset = async (assetFileId: DocId) => {
       props.queueKey,
       async () => {
         const asset = await fetchAssetByFileId(damClient, endPointAsset, assetFileId)
-        // A licence the client cannot resolve: the ext system of the widget's upload licence, which its root loaded.
+        // Falls back to the ext system of the widget's upload licence,
+        // loaded by its root, when the licence cannot be resolved.
         const shownUnder = (await getExtSystemByLicence(asset.licence)) ?? imageWidgetUploadConfig.value!.extSystem
-        // Before the detail shows the asset: it reads the configuration of its ext system as it draws, and threw
-        // without it.
+        // Must load before the detail shows the asset: it reads the ext
+        // system configuration while rendering and threw without it.
         await loadAssetDetailExtSystem(damClient, shownUnder, asset.attributes.assetType, damConfigName)
         extSystem = shownUnder
         return asset
       },
-      // Only for the asset the detail shows: an answer it no longer waits for must not change the ext system its
-      // configuration asks for names under.
+      // Only for the asset the detail still shows: a stale answer must not change the ext system used for name lookups.
       () => {
         if (extSystem) cachedExtSystemId.value = extSystem
       }
@@ -542,10 +537,11 @@ const onEditAsset = async (assetFileId: DocId) => {
   }
 }
 
-// An upload applied while the images of the entity load waits for them, its dialog and its queue as they are: once
-// those images are there, its rows come after them and the dialog goes. A widget that is read-only or gone by then
-// leaves the dialog and its queue as a read-only widget does, and nothing of the upload is lost; the dialog went at
-// once, and the rows with it. Applied again while it waits, it is not taken: the rows would come twice.
+// An upload applied during the entity image load waits with its dialog and
+// queue intact. Its rows come after the loaded images, then the dialog closes.
+// If the widget is read-only or gone by then, the dialog and queue stay as for
+// read-only, so nothing is lost. Before, the dialog and rows were dropped.
+// Applying again while waiting is ignored, or rows would be added twice.
 let uploadWaitsForLoad = false
 const onAssetUploadConfirm = async (items: ImageStoreItem[]) => {
   if (props.readonly) return
@@ -563,10 +559,9 @@ const onAssetUploadConfirm = async (items: ImageStoreItem[]) => {
 }
 
 const addUploadedRows = (items: ImageStoreItem[]) => {
-  // A file that is a duplicate of one the widget has becomes the asset of that image in the queue, and the dialog has
-  // just saved its authors. The rows of that asset that offer the pick take them with their names (the source of the
-  // upload), as after its detail has closed: left as they were, what is picked in them would be written over those
-  // authors. Their names go into the source of a row only where it has none of its own, as there; it took them always.
+  // A duplicate file becomes the asset of the existing image, and the dialog has just saved its authors. Rows of that
+  // asset offering the pick take them, as after closing the detail. Otherwise their pick would overwrite those authors.
+  // Names go into a row's source only if it has none. Before, they always overwrote it.
   if (authorEnabled.value) {
     items.forEach((item) => {
       if (isUndefined(item.assetId) || item.damAuthors.length === 0) return
@@ -593,8 +588,8 @@ const authorEnabled = computed(() => {
 })
 
 /**
- * The names of the authors of an asset, in its order, under the ext system of its licence; `pageExtSystem` where its
- * licence does not tell.
+ * Author names of an asset, in order, under its licence's ext system.
+ * Falls back to `pageExtSystem` when the licence does not tell.
  */
 const authorNamesOf = async (asset: AssetDetailItemDto, pageExtSystem: IntegerId) => {
   const extSystem = (await getExtSystemByLicence(asset.licence)) ?? pageExtSystem
@@ -610,10 +605,10 @@ const authorNamesOf = async (asset: AssetDetailItemDto, pageExtSystem: IntegerId
 }
 
 /**
- * A row that offers the pick of the authors of the DAM, once its asset turns out to have authors: it takes them, the
- * pick goes, and the row shows its source from then on. That source takes their names where it is empty, or is what a
- * pick of authors wrote there ("fill empty" of the mass operations), which the row did not show. A source of the
- * image's own (stored, given by an upload, typed while the row showed it) stays, to be checked by the user.
+ * Once the asset turns out to have authors, a row offering the
+ * author pick takes them, drops the pick and shows its source.
+ * The source takes their names if empty or if it holds a hidden "fill empty"
+ * pick from mass operations. An image's own source stays for the user to check.
  */
 const takeAuthorsGiven = (row: ImageStoreItem, authors: DocId[], names: string) => {
   row.damAuthors = [...authors]
@@ -623,26 +618,23 @@ const takeAuthorsGiven = (row: ImageStoreItem, authors: DocId[], names: string) 
 }
 
 /**
- * The detail may have given authors to an asset whose row offers the pick of them. Left as it was, the row would write
- * what is picked in it over those authors with the save of the widget, and with nothing picked its image would be
- * saved without a source. So the asset is read again, and once it has authors its rows that offer the pick take them
- * over what was picked there, as a row of an asset picked with its authors has them: named in its source, under the
- * ext system of the licence of the asset, but for a source of the image's own (`takeAuthorsGiven`). A row that shows
- * its source is left alone: that text is the user's. `detailSave`: the save of the detail that was on its way when it
- * closed. `pageExtSystem`: the ext system its configuration asked for names under by then.
+ * The detail may have given authors to an asset whose row offers the pick.
+ * Otherwise the widget save overwrote them, or saved the image without a source.
+ * So the asset is read again, and its offering rows take its authors with names under the asset
+ * licence's ext system (see `takeAuthorsGiven`). Rows showing their source are left alone.
+ * `detailSave`: the detail save pending at close. `pageExtSystem`: the ext system configured at that time.
  */
 const takeAuthorsOfDetailAsset = async (assetId: DocId, detailSave: Promise<void> | null, pageExtSystem: IntegerId) => {
   try {
-    // Read before the DAM has answered that save, the asset would be as it was before it.
+    // Read before the DAM answers that save, the asset would be stale.
     await detailSave
     const asset = await fetchAsset(damClient, endPointAsset, assetId)
     if (asset.authors.length === 0) return
     const source = await authorNamesOf(asset, pageExtSystem)
-    // The widget is gone, or has turned read-only meanwhile: nothing is written.
     if (unmounted || props.readonly) return
     images.value.forEach((image) => {
-      // By the row's own flag. Whether the page draws the pick goes by an ext system that the detail of another asset,
-      // opened meanwhile, may have changed.
+      // Uses the row's own flag. Whether the page shows the pick depends
+      // on an ext system that another asset's detail may have changed.
       if (image.assetId !== asset.id || !image.showDamAuthors) return
       takeAuthorsGiven(image, asset.authors, source)
     })
@@ -652,9 +644,9 @@ const takeAuthorsOfDetailAsset = async (assetId: DocId, detailSave: Promise<void
 }
 
 /**
- * `shown`: the asset the detail showed; none when it closed from its loader, or by itself after a read that failed.
- * What the read goes by is noted here, before anything is awaited: whether a row of that asset offers the pick, the
- * save of the detail that is on its way, and the ext system its configuration asks for names under.
+ * `shown`: the asset the detail showed. None if it closed from its loader or after a failed read.
+ * Captured before any await: whether a row of that asset offers the
+ * pick, the pending detail save, and the configured ext system.
  */
 const onAssetDetailClose = (shown: AssetDetailItemDto | null) => {
   const ofRow = detailOfRow
@@ -674,16 +666,15 @@ const onAssetDetailClose = (shown: AssetDetailItemDto | null) => {
 }
 
 const saveImages = async () => {
-  // Nothing of the user's to write; the images stay as they were loaded.
+  // Nothing of the user's to write. The images stay as loaded.
   if (props.readonly) return true
-  // Empty store here means the fetch is pending or failed, not a user deletion — the empty
-  // path below would detach every image.
+  // An empty store here means the fetch is pending or failed, not a
+  // user deletion. The empty path below would detach every image.
   if (imagesLoading.value || imagesLoadFailed.value) {
     showUnknownError()
     return false
   }
-  // The asset of a detail that has just closed is still being read: its rows are not written before they have its
-  // authors. Gone by then, the widget writes nothing.
+  // A closed detail's asset is still being read. Its rows are not written until they have its authors.
   await Promise.all(detailAssetReads.values())
   if (unmounted) return false
   v$.value.$touch()
@@ -694,16 +685,16 @@ const saveImages = async () => {
   try {
     const assetUpdateItems: AssetAuthorsItems = []
     const imagesRaw = toRaw(images.value)
-    // The rows that offer the pick of the authors, those of one asset together: the entity may have an image twice,
-    // and a duplicate from the queue is a second row of its asset. Each row on its own, the authors of an asset went
-    // out once per row that had some, the last to stay, and a row with none picked was saved without a source and
-    // went on offering the pick of authors the asset had by then. The asset gets what is picked in any of its rows,
-    // each author once, and each of those rows the authors and their names, once the DAM has taken them.
+    // Rows offering the author pick, grouped by asset. An entity may have
+    // an image twice, and a queue duplicate is a second row of its asset.
+    // Per row, authors went out once per row and the last won, and a row with no pick was saved without a source.
+    // The asset gets the union of picks in its rows, each author once,
+    // and each row gets the authors and names after the DAM accepts them.
     const offering = new Map<DocId, { assetId: DocId | undefined; rows: ImageStoreItem[]; authors: DocId[] }>()
     if (authorEnabled.value) {
       images.value.forEach((image) => {
         if (!image.showDamAuthors) return
-        // A row that offers the pick has its asset; one that had none would be on its own.
+        // A row offering the pick has an asset. One without would be grouped alone.
         const of = image.assetId ?? image.key
         const asset = offering.get(of) ?? { assetId: image.assetId, rows: [], authors: [] }
         offering.set(of, asset)
@@ -717,26 +708,24 @@ const saveImages = async () => {
     for (const { assetId, rows, authors } of offering.values()) {
       if (authors.length === 0) continue
       if (assetId) assetUpdateItems.push({ id: assetId, authors })
-      // Under the ext system of the licence of the asset of the rows, as the read before the write names authors
-      // given since; that its configuration asks for names under where the page does not know the licence. Not read
-      // for it: the rows come of the entity, of any licence.
+      // Uses the ext system of the rows' asset licence, as the pre-write read does. Falls back to the configured
+      // one when the page does not know the licence. It is not fetched, since entity rows can be of any licence.
       const extSystem =
         damConfigStore.damConfigLicenceExtSystem.get(rows[0]!.dam.licenceId)?.extSystem ?? cachedExtSystemId.value
       const authorsRes = await fetchAuthorListByIds(damClient, endPointAuthor, extSystem, authors)
       named.push({ assetId, rows, authors, source: authorsRes.map((author) => author.name).join(', ') })
     }
-    // Gone while the authors loaded, the widget writes nothing. Turned read-only meanwhile: nothing of the user's is
-    // written any more.
+    // Unmounted while authors loaded: write nothing. Turned read-only: nothing of the user's is written.
     if (unmounted) return false
     if (props.readonly) return true
-    // An asset was read when its rows came, and may have been given authors elsewhere since: the write replaces them
-    // with those picked in its rows. Each asset with something picked is read again, right before the write. Once one
-    // has authors nothing is written, of any asset or image: the rows of that asset that offer the pick take them
-    // (`takeAuthorsGiven`), the user is told till they close the message, and saves again.
+    // Assets may have received authors elsewhere since their rows loaded, and the write would
+    // replace them. So each asset with picked authors is re-read right before the write.
+    // If any asset already has authors, nothing is written. Its offering rows take those
+    // authors (`takeAuthorsGiven`), a message stays until closed, and the user saves again.
     const picked = [...offering.values()].filter(({ assetId, authors }) => !isUndefined(assetId) && authors.length > 0)
     if (picked.length > 0) {
       const readAgain = await Promise.all(picked.map(({ assetId }) => fetchAsset(damClient, endPointAsset, assetId!)))
-      // Gone, or turned read-only while the assets were read: nothing of the user's is written any more.
+      // Unmounted or made read-only while the assets were read: write nothing.
       if (unmounted || props.readonly) return false
       const givenMeanwhile = picked
         .map(({ rows }, index) => ({ rows, asset: readAgain[index]! }))
@@ -756,13 +745,13 @@ const saveImages = async () => {
     }
     if (assetUpdateItems.length) {
       await bulkUpdateAssetsAuthors(damClient, endPointAsset, assetUpdateItems)
-      // Gone while the authors were written, the widget saves no image: a widget drawn meanwhile, of the same images,
-      // read them before this save, and it was noted only once sent.
+      // Unmounted while the authors were written: save no image. A widget mounted meanwhile
+      // for the same images read them before this save, which is noted only once sent.
       if (unmounted) return false
     }
-    // The DAM has the authors of those rows by now, also when the images are not saved: the rows show the source from
-    // here on, as after a save. Left offering the pick, the rows went into the next save as picks, the read before the
-    // write found the authors written here, and that save wrote nothing.
+    // The DAM now has these authors even if the images are not saved, so the rows show the source as after a save.
+    // If the rows kept offering the pick, the next save would send them as picks,
+    // the pre-write read would find these authors, and nothing would be written.
     named.forEach(({ assetId, rows, authors, source }) => {
       rows.forEach((row) => {
         row.damAuthors = [...authors]
@@ -773,14 +762,15 @@ const saveImages = async () => {
       })
     })
     const sentRows = [...imagesRaw]
-    // Noted for the other widgets of the page, image by image, also when this one is gone by its answer.
+    // Note the saved images for the page's other widgets, one by one.
+    // This runs even if this widget unmounted before the response.
     const resItems = await noteImagesSave(
       damConfigName,
       sentRows.map((row) => row.id).filter((id) => !isUndefined(id)),
       ownImageSaves,
       imageApi.bulkUpdateImages(imageClient, sentRows.map(imageFieldsOf))
     )
-    // Gone by the answer, the widget writes nothing into the store of the images, which is the next widget's by then.
+    // If unmounted before the response, write nothing to the image store. By then it belongs to the next widget.
     if (unmounted) return true
     holdImages(
       damConfigName,
@@ -801,13 +791,13 @@ const saveImages = async () => {
     })
     if (imageStore.images.length === 0) {
       listEditor.value?.commit([])
-      // Emptying is a change too — without this the parent kept its old ids.
+      // Emptying is a change too. Without this emit the parent keeps its old ids.
       emit('update:modelValue', ids)
       return true
     }
 
-    // Each image of the answer takes what its own row had, the rows of one file one by one in the order they were
-    // sent in: found by the file alone, every row of a file took what the first of them had.
+    // Match each returned image to its own sent row. Rows of the same file are matched one by one in send order.
+    // Matching by file alone gave every row of a file the values of the first one.
     const getUpdatedItem = (item: ImageStoreItem): ImageStoreItem => {
       const index = sentRows.findIndex((row) => row.dam.damId === item.dam.damId)
       const matchedImage = index < 0 ? undefined : sentRows.splice(index, 1)[0]
@@ -815,8 +805,8 @@ const saveImages = async () => {
       return {
         ...item,
         damAuthors: matchedImage ? matchedImage.damAuthors : item.damAuthors,
-        // Only a row that offered the authors of the DAM goes on offering them: one whose asset the DAM did not
-        // return has no asset to save them into, and keeps its source.
+        // Only a row that offered DAM authors keeps offering them.
+        // A row whose asset the DAM did not return has no asset to save them into, so it keeps its source.
         showDamAuthors: matchedImage ? matchedImage.showDamAuthors && matchedImage.damAuthors.length === 0 : false,
         assetId: matchedImage ? matchedImage.assetId : item.assetId,
       }
@@ -824,19 +814,19 @@ const saveImages = async () => {
 
     const updatedItems = items.map(getUpdatedItem)
     imageStore.setImages(updatedItems)
-    // Rows passed explicitly: setImages just replaced their keys, bare commit() would read the
-    // not-yet-rerendered prop.
+    // Pass the rows explicitly. `setImages` just replaced their keys,
+    // so a bare `commit()` would read the not-yet-rerendered prop.
     listEditor.value?.commit(updatedItems)
     emit('update:modelValue', ids)
     return true
   } catch (e) {
-    // The authors refused by validation are named as the forms name them; anything else as before.
+    // Authors refused by validation are named as the forms name them. Other errors are shown as before.
     showMetadataSaveError(e, cachedExtSystemId.value, damConfigName)
     return false
   }
 }
 
-// The images that stay are numbered anew, as after a move: the backend got positions with a gap where one went.
+// Renumber the remaining images as after a move. Otherwise the backend gets positions with a gap.
 const removeImage = (index: number) => {
   imageStore.removeImageByIndex(index)
   updateAllPositions()
@@ -872,8 +862,8 @@ watch(
   }
 )
 
-// Required by the editor, but never invoked here — adds happen through the
-// upload / asset-select flow, not the editor's add button (which is hidden).
+// Required by the editor but never called. Adds go through the
+// upload and asset-select flow; the editor's add button is hidden.
 const createImageStoreItem = (): ImageStoreItem => ({
   key: generateUUIDv1(),
   ...createDamImage({ fileId: '', licenceId: 0 }, {}, { position: 0 }),

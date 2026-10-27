@@ -19,7 +19,9 @@ import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 
 const props = withDefaults(
   defineProps<{
-    /** The DAM configuration to work under. Left out: that of the component it is in, else `default`. */
+    /**
+     * DAM configuration to use. Defaults to the parent component's, else `default`.
+     */
     configName?: string
   }>(),
   {
@@ -37,11 +39,11 @@ const { replaceEmptyDescription, replaceEmptySource, replaceEmptyAuthors } = use
 const { t } = useI18n()
 const { showErrorsDefault } = useAlerts()
 
-// The two icon buttons beside a field, named for who cannot see them: what each does, and to which field.
+// Accessible names for the two icon buttons beside a field: the action and the field.
 const fillEmptyName = (field: string) => t('common.damImage.asset.massOperations.fillOneEmptyField', { field })
 const replaceName = (field: string) => t('common.damImage.asset.massOperations.replaceOneField', { field })
 
-// The authors' names are looked up first, and nothing is filled when that fails.
+// Author names are looked up first. Nothing is filled if the lookup fails.
 const fillAuthors = async (forceReplace: boolean) => {
   try {
     await replaceEmptyAuthors(texts.value.authors, forceReplace)

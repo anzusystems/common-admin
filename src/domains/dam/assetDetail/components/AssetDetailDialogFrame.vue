@@ -14,8 +14,9 @@ import type { IntegerId } from '@/shared/types/common'
 import { isNull } from '@/shared/utils/common'
 import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 
-// The frame of the detail of an asset and of the dialog of a single upload: the dialog, its toolbar, the picture or
-// the editor of the region of interest on the left, the sidebar on the right. What it draws comes from the view.
+// Shared frame of the asset detail and the single-upload dialog: dialog,
+// toolbar, image or ROI editor on the left, sidebar on the right.
+// Its content comes from the view.
 
 const props = withDefaults(
   defineProps<{
@@ -36,7 +37,9 @@ const emit = defineEmits<{
 defineSlots<{
   title(): unknown
   'toolbar-actions'(): unknown
-  /** Over the picture: given, picture and overlay share a positioned box. */
+  /**
+   * Drawn over the image. When given, image and overlay share a positioned box.
+   */
   'image-overlay'?(): unknown
   sidebar(props: { view: AssetDetailView }): unknown
 }>()
@@ -50,7 +53,7 @@ const { toolbarColor } = useTheme()
 const { activeTab } = storeToRefs(useAssetDetailStore())
 
 const { roiUpdateAcl } = useCommonAdminCoreDamOptions(damConfigName)
-// The endpoint refuses the region's save without it: the region tab then only shows the image.
+// The endpoint rejects ROI saves without this permission. The ROI tab then only shows the image.
 const roiEditable = computed(() => isNull(roiUpdateAcl) || canSafeHelper(roiUpdateAcl, undefined, 'roi'))
 
 const sidebar = ref(true)
@@ -153,8 +156,11 @@ const picture = computed(() => {
               v-else
               class="w-100 h-100 pa-2 d-flex align-center justify-center"
             >
-              <!-- Around the grey placeholder the box is as large as this area, as the placeholder is without an
-                   overlay: it fills it, and the overlay covers it. Around a picture it keeps the picture's size. -->
+              <!--
+                Around the grey placeholder the box fills this area, as the
+                placeholder does without an overlay. The overlay covers it.
+                Around an image the box keeps the image's size.
+              -->
               <div
                 v-if="$slots['image-overlay']"
                 class="position-relative"
