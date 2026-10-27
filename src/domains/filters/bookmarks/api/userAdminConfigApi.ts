@@ -52,12 +52,7 @@ export function useUserAdminConfigApi(
   }
 
   const updateUserAdminConfigPositions = (ids: IntegerId[]) => {
-    const { execute } = useApiRequest<{ userAdminConfigs: IntegerId[] }, { userAdminConfigs: IntegerId[] }>({
-      client,
-      method: 'PATCH',
-      system,
-      entity,
-    })
+    const { execute } = useApiCommand<{ userAdminConfigs: IntegerId[] }>({ client, method: 'PATCH', system, entity })
     return execute({
       urlTemplate: endPoint + '/update-positions',
       body: { userAdminConfigs: ids },

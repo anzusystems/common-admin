@@ -322,6 +322,69 @@ describe('useKeyboardNav', () => {
     })
   })
 
+  // A nested row sits inside its parent's row, so its keydown bubbles into the parent's handler.
+  describe('a key a nested row has handled', () => {
+    const nestedRows = (onChild: (e: KeyboardEvent) => void, onParent: (e: KeyboardEvent) => void) => {
+      const parentEl = document.createElement('div')
+      const childEl = document.createElement('div')
+      parentEl.appendChild(childEl)
+      parentEl.addEventListener('keydown', onParent)
+      childEl.addEventListener('keydown', onChild)
+      return (key: string) => childEl.dispatchEvent(fireKey(key))
+    }
+
+    it('does not grab the parent as well in reorder mode', () => {
+      const { options } = buildOptions({ variant: 'nested', isReorderMode: ref(true) })
+      const nav = useKeyboardNav(options)
+      const press = nestedRows(
+        (e) => nav.handleKeydown(2, e),
+        (e) => nav.handleKeydown(1, e)
+      )
+      press('Enter')
+      expect(nav.grabbedKey.value).toBe(2)
+    })
+
+    it('does not cancel the reorder when Esc releases the nested grab', () => {
+      const { options, mocks } = buildOptions({ variant: 'nested', isReorderMode: ref(true) })
+      const nav = useKeyboardNav(options)
+      const press = nestedRows(
+        (e) => nav.handleKeydown(2, e),
+        (e) => nav.handleKeydown(1, e)
+      )
+      press('Enter')
+      press('Escape')
+      expect(nav.grabbedKey.value).toBeNull()
+      expect(mocks.onCancelReorder).not.toHaveBeenCalled()
+    })
+
+    it('does not reach an outer editor whose row holds the inner one', () => {
+      const inner = buildOptions()
+      const outer = buildOptions()
+      const innerNav = useKeyboardNav(inner.options)
+      const outerNav = useKeyboardNav(outer.options)
+      const press = nestedRows(
+        (e) => innerNav.handleKeydown(2, e),
+        (e) => outerNav.handleKeydown(1, e)
+      )
+      press('Enter')
+      expect(inner.mocks.onToggleEdit).toHaveBeenCalledWith(2)
+      expect(outer.mocks.onToggleEdit).not.toHaveBeenCalled()
+    })
+
+    it('still reaches the outer editor when the inner row left the key alone', () => {
+      const inner = buildOptions()
+      const outer = buildOptions({ isEditing: () => true })
+      const innerNav = useKeyboardNav(inner.options)
+      const outerNav = useKeyboardNav(outer.options)
+      const press = nestedRows(
+        (e) => innerNav.handleKeydown(2, e),
+        (e) => outerNav.handleKeydown(1, e)
+      )
+      press('Escape')
+      expect(outer.mocks.onCancelEdit).toHaveBeenCalledWith(1)
+    })
+  })
+
   describe('disabled state', () => {
     it('disabled=true makes every key a no-op', () => {
       const disabled = ref(true)

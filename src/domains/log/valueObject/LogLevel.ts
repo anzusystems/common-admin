@@ -18,17 +18,17 @@ export function useLogLevel() {
     {
       value: LogLevel.Debug,
       title: LogLevel.Debug,
-      color: 'blue-grey lighten-5',
+      color: 'blue-grey-lighten-5',
     },
     {
       value: LogLevel.Info,
       title: LogLevel.Info,
-      color: 'blue-grey lighten-3',
+      color: 'blue-grey-lighten-3',
     },
     {
       value: LogLevel.Notice,
       title: LogLevel.Notice,
-      color: 'amber lighten-4',
+      color: 'amber-lighten-4',
     },
     {
       value: LogLevel.Warning,
@@ -43,7 +43,7 @@ export function useLogLevel() {
     {
       value: LogLevel.Critical,
       title: LogLevel.Critical,
-      color: 'red accent-4',
+      color: 'red-accent-4',
     },
     {
       value: LogLevel.Alert,
@@ -53,7 +53,7 @@ export function useLogLevel() {
     {
       value: LogLevel.Emergency,
       title: LogLevel.Emergency,
-      color: 'ping darken-4',
+      color: 'pink-darken-4',
     },
   ])
 

@@ -133,6 +133,9 @@ export function useKeyboardNav(options: KeyboardNavOptions): KeyboardNavApi {
   }
 
   function handleKeydown(key: ListEditorKey, e: KeyboardEvent) {
+    // A nested row's keydown bubbles into its ancestor rows; every key handled below calls
+    // `preventDefault`, so an ancestor does not act on it a second time for its own row.
+    if (e.defaultPrevented) return
     if (options.disabled?.value) return
 
     const ordered = orderedKeys.value

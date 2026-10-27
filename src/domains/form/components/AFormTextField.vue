@@ -113,8 +113,9 @@ const { t } = useI18n()
 const system = inject<string | undefined>(SystemScopeKey, undefined)
 const subject = inject<string | undefined>(SubjectScopeKey, undefined)
 
-const onUpdate = (newValue: string) => {
-  emit('update:modelValue', newValue)
+const onUpdate = (newValue: string | number | null) => {
+  // Under `.number` an empty input means no value; '' would reach the backend and be cast to 0.
+  emit('update:modelValue', props.modelModifiers?.number && newValue === '' ? null : newValue)
 }
 const onBlur = () => {
   emit('blur', props.modelValue)

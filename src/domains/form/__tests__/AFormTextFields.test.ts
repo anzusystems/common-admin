@@ -23,13 +23,13 @@ type Opts = {
   field: unknown
   rules?: Record<string, unknown>
   props?: Record<string, unknown>
-  initial?: string | null
+  initial?: string | number | null
   scope?: boolean
 }
 
 /** A parent that owns a vuelidate state `{ article: { title } }` and renders the field on it. */
 const mountField = ({ field, rules = {}, props = {}, initial = '', scope = true }: Opts) => {
-  const state = ref({ article: { title: initial as string | null } })
+  const state = ref({ article: { title: initial as string | number | null } })
   let v$: any
   const Parent = defineComponent({
     setup() {
@@ -40,7 +40,7 @@ const mountField = ({ field, rules = {}, props = {}, initial = '', scope = true 
       return () =>
         h(field as never, {
           modelValue: state.value.article.title,
-          'onUpdate:modelValue': (value: string) => (state.value.article.title = value),
+          'onUpdate:modelValue': (value: string | number | null) => (state.value.article.title = value),
           v: v$.value.article.title,
           ...props,
         })
@@ -191,6 +191,62 @@ describe('AFormTextField only', () => {
     await input.trigger('input')
     expect(state.value.article.title).toBe(12)
     expect(child.findComponent({ name: 'VTextField' }).props('modelModifiers')).toEqual({ number: true })
+  })
+
+  it('keeps a typed 0 under v-model.number', async () => {
+    const { wrapper, state } = mountField({ field: AFormTextField, props: { modelModifiers: { number: true } } })
+    const input = wrapper.find('input')
+    ;(input.element as HTMLInputElement).value = '0'
+    await input.trigger('input')
+    expect(state.value.article.title).toBe(0)
+  })
+
+  // '' would reach the backend, whose serializer casts it to 0.
+  it('turns an emptied v-model.number field into null', async () => {
+    const { wrapper, state, child } = mountField({
+      field: AFormTextField,
+      initial: 12,
+      props: { modelModifiers: { number: true } },
+    })
+    const input = wrapper.find('input')
+    ;(input.element as HTMLInputElement).value = ''
+    await input.trigger('input')
+    expect(child.emitted('update:modelValue')?.at(-1)).toEqual([null])
+    expect(state.value.article.title).toBe(null)
+  })
+
+  // Only exactly '': whitespace stays a string, which `minValue` and the like go on refusing.
+  it('keeps whitespace under v-model.number', async () => {
+    const { wrapper, state } = mountField({
+      field: AFormTextField,
+      initial: 12,
+      props: { modelModifiers: { number: true } },
+    })
+    const input = wrapper.find('input')
+    ;(input.element as HTMLInputElement).value = '  '
+    await input.trigger('input')
+    expect(state.value.article.title).toBe('  ')
+  })
+
+  it('passes null from the clear icon under v-model.number', async () => {
+    const { wrapper, state, child } = mountField({
+      field: AFormTextField,
+      initial: 12,
+      props: { modelModifiers: { number: true }, clearable: true },
+    })
+    await wrapper.find('.v-field__clearable .v-icon').trigger('click')
+    await flushPromises()
+    expect(child.emitted('update:modelValue')?.at(-1)).toEqual([null])
+    expect(state.value.article.title).toBe(null)
+  })
+
+  it('leaves an emptied field without v-model.number as an empty string', async () => {
+    const { wrapper, state, child } = mountField({ field: AFormTextField, initial: 'ab' })
+    const input = wrapper.find('input')
+    ;(input.element as HTMLInputElement).value = ''
+    await input.trigger('input')
+    expect(child.emitted('update:modelValue')?.at(-1)).toEqual([''])
+    expect(state.value.article.title).toBe('')
   })
 
   it('exposes focus', async () => {
