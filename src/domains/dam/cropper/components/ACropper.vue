@@ -642,6 +642,12 @@ onBeforeUnmount(() => {
 </template>
 
 <style lang="scss">
+// Full width even as a flex item, such as in the asset detail dialog. The canvas is sized from the
+// host's width, and a shrink-wrapped root has none to give, so every picture got the 200px minimum.
+.a-cropper {
+  width: 100%;
+}
+
 // `cropper-crosshair` is sized in `em`. Without its own size the centre marker would scale with the admin's font.
 // 7px matches the plus sign of v1's `.cropper-center`.
 .a-cropper cropper-crosshair {

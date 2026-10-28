@@ -93,7 +93,6 @@ describe('cropToRegion', () => {
 
   // The previous conversion tried to correct a crop overrunning the edge and subtracted a pixel count times
   // a hundred from a fraction. A 0.6px rounding overshoot on a 600px image turned a stored 0.401 into 0.301.
-  // Nothing overruns now, so there is nothing to correct.
   it('does not mangle a region that sits flush against the far edge', () => {
     const region = cropToRegion(crop({ x: 0.6, y: 0.6, width: 0.4, height: 0.4 }), roi(), WIDTH, HEIGHT)
     expect(region.pointX).toBe(480)
@@ -102,6 +101,34 @@ describe('cropToRegion', () => {
     expect(region.percentageHeight).toBe(0.4)
     expect(region.pointX + region.percentageWidth * WIDTH).toBe(WIDTH)
     expect(region.pointY + region.percentageHeight * HEIGHT).toBe(HEIGHT)
+  })
+
+  // The DAM answers 422 (`percentageHeight: error_field_length_max`) to a region ending past the image.
+  // A 3:2 crop dragged to the bottom of a 1770x1328 picture: 147.56px rounds up to 148 and 0.88889 to 0.889.
+  it('pulls the anchor back when the rounding would end the region past the image', () => {
+    const height = 1328
+    const region = cropToRegion(crop({ x: 0, y: 1 - 0.888889, width: 1, height: 0.888889 }), roi(), 1770, height)
+    expect(region.percentageHeight).toBe(0.889)
+    expect(region.pointY).toBe(147)
+    expect(height * region.percentageHeight + region.pointY).toBeLessThanOrEqual(height)
+  })
+
+  it('never ends a region flush with the far edge past the image, whatever its size', () => {
+    const sizes = [333, 599, 1328, 1770, 4031, 6000]
+    sizes.forEach((size) => {
+      for (let length = 0.05; length <= 1; length += 0.0137) {
+        const region = cropToRegion(
+          crop({ x: 1 - length, y: 1 - length, width: length, height: length }),
+          roi(),
+          size,
+          size
+        )
+        expect(size * region.percentageWidth + region.pointX).toBeLessThanOrEqual(size)
+        expect(size * region.percentageHeight + region.pointY).toBeLessThanOrEqual(size)
+        // Moved back by no more than the rounding of the size (half a thousandth) and of the anchor.
+        expect(region.pointX).toBeGreaterThanOrEqual(Math.round((1 - length) * size) - Math.ceil(size / 2000) - 1)
+      }
+    })
   })
 
   it('writes onto the region it was given, as the DAM expects', () => {

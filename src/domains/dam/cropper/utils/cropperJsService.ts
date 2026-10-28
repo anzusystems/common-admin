@@ -11,6 +11,17 @@ const roundTo = (value: number, decimals: number) => {
 const clampFraction = (value: number) => Math.min(Math.max(value, 0), 1)
 
 /**
+ * The DAM rejects a region ending past the image (`size * fraction + point > size`). The anchor is rounded
+ * to whole pixels and the size to three decimals, so a region flush with the far edge can overrun by a
+ * fraction of a pixel. The anchor is pulled back by the DAM's own sum, which keeps the region's size and ratio.
+ */
+const fitPoint = (point: number, fraction: number, size: number) => {
+  let fitted = Math.min(Math.max(point, 0), size)
+  while (fitted > 0 && size * fraction + fitted > size) fitted--
+  return fitted
+}
+
+/**
  * Converts a stored region of interest to a crop rectangle and back.
  * Pure arithmetic on the source image dimensions. The region stores its size as fractions
  * and its anchor is effectively a fraction too, so the displayed image size is not needed.
@@ -37,10 +48,12 @@ export const cropToRegion = (
   originalImageWidth: number,
   originalImageHeight: number
 ): RegionOfInterest => {
-  regionOfInterest.pointX = Math.max(0, Math.round(crop.x * originalImageWidth))
-  regionOfInterest.pointY = Math.max(0, Math.round(crop.y * originalImageHeight))
-  regionOfInterest.percentageWidth = roundTo(clampFraction(crop.width), PRECISION)
-  regionOfInterest.percentageHeight = roundTo(clampFraction(crop.height), PRECISION)
+  const percentageWidth = roundTo(clampFraction(crop.width), PRECISION)
+  const percentageHeight = roundTo(clampFraction(crop.height), PRECISION)
+  regionOfInterest.pointX = fitPoint(Math.round(crop.x * originalImageWidth), percentageWidth, originalImageWidth)
+  regionOfInterest.pointY = fitPoint(Math.round(crop.y * originalImageHeight), percentageHeight, originalImageHeight)
+  regionOfInterest.percentageWidth = percentageWidth
+  regionOfInterest.percentageHeight = percentageHeight
 
   return regionOfInterest
 }

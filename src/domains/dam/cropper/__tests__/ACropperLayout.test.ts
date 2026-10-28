@@ -1,8 +1,14 @@
 import { describe, expect, it } from 'vitest'
+import { defineComponent, h } from 'vue'
 import { mount } from '@vue/test-utils'
 import ACropper from '@/domains/dam/cropper/components/ACropper.vue'
 import { mountCropper, V2_ADAPTER, wait } from '@/domains/dam/cropper/__tests__/support/cropperHarness'
-import { LANDSCAPE_IMAGE, PORTRAIT_IMAGE } from '@/domains/dam/cropper/__tests__/support/cropperImages'
+import {
+  type CropperFixture,
+  LANDSCAPE_IMAGE,
+  PORTRAIT_IMAGE,
+  SMALL_IMAGE,
+} from '@/domains/dam/cropper/__tests__/support/cropperImages'
 
 /**
  * How the cropper reacts to the room it is given.
@@ -178,6 +184,61 @@ describe('ACropper layout', () => {
 
     expect(cropper.api.displaySize().width).toBeCloseTo(600, 0)
     cropper.destroy()
+  })
+
+  // The asset detail dialog centres the editor in a flex row. A shrink-wrapped cropper had
+  // no width to measure, and every picture came out at the 200px minimum.
+  describe('centred in a flex row, as in the asset detail dialog', () => {
+    const mountInRow = async (fixture: CropperFixture, rowWidth: number) => {
+      const frame = document.createElement('div')
+      document.body.appendChild(frame)
+      let onReady = () => {}
+      const ready = new Promise<void>((resolve) => {
+        onReady = resolve
+      })
+      const wrapper = mount(
+        defineComponent({
+          setup: () => () =>
+            h(
+              'div',
+              {
+                class: 'row',
+                style: `display: flex; align-items: center; justify-content: center; width: ${rowWidth}px; height: 700px;`,
+              },
+              [h(ACropper, { src: fixture.src, aspectRatio: 3 / 2, onReady })]
+            ),
+        }),
+        { attachTo: frame }
+      )
+      await ready
+      await wait(SETTLE)
+      const row = frame.querySelector('.row')!.getBoundingClientRect()
+      const picture = frame.querySelector('cropper-image')!.getBoundingClientRect()
+      return {
+        row,
+        picture,
+        destroy: () => {
+          wrapper.unmount()
+          frame.remove()
+        },
+      }
+    }
+
+    it('shows a small picture at its natural size, centred', async () => {
+      const { row, picture, destroy } = await mountInRow(SMALL_IMAGE, 900)
+      expect(picture.width).toBeCloseTo(SMALL_IMAGE.naturalWidth, 0)
+      expect(picture.height).toBeCloseTo(SMALL_IMAGE.naturalHeight, 0)
+      expect(picture.left - row.left).toBeCloseTo((900 - SMALL_IMAGE.naturalWidth) / 2, 0)
+      destroy()
+    })
+
+    it('scales a large picture down to the width of the row', async () => {
+      const { row, picture, destroy } = await mountInRow(LANDSCAPE_IMAGE, 520)
+      expect(picture.width).toBeCloseTo(520, 0)
+      expect(picture.height).toBeCloseTo((520 * LANDSCAPE_IMAGE.naturalHeight) / LANDSCAPE_IMAGE.naturalWidth, 0)
+      expect(picture.left).toBeCloseTo(row.left, 0)
+      destroy()
+    })
   })
 
   // A disabled cropper must still follow its frame. `DamAssetImageRoiSelect` disables it while
