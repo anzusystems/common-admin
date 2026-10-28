@@ -19,6 +19,8 @@
   "reorderModeLabel": "Režim přeskupování",
   "expandAll": "Rozbalit vše",
   "collapseAll": "Sbalit vše",
+  "expand": "Rozbalit",
+  "collapse": "Sbalit",
   "reorderApply": "Použít",
   "reorderCancel": "Zrušit",
   "moveUp": "Posunout nahoru",
@@ -64,5 +66,7 @@
   "error": {
     "maxDeepExceed": "Nemožnost přesunu. Nová hloubka překročí maximální hloubku.",
     "unableToAdd": "Nelze přidat položku."
-  }
+  },
+  "moreOptions": "Další možnosti",
+  "addNewAfter": "Přidat novou položku za tuto"
 }

@@ -1,0 +1,24 @@
+{
+  "model": {
+    "id": "Id",
+    "property": "Vlastnosť",
+    "name": "Názov",
+    "position": "Pozícia",
+    "attributes": {
+      "type": "Typ",
+      "minValue": "Min. hodnota",
+      "maxValue": "Max. hodnota",
+      "minCount": "Min. počet",
+      "maxCount": "Max. počet",
+      "required": "Povinné",
+      "searchable": "Hľadať"
+    }
+  },
+  "type": {
+    "string": "Reťazec",
+    "integer": "Celé číslo",
+    "stringArray": "Pole reťazcov",
+    "stringArrayLegacy": "Pole reťazcov (staré)",
+    "boolean": "Boolean"
+  }
+}

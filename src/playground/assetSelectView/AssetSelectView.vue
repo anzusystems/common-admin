@@ -1,11 +1,11 @@
 <script lang="ts" setup>
 import { ref } from 'vue'
-import AAssetSelect from '@/components/dam/assetSelect/AAssetSelect.vue'
-import type { DocId } from '@/types/common'
-import AChipNoLink from '@/components/AChipNoLink.vue'
-import { DamAssetType } from '@/types/coreDam/Asset'
+import AAssetSelect from '@/domains/dam/assetSelect/components/AAssetSelect.vue'
+import type { DocId } from '@/shared/types/common'
+import AChipNoLink from '@/domains/ui/components/AChipNoLink.vue'
+import { DamAssetType } from '@/domains/dam/types/Asset'
 import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
-import type { AssetSelectReturnData } from '@/types/coreDam/AssetSelect'
+import type { AssetSelectReturnData } from '@/domains/dam/types/AssetSelect'
 
 const secondDialog = ref(false)
 const thirdAssetSelect = ref<InstanceType<typeof AAssetSelect> | null>(null)
@@ -30,7 +30,7 @@ const onConfirm = (data: AssetSelectReturnData) => {
   <VCard>
     <VCardText>
       <VRow>
-        <VCol> Open using activator: </VCol>
+        <VCol>Open using activator:</VCol>
       </VRow>
       <VRow>
         <VCol cols="10">
@@ -39,7 +39,7 @@ const onConfirm = (data: AssetSelectReturnData) => {
             :max-count="3"
             :select-licences="[100000, 100001]"
             :asset-type="DamAssetType.Image"
-            @on-confirm="onConfirm"
+            @confirm="onConfirm"
           >
             <template #activator="{ props }">
               <VBtn
@@ -53,7 +53,7 @@ const onConfirm = (data: AssetSelectReturnData) => {
         </VCol>
       </VRow>
       <VRow>
-        <VCol> Open using v-model: </VCol>
+        <VCol>Open using v-model:</VCol>
       </VRow>
       <VRow>
         <VCol cols="10">
@@ -69,12 +69,12 @@ const onConfirm = (data: AssetSelectReturnData) => {
             :min-count="1"
             :max-count="1"
             :asset-type="DamAssetType.Video"
-            @on-confirm="onConfirm"
+            @confirm="onConfirm"
           />
         </VCol>
       </VRow>
       <VRow>
-        <VCol> Open using template ref: </VCol>
+        <VCol>Open using template ref:</VCol>
       </VRow>
       <VRow>
         <VCol cols="10">
@@ -90,7 +90,7 @@ const onConfirm = (data: AssetSelectReturnData) => {
             :min-count="1"
             :max-count="1"
             :asset-type="DamAssetType.Audio"
-            @on-confirm="onConfirm"
+            @confirm="onConfirm"
           />
         </VCol>
       </VRow>

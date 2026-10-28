@@ -1,13 +1,13 @@
 <script lang="ts" setup>
 import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
 import { useRouter } from 'vue-router'
-import { useCollabHelpers } from '@/components/collab/composables/collabHelpers'
+import { useCollabHelpers } from '@/domains/collab/composables/collabHelpers'
 import { useCachedUsers } from '@/playground/collabView/cachedUsers'
-import { useCollabRoom } from '@/components/collab/composables/collabRoom'
+import { useCollabRoom } from '@/domains/collab/composables/collabRoom'
 import { onBeforeUnmount, onMounted } from 'vue'
-import ACollabManagement from '@/components/collab/components/ACollabManagement.vue'
-import AActionEditButton from '@/components/buttons/action/AActionEditButton.vue'
-import { useCollabCurrentUserId } from '@/components/collab/composables/collabCurrentUserId'
+import ACollabManagement from '@/domains/collab/components/ACollabManagement.vue'
+import AActionEditButton from '@/domains/ui/buttons/action/components/AActionEditButton.vue'
+import { useCollabCurrentUserId } from '@/domains/collab/composables/collabCurrentUserId'
 
 const router = useRouter()
 

@@ -10,7 +10,9 @@
       }
     },
     "meta": {
-      "edit": "Upraviť obrázok"
+      "edit": "Upraviť obrázok",
+      "authorsGivenMeanwhile": "Asset medzitým dostal autorov v DAM. Ak obrázok nemal vlastný zdroj, má teraz ich mená; vybraní autori sa neuložili. Skontrolujte a potvrďte znova.",
+      "galleryAuthorsGivenMeanwhile": "Assety niektorých obrázkov medzitým dostali autorov v DAM. Obrázky bez vlastného zdroja majú teraz ich mená; vybraní autori sa neuložili a nič sa neuložilo. Skontrolujte a uložte znova."
     },
     "button": {
       "options": "Upraviť obrázok",
@@ -48,11 +50,14 @@
     }
   },
   "queueItem": {
-    "displayTitle": "Meno originálu",
+    "displayTitle": "Názov originálu",
     "error": "Chyba",
     "copyAssetId": "Kopírovať asset ID",
     "stillUploadingOrProcessing": "Asset sa stále nahráva alebo spracováva serverom",
-    "removeFromQueue": "Ostrániť z fronty nahrávania?",
+    "refreshFailed": "Stav položky sa nepodarilo načítať. Skúste to znova.",
+    "assetGone": "Asset už neexistuje.",
+    "duplicateOriginalUnread": "Originál duplikátu sa nepodarilo načítať.",
+    "removeFromQueue": "Odstrániť z fronty nahrávania?",
     "errorUnableToCopyToLicence": "Chyba, nie je možné kopírovať assety do licencie"
   },
   "asset": {
@@ -67,11 +72,15 @@
       "video": "Video",
       "document": "Dokument"
     },
+    "list": {
+      "noTitle": "Bez titulku"
+    },
     "detail": {
+      "sourceSystem": "DAM",
       "toggleInfo": "Info karta",
       "metadataToggle": {
-        "show": "Skryť viac detailov",
-        "hide": "Zobraziť viac detailov"
+        "show": "Zobraziť viac detailov",
+        "hide": "Skryť viac detailov"
       },
       "tabs": {
         "info": "Info",
@@ -116,6 +125,8 @@
       "fillOneEmpty": "Vyplňte prázdne pole",
       "fillAllEmpty": "Vyplniť len prázdne",
       "replaceOne": "Nahradiť všade",
+      "fillOneEmptyField": "Vyplňte prázdne pole: {field}",
+      "replaceOneField": "Nahradiť všade: {field}",
       "replaceAll": "Nahradiť všetko",
       "clearForm": "Vyčistiť",
       "general": "Hlavné"
@@ -124,6 +135,7 @@
       "low": "Nízka kvalita",
       "slots": "Sloty",
       "rss": "RSS",
+      "tts": "Syntetické (TTS)",
       "fullHd": "FullHD",
       "2k": "2K",
       "qhd": "QHD",
@@ -152,9 +164,12 @@
     "title": "Nahrávanie",
     "titleDone": "Nahrávanie ukončené",
     "stopConfirmQuestion": "Chcete ukončiť nahrávanie?",
+    "stopConfirm": "Zastaviť",
+    "onlyOneFile": "Sem sa dá nahrať len jeden súbor; použije sa prvý.",
+    "metadataJustLoaded": "Niektorým súborom sa práve načítali metadáta. Skontrolujte ich a uložte znova.",
     "limits": {
       "uploadWarning": "Varovanie pri nahrávaní",
-      "onUploadLimit": "Dosiahli ste limit nahrávania ({limit}). Dokončite nahrávanie a skúste znova",
+      "onUploadLimit": "Dosiahli ste limit nahrávania ({limit}). Dokončite nahrávanie a skúste znova.",
       "addingOverLimit": "Pokúšate sa nahrať ďalšie súbory ({count}).",
       "countAlreadyInProgress": "{count} súbor(y) prebiehajú.",
       "onlyAllowedAtOnce": "Maximálne {count} súborov je možné nahrať súčasne",
@@ -164,7 +179,7 @@
   },
   "keyword": {
     "model": {
-      "name": "Meno"
+      "name": "Názov"
     },
     "button": {
       "add": "Pridať kľúčové slovo"
@@ -190,7 +205,9 @@
       "agency": "Agentúra"
     },
     "button": {
-      "add": "Pridať nového autora"
+      "add": "Pridať nového autora",
+      "addConflict": "Pridať autora",
+      "addConflictNamed": "Pridať autora {name}"
     },
     "meta": {
       "create": "Vytvorenie autora"
@@ -199,16 +216,24 @@
     "filterMinChars": "Zadajte minimálne 2 znaky"
   },
   "uploadErrors": {
-    "unknownError": "Systémova chyba. Skúste neskôr alebo kontaktujte administrátora.",
+    "unknownError": "Systémová chyba. Skúste neskôr alebo kontaktujte administrátora.",
     "systemError": "Chyba",
     "size": "Nesprávna veľkosť",
     "offset": "Nesprávny offset",
-    "mimeType": "Nesprávny formát súboru"
+    "mimeType": "Nesprávny formát súboru",
+    "chunkValidationFailed": "Kontrola časti nahrávaného súboru zlyhala. Kontaktujte administrátora.",
+    "processingTooLong": "Spracovanie trvá príliš dlho. Použite tlačidlo obnovenia položky alebo položku odstráňte a skúste to neskôr.",
+    "readFailed": "Údaje sa nepodarilo načítať. Použite tlačidlo obnovenia položky alebo položku odstráňte a skúste to znova."
   },
   "notificationsNotConnected": "Notifikačná služba má dočasný výpadok, niektoré funkcie sa nemusia správať korektne.",
   "public": {
-    "idOrUrl": "Image ID or public image URL",
-    "inputError": "Incorrect ID provided",
-    "imagePreview": "Image preview"
+    "idOrUrl": "ID obrázka alebo verejná URL obrázka",
+    "inputError": "Zadané nesprávne ID",
+    "imagePreview": "Náhľad obrázka"
+  },
+  "error": {
+    "loadingConfig": "Chyba načítania konfigurácie DAM",
+    "accessRights": "Chyba prístupových práv DAM",
+    "unableToLock": "Obrázkový widget nie je možné uzamknúť aktuálnym používateľom."
   }
 }

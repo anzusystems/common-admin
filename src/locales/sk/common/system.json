@@ -1,6 +1,6 @@
 {
   "version": "Verzia",
-  "newVersionText": "K dispozícii je nová verzia administrácie. Pre správne fungovanie je potrebné vykonať aktulizáciu.",
+  "newVersionText": "K dispozícii je nová verzia administrácie. Pre správne fungovanie je potrebné vykonať aktualizáciu.",
   "newVersionReload": "Načítať novú verziu.",
   "theme": {
     "light": "Svetlá",
@@ -47,7 +47,8 @@
   "notFound": {
     "title": "Ups, nastala chyba 404",
     "text": "Táto stránka neexistuje. Pokiaľ by mala, kontaktujte administrátora.",
-    "backButton": "Vráť ma na úvodnú stránku"
+    "backButton": "Vráť ma na úvodnú stránku",
+    "previousButton": "Späť"
   },
   "unauthorized": {
     "title": "Ups, nastala chyba 401",
@@ -58,5 +59,10 @@
     "dropPossibility": "Nahrať alebo presunúť súbory",
     "dropHere": "Nahrať súbory"
   },
-  "inputSuggestedMax": "{current} / max {max}"
+  "upload": {
+    "incorrectFormatSize": "Nesprávny formát alebo veľkosť",
+    "onlyOneFile": "Sem sa dá nahrať len jeden súbor; použije sa prvý."
+  },
+  "inputSuggestedMax": "{current} / max {max}",
+  "notSet": "Neuvedené"
 }

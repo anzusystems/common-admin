@@ -1,20 +1,32 @@
 {
   "fulltext": "Search in texts",
-  "filterMinChars": "Zadajte minimálne {min} znaky",
+  "filterMinChars": "Enter at least {min} characters",
   "bookmark": {
     "title": "Bookmarks",
     "name": "Name",
     "add": "Add bookmark",
     "manage": "Manage bookmarks",
     "infoSave": "Current selected filters will be stored with this bookmark.",
-    "errorMax": "Max numbers of bookmarks reached. You can delete some bookmarks to add new one.",
+    "errorMax": "Max number of bookmarks reached. You can delete some bookmarks to add new one.",
     "storeTableColumns": "Save datatable columns also",
     "storeTableOrder": "Save datatable order also",
     "saveBookmarkOrder": "Save ordering",
-    "nameUniqueError": "Name of filter must be unique"
+    "nameUniqueError": "Name of filter must be unique",
+    "unsavedSection": "Bookmark order",
+    "more": "More bookmarks"
   },
   "timeInterval": {
     "from": "From",
-    "until": "Until"
+    "until": "Until",
+    "options": {
+      "hour1": "1 hour",
+      "day1": "1 day",
+      "days7": "7 days",
+      "days28": "28 days",
+      "currentMonth": "Current month",
+      "lastMonth": "Last month",
+      "last3Months": "Last 3 months",
+      "custom": "Custom"
+    }
   }
 }

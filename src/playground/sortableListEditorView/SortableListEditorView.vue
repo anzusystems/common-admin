@@ -1,9 +1,9 @@
 <script lang="ts" setup>
 import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
 import { ref } from 'vue'
-import ASortableListEditor from '@/labs/listEditor/ASortableListEditor.vue'
-import AFormTextField from '@/components/form/AFormTextField.vue'
-import type { ListViewItem } from '@/labs/listEditor/types/listEditorTypes'
+import ASortableListEditor from '@/domains/listEditor/components/ASortableListEditor.vue'
+import AFormTextField from '@/domains/form/components/AFormTextField.vue'
+import type { ListViewItem } from '@/domains/listEditor/types/listEditorTypes'
 
 interface FaqItem extends Record<string, any> {
   id: number
@@ -146,9 +146,9 @@ const onDelete = (vi: ListViewItem<FaqItem>) => log(`delete ${vi.key}`)
         ASortableListEditor — title + reorder with drag-and-drop (desktop) + arrows (mobile)
       </h2>
       <p class="text-body-medium text-medium-emphasis mb-2">
-        On desktop the drag handle (<code>⋮⋮</code>) appears on each row in reorder mode; drag to
-        move. On mobile (≤600 px) arrows are shown instead. Menu always has Move-to-top /
-        Move-to-bottom / Delete. Apply commits, Cancel reverts.
+        On desktop the drag handle (<code>⋮⋮</code>) appears on each row in reorder mode; drag to move. On mobile (≤600
+        px) arrows are shown instead. Menu always has Move-to-top / Move-to-bottom / Delete. Apply commits, Cancel
+        reverts.
       </p>
       <ASortableListEditor
         v-model="basicItems"
@@ -221,8 +221,7 @@ const onDelete = (vi: ListViewItem<FaqItem>) => log(`delete ${vi.key}`)
         ASortableListEditor — failing onReorderApply (stays in reorder mode, shows error)
       </h2>
       <p class="text-body-medium text-medium-emphasis mb-2">
-        Apply throws; the component keeps the reorder mode open with the error in the toolbar. User
-        can retry or Cancel.
+        Apply throws; the component keeps the reorder mode open with the error in the toolbar. User can retry or Cancel.
       </p>
       <ASortableListEditor
         v-model="errorItems"
@@ -249,7 +248,8 @@ const onDelete = (vi: ListViewItem<FaqItem>) => log(`delete ${vi.key}`)
         ASortableListEditor — external mode control via <code>v-model:mode</code>
       </h2>
       <p class="text-body-medium text-medium-emphasis mb-2">
-        Parent controls mode. Current: <strong>{{ externalMode }}</strong>.
+        Parent controls mode. Current: <strong>{{ externalMode }}</strong
+        >.
       </p>
       <div class="d-flex ga-2 mb-2">
         <VBtn
@@ -292,12 +292,10 @@ const onDelete = (vi: ListViewItem<FaqItem>) => log(`delete ${vi.key}`)
         </template>
       </ASortableListEditor>
 
-      <h2 class="text-headline-medium mt-8 mb-2">
-        ASortableListEditor — <code>chips</code> layout (tags / authors)
-      </h2>
+      <h2 class="text-headline-medium mt-8 mb-2">ASortableListEditor — <code>chips</code> layout (tags / authors)</h2>
       <p class="text-body-medium text-medium-emphasis mb-2">
-        Flat inline-flex pills. Drag reorders on desktop (always on, no mode toggle). Each chip has
-        a built-in close X — no confirm dialog. Use an external input above the list for adding.
+        Flat inline-flex pills. Drag reorders on desktop (always on, no mode toggle). Each chip has a built-in close X —
+        no confirm dialog. Use an external input above the list for adding.
       </p>
       <div class="d-flex ga-2 mb-2">
         <AFormTextField
@@ -331,9 +329,9 @@ const onDelete = (vi: ListViewItem<FaqItem>) => log(`delete ${vi.key}`)
         ASortableListEditor — <code>showAddAfterAction</code> (extra entry in reorder-mode kebab)
       </h2>
       <p class="text-body-medium text-medium-emphasis mb-2">
-        Enter reorder mode (top-right <code>Reorder</code> button), then open any row's
-        <code>⋮</code> menu — alongside move-to-top / move-to-bottom / delete, there's a new "Add
-        after this" entry. Parent receives <code>@add</code> with <code>{ afterId }</code>
+        Enter reorder mode (top-right <code>Reorder</code> button), then open any row's <code>⋮</code> menu — alongside
+        move-to-top / move-to-bottom / delete, there's a new "Add after this" entry. Parent receives
+        <code>@add</code> with <code>{ afterId }</code>
         and splices a new row directly below the anchor.
       </p>
       <ASortableListEditor

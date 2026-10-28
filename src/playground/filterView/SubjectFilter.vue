@@ -1,24 +1,24 @@
 <script lang="ts" setup>
 import { computed, inject } from 'vue'
-import AFilterWrapper from '@/labs/filters/AFilterWrapper.vue'
-import AFilterString from '@/labs/filters/AFilterString.vue'
-import { FilterConfigKey, FilterDataKey } from '@/labs/filters/filterInjectionKeys'
+import AFilterWrapper from '@/domains/filters/components/AFilterWrapper.vue'
+import AFilterString from '@/domains/filters/components/AFilterString.vue'
+import { FilterConfigKey, FilterDataKey } from '@/domains/filters/utils/filterInjectionKeys'
 import FilterSubjectSiteRemoteAutocomplete from '@/playground/filterView/FilterSubjectSiteRemoteAutocomplete.vue'
 import FilterSubjectAuthorRemoteAutocomplete from '@/playground/filterView/FilterSubjectAuthorRemoteAutocomplete.vue'
 import FilterSubjectRubricRemoteAutocomplete from '@/playground/filterView/FilterSubjectRubricRemoteAutocomplete.vue'
 import FilterSubjectDeskRemoteAutocomplete from '@/playground/filterView/FilterSubjectDeskRemoteAutocomplete.vue'
 import FilterSubjectUserRemoteAutocomplete from '@/playground/filterView/FilterSubjectUserRemoteAutocomplete.vue'
-import type { IntegerId, IntegerIdNullable } from '@/types/common'
-import AFilterValueObjectOptionsSelect from '@/labs/filters/AFilterValueObjectOptionsSelect.vue'
+import type { IntegerId, IntegerIdNullable } from '@/shared/types/common'
+import AFilterValueObjectOptionsSelect from '@/domains/filters/components/AFilterValueObjectOptionsSelect.vue'
 import {
   allowedTimeIntervalValuesSubject,
   useSubjectListActions,
   useSubjectLockType,
   useSubjectStatus,
 } from '@/playground/filterView/subjectTools'
-import AFilterTimeInterval from '@/labs/filters/AFilterTimeInterval.vue'
+import AFilterTimeInterval from '@/domains/filters/components/AFilterTimeInterval.vue'
 import { cmsClient } from '@/playground/mock/cmsClient'
-import { isUndefined } from '@/utils/common'
+import { isUndefined } from '@/shared/utils/common'
 
 const emit = defineEmits<{
   (e: 'submit'): void

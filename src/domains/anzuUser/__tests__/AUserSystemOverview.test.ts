@@ -1,0 +1,405 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { flushPromises, mount, type VueWrapper } from '@vue/test-utils'
+import { createPinia, setActivePinia } from 'pinia'
+import { ref } from 'vue'
+import { createMemoryHistory, createRouter } from 'vue-router'
+import type { AxiosInstance } from 'axios'
+import AUserSystemOverview from '@/domains/anzuUser/components/AUserSystemOverview.vue'
+import {
+  defineUserSystemDescriptor,
+  type AnyUserSystemDescriptor,
+} from '@/domains/anzuUser/composables/userSystemDescriptor'
+import { useUserCrossSystemStore } from '@/domains/anzuUser/store/userCrossSystemStore'
+
+const emptyList = () => ({ status: 200, data: { data: [], totalCount: 0 } })
+
+const notFound = () =>
+  Object.assign(new Error('failed'), {
+    isAxiosError: true,
+    config: { url: '/adm/v1/anzu-user/42' },
+    response: { status: 404, data: {} },
+  })
+
+const unreachable = () =>
+  Object.assign(new Error('failed'), {
+    isAxiosError: true,
+    config: { url: '/adm/v1/anzu-user/42' },
+    response: { status: 503, data: {} },
+  })
+
+interface Backend {
+  system: string
+  request: ReturnType<typeof vi.fn>
+  get: ReturnType<typeof vi.fn>
+  createNote?: string
+  canWrite?: AnyUserSystemDescriptor['canWrite']
+}
+
+const descriptorsOf = (backends: Backend[]): AnyUserSystemDescriptor[] =>
+  backends.map((item) =>
+    defineUserSystemDescriptor({
+      system: item.system,
+      label: item.system,
+      client: () => ({ request: item.request, get: item.get }) as unknown as AxiosInstance,
+      entity: 'anzuUser',
+      isEnabled: () => true,
+      requiredMetadata: false,
+      idInput: true,
+      createNote: item.createNote,
+      canWrite: item.canWrite,
+      endpoints: {
+        anzuUser: { get: '/adm/v1/anzu-user/:id', put: '/adm/v1/anzu-user/:id', post: '/adm/v1/anzu-user' },
+        base: null,
+        permissionGroup: '/adm/v1/permission-group',
+        currentUser: '/adm/v1/anzu-user/current',
+        list: '/adm/v1/anzu-user',
+        probe: 'anzuUser',
+      },
+    })
+  )
+
+const router = createRouter({
+  history: createMemoryHistory(),
+  routes: [{ path: '/', component: { template: '<div />' } }],
+})
+
+let mounted: VueWrapper | null = null
+let pinia = createPinia()
+
+const mountOverview = async (backends: Backend[]) => {
+  mounted = mount(AUserSystemOverview, {
+    global: { plugins: [router, pinia] },
+    props: { descriptors: descriptorsOf(backends) },
+    attachTo: document.body,
+  })
+  await flushPromises()
+  return mounted
+}
+
+const search = async (wrapper: VueWrapper, term: string) => {
+  await (wrapper.vm as unknown as { search: (value: string) => Promise<void> }).search(term)
+  await flushPromises()
+}
+
+beforeEach(async () => {
+  pinia = createPinia()
+  setActivePinia(pinia)
+  await router.push('/')
+  await router.isReady()
+})
+
+afterEach(() => {
+  mounted?.unmount()
+  mounted = null
+})
+
+describe('after a search that found nobody', () => {
+  it('offers to create an account when an address belongs to nobody', async () => {
+    // An address search cannot prove absence: a system holding
+    // the same person under a different address answers nothing.
+    // Refusing here would block the create flow for the search people actually use.
+    // It is safe because the dialog asks for the id and runs its own authoritative fan-out before writing.
+    const backends = ['weather', 'blog'].map((system) => ({
+      system,
+      get: vi.fn().mockResolvedValue(emptyList()),
+      request: vi.fn().mockRejectedValue(notFound()),
+    }))
+    const wrapper = await mountOverview(backends)
+
+    await search(wrapper, 'nobody@sme.sk')
+
+    expect(wrapper.find('[data-cy="cross-system-not-found"]').exists()).toBe(true)
+    expect(wrapper.find('[data-cy="cross-system-create-anywhere"]').exists()).toBe(true)
+  })
+
+  it('offers it after an id search only when every system answered an authoritative 404', async () => {
+    const answered = ['weather', 'blog'].map((system) => ({
+      system,
+      get: vi.fn().mockResolvedValue(emptyList()),
+      request: vi.fn().mockRejectedValue(notFound()),
+    }))
+    const wrapper = await mountOverview(answered)
+    await search(wrapper, '42')
+    expect(wrapper.find('[data-cy="cross-system-create-anywhere"]').exists()).toBe(true)
+  })
+
+  it('refuses after an id search one system could not answer, and offers a retry instead', async () => {
+    // A record that could not be read is not a record that does not exist.
+    // No admin can delete an AnzuUser, so a duplicate identity created on that guess cannot be taken back.
+    const backends = [
+      {
+        system: 'weather',
+        get: vi.fn().mockResolvedValue(emptyList()),
+        request: vi.fn().mockRejectedValue(notFound()),
+      },
+      {
+        system: 'blog',
+        get: vi.fn().mockResolvedValue(emptyList()),
+        request: vi.fn().mockRejectedValue(unreachable()),
+      },
+    ]
+    const wrapper = await mountOverview(backends)
+
+    await search(wrapper, '42')
+
+    expect(wrapper.find('[data-cy="cross-system-create-anywhere"]').exists()).toBe(false)
+    expect(wrapper.find('[data-cy="cross-system-retry-search"]').exists()).toBe(true)
+    expect(wrapper.text()).toContain('blog')
+  })
+
+  it('offers neither create nor a retry when the operator may create in no system', async () => {
+    const backends = ['weather', 'blog'].map((system) => ({
+      system,
+      get: vi.fn().mockResolvedValue(emptyList()),
+      request: vi.fn().mockRejectedValue(notFound()),
+      canWrite: () => false,
+    }))
+    const wrapper = await mountOverview(backends)
+
+    await search(wrapper, '42')
+
+    expect(wrapper.find('[data-cy="cross-system-not-found"]').exists()).toBe(true)
+    expect(wrapper.find('[data-cy="cross-system-create-anywhere"]').exists()).toBe(false)
+    expect(wrapper.find('[data-cy="cross-system-retry-search"]').exists()).toBe(false)
+  })
+
+  it('tells the operator what having an account in the chosen system means', async () => {
+    const backends = [
+      {
+        system: 'blog',
+        get: vi.fn().mockResolvedValue(emptyList()),
+        request: vi.fn().mockRejectedValue(notFound()),
+        createNote: 'V blogu je to ten istý účet ako na verejnom webe.',
+      },
+    ]
+    const wrapper = await mountOverview(backends)
+    await search(wrapper, 'nobody@sme.sk')
+
+    const open = wrapper.find('[data-cy="cross-system-create-anywhere"]')
+    await open.trigger('click')
+    await flushPromises()
+
+    // In blog and forum an account here is an account on the public web, so the dialog shows the system's own sentence.
+    expect(document.body.textContent).toContain('V blogu je to ten istý účet')
+    expect(document.body.textContent).toContain('The account is created disabled')
+  })
+})
+
+describe('leaving the page', () => {
+  it('does not keep the last person on screen for the next visit', async () => {
+    // The store outlives a closed dialog on purpose, so a running bulk action is not lost.
+    // It must not outlive the page: coming back through the menu showed the
+    // previous person's rows and live toggles under an empty search box.
+    const found = {
+      id: 42,
+      email: 'jozef@sme.sk',
+      person: { firstName: 'Jozef', lastName: 'Mrkvicka', fullName: 'Jozef Mrkvicka' },
+      avatar: { color: '#4CAF50', text: 'JM' },
+      enabled: true,
+      roles: [],
+      permissions: {},
+      permissionGroups: [],
+      resolvedPermissions: {},
+    }
+    const wrapper = await mountOverview([
+      {
+        system: 'weather',
+        get: vi.fn().mockResolvedValue(emptyList()),
+        request: vi.fn().mockResolvedValue({ status: 200, data: found }),
+      },
+    ])
+    await search(wrapper, '42')
+    const store = useUserCrossSystemStore()
+    expect(store.results.get('weather')?.user?.id).toBe(42)
+
+    wrapper.unmount()
+    mounted = null
+
+    expect(store.results.size).toBe(0)
+    expect(store.resolvedId).toBeNull()
+  })
+})
+
+describe('leaving the page while work is still out', () => {
+  const person = (over: Record<string, unknown> = {}) => ({
+    id: 42,
+    email: 'jozef@sme.sk',
+    person: { firstName: 'Jozef', lastName: 'Mrkvicka', fullName: 'Jozef Mrkvicka' },
+    avatar: { color: '#4CAF50', text: 'JM' },
+    enabled: true,
+    roles: [],
+    permissions: {},
+    permissionGroups: [],
+    resolvedPermissions: {},
+    ...over,
+  })
+
+  it('keeps the bulk lock while a run is still writing, so a second one cannot start (B13)', async () => {
+    // `cancel()` stops the probes, not the writes. The PUTs of a run continue after the page is gone.
+    // A reset that released the lock let a second run start against the same account while the first was unfinished.
+    const puts: Array<(value: unknown) => void> = []
+    const request = vi.fn((config: { method: string }) =>
+      config.method === 'PUT'
+        ? new Promise((resolve) => puts.push(resolve))
+        : Promise.resolve({ status: 200, data: person() })
+    )
+    const backends = [{ system: 'weather', get: vi.fn().mockResolvedValue(emptyList()), request }]
+
+    let wrapper = await mountOverview(backends)
+    await search(wrapper, '42')
+    await wrapper.get('[data-cy="cross-system-bulk-disable"]').trigger('click')
+    await flushPromises()
+    ;(document.querySelector('[data-cy="user-bulk-confirm"]') as HTMLElement).click()
+    await flushPromises()
+    const store = useUserCrossSystemStore()
+    expect(puts).toHaveLength(1)
+
+    wrapper.unmount()
+    mounted = null
+    await flushPromises()
+    expect(store.bulkRunning).toBe(true)
+
+    wrapper = await mountOverview(backends)
+    await search(wrapper, '42')
+    expect(wrapper.get('[data-cy="cross-system-bulk-disable"]').attributes('disabled')).toBeDefined()
+
+    puts[0]!({ status: 200, data: person({ enabled: false }) })
+    await flushPromises()
+    expect(store.bulkRunning).toBe(false)
+    expect(puts).toHaveLength(1)
+  })
+
+  it('does not put a person created after the page was left back on it', async () => {
+    // The create dialog is not persistent: click outside, use the menu, and the POST is still pending.
+    // The search that follows takes a fresh generation that `cancel()` cannot stop.
+    // It refilled the store the unmount had just emptied, so the next visit showed that person's rows and live buttons.
+    let created = false
+    let releasePost: (value: unknown) => void = () => {}
+    const request = vi.fn((config: { method: string }) => {
+      if (config.method === 'POST') return new Promise((resolve) => (releasePost = resolve))
+      if (created) return Promise.resolve({ status: 200, data: person({ id: 77, email: 'new@sme.sk' }) })
+      return Promise.reject(notFound())
+    })
+    const wrapper = await mountOverview([{ system: 'blog', get: vi.fn().mockResolvedValue(emptyList()), request }])
+
+    await search(wrapper, 'new@sme.sk')
+    await wrapper.get('[data-cy="cross-system-create-anywhere"]').trigger('click')
+    await flushPromises()
+    const id = document.querySelector('.v-overlay input[type="number"]') as HTMLInputElement
+    id.value = '77'
+    id.dispatchEvent(new Event('input'))
+    const email = document.querySelector('.v-overlay [data-cy="user-email"] input') as HTMLInputElement
+    email.value = 'new@sme.sk'
+    email.dispatchEvent(new Event('input'))
+    await flushPromises()
+    ;(document.querySelector('[data-cy="create-anywhere-confirm"]') as HTMLElement).click()
+    await flushPromises()
+    expect(request.mock.calls.some(([config]) => config.method === 'POST')).toBe(true)
+
+    const store = useUserCrossSystemStore()
+    wrapper.unmount()
+    mounted = null
+    created = true
+    releasePost({ status: 201, data: person({ id: 77, email: 'new@sme.sk' }) })
+    await flushPromises()
+
+    expect(store.resolvedId).toBeNull()
+    expect(store.results.size).toBe(0)
+  })
+})
+
+describe('a system the descriptor says may not be written', () => {
+  const person = () => ({
+    id: 42,
+    email: 'jozef@sme.sk',
+    person: { firstName: 'Jozef', lastName: 'Mrkvicka', fullName: 'Jozef Mrkvicka' },
+    avatar: { color: '#4CAF50', text: 'JM' },
+    enabled: true,
+    roles: [],
+    permissions: {},
+    permissionGroups: [],
+    resolvedPermissions: {},
+  })
+
+  it('offers neither the row actions nor the bulk actions, while an unknown answer keeps them', async () => {
+    const found = () => ({
+      get: vi.fn().mockResolvedValue(emptyList()),
+      request: vi.fn().mockResolvedValue({ status: 200, data: person() }),
+    })
+
+    let wrapper = await mountOverview([{ system: 'weather', ...found(), canWrite: () => false }])
+    await search(wrapper, '42')
+    expect(wrapper.find('[data-cy="cross-system-toggle-weather"]').exists()).toBe(false)
+    expect(wrapper.find('[data-cy="cross-system-bulk-disable"]').exists()).toBe(false)
+    wrapper.unmount()
+    mounted = null
+
+    wrapper = await mountOverview([{ system: 'weather', ...found(), canWrite: () => undefined }])
+    await search(wrapper, '42')
+    expect(wrapper.find('[data-cy="cross-system-toggle-weather"]').exists()).toBe(true)
+    expect(wrapper.find('[data-cy="cross-system-bulk-disable"]').exists()).toBe(true)
+  })
+
+  it('does not write a system whose right went away after the dialog was opened', async () => {
+    let mayWrite: boolean | undefined = undefined
+    const backend = {
+      system: 'weather',
+      get: vi.fn().mockResolvedValue(emptyList()),
+      request: vi.fn().mockResolvedValue({ status: 200, data: person() }),
+      canWrite: () => mayWrite,
+    }
+    const wrapper = await mountOverview([backend])
+    await search(wrapper, '42')
+    await wrapper.get('[data-cy="cross-system-bulk-disable"]').trigger('click')
+    await flushPromises()
+
+    mayWrite = false
+    ;(document.querySelector('[data-cy="user-bulk-confirm"]') as HTMLElement).click()
+    await flushPromises()
+
+    expect(backend.request.mock.calls.some(([config]) => (config as { method: string }).method === 'PUT')).toBe(false)
+  })
+
+  it('does not send the write when the right goes while the record is read again', async () => {
+    let mayWrite: boolean | undefined = undefined
+    const backend = {
+      system: 'weather',
+      get: vi.fn().mockResolvedValue(emptyList()),
+      request: vi.fn().mockImplementation(async (config: { method: string }) => {
+        if (config.method === 'GET' && mayWrite === undefined && backend.armed) mayWrite = false
+        return { status: 200, data: person() }
+      }),
+      canWrite: () => mayWrite,
+      armed: false,
+    }
+    const wrapper = await mountOverview([backend])
+    await search(wrapper, '42')
+    await wrapper.get('[data-cy="cross-system-bulk-disable"]').trigger('click')
+    await flushPromises()
+
+    backend.armed = true
+    ;(document.querySelector('[data-cy="user-bulk-confirm"]') as HTMLElement).click()
+    await flushPromises()
+
+    expect(backend.request.mock.calls.some(([config]) => (config as { method: string }).method === 'PUT')).toBe(false)
+  })
+
+  it('disables confirm once nothing selected may be written any more', async () => {
+    const mayWrite = ref<boolean | undefined>(undefined)
+    const backend = {
+      system: 'weather',
+      get: vi.fn().mockResolvedValue(emptyList()),
+      request: vi.fn().mockResolvedValue({ status: 200, data: person() }),
+      canWrite: () => mayWrite.value,
+    }
+    const wrapper = await mountOverview([backend])
+    await search(wrapper, '42')
+    await wrapper.get('[data-cy="cross-system-bulk-disable"]').trigger('click')
+    await flushPromises()
+
+    mayWrite.value = false
+    await flushPromises()
+    const confirm = document.querySelector('[data-cy="user-bulk-confirm"]') as HTMLButtonElement
+    expect(confirm.disabled).toBe(true)
+  })
+})

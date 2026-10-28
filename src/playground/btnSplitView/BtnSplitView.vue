@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import ABtnSplit from '@/components/buttons/ABtnSplit.vue'
+import ABtnSplit from '@/domains/ui/buttons/components/ABtnSplit.vue'
 import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
 </script>
 

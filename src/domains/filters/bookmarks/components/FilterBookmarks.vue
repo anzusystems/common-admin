@@ -1,0 +1,232 @@
+<script lang="ts" setup>
+import { useI18n } from 'vue-i18n'
+import { computed, inject, nextTick, onMounted, ref, useTemplateRef, watch } from 'vue'
+import { useFilterBookmarkStore } from '@/domains/filters/bookmarks/store/bookmarksStore'
+import { useUserAdminConfigApi } from '@/domains/filters/bookmarks/api/userAdminConfigApi'
+import type { AxiosInstance } from 'axios'
+import {
+  type UserAdminConfig,
+  type UserAdminConfigDataFilterBookmark,
+  UserAdminConfigLayoutType,
+} from '@/domains/filters/bookmarks/types/UserAdminConfig'
+import type { IntegerId } from '@/shared/types/common'
+import { useResizeObserver, watchThrottled } from '@vueuse/core'
+import { cloneDeep, isDefined, isNull, isString, isUndefined } from '@/shared/utils/common'
+import {
+  DatatablePaginationKey,
+  FilterConfigKey,
+  FilterDataKey,
+  FilterSelectedKey,
+} from '@/domains/filters/utils/filterInjectionKeys'
+import { type FilterData, useFilterHelpers } from '@/domains/filters/composables/filterFactory'
+import { stringToBooleanExact, stringToNumber } from '@/shared/utils/string'
+
+const props = withDefaults(
+  defineProps<{
+    client: () => AxiosInstance
+    userId: IntegerId
+    system: string
+    subject: string
+  }>(),
+  {}
+)
+
+const emit = defineEmits<{
+  (e: 'submit'): void
+}>()
+
+const { t } = useI18n()
+
+const datatableHiddenColumns = defineModel<string[] | undefined>('datatableHiddenColumns', {
+  default: undefined,
+  required: true,
+})
+
+const filterConfig = inject(FilterConfigKey)
+const filterData = inject(FilterDataKey)
+const pagination = inject(DatatablePaginationKey)
+const filterSelected = inject(FilterSelectedKey)
+
+if (isUndefined(pagination) || isUndefined(filterConfig) || isUndefined(filterData) || isUndefined(filterSelected)) {
+  throw new Error('Incorrect provide/inject config.')
+}
+
+const loading = ref(false)
+const toolbarRef = useTemplateRef('toolbar')
+const toolbarWidth = ref(300)
+const visibleItemsCount = ref(1000)
+
+const filterBookmarkStore = useFilterBookmarkStore()
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { useFetchUserAdminConfigList } = useUserAdminConfigApi(props.client, props.system)
+
+const systemResource = props.system + '_' + props.subject
+
+const loadBookmarks = async (force = false) => {
+  loading.value = true
+  await filterBookmarkStore.getBookmarks(
+    {
+      user: props.userId,
+      layoutType: UserAdminConfigLayoutType.Desktop,
+      systemResource: systemResource,
+    },
+    useFetchUserAdminConfigList,
+    force
+  )
+  loading.value = false
+}
+
+const { deserializeFilters } = useFilterHelpers(filterData, filterConfig)
+
+const onItemClick = (item: UserAdminConfig) => {
+  const config = item.data as UserAdminConfigDataFilterBookmark
+  if (isDefined(config.datatableHiddenColumns) && isDefined(datatableHiddenColumns.value)) {
+    datatableHiddenColumns.value = config.datatableHiddenColumns
+  }
+  if (isDefined(config.sortBy)) {
+    pagination.value = {
+      ...pagination.value,
+      sortBy: { key: config.sortBy!.key, order: config.sortBy!.order },
+    }
+  }
+  const deserialized = deserializeFilters(config.filter)
+  if (isNull(deserialized)) return
+  for (const filterName in filterData) {
+    const key = filterName as keyof FilterData
+    let value = deserialized.filters[key]
+    if (isUndefined(value) && filterConfig.fields[key]?.clearable) {
+      filterData[key] = cloneDeep(filterConfig.fields[key].default)
+      filterSelected.value.delete(key)
+      continue
+    }
+    if (isString(value)) {
+      const tryConvertNumber = stringToNumber(value)
+      // Only a canonical number: '0905' or '007' are codes and stay strings, as in the url hash.
+      if (!isNull(tryConvertNumber) && String(tryConvertNumber) === value) {
+        value = tryConvertNumber
+      } else {
+        // If not a number, try to convert to boolean
+        const tryConvertBoolean = stringToBooleanExact(value)
+        if (!isNull(tryConvertBoolean)) {
+          value = tryConvertBoolean
+        }
+      }
+    }
+    filterData[key] = value
+  }
+  emit('submit')
+}
+
+const THREE_DOTS_WIDTH = 32
+
+const calculateVisible = async (totalWidth: number) => {
+  const container = toolbarRef.value
+  if (isNull(container)) return
+  visibleItemsCount.value = 1000
+  await nextTick()
+  let cumulativeWidth = 0
+  let visible = 0
+  for (let i = 0; i < container.children.length; i++) {
+    const child = container.children[i] as HTMLElement
+    const childWidth = child.offsetWidth
+    cumulativeWidth += childWidth
+    if (cumulativeWidth >= totalWidth - THREE_DOTS_WIDTH) {
+      break
+    }
+    visible++
+  }
+  visibleItemsCount.value = visible
+}
+
+useResizeObserver(toolbarRef, (entries) => {
+  if (entries[0]) {
+    toolbarWidth.value = entries[0].contentRect.width
+  }
+})
+
+watchThrottled(
+  toolbarWidth,
+  (newValue, oldValue) => {
+    if (newValue === oldValue) return
+    calculateVisible(newValue)
+  },
+  { throttle: 1000 }
+)
+
+const items = computed(() => {
+  const key = filterBookmarkStore.generateKey(UserAdminConfigLayoutType.Desktop, systemResource)
+  const result = filterBookmarkStore.bookmarks.get(key)
+  return result?.items ?? []
+})
+
+const itemsComputed = computed(() => {
+  const visible = visibleItemsCount.value
+  return {
+    visible: items.value.slice(0, visible),
+    hidden: items.value.slice(visible),
+  }
+})
+
+watch([loading, () => items.value.length], ([newLoading]) => {
+  if (newLoading === true || isNull(toolbarRef.value)) return
+  toolbarWidth.value = toolbarRef.value.clientWidth
+  nextTick(() => {
+    calculateVisible(toolbarWidth.value)
+  })
+})
+
+onMounted(() => {
+  loadBookmarks()
+})
+</script>
+
+<template>
+  <div
+    ref="toolbar"
+    :key="items.length"
+    class="w-100 d-flex overflow-hidden align-center mb-1"
+  >
+    <div v-if="loading" />
+    <template v-else>
+      <div
+        v-for="item in itemsComputed.visible"
+        :key="item.id"
+        class="white-space-nowrap"
+      >
+        <VBtn
+          variant="text"
+          prepend-icon="mdi-bookmark-outline"
+          size="small"
+          class="mr-1 mb-1 bg-grey-lighten-4 text-grey-darken-3"
+          @click="onItemClick(item)"
+        >
+          {{ item.customName }}
+        </VBtn>
+      </div>
+      <VMenu
+        v-if="itemsComputed.hidden.length > 0"
+        location="bottom"
+      >
+        <template #activator="{ props: activatorProps }">
+          <VBtn
+            icon="mdi-menu-down"
+            :aria-label="t('common.filter.bookmark.more')"
+            size="x-small"
+            :width="28"
+            :height="28"
+            v-bind="activatorProps"
+          />
+        </template>
+        <VList density="compact">
+          <VListItem
+            v-for="item in itemsComputed.hidden"
+            :key="item.id"
+            @click="onItemClick(item)"
+          >
+            <VListItemTitle>{{ item.customName }}</VListItemTitle>
+          </VListItem>
+        </VList>
+      </VMenu>
+    </template>
+  </div>
+</template>

@@ -1,8 +1,8 @@
 import { computed, type Ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import useVuelidate from '@vuelidate/core'
-import type { DatetimeUTCNullable } from '@/types/common'
-import { useValidate } from '@/validators/vuelidate/useValidate'
+import type { DatetimeUTCNullable } from '@/shared/types/common'
+import { useValidate } from '@/shared/validators/vuelidate/useValidate'
 
 export interface DemoCompareDates {
   dates: {
@@ -31,21 +31,21 @@ export function useCompareValidators(article: Ref<DemoCompareDates>) {
           datesCompare: datesCompare(
             publicPublishedAtComputed,
             t('cms.articleKind.model.dates.publicPublishedAt'),
-            'onOrAfter',
+            'onOrAfter'
           ),
         },
         publicPublishedAt: {
           datesCompare: datesCompare(
             publicUpdatedAtComputed,
             t('cms.articleKind.model.dates.publicUpdatedAt'),
-            'earlierThan',
+            'earlierThan'
           ),
         },
         publicUpdatedAt: {
           datesCompare: datesCompare(
             publicPublishedAtComputed,
             t('cms.articleKind.model.dates.publicPublishedAt'),
-            'laterThan',
+            'laterThan'
           ),
         },
       },

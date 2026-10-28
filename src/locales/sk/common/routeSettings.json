@@ -1,0 +1,30 @@
+{
+  "help": {
+    "templateTitle": "Šablóna",
+    "templateText": "je reťazec, ktorý určuje, ako bude vyzerať vygenerovaná URL pre články. Ak nie je vybraná stránka, šablóna je priradená ako základná šablóna pre všetky články.",
+    "elements": "Prvky šablóny",
+    "rubric": "parameter na zobrazenie rubriky v URL; použije sa slug rubriky.",
+    "rubricsText": "parameter na zobrazenie rubrík v URL.",
+    "rubricsOffsetPositive": "Ak je parameter OFFSET nezáporný, určuje, ktorá rubrika v poradí od koreňa sa zohľadní pri generovaní. 0 znamená od koreňa.",
+    "rubricsOffsetNegative": "Ak je parameter OFFSET záporný, určuje, ktorá rubrika od listu (od konca) sa zohľadní pri generovaní.",
+    "rubricsLengthPositive": "Ak je parameter LENGTH kladný, určuje, koľko rubrík sa berie do úvahy.",
+    "rubricsLengthNegative": "Ak je parameter LENGTH záporný, určuje, koľko rubrík od konca sa do generovania nezapočítava.",
+    "rubricsSeparator": "SEPARATOR určuje, aký znak sa použije ako oddeľovač pri vypísaní viacerých rubrík. Možno použiť jeden zo znakov: ,-_/",
+    "texts": "parameter je čiarkou oddelený zoznam článkových textov. Funguje ako coalesce — pre generovanie použije prvý neprázdny text v tomto zozname.",
+    "date": "zoberie dátum publikovania článku a naformátuje ho podľa parametra z",
+    "dateDocsLink": "dokumentácie",
+    "keywordsCount": "parameter N je maximálny počet kľúčových slov, ktoré sa majú zobraziť v URL",
+    "keywordsSeparator": "SEPARATOR určuje, aký znak sa použije ako oddeľovač pri vypísaní viacerých kľúčových slov. Možno použiť jeden zo znakov: ,-_/",
+    "uid": "parameter N je počet segmentov UUID, ktoré sa zobrazia v URL, napríklad:",
+    "uidExample": "{token} je {value}",
+    "suffixTitle": "Prípona",
+    "suffixText": "Šablóna môže obsahovať vlastný text, napríklad:",
+    "suffixNote": "Pokiaľ tento reťazec bude zadaný, každá vygenerovaná stránka ho bude obsahovať na konci URL.",
+    "examplesTitle": "Príklady šablón:",
+    "exampleResult": "Výsledná URL bude napríklad:",
+    "languageTitle": "Jazyk",
+    "languageText": "Podľa nastavených jazykov sa špeciálne znaky prekonvertujú na ich ASCII podobu, napríklad á na a.",
+    "stopWordsTitle": "Stop slová",
+    "stopWordsText": "Stop slová sú slová bezvýznamné pre vygenerovanú URL aj zo SEO hľadiska a v zápise sa oddeľujú čiarkou. Tieto slová budú pri generovaní URL vynechané. Napríklad ak je pole StopWords nastavené na „a,aj,i,o“, pri generovaní URL z textov sa vynechajú samostatné slová a, aj, i, o. Pri titulku „Bratislava a Košice sú mestá i okresy“ tak URL bude vyzerať takto: bratislava-kosice-su-mesta-okresy."
+  }
+}

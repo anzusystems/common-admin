@@ -2,7 +2,8 @@ import { config } from '@vue/test-utils'
 import { createVuetify } from 'vuetify'
 import { createI18n } from 'vue-i18n'
 import { createPinia } from 'pinia'
-import { vi } from 'vitest'
+import { beforeAll, vi } from 'vitest'
+import { commands } from 'vitest/browser'
 // Import Vuetify styles for browser testing
 import 'vuetify/styles'
 // Import Material Design Icons
@@ -12,15 +13,19 @@ import en from '@/locales/en'
 // Import Vuetify components and directives
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
+import { useCommonVuetifyConfig } from '@/plugins/commonVuetifyConfig'
 
-// Create Vuetify instance for testing
+// Create Vuetify instance for testing. The library's aliases, so `ABtnPrimary` and its siblings are real
+// buttons; its defaults and theme only where a suite asks for them (`support/commonVuetify.ts`).
 const vuetify = createVuetify({
   components,
   directives,
+  aliases: useCommonVuetifyConfig().commonAliases(),
 })
 
 // Create i18n instance for testing with loaded messages
 const i18n = createI18n({
+  legacy: false,
   locale: 'en',
   fallbackLocale: 'en',
   messages: {
@@ -33,6 +38,15 @@ const pinia = createPinia()
 
 // Configure Vue Test Utils global plugins
 config.global.plugins = [vuetify, i18n, pinia]
+
+declare module 'vitest/browser' {
+  interface BrowserCommands {
+    collectGarbageIfLarge: () => Promise<void>
+  }
+}
+
+// What the iframes of the files before this one left on the page, collected when it is a lot (vitest.config.mts).
+beforeAll(() => commands.collectGarbageIfLarge())
 
 // Mock window.matchMedia for Vuetify.
 // `(any-pointer: fine)` answers TRUE: the default test environment stands in for a desktop with a
@@ -54,8 +68,7 @@ Object.defineProperty(window, 'matchMedia', {
 })
 
 // Mock ResizeObserver (handle both browser and node environments)
-const globalThis_ =
-  typeof globalThis !== 'undefined' ? globalThis : typeof global !== 'undefined' ? global : window
+const globalThis_ = typeof globalThis !== 'undefined' ? globalThis : typeof global !== 'undefined' ? global : window
 
 if (!globalThis_.ResizeObserver) {
   globalThis_.ResizeObserver = vi.fn().mockImplementation(() => ({

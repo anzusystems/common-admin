@@ -1,0 +1,461 @@
+<script lang="ts" setup>
+import { computed, inject, onUnmounted, provide, ref, watch } from 'vue'
+import { useDisplay } from 'vuetify'
+import { useI18n } from 'vue-i18n'
+import { type AssetDetailItemDto, type DamAssetTypeType } from '@/domains/dam/types/Asset'
+import { useAssetSelectActions } from '@/domains/dam/assetSelect/composables/assetSelectListActions'
+import AssetSelectListTable from '@/domains/dam/assetSelect/components/AssetSelectListTable.vue'
+import AssetSelectListBar from '@/domains/dam/assetSelect/components/AssetSelectListBar.vue'
+import { AssetSelectGridView, useGridView } from '@/domains/dam/assetSelect/composables/assetSelectGridView'
+import AssetSelectListTiles from '@/domains/dam/assetSelect/components/AssetSelectListTiles.vue'
+import { useSidebar } from '@/domains/dam/assetSelect/composables/assetSelectFilterSidebar'
+import AssetSelectFilterForm from '@/domains/dam/assetSelect/components/AssetSelectFilterForm.vue'
+import { filterAllowedImageWidgetSelectConfigs } from '@/domains/dam/config/utils/damFilterUserAllowedUploadConfigs'
+import { useAlerts } from '@/domains/system/composables/alerts'
+import { useDamConfigState } from '@/domains/dam/config/composables/damConfigState'
+import type { DamConfigLicenceExtSystemReturnType, DamExtSystemConfig } from '@/domains/dam/types/DamConfig'
+import { cloneDeep, isDefined, isUndefined } from '@/shared/utils/common'
+import AssetMetadata from '@/domains/dam/assetDetail/components/AssetMetadata.vue'
+import { useAssetSelectStore } from '@/domains/dam/assetSelect/store/assetSelectStore'
+import { storeToRefs } from 'pinia'
+import { useAssetDetailStore } from '@/domains/dam/assetDetail/store/assetDetailStore'
+import { type DatatableOrderingOption } from '@/domains/filters/datatable/utils/datatableColumns'
+import { useAssetListFilter } from '@/domains/dam/assetSelect/filter/AssetFilter'
+import { DatatablePaginationKey, FilterConfigKey, FilterDataKey } from '@/domains/filters/utils/filterInjectionKeys'
+import AFilterWrapper from '@/domains/filters/components/AFilterWrapper.vue'
+import AFilterString from '@/domains/filters/components/AFilterString.vue'
+import { useFilterHelpers } from '@/domains/filters/composables/filterFactory'
+import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
+import ADialogToolbar from '@/domains/ui/components/ADialogToolbar.vue'
+import AssetDetailDialog from '@/domains/dam/assetDetail/components/AssetDetailDialog.vue'
+import type { UploadQueueKey } from '@/domains/dam/types/UploadQueue'
+import { ImageWidgetUploadConfigKey } from '@/domains/dam/imageWidget/utils/imageWidgetInkectionKeys'
+import { useDamAcceptTypeAndSizeHelper } from '@/domains/dam/config/composables/acceptTypeAndSizeHelper'
+import { useUploadQueueDialog } from '@/domains/dam/uploadQueue/composables/useUploadQueueDialog'
+import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
+import UploadQueueDialog from '@/domains/dam/uploadQueue/components/UploadQueueDialog.vue'
+import AFileInput from '@/domains/ui/file/components/AFileInput.vue'
+import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
+
+const props = withDefaults(
+  defineProps<{
+    assetType: DamAssetTypeType
+    queueKey: UploadQueueKey
+    selectConfigs: DamConfigLicenceExtSystemReturnType[]
+    inPodcast?: boolean | null
+    configName?: string
+    skipCurrentUserCheck?: boolean
+    variant?: 'default' | 'inline'
+  }>(),
+  {
+    inPodcast: null,
+    configName: undefined,
+    skipCurrentUserCheck: false,
+    variant: 'default',
+  }
+)
+
+const sortModel = defineModel<number>('sort', { default: 1, required: false })
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const damConfigName = useDamConfigName(props.configName)
+
+const { t } = useI18n()
+
+const {
+  damClient,
+  loader,
+  pagination,
+  fetchNextPage,
+  fetchNextPageInView,
+  initStoreContext,
+  detailLoading,
+  readActiveItemAgain,
+  fetchAssetListDebounced,
+  reset,
+  resetAssetList,
+} = useAssetSelectActions(damConfigName)
+// The list bar ordering reads this. Without it the dialog would use the host page's pagination.
+provide(DatatablePaginationKey, pagination)
+
+const { assetListEnabledFilters } = useCommonAdminCoreDamOptions(damConfigName)
+
+const { loadDamConfigAssetCustomFormElements, getDamConfigAssetCustomFormElements } = useDamConfigState(
+  damClient,
+  damConfigName
+)
+
+const assetDetailStore = useAssetDetailStore()
+const { asset, dialog } = storeToRefs(assetDetailStore)
+const assetSelectStore = useAssetSelectStore()
+const { selectedLicenceId } = storeToRefs(assetSelectStore)
+
+const { sidebarRight, closeSidebarRight, closeSidebarLeft } = useSidebar()
+const { mdAndDown } = useDisplay()
+const { showErrorT } = useAlerts()
+
+const { filterData, filterConfig } = useAssetListFilter()
+provide(FilterConfigKey, filterConfig)
+provide(FilterDataKey, filterData)
+
+const { resetFilter, submitFilter } = useFilterHelpers(filterData, filterConfig, {
+  populateUrlParams: false,
+  storeFiltersLocalStorage: false,
+})
+
+const submitFilterAction = () => {
+  submitFilter(pagination, fetchAssetListDebounced)
+  if (mdAndDown.value) closeSidebarLeft()
+}
+
+const resetFilterAction = () => {
+  resetFilter(pagination, resetAssetList)
+  if (mdAndDown.value) closeSidebarLeft()
+}
+
+const onInit = () => {
+  let selectConfigLocal = cloneDeep(props.selectConfigs)
+  if (!props.skipCurrentUserCheck) {
+    selectConfigLocal = filterAllowedImageWidgetSelectConfigs(props.selectConfigs, damConfigName)
+  }
+  if (selectConfigLocal.length === 0) {
+    showErrorT('common.assetSelect.error.unallowedLicence')
+    return
+  }
+
+  reset()
+  initStoreContext(selectConfigLocal, props.assetType, props.inPodcast, false, 0, 0)
+  fetchAssetListDebounced()
+}
+
+const { gridView } = useGridView()
+
+const componentComputed = computed(() => {
+  switch (gridView.value) {
+    case AssetSelectGridView.Table:
+      return AssetSelectListTable
+    default:
+    case AssetSelectGridView.Masonry:
+    case AssetSelectGridView.Thumbnail:
+      return AssetSelectListTiles
+  }
+})
+
+const extId = computed(() => {
+  if (props.selectConfigs.length === 0) return undefined
+  if (selectedLicenceId.value > 0) {
+    const found = props.selectConfigs.find((config) => config.licence === selectedLicenceId.value)
+    if (found) return found.extSystem
+  }
+  return undefined
+})
+
+const loadingSidebarRight = computed(() => {
+  return customFormConfigLoading.value || detailLoading.value
+})
+
+const { showErrorsDefault } = useAlerts()
+const customFormConfigLoading = ref(true)
+// The custom fields config could not be read. The side panel shows
+// a notice instead of the asset form, which needs that config.
+const customFormConfigFailed = ref(false)
+
+const sortByChange = (option: DatatableOrderingOption) => {
+  pagination.value.sortBy = null
+  if (option.sortBy) {
+    pagination.value.sortBy = { key: option.sortBy.key, order: option.sortBy.order }
+  }
+  fetchAssetListDebounced()
+}
+
+// Whether the open detail was opened by the side panel's "edit".
+// Queue row details are rendered here too, and closing one makes the panel reread its own asset.
+let detailOfPanel = false
+
+const onOpenEditDialog = () => {
+  if (!asset.value) return
+  detailOfPanel = true
+  dialog.value = props.queueKey
+}
+
+// The panel rereads the asset its detail showed, not the one the list remembers.
+// They differ after a click made while the panel showed the asset it opened.
+const onCloseEditDialog = (shown: AssetDetailItemDto | null) => {
+  const ofPanel = detailOfPanel
+  detailOfPanel = false
+  readActiveItemAgain(ofPanel ? (shown?.id ?? null) : null)
+}
+
+const imageWidgetUploadConfig = inject(ImageWidgetUploadConfigKey, undefined)
+const uploadEnabled = computed(() => isDefined(imageWidgetUploadConfig) && isDefined(imageWidgetUploadConfig.value))
+
+const { uploadQueueDialog, uploadQueueDialogSaving, stopQueueLeftBehind } = useUploadQueueDialog()
+const uploadQueuesStore = useUploadQueuesStore()
+
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { uploadSizes, uploadAccept } = useDamAcceptTypeAndSizeHelper(
+  props.assetType,
+  (imageWidgetUploadConfig?.value?.extSystemConfig ?? {}) as DamExtSystemConfig
+)
+
+const uploadQueue = computed(() => {
+  return uploadQueuesStore.getQueue(props.queueKey)
+})
+
+const onFileInput = (files: File[]) => {
+  if (files.length === 0) return
+  // The page has its own entry points (button, window-wide dropzone) that bypass the dialog.
+  // While this queue's dialog saves, no file is accepted. "Save and apply" empties
+  // the queue, and a file queued meanwhile was lost half uploaded without notice.
+  if (uploadQueueDialogSaving.value === props.queueKey) return
+  const config = imageWidgetUploadConfig?.value
+  if (!config) return
+  stopQueueLeftBehind(props.queueKey)
+  uploadQueuesStore.addByFiles(props.queueKey, config.extSystem, config.licence, files, damConfigName)
+  uploadQueueDialog.value = props.queueKey
+}
+
+const onUploadApply = () => {
+  uploadQueueDialog.value = null
+  uploadQueuesStore.stopUpload(props.queueKey)
+  fetchAssetListDebounced()
+}
+
+watch(
+  extId,
+  async (newValue) => {
+    if (isUndefined(newValue)) return
+    customFormConfigLoading.value = true
+    customFormConfigFailed.value = false
+    // Custom fields of the listed type: all types of the ext system if
+    // none are loaded, else only this type if its read failed before.
+    // Loaded types are not read again.
+    const type = props.assetType
+    if (isUndefined(getDamConfigAssetCustomFormElements(newValue, type))) {
+      try {
+        await loadDamConfigAssetCustomFormElements(
+          newValue,
+          getDamConfigAssetCustomFormElements(newValue) ? [type] : undefined
+        )
+      } catch (e) {
+        showErrorsDefault(e)
+      }
+      // Ignore an answer for an ext system the list has since left.
+      if (extId.value !== newValue) return
+      customFormConfigFailed.value = isUndefined(getDamConfigAssetCustomFormElements(newValue, type))
+    }
+    customFormConfigLoading.value = false
+  },
+  { immediate: true }
+)
+
+watch(selectedLicenceId, (newValue, oldValue) => {
+  if (newValue === oldValue) return
+  resetFilterAction()
+})
+
+onInit()
+
+onUnmounted(() => {
+  reset()
+})
+</script>
+
+<template>
+  <slot
+    v-if="uploadEnabled"
+    name="upload-activator"
+    :on-file-input="onFileInput"
+    :upload-accept="uploadAccept"
+    :upload-sizes="uploadSizes"
+  >
+    <AFileInput
+      :file-input-key="uploadQueue?.fileInputKey"
+      :accept="uploadAccept"
+      :max-sizes="uploadSizes"
+      multiple
+      @files-input="onFileInput"
+    >
+      <template #activator="{ props: fileInputProps }">
+        <VBtn v-bind="fileInputProps">
+          {{ t('common.button.upload') }}
+        </VBtn>
+      </template>
+    </AFileInput>
+  </slot>
+  <div
+    class="subject-select__card"
+    :class="{ 'subject-select__card--inline': variant === 'inline' }"
+  >
+    <div class="px-2 pt-2">
+      <slot name="filter">
+        <AFilterWrapper
+          @submit="submitFilterAction"
+          @reset="resetFilterAction"
+        >
+          <template #search>
+            <AFilterString name="text" />
+          </template>
+          <template #detail>
+            <VRow v-if="selectConfigs.length > 1">
+              <VCol :cols="12">
+                <VSelect
+                  v-model="selectedLicenceId"
+                  :label="t('common.assetSelect.filter.licence')"
+                  :items="selectConfigs"
+                  item-title="licenceName"
+                  item-value="licence"
+                  hide-details
+                />
+              </VCol>
+            </VRow>
+            <AssetSelectFilterForm
+              use-config-layout
+              hide-text-search
+              :enabled-filters="assetListEnabledFilters"
+              :config-name="damConfigName"
+            />
+          </template>
+        </AFilterWrapper>
+      </slot>
+    </div>
+    <AssetSelectListBar
+      v-model:sort="sortModel"
+      hide-filter-toggle
+      @sort-by-change="sortByChange"
+    />
+    <div
+      class="subject-select__main"
+      :class="{
+        'subject-select__main--sidebar-right-active': sidebarRight && !mdAndDown,
+      }"
+    >
+      <div class="subject-select__content">
+        <component
+          :is="componentComputed"
+          v-if="extId"
+          :ext-system="extId"
+        />
+        <div class="d-flex w-100 align-center justify-center pa-4">
+          <ABtnSecondary
+            v-show="pagination.hasNextPage || loader"
+            v-intersect="fetchNextPageInView"
+            :loading="loader"
+            size="small"
+            @click="fetchNextPage"
+          >
+            {{ t('common.button.loadMore') }}
+          </ABtnSecondary>
+        </div>
+      </div>
+      <div
+        v-if="!mdAndDown"
+        class="subject-select__sidebar-right border-s"
+      >
+        <div
+          v-if="customFormConfigFailed"
+          class="d-flex w-100 align-center justify-center text-body-large"
+        >
+          {{ t('common.damImage.error.loadingConfig') }}
+        </div>
+        <div
+          v-else-if="loadingSidebarRight"
+          class="d-flex w-100 align-center justify-center"
+        >
+          <VProgressCircular indeterminate />
+        </div>
+        <div
+          v-else-if="!asset"
+          class="d-flex w-100 align-center justify-center text-body-large"
+        >
+          {{ t('common.assetSelect.meta.info.noAssetSelected') }}
+        </div>
+        <div
+          v-else
+          class="w-100"
+        >
+          <slot
+            name="sidebar-prepend"
+            :asset="asset"
+          />
+          <AssetMetadata
+            v-if="extId && !customFormConfigLoading"
+            :ext-system="extId"
+            readonly
+            show-edit-button
+            @edit-in-dam="onOpenEditDialog"
+          />
+        </div>
+      </div>
+    </div>
+    <VDialog
+      v-if="mdAndDown"
+      v-model="sidebarRight"
+      scrollable
+      @update:model-value="
+        (v) => {
+          if (!v) closeSidebarRight()
+        }
+      "
+    >
+      <VCard>
+        <ADialogToolbar @cancel="closeSidebarRight">
+          {{ t('common.assetSelect.meta.info.toggle') }}
+        </ADialogToolbar>
+        <VCardText>
+          <div
+            v-if="customFormConfigFailed"
+            class="d-flex w-100 align-center justify-center text-body-large"
+          >
+            {{ t('common.damImage.error.loadingConfig') }}
+          </div>
+          <div
+            v-else-if="loadingSidebarRight"
+            class="d-flex w-100 align-center justify-center"
+          >
+            <VProgressCircular indeterminate />
+          </div>
+          <div
+            v-else-if="asset"
+            class="w-100"
+          >
+            <slot
+              name="sidebar-prepend"
+              :asset="asset"
+            />
+            <AssetMetadata
+              v-if="extId && !customFormConfigLoading"
+              :ext-system="extId"
+              readonly
+              show-edit-button
+              @edit-in-dam="onOpenEditDialog"
+            />
+          </div>
+        </VCardText>
+        <VCardActions>
+          <VSpacer />
+          <VBtn @click="closeSidebarRight">
+            {{ t('common.button.close') }}
+          </VBtn>
+        </VCardActions>
+      </VCard>
+    </VDialog>
+  </div>
+  <AssetDetailDialog
+    v-if="dialog === queueKey && extId"
+    :queue-key="queueKey"
+    :ext-system="extId"
+    @close="onCloseEditDialog"
+  />
+  <UploadQueueDialog
+    v-if="uploadEnabled && uploadQueueDialog === queueKey && imageWidgetUploadConfig"
+    :queue-key="queueKey"
+    :ext-system="imageWidgetUploadConfig.extSystem"
+    :licence-id="imageWidgetUploadConfig.licence"
+    :file-input-key="uploadQueue?.fileInputKey ?? -1"
+    :accept="uploadAccept"
+    :max-sizes="uploadSizes"
+    @apply="onUploadApply"
+    @files-input="onFileInput"
+    @drop="onFileInput"
+  />
+</template>

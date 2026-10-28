@@ -11,5 +11,6 @@
     "remainingHours": "{value} h",
     "remainingDays": "{value} d"
   },
-  "now": "Teraz"
+  "now": "Teraz",
+  "today": "Dnes"
 }

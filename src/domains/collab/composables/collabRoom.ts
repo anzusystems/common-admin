@@ -1,0 +1,498 @@
+import {
+  type CollabAccessRoomCallbackTypes,
+  CollabAccessRoomStatus,
+  type CollabAccessRoomStatusType,
+  type CollabFieldLock,
+  type CollabFieldName,
+  type CollabJoinAckOptions,
+  CollabRequestToJoinStatus,
+  type CollabRequestToJoinStatusCallback,
+  type CollabRequestToJoinStatusType,
+  CollabRequestToTakeModerationStatus,
+  type CollabRequestToTakeModerationStatusCallback,
+  type CollabRequestToTakeModerationStatusType,
+  type CollabRoom,
+  type CollabRoomInfo,
+  type CollabRoomInfoCallback,
+  type CollabRoomOptions,
+  type CollabRoomPlainData,
+  type CollabRoomsInfo,
+  CollabStatus,
+  isCollabSuccessAccessRoomCallback,
+} from '@/domains/collab/types/Collab'
+import { computed, ref, watch } from 'vue'
+import {
+  type CollabApprovedJoinRequestEvent,
+  type CollabApprovedRequestToTakeModerationEvent,
+  type CollabJoinRequestEvent,
+  type CollabKickedFromRoomEvent,
+  type CollabRejectedJoinRequestEvent,
+  type CollabRejectedRequestToTakeModerationEvent,
+  type CollabRequestToTakeModerationEvent,
+  type CollabStartingEvent,
+  useCollabApprovedJoinRequestEventBus,
+  useCollabApprovedRequestToTakeModerationEventBus,
+  useCollabJoinRequestEventBus,
+  useCollabKickedFromRoomEventBus,
+  useCollabReconnectEventBus,
+  useCollabRejectedJoinRequestEventBus,
+  useCollabRejectedRequestToTakeModerationEventBus,
+  useCollabRequestToTakeModerationEventBus,
+  useCollabStartingEventBus,
+} from '@/domains/collab/composables/collabEventBus'
+import type { Fn } from '@vueuse/core'
+import { tryOnBeforeUnmount } from '@vueuse/core'
+import { useCollabStateInternal } from '@/domains/collab/composables/collabState'
+import { isDefined, isUndefined } from '@/shared/utils/common'
+import { useCommonAdminCollabOptions } from '@/domains/collab/composables/commonAdminCollabOptions'
+import type { AddToCachedArgs } from '@/domains/cached/composables/defineCached'
+import type { IntegerId } from '@/shared/types/common'
+
+const alertedOccupiedRooms = ref(new Set<CollabRoom>())
+const ACK_TIMEOUT = 5000
+
+export function useCollabRoom(
+  room: CollabRoom,
+  watchForNewUsers: boolean = false,
+  addToCachedUsers: ((...args: AddToCachedArgs<IntegerId>) => void) | undefined = undefined,
+  // Called fire-and-forget; any fetch fits, `defineCached().fetch` included.
+  fetchCachedUsers: (() => unknown) | undefined = undefined,
+  disableAutoUnsubscribe = false
+) {
+  const { collabSocket, collabRoomInfoState, collabFieldDataBufferState, collabFieldLocksState, claimRoomInfoWrite } =
+    useCollabStateInternal()
+
+  const reconnectEventBus = useCollabReconnectEventBus()
+  const unsubscribeCollabReconnectListener = ref<undefined | Fn>()
+  const reconnectCallback = ref<undefined | Fn>()
+
+  const joinRequestEventBus = useCollabJoinRequestEventBus()
+  const unsubscribeJoinRequestListener = ref<undefined | Fn>()
+  const joinRequestCallback = ref<undefined | ((userId: number, timestamp: number) => void)>()
+
+  const approvedJoinRequestEventBus = useCollabApprovedJoinRequestEventBus()
+  const unsubscribeApprovedJoinRequestListener = ref<undefined | Fn>()
+  const approvedJoinRequestCallback = ref<undefined | Fn>()
+
+  const rejectedJoinRequestEventBus = useCollabRejectedJoinRequestEventBus()
+  const unsubscribeRejectedJoinRequestListener = ref<undefined | Fn>()
+  const rejectedJoinRequestCallback = ref<undefined | Fn>()
+
+  const requestToTakeModerationEventBus = useCollabRequestToTakeModerationEventBus()
+  const unsubscribeRequestToTakeModerationListener = ref<undefined | Fn>()
+  const requestToTakeModerationCallback = ref<undefined | ((userId: number, timestamp: number) => void)>()
+
+  const approvedRequestToTakeModerationEventBus = useCollabApprovedRequestToTakeModerationEventBus()
+  const unsubscribeApprovedRequestToTakeModerationListener = ref<undefined | Fn>()
+  const approvedRequestToTakeModerationCallback = ref<undefined | Fn>()
+
+  const rejectedRequestToTakeModerationEventBus = useCollabRejectedRequestToTakeModerationEventBus()
+  const unsubscribeRejectedRequestToTakeModerationListener = ref<undefined | Fn>()
+  const rejectedRequestToTakeModerationCallback = ref<undefined | Fn>()
+
+  const kickedFromRoomEventBus = useCollabKickedFromRoomEventBus()
+  const unsubscribeKickedFromRoomListener = ref<undefined | Fn>()
+  const kickedFromRoomCallback = ref<undefined | Fn>()
+
+  const collabStartingEventBus = useCollabStartingEventBus()
+  const unsubscribeCollabStartingListener = ref<undefined | Fn>()
+  const collabStartingCallback = ref<undefined | ((startedCallback: (data: CollabRoomPlainData) => void) => void)>()
+
+  const reconnectEventBusListener = () => {
+    if (isDefined(reconnectCallback.value)) {
+      reconnectCallback.value()
+    }
+  }
+
+  const joinRequestEventBusListener = (event: CollabJoinRequestEvent) => {
+    if (event.room === room && isDefined(joinRequestCallback.value)) {
+      joinRequestCallback.value(event.userId, event.timestamp)
+    }
+  }
+
+  const approvedJoinRequestEventBusListener = (event: CollabApprovedJoinRequestEvent) => {
+    if (event.room === room && isDefined(approvedJoinRequestCallback.value)) {
+      approvedJoinRequestCallback.value()
+    }
+  }
+
+  const rejectedJoinRequestEventBusListener = (event: CollabRejectedJoinRequestEvent) => {
+    if (event.room === room && isDefined(rejectedJoinRequestCallback.value)) {
+      rejectedJoinRequestCallback.value()
+    }
+  }
+
+  const requestToTakeModerationEventBusListener = (event: CollabRequestToTakeModerationEvent) => {
+    if (event.room === room && isDefined(requestToTakeModerationCallback.value)) {
+      requestToTakeModerationCallback.value(event.userId, event.timestamp)
+    }
+  }
+
+  const approvedRequestToTakeModerationEventBusListener = (event: CollabApprovedRequestToTakeModerationEvent) => {
+    if (event.room === room && isDefined(approvedRequestToTakeModerationCallback.value)) {
+      approvedRequestToTakeModerationCallback.value()
+    }
+  }
+
+  const rejectedRequestToTakeModerationEventBusListener = (event: CollabRejectedRequestToTakeModerationEvent) => {
+    if (event.room === room && isDefined(rejectedRequestToTakeModerationCallback.value)) {
+      rejectedRequestToTakeModerationCallback.value()
+    }
+  }
+
+  const kickedFromCollabRookEventBusListener = (event: CollabKickedFromRoomEvent) => {
+    if (event.room === room && isDefined(kickedFromRoomCallback.value)) {
+      kickedFromRoomCallback.value()
+    }
+  }
+
+  const collabStartingEventBusListener = (event: CollabStartingEvent) => {
+    if (event.room === room && isDefined(collabStartingCallback.value)) {
+      collabStartingCallback.value(event.startedCallback)
+    }
+  }
+
+  const addJoinRequestListener = (callback: (userId: number, timestamp: number) => void) => {
+    joinRequestCallback.value = callback
+    unsubscribeJoinRequestListener.value = joinRequestEventBus.on(joinRequestEventBusListener)
+  }
+
+  const addApprovedJoinRequestListener = (callback: () => void) => {
+    approvedJoinRequestCallback.value = callback
+    unsubscribeApprovedJoinRequestListener.value = approvedJoinRequestEventBus.on(approvedJoinRequestEventBusListener)
+  }
+
+  const addRejectedJoinRequestListener = (callback: () => void) => {
+    rejectedJoinRequestCallback.value = callback
+    unsubscribeRejectedJoinRequestListener.value = rejectedJoinRequestEventBus.on(rejectedJoinRequestEventBusListener)
+  }
+
+  const addRequestToTakeModerationListener = (callback: (userId: number, timestamp: number) => void) => {
+    requestToTakeModerationCallback.value = callback
+    unsubscribeRequestToTakeModerationListener.value = requestToTakeModerationEventBus.on(
+      requestToTakeModerationEventBusListener
+    )
+  }
+
+  const addApprovedRequestToTakeModerationListener = (callback: () => void) => {
+    approvedRequestToTakeModerationCallback.value = callback
+    unsubscribeApprovedRequestToTakeModerationListener.value = approvedRequestToTakeModerationEventBus.on(
+      approvedRequestToTakeModerationEventBusListener
+    )
+  }
+
+  const addRejectedRequestToTakeModerationListener = (callback: () => void) => {
+    rejectedRequestToTakeModerationCallback.value = callback
+    unsubscribeRejectedRequestToTakeModerationListener.value = rejectedRequestToTakeModerationEventBus.on(
+      rejectedRequestToTakeModerationEventBusListener
+    )
+  }
+
+  const addCollabReconnectListener = (callback: () => void) => {
+    reconnectCallback.value = callback
+    unsubscribeCollabReconnectListener.value = reconnectEventBus.on(reconnectEventBusListener)
+  }
+
+  const addKickedFromRoomListener = (callback: () => void) => {
+    kickedFromRoomCallback.value = callback
+    unsubscribeKickedFromRoomListener.value = kickedFromRoomEventBus.on(kickedFromCollabRookEventBusListener)
+  }
+
+  const addCollabStartingListener = (callback: (startedCallback: (data: CollabRoomPlainData) => void) => void) => {
+    collabStartingCallback.value = callback
+    unsubscribeCollabStartingListener.value = collabStartingEventBus.on(collabStartingEventBusListener)
+  }
+
+  tryOnBeforeUnmount(() => {
+    if (disableAutoUnsubscribe) return
+    if (isDefined(unsubscribeCollabReconnectListener.value)) {
+      unsubscribeCollabReconnectListener.value()
+    }
+    if (isDefined(unsubscribeJoinRequestListener.value)) {
+      unsubscribeJoinRequestListener.value()
+    }
+    if (isDefined(unsubscribeApprovedJoinRequestListener.value)) {
+      unsubscribeApprovedJoinRequestListener.value()
+    }
+    if (isDefined(unsubscribeRejectedJoinRequestListener.value)) {
+      unsubscribeRejectedJoinRequestListener.value()
+    }
+    if (isDefined(unsubscribeRequestToTakeModerationListener.value)) {
+      unsubscribeRequestToTakeModerationListener.value()
+    }
+    if (isDefined(unsubscribeApprovedRequestToTakeModerationListener.value)) {
+      unsubscribeApprovedRequestToTakeModerationListener.value()
+    }
+    if (isDefined(unsubscribeRejectedRequestToTakeModerationListener.value)) {
+      unsubscribeRejectedRequestToTakeModerationListener.value()
+    }
+    if (isDefined(unsubscribeKickedFromRoomListener.value)) {
+      unsubscribeKickedFromRoomListener.value()
+    }
+    if (isDefined(unsubscribeCollabStartingListener.value)) {
+      unsubscribeCollabStartingListener.value()
+    }
+  })
+
+  const { collabOptions } = useCommonAdminCollabOptions()
+
+  const subscribeCollabRoomInfo = () => {
+    if (!collabOptions.value.enabled || isUndefined(collabSocket.value)) return
+    const isNewestWrite = claimRoomInfoWrite(room)
+    collabSocket.value.emit('subscribeCollabRoomInfo', room, (response: CollabRoomInfoCallback) => {
+      if (!isNewestWrite()) return
+      collabRoomInfoState.set(room, response.room)
+    })
+  }
+
+  const unsubscribeCollabRoomInfo = () => {
+    if (!collabOptions.value.enabled || isUndefined(collabSocket.value)) return
+    const isNewestWrite = claimRoomInfoWrite(room)
+    collabSocket.value.emit('unsubscribeCollabRoomInfo', room, (response: CollabRoomInfoCallback) => {
+      if (!isNewestWrite()) return
+      collabRoomInfoState.set(room, response.room)
+    })
+  }
+
+  const joinCollabRoom = async (
+    options: Partial<CollabRoomOptions> = {},
+    { ackTimeout = ACK_TIMEOUT }: CollabJoinAckOptions = {}
+  ): Promise<CollabAccessRoomStatusType> => {
+    return new Promise((resolve, reject) => {
+      if (!collabOptions.value.enabled || isUndefined(collabSocket.value)) return reject(CollabAccessRoomStatus.Failed)
+      const isNewestWrite = claimRoomInfoWrite(room)
+      collabSocket.value
+        ?.timeout(ackTimeout)
+        .emit('joinCollabRoom', room, options, (error, response: CollabAccessRoomCallbackTypes) => {
+          if (error) {
+            markRoomInactiveOnFailedClaim()
+            /*
+             * No cleanup leave here, though a timed-out join can leave
+             * a server membership this client never hears about.
+             * A leave is not tied to its join, so it could remove the membership of a remount that succeeded meanwhile.
+             * Marking inactive is the safe side; the stale membership is released on
+             * disconnect. A proper fix needs a generation the server can compare.
+             * A caller that leaves after a timeout passes an `ackTimeout` longer than the server's own run.
+             */
+            return void reject(CollabAccessRoomStatus.Failed)
+          }
+          if (isCollabSuccessAccessRoomCallback(response)) {
+            if (isNewestWrite()) {
+              collabRoomInfoState.set(room, response.room)
+              // Joined a room with others: its state was gathered from the moderator.
+              // Data written alone earlier was never gathered, and would later go out as room state over newer values.
+              if (response.room.status === CollabStatus.Active) collabFieldDataBufferState.delete(room)
+            }
+            return void resolve(response.status)
+          }
+          markRoomInactiveOnFailedClaim()
+          return void reject(response.status)
+        })
+
+      /**
+       * A failed claim writes nothing yet still suppresses older acknowledgements, so without this a
+       * failed join would keep showing the membership from before the leave. Recorded as an explicitly
+       * inactive room, never deleted: the mutation guards test `roomInfo && status === Inactive`, so a
+       * missing entry falls through and emits. Only while this claim is still the newest.
+       */
+      function markRoomInactiveOnFailedClaim() {
+        if (isNewestWrite()) collabRoomInfoState.set(room, createDefaultCollabRoomInfo())
+      }
+    })
+  }
+
+  /**
+   * Resolves once the server acknowledges the leave, so a caller re-joining the same room can serialise the two.
+   * Never rejects, because callers (mostly unmount hooks) ignore the result. A missing ack resolves on the timeout.
+   * A caller that joins again afterwards passes an `ackTimeout` longer than the server's own run.
+   */
+  const leaveCollabRoom = ({ ackTimeout = ACK_TIMEOUT }: CollabJoinAckOptions = {}): Promise<void> => {
+    return new Promise((resolve) => {
+      if (!collabOptions.value.enabled || isUndefined(collabSocket.value)) return void resolve()
+      // Nobody gathers this buffer any more. If kept, it would go out as room state the next time this editor is alone.
+      collabFieldDataBufferState.delete(room)
+      const isNewestWrite = claimRoomInfoWrite(room)
+      collabSocket.value
+        ?.timeout(ackTimeout)
+        .emit('leaveCollabRoom', room, (error, response: CollabAccessRoomCallbackTypes) => {
+          if (!error && isNewestWrite() && isCollabSuccessAccessRoomCallback(response)) {
+            collabRoomInfoState.set(room, response.room)
+          }
+          resolve()
+        })
+    })
+  }
+
+  const enteredCollabRoom = () => {
+    if (!collabOptions.value.enabled || isUndefined(collabSocket.value)) return
+    /* Anything remembered from a previous stay in this room is a guess: the server answers with the
+     * locks it holds only when it holds some, so a lock released while this client was away produces
+     * no event and the field would read as locked until some later one arrives. */
+    collabFieldLocksState.set(room, new Map())
+    collabSocket.value?.emit('enteredCollabRoom', room)
+  }
+
+  const requestToJoinCollabRoom = (): Promise<CollabRequestToJoinStatusType> => {
+    return new Promise((resolve, reject) => {
+      if (!collabOptions.value.enabled || isUndefined(collabSocket.value)) {
+        return reject(CollabRequestToJoinStatus.Failed)
+      }
+      collabSocket.value
+        ?.timeout(2000)
+        .emit('requestToJoin', room, new Date().getTime(), (error, response: CollabRequestToJoinStatusCallback) => {
+          if (error) {
+            return void reject(CollabRequestToJoinStatus.Failed)
+          }
+          if (response.status === CollabRequestToJoinStatus.Ok) {
+            return void resolve(response.status)
+          }
+          return void reject(response.status)
+        })
+    })
+  }
+
+  const approveRequestToJoinCollabRoom = (userId: number) => {
+    if (!collabOptions.value.enabled || isUndefined(collabSocket.value)) return
+    collabSocket.value.emit('approveRequestToJoin', room, userId)
+  }
+
+  const rejectRequestToJoinCollabRoom = (userId: number) => {
+    if (!collabOptions.value.enabled || isUndefined(collabSocket.value)) return
+    collabSocket.value.emit('rejectRequestToJoin', room, userId)
+  }
+
+  const requestToTakeModeration = async (): Promise<CollabRequestToTakeModerationStatusType> => {
+    return new Promise((resolve, reject) => {
+      if (!collabOptions.value.enabled || isUndefined(collabSocket.value)) {
+        return reject(CollabRequestToTakeModerationStatus.Failed)
+      }
+      collabSocket.value
+        ?.timeout(2000)
+        .emit(
+          'requestToTakeModeration',
+          room,
+          new Date().getTime(),
+          (error, response: CollabRequestToTakeModerationStatusCallback) => {
+            if (error) {
+              return void reject(CollabRequestToTakeModerationStatus.Failed)
+            }
+            if (response.status === CollabRequestToTakeModerationStatus.Ok) {
+              return void resolve(response.status)
+            }
+            return void reject(response.status)
+          }
+        )
+    })
+  }
+
+  const approveRequestToTakeModeration = () => {
+    if (!collabOptions.value.enabled || isUndefined(collabSocket.value)) return
+    collabSocket.value.emit('approveRequestToTakeModeration', room)
+  }
+
+  const rejectRequestToTakeModeration = () => {
+    if (!collabOptions.value.enabled || isUndefined(collabSocket.value)) return
+    collabSocket.value.emit('rejectRequestToTakeModeration', room)
+  }
+
+  const kickUserFromRoom = (userId: number) => {
+    if (!collabOptions.value.enabled || isUndefined(collabSocket.value)) return
+    collabSocket.value.emit('kickUserFromRoom', room, userId)
+  }
+
+  const purgeRoom = () => {
+    if (!collabOptions.value.enabled || isUndefined(collabSocket.value)) return
+    collabSocket.value.emit('purgeRoom', room)
+  }
+
+  const transferModeration = (userId: number) => {
+    if (!collabOptions.value.enabled || isUndefined(collabSocket.value)) return
+    collabSocket.value.emit('transferModeration', room, userId)
+  }
+
+  const createDefaultCollabRoomInfo = (): CollabRoomInfo => ({
+    name: '',
+    status: CollabStatus.Inactive,
+    users: [],
+    moderator: null,
+    options: {},
+  })
+
+  const fetchRoomInfo = async (room: CollabRoom): Promise<CollabRoomInfo> => {
+    const baseRoomInfo: CollabRoomInfo = createDefaultCollabRoomInfo()
+
+    return new Promise((resolve) => {
+      if (!collabOptions.value.enabled || isUndefined(collabSocket.value)) return resolve(baseRoomInfo)
+      collabSocket.value?.timeout(500).emit('fetchRoomsInfo', [room], (error, response: CollabRoomsInfo) => {
+        if (error) return void resolve(baseRoomInfo)
+        const roomInfo = response[room]
+        if (isUndefined(roomInfo)) return void resolve(baseRoomInfo)
+        if (!isUndefined(addToCachedUsers)) addToCachedUsers(roomInfo.users)
+        if (!isUndefined(fetchCachedUsers)) fetchCachedUsers()
+
+        return resolve(roomInfo)
+      })
+    })
+  }
+
+  const collabRoomInfo = computed((): CollabRoomInfo => {
+    return collabRoomInfoState.get(room) ?? createDefaultCollabRoomInfo()
+  })
+
+  if (watchForNewUsers) {
+    watch(
+      collabRoomInfo,
+      (newValue) => {
+        if (newValue.users.length) {
+          if (!isUndefined(addToCachedUsers)) addToCachedUsers(newValue.users)
+          if (!isUndefined(fetchCachedUsers)) fetchCachedUsers()
+        }
+      },
+      { immediate: true }
+    )
+  }
+
+  const collabRoomLocks = computed((): Map<CollabFieldName, CollabFieldLock> => {
+    return collabFieldLocksState.get(room) ?? new Map()
+  })
+
+  return {
+    subscribeCollabRoomInfo,
+    unsubscribeCollabRoomInfo,
+    joinCollabRoom,
+    leaveCollabRoom,
+    requestToJoinCollabRoom,
+    approveRequestToJoinCollabRoom,
+    rejectRequestToJoinCollabRoom,
+    addJoinRequestListener,
+    addCollabReconnectListener,
+    addApprovedJoinRequestListener,
+    addRejectedJoinRequestListener,
+    requestToTakeModeration,
+    approveRequestToTakeModeration,
+    rejectRequestToTakeModeration,
+    addRequestToTakeModerationListener,
+    addApprovedRequestToTakeModerationListener,
+    addRejectedRequestToTakeModerationListener,
+    enteredCollabRoom,
+    kickUserFromRoom,
+    purgeRoom,
+    transferModeration,
+    addKickedFromRoomListener,
+    addCollabStartingListener,
+    fetchRoomInfo,
+    collabRoomInfo,
+    collabRoomLocks,
+    collabFieldDataBufferState,
+    alertedOccupiedRooms,
+    unsubscribeJoinRequestListener,
+    unsubscribeApprovedJoinRequestListener,
+    unsubscribeRejectedJoinRequestListener,
+    unsubscribeRequestToTakeModerationListener,
+    unsubscribeApprovedRequestToTakeModerationListener,
+    unsubscribeRejectedRequestToTakeModerationListener,
+    unsubscribeKickedFromRoomListener,
+    unsubscribeCollabStartingListener,
+    unsubscribeCollabReconnectListener,
+  }
+}

@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { computed, onMounted, watch } from 'vue'
-import ACard from '@/components/ACard.vue'
-import ARow from '@/components/ARow.vue'
-import AFormTextarea from '@/components/form/AFormTextarea.vue'
-import AFormTextField from '@/components/form/AFormTextField.vue'
-import ASortableListEditor from '@/labs/listEditor/ASortableListEditor.vue'
+import ACard from '@/domains/ui/components/ACard.vue'
+import ARow from '@/domains/ui/components/ARow.vue'
+import AFormTextarea from '@/domains/form/components/AFormTextarea.vue'
+import AFormTextField from '@/domains/form/components/AFormTextField.vue'
+import ASortableListEditor from '@/domains/listEditor/components/ASortableListEditor.vue'
 import {
   type QuizQuestion,
   type QuizQuestionAnswer,
@@ -52,7 +52,7 @@ const selectCorrectAnswer = (answerIndex: number) => {
     answer.points = 0
   })
   if (answerIndex > -1) {
-    answers[answerIndex].points = 1
+    answers[answerIndex]!.points = 1
   }
   selectedValue.value.answers = answers
 }
@@ -103,9 +103,7 @@ onMounted(() => {
           </VCol>
         </VRow>
         <ARow>
-          <span class="text-body-small text-medium-emphasis">
-            (image widget omitted in playground)
-          </span>
+          <span class="text-body-small text-medium-emphasis"> (image widget omitted in playground) </span>
         </ARow>
       </ACard>
     </template>

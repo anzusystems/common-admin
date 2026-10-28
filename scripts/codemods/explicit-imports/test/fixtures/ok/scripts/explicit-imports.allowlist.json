@@ -1,0 +1,11 @@
+{
+  "residualInjections": {
+    "src/keys.ts": {
+      "watch": "unimport reads `break watch` as a use of the label's name"
+    },
+    "src/shadowing.ts": {
+      "ref": "a parameter named ref; unimport does not see parameters as declarations",
+      "unref": "a catch binding named unref; same"
+    }
+  }
+}

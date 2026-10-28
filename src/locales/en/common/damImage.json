@@ -10,14 +10,16 @@
       }
     },
     "meta": {
-      "edit": "Edit image"
+      "edit": "Edit image",
+      "authorsGivenMeanwhile": "The asset has been given authors in the Media Library in the meantime. If the image had no source of its own, it now has their names; the authors you picked were not saved. Check and confirm again.",
+      "galleryAuthorsGivenMeanwhile": "The assets of some images have been given authors in the Media Library in the meantime. Images without a source of their own now have their names; the authors you picked were not saved, and nothing was saved. Check and save again."
     },
     "button": {
       "options": "Edit image",
-      "editAsset": "Edit in DAM",
+      "editAsset": "Edit in Media Library",
       "upload": "Upload image",
-      "addFromDam": "Add from DAM",
-      "replaceFromDam": "Replace from DAM",
+      "addFromDam": "Add from Media Library",
+      "replaceFromDam": "Replace from Media Library",
       "removeImage": "Remove image"
     },
     "help": {
@@ -51,7 +53,10 @@
     "displayTitle": "Original Name",
     "error": "Error",
     "copyAssetId": "Copy asset ID",
-    "stillUploadingOrProcessing": "Asset is still uploading or processing by server",
+    "stillUploadingOrProcessing": "Asset is still uploading or being processed by server",
+    "refreshFailed": "The item's state could not be loaded. Try again.",
+    "assetGone": "The asset no longer exists.",
+    "duplicateOriginalUnread": "The original of the duplicate could not be read.",
     "removeFromQueue": "Remove item from queue?",
     "errorUnableToCopyToLicence": "Error, unable to copy assets to licence"
   },
@@ -67,11 +72,15 @@
       "video": "Video",
       "document": "Document"
     },
+    "list": {
+      "noTitle": "No title"
+    },
     "detail": {
+      "sourceSystem": "Media Library",
       "toggleInfo": "Info card",
       "metadataToggle": {
-        "show": "Hide more details",
-        "hide": "Show more details"
+        "show": "Show more details",
+        "hide": "Hide more details"
       },
       "tabs": {
         "info": "Info",
@@ -116,6 +125,8 @@
       "fillOneEmpty": "Fill empty field",
       "fillAllEmpty": "Fill only empty",
       "replaceOne": "Replace everywhere",
+      "fillOneEmptyField": "Fill empty field: {field}",
+      "replaceOneField": "Replace everywhere: {field}",
       "replaceAll": "Replace all",
       "clearForm": "Clear",
       "general": "Main"
@@ -124,6 +135,7 @@
       "low": "Low quality",
       "slots": "Slots",
       "rss": "RSS",
+      "tts": "Synthesized (TTS)",
       "fullHd": "FullHD",
       "2k": "2K",
       "qhd": "QHD",
@@ -152,6 +164,9 @@
     "title": "Uploading",
     "titleDone": "Uploading completed",
     "stopConfirmQuestion": "Do you want to stop the upload?",
+    "stopConfirm": "Stop",
+    "onlyOneFile": "Only one file can be uploaded here; the first one is used.",
+    "metadataJustLoaded": "The metadata of some files have just been loaded. Check them and save again.",
     "limits": {
       "uploadWarning": "Upload warning",
       "onUploadLimit": "You are already on upload limit ({limit}). Finish upload, then try again.",
@@ -190,7 +205,9 @@
       "agency": "Agency"
     },
     "button": {
-      "add": "Add new author"
+      "add": "Add new author",
+      "addConflict": "Add author",
+      "addConflictNamed": "Add author {name}"
     },
     "meta": {
       "create": "Creating author"
@@ -203,12 +220,20 @@
     "systemError": "Error",
     "size": "Invalid size",
     "offset": "Invalid offset",
-    "mimeType": "Invalid file format"
+    "mimeType": "Invalid file format",
+    "chunkValidationFailed": "Upload chunk validation failed. Please contact the administrator.",
+    "processingTooLong": "Processing is taking too long. Use the item's refresh button, or remove the item and try again later.",
+    "readFailed": "Data could not be loaded. Use the item's refresh button, or remove the item and try again."
   },
   "notificationsNotConnected": "The notification service is temporarily down, some features may not behave correctly.",
   "public": {
     "idOrUrl": "Image ID or public image URL",
     "inputError": "Incorrect ID provided",
     "imagePreview": "Image preview"
+  },
+  "error": {
+    "loadingConfig": "Loading Media Library config error",
+    "accessRights": "Media Library access rights error",
+    "unableToLock": "Unable to lock image widget by current user."
   }
 }

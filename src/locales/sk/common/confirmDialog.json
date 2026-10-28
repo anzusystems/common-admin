@@ -1,0 +1,8 @@
+{
+  "title": "Potvrdenie",
+  "message": "Naozaj chcete vykonať túto akciu?",
+  "action": {
+    "cancel": "Zrušiť",
+    "confirm": "Áno, potvrdiť"
+  }
+}

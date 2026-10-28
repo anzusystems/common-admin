@@ -2,19 +2,12 @@
 import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
 import { damClient } from '@/playground/mock/coreDamClient'
 import { onMounted, ref } from 'vue'
-import { usePagination } from '@/labs/filters/pagination'
-import {
-  ENTITY,
-  SYSTEM_CORE_DAM,
-  useFetchAssetList,
-} from '@/components/damImage/uploadQueue/api/damAssetApi'
-import { useApiFetchListBatch } from '@/labs/api/useApiFetchListBatch'
-import {
-  createFilter,
-  createFilterStore,
-  type MakeFilterOption,
-} from '@/labs/filters/filterFactory'
-import { useApiFetchList } from '@/labs/api/useApiFetchList'
+import { usePagination } from '@/domains/api/composables/pagination'
+import { ENTITY, useFetchAssetList } from '@/domains/dam/api/damAssetApi'
+import { SYSTEM_CORE_DAM } from '@/domains/dam/api/damConstants'
+import { useApiFetchListBatch } from '@/domains/api/composables/useApiFetchListBatch'
+import { createFilter, createFilterStore, type MakeFilterOption } from '@/domains/filters/composables/filterFactory'
+import { useApiFetchList } from '@/domains/api/composables/useApiFetchList'
 
 const showData = ref(false)
 
@@ -31,14 +24,14 @@ const { filterConfig, filterData } = createFilter(filterFieldsList, listFiltersS
 })
 
 const useFetchCustomFormListAll = () =>
-  useApiFetchListBatch<any[]>({
+  useApiFetchListBatch<any>({
     client: damClient,
     system: SYSTEM_CORE_DAM,
     entity: ENTITY,
     urlTemplate: '/adm/v1/asset/licence/:licenceId',
     urlParams: { licenceId: 100000 },
   })
-const { executeFetch: fetchAssetListAll } = useFetchCustomFormListAll()
+const { execute: fetchAssetListAll } = useFetchCustomFormListAll()
 
 const { pagination } = usePagination('id')
 pagination.value.rowsPerPage = 100
@@ -51,24 +44,24 @@ const { pagination: pagination2 } = usePagination('id')
 pagination.value.rowsPerPage = 100
 
 const useFetchUserList = () =>
-  useApiFetchList<any[]>({
+  useApiFetchList<any>({
     client: damClient,
     system: SYSTEM_CORE_DAM,
     entity: ENTITY,
     urlTemplate: '/adm/v1/user',
   })
-const { executeFetch: fetchUserList } = useFetchUserList()
+const { execute: fetchUserList } = useFetchUserList()
 
 const useFetchUserListAll = () =>
-  useApiFetchListBatch<any[]>({
+  useApiFetchListBatch<any>({
     client: damClient,
     system: SYSTEM_CORE_DAM,
     entity: ENTITY,
     urlTemplate: '/adm/v1/user',
   })
-const { executeFetch: fetchUserListAll } = useFetchUserListAll()
+const { execute: fetchUserListAll } = useFetchUserListAll()
 
-const { executeFetch: fetchAssetList } = useFetchAssetList(damClient, '/adm/v1/asset', 100000)
+const { execute: fetchAssetList } = useFetchAssetList(damClient, '/adm/v1/asset', 100000)
 
 onMounted(async () => {
   itemsList1.value = await fetchAssetList(pagination, filterData, filterConfig, {
@@ -89,9 +82,7 @@ onMounted(async () => {
 
   <VCard>
     <VCardText>
-      <VSwitch v-model="showData">
-        Toggle data
-      </VSwitch>
+      <VSwitch v-model="showData">Toggle data</VSwitch>
       <VRow>
         <VCol cols="6">
           <p>list items count, search api: {{ itemsList1.length }}</p>
