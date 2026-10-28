@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 withDefaults(
   defineProps<{
+    zIndex: number
     loading?: boolean
   }>(),
   {
@@ -13,6 +14,7 @@ withDefaults(
   <div
     v-show="loading"
     class="a-card-loader"
+    :style="{ zIndex }"
   />
 </template>
 
@@ -22,6 +24,5 @@ withDefaults(
   position: absolute;
   inset: 0;
   background-color: rgb(0 0 0 / 10%);
-  z-index: 5;
 }
 </style>

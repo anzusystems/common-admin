@@ -7,11 +7,15 @@ const props = withDefaults(
     loading?: boolean
     title?: string
     blockInput?: boolean
+    // The card is a stacking context of its own (VCard: position relative, z-index 0), so a high value
+    // covers content that layers itself inside it, e.g. a sticky editor toolbar, without reaching outside.
+    loaderZIndex?: number
   }>(),
   {
     loading: undefined,
     title: undefined,
     blockInput: false,
+    loaderZIndex: 10200,
   }
 )
 
@@ -32,7 +36,10 @@ const loadingComputed = computed(() => {
     :loading="loadingComputed"
     :inert="(loading && blockInput) || undefined"
   >
-    <ACardLoader :loading="loading" />
+    <ACardLoader
+      :loading="loading"
+      :z-index="loaderZIndex"
+    />
     <slot />
   </VCard>
 </template>

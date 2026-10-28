@@ -341,6 +341,7 @@ According rules above we have 4 types of buttons:
 - when `loading` prop is active, it shows `VCard` loading bar and a layer to prevent to click on any element inside
 - `title` is passed to `VCard` `title`
 - `blockInput` together with `loading` also sets `inert` on the card, so focus and keyboard input inside are blocked too
+- `loaderZIndex` sets the z-index of that layer (default `10200`); the card is a stacking context of its own, so the layer covers content with a high z-index inside the card (e.g. a sticky editor toolbar) and never anything outside it
 - props and slots: [`src/domains/ui/components/ACard.vue`](../../src/domains/ui/components/ACard.vue), other props: [vuetify docs](https://vuetifyjs.com/en/api/v-card/#props)
 
 ```vue
