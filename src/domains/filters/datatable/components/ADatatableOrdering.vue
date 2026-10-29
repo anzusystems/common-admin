@@ -123,6 +123,12 @@ watch(modelValue, (newValue, oldValue) => {
   if (isUndefined(found)) {
     return
   }
+  // Already the pagination's sort: the ordering only follows it (a loaded hash, `setSortBy`, an admin setting
+  // the v-model with it). Applying it again made the list submit, which put a restored page back to 1.
+  const current = pagination.value.sortBy
+  if (current?.key === found.sortBy?.key && current?.order === found.sortBy?.order) {
+    return
+  }
   if (isUndefined(props.paginationUpdateCustomCb)) {
     paginationUpdateDefault(found)
     return

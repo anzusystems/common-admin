@@ -5,7 +5,12 @@ import { isUndefined } from '@/shared/utils/common'
 
 // The page is stored per table. A single global slot leaked across lists, so list A reopened on the page set in list B.
 // The preserve flag stays global on purpose: it means the next list landed on restores its page.
-const storedPages = ref<Record<string, number>>({})
+// The rows per page are kept with the page: page 3 at another page size shows other rows.
+export interface StoredDatatablePage {
+  page: number
+  rowsPerPage?: number
+}
+const storedPages = ref<Record<string, StoredDatatablePage>>({})
 const preservePage = ref<boolean>(false)
 
 const UNSCOPED_KEY = '__unscoped'
@@ -18,8 +23,8 @@ export const datatablePageKey = (system?: unknown, subject?: unknown): string =>
   typeof system === 'string' && typeof subject === 'string' ? `${system}_${subject}` : UNSCOPED_KEY
 
 export function useDatatablePageStore() {
-  const setStoredPage = (key: string, page: number) => {
-    storedPages.value[key] = page
+  const setStoredPage = (key: string, page: number, rowsPerPage?: number) => {
+    storedPages.value[key] = { page, rowsPerPage }
   }
 
   const setPreservePage = () => {
@@ -80,13 +85,17 @@ export function useDatatablePageStore() {
   const consumeStoredPage = (key: string): number | null => {
     if (!preservePage.value) return null
     preservePage.value = false
-    return storedPages.value[key] ?? null
+    return storedPages.value[key]?.page ?? null
   }
+
+  // Read with a page `consumeStoredPage` returned, so the list shows the same rows.
+  const getStoredRowsPerPage = (key: string): number | null => storedPages.value[key]?.rowsPerPage ?? null
 
   return {
     setStoredPage,
     setPreservePage,
     preservePageForLanding,
     consumeStoredPage,
+    getStoredRowsPerPage,
   }
 }

@@ -178,6 +178,102 @@ describe('loadStoredFilters — the remembered page is keyed per table', () => {
   })
 })
 
+// The pagination stores the page only when its watcher sees a change. A list paged to 3, left through the menu
+// and reopened there on page 1 kept 3, so Close from a record opened on page 1 returned to page 3.
+// A submit right after a restore of page 3 left the watcher seeing 1 → 1 the same way.
+describe('the remembered page is the one the list shows', () => {
+  const { setStoredPage, setPreservePage, consumeStoredPage } = useDatatablePageStore()
+
+  beforeEach(() => {
+    consumeStoredPage(PAGE_STORE_KEY) // drain a flag left by a previous case
+  })
+
+  it('replaces an earlier page when the list opens without stored filters', () => {
+    setStoredPage(PAGE_STORE_KEY, 3)
+
+    const { pagination, loadStoredFilters } = setup()
+    expect(loadStoredFilters(pagination)).toBe(false)
+    setPreservePage()
+
+    expect(consumeStoredPage(PAGE_STORE_KEY)).toBe(1)
+  })
+
+  it('replaces an earlier page when the list opens with stored filters', () => {
+    setStoredPage(PAGE_STORE_KEY, 3)
+    localStorage.setItem('tableFilter_sys_subj', 'name=stored~')
+
+    const { pagination, loadStoredFilters } = setup()
+    expect(loadStoredFilters(pagination)).toBe(true)
+    setPreservePage()
+
+    expect(consumeStoredPage(PAGE_STORE_KEY)).toBe(1)
+  })
+
+  it('replaces an earlier page when a submit or a reset goes back to page 1', () => {
+    const { pagination, submitFilter, resetFilter } = setup()
+
+    setStoredPage(PAGE_STORE_KEY, 3)
+    submitFilter(pagination)
+    setPreservePage()
+    expect(consumeStoredPage(PAGE_STORE_KEY)).toBe(1)
+
+    setStoredPage(PAGE_STORE_KEY, 3)
+    resetFilter(pagination)
+    setPreservePage()
+    expect(consumeStoredPage(PAGE_STORE_KEY)).toBe(1)
+  })
+
+  // A select dialog in an editor shares its subject with the list the editor was opened from.
+  // A search in it wrote page 1 into the list's key, so Close from the editor reopened the list on page 1.
+  it('keeps the page under its own key without turning on local storage', () => {
+    setStoredPage(PAGE_STORE_KEY, 3)
+
+    const dialog = setup({ storeFiltersLocalStorage: false, pageStoreKey: 'subjectSelect_sys_subj' })
+    dialog.submitFilter(dialog.pagination)
+    setPreservePage()
+
+    expect(consumeStoredPage(PAGE_STORE_KEY)).toBe(3)
+    expect(localStorage.getItem('tableFilter_sys_subj')).toBeNull()
+  })
+
+  // Page 3 at 10 rows reopened at the default 25 rows showed rows 51-75 instead of 21-30.
+  it('restores the rows per page together with the page', () => {
+    setStoredPage(PAGE_STORE_KEY, 3, 10)
+    setPreservePage()
+    const restored = setup()
+    restored.loadStoredFilters(restored.pagination)
+
+    localStorage.setItem('tableFilter_sys_subj', 'name=stored~')
+    setStoredPage(PAGE_STORE_KEY, 3, 10)
+    setPreservePage()
+    const restoredWithFilters = setup()
+    restoredWithFilters.loadStoredFilters(restoredWithFilters.pagination)
+
+    expect(restored.pagination.value).toMatchObject({ page: 3, rowsPerPage: 10 })
+    expect(restoredWithFilters.pagination.value).toMatchObject({ page: 3, rowsPerPage: 10 })
+  })
+
+  it('leaves the rows per page alone without a Close to answer', () => {
+    setStoredPage(PAGE_STORE_KEY, 3, 10)
+
+    const { pagination, loadStoredFilters } = setup()
+    loadStoredFilters(pagination)
+
+    expect(pagination.value).toMatchObject({ page: 1, rowsPerPage: 25 })
+  })
+
+  it('keeps the page it restored for the next Close', () => {
+    setStoredPage(PAGE_STORE_KEY, 3)
+    setPreservePage()
+
+    const { pagination, loadStoredFilters } = setup()
+    loadStoredFilters(pagination)
+    setPreservePage()
+
+    expect(consumeStoredPage(PAGE_STORE_KEY)).toBe(3)
+  })
+})
+
 // A url hash from a link or from stepping back describes the whole view.
 // Fields it does not name used to keep what the module-level filter store held,
 // so the same link landed differently in a fresh tab and in the running app.

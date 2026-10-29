@@ -9,7 +9,7 @@ import { datatablePageKey, useDatatablePageStore } from '@/domains/system/store/
 const listA = datatablePageKey('cms', 'article')
 const listB = datatablePageKey('cms', 'faq')
 
-const { setStoredPage, setPreservePage, consumeStoredPage } = useDatatablePageStore()
+const { setStoredPage, setPreservePage, consumeStoredPage, getStoredRowsPerPage } = useDatatablePageStore()
 
 beforeEach(() => {
   // Drains a flag left from a previous case; the store is a module singleton.
@@ -63,6 +63,13 @@ describe('useDatatablePageStore', () => {
     setPreservePage()
 
     expect(consumeStoredPage(datatablePageKey('cms', 'never-visited'))).toBeNull()
+  })
+
+  it('keeps the rows per page the page was shown at', () => {
+    setStoredPage(listA, 3, 10)
+
+    expect(getStoredRowsPerPage(listA)).toBe(10)
+    expect(getStoredRowsPerPage(datatablePageKey('cms', 'never-visited'))).toBeNull()
   })
 })
 

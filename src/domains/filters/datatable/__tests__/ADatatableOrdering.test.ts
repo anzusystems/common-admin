@@ -119,6 +119,38 @@ describe('ADatatableOrdering', () => {
     expect(wrapper.emitted('update:modelValue')?.at(-1)).toEqual([2])
   })
 
+  // Following used to emit `sortByChange` too. The lists submit on it, so a list restored on page 3
+  // with a non-default sort (Close back from a record) went to page 1 right after the restore.
+  it('does not emit when it only follows the pagination', async () => {
+    const cb = vi.fn()
+    const { wrapper, pagination } = mountOrdering()
+    const custom = mountOrdering({ paginationUpdateCustomCb: cb })
+    pagination.value = { ...pagination.value, sortBy: { key: 'id', order: SortOrder.Asc } }
+    custom.pagination.value.sortBy = { key: 'id', order: SortOrder.Asc }
+    await flushPromises()
+    expect(wrapper.emitted('update:modelValue')?.at(-1)).toEqual([2])
+    expect(wrapper.emitted('sortByChange')).toBeUndefined()
+    expect(custom.wrapper.emitted('update:modelValue')?.at(-1)).toEqual([2])
+    expect(cb).not.toHaveBeenCalled()
+  })
+
+  // cms PageDatatable switches the sort for a text search with `setSortBy` and its v-model together.
+  it('does not emit for a v-model set together with the sort it stands for', async () => {
+    const { wrapper, pagination } = mountOrdering({ modelValue: 1 })
+    pagination.value.sortBy = { key: 'id', order: SortOrder.Asc }
+    await wrapper.setProps({ modelValue: 2 })
+    await flushPromises()
+    expect(wrapper.emitted('sortByChange')).toBeUndefined()
+  })
+
+  it('applies a v-model set without its sort', async () => {
+    const { wrapper, pagination } = mountOrdering({ modelValue: 1 })
+    await wrapper.setProps({ modelValue: 2 })
+    await flushPromises()
+    expect(pagination.value.sortBy).toEqual({ key: 'id', order: SortOrder.Asc })
+    expect(wrapper.emitted('sortByChange')?.[0]?.[0]).toMatchObject({ id: 2 })
+  })
+
   it('shows nothing for a sort no option matches', () => {
     const { wrapper } = mountOrdering({ modelValue: 99 }, 'title')
     expect(wrapper.find('.v-btn').text()).toBe('')
