@@ -329,12 +329,16 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
   // or returns to it within the tick that restored another page, would keep the older page for the next Close.
   const rememberShownPage = (pagination: Ref<Pagination>) =>
     setStoredPage(pageStoreKey, pagination.value.page, pagination.value.rowsPerPage, viewOf(pagination.value.sortBy))
-  // The page Close kept, only in the view it was shown in. A list that keeps neither filter nor sort
-  // (no hash, no local storage) comes back with both reset, and its page 3 would show other rows.
+  // The page Close kept. A list that keeps neither filter nor sort (no hash, no local storage) comes back with
+  // both reset, and its page 3 would show other rows, so its page comes back only into the view it was shown in.
+  // Not checked for other lists: they restore their view themselves, and many adjust the sort or a filter
+  // in `getList` after a submit or reset stored the view, which would turn a correct restore into page 1.
+  const keepsItsView = options.populateUrlParams || !isUndefined(storeKey)
   const consumeRestoredPage = (sortBy: DatatableSortBy) => {
     const page = consumeStoredPage(pageStoreKey)
+    if (page === null || keepsItsView) return page
     const view = getStoredView(pageStoreKey)
-    return page !== null && (view === null || view === viewOf(sortBy)) ? page : null
+    return view === null || view === viewOf(sortBy) ? page : null
   }
   // A restored page comes back at the page size it was shown at. At another size it would show other rows.
   const rowsPerPageFor = (pagination: Ref<Pagination>, restoredPage: number | null) =>

@@ -308,6 +308,22 @@ describe('the remembered page belongs to the filter and sort it was shown in', (
     expect(back.pagination.value.page).toBe(1)
   })
 
+  // Lists with a hash or local storage restore their view themselves. Many switch the sort in `getList` after
+  // a reset stored the view (cms keywords, persons, pages), and the check turned a correct restore into page 1.
+  it('restores the page of a list that keeps its view, whatever view was stored', () => {
+    const list = setup()
+    list.pagination.value.sortBy = { key: 'name', order: SortOrder.Asc }
+    list.resetFilter(list.pagination)
+    list.pagination.value.sortBy = { key: 'id', order: SortOrder.Desc } // what its `getList` switches to
+    setStoredPage(PAGE_STORE_KEY, 3)
+    setPreservePage()
+
+    const back = setup()
+    back.loadStoredFilters(back.pagination)
+
+    expect(back.pagination.value.page).toBe(3)
+  })
+
   it('restores the page when the list comes back to the same filter and sort', () => {
     leaveOnPage3((list) => (list.filterData.name = 'abc'))
 
