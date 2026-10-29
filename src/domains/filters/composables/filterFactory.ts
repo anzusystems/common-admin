@@ -322,11 +322,20 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
   if (getCurrentInstance()) {
     provide(DatatablePageStoreKey, pageStoreKey)
   }
-  const { consumeStoredPage, getStoredRowsPerPage, setStoredPage } = useDatatablePageStore()
+  const { consumeStoredPage, getStoredRowsPerPage, getStoredView, setStoredPage } = useDatatablePageStore()
+  // The filter and sort a page is shown in. Stored on load, submit and reset, which every change of them goes through.
+  const viewOf = (sortBy: DatatableSortBy) => encodeFilterHash(getFilterDataForStoring(), sortBy)
   // `ADatatablePagination` stores the page only when its watcher sees a change. A list that opens on page 1,
   // or returns to it within the tick that restored another page, would keep the older page for the next Close.
   const rememberShownPage = (pagination: Ref<Pagination>) =>
-    setStoredPage(pageStoreKey, pagination.value.page, pagination.value.rowsPerPage)
+    setStoredPage(pageStoreKey, pagination.value.page, pagination.value.rowsPerPage, viewOf(pagination.value.sortBy))
+  // The page Close kept, only in the view it was shown in. A list that keeps neither filter nor sort
+  // (no hash, no local storage) comes back with both reset, and its page 3 would show other rows.
+  const consumeRestoredPage = (sortBy: DatatableSortBy) => {
+    const page = consumeStoredPage(pageStoreKey)
+    const view = getStoredView(pageStoreKey)
+    return page !== null && (view === null || view === viewOf(sortBy)) ? page : null
+  }
   // A restored page comes back at the page size it was shown at. At another size it would show other rows.
   const rowsPerPageFor = (pagination: Ref<Pagination>, restoredPage: number | null) =>
     restoredPage === null
@@ -484,7 +493,7 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
       storedFromHash = loadFilterLocalStorage()
     }
     if (isNull(storedFromHash) || (isEmptyObject(storedFromHash.filters) && isNull(storedFromHash.sortBy))) {
-      const restoredPage = consumeStoredPage(pageStoreKey)
+      const restoredPage = consumeRestoredPage(pagination.value.sortBy)
       if (restoredPage !== null) {
         pagination.value = {
           ...pagination.value,
@@ -532,14 +541,15 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
         updateLocationHash(stored)
       }
     }
+    // A link may omit the sort. Taking `null` would drop `order[...]` from
+    // the query, and paging without ORDER BY can repeat or skip rows.
+    const sortBy = storedFromHash.sortBy ?? pagination.value.sortBy
     // Always consumed. The flag means "the next list should restore
     // its page". Leaving it set would pass the page to the next table.
-    const restoredPage = consumeStoredPage(pageStoreKey)
+    const restoredPage = consumeRestoredPage(sortBy)
     pagination.value = {
       ...pagination.value,
-      // A link may omit the sort. Taking `null` would drop `order[...]` from
-      // the query, and paging without ORDER BY can repeat or skip rows.
-      sortBy: storedFromHash.sortBy ?? pagination.value.sortBy,
+      sortBy,
       // A link starts at the first page. A restored page still wins.
       // Only the close button sets that flag, meaning the user returns
       // to this list, and that address carries the list's own hash.

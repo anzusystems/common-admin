@@ -6,9 +6,11 @@ import { isUndefined } from '@/shared/utils/common'
 // The page is stored per table. A single global slot leaked across lists, so list A reopened on the page set in list B.
 // The preserve flag stays global on purpose: it means the next list landed on restores its page.
 // The rows per page are kept with the page: page 3 at another page size shows other rows.
+// So is the view, the serialized filter and sort the page was shown in (see `useFilterHelpers`).
 export interface StoredDatatablePage {
   page: number
   rowsPerPage?: number
+  view?: string
 }
 const storedPages = ref<Record<string, StoredDatatablePage>>({})
 const preservePage = ref<boolean>(false)
@@ -23,8 +25,13 @@ export const datatablePageKey = (system?: unknown, subject?: unknown): string =>
   typeof system === 'string' && typeof subject === 'string' ? `${system}_${subject}` : UNSCOPED_KEY
 
 export function useDatatablePageStore() {
-  const setStoredPage = (key: string, page: number, rowsPerPage?: number) => {
-    storedPages.value[key] = { page, rowsPerPage }
+  // `view` undefined keeps the stored one: the pager stores a page change, which stays in the view
+  // the filter helpers stored on load, submit or reset. `null` forgets it.
+  const setStoredPage = (key: string, page: number, rowsPerPage?: number, view?: string | null) => {
+    const stored: StoredDatatablePage = { ...storedPages.value[key], page, rowsPerPage }
+    if (view === null) delete stored.view
+    else if (!isUndefined(view)) stored.view = view
+    storedPages.value[key] = stored
   }
 
   const setPreservePage = () => {
@@ -91,11 +98,14 @@ export function useDatatablePageStore() {
   // Read with a page `consumeStoredPage` returned, so the list shows the same rows.
   const getStoredRowsPerPage = (key: string): number | null => storedPages.value[key]?.rowsPerPage ?? null
 
+  const getStoredView = (key: string): string | null => storedPages.value[key]?.view ?? null
+
   return {
     setStoredPage,
     setPreservePage,
     preservePageForLanding,
     consumeStoredPage,
     getStoredRowsPerPage,
+    getStoredView,
   }
 }

@@ -42,6 +42,8 @@ beforeEach(() => {
   vi.restoreAllMocks()
   localStorage.clear()
   window.location.hash = ''
+  // The page store is a module singleton: a view an earlier case stored would decide this case's restore.
+  useDatatablePageStore().setStoredPage(PAGE_STORE_KEY, 1, undefined, null)
   vi.spyOn(console, 'error').mockImplementation(() => {})
 })
 
@@ -244,7 +246,7 @@ describe('the remembered page is the one the list shows', () => {
     restored.loadStoredFilters(restored.pagination)
 
     localStorage.setItem('tableFilter_sys_subj', 'name=stored~')
-    setStoredPage(PAGE_STORE_KEY, 3, 10)
+    setStoredPage(PAGE_STORE_KEY, 3, 10, null)
     setPreservePage()
     const restoredWithFilters = setup()
     restoredWithFilters.loadStoredFilters(restoredWithFilters.pagination)
@@ -271,6 +273,49 @@ describe('the remembered page is the one the list shows', () => {
     setPreservePage()
 
     expect(consumeStoredPage(PAGE_STORE_KEY)).toBe(3)
+  })
+})
+
+// Many lists keep neither filter nor sort (no hash, no local storage, a filter store made per mount).
+// Close brought them back with both reset but on the remembered page, i.e. page 3 of other rows.
+describe('the remembered page belongs to the filter and sort it was shown in', () => {
+  const { setStoredPage, setPreservePage } = useDatatablePageStore()
+  const keepsNothing = { storeFiltersLocalStorage: false, populateUrlParams: false }
+
+  const leaveOnPage3 = (prepare: (list: ReturnType<typeof setup>) => void) => {
+    const list = setup(keepsNothing)
+    prepare(list)
+    list.submitFilter(list.pagination)
+    setStoredPage(PAGE_STORE_KEY, 3) // the pager pages on in that view
+    setPreservePage()
+  }
+
+  it('does not restore the page into a filter that came back reset', () => {
+    leaveOnPage3((list) => (list.filterData.name = 'abc'))
+
+    const back = setup(keepsNothing)
+    back.loadStoredFilters(back.pagination)
+
+    expect(back.pagination.value.page).toBe(1)
+  })
+
+  it('does not restore the page into a sort that came back reset', () => {
+    leaveOnPage3((list) => (list.pagination.value.sortBy = { key: 'name', order: SortOrder.Asc }))
+
+    const back = setup(keepsNothing)
+    back.loadStoredFilters(back.pagination)
+
+    expect(back.pagination.value.page).toBe(1)
+  })
+
+  it('restores the page when the list comes back to the same filter and sort', () => {
+    leaveOnPage3((list) => (list.filterData.name = 'abc'))
+
+    const back = setup(keepsNothing)
+    back.filterData.name = 'abc' // a module-level filter store keeps it
+    back.loadStoredFilters(back.pagination)
+
+    expect(back.pagination.value.page).toBe(3)
   })
 })
 
