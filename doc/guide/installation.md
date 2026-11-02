@@ -69,7 +69,10 @@ The library's stylesheet is one cascade layer, `anzu-common`. Name it in the adm
   - `copyToLicenceEnabled: false` takes away the copy of a picked asset into the licence a widget uploads into: the asset select's switch and the widgets' request, a `PATCH` to `endPointImage` + `/copy-to-licence`. Left out it is on. An application whose upload licence is the only one it picks from has no use for the copy and is to turn it off; admin-ugc is to set it with this release and has not yet.
   - `keywordCreateAcl` and `authorCreateAcl` are the grants the creation of a keyword and of an author needs, checked before it is offered; none when left out (admin-dam sets `dam_keyword_create` and `dam_author_create`).
   - `image.configs[name].imageApi`: `createImage`, `updateImage` and `bulkUpdateImages` are handed the fields of the image only (`texts`, `flags`, `dam`, and `position` and `id` when the image has them), not the object a read returned. After `createImage` a widget shows its answer and does not call `fetchImage`.
-- `collab` is off unless set (`enabled`, `socketUrl`, `beforeReconnect`, `io`). Pass `io` from `socket.io-client`: only an admin with collaboration installs the package
+- `collab` is off unless set (`enabled`, `socketUrl`, `beforeReconnect`, `io`, optionally `isSameIdentity`). Pass `io` from `socket.io-client`: only an admin with collaboration installs the package
+  - `beforeReconnect` runs after the server refused the connection, not after a transport error, which socket.io recovers from on its own. Refresh the session there and answer with a `CollabReconnectVerdict`: `ready` connects again (as a resolved `void` does), `retryLater` retries with a growing delay and when the browser is back online or the tab visible, `sessionEnded` and `identityChanged` stop until `reconnectCollab()`. A rejection, an unknown answer or none within 20 s count as `retryLater`. Two refusals after `ready` end in `rejected`, reported to Sentry once.
+  - `isSameIdentity` answers synchronously whether the session cookies still belong to the user set by `setCollabUserCurrentId`; `false` stops socket.io's own reconnection before it sends them. Every handshake also names that user (`auth.userId`), and the collaboration server refuses cookies of another one.
+  - `useCollabState()` gives `collabConnectionState` (`connected`, `reconnecting`, `waitingForNetwork`, `sessionEnded`, `identityChanged`, `rejected`) for a bar that says what to do, and `reconnectCollab()` for its "try again". While no connection can come without the user, `joinCollabRoom`, `requestToJoinCollabRoom` and `requestToTakeModeration` fail at once instead of after their timeout.
 
 ```ts
 import { io } from 'socket.io-client'
@@ -77,7 +80,8 @@ import { io } from 'socket.io-client'
 const collab: CommonAdminCollabOptions = {
   enabled: envConfig.collab.enabled,
   socketUrl: envConfig.collab.socketUrl,
-  beforeReconnect: () => Promise.resolve(), // e.g. refresh an expired token first
+  beforeReconnect: async () => ((await refreshSession()) ? 'ready' : 'retryLater'),
+  isSameIdentity: () => jwtSubject() === currentUserId(),
   io,
 }
 ```

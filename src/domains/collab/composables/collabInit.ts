@@ -19,6 +19,8 @@ import {
   useCollabStartingEventBus,
 } from '@/domains/collab/composables/collabEventBus'
 import { useCollabStateInternal } from '@/domains/collab/composables/collabState'
+import { useCollabCurrentUserId } from '@/domains/collab/composables/collabCurrentUserId'
+import { type CollabRefusal, createCollabRecovery } from '@/domains/collab/composables/collabRecovery'
 import { useAlerts } from '@/domains/system/composables/alerts'
 import { useCommonAdminCollabOptions } from '@/domains/collab/composables/commonAdminCollabOptions'
 import { useSentry } from '@/domains/system/composables/sentry'
@@ -27,20 +29,18 @@ import { isNull } from '@/shared/utils/common'
 export function useCollabInit() {
   const { collabOptions } = useCommonAdminCollabOptions()
   const { showWarningT, showSuccessT } = useAlerts()
-  const { collabConnected, collabSocket, collabRoomInfoState, collabFieldLocksState, collabFieldLocksUnanswered } =
-    useCollabStateInternal()
+  const {
+    collabConnected,
+    collabSocket,
+    collabConnectionState,
+    setCollabRecover,
+    collabRoomInfoState,
+    collabFieldLocksState,
+    collabFieldLocksUnanswered,
+  } = useCollabStateInternal()
+  const { currentUserId } = useCollabCurrentUserId()
 
   const { logError } = useSentry()
-
-  let authorizationReconnectTriggered = false
-
-  const runBeforeReconnect = async () => {
-    try {
-      await collabOptions.value.beforeReconnect()
-    } catch (error) {
-      logError(error as Error, { level: 'warning', tags: { collabPhase: 'beforeReconnect' } })
-    }
-  }
 
   const initCollab = () => {
     const changeEventBus = useCollabRoomDataChangeEventBus()
@@ -68,7 +68,29 @@ export function useCollabInit() {
         transports: ['websocket'],
         path: '/ws',
         forceNew: true,
+        // Read for every handshake: the server refuses cookies of another account than the page belongs to.
+        auth: (callback) => callback({ userId: currentUserId.value }),
       })
+      const recovery = createCollabRecovery({
+        socket: collabSocket.value,
+        state: collabConnectionState,
+        beforeReconnect: () => collabOptions.value.beforeReconnect(),
+        isSameIdentity: () => collabOptions.value.isSameIdentity?.(),
+        logError,
+      })
+      setCollabRecover(recovery.retry)
+      // Optional: the test doubles of the socket have no manager.
+      collabSocket.value.io?.on('reconnect_attempt', () => {
+        if (recovery.onReconnectAttempt()) collabConnected.value = false
+      })
+      if (typeof window !== 'undefined') {
+        window.addEventListener('online', recovery.retryIfWaiting)
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'visible') recovery.retryIfWaiting()
+        })
+        window.addEventListener('pagehide', recovery.onPageHide)
+        window.addEventListener('pageshow', (event) => recovery.onPageShow(event.persisted))
+      }
       collabSocket.value.on('collabRoomChanged', (room: CollabRoomInfo) => {
         try {
           if (collabRoomInfoState.has(room.name)) {
@@ -127,7 +149,7 @@ export function useCollabInit() {
       collabSocket.value?.on('startCollab', async (room, callback: (data: CollabRoomPlainData) => void) => {
         collabStartingEventBus.emit({ room, startedCallback: callback })
       })
-      collabSocket.value.on('connect', async () => {
+      collabSocket.value.on('connect', () => {
         /* Memberships from before a reconnect are stale; the server does not re-announce them.
          *
          * The write claims behind them are deliberately left alone. Socket.io drops the
@@ -140,38 +162,21 @@ export function useCollabInit() {
         collabRoomInfoState.clear()
         // The server released the old connection's locks, and timed-out requests were dropped from the send buffer.
         collabFieldLocksUnanswered.clear()
-        // Without the reset a transient network error burns the flag and a later JWT
-        // expiration never triggers a token refresh.
-        authorizationReconnectTriggered = false
+        recovery.onConnect()
         const connectedBefore = collabConnected.value
         collabConnected.value = collabSocket.value?.connected ?? false
-        if (!connectedBefore) {
-          await runBeforeReconnect()
-          reconnectEventBus.emit('reconnect')
-        }
+        if (!connectedBefore) reconnectEventBus.emit('reconnect')
       })
-      collabSocket.value.on('connect_error', async (error) => {
-        if (!authorizationReconnectTriggered) {
-          authorizationReconnectTriggered = true
-          await runBeforeReconnect()
-          collabSocket.value?.connect()
-          return
-        }
+      collabSocket.value.on('connect_error', (error: CollabRefusal) => {
         collabConnected.value = collabSocket.value?.connected ?? false
-        // active === true means socket.io will reconnect on its own; only a permanent
-        // rejection is worth reporting.
-        if (collabSocket.value?.active) {
-          return
-        }
-        logError(error, { level: 'error', tags: { collabPhase: 'connectRejected' } })
+        // Still `active`: a transport error, socket.io reconnects on its own. Otherwise the server refused it.
+        if (collabSocket.value?.active) return recovery.onTransportError()
+        recovery.onRefused(error)
       })
-      collabSocket.value.on('disconnect', async (reason) => {
+      collabSocket.value.on('disconnect', (reason) => {
         collabRoomInfoState.forEach((roomInfo: CollabRoomInfo) => (roomInfo.status = CollabStatus.Inactive))
         collabConnected.value = collabSocket.value?.connected ?? false
-        if (reason === 'io server disconnect') {
-          await runBeforeReconnect()
-          collabSocket.value?.connect()
-        }
+        recovery.onDisconnect(reason)
       })
     } catch (error) {
       // Not `message`: with `level` beside it Sentry reads the object as scope data and drops the key.

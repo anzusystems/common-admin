@@ -1,19 +1,24 @@
 import type { Socket } from 'socket.io-client'
-import type {
-  CollabClientToServerEvents,
-  CollabFieldData,
-  CollabFieldLock,
-  CollabFieldName,
-  CollabRoom,
-  CollabRoomInfo,
-  CollabRoomPlainData,
-  CollabServerToClientEvents,
+import {
+  type CollabClientToServerEvents,
+  CollabConnectionState,
+  type CollabConnectionStateType,
+  type CollabFieldData,
+  type CollabFieldLock,
+  type CollabFieldName,
+  type CollabRoom,
+  type CollabRoomInfo,
+  type CollabRoomPlainData,
+  type CollabServerToClientEvents,
 } from '@/domains/collab/types/Collab'
-import { computed, reactive, ref, type Ref, toRaw } from 'vue'
+import { computed, reactive, readonly, ref, type Ref, toRaw } from 'vue'
 import { useCollabGatheringBufferDataEventBus } from '@/domains/collab/composables/collabEventBus'
 import { useCommonAdminCollabOptions } from '@/domains/collab/composables/commonAdminCollabOptions'
 
 const collabConnected = ref(true)
+const collabConnectionState = ref<CollabConnectionStateType>(CollabConnectionState.Connected)
+// Set by `initCollab` for the socket it creates.
+let collabRecover: (() => Promise<void>) | undefined
 const collabSocket: Ref<Socket<CollabServerToClientEvents, CollabClientToServerEvents> | undefined> = ref()
 const collabRoomInfoState = reactive(new Map<CollabRoom, CollabRoomInfo>())
 // Plain, not reactive: bookkeeping for the map above, nothing renders from it.
@@ -74,8 +79,24 @@ export function useCollabStateInternal() {
   const fieldLockMaybeHeld = (room: CollabRoom, field: CollabFieldName, userId: CollabFieldLock) =>
     collabFieldLocksState.get(room)?.get(field) === userId || !!collabFieldLocksUnanswered.get(room)?.has(field)
 
+  /** No connection comes without the user acting (or, waiting for the network, before a retry): fail now. */
+  const collabConnectionHopeless = () =>
+    collabConnectionState.value !== CollabConnectionState.Connected &&
+    collabConnectionState.value !== CollabConnectionState.Reconnecting
+
+  const setCollabRecover = (recover: () => Promise<void>) => {
+    collabRecover = recover
+  }
+
+  /** Try now, also out of `sessionEnded`, `identityChanged` and `rejected`; a no-op while connected or connecting. */
+  const reconnectCollab = (): Promise<void> => collabRecover?.() ?? Promise.resolve()
+
   return {
     collabReconnecting,
+    collabConnectionState,
+    collabConnectionHopeless,
+    setCollabRecover,
+    reconnectCollab,
     collabConnected,
     collabSocket,
     collabRoomInfoState,
@@ -90,13 +111,27 @@ export function useCollabStateInternal() {
 }
 
 /**
- * What an admin reads from the collaboration state: whether the connection is being re-established,
- * the rooms' info, and the buffered field data of a room (`gatherBufferData` collects and clears it).
- * The socket and the lock bookkeeping stay inside the library.
+ * What an admin reads from the collaboration state: whether the connection is being re-established and why it
+ * is not (`collabConnectionState`), the rooms' info, and the buffered field data of a room (`gatherBufferData`
+ * collects and clears it). `reconnectCollab` is the user's "try again". The socket and the lock bookkeeping stay
+ * inside the library.
  */
 export function useCollabState() {
-  const { collabReconnecting, collabRoomInfoState, collabFieldDataBufferState, gatherBufferData } =
-    useCollabStateInternal()
+  const {
+    collabReconnecting,
+    collabConnectionState,
+    reconnectCollab,
+    collabRoomInfoState,
+    collabFieldDataBufferState,
+    gatherBufferData,
+  } = useCollabStateInternal()
 
-  return { collabReconnecting, collabRoomInfoState, collabFieldDataBufferState, gatherBufferData }
+  return {
+    collabReconnecting,
+    collabConnectionState: readonly(collabConnectionState),
+    reconnectCollab,
+    collabRoomInfoState,
+    collabFieldDataBufferState,
+    gatherBufferData,
+  }
 }
