@@ -69,6 +69,7 @@
     "test:eslint": "vitest run --config vitest.config.node.mts",
     "test:run": "run-s --print-name test:browser test:eslint",
     "test:ui": "vitest --ui",
+    "deps:upgrade": "yarn upgrade-interactive && yarn dedupe",
     "release:start": "npx -y --allow-git=all github:anzusystems/release-tools#main start",
     "release:publish": "npx -y --allow-git=all github:anzusystems/release-tools#main publish",
     "release:cleanup": "npx -y --allow-git=all github:anzusystems/release-tools#main cleanup"

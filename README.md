@@ -49,6 +49,10 @@ A feature may be deprecated in any release when a better replacement exists. Dep
 
 To take only fixes automatically, use a range that locks the current minor (`~2.1.0`) and upgrade to a new minor by hand after reading its changelog. `^2.1.0` takes minor releases too.
 
+## Updating dependencies
+
+`yarn deps:upgrade` runs `upgrade-interactive`, then `dedupe`.
+
 ## Releasing
 
 Releases are made with [release-tools](https://github.com/anzusystems/release-tools) ([guide](https://github.com/anzusystems/release-tools/blob/main/docs/guide.md)); the rules and examples for this package are in [doc/RELEASING.md](doc/RELEASING.md):
