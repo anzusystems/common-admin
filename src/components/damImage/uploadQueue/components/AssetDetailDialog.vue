@@ -23,7 +23,7 @@ const props = withDefaults(
     extSystem: IntegerId
     configName?: string
     // Widget's site-group upload licence — only known where the dialog is opened from an editable
-    // widget flow; gates single-use editability in the sidebar (T4.8).
+    // widget flow; gates single-use editability in the sidebar.
     uploadLicence?: IntegerIdNullable | undefined
   }>(),
   {

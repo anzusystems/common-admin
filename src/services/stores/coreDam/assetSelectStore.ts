@@ -255,8 +255,8 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
     return false
   })
 
-  // Kept for the upload-queue widgets (single-asset flows): resolves the ext system of the licence
-  // the currently picked asset belongs to, defaulting to the first configured licence.
+  // Kept for the upload-queue widgets (single-asset flows): the config of the first selected licence,
+  // falling back to the first configured one once the picker is closed and the selection is cleared.
   const selectedSelectConfig = computed(() => {
     const primaryLicenceId = selectedLicenceIds.value[0]
     const found = selectConfig.value.find((configItem) => configItem.licence === primaryLicenceId)

@@ -5,7 +5,7 @@ import {
 } from '@/services/stores/coreDam/assetSelectStore'
 import { storeToRefs } from 'pinia'
 import type { Ref } from 'vue'
-import { ref } from 'vue'
+import { ref, unref } from 'vue'
 import { type AssetDetailItemDto, DamAssetType, type DamAssetTypeType } from '@/types/coreDam/Asset'
 import { usePagination } from '@/labs/filters/pagination'
 import { useAlerts } from '@/composables/system/alerts'
@@ -17,7 +17,7 @@ import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composabl
 import { useDamCachedAuthors } from '@/components/damImage/uploadQueue/author/cachedAuthors'
 import { useDamCachedKeywords } from '@/components/damImage/uploadQueue/keyword/cachedKeywords'
 import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/composables/extSystemIdForCached'
-import { isNull, isUndefined } from '@/utils/common'
+import { cloneDeep, isNull, isUndefined } from '@/utils/common'
 import { useDamCachedUsers } from '@/components/damImage/uploadQueue/author/cachedUsers'
 import { useSidebar } from '@/components/dam/assetSelect/composables/assetSelectFilterSidebar'
 import { SORT_BY_SCORE_DATE } from '@/composables/system/datatableColumns'
@@ -29,6 +29,11 @@ import { resolveDisabledReasons } from '@/components/dam/assetSelect/composables
 
 const { pagination } = usePagination(SORT_BY_SCORE_DATE)
 const detailLoading = ref(false)
+let latestListRequest = 0
+
+// Shared by every instance: the filter's mount and the licence watcher of the picker both ask for the
+// first listing in the same tick, and two debounces of their own sent two identical searches.
+const debouncedFetch = useDebounceFn((fetch: () => Promise<void>) => fetch())
 
 export function useAssetSelectActions(
   configName = 'default',
@@ -65,9 +70,7 @@ export function useAssetSelectActions(
     filterData.inPodcast = null
   }
 
-  const fetchAssetListDebounced = useDebounceFn(async () => {
-    await fetchAssetList()
-  })
+  const fetchAssetListDebounced = () => debouncedFetch(fetchAssetList)
 
   // The selectability lives in the store, not in this composable instance: the initial listing, the
   // filter submit and the filter reset are all fetched from the filter's own instance, which knows
@@ -82,20 +85,39 @@ export function useAssetSelectActions(
     assetSelectStore.setDisabledReasons(resolveDisabledReasons(items, getCachedAssetLicence, selectability))
   }
 
+  // The list is fetched into a pagination of its own: a stale request must not write hasNextPage or
+  // currentViewCount of the shared one, which belongs to the list that is on screen.
+  const fetchLatestList = async (request: number) => {
+    const { executeFetch } = useFetchAssetListByLicences(damClient, endPointAsset)
+    const requestPagination = ref(cloneDeep(pagination.value))
+    const list = await executeFetch(requestPagination, filterData, filterConfig)
+    if (request !== latestListRequest) return null
+    const answered = unref(requestPagination)
+    pagination.value = {
+      ...pagination.value,
+      hasNextPage: answered.hasNextPage,
+      currentViewCount: answered.currentViewCount,
+      totalCount: answered.totalCount,
+    }
+    return list
+  }
+
   const fetchAssetList = async () => {
     if (assetSelectStore.selectedLicenceIds.length === 0) return
     resolveTypeFilter(assetSelectStore.assetType, assetSelectStore.inPodcast)
     filterData.licences = assetSelectStore.selectedLicenceIds
     resolveSingleUseFilter()
-    const { executeFetch } = useFetchAssetListByLicences(damClient, endPointAsset)
+    const request = ++latestListRequest
     try {
       assetSelectStore.showLoader()
-      assetSelectStore.setList(await executeFetch(pagination, filterData, filterConfig))
+      const list = await fetchLatestList(request)
+      if (isNull(list)) return
+      assetSelectStore.setList(list)
       await applyDisabledReasons(assetSelectStore.assetListItems)
     } catch (error) {
-      showErrorsDefault(error)
+      if (request === latestListRequest) showErrorsDefault(error)
     } finally {
-      assetSelectStore.hideLoader()
+      if (request === latestListRequest) assetSelectStore.hideLoader()
     }
   }
 
@@ -105,16 +127,18 @@ export function useAssetSelectActions(
     resolveTypeFilter(assetSelectStore.assetType, assetSelectStore.inPodcast)
     filterData.licences = assetSelectStore.selectedLicenceIds
     resolveSingleUseFilter()
-    const { executeFetch } = useFetchAssetListByLicences(damClient, endPointAsset)
+    const request = ++latestListRequest
     try {
       assetSelectStore.showLoader()
+      const list = await fetchLatestList(request)
+      if (isNull(list)) return
       // Only the freshly appended page: the earlier pages already carry their resolved reasons.
-      const appended = assetSelectStore.appendList(await executeFetch(pagination, filterData, filterConfig))
+      const appended = assetSelectStore.appendList(list)
       await applyDisabledReasons(appended)
     } catch (error) {
-      showErrorsDefault(error)
+      if (request === latestListRequest) showErrorsDefault(error)
     } finally {
-      assetSelectStore.hideLoader()
+      if (request === latestListRequest) assetSelectStore.hideLoader()
     }
   }
 

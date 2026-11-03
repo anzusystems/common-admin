@@ -2,14 +2,6 @@
 import { useI18n } from 'vue-i18n'
 import AssetSelectTableRowItem from '@/components/dam/assetSelect/components/AssetSelectTableRowItem.vue'
 import { useAssetSelectActions } from '@/components/dam/assetSelect/composables/assetSelectListActions'
-import type { IntegerId } from '@/types/common'
-
-withDefaults(
-  defineProps<{
-    extSystem: IntegerId
-  }>(),
-  {},
-)
 
 const { t } = useI18n()
 

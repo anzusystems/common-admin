@@ -33,7 +33,8 @@ interface AssetSelectReturnAsset {
 /**
  * The subject a single-use photo may already be held by without blocking this pick. Shaped exactly
  * like the holder DAM reports in `mainFile.fileAttributes.usedByHolderName/Id`, so the comparison is
- * a plain equality. `null` means the entity has no id yet — no single-use photo is selectable then.
+ * a plain equality. `null` means there is no holder to compare with, so a held single-use photo is
+ * not blocked on the holder.
  */
 export interface AssetSelectHolder {
   resourceName: string

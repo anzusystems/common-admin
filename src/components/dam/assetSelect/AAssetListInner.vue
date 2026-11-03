@@ -335,7 +335,6 @@ onUnmounted(() => {
         <component
           :is="componentComputed"
           v-if="extId"
-          :ext-system="extId"
         />
         <div class="d-flex w-100 align-center justify-center pa-4">
           <ABtnSecondary

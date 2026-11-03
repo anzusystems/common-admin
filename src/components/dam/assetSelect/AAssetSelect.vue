@@ -31,6 +31,7 @@ import type { AssetSelectHolder } from '@/types/coreDam/AssetSelect'
 import { storeToRefs } from 'pinia'
 import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
 import { type DatatableOrderingOption } from '@/composables/system/datatableColumns'
+import { showAssetSelectPresets } from '@/components/dam/assetSelect/composables/assetSelectPresets'
 import AssetSelectLicencePresetBar from '@/components/dam/assetSelect/components/AssetSelectLicencePresetBar.vue'
 
 const props = withDefaults(
@@ -111,12 +112,14 @@ const selectConfigs = shallowRef<DamConfigLicenceExtSystemReturnType[]>([])
 // DAM refuses the whole search when even one requested licence is unreadable. Reactive on
 // `selectConfigs` (not on `onOpen`'s local variable) so a preset control created before the dialog's
 // first open still resolves to the filtered universe once the configs land.
-const allowedSelectLicences = computed<IntegerId[]>(() => {
-  const configs = props.skipCurrentUserCheck
+const allowedSelectConfigs = computed(() =>
+  props.skipCurrentUserCheck
     ? selectConfigs.value
-    : filterAllowedImageWidgetSelectConfigs(selectConfigs.value)
-  return configs.map((config) => config.licence)
-})
+    : filterAllowedImageWidgetSelectConfigs(selectConfigs.value),
+)
+const allowedSelectLicences = computed<IntegerId[]>(() =>
+  allowedSelectConfigs.value.map((config) => config.licence),
+)
 
 const { mdAndUp } = useDisplay()
 const { openSidebarLeft, closeSidebarRight, sidebarLeft, sidebarRight } = useSidebar()
@@ -124,10 +127,7 @@ const { showErrorT } = useAlerts()
 
 const onOpen = () => {
   if (!ready.value) return
-  let selectConfigLocal = cloneDeep(selectConfigs.value)
-  if (!props.skipCurrentUserCheck) {
-    selectConfigLocal = filterAllowedImageWidgetSelectConfigs(selectConfigs.value)
-  }
+  const selectConfigLocal = cloneDeep(allowedSelectConfigs.value)
   if (selectConfigLocal.length === 0) {
     showErrorT('common.assetSelect.error.unallowedLicence')
     return
@@ -182,10 +182,12 @@ const autoloadOnIntersect = (isIntersecting: boolean) => {
 const { gridView } = useGridView()
 
 // One watcher for every way the licences can change: the selection control in the filter sidebar and the
-// licence chips above the list all write the same store field.
+// licence chips above the list all write the same store field. The store is shared by every picker on the
+// page, so only the one whose dialog is open may react.
 watch(
   () => assetSelectStore.selectedLicenceIds,
   (value, oldValue) => {
+    if (!modelValue.value) return
     if (value.length === oldValue?.length && value.every((id) => oldValue.includes(id))) return
     pagination.value.page = 1
     fetchAssetListDebounced()
@@ -298,7 +300,7 @@ defineExpose({
           @sort-by-change="sortByChange"
         />
         <AssetSelectLicencePresetBar
-          v-if="allowedSelectLicences.length > 1 || listViews.length > 0"
+          v-if="showAssetSelectPresets(allowedSelectLicences, listViews)"
           :select-licences="allowedSelectLicences"
           :list-views="listViews"
         />
@@ -320,7 +322,6 @@ defineExpose({
             <component
               :is="componentComputed"
               v-if="extId"
-              :ext-system="extId"
             />
             <div class="d-flex w-100 align-center justify-center pa-4">
               <ABtnSecondary

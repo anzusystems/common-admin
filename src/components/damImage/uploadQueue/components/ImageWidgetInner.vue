@@ -538,7 +538,7 @@ const onMetadataDialogConfirm = async () => {
     releaseFieldLock.value(res.id)
 
     // Authors are written to the DAM asset only once the image exists: on take-over, res.dam.damId
-    // is the copy's file id, not the source asset picked in the dialog (C8). A failed write here
+    // is the copy's file id, not the source asset picked in the dialog. A failed write here
     // must not undo the image id already assigned above.
     if (pendingAuthorIds) {
       try {

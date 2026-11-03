@@ -1,5 +1,6 @@
 import { i18n } from '@/plugins/i18n'
 import { DamAssetType, type AssetSearchListItemDto } from '@/types/coreDam/Asset'
+import type { AssetFile } from '@/types/coreDam/AssetFile'
 import type { DamAssetLicenceCached } from '@/types/coreDam/AssetLicence'
 import type { DocId, IntegerId } from '@/types/common'
 import { isNull, isUndefined } from '@/utils/common'
@@ -16,20 +17,19 @@ export const resolveHolderName = (resourceName: string): string => {
   return te(key) ? t(key) : resourceName
 }
 
-export const resolveDisabledReason = (
-  asset: AssetSearchListItemDto,
-  licence: DamAssetLicenceCached | undefined,
-  options: AssetSelectabilityOptions
+export const resolveSingleUseReason = (
+  mainFile: AssetFile | null | undefined,
+  options: Pick<AssetSelectabilityOptions, 'singleUseAllowed' | 'holder'>
 ): string | null => {
   const { t } = i18n.global
-  const singleUse = asset.mainFile?.flags.singleUse ?? false
+  const singleUse = mainFile?.flags.singleUse ?? false
 
   if (singleUse && !options.singleUseAllowed) {
     return t('common.assetSelect.disabledReason.singleUseNotAllowed')
   }
 
-  const holderResourceName = asset.mainFile?.fileAttributes.usedByHolderName ?? ''
-  const holderResourceId = asset.mainFile?.fileAttributes.usedByHolderId ?? ''
+  const holderResourceName = mainFile?.fileAttributes.usedByHolderName ?? ''
+  const holderResourceId = mainFile?.fileAttributes.usedByHolderId ?? ''
   // The holder only decides for a file that is single use right now: a licence that stops enforcing it
   // leaves the last holder behind, and without this guard that stale value would block the file forever.
   const heldByOther =
@@ -45,6 +45,18 @@ export const resolveDisabledReason = (
       holder: resolveHolderName(holderResourceName),
     })
   }
+
+  return null
+}
+
+export const resolveDisabledReason = (
+  asset: AssetSearchListItemDto,
+  licence: DamAssetLicenceCached | undefined,
+  options: AssetSelectabilityOptions
+): string | null => {
+  const { t } = i18n.global
+  const singleUseReason = resolveSingleUseReason(asset.mainFile, options)
+  if (singleUseReason) return singleUseReason
 
   const directUseAllowed = licence?.flags.directUseAllowed ?? true
   if (!directUseAllowed && asset.attributes.assetType !== DamAssetType.Image) {

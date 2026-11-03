@@ -72,35 +72,6 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
     return []
   }
 
-  async function addByCopyToLicence(
-    queueKey: UploadQueueKey,
-    extSystem: IntegerId,
-    assetLicence: IntegerId,
-    assets: DocId[],
-  ) {
-    const { getDamConfigExtSystem } = useDamConfigState()
-
-    const configExtSystem = getDamConfigExtSystem(extSystem)
-    if (isUndefined(configExtSystem)) {
-      throw new Error('useUploadQueuesStore.addByCopyToLicence: Ext system must be initialised.')
-    }
-    for (const assetId of assets) {
-      const queueItem = createDefault(
-        'asset_' + assetId,
-        UploadQueueItemType.Asset,
-        UploadQueueItemStatus.Processing,
-        DamAssetType.Image, // only image now
-        QUEUE_CHUNK_SIZE,
-        assetLicence,
-      )
-      queueItem.assetId = assetId
-      createQueue(queueKey)
-      addQueueItem(queueKey, queueItem)
-      recalculateQueueCounts(queueKey)
-      processUpload(queueKey)
-    }
-  }
-
   async function addByFiles(
     queueKey: UploadQueueKey,
     extSystem: IntegerId,
@@ -543,7 +514,6 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
     getQueue,
     getQueueItems,
     addByFiles,
-    addByCopyToLicence,
     queueItemProcessed,
     queueItemFullyProcessed,
     queueItemDuplicate,

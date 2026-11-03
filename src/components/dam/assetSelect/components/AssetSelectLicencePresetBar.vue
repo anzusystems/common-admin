@@ -21,7 +21,9 @@ const { selectedLicenceIds, isModified, isClearable, resetToPreset, removeLicenc
 <template>
   <div class="asset-select-preset-bar d-flex flex-wrap align-center system-border-b px-2 py-1">
     <div class="a-selected-filters my-1">
-      <div class="a-selected-filters__label text-body-small">{{ t('common.assetSelect.filter.licence') }}:</div>
+      <div class="a-selected-filters__label text-body-small">
+        {{ t('common.assetSelect.filter.licence') }}:
+      </div>
       <div class="a-selected-filters__chips">
         <VChip
           v-for="licenceId in selectedLicenceIds"

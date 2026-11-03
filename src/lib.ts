@@ -488,7 +488,6 @@ import type {
   DamAssetLicenceCached,
   DamAssetLicenceExtended,
   DamAssetLicenceFlags,
-  DamAssetLicenceAutoDelete,
 } from '@/types/coreDam/AssetLicence'
 import type { DamAssetListViewResolved } from '@/types/coreDam/AssetListView'
 import type { DamAssetLicenceGroup } from '@/types/coreDam/AssetLicenceGroup'
@@ -600,11 +599,7 @@ import {
   useFetchDamAssetLicenceList,
   fetchDamAssetLicenceList,
 } from '@/components/dam/user/assetLicenceApi'
-import { fetchDamAssetListViewListByIds, useFetchDamAssetListViewList } from '@/components/dam/user/assetListViewApi'
-import { useDamAssetListViewInnerFilter } from '@/components/dam/user/AssetListViewFilter'
-import { useAssetListViewSelectActions } from '@/components/dam/user/assetListViewActions'
-import { useDamCachedAssetLicences } from '@/components/damImage/composables/cachedDamAssetLicences'
-import { useDamAssetAutoDelete } from '@/components/damImage/composables/damAssetAutoDelete'
+import { fetchDamAssetListViewListByIds } from '@/components/dam/user/assetListViewApi'
 import {
   fetchDamAssetLicenceGroupListByIds,
   useFetchDamAssetLicenceGroupList,
@@ -624,10 +619,7 @@ import {
   fetchDamUserList,
 } from '@/components/dam/user/userApi'
 import { useImageActions } from '@/components/damImage/composables/imageActions'
-import {
-  resolveImageSaveErrorMessage,
-  useImageSaveErrorMessage,
-} from '@/components/damImage/composables/imageSaveErrors'
+import { useImageSaveErrorMessage } from '@/components/damImage/composables/imageSaveErrors'
 import { useCommonAdminImageOptions } from '@/components/damImage/composables/commonAdminImageOptions'
 import { defineAuth, ROLE_SUPER_ADMIN } from '@/composables/auth/defineAuth'
 import {
@@ -832,14 +824,9 @@ export {
   useDamAuthorFactory,
   useDamAuthorType,
   useDamDistributionServiceType,
-  useDamAssetListViewInnerFilter,
-  useAssetListViewSelectActions,
-  useDamCachedAssetLicences,
-  useDamAssetAutoDelete,
   useDamAssetLicenceInnerFilter,
   useDamAssetLicenceFilter,
   useImageActions,
-  resolveImageSaveErrorMessage,
   useImageSaveErrorMessage,
   useCommonAdminImageOptions,
   defineAuth,
@@ -1036,7 +1023,6 @@ export {
   type DamAssetLicenceCached,
   type DamAssetLicenceExtended,
   type DamAssetLicenceFlags,
-  type DamAssetLicenceAutoDelete,
   type DamAssetListViewResolved,
   type DamAssetLicenceGroup,
   type DamUserUpdateDto,
@@ -1148,7 +1134,6 @@ export {
   regionToCrop,
   cropToRegion,
   fetchDamAssetListViewListByIds,
-  useFetchDamAssetListViewList,
   fetchDamAssetLicenceListByIds,
   useFetchDamAssetLicenceList,
   fetchDamAssetLicenceList,

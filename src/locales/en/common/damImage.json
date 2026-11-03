@@ -42,7 +42,6 @@
       "ownerImmutable": "The image belongs to another record and its holder can no longer be changed.",
       "ownerConflict": "The image is already assigned to another owner.",
       "imageRemoved": "The image was released in the meantime, pick it again.",
-      "multipleTargets": "A suggestion with a single-use image can only be proposed to one feed.",
       "galleryCopy": "The gallery contains a single-use image and cannot be copied."
     },
     "bulkSave": {
@@ -77,8 +76,7 @@
     "error": "Error",
     "copyAssetId": "Copy asset ID",
     "stillUploadingOrProcessing": "Asset is still uploading or processing by server",
-    "removeFromQueue": "Remove item from queue?",
-    "errorUnableToCopyToLicence": "Error, unable to copy assets to licence"
+    "removeFromQueue": "Remove item from queue?"
   },
   "asset": {
     "model": {
@@ -87,8 +85,7 @@
       "mainFileSingleUse": "Single-use license",
       "usedBy": "Used in",
       "directUseAllowed": "Direct use",
-      "autoDelete": "Automatic deletion",
-      "autoDeleteInDays": "in {days} days"
+      "autoDelete": "Automatic deletion"
     },
     "assetType": {
       "image": "Image",

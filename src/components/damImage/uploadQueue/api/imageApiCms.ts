@@ -58,7 +58,6 @@ export const KNOWN_SINGLE_USE_REASONS = [
   'owner_immutable',
   'image_removed',
   'single_use_copy',
-  'multiple_targets',
   'gallery_copy',
 ] as const
 export type KnownSingleUseReason = (typeof KNOWN_SINGLE_USE_REASONS)[number]
@@ -118,6 +117,12 @@ export interface BulkUpdateImagesResult {
    * retry them", which fails the same way again; the caller must show them once instead.
    */
   batchErrors: ImageSaveErrorInfo[]
+  /**
+   * Errors that are not an identified image save error (403, 500, network). The items of such a chunk
+   * are in `failed` without `errorInfo`; the caller shows these through its default error path, not
+   * as "save again".
+   */
+  unknownErrors: unknown[]
 }
 
 /**
@@ -126,7 +131,9 @@ export interface BulkUpdateImagesResult {
  * damId the error body names (take-over/single-use violation) carries `errorInfo`: that one is the
  * culprit. The rest of the chunk failed only by being in the same request, so a caller offering to
  * drop the offending images must offer the items with `errorInfo` and re-send the others. Chunks are
- * processed sequentially and independently: one failing chunk doesn't stop the following ones.
+ * processed sequentially and independently: one failing chunk doesn't stop the following ones, and the
+ * images of the chunks already saved are never dropped. An error that is not an identified image save
+ * error (403, 500, network) is returned in `unknownErrors` for the caller's error path.
  */
 export const bulkUpdateImages = async (
   client: () => AxiosInstance,
@@ -135,7 +142,8 @@ export const bulkUpdateImages = async (
   const images: ImageAware[] = []
   const failed: BulkUpdateImageFailure[] = []
   const batchErrors: ImageSaveErrorInfo[] = []
-  if (items.length === 0) return { images, failed, batchErrors }
+  const unknownErrors: unknown[] = []
+  if (items.length === 0) return { images, failed, batchErrors, unknownErrors }
 
   const totalCalls = Math.ceil(items.length / BULK_METADATA_LIMIT)
   for (let i = 0; i < totalCalls; i++) {
@@ -150,18 +158,23 @@ export const bulkUpdateImages = async (
       images.push(...(res.data.images as ImageAware[]))
     } catch (e) {
       const errorInfo = extractImageSaveErrorInfo(e)
-      const matchesAnItem = errorInfo && reduced.some((item) => item.dam.damId === errorInfo.damId)
+      if (!errorInfo) {
+        unknownErrors.push(e)
+        reduced.forEach((item, j) => failed.push({ item, index: offset + j }))
+        continue
+      }
+      const matchesAnItem = reduced.some((item) => item.dam.damId === errorInfo.damId)
       reduced.forEach((item, j) => {
         failed.push({
           item,
           index: offset + j,
-          errorInfo: errorInfo && item.dam.damId === errorInfo.damId ? errorInfo : undefined,
+          errorInfo: item.dam.damId === errorInfo.damId ? errorInfo : undefined,
         })
       })
-      if (errorInfo && !matchesAnItem) {
+      if (!matchesAnItem) {
         batchErrors.push(errorInfo)
       }
     }
   }
-  return { images, failed, batchErrors }
+  return { images, failed, batchErrors, unknownErrors }
 }

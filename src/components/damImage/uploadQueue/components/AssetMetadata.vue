@@ -10,7 +10,7 @@ import ACopyText from '@/components/ACopyText.vue'
 import { prettyBytes } from '@/utils/file'
 import AssetMetadataImageAttributes from '@/components/damImage/uploadQueue/components/AssetMetadataImageAttributes.vue'
 import ASystemEntityScope from '@/components/form/ASystemEntityScope.vue'
-import { dateTimePretty } from '@/utils/datetime'
+import { dateDiff, dateNow, dateTimePretty, dateTimeToDate } from '@/utils/datetime'
 import { ADamAssetMetadataValidationScopeSymbol } from '@/components/damImage/uploadQueue/composables/uploadValidations'
 import AuthorRemoteAutocompleteWithCached from '@/components/damImage/uploadQueue/author/AuthorRemoteAutocompleteWithCached.vue'
 import KeywordRemoteAutocompleteWithCached from '@/components/damImage/uploadQueue/keyword/KeywordRemoteAutocompleteWithCached.vue'
@@ -22,7 +22,7 @@ import ARow from '@/components/ARow.vue'
 import ACachedUserChip from '@/components/ACachedUserChip.vue'
 import ACachedChip from '@/components/ACachedChip.vue'
 import { useDamCachedAssetLicences } from '@/components/damImage/composables/cachedDamAssetLicences'
-import { useDamAssetAutoDelete } from '@/components/damImage/composables/damAssetAutoDelete'
+import { useRemainingTime } from '@/composables/datetime/remainingTime'
 import { useDamCachedUsers } from '@/components/damImage/uploadQueue/author/cachedUsers'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import { resolveHolderName } from '@/components/dam/assetSelect/composables/assetSelectDisabledReason'
@@ -95,7 +95,7 @@ const { mainFileSingleUseEnabled, showFileInfoEnabled, editAssetLabel } =
 
 // Editable only for a file the site group's own redaction uploaded into its own upload licence —
 // a take-over copy keeps the flag it arrived with, changing it would break the single-use exclusivity
-// it was copied for (Q15, §9).
+// it was copied for.
 const singleUseEditable = computed(() => {
   if (isUndefined(props.uploadLicence)) return true
   if (!asset.value || asset.value.licence !== props.uploadLicence) return false
@@ -111,7 +111,7 @@ const usedByHolderName = computed(() => {
 
 const { addToCachedAssetLicences, fetchCachedAssetLicences, getCachedAssetLicence, isLoadedCachedAssetLicence } =
   useDamCachedAssetLicences()
-const { autoDeleteAt, remainingDays } = useDamAssetAutoDelete()
+const { remainingTimeLong } = useRemainingTime()
 
 watch(
   () => asset.value?.licence,
@@ -134,13 +134,11 @@ const licenceFlagsKnown = computed(() => isLoadedCachedAssetLicence(asset.value?
 
 const directUseAllowed = computed(() => assetLicence.value?.flags?.directUseAllowed ?? true)
 
-const autoDeleteInDays = computed(() => {
-  const licence = asset.value?.licence
-  const createdAt = asset.value?.createdAt
-  if (isUndefined(licence) || isUndefined(createdAt)) return null
-  const deleteAt = autoDeleteAt(licence, createdAt)
+const autoDeleteIn = computed(() => {
+  const autoDeleteAt = asset.value?.autoDeleteAt
+  if (!autoDeleteAt) return null
 
-  return deleteAt === null ? null : remainingDays(deleteAt)
+  return remainingTimeLong(Math.max(0, dateDiff(dateTimeToDate(autoDeleteAt), dateNow(), 's')))
 })
 </script>
 
@@ -267,17 +265,13 @@ const autoDeleteInDays = computed(() => {
               </VCol>
             </VRow>
             <VRow
-              v-if="autoDeleteInDays !== null"
+              v-if="autoDeleteIn !== null"
               density="compact"
               class="my-2"
             >
               <VCol>
                 <ARow :title="t('common.damImage.asset.model.autoDelete')">
-                  {{
-                    t('common.damImage.asset.model.autoDeleteInDays', {
-                      days: autoDeleteInDays,
-                    })
-                  }}
+                  {{ autoDeleteIn }}
                 </ARow>
               </VCol>
             </VRow>

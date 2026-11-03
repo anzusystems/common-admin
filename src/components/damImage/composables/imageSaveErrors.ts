@@ -15,13 +15,12 @@ const SINGLE_USE_REASON_MESSAGE: Partial<Record<KnownSingleUseReason, string>> =
   invalid_owner: 'common.damImage.image.error.invalidOwner',
   owner_immutable: 'common.damImage.image.error.ownerImmutable',
   image_removed: 'common.damImage.image.error.imageRemoved',
-  multiple_targets: 'common.damImage.image.error.multipleTargets',
   gallery_copy: 'common.damImage.image.error.galleryCopy',
 }
 
 /**
  * Single place turning an `image_single_use_violation`/`image_take_over_failed` 422 or an `image_owner_conflict`
- * 409 into a message — used by every widget that can create/update an `Image` (§6c: this is the last-resort path, the
+ * 409 into a message — used by every widget that can create/update an `Image` (this is the last-resort path, the
  * picker's disabled reasons are meant to prevent most of these before the save even happens).
  *
  * `image_single_use_violation` covers several different problems and only some of them are about one

@@ -98,9 +98,11 @@ export function useAssetSelectPresetControl(selectLicences: IntegerId[], listVie
   }
 
   // Both callers run this; adding and fetching an already cached licence is a no-op.
-  onMounted(async () => {
+  // The preset keys are built from ids only, the licence names are just titles that fill in later, so the
+  // remembered preset applies at once and the list loads once instead of again after the names arrive.
+  onMounted(() => {
     addToCachedAssetLicences(selectLicences)
-    await fetchCachedAssetLicences()
+    fetchCachedAssetLicences()
 
     if (selectedPresetKey.value !== '') return
 

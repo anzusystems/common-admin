@@ -3,7 +3,7 @@ import type { DocId, DocIdNullable, IntegerId } from '@/types/common'
 /**
  * The entity/version that will own this image once saved. Sent as `ownerResourceName/Id` in the
  * create/update payload; the server derives site/siteGroup from it and, for a single-use photo, ties
- * the claim to it. `null` = the entity has no id yet, so a single-use photo cannot be picked at all.
+ * the claim to it. `null` = the entity has no id yet, so there is no owner to send.
  */
 export interface ImageOwner {
   resourceName: string

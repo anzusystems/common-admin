@@ -9,7 +9,6 @@ const mapFullToMinimal = (assetLicence: DamAssetLicenceExtended): DamAssetLicenc
   name: assetLicence.name,
   badge: assetLicence.badge ?? '',
   flags: assetLicence.flags,
-  autoDelete: assetLicence.autoDelete,
 })
 
 const mapIdToMinimal = (id: IntegerId): DamAssetLicenceCached => ({
@@ -17,7 +16,6 @@ const mapIdToMinimal = (id: IntegerId): DamAssetLicenceCached => ({
   name: '',
   badge: '',
   flags: { manualUploadAllowed: false, directUseAllowed: true, singleUseEnforced: false },
-  autoDelete: { active: false, olderThanDays: 0 },
 })
 
 const { cache, toFetch, fetch, immediateFetch, add, addManual, has, get, isLoaded } = defineCached<

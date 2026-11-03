@@ -19,23 +19,15 @@ export interface DamAssetLicenceFlags {
   singleUseEnforced: boolean
 }
 
-export interface DamAssetLicenceAutoDelete {
-  active: boolean
-  olderThanDays: number
-}
-
 /**
- * The licence fields the image select needs on top of the minimal shape: the badge it renders, the flags
- * that decide whether an asset may be used directly, and the retention window it shows on a tile.
+ * The licence fields the image select needs on top of the minimal shape: the badge it renders and the flags
+ * that decide whether an asset may be used directly.
  */
-export type DamAssetLicenceCached = DamAssetLicenceMinimal & {
+export interface DamAssetLicenceSelectFields {
   badge: string
   flags: DamAssetLicenceFlags
-  autoDelete: DamAssetLicenceAutoDelete
 }
 
-export interface DamAssetLicenceExtended extends DamAssetLicence {
-  badge: string
-  flags: DamAssetLicenceFlags
-  autoDelete: DamAssetLicenceAutoDelete
-}
+export type DamAssetLicenceCached = DamAssetLicenceMinimal & DamAssetLicenceSelectFields
+
+export interface DamAssetLicenceExtended extends DamAssetLicence, DamAssetLicenceSelectFields {}

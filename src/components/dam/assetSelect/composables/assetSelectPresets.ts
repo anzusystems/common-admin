@@ -21,6 +21,9 @@ export interface AssetSelectPreset {
   group: AssetSelectPresetGroup
 }
 
+export const showAssetSelectPresets = (selectLicences: IntegerId[], listViews: IntegerId[]): boolean =>
+  selectLicences.length > 1 || listViews.length > 0
+
 export const assetSelectSingleLicenceKey = (licenceId: IntegerId): AssetSelectPresetKey => `licence:${licenceId}`
 
 /**
@@ -105,7 +108,7 @@ export function useAssetSelectPresets(storageKey: string) {
 }
 
 /**
- * Q29: the preset choice is remembered per host configuration, not per component instance. Common-admin has
+ * The preset choice is remembered per host configuration, not per component instance. Common-admin has
  * no notion of "site group", so the sorted `selectLicences`/`listViews` ids stand in as a stable proxy for it.
  */
 export function useAssetSelectPresetStorageKey(selectLicences: IntegerId[], listViews: IntegerId[]): string {

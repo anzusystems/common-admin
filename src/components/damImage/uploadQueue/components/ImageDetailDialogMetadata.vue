@@ -86,7 +86,7 @@ const imageSourceRequired = computed(() => {
 const { getCachedAssetLicence, isLoadedCachedAssetLicence } = useDamCachedAssetLicences()
 
 // Manual override, only for a licence that already allows direct use and isn't the upload licence
-// itself (Q6) — otherwise the copy into the upload licence is mandatory and not user-controlled.
+// itself — otherwise the copy into the upload licence is mandatory and not user-controlled.
 const showTakeOverSwitch = computed(() => {
   if (!isImageCreateUpdateAware(detail.value) || isUndefined(props.uploadLicence)) return false
   const licenceId = detail.value.dam.licenceId

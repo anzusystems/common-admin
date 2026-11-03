@@ -7,6 +7,7 @@ import {
 } from '@/labs/filters/filterFactory'
 import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
 import type { Ref } from 'vue'
+import { ref } from 'vue'
 import type { Pagination } from '@/labs/filters/pagination'
 import type { ValueObjectOption } from '@/types/ValueObject'
 import type { DocId, IntegerId } from '@/types/common'
@@ -42,16 +43,23 @@ export function usePodcastInnerFilter() {
   }
 }
 
-export const usePodcastSelectActions = (licenceId: IntegerId, configName = 'default') => {
+export const usePodcastSelectActions = (licenceIds: IntegerId[], configName = 'default') => {
   const { damClient } = useCommonAdminCoreDamOptions(configName)
-  const { executeFetch } = useFetchDamPodcastList(damClient, licenceId)
+  const fetchers = licenceIds.map((licenceId) => useFetchDamPodcastList(damClient, licenceId))
 
   const fetchItems = async (
     pagination: Ref<Pagination>,
     filterData: FilterData,
     filterConfig: FilterConfig,
   ) => {
-    const podcasts = await executeFetch(pagination, filterData, filterConfig)
+    // A podcast belongs to one licence, so every selected licence is asked; each request gets its own
+    // pagination copy so the parallel responses do not overwrite each other's counts.
+    const lists = await Promise.all(
+      fetchers.map(({ executeFetch }) =>
+        executeFetch(ref({ ...pagination.value }), filterData, filterConfig),
+      ),
+    )
+    const podcasts = lists.flat()
 
     return <ValueObjectOption<DocId>[]>podcasts.map((podcast: DamPodcastAware) => ({
       title: podcast.texts.title,
@@ -60,7 +68,10 @@ export const usePodcastSelectActions = (licenceId: IntegerId, configName = 'defa
   }
 
   const fetchItemsByIds = async (ids: DocId[]) => {
-    const podcasts = await fetchDamPodcastListByIds(damClient, licenceId, ids)
+    const lists = await Promise.all(
+      licenceIds.map((licenceId) => fetchDamPodcastListByIds(damClient, licenceId, ids)),
+    )
+    const podcasts = lists.flat()
 
     return <ValueObjectOption<DocId>[]>podcasts.map((podcast: DamPodcastAware) => ({
       title: podcast.texts.title,

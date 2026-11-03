@@ -12,6 +12,7 @@ import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/compo
 import { useSidebar } from '@/components/dam/assetSelect/composables/assetSelectFilterSidebar'
 import { useI18n } from 'vue-i18n'
 import type { IntegerId } from '@/types/common'
+import { showAssetSelectPresets } from '@/components/dam/assetSelect/composables/assetSelectPresets'
 import { useAssetSelectPresetControl } from '@/components/dam/assetSelect/composables/assetSelectPresetControl'
 
 const props = withDefaults(
@@ -39,7 +40,7 @@ const { mdAndDown } = useDisplay()
 const { selectLicences, listViews } = props
 
 const { items: presetItems, selectedPresetKey, applyPreset } = useAssetSelectPresetControl(selectLicences, listViews)
-const showPresetSelect = computed(() => selectLicences.length > 1 || listViews.length > 0)
+const showPresetSelect = computed(() => showAssetSelectPresets(selectLicences, listViews))
 const { closeSidebarLeft } = useSidebar()
 const { fetchAssetListDebounced, resetAssetList, pagination } = useAssetSelectActions()
 

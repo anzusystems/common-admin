@@ -28,7 +28,7 @@ import {
 } from '@/components/damImage/uploadQueue/api/damAssetApi'
 import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
-import { applyImageOwner, type ImageOwner, type ImageStoreItem } from '@/types/ImageAware'
+import { applyImageOwner, type ImageAware, type ImageOwner, type ImageStoreItem } from '@/types/ImageAware'
 import { generateUUIDv1 } from '@/utils/generator'
 import ASortableListEditor from '@/labs/listEditor/ASortableListEditor.vue'
 import AImageWidgetSimple from '@/components/damImage/AImageWidgetSimple.vue'
@@ -229,8 +229,8 @@ const assetSelectConfirmMap = async (
     const assetDetails = (
       await Promise.all(
         [...idsByLicence].map(([licenceId, licenceIds]) =>
-          fetchAssetListByIds(damClient, endPointAsset, licenceIds, licenceId)
-        )
+          fetchAssetListByIds(damClient, endPointAsset, licenceIds, licenceId),
+        ),
       )
     ).flat()
     if (customAssetSelectMetadataToImageMap) {
@@ -406,14 +406,21 @@ const batchErrors = ref<ImageSaveErrorInfo[]>([])
 // A failed PUT chunk is atomic, so it reports every image in it — but only the one the error body
 // names is to blame. Dropping the whole chunk would detach up to 19 saveable images, so removal is
 // offered for the named ones only; the rest is simply re-sent by the next save.
-const failedCulprits = computed(() => failedImages.value.filter((failure) => isDefined(failure.errorInfo)))
+const failedCulprits = computed(() =>
+  failedImages.value.filter((failure) => isDefined(failure.errorInfo)),
+)
 
-const failedUnidentified = computed(() => failedImages.value.filter((failure) => isUndefined(failure.errorInfo)))
+const failedUnidentified = computed(() =>
+  failedImages.value.filter((failure) => isUndefined(failure.errorInfo)),
+)
 
-const failureMessage = (failure: BulkUpdateImageFailure) => resolveImageSaveErrorMessage(failure.errorInfo, t)
+const failureMessage = (failure: BulkUpdateImageFailure) =>
+  resolveImageSaveErrorMessage(failure.errorInfo, t)
 
 const batchErrorMessages = computed(() =>
-  batchErrors.value.map((errorInfo) => resolveImageSaveErrorMessage(errorInfo, t)).filter(isDefined)
+  batchErrors.value
+    .map((errorInfo) => resolveImageSaveErrorMessage(errorInfo, t))
+    .filter(isDefined),
 )
 
 const saveImages = async () => {
@@ -431,12 +438,16 @@ const saveImages = async () => {
   failedImages.value = []
   batchErrors.value = []
   try {
-    const assetUpdateItems: AssetAuthorsItems = []
+    const pendingAuthors = new Map<number, { assetId: DocId; damId: DocId; authors: DocId[] }>()
     const imagesRaw = toRaw(images.value)
-    for (const image of imagesRaw) {
+    for (const [index, image] of imagesRaw.entries()) {
       applyImageOwner(image, props.owner)
       if (authorEnabled.value && image.showDamAuthors && image.assetId) {
-        assetUpdateItems.push({ id: image.assetId, authors: image.damAuthors })
+        pendingAuthors.set(index, {
+          assetId: image.assetId,
+          damId: image.dam.damId,
+          authors: image.damAuthors,
+        })
       }
       if (authorEnabled.value && image.showDamAuthors && image.damAuthors.length > 0) {
         const authorsRes = await fetchAuthorListByIds(
@@ -447,33 +458,88 @@ const saveImages = async () => {
         image.texts.source = authorsRes.map((author) => author.name).join(', ')
       }
     }
-    if (assetUpdateItems.length) {
-      await bulkUpdateAssetsAuthors(damClient, endPointAsset, assetUpdateItems)
+    // Authors go to the saved image's asset, which on take-over is the copy, not the picked source.
+    const saveDamAuthors = async (savedByIndex: Map<number, ImageAware>) => {
+      const assetUpdateItems: AssetAuthorsItems = []
+      try {
+        const takenOverIds: IdsGroupedByLicences = new Map()
+        for (const [index, pending] of pendingAuthors) {
+          const savedItem = savedByIndex.get(index)
+          if (!savedItem || savedItem.dam.damId === pending.damId) continue
+          const group = takenOverIds.get(savedItem.dam.licenceId)
+          if (group) {
+            group.push(savedItem.dam.damId)
+          } else {
+            takenOverIds.set(savedItem.dam.licenceId, [savedItem.dam.damId])
+          }
+        }
+        const takenOverAssets = takenOverIds.size
+          ? await fetchAssetListByFileIdsMultipleLicences(damClient, endPointAsset, takenOverIds)
+          : []
+        for (const [index, pending] of pendingAuthors) {
+          const savedItem = savedByIndex.get(index)
+          if (!savedItem) continue
+          if (savedItem.dam.damId === pending.damId) {
+            assetUpdateItems.push({ id: pending.assetId, authors: pending.authors })
+            continue
+          }
+          const targetAsset = takenOverAssets.find(
+            (asset) => asset.mainFile?.id === savedItem.dam.damId,
+          )
+          if (!targetAsset) {
+            throw new Error(`Asset of taken-over file ${savedItem.dam.damId} was not found`)
+          }
+          assetUpdateItems.push({ id: targetAsset.id, authors: pending.authors })
+        }
+        if (assetUpdateItems.length) {
+          await bulkUpdateAssetsAuthors(damClient, endPointAsset, assetUpdateItems)
+        }
+      } catch (authorError) {
+        if (!showErrorsDefault(authorError)) showUnknownError()
+      }
     }
     const {
       images: resItems,
       failed,
       batchErrors: newBatchErrors,
+      unknownErrors,
     } = await imageApi.bulkUpdateImages(imageClient, imagesRaw)
-    // Partial failures are surfaced, never applied silently (Q11) — the user either removes the
+    // Partial failures are surfaced, never applied silently — the user either removes the
     // offending images or explicitly confirms "save without N", which retries with them dropped.
     if (failed.length > 0) {
-      failedImages.value = failed
-      batchErrors.value = newBatchErrors
       // Chunks that did succeed already have real ids — keep them, or a retry would re-create them
       // as duplicates instead of updating.
       if (resItems.length > 0) {
-        const savedByDamId = new Map(resItems.map((resItem) => [resItem.dam.damId, resItem]))
+        const failedIndexes = new Set(failed.map((failure) => failure.index))
+        const savedIndexes = [...imagesRaw.keys()].filter((index) => !failedIndexes.has(index))
+        const savedByIndex = new Map(
+          resItems.map((resItem, index) => [savedIndexes[index], resItem]),
+        )
+        await saveDamAuthors(savedByIndex)
+        const savedByKey = new Map(
+          [...savedByIndex].map(([index, resItem]) => [imagesRaw[index].key, resItem]),
+        )
+        // Authors of saved images are written now; a kept assetId would make the retry write them
+        // again, and on take-over to the picked source instead of the copy.
         const merged = imageStore.images.map((storeItem) => {
-          const saved = savedByDamId.get(storeItem.dam.damId)
-          return saved ? { ...storeItem, ...saved } : storeItem
+          const saved = savedByKey.get(storeItem.key)
+          return saved ? { ...storeItem, ...saved, assetId: undefined } : storeItem
         })
         imageStore.setImages(merged)
         listEditor.value?.commit(merged)
       }
+      if (unknownErrors.length > 0) {
+        // No "save again" banner: it would fail the same way again. Every failed chunk reports the same
+        // outage, so one alert stands for all of them.
+        if (!showErrorsDefault(unknownErrors[0])) showUnknownError()
+        return false
+      }
+      failedImages.value = failed
+      batchErrors.value = newBatchErrors
       showErrorT('common.damImage.image.bulkSave.partialFailure')
       return false
     }
+    await saveDamAuthors(new Map(resItems.map((resItem, index) => [index, resItem])))
     const ids: IntegerId[] = []
     const items = resItems.map((resItem) => {
       ids.push(resItem.id)
@@ -493,10 +559,8 @@ const saveImages = async () => {
       return true
     }
 
-    const getUpdatedItem = async (item: ImageStoreItem): Promise<ImageStoreItem> => {
-      const matchedImage = imageStore.images.find(
-        (storeItem) => storeItem.dam.damId === item.dam.damId,
-      )
+    const getUpdatedItem = async (item: ImageStoreItem, index: number): Promise<ImageStoreItem> => {
+      const matchedImage = imagesRaw[index]
 
       return {
         ...item,
@@ -508,7 +572,7 @@ const saveImages = async () => {
       }
     }
 
-    const updatedItems = await Promise.all(items.map((item) => getUpdatedItem(item)))
+    const updatedItems = await Promise.all(items.map((item, index) => getUpdatedItem(item, index)))
     imageStore.setImages(updatedItems)
     // Rows passed explicitly: setImages just replaced their keys, bare commit() would read the
     // not-yet-rerendered prop.
@@ -677,7 +741,9 @@ onMounted(() => {
           :key="failure.item.dam.damId"
         >
           {{ failure.item.dam.damId }}
-          <template v-if="failureMessage(failure)"> — {{ failureMessage(failure) }} </template>
+          <template v-if="failureMessage(failure)">
+            — {{ failureMessage(failure) }}
+          </template>
         </li>
       </ul>
       <div
@@ -688,7 +754,7 @@ onMounted(() => {
           t(
             'common.damImage.image.bulkSave.unidentifiedFailure',
             { count: failedUnidentified.length },
-            failedUnidentified.length
+            failedUnidentified.length,
           )
         }}
       </div>
@@ -708,7 +774,11 @@ onMounted(() => {
         @click="onSaveWithoutFailed"
       >
         {{
-          t('common.damImage.image.bulkSave.saveWithoutFailed', { count: failedCulprits.length }, failedCulprits.length)
+          t(
+            'common.damImage.image.bulkSave.saveWithoutFailed',
+            { count: failedCulprits.length },
+            failedCulprits.length,
+          )
         }}
       </VBtn>
     </VAlert>

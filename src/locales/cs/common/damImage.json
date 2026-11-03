@@ -42,7 +42,6 @@
       "ownerImmutable": "Obrázek patří jinému záznamu a jeho držitele už nelze změnit.",
       "ownerConflict": "Obrázek je už přiřazen jinému vlastníkovi.",
       "imageRemoved": "Obrázek byl mezitím uvolněn, vyberte ho znovu.",
-      "multipleTargets": "Návrh s jednorázovým obrázkem lze navrhnout jen do jednoho feedu.",
       "galleryCopy": "Galerie obsahuje jednorázový obrázek a nelze ji kopírovat."
     },
     "bulkSave": {
@@ -79,8 +78,7 @@
     "error": "Chyba",
     "copyAssetId": "Kopírovať asset ID",
     "stillUploadingOrProcessing": "Asset sa stále nahráva alebo spracováva serverom",
-    "removeFromQueue": "Ostrániť z fronty nahrávania?",
-    "errorUnableToCopyToLicence": "Chyba, nie je možné kopírovať assety do licencie"
+    "removeFromQueue": "Ostrániť z fronty nahrávania?"
   },
   "asset": {
     "model": {
@@ -89,7 +87,6 @@
       "mainFileSingleUse": "Jednorazová licencia",
       "directUseAllowed": "Přímé použití",
       "autoDelete": "Automatické smazání",
-      "autoDeleteInDays": "za {days} dní",
       "usedBy": "Použito v"
     },
     "assetType": {

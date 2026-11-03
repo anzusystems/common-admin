@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { applyImageOwner, type ImageAware, type ImageCreateUpdateAware, type ImageOwner } from '@/types/ImageAware'
-import { type AssetSelectHolder, holdersEqual } from '@/types/coreDam/AssetSelect'
+import type { AssetSelectHolder } from '@/types/coreDam/AssetSelect'
+import { resolveSingleUseReason } from '@/components/dam/assetSelect/composables/assetSelectDisabledReason'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import { fetchAssetByFileId } from '@/components/damImage/uploadQueue/api/damAssetApi'
 import { cloneDeep, isDocId, isNull, isString } from '@/utils/common'
@@ -70,15 +71,7 @@ const extractUUID = (url: string): string | undefined => {
 const validateAssetData = (asset: AssetDetailItemDto, licences: IntegerId[]) => {
   const allowedLicence = licences.some((licence) => licence === asset.licence) || asset.licence === props.uploadLicence
   if (!allowedLicence) return false
-  if (asset.mainFileSingleUse !== true) return true
-  if (!props.singleUseAllowed) return false
-  if (isNull(props.holder)) return true
-  const holderResourceName = asset.mainFile?.fileAttributes.usedByHolderName ?? ''
-  const holderResourceId = asset.mainFile?.fileAttributes.usedByHolderId ?? ''
-  return (
-    holderResourceName === '' ||
-    holdersEqual(props.holder, { resourceName: holderResourceName, resourceId: holderResourceId })
-  )
+  return resolveSingleUseReason(asset.mainFile, props) === null
 }
 
 const validators = useValidate()

@@ -57,7 +57,7 @@ const colProps = (name: keyof typeof filterConfig.fields) => {
 }
 
 const assetSelectStore = useAssetSelectStore()
-const { selectedSelectConfig, assetType } = storeToRefs(assetSelectStore)
+const { selectedSelectConfig, selectedLicenceIds, assetType } = storeToRefs(assetSelectStore)
 
 // Every licence of one search shares an ext system (LicenceCollectionSingleExtSystem), so the currently
 // active configuration is representative of the whole selection for these ext-system-scoped filters.
@@ -149,8 +149,8 @@ watch(extSystem, (newValue, oldValue) => {
       v-bind="colProps('podcastIds')"
     >
       <FilterPodcastRemoteAutocomplete
-        :key="selectedLicenceId"
-        :licence-id="selectedLicenceId ?? 0"
+        :key="selectedLicenceIds.join('-')"
+        :licence-ids="selectedLicenceIds"
         name="podcastIds"
       />
     </VCol>
