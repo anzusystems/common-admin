@@ -31,20 +31,22 @@ describe('collabRoom.fetchRoomInfo', () => {
 })
 
 describe('collabInit with a beforeReconnect that rejects', () => {
-  it('connect_error still reconnects and does not leak the rejection', async () => {
+  it('a refusal does not leak the rejection and does not connect with what failed to refresh', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
     beforeReconnect.mockRejectedValueOnce(new Error('refresh failed'))
-    await expect(handlers.connect_error!(new Error('jwt expired'))).resolves.toBeUndefined()
-    expect(socket.connect).toHaveBeenCalledTimes(1)
+    expect(() => handlers.connect_error!(new Error('jwt expired'))).not.toThrow()
+    await vi.waitFor(() => expect(beforeReconnect).toHaveBeenCalledTimes(1))
+    expect(socket.connect).not.toHaveBeenCalled()
   })
 
-  it('connect still announces the reconnect so rooms are rejoined', async () => {
+  it('connect announces the reconnect so rooms are rejoined, without asking beforeReconnect', () => {
     const reconnect = vi.fn()
     const off = useCollabReconnectEventBus().on(reconnect)
-    beforeReconnect.mockRejectedValueOnce(new Error('refresh failed'))
     handlers.disconnect!('transport close')
     socket.connected = true
-    await expect(handlers.connect!()).resolves.toBeUndefined()
+    handlers.connect!()
     expect(reconnect).toHaveBeenCalledTimes(1)
+    expect(beforeReconnect).not.toHaveBeenCalled()
     off()
   })
 })

@@ -1,4 +1,5 @@
 import type { io } from 'socket.io-client'
+import type { CollabReconnectVerdictType } from '@/domains/collab/types/Collab'
 import type { App } from 'vue'
 import Acl from '@/domains/auth/components/Acl.vue'
 import AChipNoLink from '@/domains/ui/components/AChipNoLink.vue'
@@ -173,7 +174,18 @@ export type CommonAdminCoreDamOptions =
 export type CommonAdminCollabOptions = {
   enabled: boolean
   socketUrl: string
-  beforeReconnect: () => Promise<void>
+  /**
+   * Called after the server refused the connection, not after a transport error (socket.io reconnects from
+   * those on its own). Refresh the session here and answer whether to connect again; resolving `void` means
+   * `ready`. Anything else, a rejection or no answer within 20 s means `retryLater`.
+   */
+  beforeReconnect: () => Promise<void | CollabReconnectVerdictType>
+  /**
+   * Synchronous: do the session cookies still belong to the user the page was loaded for? Asked before each of
+   * socket.io's own reconnection attempts, which `beforeReconnect` does not see; `false` stops them
+   * (`identityChanged`). `undefined` when it cannot tell. The server checks the same, this only saves the attempt.
+   */
+  isSameIdentity?: () => boolean | undefined
   /** `io` from `socket.io-client`. Passed in, so that only an admin with collaboration depends on the package. */
   io: typeof io | undefined
 }

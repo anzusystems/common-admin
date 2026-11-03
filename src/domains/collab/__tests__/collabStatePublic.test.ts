@@ -5,15 +5,24 @@ import { useCollabState } from '@/lib'
 import type * as lib from '@/lib'
 
 describe('useCollabState', () => {
-  it('gives an admin the reconnect flag, the room info, the field buffer and gatherBufferData', () => {
+  it('gives an admin the reconnect flag and state, the retry, the room info, the field buffer and gatherBufferData', () => {
     expect(Object.keys(useCollabState()).sort()).toEqual([
+      'collabConnectionState',
       'collabFieldDataBufferState',
       'collabReconnecting',
       'collabRoomInfoState',
       'gatherBufferData',
+      'reconnectCollab',
     ])
     // @ts-expect-error -- the socket is internal
     expect(useCollabState().collabSocket).toBeUndefined()
+  })
+
+  it('lets an admin read the connection state, not set it', () => {
+    const { collabConnectionState } = useCollabState()
+    // @ts-expect-error -- readonly
+    collabConnectionState.value = 'rejected'
+    expect(collabConnectionState.value).toBe('connected')
   })
 
   it('keeps the socket.io protocol types out of the public entry', () => {

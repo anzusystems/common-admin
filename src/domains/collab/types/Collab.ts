@@ -19,6 +19,34 @@ export const CollabStatus = {
 } as const
 export type CollabStatusType = (typeof CollabStatus)[keyof typeof CollabStatus]
 
+/**
+ * What `beforeReconnect` tells the library after the server refused the connection:
+ * - `ready`: connect again (a resolved `void` means the same),
+ * - `retryLater`: no point now (e.g. the token refresh failed on the network); the library retries on its own,
+ * - `sessionEnded`, `identityChanged`: no point until the user acts.
+ */
+export const CollabReconnectVerdict = {
+  Ready: 'ready',
+  RetryLater: 'retryLater',
+  SessionEnded: 'sessionEnded',
+  IdentityChanged: 'identityChanged',
+} as const
+export type CollabReconnectVerdictType = (typeof CollabReconnectVerdict)[keyof typeof CollabReconnectVerdict]
+
+/**
+ * `reconnecting` and `waitingForNetwork` recover on their own; `sessionEnded`, `identityChanged` and `rejected`
+ * wait for the user (`reconnectCollab()` or a reload).
+ */
+export const CollabConnectionState = {
+  Connected: 'connected',
+  Reconnecting: 'reconnecting',
+  WaitingForNetwork: 'waitingForNetwork',
+  SessionEnded: 'sessionEnded',
+  IdentityChanged: 'identityChanged',
+  Rejected: 'rejected',
+} as const
+export type CollabConnectionStateType = (typeof CollabConnectionState)[keyof typeof CollabConnectionState]
+
 export interface CollabRoomInfo {
   name: CollabRoom
   moderator: CollabUserIdNullable

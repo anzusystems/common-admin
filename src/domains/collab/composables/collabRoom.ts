@@ -59,8 +59,14 @@ export function useCollabRoom(
   fetchCachedUsers: (() => unknown) | undefined = undefined,
   disableAutoUnsubscribe = false
 ) {
-  const { collabSocket, collabRoomInfoState, collabFieldDataBufferState, collabFieldLocksState, claimRoomInfoWrite } =
-    useCollabStateInternal()
+  const {
+    collabSocket,
+    collabRoomInfoState,
+    collabFieldDataBufferState,
+    collabFieldLocksState,
+    claimRoomInfoWrite,
+    collabConnectionHopeless,
+  } = useCollabStateInternal()
 
   const reconnectEventBus = useCollabReconnectEventBus()
   const unsubscribeCollabReconnectListener = ref<undefined | Fn>()
@@ -260,6 +266,8 @@ export function useCollabRoom(
   ): Promise<CollabAccessRoomStatusType> => {
     return new Promise((resolve, reject) => {
       if (!collabOptions.value.enabled || isUndefined(collabSocket.value)) return reject(CollabAccessRoomStatus.Failed)
+      // Fail now rather than after the acknowledgement timeout: the caller can offer the record read-only.
+      if (collabConnectionHopeless()) return reject(CollabAccessRoomStatus.Failed)
       const isNewestWrite = claimRoomInfoWrite(room)
       collabSocket.value
         ?.timeout(ackTimeout)
@@ -334,7 +342,7 @@ export function useCollabRoom(
 
   const requestToJoinCollabRoom = (): Promise<CollabRequestToJoinStatusType> => {
     return new Promise((resolve, reject) => {
-      if (!collabOptions.value.enabled || isUndefined(collabSocket.value)) {
+      if (!collabOptions.value.enabled || isUndefined(collabSocket.value) || collabConnectionHopeless()) {
         return reject(CollabRequestToJoinStatus.Failed)
       }
       collabSocket.value
@@ -363,7 +371,7 @@ export function useCollabRoom(
 
   const requestToTakeModeration = async (): Promise<CollabRequestToTakeModerationStatusType> => {
     return new Promise((resolve, reject) => {
-      if (!collabOptions.value.enabled || isUndefined(collabSocket.value)) {
+      if (!collabOptions.value.enabled || isUndefined(collabSocket.value) || collabConnectionHopeless()) {
         return reject(CollabRequestToTakeModerationStatus.Failed)
       }
       collabSocket.value
