@@ -53,7 +53,7 @@
     "lib:build": "run-s --print-name lint:tsc build",
     "ci": "run-p --aggregate-output --continue-on-error --print-label --silent lint:tsc format:check lint:oxlint lint:eslint lint:stylelint",
     "lint": "[ \"$*\" = \"--fix\" ] && yarn lint:fix || yarn ci",
-    "lint:fix": "run-s --print-name lint:tsc lint:oxlint:fix lint:eslint:fix lint:stylelint:fix format",
+    "lint:fix": "run-s --continue-on-error --print-name lint:tsc lint:oxlint:fix lint:eslint:fix lint:stylelint:fix format",
     "lint:tsc": "NODE_OPTIONS=--max-old-space-size=4096 vue-tsc --build",
     "lint:tsc:test": "NODE_OPTIONS=--max-old-space-size=4096 vue-tsc --build tsconfig.test.json",
     "lint:eslint": "eslint",

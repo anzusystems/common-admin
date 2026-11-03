@@ -81,23 +81,18 @@ const computedTotalCountText = computed(() => {
   return pagination.value.totalCount
 })
 
+// One watcher for both. A restore after Close sets the page and the rows per page together, and a separate
+// rows watcher put that page back to 1. Rows per page changed alone (the toggle) still start on page 1.
 watch(
-  () => pagination.value.rowsPerPage,
-  (newValue, oldValue) => {
-    if (newValue !== oldValue) {
+  [() => pagination.value.page, () => pagination.value.rowsPerPage],
+  ([page, rowsPerPage], [oldPage, oldRowsPerPage]) => {
+    if (rowsPerPage !== oldRowsPerPage && page === oldPage && page !== 1) {
+      // Runs this watcher again for the page, which stores it and emits once.
       pagination.value.page = 1
-      emit('change')
+      return
     }
-  }
-)
-
-watch(
-  () => pagination.value.page,
-  (newValue, oldValue) => {
-    if (newValue !== oldValue) {
-      setStoredPage(pageStoreKey.value, newValue)
-      emit('change')
-    }
+    setStoredPage(pageStoreKey.value, page, rowsPerPage)
+    emit('change')
   }
 )
 

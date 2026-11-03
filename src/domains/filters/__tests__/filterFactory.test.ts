@@ -42,6 +42,8 @@ beforeEach(() => {
   vi.restoreAllMocks()
   localStorage.clear()
   window.location.hash = ''
+  // The page store is a module singleton: a view an earlier case stored would decide this case's restore.
+  useDatatablePageStore().setStoredPage(PAGE_STORE_KEY, 1, undefined, null)
   vi.spyOn(console, 'error').mockImplementation(() => {})
 })
 
@@ -175,6 +177,161 @@ describe('loadStoredFilters — the remembered page is keyed per table', () => {
     loadStoredFilters(pagination)
 
     expect(pagination.value.page).toBe(4)
+  })
+})
+
+// The pagination stores the page only when its watcher sees a change. A list paged to 3, left through the menu
+// and reopened there on page 1 kept 3, so Close from a record opened on page 1 returned to page 3.
+// A submit right after a restore of page 3 left the watcher seeing 1 → 1 the same way.
+describe('the remembered page is the one the list shows', () => {
+  const { setStoredPage, setPreservePage, consumeStoredPage } = useDatatablePageStore()
+
+  beforeEach(() => {
+    consumeStoredPage(PAGE_STORE_KEY) // drain a flag left by a previous case
+  })
+
+  it('replaces an earlier page when the list opens without stored filters', () => {
+    setStoredPage(PAGE_STORE_KEY, 3)
+
+    const { pagination, loadStoredFilters } = setup()
+    expect(loadStoredFilters(pagination)).toBe(false)
+    setPreservePage()
+
+    expect(consumeStoredPage(PAGE_STORE_KEY)).toBe(1)
+  })
+
+  it('replaces an earlier page when the list opens with stored filters', () => {
+    setStoredPage(PAGE_STORE_KEY, 3)
+    localStorage.setItem('tableFilter_sys_subj', 'name=stored~')
+
+    const { pagination, loadStoredFilters } = setup()
+    expect(loadStoredFilters(pagination)).toBe(true)
+    setPreservePage()
+
+    expect(consumeStoredPage(PAGE_STORE_KEY)).toBe(1)
+  })
+
+  it('replaces an earlier page when a submit or a reset goes back to page 1', () => {
+    const { pagination, submitFilter, resetFilter } = setup()
+
+    setStoredPage(PAGE_STORE_KEY, 3)
+    submitFilter(pagination)
+    setPreservePage()
+    expect(consumeStoredPage(PAGE_STORE_KEY)).toBe(1)
+
+    setStoredPage(PAGE_STORE_KEY, 3)
+    resetFilter(pagination)
+    setPreservePage()
+    expect(consumeStoredPage(PAGE_STORE_KEY)).toBe(1)
+  })
+
+  // A select dialog in an editor shares its subject with the list the editor was opened from.
+  // A search in it wrote page 1 into the list's key, so Close from the editor reopened the list on page 1.
+  it('keeps the page under its own key without turning on local storage', () => {
+    setStoredPage(PAGE_STORE_KEY, 3)
+
+    const dialog = setup({ storeFiltersLocalStorage: false, pageStoreKey: 'subjectSelect_sys_subj' })
+    dialog.submitFilter(dialog.pagination)
+    setPreservePage()
+
+    expect(consumeStoredPage(PAGE_STORE_KEY)).toBe(3)
+    expect(localStorage.getItem('tableFilter_sys_subj')).toBeNull()
+  })
+
+  // Page 3 at 10 rows reopened at the default 25 rows showed rows 51-75 instead of 21-30.
+  it('restores the rows per page together with the page', () => {
+    setStoredPage(PAGE_STORE_KEY, 3, 10)
+    setPreservePage()
+    const restored = setup()
+    restored.loadStoredFilters(restored.pagination)
+
+    localStorage.setItem('tableFilter_sys_subj', 'name=stored~')
+    setStoredPage(PAGE_STORE_KEY, 3, 10, null)
+    setPreservePage()
+    const restoredWithFilters = setup()
+    restoredWithFilters.loadStoredFilters(restoredWithFilters.pagination)
+
+    expect(restored.pagination.value).toMatchObject({ page: 3, rowsPerPage: 10 })
+    expect(restoredWithFilters.pagination.value).toMatchObject({ page: 3, rowsPerPage: 10 })
+  })
+
+  it('leaves the rows per page alone without a Close to answer', () => {
+    setStoredPage(PAGE_STORE_KEY, 3, 10)
+
+    const { pagination, loadStoredFilters } = setup()
+    loadStoredFilters(pagination)
+
+    expect(pagination.value).toMatchObject({ page: 1, rowsPerPage: 25 })
+  })
+
+  it('keeps the page it restored for the next Close', () => {
+    setStoredPage(PAGE_STORE_KEY, 3)
+    setPreservePage()
+
+    const { pagination, loadStoredFilters } = setup()
+    loadStoredFilters(pagination)
+    setPreservePage()
+
+    expect(consumeStoredPage(PAGE_STORE_KEY)).toBe(3)
+  })
+})
+
+// Many lists keep neither filter nor sort (no hash, no local storage, a filter store made per mount).
+// Close brought them back with both reset but on the remembered page, i.e. page 3 of other rows.
+describe('the remembered page belongs to the filter and sort it was shown in', () => {
+  const { setStoredPage, setPreservePage } = useDatatablePageStore()
+  const keepsNothing = { storeFiltersLocalStorage: false, populateUrlParams: false }
+
+  const leaveOnPage3 = (prepare: (list: ReturnType<typeof setup>) => void) => {
+    const list = setup(keepsNothing)
+    prepare(list)
+    list.submitFilter(list.pagination)
+    setStoredPage(PAGE_STORE_KEY, 3) // the pager pages on in that view
+    setPreservePage()
+  }
+
+  it('does not restore the page into a filter that came back reset', () => {
+    leaveOnPage3((list) => (list.filterData.name = 'abc'))
+
+    const back = setup(keepsNothing)
+    back.loadStoredFilters(back.pagination)
+
+    expect(back.pagination.value.page).toBe(1)
+  })
+
+  it('does not restore the page into a sort that came back reset', () => {
+    leaveOnPage3((list) => (list.pagination.value.sortBy = { key: 'name', order: SortOrder.Asc }))
+
+    const back = setup(keepsNothing)
+    back.loadStoredFilters(back.pagination)
+
+    expect(back.pagination.value.page).toBe(1)
+  })
+
+  // Lists with a hash or local storage restore their view themselves. Many switch the sort in `getList` after
+  // a reset stored the view (cms keywords, persons, pages), and the check turned a correct restore into page 1.
+  it('restores the page of a list that keeps its view, whatever view was stored', () => {
+    const list = setup()
+    list.pagination.value.sortBy = { key: 'name', order: SortOrder.Asc }
+    list.resetFilter(list.pagination)
+    list.pagination.value.sortBy = { key: 'id', order: SortOrder.Desc } // what its `getList` switches to
+    setStoredPage(PAGE_STORE_KEY, 3)
+    setPreservePage()
+
+    const back = setup()
+    back.loadStoredFilters(back.pagination)
+
+    expect(back.pagination.value.page).toBe(3)
+  })
+
+  it('restores the page when the list comes back to the same filter and sort', () => {
+    leaveOnPage3((list) => (list.filterData.name = 'abc'))
+
+    const back = setup(keepsNothing)
+    back.filterData.name = 'abc' // a module-level filter store keeps it
+    back.loadStoredFilters(back.pagination)
+
+    expect(back.pagination.value.page).toBe(3)
   })
 })
 

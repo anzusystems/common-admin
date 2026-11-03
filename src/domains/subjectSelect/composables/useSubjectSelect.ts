@@ -8,6 +8,7 @@ import { type Pagination, usePagination } from '@/domains/api/composables/pagina
 import type { FetchListParams } from '@/domains/api/composables/useApiFetchList'
 import { useDebounceFn } from '@vueuse/core'
 import { isNull } from '@/shared/utils/common'
+import { datatablePageKey } from '@/domains/system/store/datatablePageStore'
 
 export function useSubjectSelect<TItem>(
   datatableConfig: any,
@@ -38,6 +39,8 @@ export function useSubjectSelect<TItem>(
   const { resetFilter, submitFilter } = useFilterHelpers(filterData, filterConfig, {
     storeFiltersLocalStorage: false,
     populateUrlParams: false,
+    // Its own page key: a dialog in an editor shared the list's, and Close from the editor reopened the list there.
+    pageStoreKey: 'subjectSelect_' + datatablePageKey(system, subject),
   })
   const { showErrorsDefault } = useAlerts()
 

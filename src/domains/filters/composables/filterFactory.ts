@@ -281,6 +281,9 @@ export function useFilterClearHelpers<
 export interface FilterHelpersMoreOptions {
   storeFiltersLocalStorage: string | boolean // false to disable, string to override store key
   populateUrlParams: boolean
+  // Keys the remembered page without turning on local storage. A select dialog sharing its subject with a list
+  // sets its own, so searching or paging in it does not change the page Close returns that list to.
+  pageStoreKey?: string
 }
 
 const FilterHelpersMoreOptionsDefault = {
@@ -309,14 +312,39 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
 
   // The page key exists even when filters are not persisted.
   // A string override distinguishes tables sharing a subject.
-  const pageStoreKey = isString(options.storeFiltersLocalStorage)
-    ? options.storeFiltersLocalStorage
-    : datatablePageKey(filterConfig.general.system, filterConfig.general.subject)
+  const pageStoreKey =
+    options.pageStoreKey ??
+    (isString(options.storeFiltersLocalStorage)
+      ? options.storeFiltersLocalStorage
+      : datatablePageKey(filterConfig.general.system, filterConfig.general.subject))
   // Provided so `ADatatablePagination` picks it up. Guarded because
   // the composable may run outside setup, where Vue would warn.
   if (getCurrentInstance()) {
     provide(DatatablePageStoreKey, pageStoreKey)
   }
+  const { consumeStoredPage, getStoredRowsPerPage, getStoredView, setStoredPage } = useDatatablePageStore()
+  // The filter and sort a page is shown in. Stored on load, submit and reset, which every change of them goes through.
+  const viewOf = (sortBy: DatatableSortBy) => encodeFilterHash(getFilterDataForStoring(), sortBy)
+  // `ADatatablePagination` stores the page only when its watcher sees a change. A list that opens on page 1,
+  // or returns to it within the tick that restored another page, would keep the older page for the next Close.
+  const rememberShownPage = (pagination: Ref<Pagination>) =>
+    setStoredPage(pageStoreKey, pagination.value.page, pagination.value.rowsPerPage, viewOf(pagination.value.sortBy))
+  // The page Close kept. A list that keeps neither filter nor sort (no hash, no local storage) comes back with
+  // both reset, and its page 3 would show other rows, so its page comes back only into the view it was shown in.
+  // Not checked for other lists: they restore their view themselves, and many adjust the sort or a filter
+  // in `getList` after a submit or reset stored the view, which would turn a correct restore into page 1.
+  const keepsItsView = options.populateUrlParams || !isUndefined(storeKey)
+  const consumeRestoredPage = (sortBy: DatatableSortBy) => {
+    const page = consumeStoredPage(pageStoreKey)
+    if (page === null || keepsItsView) return page
+    const view = getStoredView(pageStoreKey)
+    return view === null || view === viewOf(sortBy) ? page : null
+  }
+  // A restored page comes back at the page size it was shown at. At another size it would show other rows.
+  const rowsPerPageFor = (pagination: Ref<Pagination>, restoredPage: number | null) =>
+    restoredPage === null
+      ? pagination.value.rowsPerPage
+      : (getStoredRowsPerPage(pageStoreKey) ?? pagination.value.rowsPerPage)
 
   const { clearAll } = useFilterClearHelpers<F>()
 
@@ -441,6 +469,7 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
 
   const resetFilter = (pagination: Ref<Pagination>, callback?: AnyFn) => {
     pagination.value = { ...pagination.value, page: 1 }
+    rememberShownPage(pagination)
     if (storeKey && localStorage) {
       localStorage.removeItem(storeKey)
     }
@@ -455,12 +484,12 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
     updateLocationHash(serialized)
     storeFilterLocalStorage(serialized)
     pagination.value = { ...pagination.value, page: 1 }
+    rememberShownPage(pagination)
     filterConfig.touched = false
     if (callback) callback()
   }
 
   const loadStoredFilters = (pagination: Ref<Pagination>, callback?: AnyFn) => {
-    const { consumeStoredPage } = useDatatablePageStore()
     let source: 'hash' | 'localStorage' = 'hash'
     let storedFromHash = parseLocationHash()
     if (isNull(storedFromHash)) {
@@ -468,10 +497,15 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
       storedFromHash = loadFilterLocalStorage()
     }
     if (isNull(storedFromHash) || (isEmptyObject(storedFromHash.filters) && isNull(storedFromHash.sortBy))) {
-      const restoredPage = consumeStoredPage(pageStoreKey)
+      const restoredPage = consumeRestoredPage(pagination.value.sortBy)
       if (restoredPage !== null) {
-        pagination.value = { ...pagination.value, page: restoredPage }
+        pagination.value = {
+          ...pagination.value,
+          page: restoredPage,
+          rowsPerPage: rowsPerPageFor(pagination, restoredPage),
+        }
       }
+      rememberShownPage(pagination)
       if (callback) callback()
       return false
     }
@@ -511,19 +545,22 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
         updateLocationHash(stored)
       }
     }
+    // A link may omit the sort. Taking `null` would drop `order[...]` from
+    // the query, and paging without ORDER BY can repeat or skip rows.
+    const sortBy = storedFromHash.sortBy ?? pagination.value.sortBy
     // Always consumed. The flag means "the next list should restore
     // its page". Leaving it set would pass the page to the next table.
-    const restoredPage = consumeStoredPage(pageStoreKey)
+    const restoredPage = consumeRestoredPage(sortBy)
     pagination.value = {
       ...pagination.value,
-      // A link may omit the sort. Taking `null` would drop `order[...]` from
-      // the query, and paging without ORDER BY can repeat or skip rows.
-      sortBy: storedFromHash.sortBy ?? pagination.value.sortBy,
+      sortBy,
       // A link starts at the first page. A restored page still wins.
       // Only the close button sets that flag, meaning the user returns
       // to this list, and that address carries the list's own hash.
       page: restoredPage ?? (source === 'hash' ? 1 : pagination.value.page),
+      rowsPerPage: rowsPerPageFor(pagination, restoredPage),
     }
+    rememberShownPage(pagination)
     if (hashDescribesThisView) {
       // Local storage mirrors the last applied state, so a link becomes the view the user returns to.
       // Re-serialized to drop values equal to their default. A sort-only hash does not overwrite it.
