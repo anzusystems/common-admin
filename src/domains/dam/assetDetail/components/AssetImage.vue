@@ -9,6 +9,7 @@ import {
   DamAssetType,
   type DamAssetTypeType,
 } from '@/domains/dam/types/Asset'
+import type { DatetimeUTCNullable } from '@/shared/types/common'
 import { isUndefined } from '@/shared/utils/common'
 import { useRemainingTime } from '@/domains/ui/datetime/composables/remainingTime'
 import AssetImageMetaIcons from '@/domains/dam/assetDetail/components/AssetImageMetaIcons.vue'
@@ -40,6 +41,10 @@ const props = withDefaults(
     assetFileProperties?: AssetFileProperties | undefined
     /** Passed to the meta icons: shows the synthesized audio (TTS) icon. */
     showTts?: boolean
+    /** Passed to the meta icons: shows the badge of the automatic deletion. */
+    autoDeleteAt?: DatetimeUTCNullable
+    /** Passed to the meta icons: the badge of the asset's licence. */
+    licenceBadge?: string
   }>(),
   {
     assetType: DamAssetType.Image,
@@ -66,6 +71,8 @@ const props = withDefaults(
     showMetaIcons: false,
     assetFileProperties: undefined,
     showTts: false,
+    autoDeleteAt: null,
+    licenceBadge: '',
   }
 )
 const emit = defineEmits<{
@@ -243,6 +250,8 @@ const { remainingTimeShort } = useRemainingTime()
         :asset-file-properties="assetFileProperties"
         :asset-type="assetType"
         :show-tts="showTts"
+        :auto-delete-at="autoDeleteAt"
+        :licence-badge="licenceBadge"
       />
     </template>
   </VImg>
@@ -280,6 +289,8 @@ const { remainingTimeShort } = useRemainingTime()
       :asset-file-properties="assetFileProperties"
       :asset-type="assetType"
       :show-tts="showTts"
+      :auto-delete-at="autoDeleteAt"
+      :licence-badge="licenceBadge"
     />
   </div>
   <div
@@ -326,6 +337,8 @@ const { remainingTimeShort } = useRemainingTime()
       :asset-file-properties="assetFileProperties"
       :asset-type="assetType"
       :show-tts="showTts"
+      :auto-delete-at="autoDeleteAt"
+      :licence-badge="licenceBadge"
     />
   </div>
 </template>

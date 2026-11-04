@@ -64,7 +64,8 @@
     "model": {
       "authors": "Authors",
       "keywords": "Keywords",
-      "mainFileSingleUse": "Single-use license"
+      "mainFileSingleUse": "Single-use license",
+      "autoDelete": "Automatic deletion"
     },
     "assetType": {
       "image": "Image",
@@ -105,7 +106,8 @@
           "width": "Width",
           "height": "Height",
           "ratio": "Aspect ratio",
-          "animated": "Animated"
+          "animated": "Animated",
+          "licence": "Licence"
         }
       },
       "roi": {
@@ -140,7 +142,8 @@
       "2k": "2K",
       "qhd": "QHD",
       "4k": "4K",
-      "8k": "8K"
+      "8k": "8K",
+      "autoDeleteAt": "Auto delete {date}"
     },
     "assetFileFailReason": {
       "none": "None",

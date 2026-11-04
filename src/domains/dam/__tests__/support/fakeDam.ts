@@ -72,7 +72,7 @@ export const damImageFile = (
   originAssetFile: null,
   links: {},
   metadata: {
-    exifData: [],
+    exifData: {},
     id: `metadata-${id}`,
     createdAt: TIMESTAMP,
     modifiedAt: TIMESTAMP,
@@ -124,6 +124,7 @@ export const damAsset = (id: DocId, parts: Partial<AssetDetailItemDto> = {}): As
   mainFileSingleUse: null,
   mainFileInternal: null,
   mainFileOverrideInternal: null,
+  autoDeleteAt: null,
   createdAt: TIMESTAMP,
   modifiedAt: TIMESTAMP,
   createdBy: 1,

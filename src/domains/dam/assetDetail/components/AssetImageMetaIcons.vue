@@ -12,6 +12,10 @@ import {
 } from '@/domains/dam/assetDetail/utils/assetImageIconsConfig'
 import { useDamConfigStoreOf } from '@/domains/dam/config/store/damConfigStore'
 import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
+import { useRemainingTime } from '@/domains/ui/datetime/composables/remainingTime'
+import { useAutoDeleteTimeLeft } from '@/domains/dam/assetDetail/composables/autoDeleteTimeLeft'
+import type { DatetimeUTCNullable } from '@/shared/types/common'
+import { dateTimeFriendly } from '@/shared/utils/datetime'
 
 const props = withDefaults(
   defineProps<{
@@ -22,17 +26,34 @@ const props = withDefaults(
     showTts?: boolean
     /** DAM configuration whose distribution services name the icons. Inherited when not given. */
     configName?: string
+    /** When DAM deletes the asset: a badge shows the time left. Only admin-dam passes it, the other admins show none. */
+    autoDeleteAt?: DatetimeUTCNullable
+    /** Badge of the asset's licence, shown as given. Empty shows none. */
+    licenceBadge?: string
   }>(),
   {
     disableAbsolute: false,
     showTts: false,
     configName: undefined,
+    autoDeleteAt: null,
+    licenceBadge: '',
   }
 )
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const damConfigStore = useDamConfigStoreOf(useDamConfigName(props.configName))
 
 const { t } = useI18n()
+const { remainingTimeShort } = useRemainingTime()
+
+const { secondsLeft } = useAutoDeleteTimeLeft(() => props.autoDeleteAt)
+
+const autoDeleteBadge = computed(() => {
+  if (!props.autoDeleteAt || secondsLeft.value === null) return null
+  return {
+    text: remainingTimeShort(secondsLeft.value),
+    title: t('common.damImage.asset.metaIcons.autoDeleteAt', { date: dateTimeFriendly(props.autoDeleteAt) }),
+  }
+})
 
 const checkDimensions = (icons: string[], titles: string[]) => {
   if (props.assetFileProperties.width === 0 || props.assetFileProperties.height === 0) {
@@ -89,10 +110,28 @@ const data = computed(() => {
 
 <template>
   <div
-    v-show="data.icons.length > 0"
+    v-show="data.icons.length > 0 || autoDeleteBadge || licenceBadge"
     class="asset-image__meta-icons"
     :class="{ 'asset-image__meta-icons-absolute': !disableAbsolute }"
   >
+    <span
+      v-if="licenceBadge"
+      class="asset-image__licence-badge"
+      data-cy="asset-licence-badge"
+    >
+      {{ licenceBadge }}
+    </span>
+    <VChip
+      v-if="autoDeleteBadge"
+      size="x-small"
+      variant="flat"
+      color="warning"
+      class="ma-1 align-self-center"
+      :title="autoDeleteBadge.title"
+      data-cy="asset-auto-delete-badge"
+    >
+      {{ autoDeleteBadge.text }}
+    </VChip>
     <img
       v-for="(item, index) in data.icons"
       :key="item"
@@ -117,6 +156,22 @@ const data = computed(() => {
   img.img-svg {
     height: 30px;
     padding: 2px;
+  }
+
+  // As the SVG meta icons: a half-transparent black circle with white bold letters.
+  .asset-image__licence-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    margin: 2px;
+    border-radius: 50%;
+    background-color: rgb(0 0 0 / 50%);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1;
   }
 }
 </style>

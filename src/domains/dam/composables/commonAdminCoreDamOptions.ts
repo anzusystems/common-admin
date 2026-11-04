@@ -101,6 +101,9 @@ export function useCommonAdminCoreDamOptions(configName: string) {
     copyToLicenceEnabled: commonAdminCoreDamOptions.value.configs[configName].copyToLicenceEnabled,
     showSourceEnabled: commonAdminCoreDamOptions.value.configs[configName].showSourceEnabled ?? true,
     showFileInfoEnabled: commonAdminCoreDamOptions.value.configs[configName].showFileInfoEnabled ?? true,
+    showAutoDeleteEnabled: commonAdminCoreDamOptions.value.configs[configName].showAutoDeleteEnabled ?? false,
+    showLicenceEnabled: commonAdminCoreDamOptions.value.configs[configName].showLicenceEnabled ?? false,
+    showLicenceBadgeEnabled: commonAdminCoreDamOptions.value.configs[configName].showLicenceBadgeEnabled ?? false,
     sourceLabel:
       commonAdminCoreDamOptions.value.configs[configName].sourceLabel || t('common.damImage.image.model.texts.source'),
     editAssetLabel:

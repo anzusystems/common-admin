@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { type AssetDetailItemDto, DamAssetType, DamAssetTypeDefault } from '@/domains/dam/types/Asset'
 import { assetFileIsImageFile } from '@/domains/dam/types/AssetFile'
@@ -10,21 +10,43 @@ import { dateTimePretty } from '@/shared/utils/datetime'
 import ACachedUserChip from '@/domains/cached/components/ACachedUserChip.vue'
 import { useDamCachedUsers } from '@/domains/dam/author/composables/cachedUsers'
 import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
+import ACachedChip from '@/domains/cached/components/ACachedChip.vue'
+import { useDamCachedAssetLicences } from '@/domains/dam/user/composables/cachedAssetLicences'
 
 // "File" metadata panel of the asset detail and the single-upload dialog.
 // It sets no overflow-wrap itself. The detail passes `style="overflow-wrap: normal"`, which falls through to the root.
 
-const props = defineProps<{
-  asset: AssetDetailItemDto
-  /** Shows creator and last modifier chips. */
-  showUsers: boolean
-}>()
+const props = withDefaults(
+  defineProps<{
+    asset: AssetDetailItemDto
+    /** Shows creator and last modifier chips. */
+    showUsers: boolean
+    /** Shows the asset's licence. */
+    showLicence?: boolean
+  }>(),
+  {
+    showLicence: false,
+  }
+)
 
 const { t } = useI18n()
 
 const isTypeImage = computed(() => (props.asset.attributes.assetType || DamAssetTypeDefault) === DamAssetType.Image)
 
-const { getCachedUser } = useDamCachedUsers(useDamConfigName())
+const damConfigName = useDamConfigName()
+const { getCachedUser } = useDamCachedUsers(damConfigName)
+
+const { addToCachedAssetLicences, fetchCachedAssetLicences, getCachedAssetLicence } =
+  useDamCachedAssetLicences(damConfigName)
+watch(
+  [() => props.showLicence, () => props.asset.licence],
+  ([showLicence, licence]) => {
+    if (!showLicence) return
+    addToCachedAssetLicences(licence)
+    fetchCachedAssetLicences()
+  },
+  { immediate: true }
+)
 </script>
 
 <template>
@@ -48,6 +70,23 @@ const { getCachedUser } = useDamCachedUsers(useDamConfigName())
         </VCol>
         <VCol cols="9">
           {{ asset.attributes.assetType }}
+        </VCol>
+      </VRow>
+      <VRow
+        v-if="showLicence"
+        data-cy="asset-licence"
+      >
+        <VCol cols="3">
+          {{ t('common.damImage.asset.detail.info.field.licence') }}
+        </VCol>
+        <VCol cols="9">
+          <ACachedChip
+            :id="asset.licence"
+            :get-cached-fn="getCachedAssetLicence"
+            display-text-path="name"
+            route=""
+            disable-click
+          />
         </VCol>
       </VRow>
       <VRow>

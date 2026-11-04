@@ -435,7 +435,13 @@ import { DamAuthorType, type DamAuthorTypeType, useDamAuthorType } from '@/domai
 import { useDamKeywordFactory } from '@/domains/dam/keyword/factory/KeywordFactory'
 import { useDamAuthorFactory } from '@/domains/dam/author/factory/AuthorFactory'
 import type { DamCurrentUserDto } from '@/domains/dam/types/DamCurrentUser'
-import type { DamAssetLicence, DamAssetLicenceMinimal } from '@/domains/dam/types/AssetLicence'
+import type {
+  DamAssetLicence,
+  DamAssetLicenceCached,
+  DamAssetLicenceExtended,
+  DamAssetLicenceMinimal,
+  DamAssetLicenceSelectFields,
+} from '@/domains/dam/types/AssetLicence'
 import type { DamAssetLicenceGroup } from '@/domains/dam/types/AssetLicenceGroup'
 import { useCollabInit } from '@/domains/collab/composables/collabInit'
 import { useCommonAdminCollabOptions } from '@/domains/collab/composables/commonAdminCollabOptions'
@@ -527,6 +533,7 @@ import ADamUserFilterRemoteAutocomplete from '@/domains/dam/user/components/DamU
 import ADamUserRemoteAutocomplete from '@/domains/dam/user/components/DamUserRemoteAutocomplete.vue'
 import ADamAdminAssetLink from '@/domains/dam/components/DamAdminAssetLink.vue'
 import { useDamCachedUsers } from '@/domains/dam/author/composables/cachedUsers'
+import { useDamCachedAssetLicences } from '@/domains/dam/user/composables/cachedAssetLicences'
 import { useImageStore } from '@/domains/dam/imageWidget/store/imageStore'
 import { isImageCreateUpdateAware, isMediaAware } from '@/domains/dam/imageWidget/store/imageMediaWidgetStore'
 import type { DamMediaFromDam, ImageMediaCollabValue, MediaAware } from '@/domains/dam/types/MediaAware'
@@ -923,6 +930,7 @@ export {
   SessionExpiredError,
   defineBreadcrumbs,
   useDamCachedUsers,
+  useDamCachedAssetLicences,
   useUnreleasedFeatures,
   useDebugFeatures,
   useSentry,
@@ -1109,7 +1117,10 @@ export {
   type DamExtSystemMinimal,
   type DamCurrentUserDto,
   type DamAssetLicence,
+  type DamAssetLicenceCached,
+  type DamAssetLicenceExtended,
   type DamAssetLicenceMinimal,
+  type DamAssetLicenceSelectFields,
   type DamAssetLicenceGroup,
   type DamUserUpdateDto,
   type DamUser,

@@ -64,7 +64,8 @@
     "model": {
       "authors": "Autori",
       "keywords": "Kľúčové slová",
-      "mainFileSingleUse": "Jednorazová licencia"
+      "mainFileSingleUse": "Jednorazová licencia",
+      "autoDelete": "Automatické zmazanie"
     },
     "assetType": {
       "image": "Obrázok",
@@ -105,7 +106,8 @@
           "width": "Šírka",
           "height": "Výška",
           "ratio": "Pomer strán",
-          "animated": "Animované"
+          "animated": "Animované",
+          "licence": "Licencia"
         }
       },
       "roi": {
@@ -140,7 +142,8 @@
       "2k": "2K",
       "qhd": "QHD",
       "4k": "4K",
-      "8k": "8K"
+      "8k": "8K",
+      "autoDeleteAt": "Automatické zmazanie {date}"
     },
     "assetFileFailReason": {
       "none": "Žiadny",

@@ -1,10 +1,14 @@
-import { computed, type Ref } from 'vue'
+import { computed, type Ref, watch } from 'vue'
 import type { AssetSearchListItemDto } from '@/domains/dam/types/Asset'
 import type { AssetSelectListItem } from '@/domains/dam/assetSelect/store/assetSelectStore'
+import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
+import { inheritedDamConfigName } from '@/domains/dam/composables/damConfigName'
+import { useDamCachedAssetLicences } from '@/domains/dam/user/composables/cachedAssetLicences'
 
 const IMAGE_HEIGHT = 200
 const IMAGE_BG_COLOR_DEFAULT = '#ccc'
 
+/** Call it in the setup of a list item: the item inherits the DAM configuration of its asset select. */
 export function useAssetItemActions(item: Readonly<Ref<AssetSelectListItem>>) {
   const asset = computed<AssetSearchListItemDto>(() => {
     return item.value.asset
@@ -52,11 +56,32 @@ export function useAssetItemActions(item: Readonly<Ref<AssetSelectListItem>>) {
     }
   })
 
+  // The badge of the asset's licence, only where the configuration turns it on (`showLicenceBadgeEnabled`).
+  const configName = inheritedDamConfigName()
+  const { showLicenceBadgeEnabled } = useCommonAdminCoreDamOptions(configName)
+  const { addToCachedAssetLicences, fetchCachedAssetLicences, getCachedAssetLicence } =
+    useDamCachedAssetLicences(configName)
+  if (showLicenceBadgeEnabled) {
+    // The cache's fetch is debounced: the items of one list load their licences in one request.
+    watch(
+      () => asset.value.licence,
+      (licence) => {
+        addToCachedAssetLicences(licence)
+        fetchCachedAssetLicences()
+      },
+      { immediate: true }
+    )
+  }
+  const licenceBadge = computed(() =>
+    showLicenceBadgeEnabled ? (getCachedAssetLicence(asset.value.licence)?.badge ?? '') : ''
+  )
+
   return {
     asset,
     assetType,
     assetStatus,
     imageProperties,
     tableImageProperties,
+    licenceBadge,
   }
 }

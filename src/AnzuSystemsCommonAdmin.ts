@@ -130,6 +130,15 @@ export interface CommonAdminCoreDamConfig {
   copyToLicenceEnabled?: boolean
   showSourceEnabled?: boolean
   showFileInfoEnabled?: boolean
+  /**
+   * The asset detail of this configuration's widgets and asset selects shows when DAM deletes the asset (the time
+   * left), for an asset whose licence deletes automatically. Off unless `true`.
+   */
+  showAutoDeleteEnabled?: boolean
+  /** The asset detail of this configuration's widgets and asset selects shows the asset's licence. Off unless `true`. */
+  showLicenceEnabled?: boolean
+  /** The tiles and rows of this configuration's asset selects show the badge of the asset's licence. Off unless `true`. */
+  showLicenceBadgeEnabled?: boolean
   sourceLabel?: string
   editAssetLabel?: string
   addFromDamLabel?: string

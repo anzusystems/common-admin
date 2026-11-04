@@ -34,6 +34,7 @@ const { endPoints, extSystem: EXT_DEFAULT, licence } = cmsConfiguration
 const OWN = { asset: '/own/v2/asset', image: '/own/v2/image' }
 const OWN_AUTHOR = '/own/v2/author'
 const OWN_KEYWORD = '/own/v2/keyword'
+const OWN_LICENCE = '/own/v2/asset-licence'
 const EXT_OWN = 2
 const NAMES = /^(.*)\/(author|keyword)\/ext-system\/(\d+)\/search$/
 /** Waits from this length are held. The caches wait 1.5 s before they ask. */
@@ -53,6 +54,11 @@ const answerNames = (of: FakeDam, which: string) =>
     if (NAMES.test(path!)) {
       const ids = (params.get('id') ?? '').split(',')
       const found = ids.map((id) => ({ id, name: `${id} of ${which}`, identifier: '', flags: { reviewed: true } }))
+      return { status: 200, data: { data: found, totalCount: found.length } }
+    }
+    if (path!.endsWith('/asset-licence')) {
+      const ids = (params.get('filter_in[id]') ?? '').split(',').map(Number)
+      const found = ids.map((id) => ({ id, name: `${id} of ${which}`, badge: '' }))
       return { status: 200, data: { data: found, totalCount: found.length } }
     }
     if (path === '/adm/v1/user') {
@@ -86,6 +92,7 @@ beforeEach(() => {
         endPointImage: OWN.image,
         endPointAuthor: OWN_AUTHOR,
         endPointKeyword: OWN_KEYWORD,
+        endPointAssetLicence: OWN_LICENCE,
       },
     },
   })
@@ -108,6 +115,10 @@ const askedForNames = (of: FakeDam) =>
   of.requests
     .map((request) => `${request.method} ${request.url.split('?')[0]}`)
     .filter((request) => NAMES.test(request.split(' ')[1]!) || request.endsWith('/adm/v1/user'))
+const askedForLicences = (of: FakeDam) =>
+  of.requests
+    .map((request) => `${request.method} ${request.url.split('?')[0]}`)
+    .filter((request) => request.endsWith('/asset-licence'))
 const cachesAsk = async () => {
   await waits.elapse()
   await flushPromises()
@@ -207,6 +218,29 @@ describe('the panel of the file under a named DAM configuration', () => {
 
     expect(panel.html()).toContain('Creator of own')
     expect(panel.html()).not.toContain('Creator of default')
+  })
+
+  it("shows the asset's licence by the licences of that configuration, asked at its address", async () => {
+    const panel = await mountUnderOwn(
+      'inside a component under it',
+      defineComponent({
+        setup: () => () =>
+          h(VExpansionPanels, { modelValue: ['file'] }, () => [
+            h(AssetFileInfoPanel, {
+              asset: damAsset('asset-licence', { licence: 4321 }),
+              showUsers: false,
+              showLicence: true,
+            }),
+          ]),
+      }),
+      {}
+    )
+
+    await cachesAsk()
+
+    expect(askedForLicences(own)).toEqual([`GET ${OWN_LICENCE}`])
+    expect(askedForLicences(dam)).toEqual([])
+    expect(panel.text()).toContain('4321 of own')
   })
 })
 

@@ -11,3 +11,12 @@ export interface DamAssetLicence extends DamAssetLicenceMinimal, AnzuUserAndTime
   extSystem: IntegerIdNullable
   extId: string
 }
+
+export interface DamAssetLicenceSelectFields {
+  /** Up to four characters `A-Z0-9` that mark the licence's assets, empty when it has none. */
+  badge: string
+}
+
+export type DamAssetLicenceCached = DamAssetLicenceMinimal & DamAssetLicenceSelectFields
+
+export interface DamAssetLicenceExtended extends DamAssetLicence, DamAssetLicenceSelectFields {}

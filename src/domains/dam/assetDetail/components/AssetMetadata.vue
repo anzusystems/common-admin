@@ -20,6 +20,8 @@ import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 import { useAssetSuggestions } from '@/domains/dam/uploadQueue/composables/assetSuggestions'
 import { useDamCachedAuthors } from '@/domains/dam/author/composables/cachedAuthors'
 import { useDamCachedUsers } from '@/domains/dam/author/composables/cachedUsers'
+import { useAutoDeleteTimeLeft } from '@/domains/dam/assetDetail/composables/autoDeleteTimeLeft'
+import { useRemainingTime } from '@/domains/ui/datetime/composables/remainingTime'
 
 const props = withDefaults(
   defineProps<{
@@ -94,7 +96,17 @@ const { keywordRequired, keywordEnabled } = useDamKeywordAssetTypeConfig(
   damConfigName
 )
 
-const { mainFileSingleUseEnabled, showFileInfoEnabled, editAssetLabel } = useCommonAdminCoreDamOptions(damConfigName)
+const { mainFileSingleUseEnabled, showFileInfoEnabled, showAutoDeleteEnabled, showLicenceEnabled, editAssetLabel } =
+  useCommonAdminCoreDamOptions(damConfigName)
+
+// Only where the configuration turns it on: without it no clock runs.
+const { secondsLeft: autoDeleteSecondsLeft } = useAutoDeleteTimeLeft(() =>
+  showAutoDeleteEnabled ? asset.value?.autoDeleteAt : null
+)
+const { remainingTimeLong } = useRemainingTime()
+const autoDeleteIn = computed(() =>
+  autoDeleteSecondsLeft.value === null ? null : remainingTimeLong(autoDeleteSecondsLeft.value)
+)
 
 const { addToCachedUsers, fetchCachedUsers } = useDamCachedUsers(damConfigName)
 // The "file" panel chips show creator and modifier from the configuration's user cache.
@@ -211,6 +223,18 @@ watch(
                 />
               </VCol>
             </VRow>
+            <VRow
+              v-if="autoDeleteIn !== null"
+              density="compact"
+              class="my-2"
+              data-cy="asset-auto-delete"
+            >
+              <VCol>
+                <ARow :title="t('common.damImage.asset.model.autoDelete')">
+                  {{ autoDeleteIn }}
+                </ARow>
+              </VCol>
+            </VRow>
           </template>
         </AssetCustomMetadataForm>
       </VExpansionPanelText>
@@ -220,6 +244,7 @@ watch(
       v-if="showFileInfoEnabled"
       :asset="asset"
       show-users
+      :show-licence="showLicenceEnabled"
       style="overflow-wrap: normal"
     />
   </VExpansionPanels>

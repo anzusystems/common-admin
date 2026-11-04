@@ -1,4 +1,4 @@
-import type { DocId, DocIdNullable, IntegerId } from '@/shared/types/common'
+import type { DatetimeUTCNullable, DocId, DocIdNullable, IntegerId } from '@/shared/types/common'
 import type { AnzuUserAndTimeTrackingAware } from '@/shared/types/AnzuUserAndTimeTrackingAware'
 import type { ResourceNameSystemAware } from '@/shared/types/ResourceNameSystemAware'
 import type { AssetFile } from '@/domains/dam/types/AssetFile'
@@ -68,6 +68,7 @@ export interface AssetSearchListItemDto extends AnzuUserAndTimeTrackingAware, Re
   mainFileSingleUse: Readonly<boolean | null>
   mainFileInternal: Readonly<boolean | null>
   mainFileOverrideInternal: Readonly<boolean | null>
+  autoDeleteAt: Readonly<DatetimeUTCNullable>
 }
 
 export interface AssetDetailItemDto extends AnzuUserAndTimeTrackingAware, ResourceNameSystemAware {
@@ -87,6 +88,7 @@ export interface AssetDetailItemDto extends AnzuUserAndTimeTrackingAware, Resour
   mainFileSingleUse: Readonly<boolean | null>
   mainFileInternal: Readonly<boolean | null>
   mainFileOverrideInternal: Readonly<boolean | null>
+  autoDeleteAt: Readonly<DatetimeUTCNullable>
 }
 
 export interface AssetMetadataDto extends AnzuUserAndTimeTrackingAware, ResourceNameSystemAware, Metadata {

@@ -8,6 +8,7 @@ import { useAssetDetailStore } from '@/domains/dam/assetDetail/store/assetDetail
 import * as authorActions from '@/domains/dam/author/composables/authorActions'
 import * as cachedAuthors from '@/domains/dam/author/composables/cachedAuthors'
 import * as cachedUsers from '@/domains/dam/author/composables/cachedUsers'
+import * as cachedAssetLicences from '@/domains/dam/user/composables/cachedAssetLicences'
 import * as damAuthorConfig from '@/domains/dam/author/composables/damAuthorConfig'
 import * as commonAdminCoreDamOptions from '@/domains/dam/composables/commonAdminCoreDamOptions'
 import * as damNotificationsConnection from '@/domains/dam/composables/damNotificationsConnection'
@@ -41,6 +42,7 @@ const modules: Record<string, unknown>[] = [
   authorActions,
   cachedAuthors,
   cachedUsers,
+  cachedAssetLicences,
   damAuthorConfig,
   commonAdminCoreDamOptions,
   damNotificationsConnection,

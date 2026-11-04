@@ -31,7 +31,7 @@ const onItemClick = () => {
 
 const item = toRef(props, 'item')
 
-const { asset, assetType, assetStatus, imageProperties } = useAssetItemActions(item)
+const { asset, assetType, assetStatus, imageProperties, licenceBadge } = useAssetItemActions(item)
 </script>
 
 <template>
@@ -66,6 +66,7 @@ const { asset, assetType, assetStatus, imageProperties } = useAssetItemActions(i
         :fallback-height="IMAGE_HEIGHT"
         :asset-file-properties="item.asset.assetFileProperties"
         :show-meta-icons="showMetaIcons"
+        :licence-badge="licenceBadge"
       />
       <div class="asset-list-tiles__item-text text-body-small px-2 py-1">
         <div class="d-flex align-center justify-space-between position-relative">

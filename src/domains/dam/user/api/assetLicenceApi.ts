@@ -8,12 +8,17 @@ import { useApiFetchByIds } from '@/domains/api/composables/useApiFetchByIds'
 const END_POINT = '/adm/v1/asset-licence'
 export const ENTITY = 'assetLicence'
 
-export const fetchDamAssetLicenceListByIds = (client: () => AxiosInstance, ids: IntegerId[]) => {
+/** `endPoint`: the licences endpoint from a configuration (`endPointAssetLicence`). Defaults to `/adm/v1/asset-licence`. */
+export const fetchDamAssetLicenceListByIds = (
+  client: () => AxiosInstance,
+  ids: IntegerId[],
+  endPoint: string = END_POINT
+) => {
   const { execute } = useApiFetchByIds<DamAssetLicence>({
     client,
     system: SYSTEM_CORE_DAM,
     entity: ENTITY,
-    urlTemplate: END_POINT,
+    urlTemplate: endPoint,
   })
 
   return execute(ids)

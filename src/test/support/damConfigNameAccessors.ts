@@ -10,6 +10,7 @@ export const DAM_NAME_ACCESSORS: Record<string, number> = {
   useDamCachedAuthors: 1,
   useDamCachedKeywords: 1,
   useDamCachedUsers: 1,
+  useDamCachedAssetLicences: 1,
   useDamCachedAuthorsForRemoteAutocomplete: 1,
   useCachedKeywordsForRemoteAutocomplete: 1,
   useExtSystemIdForCached: 1,
