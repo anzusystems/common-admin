@@ -4,7 +4,7 @@
 yarn add @anzusystems/common-admin
 ```
 
-Peer dependencies: `vue`, `vuetify`, `vue-i18n`, `pinia`, `vue-router`, `axios`, `dayjs`, `@vueuse/core`, `@vueuse/integrations` (with `sortablejs` for its `useSortable`), `@vuelidate/core`, `@vuelidate/validators`, `@sentry/vue`. Optional: `socket.io-client` (collaboration), `vite` and `@sentry/vite-plugin` (the `./vite` entry), `@vueuse/shared` (comes with `@vueuse/core`; the declarations name its types). Versions are in `peerDependencies` of [`package.json`](../../package.json). Icons are `mdi-*` classes: install `@mdi/font`.
+Peer dependencies: `vue`, `vuetify`, `vue-i18n`, `pinia`, `vue-router`, `axios`, `dayjs`, `@vueuse/core`, `@vueuse/integrations` (with `sortablejs` for its `useSortable`), `@vuelidate/core`, `@vuelidate/validators`, `@sentry/vue`. Optional: `socket.io-client` (collaboration), `vite` and `@sentry/vite-plugin` (the `./vite` entry), `playwright` (the types of the `./e2e` entry), `@vueuse/shared` (comes with `@vueuse/core`; the declarations name its types). Versions are in `peerDependencies` of [`package.json`](../../package.json). Icons are `mdi-*` classes: install `@mdi/font`.
 
 ## Configuration
 
@@ -272,6 +272,46 @@ export default defineConfig({
 ```
 
 Sentry is on when `APP_DEPLOY_ENV` and `SENTRY_URL` are set; it needs `SENTRY_AUTH_TOKEN` and takes the release name from `GITVAR_SHORTVERSION`. The build then emits `hidden` source maps, uploads them to the `petitpress` org (`org` option) and deletes them from `build.outDir`, so they never reach the deployed site. A missing token or a failed upload fails the build; to build without Sentry, leave `SENTRY_URL` unset. The library's own source maps are chained into the admin's, so frames from common-admin resolve to its `.vue` and `.ts` sources. Other options go to `sentryVitePlugin`, e.g. `release: { name: 'verify-1', finalize: false }` for a test upload. Install `@sentry/vite-plugin` as a devDependency; keep `anzuSentry` first in `plugins`.
+
+### Route walk
+
+`@anzusystems/common-admin/e2e` opens every route of the admin against its real API and data, a listing's first record for a route with a parameter, and fails a route on an uncaught error or rejection, a `console.error`, an API answer of 4xx/5xx or none, an API request that takes 10 s or more (answered or not), a failed document, or script, style or image of its own origin, the 404 view, landing anywhere but the address opened, a card loader that never ends, an empty page or a component nothing registers. It belongs in the admin's Playwright project, as a group of its own (a few minutes for hundreds of routes), run by hand against a production build, not in CI:
+
+```ts
+// e2e/tests/routes/routeWalk.ts: what the walk needs to know about the admin
+import * as path from 'path'
+import type { RouteWalkOptions } from '@anzusystems/common-admin/e2e'
+import { forceLogin } from '@pages/shared/login' // the admin's own login
+
+
+export const routeWalk: RouteWalkOptions = {
+  title: 'ADMIN-CMS - Routes',
+  declarationFile: path.resolve(__dirname, '../../../src/typed-router.d.ts'),
+  pagesDir: path.resolve(__dirname, '../../../src/pages'),
+  login: forceLogin,
+  skip: { '/logout': 'ends the session the worker walks in' },
+}
+```
+
+```ts
+// e2e/tests/routes/boot.spec.ts, a Playwright project that the routes' project depends on
+import { expect, test } from '@playwright/test'
+import { defineRouteWalkBoot } from '@anzusystems/common-admin/e2e'
+import { routeWalk } from './routeWalk'
+
+defineRouteWalkBoot({ test, expect }, routeWalk)
+```
+
+```ts
+// e2e/tests/routes/routes.spec.ts
+import { expect, test } from '@playwright/test'
+import { defineRouteWalk } from '@anzusystems/common-admin/e2e'
+import { routeWalk } from './routeWalk'
+
+defineRouteWalk({ test, expect }, routeWalk)
+```
+
+The admin passes its own `test` and `expect`: the walk does not import Playwright Test, which lives in the e2e project, and a second copy in one run fails. The options (`RouteWalkOptions`) cover routes to skip, parameters given by name or resolved through the API, routes that forward by design, problems to ignore with a reason, and the timings, for all routes (`timings`) or, with a reason, for a slow one (`routeTimings`). The e2e project reaches the package in the admin's `node_modules`; for the types, map `playwright/test` to its own copy, file and extension included, since the declarations are ES modules (`"paths": { "playwright/test": ["./node_modules/playwright/test.d.ts"] }`): without it they resolve to nothing and, with `skipLibCheck`, every type of the walk is silently `any`. Its conventions (the card loader, the 404 view, the rows of a listing) are tested against the components in `src/test/routeWalkConventions.test.ts`, what it reports in `src/test/node/routeWalk.test.ts`, how it registers and ends its tests in `src/test/node/routeWalkRegistration.test.ts`.
 
 ### Imports
 

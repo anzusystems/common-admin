@@ -108,8 +108,9 @@ for target in "${TARGETS[@]}"; do
 
     # The eslint plugin ships from `src/eslint` (package.json "files"), not from dist.
     # Without this the admins keep linting with the plugin of whatever version they installed.
-    # Same for the Vite plugins in `src/vite` (Sentry and source maps), which the admin's build loads.
-    for dir in eslint vite; do
+    # Same for the Vite plugins in `src/vite` (Sentry and source maps), which the admin's build loads,
+    # and the route walk in `src/e2e`, which its e2e project loads.
+    for dir in e2e eslint vite; do
         rm -rf "${PACKAGE_DIR}/src/${dir}"
         mkdir -p "${PACKAGE_DIR}/src/${dir}"
         cp -r "${COMMON_ADMIN_PROJECT}/src/${dir}/"* "${PACKAGE_DIR}/src/${dir}/"
@@ -125,5 +126,5 @@ for target in "${TARGETS[@]}"; do
     # in it. A stale list would make the plugin reload only those files.
     : > "${target}/.common-admin-updated"
 
-    echo "Successfully copied release from ${COMMON_ADMIN_PROJECT} (dist, src/eslint, src/vite) to ${PACKAGE_DIR}"
+    echo "Successfully copied release from ${COMMON_ADMIN_PROJECT} (dist, src/e2e, src/eslint, src/vite) to ${PACKAGE_DIR}"
 done

@@ -22,6 +22,7 @@ beforeEach(() => {
   admin = join(root, 'admin')
   outDir = join(library, 'out')
   write(join(library, 'package.json'), '{"name":"@anzusystems/common-admin"}')
+  write(join(library, 'src/e2e/index.mjs'), '')
   write(join(library, 'src/eslint/plugin.mjs'), '')
   write(join(library, 'src/vite/index.mjs'), '')
   write(join(admin, 'package.json'), '{}')
@@ -57,6 +58,7 @@ describe('devCopyToAdmins', () => {
     expect(readFileSync(adminFile('common-admin.d.ts'), 'utf8')).toBe('types')
     expect(readFileSync(join(admin, PACKAGE, 'package.json'), 'utf8')).toContain('common-admin')
     expect(existsSync(join(admin, PACKAGE, 'src/vite/index.mjs'))).toBe(true)
+    expect(existsSync(join(admin, PACKAGE, 'src/e2e/index.mjs'))).toBe(true)
     expect(readFileSync(join(admin, '.common-admin-updated'), 'utf8')).toBe('*\n')
   })
 

@@ -3,6 +3,7 @@
   "packageManager": "yarn@4.18.1",
   "files": [
     "dist",
+    "src/e2e/**",
     "src/eslint/**",
     "src/vite/**"
   ],
@@ -19,6 +20,10 @@
     "./styles": {
       "types": "./dist/common-admin.css.d.ts",
       "default": "./dist/common-admin.css"
+    },
+    "./e2e": {
+      "types": "./src/e2e/index.d.mts",
+      "default": "./src/e2e/index.mjs"
     },
     "./eslint": {
       "types": "./src/eslint/plugin.d.mts",
@@ -157,6 +162,7 @@
     "eslint-plugin-vuetify": "^2.7.3",
     "oxlint": "^1.90.0",
     "pinia": "^4.1.0",
+    "playwright": "^1.64.1",
     "socket.io-client": "^4.8.4",
     "sortablejs": "^1.15.7",
     "vite": "^8.3.5",
@@ -192,6 +198,9 @@
       "optional": true
     },
     "oxlint": {
+      "optional": true
+    },
+    "playwright": {
       "optional": true
     },
     "socket.io-client": {

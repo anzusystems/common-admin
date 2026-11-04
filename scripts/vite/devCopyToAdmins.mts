@@ -8,7 +8,7 @@ const PACKAGE = 'node_modules/@anzusystems/common-admin'
 const TRIGGER = '.common-admin-updated'
 const MARKER = '.dev-admin'
 // Shipped next to dist (package.json "files"); copied once when the watch starts.
-const EXTRA_DIRS = ['src/eslint', 'src/vite']
+const EXTRA_DIRS = ['src/e2e', 'src/eslint', 'src/vite']
 
 /**
  * The admins to copy into: `COMMON_ADMIN_TARGETS` (colon separated), else whatever copy.sh would

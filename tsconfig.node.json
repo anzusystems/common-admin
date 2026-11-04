@@ -6,10 +6,16 @@
     "vitest.config.*",
     "cypress.config.*",
     "nightwatch.conf.*",
-    "playwright.config.*"
+    "playwright.config.*",
+    // The route walk is JavaScript, shipped as it is; checked by its JSDoc.
+    "src/e2e/*.mjs"
   ],
   "compilerOptions": {
     "noEmit": true,
+    "allowJs": true,
+    "checkJs": true,
+    // @tsconfig/node22's, and the DOM: the route walk runs code in the page.
+    "lib": ["es2024", "ESNext.Array", "ESNext.Collection", "ESNext.Iterator", "DOM", "DOM.Iterable"],
     // vite.config.lib.mts imports the dev-copy plugin by its `.mts` name, which Vite's config loader resolves
     "allowImportingTsExtensions": true,
     "incremental": true,

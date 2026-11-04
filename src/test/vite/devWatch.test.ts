@@ -225,10 +225,11 @@ describe('copy.sh', () => {
   // Measured: the page showed a mix of the two builds.
   const libraryWithBuild = () => {
     const library = tempRoot()
-    for (const dir of ['dist', 'src/eslint', 'src/vite']) mkdirSync(join(library, dir), { recursive: true })
+    for (const dir of ['dist', 'src/e2e', 'src/eslint', 'src/vite']) mkdirSync(join(library, dir), { recursive: true })
     for (const file of ['dist/common-admin.js', 'dist/common-admin.d.ts', 'dist/common-admin.css']) {
       writeFileSync(join(library, file), '')
     }
+    writeFileSync(join(library, 'src/e2e/index.mjs'), '')
     writeFileSync(join(library, 'src/eslint/plugin.mjs'), '')
     writeFileSync(join(library, 'src/vite/index.mjs'), '')
     writeFileSync(join(library, 'package.json'), '{}')
