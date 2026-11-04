@@ -5,19 +5,19 @@ import {
 } from '@/services/stores/coreDam/assetSelectStore'
 import { storeToRefs } from 'pinia'
 import type { Ref } from 'vue'
-import { ref } from 'vue'
+import { ref, unref } from 'vue'
 import { type AssetDetailItemDto, DamAssetType, type DamAssetTypeType } from '@/types/coreDam/Asset'
 import { usePagination } from '@/labs/filters/pagination'
 import { useAlerts } from '@/composables/system/alerts'
-import type { DocId, IntegerId } from '@/types/common'
+import type { DocId } from '@/types/common'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
-import { fetchAsset, useFetchAssetList } from '@/components/damImage/uploadQueue/api/damAssetApi'
+import { fetchAsset, useFetchAssetListByLicences } from '@/components/damImage/uploadQueue/api/damAssetApi'
 import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
 import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
 import { useDamCachedAuthors } from '@/components/damImage/uploadQueue/author/cachedAuthors'
 import { useDamCachedKeywords } from '@/components/damImage/uploadQueue/keyword/cachedKeywords'
 import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/composables/extSystemIdForCached'
-import { isUndefined } from '@/utils/common'
+import { cloneDeep, isNull, isUndefined } from '@/utils/common'
 import { useDamCachedUsers } from '@/components/damImage/uploadQueue/author/cachedUsers'
 import { useSidebar } from '@/components/dam/assetSelect/composables/assetSelectFilterSidebar'
 import { SORT_BY_SCORE_DATE } from '@/composables/system/datatableColumns'
@@ -27,6 +27,11 @@ import { useDisplay } from 'vuetify'
 
 const { pagination } = usePagination(SORT_BY_SCORE_DATE)
 const detailLoading = ref(false)
+let latestListRequest = 0
+
+// Shared by every instance: the filter's mount and the licence watcher of the picker both ask for the
+// first listing in the same tick, and two debounces of their own sent two identical searches.
+const debouncedFetch = useDebounceFn((fetch: () => Promise<void>) => fetch())
 
 export function useAssetSelectActions(
   configName = 'default',
@@ -53,25 +58,39 @@ export function useAssetSelectActions(
     filterData.inPodcast = null
   }
 
-  const fetchAssetListDebounced = useDebounceFn(async () => {
-    await fetchAssetList()
-  })
+  const fetchAssetListDebounced = () => debouncedFetch(fetchAssetList)
+
+  // The list is fetched into a pagination of its own: a stale request must not write hasNextPage or
+  // currentViewCount of the shared one, which belongs to the list that is on screen.
+  const fetchLatestList = async (request: number) => {
+    const { executeFetch } = useFetchAssetListByLicences(damClient, endPointAsset)
+    const requestPagination = ref(cloneDeep(pagination.value))
+    const list = await executeFetch(requestPagination, filterData, filterConfig)
+    if (request !== latestListRequest) return null
+    const answered = unref(requestPagination)
+    pagination.value = {
+      ...pagination.value,
+      hasNextPage: answered.hasNextPage,
+      currentViewCount: answered.currentViewCount,
+      totalCount: answered.totalCount,
+    }
+    return list
+  }
 
   const fetchAssetList = async () => {
-    if (assetSelectStore.selectedLicenceId <= 0) return
+    if (assetSelectStore.selectedLicenceIds.length === 0) return
     resolveTypeFilter(assetSelectStore.assetType, assetSelectStore.inPodcast)
-    const { executeFetch } = useFetchAssetList(
-      damClient,
-      endPointAsset,
-      assetSelectStore.selectedLicenceId,
-    )
+    filterData.licences = assetSelectStore.selectedLicenceIds
+    const request = ++latestListRequest
     try {
       assetSelectStore.showLoader()
-      assetSelectStore.setList(await executeFetch(pagination, filterData, filterConfig))
+      const list = await fetchLatestList(request)
+      if (isNull(list)) return
+      assetSelectStore.setList(list)
     } catch (error) {
-      showErrorsDefault(error)
+      if (request === latestListRequest) showErrorsDefault(error)
     } finally {
-      assetSelectStore.hideLoader()
+      if (request === latestListRequest) assetSelectStore.hideLoader()
     }
   }
 
@@ -79,18 +98,17 @@ export function useAssetSelectActions(
     if (assetSelectStore.loader) return
     pagination.value.page = pagination.value.page + 1
     resolveTypeFilter(assetSelectStore.assetType, assetSelectStore.inPodcast)
-    const { executeFetch } = useFetchAssetList(
-      damClient,
-      endPointAsset,
-      assetSelectStore.selectedLicenceId,
-    )
+    filterData.licences = assetSelectStore.selectedLicenceIds
+    const request = ++latestListRequest
     try {
       assetSelectStore.showLoader()
-      assetSelectStore.appendList(await executeFetch(pagination, filterData, filterConfig))
+      const list = await fetchLatestList(request)
+      if (isNull(list)) return
+      assetSelectStore.appendList(list)
     } catch (error) {
-      showErrorsDefault(error)
+      if (request === latestListRequest) showErrorsDefault(error)
     } finally {
-      assetSelectStore.hideLoader()
+      if (request === latestListRequest) assetSelectStore.hideLoader()
     }
   }
 
@@ -98,7 +116,7 @@ export function useAssetSelectActions(
   const { addToCachedKeywords, fetchCachedKeywords } = useDamCachedKeywords()
   const { addToCachedUsers, fetchCachedUsers } = useDamCachedUsers()
 
-  const onItemClick = async (data: { assetId: DocId; index: number }, extSystem: IntegerId) => {
+  const onItemClick = async (data: { assetId: DocId; index: number }) => {
     const { cachedExtSystemId } = useExtSystemIdForCached()
     if (!mdAndDown.value) openSidebarRight()
     assetSelectStore.toggleSelectedByIndex(data.index)
@@ -106,7 +124,13 @@ export function useAssetSelectActions(
     detailLoading.value = true
     try {
       const asset = await fetchAsset(damClient, endPointAsset, data.assetId)
-      cachedExtSystemId.value = extSystem
+      // Every licence in one search shares an ext system (LicenceCollectionSingleExtSystem), but resolve
+      // it from the asset's own licence rather than the dialog-wide selection so this stays correct if
+      // that backend constraint is ever relaxed.
+      const assetSelectConfig = assetSelectStore.selectConfig.find((config) => config.licence === asset.licence)
+      if (assetSelectConfig) {
+        cachedExtSystemId.value = assetSelectConfig.extSystem
+      }
       addToCachedAuthors(asset.authors)
       addToCachedKeywords(asset.keywords)
       if (showFileInfoEnabled) {

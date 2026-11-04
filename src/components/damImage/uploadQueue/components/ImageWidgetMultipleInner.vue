@@ -54,6 +54,7 @@ const props = withDefaults(
     queueKey: UploadQueueKey
     uploadLicence: IntegerId
     selectLicences: IntegerId[]
+    listViews?: IntegerId[]
     configName?: string
     label?: string | undefined
     readonly?: boolean
@@ -65,12 +66,10 @@ const props = withDefaults(
     skipCurrentUserCheck?: boolean
   }>(),
   {
+    listViews: () => [],
     configName: 'default',
     label: undefined,
-    image: undefined,
     readonly: false,
-    lockable: false,
-    lockedById: undefined,
     dataCy: undefined,
     width: undefined,
     disableDraggable: false,
@@ -235,17 +234,26 @@ const assetSelectConfirmMap = async (
   items: AssetSearchListItemDto[],
 ): Promise<ImageStoreItem[]> => {
   const assetSelectStore = useAssetSelectStore()
-  const ids = items.map((item) => item.id)
   const assetMetadataMap = new Map<DocId, { description: string; authorIds: DocId[] }>()
   const authorIdsToFetch = new Set<DocId>()
   const authorsMap = new Map<DocId, string>()
   try {
-    const assetDetails = await fetchAssetListByIds(
-      damClient,
-      endPointAsset,
-      ids,
-      assetSelectStore.selectedLicenceId,
-    )
+    // A selection may span several licences while the endpoint scopes by exactly one, so details are
+    // fetched per licence of the picked item rather than for one licence of the whole selection.
+    const idsByLicence = new Map<IntegerId, DocId[]>()
+    items.forEach((item) => {
+      const licenceIds = idsByLicence.get(item.licence) ?? []
+      licenceIds.push(item.id)
+      idsByLicence.set(item.licence, licenceIds)
+    })
+
+    const assetDetails = (
+      await Promise.all(
+        [...idsByLicence].map(([licenceId, licenceIds]) =>
+          fetchAssetListByIds(damClient, endPointAsset, licenceIds, licenceId),
+        ),
+      )
+    ).flat()
     if (customAssetSelectMetadataToImageMap) {
       assetDetails.forEach((assetDetail) => {
         const mapped = customAssetSelectMetadataToImageMap(assetDetail)
@@ -598,6 +606,7 @@ onMounted(() => {
       v-model="assetSelectDialog"
       :select-licences="selectLicences"
       :upload-licence="uploadLicence"
+      :list-views="listViews"
       :min-count="1"
       :max-count="50"
       :asset-type="DamAssetType.Image"

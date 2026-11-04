@@ -12,3 +12,11 @@ export interface DamAssetLicence
   extSystem: IntegerIdNullable
   extId: string
 }
+
+export interface DamAssetLicenceSelectFields {
+  badge: string
+}
+
+export type DamAssetLicenceCached = DamAssetLicenceMinimal & DamAssetLicenceSelectFields
+
+export interface DamAssetLicenceExtended extends DamAssetLicence, DamAssetLicenceSelectFields {}

@@ -18,6 +18,7 @@ const props = withDefaults(
     queueKey: UploadQueueKey
     uploadLicence: IntegerId
     selectLicences: IntegerId[]
+    listViews?: IntegerId[]
     configName?: string
     label?: string | undefined
     readonly?: boolean
@@ -26,14 +27,11 @@ const props = withDefaults(
     callDeleteApiOnRemove?: boolean
   }>(),
   {
+    listViews: () => [],
     configName: 'default',
     label: undefined,
-    image: undefined,
     readonly: false,
-    lockable: false,
-    lockedById: undefined,
     dataCy: undefined,
-    expandOptions: false,
     width: undefined,
     callDeleteApiOnRemove: false,
   },

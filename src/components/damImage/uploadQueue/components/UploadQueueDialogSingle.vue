@@ -98,6 +98,7 @@ const asset = computed<AssetDetailItemDto | null>(() => {
     mainFileSingleUse: false,
     mainFileInternal: item.value.mainFileInternal ?? null,
     mainFileOverrideInternal: null,
+    autoDeleteAt: null,
     flags: {
       described: false,
       visible: false,

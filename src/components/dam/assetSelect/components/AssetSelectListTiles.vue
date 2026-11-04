@@ -3,14 +3,6 @@ import AssetSelectTilesItem from '@/components/dam/assetSelect/components/AssetS
 import { useGridView } from '@/components/dam/assetSelect/composables/assetSelectGridView'
 import { useAssetSelectActions } from '@/components/dam/assetSelect/composables/assetSelectListActions'
 import { useI18n } from 'vue-i18n'
-import type { IntegerId } from '@/types/common'
-
-withDefaults(
-  defineProps<{
-    extSystem: IntegerId
-  }>(),
-  {},
-)
 
 const { gridView } = useGridView()
 const { onItemClick, assetListItems, loader } = useAssetSelectActions()
@@ -29,7 +21,7 @@ const { t } = useI18n()
       :index="index"
       :item="item"
       show-meta-icons
-      @item-click="onItemClick($event, extSystem)"
+      @item-click="onItemClick($event)"
     />
   </div>
   <div

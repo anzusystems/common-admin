@@ -2,14 +2,6 @@
 import { useI18n } from 'vue-i18n'
 import AssetSelectTableRowItem from '@/components/dam/assetSelect/components/AssetSelectTableRowItem.vue'
 import { useAssetSelectActions } from '@/components/dam/assetSelect/composables/assetSelectListActions'
-import type { IntegerId } from '@/types/common'
-
-withDefaults(
-  defineProps<{
-    extSystem: IntegerId
-  }>(),
-  {},
-)
 
 const { t } = useI18n()
 
@@ -51,11 +43,11 @@ const { onItemClick, assetListItems, loader } = useAssetSelectActions()
         :index="index"
         :item="item"
         show-meta-icons
-        @item-click="onItemClick($event, extSystem)"
+        @item-click="onItemClick($event)"
       />
       <tr v-if="!loader && assetListItems.length === 0">
         <td
-          colspan="6"
+          colspan="7"
           class="text-center"
         >
           {{ t('common.assetSelect.meta.texts.noItemsFound') }}

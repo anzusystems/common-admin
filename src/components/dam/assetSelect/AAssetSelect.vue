@@ -30,6 +30,8 @@ import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
 import { storeToRefs } from 'pinia'
 import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
 import { type DatatableOrderingOption } from '@/composables/system/datatableColumns'
+import { showAssetSelectPresets } from '@/components/dam/assetSelect/composables/assetSelectPresets'
+import AssetSelectLicencePresetBar from '@/components/dam/assetSelect/components/AssetSelectLicencePresetBar.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -43,6 +45,7 @@ const props = withDefaults(
     configName?: string
     skipCurrentUserCheck?: boolean
     onDetailLoadedCallback?: ((asset: AssetDetailItemDto) => void) | undefined
+    listViews?: IntegerId[]
   }>(),
   {
     inPodcast: null,
@@ -51,6 +54,7 @@ const props = withDefaults(
     configName: 'default',
     skipCurrentUserCheck: false,
     onDetailLoadedCallback: undefined,
+    listViews: () => [],
   },
 )
 
@@ -79,7 +83,7 @@ const {
   fetchAssetListDebounced,
   reset,
   // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-} = useAssetSelectActions('default', props.onDetailLoadedCallback)
+} = useAssetSelectActions(props.configName, props.onDetailLoadedCallback)
 
 const { loadDamConfigAssetCustomFormElements, getDamConfigAssetCustomFormElements } =
   useDamConfigState(damClient)
@@ -88,9 +92,22 @@ const { getOrLoadDamConfigExtSystemByLicences } = useDamConfigState(damClient)
 const assetDetailStore = useAssetDetailStore()
 const { asset } = storeToRefs(assetDetailStore)
 const assetSelectStore = useAssetSelectStore()
-const { selectedLicenceId } = storeToRefs(assetSelectStore)
+const { selectedSelectConfig, selectedLicenceIds } = storeToRefs(assetSelectStore)
 
 const selectConfigs = shallowRef<DamConfigLicenceExtSystemReturnType[]>([])
+
+// Presets and the filter's licence list must never offer a licence the picker itself would reject:
+// DAM refuses the whole search when even one requested licence is unreadable. Reactive on
+// `selectConfigs` (not on `onOpen`'s local variable) so a preset control created before the dialog's
+// first open still resolves to the filtered universe once the configs land.
+const allowedSelectConfigs = computed(() =>
+  props.skipCurrentUserCheck
+    ? selectConfigs.value
+    : filterAllowedImageWidgetSelectConfigs(selectConfigs.value),
+)
+const allowedSelectLicences = computed<IntegerId[]>(() =>
+  allowedSelectConfigs.value.map((config) => config.licence),
+)
 
 const { mdAndUp } = useDisplay()
 const { openSidebarLeft, closeSidebarRight, sidebarLeft, sidebarRight } = useSidebar()
@@ -98,10 +115,7 @@ const { showErrorT } = useAlerts()
 
 const onOpen = () => {
   if (!ready.value) return
-  let selectConfigLocal = cloneDeep(selectConfigs.value)
-  if (!props.skipCurrentUserCheck) {
-    selectConfigLocal = filterAllowedImageWidgetSelectConfigs(selectConfigs.value)
-  }
+  const selectConfigLocal = cloneDeep(allowedSelectConfigs.value)
   if (selectConfigLocal.length === 0) {
     showErrorT('common.assetSelect.error.unallowedLicence')
     return
@@ -158,11 +172,25 @@ const { gridView } = useGridView()
 const showCopyToLicence = computed(() => {
   return (
     props.assetType === DamAssetType.Image &&
-    selectedLicenceId.value > 0 &&
+    selectedLicenceIds.value.length > 0 &&
     !isUndefined(props.uploadLicence) &&
-    selectedLicenceId.value !== props.uploadLicence
+    selectedLicenceIds.value[0] !== props.uploadLicence
   )
 })
+
+// One watcher for every way the licences can change: the selection control in the filter sidebar and the
+// licence chips above the list all write the same store field. The store is shared by every picker on the
+// page, so only the one whose dialog is open may react.
+watch(
+  () => assetSelectStore.selectedLicenceIds,
+  (value, oldValue) => {
+    if (!modelValue.value) return
+    if (value.length === oldValue?.length && value.every((id) => oldValue.includes(id))) return
+    pagination.value.page = 1
+    fetchAssetListDebounced()
+  },
+  { deep: true }
+)
 
 const componentComputed = computed(() => {
   switch (gridView.value) {
@@ -180,12 +208,7 @@ const disabledSubmit = computed(() => {
 })
 
 const extId = computed(() => {
-  if (selectConfigs.value.length === 0) return undefined
-  if (selectedLicenceId.value > 0) {
-    const found = selectConfigs.value.find((config) => config.licence === selectedLicenceId.value)
-    if (found) return found.extSystem
-  }
-  return undefined
+  return selectedSelectConfig.value?.extSystem
 })
 
 const loadingSidebarRight = computed(() => {
@@ -273,6 +296,11 @@ defineExpose({
           v-model:sort="sortModel"
           @sort-by-change="sortByChange"
         />
+        <AssetSelectLicencePresetBar
+          v-if="showAssetSelectPresets(allowedSelectLicences, listViews)"
+          :select-licences="allowedSelectLicences"
+          :list-views="listViews"
+        />
         <div
           class="subject-select__main"
           :class="{
@@ -281,13 +309,16 @@ defineExpose({
           }"
         >
           <div class="subject-select__sidebar system-border-r">
-            <AssetSelectFilter :config-name="configName" />
+            <AssetSelectFilter
+              :config-name="configName"
+              :select-licences="allowedSelectLicences"
+              :list-views="listViews"
+            />
           </div>
           <div class="subject-select__content">
             <component
               :is="componentComputed"
               v-if="extId"
-              :ext-system="extId"
             />
             <div class="d-flex w-100 align-center justify-center pa-4">
               <ABtnSecondary

@@ -480,6 +480,7 @@ import { useDamAuthorFactory } from '@/components/damImage/uploadQueue/author/Au
 import type { DamCurrentUserDto } from '@/types/coreDam/DamCurrentUser'
 import { fetchDamCurrentUser } from '@/components/damImage/uploadQueue/api/damCurrentUserApi'
 import type { DamAssetLicence, DamAssetLicenceMinimal } from '@/types/coreDam/AssetLicence'
+import type { DamAssetListViewResolved } from '@/types/coreDam/AssetListView'
 import type { DamAssetLicenceGroup } from '@/types/coreDam/AssetLicenceGroup'
 import { useCollabInit } from '@/components/collab/composables/collabInit'
 import { useCommonAdminCollabOptions } from '@/components/collab/composables/commonAdminCollabOptions'
@@ -574,6 +575,7 @@ import {
   isCollabSuccessChangeRoomLockCallback,
 } from '@/components/collab/types/Collab'
 import DamAssetLicenceRemoteAutocomplete from '@/components/dam/user/DamAssetLicenceRemoteAutocomplete.vue'
+import DamAssetListViewRemoteAutocomplete from '@/components/dam/user/DamAssetListViewRemoteAutocomplete.vue'
 import DamAssetLicenceGroupRemoteAutocomplete from '@/components/dam/user/DamAssetLicenceGroupRemoteAutocomplete.vue'
 import DamExtSystemRemoteAutocomplete from '@/components/dam/user/DamExtSystemRemoteAutocomplete.vue'
 import DamExternalProviderAssetSelect from '@/components/dam/user/DamExternalProviderAssetSelect.vue'
@@ -588,6 +590,7 @@ import {
   useFetchDamAssetLicenceList,
   fetchDamAssetLicenceList,
 } from '@/components/dam/user/assetLicenceApi'
+import { fetchDamAssetListViewListByIds } from '@/components/dam/user/assetListViewApi'
 import {
   fetchDamAssetLicenceGroupListByIds,
   useFetchDamAssetLicenceGroupList,
@@ -754,6 +757,7 @@ export {
   DamExternalProviderAssetSelect,
   DamDistributionServiceSelect,
   DamAssetLicenceRemoteAutocomplete,
+  DamAssetListViewRemoteAutocomplete,
   DamAssetLicenceGroupRemoteAutocomplete,
   DamAuthorFilterRemoteAutocomplete,
   DamAuthorFilterRemoteAutocompleteLegacy,
@@ -995,6 +999,7 @@ export {
   type DamCurrentUserDto,
   type DamAssetLicence,
   type DamAssetLicenceMinimal,
+  type DamAssetListViewResolved,
   type DamAssetLicenceGroup,
   type DamUserUpdateDto,
   type DamUser,
@@ -1104,6 +1109,7 @@ export {
   useJobStatus,
   regionToCrop,
   cropToRegion,
+  fetchDamAssetListViewListByIds,
   fetchDamAssetLicenceListByIds,
   useFetchDamAssetLicenceList,
   fetchDamAssetLicenceList,
