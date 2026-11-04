@@ -19,6 +19,7 @@ import AFilterBookmarkButton from '@/domains/filters/bookmarks/components/AFilte
 import FilterBookmarks from '@/domains/filters/bookmarks/components/FilterBookmarks.vue'
 import type { IntegerIdNullable } from '@/shared/types/common'
 import { type AxiosInstance } from 'axios'
+import { VSlideYTransition } from 'vuetify/components/transitions'
 
 const props = withDefaults(
   defineProps<{
@@ -197,7 +198,7 @@ defineExpose({
       </VCol>
     </VRow>
     <div v-if="!hideMore">
-      <component :is="alwaysVisible ? 'div' : 'VSlideYTransition'">
+      <component :is="alwaysVisible ? 'div' : VSlideYTransition">
         <div
           v-show="showDetail"
           :class="{ 'mt-6 pa-4 border': !alwaysVisible }"
