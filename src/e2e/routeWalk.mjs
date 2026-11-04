@@ -348,8 +348,9 @@ const unresolvedComponents = (page) =>
 
 /**
  * Opens the route on a fresh document. `about:blank` first, so that what the previous page still logs or
- * requests while it unloads is not blamed on this one. An app that comes up blank is reloaded once: a cold
- * boot can hit a transient failure that the next one does not.
+ * requests while it unloads is not blamed on this one. An app that comes up blank, without a `main` or with
+ * only the start-up loader's empty one, is reloaded once: a cold boot can hit a transient failure that the next
+ * one does not. A page that stays empty after that is reported as one.
  *
  * @param {Page} page
  * @param {PageWatcher} watcher
@@ -360,14 +361,13 @@ const openRoute = async (page, watcher, target, timings) => {
   await page.goto('about:blank')
   watcher.reset(timings)
   await page.goto(target)
-  try {
-    return await settle(page, watcher, timings)
-  } catch (error) {
-    if ((await page.locator('main').count()) > 0) throw error
-    watcher.reset(timings)
-    await page.reload()
-    return settle(page, watcher, timings)
-  }
+  const first = await settle(page, watcher, timings).catch((/** @type {Error} */ error) => error)
+  if (typeof first === 'boolean' && (await pageState(page))?.hasText) return first
+  // A loader that never ends on a page that rendered is the page's failure, not the boot's.
+  if (first instanceof Error && (await page.locator('main').count()) > 0) throw first
+  watcher.reset(timings)
+  await page.reload()
+  return settle(page, watcher, timings)
 }
 
 /** @type {import('./types.mjs').VisitRoute} */
@@ -405,12 +405,19 @@ export async function firstRecordOf(
   const file = recordFile(outputDir, listing, pattern)
   if (fs.existsSync(file)) return JSON.parse(fs.readFileSync(file, 'utf8'))
 
-  const lookup = await (async () => {
-    const listingTimings = withDefaults(timings)
-    watcher.reset(listingTimings)
-    await page.goto(listing)
-    await settle(page, watcher, listingTimings).catch(() => false)
-    if ((await page.locator(NOT_FOUND_SELECTOR).count()) > 0) return { missing: `${listing} is not a page` }
+  // `keep`: an answer the listing gives every time. One that a failed load or a page still loading gave is not kept,
+  // so the routes after it look again instead of all failing on what went wrong once.
+  /** @type {{ lookup: RecordLookup; keep: boolean }} */
+  const { lookup, keep } = await (async () => {
+    const opened = await openRoute(page, watcher, listing, withDefaults(timings)).then(
+      () => undefined,
+      (/** @type {Error} */ error) => error
+    )
+    if (opened) return { lookup: { missing: `${listing} did not load: ${opened.message}` }, keep: false }
+    if ((await page.locator(NOT_FOUND_SELECTOR).count()) > 0) {
+      return { lookup: { missing: `${listing} is not a page` }, keep: true }
+    }
+    if (!(await pageState(page))?.hasText) return { lookup: { missing: `${listing} came up empty` }, keep: false }
 
     const fromLink = await page.evaluate(
       ({ prefix, source }) => {
@@ -421,15 +428,15 @@ export async function firstRecordOf(
       },
       { prefix: listing, source: pattern.source }
     )
-    if (fromLink !== undefined) return { id: fromLink }
+    if (fromLink !== undefined) return { lookup: { id: fromLink }, keep: true }
 
     const firstRow = page.locator(rowSelector).first()
     if ((await firstRow.count()) === 0) {
       // Empty only when the table says so: a row selector that matches nothing must not pass for no data.
       if (await page.locator(NO_DATA_SELECTOR).first().isVisible()) {
-        return { missing: `${listing} shows no record`, empty: /** @type {const} */ (true) }
+        return { lookup: { missing: `${listing} shows no record`, empty: /** @type {const} */ (true) }, keep: true }
       }
-      return { missing: `nothing in ${listing} matches the row selector` }
+      return { lookup: { missing: `nothing in ${listing} matches the row selector` }, keep: false }
     }
     // The corner of the first cell, inside its padding: a cell can hold a link to another record
     // (a site group, a super author), and a click on it would open that one instead.
@@ -439,15 +446,19 @@ export async function firstRecordOf(
       .click({ position: { x: 3, y: 3 } })
     await page.waitForURL((url) => url.pathname.startsWith(`${listing}/`), { timeout: 10_000 }).catch(() => {})
     const candidate = new URL(page.url()).pathname.slice(listing.length + 1).split('/')[0] ?? ''
-    if (!pattern.test(candidate)) return { missing: `clicking the first row of ${listing} opened ${page.url()}` }
+    if (!pattern.test(candidate)) {
+      return { lookup: { missing: `clicking the first row of ${listing} opened ${page.url()}` }, keep: false }
+    }
 
-    return { id: candidate }
+    return { lookup: { id: candidate }, keep: true }
   })()
-  // Written aside and renamed: another worker reading meanwhile sees the whole file or none.
-  fs.mkdirSync(path.dirname(file), { recursive: true })
-  const written = `${file}.${process.pid}.tmp`
-  fs.writeFileSync(written, JSON.stringify(lookup))
-  fs.renameSync(written, file)
+  if (keep) {
+    // Written aside and renamed: another worker reading meanwhile sees the whole file or none.
+    fs.mkdirSync(path.dirname(file), { recursive: true })
+    const written = `${file}.${process.pid}.tmp`
+    fs.writeFileSync(written, JSON.stringify(lookup))
+    fs.renameSync(written, file)
+  }
 
   return lookup
 }

@@ -226,6 +226,13 @@ describe('visitRoute', SLOW_TEST, () => {
     expect((await visit('/flaky')).problems).toEqual([])
     await expect(visit('/blank')).rejects.toThrow('the app did not render')
   })
+
+  it('reloads an app that stayed on its start-up loader once', async () => {
+    let loads = 0
+    pages['/x'] = () => (++loads === 1 ? app('') : app('Records'))
+    expect((await visit('/x')).problems).toEqual([])
+    expect(loads).toBe(2)
+  })
 })
 
 describe('firstRecordOf', () => {
@@ -253,6 +260,20 @@ describe('firstRecordOf', () => {
     fs.rmSync(path.join(outputDir, 'route-walk-records'), { recursive: true, force: true })
     pages['/things'] = app('<ul><li>Seven</li></ul>')
     expect(await lookup()).toEqual({ missing: 'nothing in /things matches the row selector' })
+  })
+
+  it('reloads a listing that came up blank, and keeps no answer it cannot be sure of', SLOW_TEST, async () => {
+    let loads = 0
+    pages['/things'] = () => (++loads === 1 ? app('') : app('<a href="/things/5">5</a>'))
+    expect(await lookup()).toEqual({ id: '5' })
+
+    fs.rmSync(path.join(outputDir, 'route-walk-records'), { recursive: true, force: true })
+    pages['/things'] = app('')
+    expect(await lookup()).toEqual({ missing: '/things came up empty' })
+    pages['/things'] = app('<ul><li>Seven</li></ul>')
+    expect(await lookup()).toEqual({ missing: 'nothing in /things matches the row selector' })
+    pages['/things'] = app('<a href="/things/6">6</a>')
+    expect(await lookup()).toEqual({ id: '6' })
   })
 })
 

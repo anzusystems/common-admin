@@ -38,6 +38,7 @@ export declare const visitRoute: VisitRoute
 
 /**
  * The first record a listing shows: from a link to it, else by clicking the first row and reading where the
- * app went. Kept in a file in `outputDir`, so a record's detail and edit share one visit of the listing.
+ * app went. An answer the listing gives every time (a record, no record, not a page) is kept in a file in
+ * `outputDir`, so a record's detail and edit share one visit of the listing; one a failed or empty load gave is not.
  */
 export declare const firstRecordOf: FirstRecordOf
