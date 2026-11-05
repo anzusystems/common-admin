@@ -29,6 +29,12 @@ export interface AnzuUserActionsParams {
   endPoint?: string
   /** Vuelidate scope, when the page collects its fields under one of its own. */
   validationScope?: string | symbol
+  /**
+   * Fields of the update's answer copied into the form besides the tracking: the ones the backend
+   * recalculates on save and the form only shows (DAM's `userToExtSystems`, "User in external systems").
+   * The rest of the form keeps what the user filled in.
+   */
+  updateResponseFields?: string[]
 }
 
 // The record store is shared by every page and system, and requests are not
@@ -178,14 +184,24 @@ export const useAnzuUserActions = (params: AnzuUserActionsParams) => {
         throw new AnzuFatalError(undefined, '[useAnzuUserActions] update called on a record with no id.')
       }
       const { execute } = useUpdateAnzuUser()
+      const generation = fetchGeneration
+      const sent = anzuUserOneStore.anzuUser
       const res = await execute({
         urlParams: { id },
         body: anzuUserOneStore.anzuUser,
       })
-      // Before the snapshot: `isDirty` compares the whole record, so tracking written after it would
+      showRecordWas('updated')
+      // The store holds another record: the page was left meanwhile, or a fetch already loading when the save
+      // went out has landed. Fetch and reset put a new object in the store, the form edits the one there.
+      if (generation !== fetchGeneration || anzuUserOneStore.anzuUser !== sent) return true
+      // Before the snapshot: `isDirty` compares the whole record, so a write after it would
       // mark the form as unsaved.
       syncUserAndTimeTracking(anzuUserOneStore.anzuUser, res)
-      showRecordWas('updated')
+      const record = anzuUserOneStore.anzuUser as unknown as Record<string, unknown>
+      const answer = res as unknown as Record<string, unknown>
+      for (const field of params.updateResponseFields ?? []) {
+        if (!isUndefined(answer[field])) record[field] = answer[field]
+      }
       snapshot()
       return true
     } catch (error) {

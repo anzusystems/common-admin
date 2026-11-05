@@ -164,12 +164,17 @@ export const usePermissionGroupActions = (params: PermissionGroupActionsParams) 
         throw new AnzuFatalError(undefined, '[usePermissionGroupActions] update called on a record with no id.')
       }
       const { execute } = useUpdatePermissionGroup()
+      const generation = fetchGeneration
+      const sent = permissionGroupOneStore.permissionGroup
       const res = await execute({
         urlParams: { id: permissionGroupOneStore.permissionGroup.id },
         body: permissionGroupOneStore.permissionGroup,
       })
-      syncUserAndTimeTracking(permissionGroupOneStore.permissionGroup, res)
       showRecordWas('updated')
+      // The store holds another record: the page was left meanwhile, or a fetch already loading when the save
+      // went out has landed. Fetch and reset put a new object in the store, the form edits the one there.
+      if (generation !== fetchGeneration || permissionGroupOneStore.permissionGroup !== sent) return true
+      syncUserAndTimeTracking(permissionGroupOneStore.permissionGroup, res)
       return true
     } catch (error) {
       showErrorsDefault(error)
