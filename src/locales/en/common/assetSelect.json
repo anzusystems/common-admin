@@ -62,7 +62,7 @@
   },
   "preset": {
     "all": "All licences",
-    "label": "Selection",
+    "label": "Search in",
     "groupListViews": "Selections",
     "groupLicences": "Licences"
   }

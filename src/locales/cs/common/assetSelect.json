@@ -62,7 +62,7 @@
   },
   "preset": {
     "all": "Všechny licence",
-    "label": "Výběr",
+    "label": "Hledat v",
     "groupListViews": "Výběry",
     "groupLicences": "Licence"
   }
