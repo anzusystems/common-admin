@@ -1,13 +1,13 @@
 import type { IntegerId } from '@/types/common'
 import { defineCached } from '@/composables/system/defineCached'
-import type { DamAssetLicenceCached, DamAssetLicenceExtended } from '@/types/coreDam/AssetLicence'
+import type { DamAssetLicence, DamAssetLicenceCached } from '@/types/coreDam/AssetLicence'
 import { fetchDamAssetLicenceListByIds } from '@/components/dam/user/assetLicenceApi'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 
-const mapFullToMinimal = (assetLicence: DamAssetLicenceExtended): DamAssetLicenceCached => ({
+const mapFullToMinimal = (assetLicence: DamAssetLicence): DamAssetLicenceCached => ({
   id: assetLicence.id,
   name: assetLicence.name,
-  badge: assetLicence.badge ?? '',
+  badge: assetLicence.badge,
 })
 
 const mapIdToMinimal = (id: IntegerId): DamAssetLicenceCached => ({
@@ -18,12 +18,12 @@ const mapIdToMinimal = (id: IntegerId): DamAssetLicenceCached => ({
 
 const { cache, toFetch, fetch, immediateFetch, add, addManual, has, get, isLoaded } = defineCached<
   IntegerId,
-  DamAssetLicenceExtended,
+  DamAssetLicence,
   DamAssetLicenceCached
 >(mapFullToMinimal, mapIdToMinimal, (ids) => {
   const { damClient } = useCommonAdminCoreDamOptions()
 
-  return fetchDamAssetLicenceListByIds(damClient, ids) as Promise<DamAssetLicenceExtended[]>
+  return fetchDamAssetLicenceListByIds(damClient, ids)
 })
 
 export const useDamCachedAssetLicences = () => {

@@ -3,9 +3,19 @@ import { useI18n } from 'vue-i18n'
 import AssetSelectTableRowItem from '@/components/dam/assetSelect/components/AssetSelectTableRowItem.vue'
 import { useAssetSelectActions } from '@/components/dam/assetSelect/composables/assetSelectListActions'
 
+const props = withDefaults(
+  defineProps<{
+    configName?: string
+  }>(),
+  {
+    configName: 'default',
+  },
+)
+
 const { t } = useI18n()
 
-const { onItemClick, assetListItems, loader } = useAssetSelectActions()
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { onItemClick, assetListItems, loader } = useAssetSelectActions(props.configName)
 </script>
 
 <template>

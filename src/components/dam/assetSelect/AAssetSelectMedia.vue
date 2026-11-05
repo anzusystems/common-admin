@@ -91,7 +91,7 @@ const { getOrLoadDamConfigExtSystemByLicences } = useDamConfigState(damClient)
 const assetDetailStore = useAssetDetailStore()
 const { asset } = storeToRefs(assetDetailStore)
 const assetSelectStore = useAssetSelectStore()
-const { selectedSelectConfig, selectedLicenceIds, assetType } = storeToRefs(assetSelectStore)
+const { selectedSelectConfig, selectedAssets, assetType } = storeToRefs(assetSelectStore)
 
 const selectConfigs = shallowRef<DamConfigLicenceExtSystemReturnType[]>([])
 
@@ -167,15 +167,12 @@ const { gridView } = useGridView()
 const showCopyToLicence = computed(() => {
   return (
     assetType.value === DamAssetType.Image &&
-    selectedLicenceIds.value.length > 0 &&
     !isUndefined(props.uploadLicence) &&
-    selectedLicenceIds.value[0] !== props.uploadLicence
+    [...selectedAssets.value.values()].some((item) => item.asset.licence !== props.uploadLicence)
   )
 })
 
-// One watcher for every way the licences can change: the selection control in the filter sidebar and the
-// licence chips above the list all write the same store field. The store is shared by every picker on the
-// page, so only the one whose dialog is open may react.
+// The store is shared by every picker on the page, so only the one whose dialog is open may react.
 watch(
   () => assetSelectStore.selectedLicenceIds,
   (value, oldValue) => {
@@ -184,7 +181,7 @@ watch(
     pagination.value.page = 1
     fetchAssetListDebounced()
   },
-  { deep: true }
+  { deep: true },
 )
 
 const componentComputed = computed(() => {
@@ -324,6 +321,7 @@ defineExpose({
             <component
               :is="componentComputed"
               v-if="extId"
+              :config-name="configName"
             />
             <div class="d-flex w-100 align-center justify-center pa-4">
               <ABtnSecondary

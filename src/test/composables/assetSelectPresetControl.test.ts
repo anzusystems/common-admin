@@ -7,21 +7,16 @@ import { SYSTEM_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
 import { useAssetSelectPresetControl } from '@/components/dam/assetSelect/composables/assetSelectPresetControl'
 import {
   AssetSelectPresetAll,
+  assetSelectPresetStorageKey,
   useAssetSelectPresets,
-  useAssetSelectPresetStorageKey,
 } from '@/components/dam/assetSelect/composables/assetSelectPresets'
 import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
 import type { DamCurrentUserDto } from '@/types/coreDam/DamCurrentUser'
+import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
 import type { IntegerId } from '@/types/common'
-
-const { fetchCachedAssetLicences } = vi.hoisted(() => ({
-  fetchCachedAssetLicences: vi.fn(),
-}))
 
 vi.mock('@/components/damImage/composables/cachedDamAssetLicences', () => ({
   useDamCachedAssetLicences: () => ({
-    addToCachedAssetLicences: vi.fn(),
-    fetchCachedAssetLicences,
     getCachedAssetLicence: () => undefined,
   }),
 }))
@@ -52,7 +47,6 @@ describe('useAssetSelectPresetControl', () => {
   beforeEach(() => {
     pinia = createPinia()
     localStorage.clear()
-    fetchCachedAssetLicences.mockReset().mockResolvedValue(undefined)
     const { useCurrentUser } = defineAuth(SYSTEM_DAM)
     useCurrentUser<DamCurrentUserDto>(SYSTEM_DAM).setCurrentUser({
       id: 1,
@@ -70,9 +64,7 @@ describe('useAssetSelectPresetControl', () => {
     'opens on the right selection for %s',
     async (_name, storedKey, expectedKey, expectedLicenceIds) => {
       if (storedKey) {
-        useAssetSelectPresets(
-          useAssetSelectPresetStorageKey(SELECT_LICENCES, LIST_VIEWS),
-        ).storeState({
+        useAssetSelectPresets(assetSelectPresetStorageKey(SELECT_LICENCES, LIST_VIEWS)).storeState({
           presetKey: storedKey,
         })
       }
@@ -81,49 +73,27 @@ describe('useAssetSelectPresetControl', () => {
 
       expect(control.selectedPresetKey.value).toBe(expectedKey)
       expect(control.selectedLicenceIds.value).toEqual(expectedLicenceIds)
-      expect(control.isModified.value).toBe(false)
     },
   )
 
-  it('opens on the remembered selection while the licence names are still loading', async () => {
-    fetchCachedAssetLicences.mockReturnValue(new Promise(() => {}))
-    useAssetSelectPresets(useAssetSelectPresetStorageKey(SELECT_LICENCES, LIST_VIEWS)).storeState({
-      presetKey: 'licence:20',
-    })
+  it('reopens a closed picker on the chosen selection', async () => {
+    const { control, store } = await mountControl()
+    control.applyPreset('licence:20')
+    store.reset(true)
+    store.setSelectConfig(
+      SELECT_LICENCES.map(
+        (licence) =>
+          ({
+            licence,
+            extSystem: 1,
+            licenceName: '',
+          }) as unknown as DamConfigLicenceExtSystemReturnType,
+      ),
+    )
 
-    const { control } = await mountControl()
+    const { control: reopened } = await mountControl()
 
-    expect(control.selectedPresetKey.value).toBe('licence:20')
-    expect(control.selectedLicenceIds.value).toEqual([20])
+    expect(reopened.selectedPresetKey.value).toBe('licence:20')
+    expect(reopened.selectedLicenceIds.value).toEqual([20])
   })
-
-  it('marks the selection modified when a licence is dropped and keeps the last one', async () => {
-    const { control } = await mountControl()
-
-    control.removeLicence(10)
-    control.removeLicence(20)
-
-    expect(control.selectedLicenceIds.value).toEqual([20])
-    expect(control.isModified.value).toBe(true)
-    expect(control.isClearable.value).toBe(false)
-  })
-
-  it.each<[string, string, string, IntegerId[]]>([
-    ['selection this host offers', 'listView:1', 'listView:1', [10]],
-    ['all licences for a key set by another picker', 'listView:9', AssetSelectPresetAll, [10, 20]],
-  ])(
-    'resets a narrowed search to the %s',
-    async (_name, activeKey, expectedKey, expectedLicenceIds) => {
-      const { control, store } = await mountControl()
-      control.applyPreset(AssetSelectPresetAll)
-      control.removeLicence(10)
-      store.setSelectedPresetKey(activeKey)
-
-      control.resetToPreset()
-
-      expect(control.selectedPresetKey.value).toBe(expectedKey)
-      expect(control.selectedLicenceIds.value).toEqual(expectedLicenceIds)
-      expect(control.isModified.value).toBe(false)
-    },
-  )
 })

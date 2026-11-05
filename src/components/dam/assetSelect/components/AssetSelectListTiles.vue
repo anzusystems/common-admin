@@ -4,8 +4,18 @@ import { useGridView } from '@/components/dam/assetSelect/composables/assetSelec
 import { useAssetSelectActions } from '@/components/dam/assetSelect/composables/assetSelectListActions'
 import { useI18n } from 'vue-i18n'
 
+const props = withDefaults(
+  defineProps<{
+    configName?: string
+  }>(),
+  {
+    configName: 'default',
+  },
+)
+
 const { gridView } = useGridView()
-const { onItemClick, assetListItems, loader } = useAssetSelectActions()
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { onItemClick, assetListItems, loader } = useAssetSelectActions(props.configName)
 
 const { t } = useI18n()
 </script>

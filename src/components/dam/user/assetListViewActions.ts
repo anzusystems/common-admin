@@ -1,7 +1,10 @@
-import type { DamAssetListViewResolved } from '@/types/coreDam/AssetListView'
+import type { DamAssetListViewMinimal } from '@/types/coreDam/AssetListView'
 import type { ValueObjectOption } from '@/types/ValueObject'
 import type { Pagination } from '@/labs/filters/pagination'
-import { fetchDamAssetListViewListByIds, useFetchDamAssetListViewList } from '@/components/dam/user/assetListViewApi'
+import {
+  fetchDamAssetListViewListByIds,
+  useFetchDamAssetListViewList,
+} from '@/components/dam/user/assetListViewApi'
 import type { AxiosInstance } from 'axios'
 import type { IntegerId } from '@/types/common'
 import type { Ref } from 'vue'
@@ -10,14 +13,20 @@ import type { FilterConfig, FilterData } from '@/labs/filters/filterFactory'
 export const useAssetListViewSelectActions = (client: () => AxiosInstance) => {
   const { executeFetch } = useFetchDamAssetListViewList(client)
 
-  const mapToValueObjectOption = (listViews: DamAssetListViewResolved[]): ValueObjectOption<IntegerId>[] => {
-    return listViews.map((listView: DamAssetListViewResolved) => ({
+  const mapToValueObjectOption = (
+    listViews: DamAssetListViewMinimal[],
+  ): ValueObjectOption<IntegerId>[] => {
+    return listViews.map((listView: DamAssetListViewMinimal) => ({
       title: listView.name,
       value: listView.id,
     }))
   }
 
-  const fetchItems = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
+  const fetchItems = async (
+    pagination: Ref<Pagination>,
+    filterData: FilterData,
+    filterConfig: FilterConfig,
+  ) => {
     return mapToValueObjectOption(await executeFetch(pagination, filterData, filterConfig))
   }
 

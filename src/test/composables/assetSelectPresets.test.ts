@@ -1,12 +1,11 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { createPinia, setActivePinia } from 'pinia'
 import { defineAuth } from '@/composables/auth/defineAuth'
 import { SYSTEM_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
 import {
   AssetSelectPresetAll,
   showAssetSelectPresets,
   useAssetSelectPresets,
-  useAssetSelectPresetStorageKey,
+  assetSelectPresetStorageKey,
 } from '@/components/dam/assetSelect/composables/assetSelectPresets'
 import type { DamCurrentUserDto } from '@/types/coreDam/DamCurrentUser'
 import type { IntegerId } from '@/types/common'
@@ -22,11 +21,11 @@ const sportListView = (licences: IntegerId[]) => ({
   name: 'Šport a regióny',
   extSystem: 1,
   licences,
+  uploadLicence: null,
 })
 
 describe('useAssetSelectPresets', () => {
   beforeEach(() => {
-    setActivePinia(createPinia())
     localStorage.clear()
   })
 
@@ -58,13 +57,11 @@ describe('useAssetSelectPresets', () => {
 
   it('remembers the chosen preset per host configuration whatever the order of its ids', () => {
     setDamCurrentUser([])
-    useAssetSelectPresets(useAssetSelectPresetStorageKey([20, 10], [2, 1])).storeState({
+    useAssetSelectPresets(assetSelectPresetStorageKey([20, 10], [2, 1])).storeState({
       presetKey: 'listView:1',
     })
 
-    const { loadStoredState } = useAssetSelectPresets(
-      useAssetSelectPresetStorageKey([10, 20], [1, 2]),
-    )
+    const { loadStoredState } = useAssetSelectPresets(assetSelectPresetStorageKey([10, 20], [1, 2]))
 
     expect(loadStoredState()).toEqual({ presetKey: 'listView:1' })
   })

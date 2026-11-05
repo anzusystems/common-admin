@@ -480,7 +480,7 @@ import { useDamAuthorFactory } from '@/components/damImage/uploadQueue/author/Au
 import type { DamCurrentUserDto } from '@/types/coreDam/DamCurrentUser'
 import { fetchDamCurrentUser } from '@/components/damImage/uploadQueue/api/damCurrentUserApi'
 import type { DamAssetLicence, DamAssetLicenceMinimal } from '@/types/coreDam/AssetLicence'
-import type { DamAssetListViewResolved } from '@/types/coreDam/AssetListView'
+import type { DamAssetListViewMinimal, DamAssetListViewResolved } from '@/types/coreDam/AssetListView'
 import type { DamAssetLicenceGroup } from '@/types/coreDam/AssetLicenceGroup'
 import { useCollabInit } from '@/components/collab/composables/collabInit'
 import { useCommonAdminCollabOptions } from '@/components/collab/composables/commonAdminCollabOptions'
@@ -999,6 +999,7 @@ export {
   type DamCurrentUserDto,
   type DamAssetLicence,
   type DamAssetLicenceMinimal,
+  type DamAssetListViewMinimal,
   type DamAssetListViewResolved,
   type DamAssetLicenceGroup,
   type DamUserUpdateDto,

@@ -63,8 +63,6 @@
   "preset": {
     "all": "Všechny licence",
     "label": "Výběr",
-    "modifiedTitle": "{title} (změněno)",
-    "reset": "Vrátit výběr",
     "groupListViews": "Výběry",
     "groupLicences": "Licence"
   }

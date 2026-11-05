@@ -37,7 +37,7 @@
     }
   },
   "filter": {
-    "licence": "Licencie",
+    "licence": "Licencia",
     "text": "Text",
     "described": "Popísané",
     "visible": "Viditeľné",
@@ -63,8 +63,6 @@
   "preset": {
     "all": "Všetky licencie",
     "label": "Výber",
-    "modifiedTitle": "{title} (zmenené)",
-    "reset": "Vrátiť výber",
     "groupListViews": "Výbery",
     "groupLicences": "Licencie"
   }

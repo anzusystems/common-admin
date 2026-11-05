@@ -34,7 +34,6 @@ const { assetListEnabledFilters } = useCommonAdminCoreDamOptions(props.configNam
 const { t } = useI18n()
 const { mdAndDown } = useDisplay()
 
-// The selection control sits with the other filter fields; the chips above the list only show its result.
 // Host configuration, not expected to change after mount.
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { selectLicences, listViews } = props
@@ -42,7 +41,8 @@ const { selectLicences, listViews } = props
 const { items: presetItems, selectedPresetKey, applyPreset } = useAssetSelectPresetControl(selectLicences, listViews)
 const showPresetSelect = computed(() => showAssetSelectPresets(selectLicences, listViews))
 const { closeSidebarLeft } = useSidebar()
-const { fetchAssetListDebounced, resetAssetList, pagination } = useAssetSelectActions()
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { fetchAssetListDebounced, resetAssetList, pagination } = useAssetSelectActions(props.configName)
 
 const assetSelectStore = useAssetSelectStore()
 

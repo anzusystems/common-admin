@@ -97,7 +97,7 @@ watch(
     addToCachedAssetLicences(licence)
     fetchCachedAssetLicences()
   },
-  { immediate: true }
+  { immediate: true },
 )
 
 const autoDeleteIn = computed(() => {

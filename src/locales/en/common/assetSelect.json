@@ -37,7 +37,7 @@
     }
   },
   "filter": {
-    "licence": "Licences",
+    "licence": "Licence",
     "text": "Text",
     "described": "Described",
     "visible": "Visible",
@@ -63,8 +63,6 @@
   "preset": {
     "all": "All licences",
     "label": "Selection",
-    "modifiedTitle": "{title} (changed)",
-    "reset": "Reset selection",
     "groupListViews": "Selections",
     "groupLicences": "Licences"
   }

@@ -131,7 +131,6 @@ const data = computed(() => {
     padding: 2px;
   }
 
-  // Same look as the SVG meta icons (low.svg): half-transparent black circle with white bold letters.
   .asset-image__licence-badge {
     display: inline-flex;
     align-items: center;

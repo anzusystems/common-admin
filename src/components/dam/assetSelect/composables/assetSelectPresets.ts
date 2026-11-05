@@ -21,27 +21,18 @@ export interface AssetSelectPreset {
   group: AssetSelectPresetGroup
 }
 
-export const showAssetSelectPresets = (selectLicences: IntegerId[], listViews: IntegerId[]): boolean =>
-  selectLicences.length > 1 || listViews.length > 0
+export const showAssetSelectPresets = (
+  selectLicences: IntegerId[],
+  listViews: IntegerId[],
+): boolean => selectLicences.length > 1 || listViews.length > 0
 
-export const assetSelectSingleLicenceKey = (licenceId: IntegerId): AssetSelectPresetKey => `licence:${licenceId}`
+export const assetSelectSingleLicenceKey = (licenceId: IntegerId): AssetSelectPresetKey =>
+  `licence:${licenceId}`
 
-/**
- * Only the chosen selection is remembered, never an ad-hoc narrowing of its licences. Narrowing is a
- * temporary tweak, and carrying it into the next session silently searches a subset the editor no longer
- * sees a reason for — it reads as "licences are missing" rather than as a filter they once set.
- */
 export interface AssetSelectPresetStoredState {
   presetKey: AssetSelectPresetKey
 }
 
-/**
- * One control carries every way of scoping the search, because a chip row next to a licence dropdown only
- * says the same thing twice. The list is grouped: the pinned `AssetListView`s first, then the site group's
- * own licences — all of them at once, and each one on its own, so reaching a single licence is one click
- * like it used to be. A view's licences are always intersected with `selectLicences`, so a view can narrow
- * the set the host allows but never widen it.
- */
 export function useAssetSelectPresets(storageKey: string) {
   const { useCurrentUser } = defineAuth<AclValue>(SYSTEM_DAM)
   const { currentUser: damCurrentUser } = useCurrentUser<DamCurrentUserDto>(SYSTEM_DAM)
@@ -49,7 +40,7 @@ export function useAssetSelectPresets(storageKey: string) {
   const buildPresets = (
     selectLicences: IntegerId[],
     listViews: IntegerId[],
-    licenceTitle: (licenceId: IntegerId) => string
+    licenceTitle: (licenceId: IntegerId) => string,
   ): AssetSelectPreset[] => {
     const selectLicencesSet = new Set(selectLicences)
     const allowedListViewIds = new Set(listViews)
@@ -107,11 +98,11 @@ export function useAssetSelectPresets(storageKey: string) {
   }
 }
 
-/**
- * The preset choice is remembered per host configuration, not per component instance. Common-admin has
- * no notion of "site group", so the sorted `selectLicences`/`listViews` ids stand in as a stable proxy for it.
- */
-export function useAssetSelectPresetStorageKey(selectLicences: IntegerId[], listViews: IntegerId[]): string {
+// Common-admin has no notion of a site group, so the sorted host ids stand in for it.
+export function assetSelectPresetStorageKey(
+  selectLicences: IntegerId[],
+  listViews: IntegerId[],
+): string {
   const licencesPart = [...selectLicences].sort((a, b) => a - b).join('-')
   const listViewsPart = [...listViews].sort((a, b) => a - b).join('-')
   return `common.assetSelect.preset.${licencesPart}.${listViewsPart}`

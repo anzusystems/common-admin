@@ -19,6 +19,7 @@ import { useDamCachedKeywords } from '@/components/damImage/uploadQueue/keyword/
 import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/composables/extSystemIdForCached'
 import { cloneDeep, isNull, isUndefined } from '@/utils/common'
 import { useDamCachedUsers } from '@/components/damImage/uploadQueue/author/cachedUsers'
+import { useDamCachedAssetLicences } from '@/components/damImage/composables/cachedDamAssetLicences'
 import { useSidebar } from '@/components/dam/assetSelect/composables/assetSelectFilterSidebar'
 import { SORT_BY_SCORE_DATE } from '@/composables/system/datatableColumns'
 import { useFilterClearHelpers } from '@/labs/filters/filterFactory'
@@ -29,8 +30,7 @@ const { pagination } = usePagination(SORT_BY_SCORE_DATE)
 const detailLoading = ref(false)
 let latestListRequest = 0
 
-// Shared by every instance: the filter's mount and the licence watcher of the picker both ask for the
-// first listing in the same tick, and two debounces of their own sent two identical searches.
+// One debounce for every instance: the filter's mount and the picker's licence watcher fetch in the same tick.
 const debouncedFetch = useDebounceFn((fetch: () => Promise<void>) => fetch())
 
 export function useAssetSelectActions(
@@ -60,8 +60,7 @@ export function useAssetSelectActions(
 
   const fetchAssetListDebounced = () => debouncedFetch(fetchAssetList)
 
-  // The list is fetched into a pagination of its own: a stale request must not write hasNextPage or
-  // currentViewCount of the shared one, which belongs to the list that is on screen.
+  // A stale request must not write the pagination of the list that is on screen.
   const fetchLatestList = async (request: number) => {
     const { executeFetch } = useFetchAssetListByLicences(damClient, endPointAsset)
     const requestPagination = ref(cloneDeep(pagination.value))
@@ -115,6 +114,7 @@ export function useAssetSelectActions(
   const { addToCachedAuthors, fetchCachedAuthors } = useDamCachedAuthors()
   const { addToCachedKeywords, fetchCachedKeywords } = useDamCachedKeywords()
   const { addToCachedUsers, fetchCachedUsers } = useDamCachedUsers()
+  const { addToCachedAssetLicences, fetchCachedAssetLicences } = useDamCachedAssetLicences()
 
   const onItemClick = async (data: { assetId: DocId; index: number }) => {
     const { cachedExtSystemId } = useExtSystemIdForCached()
@@ -124,13 +124,7 @@ export function useAssetSelectActions(
     detailLoading.value = true
     try {
       const asset = await fetchAsset(damClient, endPointAsset, data.assetId)
-      // Every licence in one search shares an ext system (LicenceCollectionSingleExtSystem), but resolve
-      // it from the asset's own licence rather than the dialog-wide selection so this stays correct if
-      // that backend constraint is ever relaxed.
-      const assetSelectConfig = assetSelectStore.selectConfig.find((config) => config.licence === asset.licence)
-      if (assetSelectConfig) {
-        cachedExtSystemId.value = assetSelectConfig.extSystem
-      }
+      cachedExtSystemId.value = assetSelectStore.selectedSelectConfig.extSystem
       addToCachedAuthors(asset.authors)
       addToCachedKeywords(asset.keywords)
       if (showFileInfoEnabled) {
@@ -160,6 +154,7 @@ export function useAssetSelectActions(
   }
 
   const reset = async () => {
+    latestListRequest++
     clearAll(filterData, filterConfig)
     pagination.value.page = 1
     assetSelectStore.reset(true)
@@ -177,6 +172,8 @@ export function useAssetSelectActions(
     assetSelectStore.clearSelected()
     assetSelectStore.setAssetType(assetType)
     assetSelectStore.setSelectConfig(selectConfig)
+    addToCachedAssetLicences(selectConfig.map((config) => config.licence))
+    fetchCachedAssetLicences()
     assetSelectStore.setSingleMode(singleMode)
     assetSelectStore.setMinCount(minCount)
     assetSelectStore.setMaxCount(maxCount)

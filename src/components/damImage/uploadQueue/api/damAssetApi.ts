@@ -62,11 +62,7 @@ export const useFetchAssetList = (
     urlParams: { licenceId },
   })
 
-/**
- * Same search as {@link useFetchAssetList}, generalised to a whole licence preset. Backend requires all
- * licences of one call to share an ext system (`LicenceCollectionSingleExtSystem`) — a mixed preset fails
- * the search with a validation error rather than silently widening across ext systems.
- */
+// DAM requires all licences of one search to share an ext system (LicenceCollectionSingleExtSystem).
 export const useFetchAssetListByLicences = (client: () => AxiosInstance, endPoint: string) =>
   useApiFetchList<AssetSearchListItemDto[]>({
     client,

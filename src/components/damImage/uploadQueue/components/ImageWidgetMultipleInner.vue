@@ -238,19 +238,17 @@ const assetSelectConfirmMap = async (
   const authorIdsToFetch = new Set<DocId>()
   const authorsMap = new Map<DocId, string>()
   try {
-    // A selection may span several licences while the endpoint scopes by exactly one, so details are
-    // fetched per licence of the picked item rather than for one licence of the whole selection.
-    const idsByLicence = new Map<IntegerId, DocId[]>()
+    const idsByLicence: IdsGroupedByLicences = new Map()
     items.forEach((item) => {
-      const licenceIds = idsByLicence.get(item.licence) ?? []
-      licenceIds.push(item.id)
-      idsByLicence.set(item.licence, licenceIds)
+      const docIds = idsByLicence.get(item.licence) ?? []
+      docIds.push(item.id)
+      idsByLicence.set(item.licence, docIds)
     })
 
     const assetDetails = (
       await Promise.all(
-        [...idsByLicence].map(([licenceId, licenceIds]) =>
-          fetchAssetListByIds(damClient, endPointAsset, licenceIds, licenceId),
+        [...idsByLicence].map(([licenceId, docIds]) =>
+          fetchAssetListByIds(damClient, endPointAsset, docIds, licenceId),
         ),
       )
     ).flat()

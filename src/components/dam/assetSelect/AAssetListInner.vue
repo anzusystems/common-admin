@@ -92,8 +92,6 @@ const { asset, dialog } = storeToRefs(assetDetailStore)
 const assetSelectStore = useAssetSelectStore()
 const { selectedLicenceIds } = storeToRefs(assetSelectStore)
 
-// This inner view keeps the historical single-licence dropdown (no preset UI) — one licence drives the
-// search at a time, same as before selectedLicenceIds became an array for the preset picker.
 const selectedLicenceId = computed<IntegerId>({
   get: () => selectedLicenceIds.value[0] ?? 0,
   set: (value) => assetSelectStore.setSelectedLicenceIds([value]),
@@ -134,7 +132,6 @@ const onInit = () => {
 
   reset()
   initStoreContext(selectConfigLocal, props.assetType, props.inPodcast, false, 0, 0)
-  // Keep the historical default: one licence (the first allowed), picked via the dropdown below.
   assetSelectStore.setSelectedLicenceIds([selectConfigLocal[0].licence])
   fetchAssetListDebounced()
 }
@@ -335,6 +332,7 @@ onUnmounted(() => {
         <component
           :is="componentComputed"
           v-if="extId"
+          :config-name="configName"
         />
         <div class="d-flex w-100 align-center justify-center pa-4">
           <ABtnSecondary

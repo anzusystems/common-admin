@@ -11,12 +11,7 @@ export interface DamAssetLicence
   extends DamAssetLicenceMinimal, AnzuUserAndTimeTrackingAware, ResourceNameSystemAware {
   extSystem: IntegerIdNullable
   extId: string
-}
-
-export interface DamAssetLicenceSelectFields {
   badge: string
 }
 
-export type DamAssetLicenceCached = DamAssetLicenceMinimal & DamAssetLicenceSelectFields
-
-export interface DamAssetLicenceExtended extends DamAssetLicence, DamAssetLicenceSelectFields {}
+export type DamAssetLicenceCached = DamAssetLicenceMinimal & Pick<DamAssetLicence, 'badge'>

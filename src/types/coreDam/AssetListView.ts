@@ -1,13 +1,13 @@
 import type { IntegerId, IntegerIdNullable } from '@/types/common'
 
-/**
- * An asset list view as the backend resolves it for the current user: the licences are already narrowed
- * down to the ones he may read, so the client never widens the set it was given.
- */
-export interface DamAssetListViewResolved {
+export interface DamAssetListViewMinimal {
   id: IntegerId
   name: string
+}
+
+// Only the current user's list views are resolved: their licences are narrowed to the ones the user may read.
+export interface DamAssetListViewResolved extends DamAssetListViewMinimal {
   extSystem: IntegerId
   licences: IntegerId[]
-  uploadLicence?: IntegerIdNullable
+  uploadLicence: IntegerIdNullable
 }

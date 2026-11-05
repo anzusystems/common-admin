@@ -21,8 +21,6 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
   const assetListItems = ref<Array<AssetSelectListItem>>([])
   const loader = ref(false)
   const selectedLicenceIds = ref<IntegerId[]>([])
-  // Which selection (a list view, all licences, or a single one) filled selectedLicenceIds. Shared
-  // because the control lives in the filter sidebar while the chips showing the result live in the bar.
   const selectedPresetKey = ref<string>('')
   const selectConfig = ref<DamConfigLicenceExtSystemReturnType[]>([])
   const assetType = ref<DamAssetTypeType>(DamAssetTypeDefault)
@@ -223,8 +221,6 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
     selectedLicenceIds.value = []
   }
 
-  // Kept for the upload-queue widgets (single-asset flows): the config of the first selected licence,
-  // falling back to the first configured one once the picker is closed and the selection is cleared.
   const selectedSelectConfig = computed(() => {
     const primaryLicenceId = selectedLicenceIds.value[0]
     const found = selectConfig.value.find((configItem) => configItem.licence === primaryLicenceId)

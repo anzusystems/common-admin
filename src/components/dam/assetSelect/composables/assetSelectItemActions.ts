@@ -63,9 +63,7 @@ export function useAssetItemActions(item: Readonly<Ref<AssetSelectListItem>>) {
 
   const { getCachedAssetLicence } = useDamCachedAssetLicences()
 
-  const licence = computed(() => getCachedAssetLicence(asset.value.licence))
-
-  const licenceBadge = computed(() => licence.value?.badge ?? '')
+  const licenceBadge = computed(() => getCachedAssetLicence(asset.value.licence)?.badge ?? '')
 
   return {
     asset,
@@ -73,7 +71,6 @@ export function useAssetItemActions(item: Readonly<Ref<AssetSelectListItem>>) {
     assetStatus,
     imageProperties,
     tableImageProperties,
-    licence,
     licenceBadge,
   }
 }

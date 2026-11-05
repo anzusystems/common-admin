@@ -92,14 +92,12 @@ const { getOrLoadDamConfigExtSystemByLicences } = useDamConfigState(damClient)
 const assetDetailStore = useAssetDetailStore()
 const { asset } = storeToRefs(assetDetailStore)
 const assetSelectStore = useAssetSelectStore()
-const { selectedSelectConfig, selectedLicenceIds } = storeToRefs(assetSelectStore)
+const { selectedSelectConfig, selectedAssets } = storeToRefs(assetSelectStore)
 
 const selectConfigs = shallowRef<DamConfigLicenceExtSystemReturnType[]>([])
 
-// Presets and the filter's licence list must never offer a licence the picker itself would reject:
-// DAM refuses the whole search when even one requested licence is unreadable. Reactive on
-// `selectConfigs` (not on `onOpen`'s local variable) so a preset control created before the dialog's
-// first open still resolves to the filtered universe once the configs land.
+// DAM refuses the whole search when even one requested licence is unreadable, so presets and the
+// filter's licence list are limited to the licences the picker itself accepts.
 const allowedSelectConfigs = computed(() =>
   props.skipCurrentUserCheck
     ? selectConfigs.value
@@ -172,15 +170,12 @@ const { gridView } = useGridView()
 const showCopyToLicence = computed(() => {
   return (
     props.assetType === DamAssetType.Image &&
-    selectedLicenceIds.value.length > 0 &&
     !isUndefined(props.uploadLicence) &&
-    selectedLicenceIds.value[0] !== props.uploadLicence
+    [...selectedAssets.value.values()].some((item) => item.asset.licence !== props.uploadLicence)
   )
 })
 
-// One watcher for every way the licences can change: the selection control in the filter sidebar and the
-// licence chips above the list all write the same store field. The store is shared by every picker on the
-// page, so only the one whose dialog is open may react.
+// The store is shared by every picker on the page, so only the one whose dialog is open may react.
 watch(
   () => assetSelectStore.selectedLicenceIds,
   (value, oldValue) => {
@@ -189,7 +184,7 @@ watch(
     pagination.value.page = 1
     fetchAssetListDebounced()
   },
-  { deep: true }
+  { deep: true },
 )
 
 const componentComputed = computed(() => {
@@ -319,6 +314,7 @@ defineExpose({
             <component
               :is="componentComputed"
               v-if="extId"
+              :config-name="configName"
             />
             <div class="d-flex w-100 align-center justify-center pa-4">
               <ABtnSecondary
