@@ -1,0 +1,30 @@
+{
+  "help": {
+    "templateTitle": "Template",
+    "templateText": "is a string that defines what the generated article URL will look like. When no page is selected, the template becomes the default template for all articles.",
+    "elements": "Template elements",
+    "rubric": "renders the rubric in the URL, using the rubric slug.",
+    "rubricsText": "renders the rubrics in the URL.",
+    "rubricsOffsetPositive": "A non-negative OFFSET picks which rubric, counting from the root, is used for generation. 0 means from the root.",
+    "rubricsOffsetNegative": "A negative OFFSET picks which rubric, counting from the leaf, is used for generation.",
+    "rubricsLengthPositive": "A positive LENGTH sets how many rubrics are taken into account.",
+    "rubricsLengthNegative": "A negative LENGTH sets how many rubrics from the end are left out of generation.",
+    "rubricsSeparator": "SEPARATOR sets the character used between multiple rubrics. One of these may be used: ,-_/",
+    "texts": "a comma-separated list of article texts. It works as a coalesce — generation uses the first non-empty text in the list.",
+    "date": "takes the article's publication date and formats it with the parameter from the",
+    "dateDocsLink": "documentation",
+    "keywordsCount": "N is the maximum number of keywords shown in the URL",
+    "keywordsSeparator": "SEPARATOR sets the character used between multiple keywords. One of these may be used: ,-_/",
+    "uid": "N is the number of UUID segments shown in the URL, for example:",
+    "uidExample": "{token} is {value}",
+    "suffixTitle": "Suffix",
+    "suffixText": "The template may contain custom text, for example:",
+    "suffixNote": "When this string is set, every generated page will carry it at the end of the URL.",
+    "examplesTitle": "Template examples:",
+    "exampleResult": "The resulting URL will look like:",
+    "languageTitle": "Language",
+    "languageText": "Following the configured languages, special characters are converted to their ASCII form, for example á to a.",
+    "stopWordsTitle": "Stop words",
+    "stopWordsText": "Stop words are words that carry no meaning for the generated URL or for SEO, and are separated by commas. They are left out when the URL is generated. For example, with the StopWords field set to “a,aj,i,o”, the standalone words a, aj, i, o are dropped when generating the URL from texts. With the headline “Bratislava a Košice sú mestá i okresy” the URL becomes bratislava-kosice-su-mesta-okresy."
+  }
+}

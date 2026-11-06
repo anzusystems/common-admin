@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import SidebarItems from '@/playground/system/SidebarItems.vue'
-import TestRouteSwitch from '@/components/TestRouteSwitch.vue'
+import TestRouteSwitch from '@/playground/system/TestRouteSwitch.vue'
 </script>
 
 <template>

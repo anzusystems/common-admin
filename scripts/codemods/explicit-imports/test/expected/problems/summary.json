@@ -1,0 +1,61 @@
+{
+  "exitCode": 1,
+  "totals": {
+    "files": 5,
+    "importDeclarations": 5,
+    "propsChanged": 1
+  },
+  "files": {
+    "src/components/FlagProp.vue": {
+      "types": [
+        "Flag"
+      ]
+    },
+    "src/components/NoSetup.vue": {
+      "template": [
+        "toRaw"
+      ]
+    },
+    "src/components/ReadonlyConflict.vue": {
+      "setup": [
+        "readonly"
+      ]
+    },
+    "src/domains/thing.ts": {
+      "script": [
+        "useStore"
+      ]
+    },
+    "src/exportAlias.ts": {
+      "script": [
+        "toRaw"
+      ]
+    }
+  },
+  "props": {
+    "src/components/FlagProp.vue": {
+      "dev": {
+        "before": "{\n    flag: { type: null, required: false }\n  }",
+        "after": "{\n    flag: { type: Boolean, required: false }\n  }"
+      },
+      "prod": {
+        "before": "{\n    flag: {}\n  }",
+        "after": "{\n    flag: { type: Boolean }\n  }"
+      }
+    }
+  },
+  "newCycleEdges": [
+    "src/domains/thing.ts -> src/shared/store.ts"
+  ],
+  "violations": [
+    "src/components/FlagProp.vue: a prop gained the runtime type Boolean (dev)",
+    "src/components/FlagProp.vue: a prop gained the runtime type Boolean (prod)",
+    "src/components/NoSetup.vue: template uses auto-imports but there is no <script setup>",
+    "src/components/NoSetup.vue: unimport would still inject toRaw",
+    "src/components/ReadonlyConflict.vue: readonly is a prop and would be shadowed by the import",
+    "src/components/ReadonlyConflict.vue: template reference readonly: $props -> $setup",
+    "src/domains/thing.ts -> src/shared/store.ts: new import edge inside a cycle",
+    "src/exportAlias.ts: toRaw is imported now, but unimport did not inject it before",
+    "src/widget.ts: unimport would still inject computed"
+  ]
+}

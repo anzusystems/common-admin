@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
 import { ref } from 'vue'
-import ASortableListEditor from '@/labs/listEditor/ASortableListEditor.vue'
-import AFormTextarea from '@/components/form/AFormTextarea.vue'
+import ASortableListEditor from '@/domains/listEditor/components/ASortableListEditor.vue'
+import AFormTextarea from '@/domains/form/components/AFormTextarea.vue'
 
 interface MockImage extends Record<string, any> {
   id: number
@@ -28,7 +28,7 @@ const buildImages = (): MockImage[] =>
     id: i + 1,
     key: `img-${i + 1}`,
     position: i + 1,
-    src: makeSvgThumb(String(i + 1), palette[i % palette.length]),
+    src: makeSvgThumb(String(i + 1), palette[i % palette.length]!),
     title: `Image ${i + 1}`,
     description: `Description for image ${i + 1}`,
   }))
@@ -43,7 +43,7 @@ const createImage = (): MockImage => {
     id,
     key: `img-${id}`,
     position: 0,
-    src: makeSvgThumb(String(id), palette[id % palette.length]),
+    src: makeSvgThumb(String(id), palette[id % palette.length]!),
     title: `Image ${id}`,
     description: '',
   }
@@ -73,15 +73,12 @@ const onReorderApplied = (items: MockImage[]) => {
 
   <VCard>
     <VCardText>
-      <h2 class="text-headline-medium mt-4 mb-2">
-        Card-grid + reorder mode pattern (#view-body slot)
-      </h2>
+      <h2 class="text-headline-medium mt-4 mb-2">Card-grid + reorder mode pattern (#view-body slot)</h2>
       <p class="text-body-medium text-medium-emphasis mb-2">
         The editor's header hosts the Reorder / Apply / Cancel buttons; the
-        <code>#view-body</code> slot lets you put any content (here, a card grid with form fields)
-        in place of the editor's default vertical list while in view mode. Click
-        <strong>Reorder</strong> in the editor's header to switch to the bigger-thumbnail sortable
-        list.
+        <code>#view-body</code> slot lets you put any content (here, a card grid with form fields) in place of the
+        editor's default vertical list while in view mode. Click <strong>Reorder</strong> in the editor's header to
+        switch to the bigger-thumbnail sortable list.
       </p>
       <p class="text-body-medium text-medium-emphasis mb-4">
         This is the same pattern used by <code>AImageWidgetMultiple</code>.
@@ -123,7 +120,7 @@ const onReorderApplied = (items: MockImage[]) => {
                 :src="image.src"
                 :alt="image.title"
                 class="card-grid__thumb"
-              >
+              />
               <div class="card-grid__body">
                 <div class="card-grid__title">
                   {{ image.title }}
@@ -153,7 +150,7 @@ const onReorderApplied = (items: MockImage[]) => {
               :src="raw.src"
               :alt="raw.title"
               class="card-grid-reorder-row__thumb"
-            >
+            />
             <div class="card-grid-reorder-row__meta">
               <div class="card-grid-reorder-row__title">
                 {{ raw.title }}
@@ -174,9 +171,7 @@ const onReorderApplied = (items: MockImage[]) => {
         last event: {{ lastEvent }}
       </div>
 
-      <h3 class="text-title-large mt-6 mb-2">
-        Order (live)
-      </h3>
+      <h3 class="text-title-large mt-6 mb-2">Order (live)</h3>
       <div class="text-body-small text-medium-emphasis">
         {{ images.map((i) => `${i.position}:${i.id}`).join(' · ') }}
       </div>

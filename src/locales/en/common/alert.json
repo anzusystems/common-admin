@@ -1,6 +1,9 @@
 {
   "unknownError": "System error, try again later or contact administrator",
-  "forbiddenError": "Access denied, you dont have correct rights for this action",
+  "forbiddenError": "Access denied, you don't have correct rights for this action",
+  "recordNotFound": "The record does not exist or has been deleted.",
+  "recordForbidden": "You do not have permission to access this record.",
+  "navigationFailed": "The page could not be opened.",
   "fixValidationErrors": "Please fill all required fields and fix problems",
   "fixApiValidationErrors": "Please, fix these errors",
   "apiForbiddenOperationError": "Forbidden operation",
@@ -14,5 +17,6 @@
     "disabled": "Record was disabled"
   },
   "idWasCopied": "ID was copied to clipboard",
-  "textWasCopied": "Text was copied to clipboard"
+  "textWasCopied": "Text was copied to clipboard",
+  "authUnavailable": "The sign-in server is not responding. Try again in a moment."
 }

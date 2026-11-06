@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
 import { ref } from 'vue'
-import ACopyText from '@/components/ACopyText.vue'
+import ACopyText from '@/domains/ui/components/ACopyText.vue'
 
 const copyTextFirst = ref('copyTextFirst')
 const copyTextSecond = ref('copyTextSecond')

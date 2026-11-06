@@ -1,7 +1,7 @@
-import { AVAILABLE_LANGUAGES, DEFAULT_LANGUAGE } from '@/playground'
+import { AVAILABLE_LANGUAGES, DEFAULT_LANGUAGE } from '@/playground/playground'
 import { ref } from 'vue'
-import type { LanguageCode } from '@/composables/languageSettings'
-import { modifyLanguageSettings } from '@/composables/languageSettings'
+import type { LanguageCode } from '@/domains/system/composables/languageSettings'
+import { modifyLanguageSettings } from '@/domains/system/composables/languageSettings'
 
 export const initLanguageMessagesLoaded = ref(false)
 
@@ -20,7 +20,7 @@ export const initLoadLanguageMessages = async () => {
   }
   const { initializeLanguage, addMessages, currentLanguageCode } = modifyLanguageSettings(
     AVAILABLE_LANGUAGES,
-    DEFAULT_LANGUAGE,
+    DEFAULT_LANGUAGE
   )
   initializeLanguage()
   await loadMessages(currentLanguageCode.value)

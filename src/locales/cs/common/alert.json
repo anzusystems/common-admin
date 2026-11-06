@@ -1,6 +1,9 @@
 {
   "unknownError": "Systémová chyba. Zkuste to později nebo kontaktujte administrátora.",
   "forbiddenError": "Přístup zamítnut. K provedení dané akce nemáte oprávnění.",
+  "recordNotFound": "Záznam neexistuje nebo byl smazán.",
+  "recordForbidden": "K tomuto záznamu nemáte oprávnění.",
+  "navigationFailed": "Stránku se nepodařilo otevřít.",
   "fixValidationErrors": "Vyplňte všechna povinná pole a opravte chyby.",
   "fixApiValidationErrors": "Opravte tyto chyby.",
   "apiForbiddenOperationError": "Zakázaná akce.",
@@ -14,5 +17,6 @@
     "disabled": "Záznam byl zakázán."
   },
   "idWasCopied": "ID bylo zkopírováno do schránky.",
-  "textWasCopied": "Text byl zkopírován do schránky"
+  "textWasCopied": "Text byl zkopírován do schránky",
+  "authUnavailable": "Přihlašovací server momentálně neodpovídá. Zkuste to za chvíli znovu."
 }

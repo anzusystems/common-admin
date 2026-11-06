@@ -1,9 +1,10 @@
-import stylistic from '@stylistic/eslint-plugin'
 import pluginVue from 'eslint-plugin-vue'
 import { defineConfigWithVueTs, vueTsConfigs } from '@vue/eslint-config-typescript'
 import vuetify from 'eslint-plugin-vuetify'
-import oxlint from 'eslint-plugin-oxlint'
+import oxlintPlugin from 'eslint-plugin-oxlint'
 import { recommended as anzuRecommended } from './src/eslint/plugin.mjs'
+
+const { buildFromOxlintConfigFile } = oxlintPlugin
 
 export default defineConfigWithVueTs(
   {
@@ -18,66 +19,45 @@ export default defineConfigWithVueTs(
       '**/coverage/**',
       '.stylelintrc.cjs',
       '**/cypress/**',
-      '**/docs/**',
       '.playwright-cli/**',
+      'scripts/codemods/explicit-imports/test/fixtures/**',
+      'scripts/codemods/explicit-imports/test/expected/**',
     ],
+  },
+  {
+    // `@/lib` is the public entry. A library module that imports it creates
+    // a cycle through the entry and pulls every export into its graph.
+    // Per-module output then ships all of it to each consumer of that module. Import from the defining module instead.
+    name: 'app/no-public-entry',
+    files: ['src/**/*.{ts,vue}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [{ name: '@/lib', message: 'Import from the module that defines it, not from the public entry.' }],
+          patterns: [
+            {
+              regex: '^(\\.\\.?/)+lib$',
+              message: 'Import from the module that defines it, not from the public entry.',
+            },
+          ],
+        },
+      ],
+    },
   },
   pluginVue.configs['flat/essential'],
   pluginVue.configs['flat/strongly-recommended'],
   pluginVue.configs['flat/recommended'],
   vueTsConfigs.recommended,
-  anzuRecommended({
-    deprecatedImports: {
-      mode: 'internal',
-      skipFiles: [
-        'src/lib.ts',
-        'src/services/api/apiFetchByIds.ts',
-        'src/components/form/AFormRemoteAutocompleteWithCached.vue',
-        'src/components/filter/AFilterMixed.vue',
-        'src/components/dam/assetSelect/composables/assetSelectListActions.ts',
-      ],
-    },
-  }),
+  anzuRecommended(),
   {
-    plugins: {
-      '@stylistic': stylistic,
-    },
+    name: 'app/rules',
     rules: {
       '@typescript-eslint/ban-ts-comment': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-empty-interface': 'off',
-      '@stylistic/semi': ['error', 'never'],
-      '@stylistic/quotes': ['error', 'single', { avoidEscape: true }],
-      'vue/multi-word-component-names': [
-        'error',
-        {
-          ignores: ['Acl'],
-        },
-      ],
-      'vue/valid-v-slot': ['error', { allowModifiers: true }],
-      '@stylistic/object-curly-spacing': ['error', 'always'],
-      '@stylistic/no-multiple-empty-lines': ['error', { max: 1, maxEOF: 1 }],
-      '@stylistic/no-trailing-spaces': 'error',
-      '@stylistic/comma-dangle': ['error', 'only-multiline'],
-      '@stylistic/max-len': [
-        'error',
-        {
-          code: 120,
-          ignoreTrailingComments: true,
-          ignoreUrls: true,
-          ignoreRegExpLiterals: true,
-          ignorePattern: '^import .*',
-        },
-      ],
-      'vue/no-template-target-blank': ['error'],
-      'vue/block-order': ['error', { order: [['script', 'template'], 'style'] }],
-      'vue/define-macros-order': ['error'],
-      'vue/component-name-in-template-casing': ['error'],
-      'vue/component-api-style': ['error'],
-      'vue/prefer-define-options': ['error'],
-      'vue/require-typed-ref': ['error'],
-      'vue/no-setup-props-reactivity-loss': ['error'],
-      'vue/no-ref-object-reactivity-loss': ['error'],
+      '@typescript-eslint/no-empty-object-type': 'off',
+      '@typescript-eslint/no-unused-expressions': 'off',
       '@typescript-eslint/no-unused-vars': [
         'error',
         {
@@ -86,26 +66,72 @@ export default defineConfigWithVueTs(
           caughtErrors: 'none',
         },
       ],
-      '@typescript-eslint/no-empty-object-type': 'off',
-      '@typescript-eslint/no-unused-expressions': 'off',
+      'vue/multi-word-component-names': [
+        'error',
+        {
+          ignores: ['Acl'],
+        },
+      ],
+      'vue/valid-v-slot': ['error', { allowModifiers: true }],
+      'vue/no-template-target-blank': ['error'],
+      'vue/block-order': ['error', { order: [['script', 'template'], 'style'] }],
+      'vue/define-macros-order': ['error'],
+      'vue/component-name-in-template-casing': ['error'],
+      'vue/component-api-style': ['error'],
+      'vue/prefer-define-options': ['error'],
+      'vue/no-setup-props-reactivity-loss': ['error'],
+      'vue/no-ref-object-reactivity-loss': ['error'],
     },
   },
   {
     name: 'app/test-files',
-    files: ['**/*.test.{ts,js}', '**/*.spec.{ts,js}', '**/test/**/*.{ts,js}', '**/tests/**/*.{ts,js}'],
+    files: [
+      '**/*.test.{ts,js}',
+      '**/*.spec.{ts,js}',
+      '**/test/**/*.{ts,js}',
+      '**/tests/**/*.{ts,js}',
+      '**/__tests__/**/*.{ts,js}',
+    ],
     rules: {
-      // Relax rules for test files
-      '@stylistic/max-len': ['error', { code: 150 }], // Longer lines for test descriptions
-      '@typescript-eslint/no-explicit-any': 'off', // Allow any in tests for mocking
-      '@typescript-eslint/no-non-null-assertion': 'off', // Allow ! in tests
-      'vue/one-component-per-file': 'off', // Allow multiple components in test files
-      '@stylistic/no-multiple-empty-lines': ['error', { max: 2 }], // More spacing in tests
-      // Keep important rules
-      '@stylistic/semi': ['error', 'never'],
-      '@stylistic/quotes': ['error', 'single', { avoidEscape: true }],
-      '@stylistic/object-curly-spacing': ['error', 'always'],
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-non-null-assertion': 'off',
+      'vue/one-component-per-file': 'off',
+    },
+  },
+  {
+    // Factories: each call makes one component, and the two of a teleport slot share its target.
+    name: 'app/component-factories',
+    files: [
+      'src/domains/remoteAutocomplete/composables/createRemoteAutocomplete.ts',
+      'src/domains/system/appShell/composables/teleportSlot.ts',
+    ],
+    rules: {
+      'vue/one-component-per-file': 'off',
     },
   },
   ...vuetify.configs['flat/recommended-v4'],
-  oxlint.configs['flat/recommended'],
+  // Derives the disabled-rule list from .oxlintrc.json, so enabling a rule in
+  // oxlint automatically stops eslint from running it.
+  ...(await buildFromOxlintConfigFile('.oxlintrc.json')),
+  {
+    // The only eslint rules that conflict with oxfmt. Measured: without
+    // this block eslint reports 145 warnings, all on these rules.
+    // `html-self-closing` is configured, not disabled, because only its `void`
+    // part conflicts: oxfmt writes `<img />` but the rule's default wants `<img>`.
+    // With `void: 'any'` eslint still enforces `<VBtn></VBtn>`.
+    name: 'app/owned-by-oxfmt',
+    rules: {
+      'vue/html-closing-bracket-newline': 'off',
+      'vue/html-indent': 'off',
+      'vue/singleline-html-element-content-newline': 'off',
+      'vue/html-self-closing': [
+        'error',
+        {
+          html: { void: 'any', normal: 'always', component: 'always' },
+          svg: 'always',
+          math: 'always',
+        },
+      ],
+    },
+  }
 )

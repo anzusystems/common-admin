@@ -1,0 +1,82 @@
+<script lang="ts" setup>
+import { useAuthorSelectActions } from '@/domains/dam/author/composables/authorActions'
+import { useAuthorInnerFilter } from '@/domains/dam/author/filter/AuthorFilter'
+import type { IntegerId } from '@/shared/types/common'
+import { useI18n } from 'vue-i18n'
+import AFilterRemoteAutocompleteWithMinimal from '@/domains/remoteAutocomplete/components/AFilterRemoteAutocompleteWithMinimal.vue'
+import { provide } from 'vue'
+import { FilterInnerConfigKey, FilterInnerDataKey } from '@/domains/filters/utils/filterInjectionKeys'
+import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
+
+const props = withDefaults(
+  defineProps<{
+    name: string
+    extSystem: IntegerId
+    /** DAM configuration to use. Defaults to the parent component's, else `default`. */
+    configName?: string
+  }>(),
+  {
+    configName: undefined,
+  }
+)
+const emit = defineEmits<{
+  (e: 'change'): void
+}>()
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const damConfigName = useDamConfigName(props.configName)
+
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { fetchItemsMinimal, fetchItemsMinimalByIds } = useAuthorSelectActions(props.extSystem, damConfigName)
+
+const { filterData, filterConfig } = useAuthorInnerFilter()
+provide(FilterInnerConfigKey, filterConfig)
+provide(FilterInnerDataKey, filterData)
+
+const { t } = useI18n()
+</script>
+
+<template>
+  <AFilterRemoteAutocompleteWithMinimal
+    :name="name"
+    :fetch-items-minimal="fetchItemsMinimal"
+    :fetch-items-minimal-by-ids="fetchItemsMinimalByIds"
+    filter-by-field="text"
+    :filter-sort-by="null"
+    @change="emit('change')"
+  >
+    <template #item="{ props: itemProps, item: itemItem }">
+      <VListItem
+        v-if="itemItem"
+        v-bind="itemProps"
+        title=""
+      >
+        <VListItemTitle>
+          {{ itemItem.title }}
+          <VIcon
+            v-if="itemItem.raw?.raw?.reviewed || itemItem.raw?.reviewed"
+            icon="mdi-shield-check"
+            class="text-success ml-1"
+            size="small"
+            :title="t('common.damImage.author.model.flags.reviewed')"
+          />
+        </VListItemTitle>
+      </VListItem>
+    </template>
+    <template #chip="{ props: chipProps, item: chipItem }">
+      <VChip
+        v-if="chipItem"
+        v-bind="chipProps"
+        close-label="common.button.remove"
+      >
+        {{ chipItem.title }}
+        <VIcon
+          v-if="chipItem.raw?.raw?.reviewed || chipItem.raw?.reviewed"
+          icon="mdi-shield-check"
+          class="text-success ml-1"
+          size="small"
+          :title="t('common.damImage.author.model.flags.reviewed')"
+        />
+      </VChip>
+    </template>
+  </AFilterRemoteAutocompleteWithMinimal>
+</template>

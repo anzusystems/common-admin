@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import AFilterWrapperSubjectSelect from '@/labs/subjectSelect/AFilterWrapperSubjectSelect.vue'
+import AFilterWrapperSubjectSelect from '@/domains/subjectSelect/components/AFilterWrapperSubjectSelect.vue'
 
 const emit = defineEmits<{
   (e: 'submit'): void

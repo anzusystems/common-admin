@@ -3,9 +3,8 @@ import {
   createFilterStore,
   type FilterConfig,
   type FilterData,
-  type FilterStore,
   type MakeFilterOption,
-} from '@/labs/filters/filterFactory'
+} from '@/domains/filters/composables/filterFactory'
 
 export const filterFields = [
   {
@@ -65,19 +64,13 @@ export const filterFields = [
 const listFiltersStore = createFilterStore(filterFields)
 
 export function useSubjectListFilter() {
-  const { filterConfig, filterData } = createFilter(filterFields, listFiltersStore, {
+  return createFilter(filterFields, listFiltersStore, {
     elastic: true,
     system: 'system',
     subject: 'subject',
   })
-
-  return {
-    filterConfig,
-    filterData,
-  }
 }
 
 export type SubjectFilterFields = typeof filterFields
-export type SubjectFilterStore = FilterStore<SubjectFilterFields>
 export type SubjectFilterData = FilterData<SubjectFilterFields>
 export type SubjectFilterConfig = FilterConfig<SubjectFilterFields>

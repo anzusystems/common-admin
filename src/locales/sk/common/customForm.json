@@ -1,0 +1,24 @@
+{
+  "filter": {
+    "id": "Id",
+    "name": "Názov"
+  },
+  "model": {
+    "id": "Id",
+    "name": "Názov",
+    "active": "Aktívne",
+    "elements": "Položky",
+    "resourceNames": "Názvy zdrojov",
+    "sitesGroups": "Skupiny webov"
+  },
+  "action": {
+    "create": "Vytvoriť",
+    "addElement": "Pridať položku"
+  },
+  "meta": {
+    "errorLoadingConfig": "Nepodarilo sa načítať konfiguráciu"
+  },
+  "section": {
+    "demo": "Ukážka"
+  }
+}

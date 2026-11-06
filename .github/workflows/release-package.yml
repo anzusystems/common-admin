@@ -1,69 +1,191 @@
-name: Node.js Package Release
-
+# Created by release-tools init. Releases are made with `release:start` and `release:publish`.
+# A prerelease can also be published by hand: a GitHub Release marked as pre-release, tagged with the full version
+# (e.g. 2.0.0-rc.1), on a commit that contains this file (`next` now, `main` after the merge) and whose CI passed.
+# The `manual-*` jobs check it, build and pack it as the tool does, and publish it under the npm tag the tool would
+# choose. Finals only with `release:publish`. Releases made by the tool are skipped (their body ends with its footer).
+# `release:init` would replace this file with its stub, without the `manual-*` jobs.
+name: Release
 on:
-  release:
-    types: [created]
   push:
-    branches:
-      - beta
-
-permissions:
-  contents: read
-  id-token: write
-
+    tags: ['[0-9]*.[0-9]*.[0-9]*']
+  release:
+    types: [published]
+concurrency:
+  group: release
+  cancel-in-progress: false
+  queue: max
 env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 jobs:
-  build-publish-pkg:
-    name: Build and push package on node 24
-    runs-on: 'ubuntu-latest'
-    environment: npmjs-publish
+  build:
+    if: ${{ github.event_name == 'push' && !github.event.deleted }}
+    runs-on: ubuntu-latest
+    permissions: { contents: read, actions: read, pull-requests: read }
+    outputs:
+      release: ${{ steps.build.outputs.release }}
+      tag-object: ${{ steps.build.outputs.tag-object }}
+      tarball-sha512: ${{ steps.build.outputs.tarball-sha512 }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - id: build
+        uses: anzusystems/release-tools/publish@main
+        with: { mode: build }
+  publish:
+    needs: build
+    if: needs.build.outputs.release == 'true'
+    runs-on: ubuntu-latest
+    environment: npmjs-publish
+    permissions: { contents: write, id-token: write }
+    outputs:
+      version: ${{ steps.publish.outputs.version }}
+      tag: ${{ steps.publish.outputs.tag }}
+      prerelease: ${{ steps.publish.outputs.prerelease }}
+      latest: ${{ steps.publish.outputs.latest }}
+      published: ${{ steps.publish.outputs.published }}
+      released-now: ${{ steps.publish.outputs.released-now }}
+    steps:
+      - id: publish
+        uses: anzusystems/release-tools/publish@main
         with:
-          ref: ${{ github.ref }}
-
-      - name: Check version change (beta only)
-        id: check
-        if: github.event_name == 'push'
-        uses: EndBug/version-check@v2
+          mode: publish
+          tag-object: '${{ needs.build.outputs.tag-object }}'
+          tarball-sha512: '${{ needs.build.outputs.tarball-sha512 }}'
+  manual-check:
+    if: ${{ github.event_name == 'release' && !contains(github.event.release.body, '<!-- release-tools') }}
+    runs-on: ubuntu-latest
+    permissions: { actions: read }
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      npm-tag: ${{ steps.version.outputs.npm-tag }}
+    steps:
+      - name: Version and npm tag of the release
+        id: version
+        env:
+          PACKAGE: '@anzusystems/common-admin'
+          TAG: ${{ github.event.release.tag_name }}
+          PRERELEASE: ${{ github.event.release.prerelease }}
+        run: |
+          if [ "$PRERELEASE" != "true" ]; then
+            echo "::error::Only a pre-release is published by hand; a final is published with yarn release:publish."
+            exit 1
+          fi
+          re='^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)-(alpha|beta|rc)\.(0|[1-9][0-9]*)$'
+          if ! [[ "$TAG" =~ $re ]]; then
+            echo "::error::The tag must be the full version, e.g. 2.0.0-rc.1, 2.0.0-beta.1 or 2.0.0-alpha.1 (got '$TAG')."
+            exit 1
+          fi
+          major=${BASH_REMATCH[1]} minor=${BASH_REMATCH[2]} id=${BASH_REMATCH[4]}
+          npm view "$PACKAGE" versions --json > "$RUNNER_TEMP/versions.json"
+          tr -d ' ",[]' < "$RUNNER_TEMP/versions.json" > "$RUNNER_TEMP/versions.txt"
+          if grep -qxF "$TAG" "$RUNNER_TEMP/versions.txt"; then
+            echo "::notice::$TAG is already on npm; nothing to publish."
+            exit 0
+          fi
+          if grep -qxF "${TAG%%-*}" "$RUNNER_TEMP/versions.txt"; then
+            echo "::error::${TAG%%-*} is already released, so no prerelease of it is published."
+            exit 1
+          fi
+          # The npm tag the tool would choose: `<name>-X.Y` for a line older than the latest released one,
+          # or when the npm tag `<name>` already points to a higher version. npm tags never move back.
+          npm_tag=$id
+          latest=$(grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' "$RUNNER_TEMP/versions.txt" | sort -V | tail -n 1)
+          current=$(npm view "$PACKAGE" "dist-tags.$id")
+          if [ -n "$latest" ] && [ "${latest%.*}" != "$major.$minor" ] \
+            && [ "$(printf '%s\n%s\n' "${latest%.*}" "$major.$minor" | sort -V | tail -n 1)" != "$major.$minor" ]; then
+            npm_tag="$id-$major.$minor"
+          elif [ -n "$current" ] && [ "$(printf '%s\n%s\n' "$current" "$TAG" | sort -V | tail -n 1)" != "$TAG" ]; then
+            npm_tag="$id-$major.$minor"
+          fi
+          echo "version=$TAG" >> "$GITHUB_OUTPUT"
+          echo "npm-tag=$npm_tag" >> "$GITHUB_OUTPUT"
+          echo "::notice::$TAG is published under the npm tag $npm_tag."
+      - name: CI of the commit passed
+        if: steps.version.outputs.version != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ci=$(gh run list -R "$GITHUB_REPOSITORY" --workflow ci.yml --commit "$GITHUB_SHA" --event push --limit 1 \
+            --json status,conclusion -q '.[] | .status + "/" + .conclusion')
+          if [ "$ci" != "completed/success" ]; then
+            echo "::error::CI of $GITHUB_SHA is '${ci:-not found}'; publish a commit whose CI passed, or re-run this job once its CI is green."
+            exit 1
+          fi
+  manual-build:
+    needs: manual-check
+    if: needs.manual-check.outputs.version != ''
+    runs-on: ubuntu-latest
+    permissions: { contents: read }
+    env:
+      SKIP_PLAYWRIGHT_INSTALL: 'true'
+    outputs:
+      tarball-sha512: ${{ steps.pack.outputs.sha512 }}
+    steps:
+      - uses: actions/checkout@v4
         with:
-          diff-search: true
-
-      - name: Enable corepack
-        if: github.event_name == 'release' || (steps.check.outputs.changed == 'true' && contains(steps.check.outputs.version, 'beta'))
-        run: corepack enable
-
-      - name: Setup Node
-        if: github.event_name == 'release' || (steps.check.outputs.changed == 'true' && contains(steps.check.outputs.version, 'beta'))
-        uses: actions/setup-node@v4
+          persist-credentials: false
+      - run: corepack enable
+      - uses: actions/setup-node@v4
         with:
           node-version: '24'
           cache: 'yarn'
           cache-dependency-path: 'yarn.lock'
-
-      - name: Install dependencies
-        if: github.event_name == 'release' || (steps.check.outputs.changed == 'true' && contains(steps.check.outputs.version, 'beta'))
-        run: yarn install --immutable
+      - run: yarn install --immutable
+      - name: Set the version of the release
         env:
-          SKIP_PLAYWRIGHT_INSTALL: true
-
-      - name: Run Yarn Build
-        if: github.event_name == 'release' || (steps.check.outputs.changed == 'true' && contains(steps.check.outputs.version, 'beta'))
-        run: yarn lib:build
-
-      - name: Publish package to npmjs
-        if: github.event_name == 'release'
+          VERSION: ${{ needs.manual-check.outputs.version }}
+        run: npm pkg set version="$VERSION"
+      - run: yarn lib:build
+      - name: Pack and check the package
+        id: pack
+        env:
+          VERSION: ${{ needs.manual-check.outputs.version }}
         run: |
-          if [ "${{ github.event.release.prerelease }}" = "true" ]; then
-            npm publish --access public --tag beta
-          else
-            npm publish --access public
+          tgz="$RUNNER_TEMP/package.tgz"
+          yarn pack --out "$tgz"
+          packed=$(tar -xzOf "$tgz" package/package.json | node -p 'JSON.parse(require("fs").readFileSync(0, "utf8")).version')
+          if [ "$packed" != "$VERSION" ]; then
+            echo "::error::The packed package.json has the version '$packed', not $VERSION."
+            exit 1
           fi
-
-      - name: Publish beta package to npmjs
-        if: github.event_name == 'push' && steps.check.outputs.changed == 'true' && contains(steps.check.outputs.version, 'beta')
+          if ! diff <(tar -tzf "$tgz" | sed -n 's|^package/dist/|dist/|p' | sort) <(find dist -type f | sort); then
+            echo "::error::The package does not hold exactly the built dist/."
+            exit 1
+          fi
+          echo "sha512=$(sha512sum "$tgz" | cut -d ' ' -f 1)" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: manual-package
+          path: ${{ runner.temp }}/package.tgz
+          if-no-files-found: error
+          retention-days: 30
+          overwrite: true
+  manual-publish:
+    needs: [manual-check, manual-build]
+    runs-on: ubuntu-latest
+    environment: npmjs-publish
+    permissions: { contents: read, id-token: write }
+    steps:
+      - name: The tag still points to the commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.release.tag_name }}
         run: |
-          npm publish --tag beta
+          sha=$(gh api "repos/$GITHUB_REPOSITORY/commits/refs/tags/$TAG" -q .sha)
+          if [ "$sha" != "$GITHUB_SHA" ]; then
+            echo "::error::The tag $TAG now points to $sha, not to the built commit $GITHUB_SHA; nothing is published."
+            exit 1
+          fi
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/download-artifact@v4
+        with:
+          name: manual-package
+          path: ${{ runner.temp }}/package
+      - name: Publish to npm
+        working-directory: ${{ runner.temp }}/package
+        env:
+          NPM_TAG: ${{ needs.manual-check.outputs.npm-tag }}
+          SHA512: ${{ needs.manual-build.outputs.tarball-sha512 }}
+        run: |
+          echo "$SHA512  package.tgz" | sha512sum -c -
+          npm publish ./package.tgz --access public --tag "$NPM_TAG"

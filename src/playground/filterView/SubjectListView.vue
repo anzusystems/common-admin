@@ -2,7 +2,7 @@
 import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
 import SubjectDatatable from '@/playground/filterView/SubjectDatatable.vue'
 import { useSubjectListActions } from '@/playground/filterView/subjectTools'
-import ACard from '@/components/ACard.vue'
+import ACard from '@/domains/ui/components/ACard.vue'
 
 const { listLoading } = useSubjectListActions()
 </script>
