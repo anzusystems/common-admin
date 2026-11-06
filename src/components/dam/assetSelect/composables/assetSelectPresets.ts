@@ -4,11 +4,6 @@ import type { DamCurrentUserDto } from '@/types/coreDam/DamCurrentUser'
 import { defineAuth } from '@/composables/auth/defineAuth'
 import type { AclValue } from '@/types/Permission'
 import { SYSTEM_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
-import { i18n } from '@/plugins/i18n'
-
-const { t } = i18n.global
-
-export const AssetSelectPresetAll = 'all' as const
 
 export type AssetSelectPresetKey = string
 
@@ -58,12 +53,6 @@ export function useAssetSelectPresets(storageKey: string) {
 
     return [
       ...listViewPresets,
-      {
-        key: AssetSelectPresetAll,
-        title: t('common.assetSelect.preset.all'),
-        licenceIds: selectLicences,
-        group: 'licence' as const,
-      },
       ...selectLicences.map((licenceId) => ({
         key: assetSelectSingleLicenceKey(licenceId),
         title: licenceTitle(licenceId),

@@ -61,7 +61,6 @@
     "unallowedLicence": "Nemáte práva na licenciu v DAM"
   },
   "preset": {
-    "all": "Všechny licence",
     "label": "Hledat v",
     "groupListViews": "Výběry",
     "groupLicences": "Licence"

@@ -6,7 +6,6 @@ import { defineAuth } from '@/composables/auth/defineAuth'
 import { SYSTEM_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
 import { useAssetSelectPresetControl } from '@/components/dam/assetSelect/composables/assetSelectPresetControl'
 import {
-  AssetSelectPresetAll,
   assetSelectPresetStorageKey,
   useAssetSelectPresets,
 } from '@/components/dam/assetSelect/composables/assetSelectPresets'
@@ -50,10 +49,10 @@ describe('useAssetSelectPresetControl', () => {
   })
 
   it.each<[string, string | null, string, IntegerId[]]>([
-    ['nothing remembered', null, AssetSelectPresetAll, [10, 20]],
+    ['nothing remembered', null, 'licence:10', [10]],
     ['remembered list view', 'listView:1', 'listView:1', [10]],
     ['remembered single licence', 'licence:20', 'licence:20', [20]],
-    ['remembered key this host does not offer', 'listView:9', AssetSelectPresetAll, [10, 20]],
+    ['remembered key this host does not offer', 'listView:9', 'licence:10', [10]],
   ])(
     'opens on the right selection for %s',
     async (_name, storedKey, expectedKey, expectedLicenceIds) => {

@@ -2,7 +2,6 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { defineAuth } from '@/composables/auth/defineAuth'
 import { SYSTEM_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
 import {
-  AssetSelectPresetAll,
   showAssetSelectPresets,
   useAssetSelectPresets,
   assetSelectPresetStorageKey,
@@ -29,14 +28,13 @@ describe('useAssetSelectPresets', () => {
     localStorage.clear()
   })
 
-  it('offers all given licences together and each one on its own, never a wider set', () => {
+  it('offers each licence on its own, never a wider set', () => {
     setDamCurrentUser([])
     const { buildPresets } = useAssetSelectPresets('test-storage-key')
 
     const presets = buildPresets([10, 20], [], (id) => `Licencia ${id}`)
 
     expect(presets.map(({ key, licenceIds }) => ({ key, licenceIds }))).toEqual([
-      { key: AssetSelectPresetAll, licenceIds: [10, 20] },
       { key: 'licence:10', licenceIds: [10] },
       { key: 'licence:20', licenceIds: [20] },
     ])

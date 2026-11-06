@@ -45,7 +45,7 @@ const sortModel = defineModel<number>('sort', { default: 1, required: false })
 
 const { t } = useI18n()
 const { gridView, setGridView } = useGridView()
-const { mdAndDown } = useDisplay()
+const { mdAndDown, mdAndUp } = useDisplay()
 
 watch(
   mdAndDown,
@@ -110,6 +110,11 @@ const customSortOptions = [
     sortBy: { key: SORT_BY_SCORE_DATE, order: SortOrder.Asc },
   },
 ]
+
+const onSortClick = (option: DatatableOrderingOption) => {
+  sortModel.value = option.id
+  emit('sortByChange', option)
+}
 
 onMounted(() => {
   if (props.preselectAssetType === DamAssetType.Audio && props.preselectInPodcast) {
@@ -229,12 +234,34 @@ onMounted(() => {
           </div>
           <div class="d-flex align-center">
             <slot name="second-bar-right" />
-            <ADatatableOrdering
-              v-if="!disableSort"
-              v-model="sortModel"
-              :custom-options="customSortOptions"
-              @sort-by-change="emit('sortByChange', $event)"
-            />
+            <template v-if="!disableSort">
+              <div
+                v-if="mdAndUp"
+                class="d-flex align-center mr-1"
+              >
+                <div class="text-body-small mr-2">
+                  {{ t('common.system.datatable.ordering.title') }}:
+                </div>
+                <VBtn
+                  v-for="option in customSortOptions"
+                  :key="option.id"
+                  size="small"
+                  class="mr-1"
+                  :active="option.id === sortModel"
+                  :color="option.id === sortModel ? 'secondary' : ''"
+                  :variant="option.id === sortModel ? 'flat' : 'text'"
+                  @click.stop="onSortClick(option)"
+                >
+                  {{ t(option.titleT) }}
+                </VBtn>
+              </div>
+              <ADatatableOrdering
+                v-else
+                v-model="sortModel"
+                :custom-options="customSortOptions"
+                @sort-by-change="emit('sortByChange', $event)"
+              />
+            </template>
             <VBtn
               size="x-small"
               icon

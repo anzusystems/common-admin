@@ -3,7 +3,7 @@ import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
 import type { IntegerId } from '@/types/common'
 import {
-  AssetSelectPresetAll,
+  assetSelectSingleLicenceKey,
   type AssetSelectPresetKey,
   assetSelectPresetStorageKey,
   useAssetSelectPresets,
@@ -64,7 +64,7 @@ export function useAssetSelectPresetControl(selectLicences: IntegerId[], listVie
       ? presets.value.find((item) => item.key === stored.presetKey)
       : undefined
 
-    applyPreset(storedPreset?.key ?? AssetSelectPresetAll)
+    applyPreset(storedPreset?.key ?? assetSelectSingleLicenceKey(selectLicences[0]))
   })
 
   return {
