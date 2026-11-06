@@ -211,6 +211,30 @@ describe('defineRouteWalk', { timeout: 60_000 }, () => {
     ])
   })
 
+  it('ignores the problems of `localIgnore` only on the local stack', async () => {
+    pages['/noisy'] = app('Records', `console.error('no mailer here')`)
+    const options = admin(['/noisy'], {
+      localIgnore: [{ problem: /no mailer here/, reason: 'the local stack runs no mailer' }],
+    })
+    const walk = async (env: string | undefined) => {
+      const saved = process.env.E2E_ENV
+      if (env === undefined) Reflect.deleteProperty(process.env, 'E2E_ENV')
+      else process.env.E2E_ENV = env as typeof process.env.E2E_ENV
+      try {
+        const { playwright, run } = fakePlaywright()
+        defineRouteWalk(playwright, options)
+        return (await run(dir)).outcomes['opens /noisy']
+      } finally {
+        if (saved === undefined) Reflect.deleteProperty(process.env, 'E2E_ENV')
+        else process.env.E2E_ENV = saved
+      }
+    }
+
+    expect(await walk('local')).toBe('passed')
+    expect(await walk('staging')).toMatch(/^failed: .*no mailer here/s)
+    expect(await walk(undefined)).toMatch(/^failed: .*no mailer here/s)
+  })
+
   it('fails its guard when a page file has no route, or an option names a route the app does not have', async () => {
     const options = admin(['/ok'], { skip: { '/gone': 'removed' } })
     fs.writeFileSync(path.join(options.pagesDir, 'extra.vue'), '')

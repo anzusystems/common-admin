@@ -503,7 +503,8 @@ export function defineRouteWalk({ test: base, expect }, options) {
   const skip = options.skip ?? {}
   const noRecord = options.noRecord ?? {}
   const resolve = options.resolve ?? {}
-  const ignore = options.ignore ?? []
+  // `E2E_ENV` as loadE2eEnv set it; the walk runs without it too (its own tests), as on a deployed environment.
+  const ignore = [...(options.ignore ?? []), ...(process.env.E2E_ENV === 'local' ? (options.localIgnore ?? []) : [])]
   const timings = withDefaults(options.timings)
 
   // One logged-in page per worker: logging in for each of hundreds of routes would double the run.
