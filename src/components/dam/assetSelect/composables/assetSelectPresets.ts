@@ -24,11 +24,7 @@ export const showAssetSelectPresets = (
 export const assetSelectSingleLicenceKey = (licenceId: IntegerId): AssetSelectPresetKey =>
   `licence:${licenceId}`
 
-export interface AssetSelectPresetStoredState {
-  presetKey: AssetSelectPresetKey
-}
-
-export function useAssetSelectPresets(storageKey: string) {
+export function useAssetSelectPresets() {
   const { useCurrentUser } = defineAuth<AclValue>(SYSTEM_DAM)
   const { currentUser: damCurrentUser } = useCurrentUser<DamCurrentUserDto>(SYSTEM_DAM)
 
@@ -62,37 +58,20 @@ export function useAssetSelectPresets(storageKey: string) {
     ]
   }
 
-  const loadStoredState = (): AssetSelectPresetStoredState | null => {
-    try {
-      const raw = localStorage.getItem(storageKey)
-      if (!raw) return null
-      return JSON.parse(raw) as AssetSelectPresetStoredState
-    } catch {
-      return null
-    }
-  }
-
-  const storeState = (state: AssetSelectPresetStoredState): void => {
-    try {
-      localStorage.setItem(storageKey, JSON.stringify(state))
-    } catch {
-      // localStorage can be unavailable (private mode, blocked site data) — the preset just won't persist.
-    }
-  }
-
   return {
     buildPresets,
-    loadStoredState,
-    storeState,
+    damCurrentUser,
   }
 }
 
-// Common-admin has no notion of a site group, so the sorted host ids stand in for it.
+// Common-admin has no notion of a site group, so the sorted host ids stand in for it: a changed site group
+// configuration gets a new key. The DAM user is part of the key, so the next user in the same browser starts fresh.
 export function assetSelectPresetStorageKey(
+  damUserId: IntegerId,
   selectLicences: IntegerId[],
   listViews: IntegerId[],
 ): string {
   const licencesPart = [...selectLicences].sort((a, b) => a - b).join('-')
   const listViewsPart = [...listViews].sort((a, b) => a - b).join('-')
-  return `common.assetSelect.preset.${licencesPart}.${listViewsPart}`
+  return `common.assetSelect.preset.${damUserId}.${licencesPart}.${listViewsPart}`
 }

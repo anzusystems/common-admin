@@ -5,10 +5,7 @@ import { createPinia, type Pinia } from 'pinia'
 import { defineAuth } from '@/composables/auth/defineAuth'
 import { SYSTEM_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
 import { useAssetSelectPresetControl } from '@/components/dam/assetSelect/composables/assetSelectPresetControl'
-import {
-  assetSelectPresetStorageKey,
-  useAssetSelectPresets,
-} from '@/components/dam/assetSelect/composables/assetSelectPresets'
+import { assetSelectPresetStorageKey } from '@/components/dam/assetSelect/composables/assetSelectPresets'
 import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
 import type { DamCurrentUserDto } from '@/types/coreDam/DamCurrentUser'
 import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
@@ -19,13 +16,22 @@ const LIST_VIEWS: IntegerId[] = [1]
 
 let pinia: Pinia
 
-const mountControl = async () => {
+const setDamUser = (id: IntegerId) => {
+  const { useCurrentUser } = defineAuth(SYSTEM_DAM)
+  useCurrentUser<DamCurrentUserDto>(SYSTEM_DAM).setCurrentUser({
+    id,
+    roles: [],
+    listViews: [{ id: 1, name: 'Šport a regióny', extSystem: 1, licences: [10, 30] }],
+  } as unknown as DamCurrentUserDto)
+}
+
+const mountControl = async (selectLicences: IntegerId[] = SELECT_LICENCES) => {
   let control!: ReturnType<typeof useAssetSelectPresetControl>
   let store!: ReturnType<typeof useAssetSelectStore>
   mount(
     defineComponent({
       setup() {
-        control = useAssetSelectPresetControl(SELECT_LICENCES, LIST_VIEWS)
+        control = useAssetSelectPresetControl(selectLicences, LIST_VIEWS)
         store = useAssetSelectStore()
         return () => h('div')
       },
@@ -40,12 +46,7 @@ describe('useAssetSelectPresetControl', () => {
   beforeEach(() => {
     pinia = createPinia()
     localStorage.clear()
-    const { useCurrentUser } = defineAuth(SYSTEM_DAM)
-    useCurrentUser<DamCurrentUserDto>(SYSTEM_DAM).setCurrentUser({
-      id: 1,
-      roles: [],
-      listViews: [{ id: 1, name: 'Šport a regióny', extSystem: 1, licences: [10, 30] }],
-    } as unknown as DamCurrentUserDto)
+    setDamUser(1)
   })
 
   it.each<[string, string | null, string, IntegerId[]]>([
@@ -57,9 +58,7 @@ describe('useAssetSelectPresetControl', () => {
     'opens on the right selection for %s',
     async (_name, storedKey, expectedKey, expectedLicenceIds) => {
       if (storedKey) {
-        useAssetSelectPresets(assetSelectPresetStorageKey(SELECT_LICENCES, LIST_VIEWS)).storeState({
-          presetKey: storedKey,
-        })
+        localStorage.setItem(assetSelectPresetStorageKey(1, SELECT_LICENCES, LIST_VIEWS), storedKey)
       }
 
       const { control } = await mountControl()
@@ -88,5 +87,26 @@ describe('useAssetSelectPresetControl', () => {
 
     expect(reopened.selectedPresetKey.value).toBe('licence:20')
     expect(reopened.selectedLicenceIds.value).toEqual([20])
+  })
+
+  it('starts another DAM user in the same browser on the first licence', async () => {
+    const { control } = await mountControl()
+    control.applyPreset('licence:20')
+    pinia = createPinia()
+    setDamUser(2)
+
+    const { control: nextUser } = await mountControl()
+
+    expect(nextUser.selectedPresetKey.value).toBe('licence:10')
+  })
+
+  it('starts on the first licence after the host licences change', async () => {
+    const { control } = await mountControl()
+    control.applyPreset('licence:20')
+    pinia = createPinia()
+
+    const { control: changed } = await mountControl([10, 20, 30])
+
+    expect(changed.selectedPresetKey.value).toBe('licence:10')
   })
 })

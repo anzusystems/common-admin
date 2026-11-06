@@ -148,7 +148,7 @@ const onClose = () => {
 }
 
 const getCopyToLicenceId = () => {
-  if (copyToLicence.value && props.uploadLicence) {
+  if (copyToLicence.value && showCopyToLicence.value && props.uploadLicence) {
     return props.uploadLicence
   }
   return undefined

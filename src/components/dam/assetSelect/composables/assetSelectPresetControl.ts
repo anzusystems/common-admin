@@ -1,4 +1,5 @@
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import { useStorage } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
 import type { IntegerId } from '@/types/common'
@@ -12,8 +13,17 @@ import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
 
 export function useAssetSelectPresetControl(selectLicences: IntegerId[], listViews: IntegerId[]) {
   const { t } = useI18n()
-  const storageKey = assetSelectPresetStorageKey(selectLicences, listViews)
-  const { buildPresets, loadStoredState, storeState } = useAssetSelectPresets(storageKey)
+  const { buildPresets, damCurrentUser } = useAssetSelectPresets()
+  // Without a DAM user there is nobody to remember the choice for.
+  const damUserId = damCurrentUser.value?.id
+  const storedPresetKey = damUserId
+    ? useStorage<AssetSelectPresetKey>(
+        assetSelectPresetStorageKey(damUserId, selectLicences, listViews),
+        '',
+        localStorage,
+        { writeDefaults: false },
+      )
+    : ref<AssetSelectPresetKey>('')
 
   const assetSelectStore = useAssetSelectStore()
   const { selectedLicenceIds, selectedPresetKey } = storeToRefs(assetSelectStore)
@@ -53,16 +63,13 @@ export function useAssetSelectPresetControl(selectLicences: IntegerId[], listVie
 
     assetSelectStore.setSelectedPresetKey(preset.key)
     assetSelectStore.setSelectedLicenceIds(preset.licenceIds)
-    storeState({ presetKey: preset.key })
+    storedPresetKey.value = preset.key
   }
 
   onMounted(() => {
     if (selectedPresetKey.value !== '') return
 
-    const stored = loadStoredState()
-    const storedPreset = stored
-      ? presets.value.find((item) => item.key === stored.presetKey)
-      : undefined
+    const storedPreset = presets.value.find((item) => item.key === storedPresetKey.value)
 
     applyPreset(storedPreset?.key ?? assetSelectSingleLicenceKey(selectLicences[0]))
   })

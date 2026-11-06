@@ -30,7 +30,7 @@ describe('useAssetSelectPresets', () => {
 
   it('offers each licence on its own, never a wider set', () => {
     setDamCurrentUser([])
-    const { buildPresets } = useAssetSelectPresets('test-storage-key')
+    const { buildPresets } = useAssetSelectPresets()
 
     const presets = buildPresets([10, 20], [], (id) => `Licencia ${id}`)
 
@@ -46,29 +46,23 @@ describe('useAssetSelectPresets', () => {
     ['list view not pinned for the host', [10, 20], [], undefined],
   ])('%s', (_name, listViewLicences, pinnedListViews, expected) => {
     setDamCurrentUser([sportListView(listViewLicences)])
-    const { buildPresets } = useAssetSelectPresets('test-storage-key')
+    const { buildPresets } = useAssetSelectPresets()
 
     const presets = buildPresets([10, 20], pinnedListViews, (id) => `Licencia ${id}`)
 
     expect(presets.find((preset) => preset.key === 'listView:1')?.licenceIds).toEqual(expected)
   })
 
-  it('remembers the chosen preset per host configuration whatever the order of its ids', () => {
-    setDamCurrentUser([])
-    useAssetSelectPresets(assetSelectPresetStorageKey([20, 10], [2, 1])).storeState({
-      presetKey: 'listView:1',
-    })
-
-    const { loadStoredState } = useAssetSelectPresets(assetSelectPresetStorageKey([10, 20], [1, 2]))
-
-    expect(loadStoredState()).toEqual({ presetKey: 'listView:1' })
-  })
-
-  it('ignores a remembered value it cannot read', () => {
-    setDamCurrentUser([])
-    localStorage.setItem('test-storage-key', '{broken')
-
-    expect(useAssetSelectPresets('test-storage-key').loadStoredState()).toBeNull()
+  it('keys the remembered preset by DAM user and host configuration, whatever the order of its ids', () => {
+    expect(assetSelectPresetStorageKey(1, [20, 10], [2, 1])).toBe(
+      assetSelectPresetStorageKey(1, [10, 20], [1, 2]),
+    )
+    expect(assetSelectPresetStorageKey(2, [10, 20], [1, 2])).not.toBe(
+      assetSelectPresetStorageKey(1, [10, 20], [1, 2]),
+    )
+    expect(assetSelectPresetStorageKey(1, [10, 20], [1])).not.toBe(
+      assetSelectPresetStorageKey(1, [10, 20], [1, 2]),
+    )
   })
 })
 

@@ -355,23 +355,26 @@ const assetSelectConfirmMap = async (
 
 const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
   if (data.type !== 'asset' || data.value.length === 0) return
-  if (!isUndefined(data.copyToLicence)) {
+  const assets = data.value.filter((asset) => !isNull(asset.mainFile))
+  const targetLicence = data.copyToLicence
+  const assetsToCopy = isUndefined(targetLicence)
+    ? []
+    : assets.filter((asset) => asset.licence !== targetLicence)
+  if (!isUndefined(targetLicence) && assetsToCopy.length > 0) {
     try {
       const copyRes = await copyToLicence(
         damClient,
         endPointAsset,
-        data.value
-          .filter((asset) => !isNull(asset.mainFile))
-          .map((asset) => ({ asset: asset.id, targetAssetLicence: data.copyToLicence! })),
+        assetsToCopy.map((asset) => ({ asset: asset.id, targetAssetLicence: targetLicence })),
       )
       onCopyToLicence(copyRes)
     } catch (e) {
       showErrorsDefault(e)
     }
-    return
   }
-  const items = await assetSelectConfirmMap(data.value.filter((asset) => !isNull(asset.mainFile)))
-  imageStore.addImages(items)
+  const assetsToAdd = assets.filter((asset) => !assetsToCopy.includes(asset))
+  if (assetsToAdd.length === 0) return
+  imageStore.addImages(await assetSelectConfirmMap(assetsToAdd))
 }
 
 const assetDetailStore = useAssetDetailStore()
