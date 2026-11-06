@@ -83,6 +83,11 @@ export interface RouteWalkOptions {
   redirects?: Record<string, RegExp>
   /** Problems that do not fail a route. */
   ignore?: RouteWalkIgnore[]
+  /**
+   * Problems that do not fail a route on the local Docker stack only (`E2E_ENV=local`): what the stack does not
+   * run, e.g. a mailer or an analytics service. On devel and staging they are failures.
+   */
+  localIgnore?: RouteWalkIgnore[]
   /** The rows of a listing, clicked to find a record when no link to one is found. Default: Vuetify's data table. */
   rowSelector?: string
   /**
