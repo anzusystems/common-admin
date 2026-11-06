@@ -59,5 +59,10 @@
   },
   "error": {
     "unallowedLicence": "Nemáte práva na licenciu v DAM"
+  },
+  "preset": {
+    "label": "Search in",
+    "groupListViews": "Selections",
+    "groupLicences": "Licences"
   }
 }

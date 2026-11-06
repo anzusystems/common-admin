@@ -20,7 +20,8 @@ export interface AssetSelectListItem {
 export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectStore', () => {
   const assetListItems = ref<Array<AssetSelectListItem>>([])
   const loader = ref(false)
-  const selectedLicenceId = ref<IntegerId>(0)
+  const selectedLicenceIds = ref<IntegerId[]>([])
+  const selectedPresetKey = ref<string>('')
   const selectConfig = ref<DamConfigLicenceExtSystemReturnType[]>([])
   const assetType = ref<DamAssetTypeType>(DamAssetTypeDefault)
   const inPodcast = ref<boolean | null>(null)
@@ -40,11 +41,15 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
 
   function setSelectConfig(value: DamConfigLicenceExtSystemReturnType[]) {
     selectConfig.value = value
-    if (value.length === 0) {
-      selectedLicenceId.value = 0
-      return
-    }
-    selectedLicenceId.value = value[0].licence
+    selectedLicenceIds.value = value.map((config) => config.licence)
+  }
+
+  function setSelectedLicenceIds(ids: IntegerId[]) {
+    selectedLicenceIds.value = ids
+  }
+
+  function setSelectedPresetKey(key: string) {
+    selectedPresetKey.value = key
   }
 
   function setSingleMode(value: boolean) {
@@ -212,18 +217,20 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
     minCount.value = 0
     maxCount.value = 0
     activeItemIndex.value = null
+    selectedPresetKey.value = ''
+    selectedLicenceIds.value = []
   }
 
   const selectedSelectConfig = computed(() => {
-    const found = selectConfig.value.find(
-      (configItem) => configItem.licence === selectedLicenceId.value,
-    )
+    const primaryLicenceId = selectedLicenceIds.value[0]
+    const found = selectConfig.value.find((configItem) => configItem.licence === primaryLicenceId)
     if (found) return found
     return selectConfig.value[0]
   })
 
   return {
-    selectedLicenceId,
+    selectedLicenceIds,
+    selectedPresetKey,
     selectConfig,
     assetType,
     inPodcast,
@@ -238,6 +245,8 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
     getSelectedData,
     setAssetType,
     setSelectConfig,
+    setSelectedLicenceIds,
+    setSelectedPresetKey,
     setSingleMode,
     setMinCount,
     setMaxCount,

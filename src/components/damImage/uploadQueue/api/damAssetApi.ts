@@ -62,6 +62,16 @@ export const useFetchAssetList = (
     urlParams: { licenceId },
   })
 
+// DAM requires all licences of one search to share an ext system (LicenceCollectionSingleExtSystem).
+export const useFetchAssetListByLicences = (client: () => AxiosInstance, endPoint: string) =>
+  useApiFetchList<AssetSearchListItemDto[]>({
+    client,
+    system: SYSTEM_CORE_DAM,
+    entity: ENTITY,
+    // No '/search' here: useApiFetchList appends it for an elastic filter config.
+    urlTemplate: endPoint + '/licence',
+  })
+
 export const fetchAsset = (client: () => AxiosInstance, endPoint: string, id: DocId) =>
   apiFetchOne<AssetDetailItemDto>(client, endPoint + '/:id', { id }, SYSTEM_CORE_DAM, ENTITY)
 

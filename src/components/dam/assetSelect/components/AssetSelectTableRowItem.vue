@@ -31,7 +31,7 @@ const IMAGE_WIDTH = 128
 
 const item = toRef(props, 'item')
 
-const { asset, tableImageProperties, assetType, assetStatus } = useAssetItemActions(item)
+const { asset, tableImageProperties, assetType, assetStatus, licenceBadge } = useAssetItemActions(item)
 
 const onItemClick = () => {
   emit('itemClick', { assetId: asset.value.id, index: props.index })
@@ -78,6 +78,7 @@ const onItemClick = () => {
       <AssetImageMetaIcons
         :asset-file-properties="item.asset.assetFileProperties"
         :asset-type="assetType"
+        :licence-badge="licenceBadge"
         disable-absolute
       />
     </td>

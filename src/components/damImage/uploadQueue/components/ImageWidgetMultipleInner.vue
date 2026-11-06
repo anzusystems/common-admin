@@ -54,6 +54,7 @@ const props = withDefaults(
     queueKey: UploadQueueKey
     uploadLicence: IntegerId
     selectLicences: IntegerId[]
+    listViews?: IntegerId[]
     configName?: string
     label?: string | undefined
     readonly?: boolean
@@ -65,12 +66,10 @@ const props = withDefaults(
     skipCurrentUserCheck?: boolean
   }>(),
   {
+    listViews: () => [],
     configName: 'default',
     label: undefined,
-    image: undefined,
     readonly: false,
-    lockable: false,
-    lockedById: undefined,
     dataCy: undefined,
     width: undefined,
     disableDraggable: false,
@@ -235,17 +234,24 @@ const assetSelectConfirmMap = async (
   items: AssetSearchListItemDto[],
 ): Promise<ImageStoreItem[]> => {
   const assetSelectStore = useAssetSelectStore()
-  const ids = items.map((item) => item.id)
   const assetMetadataMap = new Map<DocId, { description: string; authorIds: DocId[] }>()
   const authorIdsToFetch = new Set<DocId>()
   const authorsMap = new Map<DocId, string>()
   try {
-    const assetDetails = await fetchAssetListByIds(
-      damClient,
-      endPointAsset,
-      ids,
-      assetSelectStore.selectedLicenceId,
-    )
+    const idsByLicence: IdsGroupedByLicences = new Map()
+    items.forEach((item) => {
+      const docIds = idsByLicence.get(item.licence) ?? []
+      docIds.push(item.id)
+      idsByLicence.set(item.licence, docIds)
+    })
+
+    const assetDetails = (
+      await Promise.all(
+        [...idsByLicence].map(([licenceId, docIds]) =>
+          fetchAssetListByIds(damClient, endPointAsset, docIds, licenceId),
+        ),
+      )
+    ).flat()
     if (customAssetSelectMetadataToImageMap) {
       assetDetails.forEach((assetDetail) => {
         const mapped = customAssetSelectMetadataToImageMap(assetDetail)
@@ -349,23 +355,26 @@ const assetSelectConfirmMap = async (
 
 const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
   if (data.type !== 'asset' || data.value.length === 0) return
-  if (!isUndefined(data.copyToLicence)) {
+  const assets = data.value.filter((asset) => !isNull(asset.mainFile))
+  const targetLicence = data.copyToLicence
+  const assetsToCopy = isUndefined(targetLicence)
+    ? []
+    : assets.filter((asset) => asset.licence !== targetLicence)
+  if (!isUndefined(targetLicence) && assetsToCopy.length > 0) {
     try {
       const copyRes = await copyToLicence(
         damClient,
         endPointAsset,
-        data.value
-          .filter((asset) => !isNull(asset.mainFile))
-          .map((asset) => ({ asset: asset.id, targetAssetLicence: data.copyToLicence! })),
+        assetsToCopy.map((asset) => ({ asset: asset.id, targetAssetLicence: targetLicence })),
       )
       onCopyToLicence(copyRes)
     } catch (e) {
       showErrorsDefault(e)
     }
-    return
   }
-  const items = await assetSelectConfirmMap(data.value.filter((asset) => !isNull(asset.mainFile)))
-  imageStore.addImages(items)
+  const assetsToAdd = assets.filter((asset) => !assetsToCopy.includes(asset))
+  if (assetsToAdd.length === 0) return
+  imageStore.addImages(await assetSelectConfirmMap(assetsToAdd))
 }
 
 const assetDetailStore = useAssetDetailStore()
@@ -598,6 +607,7 @@ onMounted(() => {
       v-model="assetSelectDialog"
       :select-licences="selectLicences"
       :upload-licence="uploadLicence"
+      :list-views="listViews"
       :min-count="1"
       :max-count="50"
       :asset-type="DamAssetType.Image"

@@ -69,6 +69,7 @@ const props = withDefaults(
     queueKey: UploadQueueKey
     uploadLicence: IntegerId
     selectLicences: IntegerId[]
+    listViews?: IntegerId[]
     image?: ImageAware | undefined // optional, if available, no need to fetch image data
     configName?: string
     collab?: CollabComponentConfig
@@ -89,6 +90,7 @@ const props = withDefaults(
     skipCurrentUserCheck?: boolean
   }>(),
   {
+    listViews: () => [],
     configName: 'default',
     collab: undefined,
     collabStatus: CollabStatus.Inactive,
@@ -96,8 +98,6 @@ const props = withDefaults(
     required: false,
     image: undefined,
     readonly: false,
-    lockable: false,
-    lockedById: undefined,
     dataCy: undefined,
     expandOptions: false,
     expandMetadata: false,
@@ -862,6 +862,7 @@ defineExpose({
     v-model="assetSelectDialog"
     :select-licences="selectLicences"
     :upload-licence="uploadLicence"
+    :list-views="listViews"
     :min-count="1"
     :max-count="1"
     :asset-type="DamAssetType.Image"

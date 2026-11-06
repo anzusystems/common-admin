@@ -178,7 +178,7 @@ interface ImageAttributes {
 }
 
 interface Metadata {
-  exifData: [] // todo check
+  exifData: Record<string, string | number | boolean | null>
   id: string
   createdAt: string
   modifiedAt: string

@@ -24,6 +24,7 @@ const props = withDefaults(
     iconColor?: string
     showMetaIcons?: boolean
     assetFileProperties?: AssetFileProperties | undefined
+    licenceBadge?: string
   }>(),
   {
     assetType: DamAssetType.Image,
@@ -37,6 +38,7 @@ const props = withDefaults(
     iconColor: '#505050',
     showMetaIcons: false,
     assetFileProperties: undefined,
+    licenceBadge: '',
   },
 )
 const emit = defineEmits<{
@@ -110,6 +112,7 @@ const showIconComputed = computed(() => {
       v-if="showMetaIcons && assetFileProperties"
       :asset-file-properties="assetFileProperties"
       :asset-type="assetType"
+      :licence-badge="licenceBadge"
     />
   </div>
   <div
@@ -139,6 +142,7 @@ const showIconComputed = computed(() => {
       v-if="showMetaIcons && assetFileProperties"
       :asset-file-properties="assetFileProperties"
       :asset-type="assetType"
+      :licence-badge="licenceBadge"
     />
   </div>
 </template>

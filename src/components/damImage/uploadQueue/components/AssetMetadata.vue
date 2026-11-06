@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { useI18n } from 'vue-i18n'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { DamAssetType, DamAssetTypeDefault } from '@/types/coreDam/Asset'
 import { type AssetFile, assetFileIsImageFile } from '@/types/coreDam/AssetFile'
 import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
@@ -10,7 +10,7 @@ import ACopyText from '@/components/ACopyText.vue'
 import { prettyBytes } from '@/utils/file'
 import AssetMetadataImageAttributes from '@/components/damImage/uploadQueue/components/AssetMetadataImageAttributes.vue'
 import ASystemEntityScope from '@/components/form/ASystemEntityScope.vue'
-import { dateTimePretty } from '@/utils/datetime'
+import { dateDiff, dateNow, dateTimePretty, dateTimeToDate } from '@/utils/datetime'
 import { ADamAssetMetadataValidationScopeSymbol } from '@/components/damImage/uploadQueue/composables/uploadValidations'
 import AuthorRemoteAutocompleteWithCached from '@/components/damImage/uploadQueue/author/AuthorRemoteAutocompleteWithCached.vue'
 import KeywordRemoteAutocompleteWithCached from '@/components/damImage/uploadQueue/keyword/KeywordRemoteAutocompleteWithCached.vue'
@@ -20,8 +20,12 @@ import type { IntegerId } from '@/types/common'
 import ABooleanValue from '@/components/ABooleanValue.vue'
 import ARow from '@/components/ARow.vue'
 import ACachedUserChip from '@/components/ACachedUserChip.vue'
+import ACachedChip from '@/components/ACachedChip.vue'
+import { useDamCachedAssetLicences } from '@/components/damImage/composables/cachedDamAssetLicences'
+import { useRemainingTime } from '@/composables/datetime/remainingTime'
 import { useDamCachedUsers } from '@/components/damImage/uploadQueue/author/cachedUsers'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
+import { isUndefined } from '@/utils/common'
 
 const props = withDefaults(
   defineProps<{
@@ -82,6 +86,26 @@ const { cachedUsers } = useDamCachedUsers()
 
 const { mainFileSingleUseEnabled, showFileInfoEnabled, editAssetLabel } =
   useCommonAdminCoreDamOptions(props.configName) // eslint-disable-line vue/no-setup-props-reactivity-loss
+
+const { addToCachedAssetLicences, fetchCachedAssetLicences, getCachedAssetLicence } = useDamCachedAssetLicences()
+const { remainingTimeLong } = useRemainingTime()
+
+watch(
+  () => asset.value?.licence,
+  (licence) => {
+    if (isUndefined(licence)) return
+    addToCachedAssetLicences(licence)
+    fetchCachedAssetLicences()
+  },
+  { immediate: true },
+)
+
+const autoDeleteIn = computed(() => {
+  const autoDeleteAt = asset.value?.autoDeleteAt
+  if (!autoDeleteAt) return null
+
+  return remainingTimeLong(Math.max(0, dateDiff(dateTimeToDate(autoDeleteAt), dateNow(), 's')))
+})
 </script>
 
 <template>
@@ -184,6 +208,17 @@ const { mainFileSingleUseEnabled, showFileInfoEnabled, editAssetLabel } =
                 />
               </VCol>
             </VRow>
+            <VRow
+              v-if="autoDeleteIn !== null"
+              density="compact"
+              class="my-2"
+            >
+              <VCol>
+                <ARow :title="t('common.damImage.asset.model.autoDelete')">
+                  {{ autoDeleteIn }}
+                </ARow>
+              </VCol>
+            </VRow>
           </template>
         </AssetCustomMetadataForm>
       </VExpansionPanelText>
@@ -213,6 +248,20 @@ const { mainFileSingleUseEnabled, showFileInfoEnabled, editAssetLabel } =
           </VCol>
           <VCol cols="9">
             {{ asset.attributes.assetType }}
+          </VCol>
+        </VRow>
+        <VRow>
+          <VCol cols="3">
+            {{ t('common.damImage.asset.detail.info.field.licence') }}
+          </VCol>
+          <VCol cols="9">
+            <ACachedChip
+              :id="asset.licence"
+              :get-cached-fn="getCachedAssetLicence"
+              display-text-path="name"
+              route=""
+              disable-click
+            />
           </VCol>
         </VRow>
         <VRow>
