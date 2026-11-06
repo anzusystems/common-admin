@@ -14,7 +14,7 @@ const { t } = useI18n()
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { selectLicences, listViews } = props
 
-const { selectedLicenceIds, licenceTitle, licenceBadge } = useAssetSelectPresetControl(
+const { selectedLicenceIds, licenceTitle } = useAssetSelectPresetControl(
   selectLicences,
   listViews,
 )
@@ -33,12 +33,6 @@ const { selectedLicenceIds, licenceTitle, licenceBadge } = useAssetSelectPresetC
           size="small"
           class="a-selected-filters__chip"
         >
-          <span
-            v-if="licenceBadge(licenceId)"
-            class="font-weight-bold mr-1"
-          >
-            {{ licenceBadge(licenceId) }}
-          </span>
           {{ licenceTitle(licenceId) }}
         </VChip>
       </div>

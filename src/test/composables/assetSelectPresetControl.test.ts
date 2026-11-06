@@ -15,12 +15,6 @@ import type { DamCurrentUserDto } from '@/types/coreDam/DamCurrentUser'
 import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
 import type { IntegerId } from '@/types/common'
 
-vi.mock('@/components/damImage/composables/cachedDamAssetLicences', () => ({
-  useDamCachedAssetLicences: () => ({
-    getCachedAssetLicence: () => undefined,
-  }),
-}))
-
 const SELECT_LICENCES: IntegerId[] = [10, 20]
 const LIST_VIEWS: IntegerId[] = [1]
 

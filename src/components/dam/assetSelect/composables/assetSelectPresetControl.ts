@@ -8,14 +8,12 @@ import {
   assetSelectPresetStorageKey,
   useAssetSelectPresets,
 } from '@/components/dam/assetSelect/composables/assetSelectPresets'
-import { useDamCachedAssetLicences } from '@/components/damImage/composables/cachedDamAssetLicences'
 import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
 
 export function useAssetSelectPresetControl(selectLicences: IntegerId[], listViews: IntegerId[]) {
   const { t } = useI18n()
   const storageKey = assetSelectPresetStorageKey(selectLicences, listViews)
   const { buildPresets, loadStoredState, storeState } = useAssetSelectPresets(storageKey)
-  const { getCachedAssetLicence } = useDamCachedAssetLicences()
 
   const assetSelectStore = useAssetSelectStore()
   const { selectedLicenceIds, selectedPresetKey } = storeToRefs(assetSelectStore)
@@ -26,8 +24,6 @@ export function useAssetSelectPresetControl(selectLicences: IntegerId[], listVie
       String(licenceId)
     )
   }
-
-  const licenceBadge = (licenceId: IntegerId) => getCachedAssetLicence(licenceId)?.badge ?? ''
 
   const presets = computed(() => buildPresets(selectLicences, listViews, licenceTitle))
 
@@ -77,6 +73,5 @@ export function useAssetSelectPresetControl(selectLicences: IntegerId[], listVie
     selectedLicenceIds,
     applyPreset,
     licenceTitle,
-    licenceBadge,
   }
 }
