@@ -40,7 +40,6 @@ import { useUploadQueueDialog } from '@/components/damImage/uploadQueue/composab
 import { fetchAuthorListByIds } from '@/components/damImage/uploadQueue/api/authorApi'
 import { useI18n } from 'vue-i18n'
 import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/composables/extSystemIdForCached'
-import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
 import {
   type CollabComponentConfig,
   type CollabFieldData,
@@ -407,7 +406,6 @@ const reset = () => {
   releaseFieldLock.value(null)
 }
 
-const assetSelectStore = useAssetSelectStore()
 const { getDamConfigExtSystem } = useDamConfigState()
 
 const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
@@ -442,12 +440,9 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
         if (isString(assetRes.metadata.customData?.description)) {
           description = assetRes.metadata.customData.description.trim()
         }
-        if (assetRes.authors.length > 0) {
-          const authorsRes = await fetchAuthorListByIds(
-            damClient,
-            assetSelectStore.selectedSelectConfig.extSystem,
-            assetRes.authors,
-          )
+        const extSystem = await getExtSystemByLicence(assetRes.licence)
+        if (assetRes.authors.length > 0 && extSystem) {
+          const authorsRes = await fetchAuthorListByIds(damClient, extSystem, assetRes.authors)
           source = authorsRes.map((author) => author.name).join(', ')
         } else if (assetRes.authors.length === 0) {
           const configExtSystem = getDamConfigExtSystem(imageWidgetUploadConfig.value!.extSystem)
@@ -534,19 +529,11 @@ const onMetadataDialogConfirm = async () => {
   metadataDialogSaving.value = true
   try {
     if (showDamAuthorsInCmsImage.value && asset.value) {
-      if (asset.value.authors.length > 0) {
-        const authorsRes = await fetchAuthorListByIds(
-          damClient,
-          assetSelectStore.selectedSelectConfig.extSystem,
-          asset.value.authors,
-        )
+      const extSystem = await getExtSystemByLicence(asset.value.licence)
+      if (asset.value.authors.length > 0 && extSystem) {
+        const authorsRes = await fetchAuthorListByIds(damClient, extSystem, asset.value.authors)
         detail.value.texts.source = authorsRes.map((author) => author.name).join(', ')
-        await updateAssetAuthors(
-          damClient,
-          endPointAsset,
-          asset.value,
-          assetSelectStore.selectedSelectConfig.extSystem,
-        )
+        await updateAssetAuthors(damClient, endPointAsset, asset.value, extSystem)
         showDamAuthorsInCmsImage.value = false
       }
     }

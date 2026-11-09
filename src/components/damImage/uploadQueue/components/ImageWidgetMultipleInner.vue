@@ -41,7 +41,6 @@ import { useI18n } from 'vue-i18n'
 import useVuelidate from '@vuelidate/core'
 import { AImageMetadataValidationScopeSymbol } from '@/components/damImage/uploadQueue/composables/uploadValidations'
 import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/composables/extSystemIdForCached'
-import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
 import ImageWidgetMultipleLimitDialog from '@/components/damImage/uploadQueue/components/ImageWidgetMultipleLimitDialog.vue'
 import { ImageWidgetUploadConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
 import { fetchAssetListByFileIdsMultipleLicences } from '@/components/damImage/uploadQueue/api/damfetchAssetListByFileIdsMultipleLicences'
@@ -233,9 +232,7 @@ const afterLimitDialogAdd = () => {
 const assetSelectConfirmMap = async (
   items: AssetSearchListItemDto[],
 ): Promise<ImageStoreItem[]> => {
-  const assetSelectStore = useAssetSelectStore()
   const assetMetadataMap = new Map<DocId, { description: string; authorIds: DocId[] }>()
-  const authorIdsToFetch = new Set<DocId>()
   const authorsMap = new Map<DocId, string>()
   try {
     const idsByLicence: IdsGroupedByLicences = new Map()
@@ -270,21 +267,23 @@ const assetSelectConfirmMap = async (
           authorIds: assetDetail.authors,
         })
       })
-      assetMetadataMap.forEach((assetMeta) => {
-        assetMeta.authorIds.forEach((authorId) => {
-          authorIdsToFetch.add(authorId)
-        })
-      })
-      if (authorIdsToFetch.size > 0) {
-        const authorsRes = await fetchAuthorListByIds(
-          damClient,
-          assetSelectStore.selectedSelectConfig.extSystem,
-          [...authorIdsToFetch],
-        )
-        authorsRes.forEach((author) => {
-          authorsMap.set(author.id, author.name)
-        })
+      const authorIdsByExtSystem = new Map<IntegerId, Set<DocId>>()
+      for (const assetDetail of assetDetails) {
+        if (assetDetail.authors.length === 0) continue
+        const extSystem = await getExtSystemByLicence(assetDetail.licence)
+        if (!extSystem) continue
+        const authorIds = authorIdsByExtSystem.get(extSystem) ?? new Set<DocId>()
+        assetDetail.authors.forEach((authorId) => authorIds.add(authorId))
+        authorIdsByExtSystem.set(extSystem, authorIds)
       }
+      const authorsRes = await Promise.all(
+        [...authorIdsByExtSystem].map(([extSystem, authorIds]) =>
+          fetchAuthorListByIds(damClient, extSystem, [...authorIds]),
+        ),
+      )
+      authorsRes.flat().forEach((author) => {
+        authorsMap.set(author.id, author.name)
+      })
     }
   } catch (e) {
     showErrorsDefault(e)
