@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { useDisplay } from 'vuetify'
 import { useAssetSelectActions } from '@/components/dam/assetSelect/composables/assetSelectListActions'
-import { computed, onMounted, provide } from 'vue'
+import { computed, onMounted, provide, watch } from 'vue'
 import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
 import AssetSelectFilterForm from '@/components/dam/assetSelect/components/filter/AssetSelectFilterForm.vue'
 import { useAssetListFilter } from '@/model/coreDam/filter/AssetFilter'
@@ -64,6 +64,15 @@ const resetFilterAction = () => {
   resetFilter(pagination, resetAssetList)
   if (mdAndDown.value) closeSidebarLeft()
 }
+
+watch(
+  () => assetSelectStore.selectedLicenceIds,
+  (value, oldValue) => {
+    if (value.length === oldValue?.length && value.every((id) => oldValue.includes(id))) return
+    resetFilterAction()
+  },
+  { deep: true },
+)
 
 const componentComputed = computed(() => {
   switch (assetSelectStore.assetType) {

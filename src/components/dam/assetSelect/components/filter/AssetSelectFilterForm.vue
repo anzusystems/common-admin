@@ -68,10 +68,6 @@ watch(extSystem, (newValue, oldValue) => {
     filterData.authorIds = []
   }
 })
-
-watch(selectedLicenceIds, () => {
-  filterData.podcastIds = []
-})
 </script>
 
 <template>
