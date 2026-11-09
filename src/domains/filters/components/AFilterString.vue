@@ -14,10 +14,13 @@ const props = withDefaults(
   defineProps<{
     name: string
     placeholder?: string | undefined
+    /** Shown under the field for as long as it is given, e.g. while the value changes what the other filters do. */
+    hint?: string | undefined
     dataCy?: string
   }>(),
   {
     placeholder: undefined,
+    hint: undefined,
     dataCy: 'filter-string',
   }
 )
@@ -109,7 +112,9 @@ watch(
     :placeholder="placeholderComputed"
     :clearable="!filterConfigCurrent.mandatory"
     :data-cy="dataCy"
-    hide-details
+    :hint="hint"
+    :persistent-hint="!!hint"
+    :hide-details="!hint"
     autocomplete="off"
     @blur="updateSelected"
     @click:clear.stop="clearField"

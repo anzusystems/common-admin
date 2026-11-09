@@ -119,6 +119,15 @@ describe('AFilterString', () => {
     expect(mountString('code').wrapper.find('input').attributes('placeholder')).toBe('Exact match')
     expect(mountString('text', { placeholder: 'Mine' }).wrapper.find('input').attributes('placeholder')).toBe('Mine')
   })
+
+  it('shows a hint under the field for as long as it is given, and no details without one', async () => {
+    const { wrapper } = mountString('text', { hint: 'The other filters are left out.' })
+    expect(wrapper.find('.v-messages').text()).toBe('The other filters are left out.')
+
+    await wrapper.setProps({ hint: undefined })
+    expect(wrapper.find('.v-input__details').exists()).toBe(false)
+    expect(mountString('slug').wrapper.find('.v-input__details').exists()).toBe(false)
+  })
 })
 
 describe('AFilterWrapper', () => {
