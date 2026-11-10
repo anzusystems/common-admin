@@ -25,14 +25,25 @@ const setDamUser = (id: IntegerId) => {
   } as unknown as DamCurrentUserDto)
 }
 
+const selectConfigs = (selectLicences: IntegerId[]) =>
+  selectLicences.map(
+    (licence) =>
+      ({
+        licence,
+        extSystem: 1,
+        licenceName: '',
+      }) as unknown as DamConfigLicenceExtSystemReturnType,
+  )
+
 const mountControl = async (selectLicences: IntegerId[] = SELECT_LICENCES) => {
   let control!: ReturnType<typeof useAssetSelectPresetControl>
   let store!: ReturnType<typeof useAssetSelectStore>
   mount(
     defineComponent({
       setup() {
-        control = useAssetSelectPresetControl(selectLicences, LIST_VIEWS)
         store = useAssetSelectStore()
+        store.setSelectConfig(selectConfigs(selectLicences))
+        control = useAssetSelectPresetControl(LIST_VIEWS)
         return () => h('div')
       },
     }),
@@ -68,20 +79,18 @@ describe('useAssetSelectPresetControl', () => {
     },
   )
 
+  it('leaves the first licence choice to the preset control', () => {
+    const store = useAssetSelectStore(pinia)
+
+    store.setSelectConfig(selectConfigs(SELECT_LICENCES))
+
+    expect(store.selectedLicenceIds).toEqual([])
+  })
+
   it('reopens a closed picker on the chosen selection', async () => {
     const { control, store } = await mountControl()
     control.applyPreset('licence:20')
     store.reset(true)
-    store.setSelectConfig(
-      SELECT_LICENCES.map(
-        (licence) =>
-          ({
-            licence,
-            extSystem: 1,
-            licenceName: '',
-          }) as unknown as DamConfigLicenceExtSystemReturnType,
-      ),
-    )
 
     const { control: reopened } = await mountControl()
 

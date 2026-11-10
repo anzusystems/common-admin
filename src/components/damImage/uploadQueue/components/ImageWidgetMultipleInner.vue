@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { DocId, IntegerId } from '@/types/common'
 import { computed, inject, onMounted, ref, type ShallowRef, toRaw } from 'vue'
-import { isNull, isString, isUndefined } from '@/utils/common'
+import { isString, isUndefined } from '@/utils/common'
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
 import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
 import { useImageStore } from '@/components/damImage/uploadQueue/composables/imageStore'
@@ -46,6 +46,7 @@ import { ImageWidgetUploadConfig } from '@/components/damImage/composables/image
 import { fetchAssetListByFileIdsMultipleLicences } from '@/components/damImage/uploadQueue/api/damfetchAssetListByFileIdsMultipleLicences'
 import { copyToLicence } from '@/components/damImage/uploadQueue/api/damImageApi'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
+import { splitAssetsForCopyToLicence } from '@/components/damImage/uploadQueue/composables/splitAssetsForCopyToLicence'
 
 const props = withDefaults(
   defineProps<{
@@ -354,26 +355,22 @@ const assetSelectConfirmMap = async (
 
 const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
   if (data.type !== 'asset' || data.value.length === 0) return
-  const assets = data.value.filter((asset) => !isNull(asset.mainFile))
   const targetLicence = data.copyToLicence
-  const assetsToCopy = isUndefined(targetLicence)
-    ? []
-    : assets.filter((asset) => asset.licence !== targetLicence)
-  if (!isUndefined(targetLicence) && assetsToCopy.length > 0) {
+  const { toCopy, toAdd } = splitAssetsForCopyToLicence(data.value, targetLicence)
+  if (!isUndefined(targetLicence) && toCopy.length > 0) {
     try {
       const copyRes = await copyToLicence(
         damClient,
         endPointAsset,
-        assetsToCopy.map((asset) => ({ asset: asset.id, targetAssetLicence: targetLicence })),
+        toCopy.map((asset) => ({ asset: asset.id, targetAssetLicence: targetLicence })),
       )
       onCopyToLicence(copyRes)
     } catch (e) {
       showErrorsDefault(e)
     }
   }
-  const assetsToAdd = assets.filter((asset) => !assetsToCopy.includes(asset))
-  if (assetsToAdd.length === 0) return
-  imageStore.addImages(await assetSelectConfirmMap(assetsToAdd))
+  if (toAdd.length === 0) return
+  imageStore.addImages(await assetSelectConfirmMap(toAdd))
 }
 
 const assetDetailStore = useAssetDetailStore()

@@ -143,11 +143,12 @@ watch(extSystem, (newValue, oldValue) => {
       />
     </VCol>
     <VCol
-      v-if="assetType === DamAssetType.Audio && isFilterEnabled('podcastIds')"
+      v-if="extSystem && assetType === DamAssetType.Audio && isFilterEnabled('podcastIds')"
       v-bind="colProps('podcastIds')"
     >
       <FilterPodcastRemoteAutocomplete
         :key="selectedLicenceIds.join('-')"
+        :ext-system="extSystem"
         :licence-ids="selectedLicenceIds"
         name="podcastIds"
       />

@@ -29,7 +29,6 @@ import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
 import { storeToRefs } from 'pinia'
 import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
 import { type DatatableOrderingOption } from '@/composables/system/datatableColumns'
-import { showAssetSelectPresets } from '@/components/dam/assetSelect/composables/assetSelectPresets'
 import AssetSelectLicencePresetBar from '@/components/dam/assetSelect/components/AssetSelectLicencePresetBar.vue'
 
 const props = withDefaults(
@@ -95,23 +94,15 @@ const { selectedSelectConfig, selectedAssets, assetType } = storeToRefs(assetSel
 
 const selectConfigs = shallowRef<DamConfigLicenceExtSystemReturnType[]>([])
 
-// DAM refuses the whole search when even one requested licence is unreadable, so presets and the
-// filter's licence list are limited to the licences the picker itself accepts.
-const allowedSelectConfigs = computed(() =>
-  props.skipCurrentUserCheck
-    ? selectConfigs.value
-    : filterAllowedImageWidgetSelectConfigs(selectConfigs.value),
-)
-const allowedSelectLicences = computed<IntegerId[]>(() =>
-  allowedSelectConfigs.value.map((config) => config.licence),
-)
-
 const { openSidebarLeft, sidebarLeft, sidebarRight } = useSidebar()
 const { showErrorT } = useAlerts()
 
 const onOpen = () => {
   if (!ready.value) return
-  const selectConfigLocal = cloneDeep(allowedSelectConfigs.value)
+  let selectConfigLocal = cloneDeep(selectConfigs.value)
+  if (!props.skipCurrentUserCheck) {
+    selectConfigLocal = filterAllowedImageWidgetSelectConfigs(selectConfigs.value)
+  }
   if (selectConfigLocal.length === 0) {
     showErrorT('common.assetSelect.error.unallowedLicence')
     return
@@ -298,11 +289,7 @@ defineExpose({
           @type-change="typeChange"
           @sort-by-change="sortByChange"
         />
-        <AssetSelectLicencePresetBar
-          v-if="showAssetSelectPresets(allowedSelectLicences, listViews)"
-          :select-licences="allowedSelectLicences"
-          :list-views="listViews"
-        />
+        <AssetSelectLicencePresetBar :list-views="listViews" />
         <div
           class="subject-select__main"
           :class="{
@@ -313,7 +300,6 @@ defineExpose({
           <div class="subject-select__sidebar system-border-r">
             <AssetSelectFilter
               :config-name="configName"
-              :select-licences="allowedSelectLicences"
               :list-views="listViews"
             />
           </div>

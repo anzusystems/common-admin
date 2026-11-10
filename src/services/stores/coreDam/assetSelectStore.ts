@@ -41,7 +41,6 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
 
   function setSelectConfig(value: DamConfigLicenceExtSystemReturnType[]) {
     selectConfig.value = value
-    selectedLicenceIds.value = value.map((config) => config.licence)
   }
 
   function setSelectedLicenceIds(ids: IntegerId[]) {

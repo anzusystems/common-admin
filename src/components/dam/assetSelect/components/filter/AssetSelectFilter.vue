@@ -12,18 +12,15 @@ import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/compo
 import { useSidebar } from '@/components/dam/assetSelect/composables/assetSelectFilterSidebar'
 import { useI18n } from 'vue-i18n'
 import type { IntegerId } from '@/types/common'
-import { showAssetSelectPresets } from '@/components/dam/assetSelect/composables/assetSelectPresets'
 import { useAssetSelectPresetControl } from '@/components/dam/assetSelect/composables/assetSelectPresetControl'
 
 const props = withDefaults(
   defineProps<{
     configName?: string
-    selectLicences?: IntegerId[]
     listViews?: IntegerId[]
   }>(),
   {
     configName: 'default',
-    selectLicences: () => [],
     listViews: () => [],
   },
 )
@@ -34,12 +31,14 @@ const { assetListEnabledFilters } = useCommonAdminCoreDamOptions(props.configNam
 const { t } = useI18n()
 const { mdAndDown } = useDisplay()
 
-// Host configuration, not expected to change after mount.
-// eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { selectLicences, listViews } = props
-
-const { items: presetItems, selectedPresetKey, applyPreset } = useAssetSelectPresetControl(selectLicences, listViews)
-const showPresetSelect = computed(() => showAssetSelectPresets(selectLicences, listViews))
+const {
+  items: presetItems,
+  showPresets,
+  selectedPresetKey,
+  applyPreset,
+  // Host configuration, not expected to change after mount.
+  // eslint-disable-next-line vue/no-setup-props-reactivity-loss
+} = useAssetSelectPresetControl(props.listViews)
 const { closeSidebarLeft } = useSidebar()
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { fetchAssetListDebounced, resetAssetList, pagination } = useAssetSelectActions(props.configName)
@@ -94,7 +93,7 @@ onMounted(() => {
         @reset="resetFilterAction"
       >
         <template #detail>
-          <VRow v-if="showPresetSelect">
+          <VRow v-if="showPresets">
             <VCol :cols="12">
               <VSelect
                 :model-value="selectedPresetKey"
