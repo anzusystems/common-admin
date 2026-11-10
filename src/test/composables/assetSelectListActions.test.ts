@@ -222,6 +222,26 @@ describe('useAssetSelectActions', () => {
     expect(listedIds(filter.store)).toEqual(['listed'])
   })
 
+  it('asks DAM for no next page without a licence', async () => {
+    const { actions } = mountActions()
+    const page = actions.pagination.value.page
+
+    await actions.fetchNextPage()
+
+    expect(executeFetch).not.toHaveBeenCalled()
+    expect(actions.pagination.value.page).toBe(page)
+  })
+
+  it('keeps the licences when the same ones come again, so the list does not reload', () => {
+    const { store } = mountActions()
+    store.setSelectedLicenceIds([10, 20])
+    const selected = store.selectedLicenceIds
+
+    store.setSelectedLicenceIds([20, 10])
+
+    expect(store.selectedLicenceIds).toBe(selected)
+  })
+
   it('keeps loading while the newer search runs after the older one answered', async () => {
     const { store, older, newer } = startTwoSearches()
 

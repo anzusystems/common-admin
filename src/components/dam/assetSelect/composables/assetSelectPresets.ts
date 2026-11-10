@@ -7,7 +7,7 @@ import { SYSTEM_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
 
 export type AssetSelectPresetKey = string
 
-export type AssetSelectPresetGroup = 'listView' | 'licence'
+type AssetSelectPresetGroup = 'listView' | 'licence'
 
 export interface AssetSelectPreset {
   key: AssetSelectPresetKey
@@ -15,11 +15,6 @@ export interface AssetSelectPreset {
   licenceIds: IntegerId[]
   group: AssetSelectPresetGroup
 }
-
-export const showAssetSelectPresets = (
-  selectLicences: IntegerId[],
-  listViews: IntegerId[],
-): boolean => selectLicences.length > 1 || listViews.length > 0
 
 export const assetSelectSingleLicenceKey = (licenceId: IntegerId): AssetSelectPresetKey =>
   `licence:${licenceId}`

@@ -2,7 +2,6 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { defineAuth } from '@/composables/auth/defineAuth'
 import { SYSTEM_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
 import {
-  showAssetSelectPresets,
   useAssetSelectPresets,
   assetSelectPresetStorageKey,
 } from '@/components/dam/assetSelect/composables/assetSelectPresets'
@@ -63,16 +62,5 @@ describe('useAssetSelectPresets', () => {
     expect(assetSelectPresetStorageKey(1, [10, 20], [1])).not.toBe(
       assetSelectPresetStorageKey(1, [10, 20], [1, 2]),
     )
-  })
-})
-
-describe('showAssetSelectPresets', () => {
-  it.each<[string, IntegerId[], IntegerId[], boolean]>([
-    ['one licence and no list view', [10], [], false],
-    ['no licence and no list view', [], [], false],
-    ['two licences', [10, 20], [], true],
-    ['one licence and a list view', [10], [1], true],
-  ])('%s', (_name, selectLicences, listViews, expected) => {
-    expect(showAssetSelectPresets(selectLicences, listViews)).toBe(expected)
   })
 })

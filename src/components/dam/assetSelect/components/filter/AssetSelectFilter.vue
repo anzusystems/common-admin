@@ -64,14 +64,7 @@ const resetFilterAction = () => {
   if (mdAndDown.value) closeSidebarLeft()
 }
 
-watch(
-  () => assetSelectStore.selectedLicenceIds,
-  (value, oldValue) => {
-    if (value.length === oldValue?.length && value.every((id) => oldValue.includes(id))) return
-    resetFilterAction()
-  },
-  { deep: true },
-)
+watch(() => assetSelectStore.selectedLicenceIds, resetFilterAction)
 
 const componentComputed = computed(() => {
   switch (assetSelectStore.assetType) {

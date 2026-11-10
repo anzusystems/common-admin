@@ -163,18 +163,6 @@ const showCopyToLicence = computed(() => {
   )
 })
 
-// The store is shared by every picker on the page, so only the one whose dialog is open may react.
-watch(
-  () => assetSelectStore.selectedLicenceIds,
-  (value, oldValue) => {
-    if (!modelValue.value) return
-    if (value.length === oldValue?.length && value.every((id) => oldValue.includes(id))) return
-    pagination.value.page = 1
-    fetchAssetListDebounced()
-  },
-  { deep: true },
-)
-
 const componentComputed = computed(() => {
   switch (gridView.value) {
     case AssetSelectGridView.Table:
@@ -289,7 +277,7 @@ defineExpose({
           @type-change="typeChange"
           @sort-by-change="sortByChange"
         />
-        <AssetSelectLicencePresetBar :list-views="listViews" />
+        <AssetSelectLicencePresetBar />
         <div
           class="subject-select__main"
           :class="{

@@ -7,7 +7,6 @@ import {
   type AssetSelectPreset,
   type AssetSelectPresetKey,
   assetSelectPresetStorageKey,
-  showAssetSelectPresets,
   useAssetSelectPresets,
 } from '@/components/dam/assetSelect/composables/assetSelectPresets'
 import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
@@ -25,7 +24,7 @@ export function useAssetSelectPresetControl(listViews: IntegerId[]) {
   const { t } = useI18n()
   const { buildPresets, damCurrentUser } = useAssetSelectPresets()
   const assetSelectStore = useAssetSelectStore()
-  const { selectedLicenceIds, selectedPresetKey } = storeToRefs(assetSelectStore)
+  const { selectedPresetKey } = storeToRefs(assetSelectStore)
   // The picker puts only the licences the user may read into the store before its content mounts;
   // DAM refuses the whole search when even one requested licence is unreadable.
   const selectLicences = assetSelectStore.selectConfig.map((config) => config.licence)
@@ -40,15 +39,8 @@ export function useAssetSelectPresetControl(listViews: IntegerId[]) {
       )
     : ref<AssetSelectPresetKey>('')
 
-  const licenceTitle = (licenceId: IntegerId) => {
-    return (
-      assetSelectStore.selectConfig.find((config) => config.licence === licenceId)?.licenceName ||
-      String(licenceId)
-    )
-  }
-
-  const presets = computed(() => buildPresets(selectLicences, listViews, licenceTitle))
-  const showPresets = showAssetSelectPresets(selectLicences, listViews)
+  const presets = computed(() => buildPresets(selectLicences, listViews, assetSelectStore.licenceTitle))
+  const showPresets = computed(() => presets.value.length > 1)
 
   const items = computed(() => {
     const listViewPresets = presets.value.filter((preset) => preset.group === 'listView')
@@ -88,8 +80,6 @@ export function useAssetSelectPresetControl(listViews: IntegerId[]) {
     items,
     showPresets,
     selectedPresetKey,
-    selectedLicenceIds,
     applyPreset,
-    licenceTitle,
   }
 }

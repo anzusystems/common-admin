@@ -270,7 +270,7 @@ defineExpose({
           v-model:sort="sortModel"
           @sort-by-change="sortByChange"
         />
-        <AssetSelectLicencePresetBar :list-views="listViews" />
+        <AssetSelectLicencePresetBar />
         <div
           class="subject-select__main"
           :class="{

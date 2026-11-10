@@ -43,8 +43,15 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
     selectConfig.value = value
   }
 
+  // The list reloads on every change of the licences; the same licences again are no change.
   function setSelectedLicenceIds(ids: IntegerId[]) {
+    const current = selectedLicenceIds.value
+    if (ids.length === current.length && ids.every((id) => current.includes(id))) return
     selectedLicenceIds.value = ids
+  }
+
+  function licenceTitle(licenceId: IntegerId) {
+    return selectConfig.value.find((config) => config.licence === licenceId)?.licenceName || String(licenceId)
   }
 
   function setSelectedPresetKey(key: string) {
@@ -245,6 +252,7 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
     setAssetType,
     setSelectConfig,
     setSelectedLicenceIds,
+    licenceTitle,
     setSelectedPresetKey,
     setSingleMode,
     setMinCount,

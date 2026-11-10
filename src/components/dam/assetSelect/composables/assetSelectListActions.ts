@@ -76,10 +76,16 @@ export function useAssetSelectActions(
     return list
   }
 
-  const fetchAssetList = async () => {
-    if (assetSelectStore.selectedLicenceIds.length === 0) return
+  // DAM searches only the licences the picker chose; without one there is nothing to ask for.
+  const prepareListRequest = () => {
+    if (assetSelectStore.selectedLicenceIds.length === 0) return false
     resolveTypeFilter(assetSelectStore.assetType, assetSelectStore.inPodcast)
     filterData.licences = assetSelectStore.selectedLicenceIds
+    return true
+  }
+
+  const fetchAssetList = async () => {
+    if (!prepareListRequest()) return
     const request = ++latestListRequest
     try {
       assetSelectStore.showLoader()
@@ -94,10 +100,8 @@ export function useAssetSelectActions(
   }
 
   const fetchNextPage = async () => {
-    if (assetSelectStore.loader) return
+    if (assetSelectStore.loader || !prepareListRequest()) return
     pagination.value.page = pagination.value.page + 1
-    resolveTypeFilter(assetSelectStore.assetType, assetSelectStore.inPodcast)
-    filterData.licences = assetSelectStore.selectedLicenceIds
     const request = ++latestListRequest
     try {
       assetSelectStore.showLoader()

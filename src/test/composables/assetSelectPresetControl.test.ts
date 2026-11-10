@@ -72,12 +72,22 @@ describe('useAssetSelectPresetControl', () => {
         localStorage.setItem(assetSelectPresetStorageKey(1, SELECT_LICENCES, LIST_VIEWS), storedKey)
       }
 
-      const { control } = await mountControl()
+      const { control, store } = await mountControl()
 
       expect(control.selectedPresetKey.value).toBe(expectedKey)
-      expect(control.selectedLicenceIds.value).toEqual(expectedLicenceIds)
+      expect(store.selectedLicenceIds).toEqual(expectedLicenceIds)
     },
   )
+
+  it.each<[string, IntegerId[], boolean]>([
+    ['two licences', [10, 20], true],
+    ['one licence in a list view of the user', [10], true],
+    ['one licence outside every list view of the user', [20], false],
+  ])('offers the selection only with more than one choice: %s', async (_name, selectLicences, expected) => {
+    const { control } = await mountControl(selectLicences)
+
+    expect(control.showPresets.value).toBe(expected)
+  })
 
   it('leaves the first licence choice to the preset control', () => {
     const store = useAssetSelectStore(pinia)
@@ -92,10 +102,10 @@ describe('useAssetSelectPresetControl', () => {
     control.applyPreset('licence:20')
     store.reset(true)
 
-    const { control: reopened } = await mountControl()
+    const { control: reopened, store: reopenedStore } = await mountControl()
 
     expect(reopened.selectedPresetKey.value).toBe('licence:20')
-    expect(reopened.selectedLicenceIds.value).toEqual([20])
+    expect(reopenedStore.selectedLicenceIds).toEqual([20])
   })
 
   it('starts another DAM user in the same browser on the first licence', async () => {
