@@ -122,6 +122,7 @@ const onInit = () => {
   }
   if (selectConfigLocal.length === 0) {
     showErrorT('common.assetSelect.error.unallowedLicence')
+    assetSelectStore.setSelectConfig([])
     return
   }
 
