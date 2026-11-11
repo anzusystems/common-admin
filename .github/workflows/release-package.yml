@@ -62,8 +62,12 @@ jobs:
           else
             npm publish --access public
           fi
+        env:
+          SKIP_PLAYWRIGHT_INSTALL: true
 
       - name: Publish beta package to npmjs
         if: github.event_name == 'push' && steps.check.outputs.changed == 'true' && contains(steps.check.outputs.version, 'beta')
         run: |
           npm publish --tag beta
+        env:
+          SKIP_PLAYWRIGHT_INSTALL: true
