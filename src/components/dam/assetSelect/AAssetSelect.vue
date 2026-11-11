@@ -220,13 +220,26 @@ watch(
   { immediate: true },
 )
 
-onMounted(async () => {
+let loadSeq = 0
+const loadSelectConfigs = async () => {
+  const seq = ++loadSeq
   ready.value = false
   loading.value = true
-  selectConfigs.value = await getOrLoadDamConfigExtSystemByLicences(props.selectLicences)
+  const configs = await getOrLoadDamConfigExtSystemByLicences(props.selectLicences)
+  if (seq !== loadSeq) return
+  selectConfigs.value = configs
   loading.value = false
   ready.value = true
-})
+}
+
+// Hosts often mount the picker before their entity has loaded, and they pass inline arrays like `[licence]`,
+// which are a new reference on every render, so the joined ids are watched.
+watch(
+  () => props.selectLicences.join(','),
+  () => loadSelectConfigs(),
+)
+
+onMounted(loadSelectConfigs)
 
 onUnmounted(() => {
   selectConfigs.value = []
