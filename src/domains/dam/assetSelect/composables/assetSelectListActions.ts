@@ -8,7 +8,7 @@ import { usePagination } from '@/domains/api/composables/pagination'
 import { useAlerts } from '@/domains/system/composables/alerts'
 import type { DocId, IntegerId } from '@/shared/types/common'
 import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
-import { fetchAsset, useFetchAssetList } from '@/domains/dam/api/damAssetApi'
+import { fetchAsset, useFetchAssetList, useFetchAssetListByLicences } from '@/domains/dam/api/damAssetApi'
 import type { DamConfigLicenceExtSystemReturnType } from '@/domains/dam/types/DamConfig'
 import { useAssetDetailStore } from '@/domains/dam/assetDetail/store/assetDetailStore'
 import { useDamCachedAuthors } from '@/domains/dam/author/composables/cachedAuthors'
@@ -29,6 +29,9 @@ let listController: AbortController | undefined
 let detailRequest = 0
 // Counts list restarts, so a failed further page is tracked per list.
 let listTurn = 0
+// One debounce for every asset select part, like the pagination: the filter's mount and the picker's licence choice
+// ask for the first listing in the same tick, and only one search goes out.
+const readListAfterPause = useDebounceFn((read: () => Promise<void>) => read())
 
 /**
  * Scroll position of the scroll container of the "Load more" button: the nearest scrollable ancestor, else the page.
@@ -100,24 +103,36 @@ export function useAssetSelectActions(configName: string) {
     pagination.value = { ...pagination.value, page: 1, hasNextPage }
   }
 
-  const readListAfterPause = useDebounceFn(async () => {
-    await fetchAssetList()
-  })
-
   /** Every list reload goes through here: it restarts at once and is read after a debounce. */
   const fetchAssetListDebounced = () => {
     startListAnew()
-    return readListAfterPause()
+    return readListAfterPause(fetchAssetList)
+  }
+
+  /**
+   * The list read of the chosen licences, or `undefined` without one. One licence is read at its own endpoint
+   * (`/licence/:licenceId`), which every DAM has, the UGC proxy too. Several, the licences of a list view, in one
+   * search at `/licence` with the filter `licences`.
+   */
+  const listRead = () => {
+    const licenceIds = assetSelectStore.selectedLicenceIds
+    if (licenceIds.length === 0) return undefined
+    resolveTypeFilter(assetSelectStore.assetType, assetSelectStore.inPodcast)
+    if (licenceIds.length === 1) {
+      filterData.licences = []
+      return useFetchAssetList(damClient, endPointAsset, licenceIds[0]!).execute
+    }
+    filterData.licences = [...licenceIds]
+    return useFetchAssetListByLicences(damClient, endPointAsset).execute
   }
 
   const fetchAssetList = async () => {
-    if (assetSelectStore.selectedLicenceId <= 0) {
+    const execute = listRead()
+    if (!execute) {
       // Nothing is read, so the loader of the abandoned list is turned off.
       if (!listController) assetSelectStore.hideLoader()
       return
     }
-    resolveTypeFilter(assetSelectStore.assetType, assetSelectStore.inPodcast)
-    const { execute } = useFetchAssetList(damClient, endPointAsset, assetSelectStore.selectedLicenceId)
     // Restart again as the read starts, covering anything requested during the debounce.
     startListAnew()
     const controller = (listController = new AbortController())
@@ -136,11 +151,12 @@ export function useAssetSelectActions(configName: string) {
 
   const fetchNextPage = async () => {
     if (assetSelectStore.loader) return
+    // Without a licence there is no list to continue.
+    const execute = listRead()
+    if (!execute) return
     failedInListTurn = null
     const page = pagination.value.page
     pagination.value.page = page + 1
-    resolveTypeFilter(assetSelectStore.assetType, assetSelectStore.inPodcast)
-    const { execute } = useFetchAssetList(damClient, endPointAsset, assetSelectStore.selectedLicenceId)
     // A new list (filter submit) aborts this page too: appended, it would be the old filter's page.
     listController?.abort()
     const controller = (listController = new AbortController())

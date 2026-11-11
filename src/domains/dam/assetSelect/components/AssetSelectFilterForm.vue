@@ -6,7 +6,6 @@ import { storeToRefs } from 'pinia'
 import AFilterBooleanSelect from '@/domains/filters/components/AFilterBooleanSelect.vue'
 import AFilterString from '@/domains/filters/components/AFilterString.vue'
 import DamKeywordFilterRemoteAutocomplete from '@/domains/dam/keyword/components/DamKeywordFilterRemoteAutocomplete.vue'
-import type { IntegerId } from '@/shared/types/common'
 import DamAuthorFilterRemoteAutocomplete from '@/domains/dam/author/components/DamAuthorFilterRemoteAutocomplete.vue'
 import DamUserFilterRemoteAutocomplete from '@/domains/dam/user/components/DamUserFilterRemoteAutocomplete.vue'
 import AssetDistributionServiceNameFilter from '@/domains/dam/assetSelect/components/AssetDistributionServiceNameFilter.vue'
@@ -60,15 +59,11 @@ const colProps = (name: keyof typeof filterConfig.fields) => {
 }
 
 const assetSelectStore = useAssetSelectStore()
-const { selectConfig, selectedLicenceId, assetType } = storeToRefs(assetSelectStore)
+const { selectedSelectConfig, selectedLicenceIds, assetType } = storeToRefs(assetSelectStore)
 
-const extSystem = computed<IntegerId | undefined>(() => {
-  const found = selectConfig.value.find((config) => config.licence === selectedLicenceId.value)
-  if (found) {
-    return found.extSystem
-  }
-  return undefined
-})
+const extSystem = computed(() => selectedSelectConfig.value?.extSystem)
+// Inputs whose options depend on the browsed licences are drawn anew for other licences.
+const licencesKey = computed(() => selectedLicenceIds.value.join('-'))
 
 watch(extSystem, (newValue, oldValue) => {
   if (newValue !== oldValue) {
@@ -146,17 +141,18 @@ watch(extSystem, (newValue, oldValue) => {
       v-bind="colProps('distributedInServices')"
     >
       <AssetDistributionServiceNameFilter
-        :key="selectedLicenceId"
+        :key="licencesKey"
         name="distributedInServices"
       />
     </VCol>
     <VCol
-      v-if="assetType === DamAssetType.Audio && isFilterEnabled('podcastIds')"
+      v-if="extSystem && assetType === DamAssetType.Audio && isFilterEnabled('podcastIds')"
       v-bind="colProps('podcastIds')"
     >
       <FilterPodcastRemoteAutocomplete
-        :key="selectedLicenceId"
-        :licence-id="selectedLicenceId"
+        :key="licencesKey"
+        :ext-system="extSystem"
+        :licence-ids="selectedLicenceIds"
         name="podcastIds"
       />
     </VCol>

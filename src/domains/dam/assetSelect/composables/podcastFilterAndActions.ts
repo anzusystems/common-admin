@@ -13,7 +13,8 @@ import type { DocId, IntegerId } from '@/shared/types/common'
 import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
 import { fetchDamPodcastListByIds, useFetchDamPodcastList } from '@/domains/dam/assetSelect/api/damPodcastApi'
 
-export function usePodcastInnerFilter() {
+/** `licenceIds`: the browsed licences of one ext system; only their podcasts are listed. */
+export function usePodcastInnerFilter(licenceIds: IntegerId[]) {
   const filterFieldsInner = [
     {
       name: 'title' as const,
@@ -22,6 +23,7 @@ export function usePodcastInnerFilter() {
       type: 'string',
       apiName: 'texts.title',
     },
+    { name: 'licence' as const, variant: 'in', default: licenceIds },
   ] satisfies readonly MakeFilterOption[]
 
   const { filterConfig, filterData } = createFilter(filterFieldsInner, createFilterStore(filterFieldsInner), {
@@ -35,9 +37,9 @@ export function usePodcastInnerFilter() {
   }
 }
 
-export const usePodcastSelectActions = (licenceId: IntegerId, configName: string) => {
+export const usePodcastSelectActions = (extSystemId: IntegerId, configName: string) => {
   const { damClient, endPointPodcast } = useCommonAdminCoreDamOptions(configName)
-  const { execute } = useFetchDamPodcastList(damClient, licenceId, endPointPodcast)
+  const { execute } = useFetchDamPodcastList(damClient, extSystemId, endPointPodcast)
 
   const fetchItems = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
     const podcasts = await execute(pagination, filterData, filterConfig)
@@ -49,7 +51,7 @@ export const usePodcastSelectActions = (licenceId: IntegerId, configName: string
   }
 
   const fetchItemsByIds = async (ids: DocId[]) => {
-    const podcasts = await fetchDamPodcastListByIds(damClient, licenceId, ids, endPointPodcast)
+    const podcasts = await fetchDamPodcastListByIds(damClient, extSystemId, ids, endPointPodcast)
 
     return podcasts.map((podcast: DamPodcastAware) => ({
       title: podcast.texts.title,

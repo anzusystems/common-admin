@@ -22,6 +22,8 @@ const props = withDefaults(
     queueKey: UploadQueueKey
     uploadLicence: IntegerId
     selectLicences: IntegerId[]
+    /** List views of the host the asset select offers as "Search in" choices, those the DAM user has. */
+    listViews?: IntegerId[]
     configName?: string
     label?: string | undefined
     readonly?: boolean
@@ -31,13 +33,10 @@ const props = withDefaults(
   }>(),
   {
     configName: undefined,
+    listViews: () => [],
     label: undefined,
-    image: undefined,
     readonly: false,
-    lockable: false,
-    lockedById: undefined,
     dataCy: undefined,
-    expandOptions: false,
     width: undefined,
     callDeleteApiOnRemove: false,
   }

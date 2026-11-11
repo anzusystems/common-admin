@@ -99,7 +99,7 @@ const { keywordRequired, keywordEnabled } = useDamKeywordAssetTypeConfig(
 const { mainFileSingleUseEnabled, showFileInfoEnabled, showAutoDeleteEnabled, showLicenceEnabled, editAssetLabel } =
   useCommonAdminCoreDamOptions(damConfigName)
 
-// Only where the configuration turns it on: without it no clock runs.
+// Not where the configuration turns it off: there no clock runs.
 const { secondsLeft: autoDeleteSecondsLeft } = useAutoDeleteTimeLeft(() =>
   showAutoDeleteEnabled ? asset.value?.autoDeleteAt : null
 )

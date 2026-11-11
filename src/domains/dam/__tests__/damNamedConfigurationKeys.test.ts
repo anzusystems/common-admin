@@ -90,7 +90,7 @@ const answerAt = (of: FakeDam, at: typeof TODAY) =>
       const person = { firstName: '', lastName: '', fullName: 'Somebody' }
       return { status: 200, data: { data: [{ id: 5, email: '', avatar: {}, person }], totalCount: 1 } }
     }
-    if (path === `${at.endPointPodcast}/licence/${LICENCE}`) {
+    if (path === `${at.endPointPodcast}/ext-system/${EXT}`) {
       return { status: 200, data: { data: [{ id: 'podcast-1', texts: { title: 'A podcast' } }], totalCount: 1 } }
     }
     if (path.startsWith(`${at.endPointCmsAsset}/`)) return { status: 200, data: {} }
@@ -155,9 +155,9 @@ describe('the addresses with a key of a DAM configuration', () => {
       users.fetchCachedUsers()
       await waits.elapse()
       await flushPromises()
-      const podcastActions = usePodcastSelectActions(LICENCE, name)
+      const podcastActions = usePodcastSelectActions(EXT, name)
       const podcasts = await podcastActions.fetchItemsByIds(['podcast-1'])
-      const { filterData, filterConfig } = usePodcastInnerFilter()
+      const { filterData, filterConfig } = usePodcastInnerFilter([LICENCE])
       const listed = await podcastActions.fetchItems(usePagination('id').pagination, filterData, filterConfig)
 
       expect(asked(of())).toEqual([
@@ -168,8 +168,8 @@ describe('the addresses with a key of a DAM configuration', () => {
         `GET ${at.endPointAssetCustomForm}/ext-system/${EXT}/type/image/element`,
         `GET ${at.endPointAssetCustomForm}/distribution-service/youtube/element`,
         `GET ${at.endPointUser}`,
-        `GET ${at.endPointPodcast}/licence/${LICENCE}`,
-        `GET ${at.endPointPodcast}/licence/${LICENCE}`,
+        `GET ${at.endPointPodcast}/ext-system/${EXT}`,
+        `GET ${at.endPointPodcast}/ext-system/${EXT}`,
       ])
       expect(asked(name === 'own' ? dam : own)).toEqual([])
       expect(users.getCachedUser(5)?.person.fullName).toBe('Somebody')

@@ -56,7 +56,7 @@ const { onItemClick, assetListItems, loader } = useAssetSelectActions(useDamConf
       />
       <tr v-if="!loader && assetListItems.length === 0">
         <td
-          colspan="6"
+          colspan="7"
           class="text-center"
         >
           {{ t('common.assetSelect.meta.texts.noItemsFound') }}

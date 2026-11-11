@@ -12,7 +12,9 @@ import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 const props = withDefaults(
   defineProps<{
     name: string
-    licenceId: IntegerId
+    extSystem: IntegerId
+    /** The browsed licences: only their podcasts are offered. */
+    licenceIds: IntegerId[]
   }>(),
   {}
 )
@@ -21,8 +23,9 @@ const emit = defineEmits<{
 }>()
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { fetchItems, fetchItemsByIds } = usePodcastSelectActions(props.licenceId, useDamConfigName())
-const { filterData, filterConfig } = usePodcastInnerFilter()
+const { fetchItems, fetchItemsByIds } = usePodcastSelectActions(props.extSystem, useDamConfigName())
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { filterData, filterConfig } = usePodcastInnerFilter(props.licenceIds)
 provide(FilterInnerConfigKey, filterConfig)
 provide(FilterInnerDataKey, filterData)
 </script>

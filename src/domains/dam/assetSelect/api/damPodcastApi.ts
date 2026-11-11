@@ -9,10 +9,11 @@ import { DAM_END_POINT_PODCAST } from '@/domains/dam/api/damEndPoints'
 const ENTITY = 'podcast'
 
 // `endPoint`: the caller's podcast endpoint. The default is used when not given.
+// The podcasts of an ext system: the picker may browse several licences of it at once, which filter the list.
 
 export const fetchDamPodcastListByIds = (
   client: () => AxiosInstance,
-  licenceId: IntegerId,
+  extSystemId: IntegerId,
   ids: DocId[],
   endPoint: string = DAM_END_POINT_PODCAST
 ) => {
@@ -20,8 +21,8 @@ export const fetchDamPodcastListByIds = (
     client,
     system: SYSTEM_CORE_DAM,
     entity: ENTITY,
-    urlTemplate: endPoint + '/licence/:licenceId',
-    urlParams: { licenceId },
+    urlTemplate: endPoint + '/ext-system/:extSystemId',
+    urlParams: { extSystemId },
   })
 
   return execute(ids)
@@ -29,13 +30,13 @@ export const fetchDamPodcastListByIds = (
 
 export const useFetchDamPodcastList = (
   client: () => AxiosInstance,
-  licenceId: IntegerId,
+  extSystemId: IntegerId,
   endPoint: string = DAM_END_POINT_PODCAST
 ) =>
   useApiFetchList<DamPodcastAware>({
     client,
     system: SYSTEM_CORE_DAM,
     entity: ENTITY,
-    urlTemplate: endPoint + '/licence/:licenceId',
-    urlParams: { licenceId },
+    urlTemplate: endPoint + '/ext-system/:extSystemId',
+    urlParams: { extSystemId },
   })

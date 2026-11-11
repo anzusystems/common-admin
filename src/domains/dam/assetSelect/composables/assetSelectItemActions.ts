@@ -1,6 +1,7 @@
 import { computed, type Ref, watch } from 'vue'
 import type { AssetSearchListItemDto } from '@/domains/dam/types/Asset'
-import type { AssetSelectListItem } from '@/domains/dam/assetSelect/store/assetSelectStore'
+import { type AssetSelectListItem, useAssetSelectStore } from '@/domains/dam/assetSelect/store/assetSelectStore'
+import { isNull } from '@/shared/utils/common'
 import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
 import { inheritedDamConfigName } from '@/domains/dam/composables/damConfigName'
 import { useDamCachedAssetLicences } from '@/domains/dam/user/composables/cachedAssetLicences'
@@ -56,24 +57,26 @@ export function useAssetItemActions(item: Readonly<Ref<AssetSelectListItem>>) {
     }
   })
 
-  // The badge of the asset's licence, only where the configuration turns it on (`showLicenceBadgeEnabled`).
+  // The badge of the asset's licence tells the licences of one list apart: shown only while the select searches in
+  // more than one licence (the rule of admin-dam), and where the configuration leaves it on (`showLicenceBadgeEnabled`).
   const configName = inheritedDamConfigName()
   const { showLicenceBadgeEnabled } = useCommonAdminCoreDamOptions(configName)
+  const assetSelectStore = useAssetSelectStore()
   const { addToCachedAssetLicences, fetchCachedAssetLicences, getCachedAssetLicence } =
     useDamCachedAssetLicences(configName)
-  if (showLicenceBadgeEnabled) {
-    // The cache's fetch is debounced: the items of one list load their licences in one request.
-    watch(
-      () => asset.value.licence,
-      (licence) => {
-        addToCachedAssetLicences(licence)
-        fetchCachedAssetLicences()
-      },
-      { immediate: true }
-    )
-  }
+  const showLicenceBadge = computed(() => showLicenceBadgeEnabled && assetSelectStore.selectedLicenceIds.length > 1)
+  // The cache's fetch is debounced: the items of one list load their licences in one request.
+  watch(
+    () => (showLicenceBadge.value ? asset.value.licence : null),
+    (licence) => {
+      if (isNull(licence)) return
+      addToCachedAssetLicences(licence)
+      fetchCachedAssetLicences()
+    },
+    { immediate: true }
+  )
   const licenceBadge = computed(() =>
-    showLicenceBadgeEnabled ? (getCachedAssetLicence(asset.value.licence)?.badge ?? '') : ''
+    showLicenceBadge.value ? (getCachedAssetLicence(asset.value.licence)?.badge ?? '') : ''
   )
 
   return {

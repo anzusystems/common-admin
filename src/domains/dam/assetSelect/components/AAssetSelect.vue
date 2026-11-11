@@ -30,6 +30,7 @@ import { type DatatableOrderingOption } from '@/domains/filters/datatable/utils/
 import { DatatablePaginationKey } from '@/domains/filters/utils/filterInjectionKeys'
 import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
 import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
+import AssetSelectLicencePresetBar from '@/domains/dam/assetSelect/components/AssetSelectLicencePresetBar.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -42,6 +43,8 @@ const props = withDefaults(
     returnType?: AssetSelectReturnTypeType
     configName?: string
     skipCurrentUserCheck?: boolean
+    /** List views of the host offered as "Search in" choices, those the DAM user has. */
+    listViews?: IntegerId[]
   }>(),
   {
     inPodcast: null,
@@ -49,6 +52,7 @@ const props = withDefaults(
     returnType: AssetSelectReturnType.MainFileId,
     configName: undefined,
     skipCurrentUserCheck: false,
+    listViews: () => [],
   }
 )
 
@@ -92,7 +96,7 @@ const { getOrLoadDamConfigExtSystemByLicences } = useDamConfigState(damClient, d
 const assetDetailStore = useAssetDetailStore()
 const { asset } = storeToRefs(assetDetailStore)
 const assetSelectStore = useAssetSelectStore()
-const { selectedLicenceId } = storeToRefs(assetSelectStore)
+const { selectedSelectConfig, selectedAssets } = storeToRefs(assetSelectStore)
 const { copyToLicenceEnabled } = useCommonAdminCoreDamOptions(damConfigName)
 
 const selectConfigs = shallowRef<DamConfigLicenceExtSystemReturnType[]>([])
@@ -165,13 +169,13 @@ const onConfirm = () => {
 
 const { gridView } = useGridView()
 
+// Offered once a picked asset is of another licence than the upload licence: the picker may browse several licences.
 const showCopyToLicence = computed(() => {
   return (
     copyToLicenceEnabled !== false &&
     props.assetType === DamAssetType.Image &&
-    selectedLicenceId.value > 0 &&
     !isUndefined(props.uploadLicence) &&
-    selectedLicenceId.value !== props.uploadLicence
+    [...selectedAssets.value.values()].some((item) => item.asset.licence !== props.uploadLicence)
   )
 })
 
@@ -190,13 +194,10 @@ const disabledSubmit = computed(() => {
   return selectedCount.value < props.minCount || selectedCount.value > props.maxCount
 })
 
+// The ext system of the browsed licences, while this picker is open: the store is shared by every picker of the page.
 const extId = computed(() => {
-  if (selectConfigs.value.length === 0) return undefined
-  if (selectedLicenceId.value > 0) {
-    const found = selectConfigs.value.find((config) => config.licence === selectedLicenceId.value)
-    if (found) return found.extSystem
-  }
-  return undefined
+  if (!modelValue.value || selectConfigs.value.length === 0) return undefined
+  return selectedSelectConfig.value?.extSystem
 })
 
 const loadingSidebarRight = computed(() => {
@@ -245,13 +246,28 @@ watch(
   { immediate: true }
 )
 
-onMounted(async () => {
+let loadSeq = 0
+const loadSelectConfigs = async () => {
+  const seq = ++loadSeq
+  // An open picker belongs to the licences it was opened with.
+  if (modelValue.value) onClose()
   ready.value = false
   loading.value = true
-  selectConfigs.value = await getOrLoadDamConfigExtSystemByLicences(props.selectLicences)
+  const configs = await getOrLoadDamConfigExtSystemByLicences(props.selectLicences)
+  if (seq !== loadSeq) return
+  selectConfigs.value = configs
   loading.value = false
   ready.value = true
-})
+}
+
+// Hosts often mount the picker before their entity has loaded, and they pass inline arrays like `[licence]`,
+// which are a new reference on every render, so the joined ids are watched.
+watch(
+  () => props.selectLicences.join(','),
+  () => loadSelectConfigs()
+)
+
+onMounted(loadSelectConfigs)
 
 onUnmounted(() => {
   selectConfigs.value = []
@@ -295,6 +311,7 @@ defineExpose({
           v-model:sort="sortModel"
           @sort-by-change="sortByChange"
         />
+        <AssetSelectLicencePresetBar />
         <div
           class="subject-select__main"
           :class="{
@@ -303,7 +320,10 @@ defineExpose({
           }"
         >
           <div class="subject-select__sidebar border-e">
-            <AssetSelectFilter :config-name="damConfigName" />
+            <AssetSelectFilter
+              :config-name="damConfigName"
+              :list-views="listViews"
+            />
           </div>
           <div class="subject-select__content">
             <component

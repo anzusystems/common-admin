@@ -20,7 +20,9 @@ export interface AssetSelectListItem {
 export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectStore', () => {
   const assetListItems = ref<Array<AssetSelectListItem>>([])
   const loader = ref(false)
-  const selectedLicenceId = ref<IntegerId>(0)
+  // The licences the list is read from: one, or those of a list view. The preset control chooses them.
+  const selectedLicenceIds = ref<IntegerId[]>([])
+  const selectedPresetKey = ref<string>('')
   const selectConfig = ref<DamConfigLicenceExtSystemReturnType[]>([])
   const assetType = ref<DamAssetTypeType>(DamAssetTypeDefault)
   const inPodcast = ref<boolean | null>(null)
@@ -44,11 +46,21 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
 
   function setSelectConfig(value: DamConfigLicenceExtSystemReturnType[]) {
     selectConfig.value = value
-    if (value.length === 0) {
-      selectedLicenceId.value = 0
-      return
-    }
-    selectedLicenceId.value = value[0]!.licence
+  }
+
+  // The list reloads on every change of the licences; the same licences again are no change.
+  function setSelectedLicenceIds(ids: IntegerId[]) {
+    const current = selectedLicenceIds.value
+    if (ids.length === current.length && ids.every((id) => current.includes(id))) return
+    selectedLicenceIds.value = ids
+  }
+
+  function licenceTitle(licenceId: IntegerId) {
+    return selectConfig.value.find((config) => config.licence === licenceId)?.licenceName || String(licenceId)
+  }
+
+  function setSelectedPresetKey(key: string) {
+    selectedPresetKey.value = key
   }
 
   function setSingleMode(value: boolean) {
@@ -258,10 +270,14 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
     singleMode.value = false
     minCount.value = 0
     maxCount.value = 0
+    selectedPresetKey.value = ''
+    selectedLicenceIds.value = []
   }
 
+  // The config of the first selected licence. All licences of a list view share its ext system.
   const selectedSelectConfig = computed(() => {
-    const found = selectConfig.value.find((configItem) => configItem.licence === selectedLicenceId.value)
+    const primaryLicenceId = selectedLicenceIds.value[0]
+    const found = selectConfig.value.find((configItem) => configItem.licence === primaryLicenceId)
     if (found) return found
     return selectConfig.value[0]
   })
@@ -279,7 +295,8 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
   }
 
   return {
-    selectedLicenceId,
+    selectedLicenceIds,
+    selectedPresetKey,
     selectConfig,
     assetType,
     inPodcast,
@@ -297,6 +314,9 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
     getSelectedData,
     setAssetType,
     setSelectConfig,
+    setSelectedLicenceIds,
+    licenceTitle,
+    setSelectedPresetKey,
     setSingleMode,
     setMinCount,
     setMaxCount,

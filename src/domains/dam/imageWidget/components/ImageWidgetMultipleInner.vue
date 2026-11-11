@@ -68,6 +68,8 @@ const props = withDefaults(
     queueKey: UploadQueueKey
     uploadLicence: IntegerId
     selectLicences: IntegerId[]
+    /** List views of the host the asset select offers as "Search in" choices, those the DAM user has. */
+    listViews?: IntegerId[]
     configName?: string
     label?: string | undefined
     readonly?: boolean
@@ -80,11 +82,9 @@ const props = withDefaults(
   }>(),
   {
     configName: undefined,
+    listViews: () => [],
     label: undefined,
-    image: undefined,
     readonly: false,
-    lockable: false,
-    lockedById: undefined,
     dataCy: undefined,
     width: undefined,
     disableDraggable: false,
@@ -932,6 +932,7 @@ onMounted(() => {
     <AAssetSelect
       v-model="assetSelectDialog"
       :select-licences="selectLicences"
+      :list-views="listViews"
       :upload-licence="uploadLicence"
       :min-count="1"
       :max-count="50"

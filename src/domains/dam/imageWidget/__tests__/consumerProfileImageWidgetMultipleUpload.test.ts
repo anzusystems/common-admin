@@ -467,7 +467,7 @@ describe.each(consumerProfiles)('the widget of several images under the $name', 
         offered(OTHER, OTHER_EXT_SYSTEM),
         offered(THIRD, THIRD_EXT_SYSTEM),
       ])
-      picker.selectedLicenceId = browsed
+      picker.setSelectedLicenceIds([browsed])
       mounted.findComponent(Picker).vm.$emit('confirm', { type: 'asset', value: assets })
       await vi.waitFor(() => expect(images()).toHaveLength(assets.length))
       await flushPromises()

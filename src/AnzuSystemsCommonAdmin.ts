@@ -89,7 +89,10 @@ export interface CommonAdminCoreDamConfig {
    * Used by this configuration's user cache and by user inputs and filters under it that have no client of their own.
    */
   endPointUser?: string
-  /** Where the podcasts of a licence are listed (`/licence/:licenceId` after it); `/adm/v1/podcast` by default. */
+  /**
+   * Where the podcasts of an ext system are listed (`/ext-system/:extSystemId` after it, filtered by the browsed
+   * licences); `/adm/v1/podcast` by default.
+   */
   endPointPodcast?: string
   /** Where the image and media widget reads a picked asset as a medium of the CMS; `/adm/v1/cms/asset` by default. */
   endPointCmsAsset?: string
@@ -132,12 +135,15 @@ export interface CommonAdminCoreDamConfig {
   showFileInfoEnabled?: boolean
   /**
    * The asset detail of this configuration's widgets and asset selects shows when DAM deletes the asset (the time
-   * left), for an asset whose licence deletes automatically. Off unless `true`.
+   * left), for an asset whose licence deletes automatically. On unless `false`.
    */
   showAutoDeleteEnabled?: boolean
-  /** The asset detail of this configuration's widgets and asset selects shows the asset's licence. Off unless `true`. */
+  /** The asset detail of this configuration's widgets and asset selects shows the asset's licence. On unless `false`. */
   showLicenceEnabled?: boolean
-  /** The tiles and rows of this configuration's asset selects show the badge of the asset's licence. Off unless `true`. */
+  /**
+   * The tiles and rows of this configuration's asset selects show the badge of the asset's licence while the select
+   * searches in more than one licence. On unless `false`.
+   */
   showLicenceBadgeEnabled?: boolean
   sourceLabel?: string
   editAssetLabel?: string

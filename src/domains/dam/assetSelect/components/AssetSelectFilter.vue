@@ -4,7 +4,6 @@ import { useDisplay } from 'vuetify'
 import { useAssetSelectActions } from '@/domains/dam/assetSelect/composables/assetSelectListActions'
 import { computed, onMounted, provide, watch } from 'vue'
 import { useAssetSelectStore } from '@/domains/dam/assetSelect/store/assetSelectStore'
-import { storeToRefs } from 'pinia'
 import AssetSelectFilterForm from '@/domains/dam/assetSelect/components/AssetSelectFilterForm.vue'
 import { useAssetListFilter } from '@/domains/dam/assetSelect/filter/AssetFilter'
 import { FilterConfigKey, FilterDataKey } from '@/domains/filters/utils/filterInjectionKeys'
@@ -13,13 +12,17 @@ import { useFilterHelpers } from '@/domains/filters/composables/filterFactory'
 import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
 import { useSidebar } from '@/domains/dam/assetSelect/composables/assetSelectFilterSidebar'
 import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
+import type { IntegerId } from '@/shared/types/common'
+import { useAssetSelectPresetControl } from '@/domains/dam/assetSelect/composables/assetSelectPresetControl'
 
 const props = withDefaults(
   defineProps<{
     configName?: string
+    listViews?: IntegerId[]
   }>(),
   {
     configName: undefined,
+    listViews: () => [],
   }
 )
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
@@ -29,11 +32,18 @@ const { assetListEnabledFilters } = useCommonAdminCoreDamOptions(damConfigName)
 
 const { t } = useI18n()
 const { mdAndDown } = useDisplay()
+const {
+  items: presetItems,
+  showPresets,
+  selectedPresetKey,
+  applyPreset,
+  // Host configuration, read when the picker opens.
+  // eslint-disable-next-line vue/no-setup-props-reactivity-loss
+} = useAssetSelectPresetControl(props.listViews, damConfigName)
 const { closeSidebarLeft } = useSidebar()
 const { fetchAssetListDebounced, resetAssetList, pagination } = useAssetSelectActions(damConfigName)
 
 const assetSelectStore = useAssetSelectStore()
-const { selectedLicenceId, selectConfig } = storeToRefs(assetSelectStore)
 
 const { filterData, filterConfig } = useAssetListFilter()
 provide(FilterConfigKey, filterConfig)
@@ -61,10 +71,18 @@ const componentComputed = computed(() => {
   }
 })
 
-watch(selectedLicenceId, (newValue, oldValue) => {
-  if (newValue === oldValue) return
-  resetFilterAction()
-})
+// The first choice applied when the picker opens is no change by the user: the filter and the sidebar stay.
+// Only that one is skipped; a later choice after the licences were cleared resets as any other.
+let openingChoice = true
+watch(
+  () => assetSelectStore.selectedLicenceIds,
+  (newValue, oldValue) => {
+    const isOpeningChoice = openingChoice && oldValue.length === 0
+    openingChoice = false
+    if (isOpeningChoice) return
+    resetFilterAction()
+  }
+)
 
 onMounted(() => {
   fetchAssetListDebounced()
@@ -79,15 +97,14 @@ onMounted(() => {
         @reset="resetFilterAction"
       >
         <template #detail>
-          <VRow v-if="selectConfig.length > 1">
+          <VRow v-if="showPresets">
             <VCol :cols="12">
               <VSelect
-                v-model="selectedLicenceId"
-                :label="t('common.assetSelect.filter.licence')"
-                :items="selectConfig"
-                item-title="licenceName"
-                item-value="licence"
+                :model-value="selectedPresetKey"
+                :items="presetItems"
+                :label="t('common.assetSelect.preset.label')"
                 hide-details
+                @update:model-value="applyPreset"
               />
             </VCol>
           </VRow>
@@ -97,22 +114,6 @@ onMounted(() => {
             :config-name="damConfigName"
           />
         </template>
-        <VRow v-if="selectConfig.length > 1">
-          <VCol :cols="12">
-            <VSelect
-              v-model="selectedLicenceId"
-              :label="t('common.assetSelect.filter.licence')"
-              :items="selectConfig"
-              item-title="licenceName"
-              item-value="licence"
-            />
-          </VCol>
-        </VRow>
-        <component
-          :is="componentComputed"
-          :enabled-filters="assetListEnabledFilters"
-          :config-name="damConfigName"
-        />
       </AFilterWrapperSubjectSelect>
     </div>
   </div>

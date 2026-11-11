@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { computed, provide, watch } from 'vue'
 import type { IntegerId } from '@/shared/types/common'
-import { cloneDeep } from '@/shared/utils/common'
+import { cloneDeep, isNull } from '@/shared/utils/common'
 import AFormRemoteAutocomplete from '@/domains/remoteAutocomplete/components/AFormRemoteAutocomplete.vue'
 import { useDamAssetLicenceInnerFilter } from '@/domains/dam/user/filter/AssetLicenceFilter'
 import { useAssetLicenceSelectActions } from '@/domains/dam/user/composables/assetLicenceActions'
@@ -61,9 +61,10 @@ provide(FilterInnerDataKey, filterData)
 watch(
   () => props.extSystemId,
   (newValue, oldValue) => {
-    if (newValue === oldValue) return
-    modelValueComputed.value = props.multiple ? [] : null
     filterData.extSystem = newValue
+    // A form that loads its entity sets the ext system the first time; only a switch to another one drops the licences.
+    if (newValue === oldValue || isNull(oldValue)) return
+    modelValueComputed.value = props.multiple ? [] : null
   }
 )
 </script>

@@ -51,6 +51,19 @@ export const useFetchAssetList = (client: () => AxiosInstance, endPoint: string,
   })
 
 /**
+ * Assets of several licences in one search, the licences in the filter `licences`. DAM requires them to share an ext
+ * system (LicenceCollectionSingleExtSystem). Not every endpoint has it: the UGC proxy of core-dam lists only one licence.
+ */
+export const useFetchAssetListByLicences = (client: () => AxiosInstance, endPoint: string) =>
+  useApiFetchList<AssetSearchListItemDto>({
+    client,
+    system: SYSTEM_CORE_DAM,
+    entity: ENTITY,
+    // No '/search' here: useApiFetchList appends it for an elastic filter config.
+    urlTemplate: endPoint + '/licence',
+  })
+
+/**
  * `options.report: false` keeps a failure of this read out of the api error logger.
  * Used by the upload queue, which polls the same asset repeatedly and reports only the first failure of a streak.
  */

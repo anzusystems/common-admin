@@ -372,6 +372,8 @@ describe('the asset select, under a named DAM configuration', () => {
   beforeEach(() => {
     const select = useAssetSelectStore()
     select.setSelectConfig([{ licence, extSystem, licenceName: '', extSystemConfig: {} as never }])
+    // What the preset control of a picker does once it mounts.
+    select.setSelectedLicenceIds([licence])
     select.setAssetType(DamAssetType.Image)
     own.assets.set('own-asset-7', damAsset('own-asset-7', { licence }))
   })

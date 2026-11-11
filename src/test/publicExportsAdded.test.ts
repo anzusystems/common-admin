@@ -28,6 +28,12 @@ describe('exports the admins redefined', () => {
     expect(lib.destroyDamNotifications).toBeTypeOf('function')
   })
 
+  // admin-cms picks the list views of a site group and admin-dam caches their names (#86490).
+  it('include the asset list views of the DAM', () => {
+    expect(lib.ADamAssetListViewRemoteAutocomplete).toBeTypeOf('object')
+    expect(lib.fetchDamAssetListViewListByIds).toBeTypeOf('function')
+  })
+
   // An application with an upload queue store of its own (admin-dam) settles its rows through the same modules.
   it('include the settlement of the upload queue', () => {
     expect(lib.createUploadSettlement).toBeTypeOf('function')
@@ -127,6 +133,8 @@ describe('renamed in 2.0.0', () => {
     DamAssetImageRoiSelect: 'ADamAssetImageRoiSelect',
     DamAssetLicenceGroupRemoteAutocomplete: 'ADamAssetLicenceGroupRemoteAutocomplete',
     DamAssetLicenceRemoteAutocomplete: 'ADamAssetLicenceRemoteAutocomplete',
+    // Added in 1.50.0 under the old name.
+    DamAssetListViewRemoteAutocomplete: 'ADamAssetListViewRemoteAutocomplete',
     DamAuthorFilterRemoteAutocomplete: 'ADamAuthorFilterRemoteAutocomplete',
     DamDistributionServiceSelect: 'ADamDistributionServiceSelect',
     DamExtSystemRemoteAutocomplete: 'ADamExtSystemRemoteAutocomplete',

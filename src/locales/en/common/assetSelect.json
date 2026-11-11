@@ -61,5 +61,10 @@
     "unallowedLicence": "You do not have permission for this Media Library licence",
     "noSelectLicence": "Error, no select licence.",
     "loadingDistributionServices": "Error loading distribution services."
+  },
+  "preset": {
+    "label": "Search in",
+    "groupListViews": "Selections",
+    "groupLicences": "Licences"
   }
 }

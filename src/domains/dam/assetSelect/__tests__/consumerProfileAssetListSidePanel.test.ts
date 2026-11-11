@@ -631,7 +631,7 @@ describe('the asset list of the asset page of admin-ugc and its side panel', () 
       await vi.waitFor(() => expect(reads.waiting).toHaveLength(4))
       expect(panelLoads()).toBe(true)
 
-      useAssetSelectStore(pinia).selectedLicenceId = OTHER.licence
+      useAssetSelectStore(pinia).setSelectedLicenceIds([OTHER.licence])
       await flushPromises()
       expect([saysItFailed(), panelLoads()]).toEqual([false, false])
       reads.release({ status: 500 })

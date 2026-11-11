@@ -49,6 +49,8 @@ const setup = () => {
   mount(defineComponent({ setup: () => ((actions = useAssetSelectActions('default')), () => h('div')) }))
   const store = useAssetSelectStore()
   store.setSelectConfig([{ licence: 1, extSystem: 1, licenceName: '', extSystemConfig: {} as any }])
+  // What the preset control of a picker does once it mounts.
+  store.setSelectedLicenceIds([1])
   store.setAssetType(DamAssetType.Image)
   api.list.length = 0
   return { actions, store }

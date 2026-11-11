@@ -202,7 +202,7 @@ describe.each(consumerProfiles)('the image widget and the library of the DAM und
 
       expect(picker()).not.toBeNull()
       expect(picker()!.textContent).toContain(uiText('common.assetSelect.meta.texts.title'))
-      expect(useAssetSelectStore(pinia).selectedLicenceId).toBe(licence)
+      expect(useAssetSelectStore(pinia).selectedLicenceIds).toEqual([licence])
       // The configuration is in the store by the time the inner widget mounts: admin-ugc writes it there itself.
       expect(dam.requests.filter((request) => !isListRequest(request))).toEqual([])
       expect(toForeignPrefix()).toEqual([])
@@ -237,21 +237,40 @@ describe.each(consumerProfiles)('the image widget and the library of the DAM und
       )
     })
 
+    // Offered once an asset of another licence than the one of the widget is picked: the picker may browse several.
     it.each([
       ['offers', undefined, true],
       ['does not offer, where the application turns it off,', false, false],
-    ])('%s the copy into the licence of the widget over the assets of another licence', async (_, enabled, offered) => {
-      if (enabled === false) copyOff()
-      if (isCms) signInToDam(extSystem)
-      await mountInner({ uploadLicence: licence + 1 })
+    ])(
+      '%s the copy into the licence of the widget over a picked asset of another licence',
+      async (_, enabled, offered) => {
+        if (enabled === false) copyOff()
+        if (isCms) signInToDam(extSystem)
+        await mountInner({ uploadLicence: licence + 1 })
 
-      await openTheLibrary()
-      await vi.waitFor(() => expect(listRequests()).toHaveLength(1))
-      await vi.waitFor(() => expect(useAssetSelectStore(pinia).loader).toBe(false))
+        await openTheLibrary()
+        await vi.waitFor(() => expect(listRequests()).toHaveLength(1))
+        await vi.waitFor(() => expect(useAssetSelectStore(pinia).loader).toBe(false))
+        const copyOffered = () => picker()!.textContent!.includes(uiText('common.assetSelect.meta.texts.copyToLicence'))
 
-      expect(useAssetSelectStore(pinia).selectedLicenceId).toBe(licence)
-      expect(picker()!.textContent!.includes(uiText('common.assetSelect.meta.texts.copyToLicence'))).toBe(offered)
-    })
+        expect(useAssetSelectStore(pinia).selectedLicenceIds).toEqual([licence])
+        expect(copyOffered()).toBe(false)
+        const store = useAssetSelectStore(pinia)
+        store.setList([
+          {
+            id: 'asset-9',
+            licence,
+            mainFile: { id: 'file-of-asset-9' },
+            attributes: { assetType: DamAssetType.Image },
+            podcasts: [],
+          } as never,
+        ])
+        store.toggleSelectedByIndex(0)
+        await flushPromises()
+
+        expect(copyOffered()).toBe(offered)
+      }
+    )
 
     // Finding 33: the picker dialog used to open over no licence and list nothing.
     // Pressing again must report the same.
@@ -264,7 +283,7 @@ describe.each(consumerProfiles)('the image widget and the library of the DAM und
       expect(shownAlerts()).toEqual([notAllowed])
       expect(listRequests()).toEqual([])
       expect(dam.requests).toEqual([])
-      expect(useAssetSelectStore(pinia).selectedLicenceId).toBe(0)
+      expect(useAssetSelectStore(pinia).selectedLicenceIds).toEqual([])
       expect(picker()).toBeNull()
 
       await openTheLibrary()
@@ -333,7 +352,7 @@ describe.each(consumerProfiles)('the image widget and the library of the DAM und
       await flushPromises()
     }
     const browse = async (other: IntegerId) => {
-      useAssetSelectStore(pinia).selectedLicenceId = other
+      useAssetSelectStore(pinia).setSelectedLicenceIds([other])
       await flushPromises()
     }
     const switchCopyOn = async () => {
@@ -356,7 +375,7 @@ describe.each(consumerProfiles)('the image widget and the library of the DAM und
         ['offers', undefined, true],
         ['does not offer, where the application turns it off,', false, false],
       ])(
-        'the picker of the image and media widget %s the copy into the licence of the widget over the assets of another licence',
+        'the picker of the image and media widget %s the copy into the licence of the widget over a picked asset of another licence',
         async (_, enabled, offered) => {
           if (enabled === false) copyOff()
           signInToDam(extSystem)
@@ -364,24 +383,26 @@ describe.each(consumerProfiles)('the image widget and the library of the DAM und
           await open(await mountPicker(AAssetSelectMedia, { uploadLicence: licence + 1 }))
 
           expect(listRequests()).toHaveLength(1)
-          expect(useAssetSelectStore(pinia).selectedLicenceId).toBe(licence)
+          expect(useAssetSelectStore(pinia).selectedLicenceIds).toEqual([licence])
+          expect(copySwitch()).toBeUndefined()
+          await pick(listed('asset-9', licence))
           expect(isUndefined(copySwitch())).toBe(!offered)
         }
       )
 
       // Picked assets keep their licence when the browsed licence changes.
-      // Each asset's own licence decides, not the one browsed at confirm.
+      // Each asset's own licence decides, not the one browsed at confirm, and the switch stays while one is picked.
       it.each(pickers)(
         '%s asks for the copy of an asset picked over another licence, confirmed over the licence of the upload',
         async (_, component, own) => {
           signInToDam(extSystem)
           const mounted = await mountPicker(component, { ...own, uploadLicence: licence + 1 })
           await open(mounted)
-          await switchCopyOn()
           await pick(listed('asset-9', licence))
+          await switchCopyOn()
 
           await browse(licence + 1)
-          expect(copySwitch()).toBeUndefined()
+          expect(copySwitch()).toBeDefined()
           await confirm()
 
           expect(copyAsked(mounted)).toEqual([licence + 1])
@@ -389,7 +410,7 @@ describe.each(consumerProfiles)('the image widget and the library of the DAM und
       )
 
       it.each(pickers)(
-        '%s asks for no copy of an asset picked in the licence of the upload, the switch on over another licence',
+        '%s offers and asks for no copy of an asset picked in the licence of the upload, whichever licence is browsed',
         async (_, component, own) => {
           signInToDam(extSystem)
           const mounted = await mountPicker(component, { ...own, uploadLicence: licence })
@@ -398,7 +419,7 @@ describe.each(consumerProfiles)('the image widget and the library of the DAM und
           await pick(listed('asset-9', licence))
 
           await browse(licence + 1)
-          await switchCopyOn()
+          expect(copySwitch()).toBeUndefined()
           await confirm()
 
           expect(copyAsked(mounted)).toEqual([undefined])
@@ -411,8 +432,8 @@ describe.each(consumerProfiles)('the image widget and the library of the DAM und
           signInToDam(extSystem)
           const mounted = await mountPicker(component, { ...own, uploadLicence: licence + 1, maxCount: 2 })
           await open(mounted)
-          await switchCopyOn()
           await pick(listed('asset-9', licence), listed('asset-10', licence + 1))
+          await switchCopyOn()
           await confirm()
 
           expect(copyAsked(mounted)).toEqual([licence + 1])

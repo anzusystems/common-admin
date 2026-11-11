@@ -442,6 +442,7 @@ import type {
   DamAssetLicenceMinimal,
   DamAssetLicenceSelectFields,
 } from '@/domains/dam/types/AssetLicence'
+import type { DamAssetListViewMinimal, DamAssetListViewResolved } from '@/domains/dam/types/AssetListView'
 import type { DamAssetLicenceGroup } from '@/domains/dam/types/AssetLicenceGroup'
 import { useCollabInit } from '@/domains/collab/composables/collabInit'
 import { useCommonAdminCollabOptions } from '@/domains/collab/composables/commonAdminCollabOptions'
@@ -501,6 +502,7 @@ import {
   type CollabUserIdNullable,
 } from '@/domains/collab/types/Collab'
 import ADamAssetLicenceRemoteAutocomplete from '@/domains/dam/user/components/DamAssetLicenceRemoteAutocomplete.vue'
+import ADamAssetListViewRemoteAutocomplete from '@/domains/dam/user/components/DamAssetListViewRemoteAutocomplete.vue'
 import ADamAssetLicenceGroupRemoteAutocomplete from '@/domains/dam/user/components/DamAssetLicenceGroupRemoteAutocomplete.vue'
 import ADamExtSystemRemoteAutocomplete from '@/domains/dam/user/components/DamExtSystemRemoteAutocomplete.vue'
 import ADamExternalProviderAssetSelect from '@/domains/dam/user/components/DamExternalProviderAssetSelect.vue'
@@ -508,6 +510,7 @@ import ADamDistributionServiceSelect from '@/domains/dam/user/components/DamDist
 import { useDamDistributionServiceType } from '@/domains/dam/user/types/DamDistributionServiceType'
 import { useDamAssetLicenceInnerFilter } from '@/domains/dam/user/filter/AssetLicenceFilter'
 import { fetchDamAssetLicenceListByIds, useFetchDamAssetLicenceList } from '@/domains/dam/user/api/assetLicenceApi'
+import { fetchDamAssetListViewListByIds } from '@/domains/dam/user/api/assetListViewApi'
 import { fetchDamAssetLicenceGroupListByIds } from '@/domains/dam/user/api/assetLicenceGroupApi'
 import { fetchDamExtSystemListByIds } from '@/domains/dam/user/api/extSystemApi'
 import type { DamUser, DamUserUpdateDto } from '@/domains/dam/user/types/DamUser'
@@ -856,6 +859,7 @@ export {
   ADamExternalProviderAssetSelect,
   ADamDistributionServiceSelect,
   ADamAssetLicenceRemoteAutocomplete,
+  ADamAssetListViewRemoteAutocomplete,
   ADamAssetLicenceGroupRemoteAutocomplete,
   ADamAuthorFilterRemoteAutocomplete,
   ADamKeywordFilterRemoteAutocomplete,
@@ -1121,6 +1125,8 @@ export {
   type DamAssetLicenceExtended,
   type DamAssetLicenceMinimal,
   type DamAssetLicenceSelectFields,
+  type DamAssetListViewMinimal,
+  type DamAssetListViewResolved,
   type DamAssetLicenceGroup,
   type DamUserUpdateDto,
   type DamUser,
@@ -1208,6 +1214,7 @@ export {
   useJobBaseResource,
   useJobStatus,
   fetchDamAssetLicenceListByIds,
+  fetchDamAssetListViewListByIds,
   useFetchDamAssetLicenceList,
   fetchDamAssetLicenceGroupListByIds,
   fetchDamExtSystemListByIds,

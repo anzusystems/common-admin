@@ -46,7 +46,7 @@ const sortModel = defineModel<number>('sort', { default: 1, required: false })
 
 const { t } = useI18n()
 const { gridView, setGridView } = useGridView()
-const { mdAndDown } = useDisplay()
+const { mdAndDown, mdAndUp } = useDisplay()
 
 watch(
   mdAndDown,
@@ -242,12 +242,37 @@ onMounted(() => {
           </div>
           <div class="d-flex align-center">
             <slot name="second-bar-right" />
-            <ADatatableOrdering
-              v-if="!disableSort"
-              v-model="sortModel"
-              :custom-options="customSortOptions"
-              :pagination-update-custom-cb="onSortUpdate"
-            />
+            <template v-if="!disableSort">
+              <!-- The buttons only choose the sort. The ordering below stays mounted and applies it: it also follows
+                   the sort of the shared pagination when a dialog opens with one chosen in another picker. -->
+              <div
+                v-if="mdAndUp"
+                class="d-flex align-center mr-1"
+                data-cy="asset-select-sorting"
+              >
+                <div class="text-body-small mr-2">{{ t('common.system.datatable.ordering.title') }}:</div>
+                <VBtn
+                  v-for="option in customSortOptions"
+                  :key="option.id"
+                  size="small"
+                  class="mr-1"
+                  :aria-pressed="option.id === sortModel"
+                  :active="option.id === sortModel"
+                  :color="option.id === sortModel ? 'secondary' : ''"
+                  :variant="option.id === sortModel ? 'flat' : 'text'"
+                  @click.stop="sortModel = option.id"
+                >
+                  {{ t(option.titleT) }}
+                </VBtn>
+              </div>
+              <div v-show="!mdAndUp">
+                <ADatatableOrdering
+                  v-model="sortModel"
+                  :custom-options="customSortOptions"
+                  :pagination-update-custom-cb="onSortUpdate"
+                />
+              </div>
+            </template>
             <VBtn
               :aria-label="t('common.assetSelect.meta.grid.masonry')"
               size="x-small"

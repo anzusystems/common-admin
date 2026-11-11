@@ -240,7 +240,7 @@ describe('an asset picked to be copied that is already in the licence of the upl
       { licence: 1, extSystem: 1 } as never,
       { licence: 2, extSystem: 1 } as never,
     ])
-    useAssetSelectStore().selectedLicenceId = 2
+    useAssetSelectStore().setSelectedLicenceIds([2])
   })
 
   it.each<[string, Component, Record<string, unknown>]>([
@@ -305,7 +305,7 @@ describe('an asset picked to be copied that is already in the licence of the upl
         { licence: 1, extSystem: 7 } as never,
         { licence: 2, extSystem: 1 } as never,
       ])
-      useAssetSelectStore().selectedLicenceId = 1
+      useAssetSelectStore().setSelectedLicenceIds([1])
       wrapper.findComponent(Picker).vm.$emit('confirm', {
         type: 'asset',
         copyToLicence: 2,

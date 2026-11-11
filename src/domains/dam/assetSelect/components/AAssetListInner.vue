@@ -36,6 +36,7 @@ import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueu
 import UploadQueueDialog from '@/domains/dam/uploadQueue/components/UploadQueueDialog.vue'
 import AFileInput from '@/domains/ui/file/components/AFileInput.vue'
 import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
+import { useAssetSelectPresetControl } from '@/domains/dam/assetSelect/composables/assetSelectPresetControl'
 
 const props = withDefaults(
   defineProps<{
@@ -87,7 +88,7 @@ const { loadDamConfigAssetCustomFormElements, getDamConfigAssetCustomFormElement
 const assetDetailStore = useAssetDetailStore()
 const { asset, dialog } = storeToRefs(assetDetailStore)
 const assetSelectStore = useAssetSelectStore()
-const { selectedLicenceId } = storeToRefs(assetSelectStore)
+const { selectedLicenceIds, selectedSelectConfig } = storeToRefs(assetSelectStore)
 
 const { sidebarRight, closeSidebarRight, closeSidebarLeft } = useSidebar()
 const { mdAndDown } = useDisplay()
@@ -119,6 +120,8 @@ const onInit = () => {
   }
   if (selectConfigLocal.length === 0) {
     showErrorT('common.assetSelect.error.unallowedLicence')
+    // No licences of an earlier list stay in the shared store.
+    assetSelectStore.setSelectConfig([])
     return
   }
 
@@ -142,11 +145,7 @@ const componentComputed = computed(() => {
 
 const extId = computed(() => {
   if (props.selectConfigs.length === 0) return undefined
-  if (selectedLicenceId.value > 0) {
-    const found = props.selectConfigs.find((config) => config.licence === selectedLicenceId.value)
-    if (found) return found.extSystem
-  }
-  return undefined
+  return selectedSelectConfig.value?.extSystem
 })
 
 const loadingSidebarRight = computed(() => {
@@ -248,12 +247,19 @@ watch(
   { immediate: true }
 )
 
-watch(selectedLicenceId, (newValue, oldValue) => {
-  if (newValue === oldValue) return
+watch(selectedLicenceIds, () => {
   resetFilterAction()
 })
 
 onInit()
+
+// Reads the licences that onInit put into the store. The inline list offers no list views.
+const {
+  items: presetItems,
+  showPresets,
+  selectedPresetKey,
+  applyPreset,
+} = useAssetSelectPresetControl([], damConfigName)
 
 onUnmounted(() => {
   reset()
@@ -296,15 +302,14 @@ onUnmounted(() => {
             <AFilterString name="text" />
           </template>
           <template #detail>
-            <VRow v-if="selectConfigs.length > 1">
+            <VRow v-if="showPresets">
               <VCol :cols="12">
                 <VSelect
-                  v-model="selectedLicenceId"
-                  :label="t('common.assetSelect.filter.licence')"
-                  :items="selectConfigs"
-                  item-title="licenceName"
-                  item-value="licence"
+                  :model-value="selectedPresetKey"
+                  :items="presetItems"
+                  :label="t('common.assetSelect.preset.label')"
                   hide-details
+                  @update:model-value="applyPreset"
                 />
               </VCol>
             </VRow>

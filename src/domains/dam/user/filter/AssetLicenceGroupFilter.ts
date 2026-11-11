@@ -5,6 +5,7 @@ import { createFilter, createFilterStore, type MakeFilterOption } from '@/domain
 export function useDamAssetLicenceGroupInnerFilter() {
   const filterFieldsInner = [
     { name: 'name' as const, variant: 'startsWith', default: null, type: 'string' },
+    { name: 'extSystem' as const, default: null },
   ] satisfies readonly MakeFilterOption[]
 
   const { filterConfig, filterData } = createFilter(filterFieldsInner, createFilterStore(filterFieldsInner), {

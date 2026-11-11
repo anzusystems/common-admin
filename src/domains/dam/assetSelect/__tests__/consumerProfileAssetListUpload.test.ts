@@ -167,7 +167,7 @@ describe.each(consumerProfiles)('the asset list with an upload under the $name',
       expect(toForeignPrefix()).toEqual([])
       expect(dam.unanswered).toEqual([])
       expect(shownAlerts()).toEqual([])
-      expect(useAssetSelectStore(pinia).selectedLicenceId).toBe(licence)
+      expect(useAssetSelectStore(pinia).selectedLicenceIds).toEqual([licence])
     })
 
     // admin-ugc has no DAM user, so its pages pass

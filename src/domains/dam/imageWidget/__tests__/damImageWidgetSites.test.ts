@@ -155,7 +155,7 @@ const pick = async (
     { licence: ASSET_LICENCE, extSystem: 1 } as never,
     { licence: UPLOAD_LICENCE, extSystem: 1 } as never,
   ])
-  useAssetSelectStore().selectedLicenceId = ASSET_LICENCE
+  useAssetSelectStore().setSelectedLicenceIds([ASSET_LICENCE])
   wrapper.findComponent(Picker).vm.$emit('confirm', { type: 'asset', value: picked })
   await flushPromises()
   await flushPromises()

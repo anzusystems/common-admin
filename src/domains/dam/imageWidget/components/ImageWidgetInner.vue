@@ -79,6 +79,8 @@ const props = withDefaults(
     queueKey: UploadQueueKey
     uploadLicence: IntegerId
     selectLicences: IntegerId[]
+    /** List views of the host the asset select offers as "Search in" choices, those the DAM user has. */
+    listViews?: IntegerId[]
     image?: ImageAware | undefined // If given, the image data is not fetched.
     configName?: string
     collab?: CollabComponentConfig
@@ -100,14 +102,13 @@ const props = withDefaults(
   }>(),
   {
     configName: undefined,
+    listViews: () => [],
     collab: undefined,
     collabStatus: CollabStatus.Inactive,
     label: undefined,
     required: false,
     image: undefined,
     readonly: false,
-    lockable: false,
-    lockedById: undefined,
     dataCy: undefined,
     expandOptions: false,
     expandMetadata: false,
@@ -1288,6 +1289,7 @@ defineExpose({
   <AAssetSelect
     v-model="assetSelectDialog"
     :select-licences="selectLicences"
+    :list-views="listViews"
     :upload-licence="uploadLicence"
     :min-count="1"
     :max-count="1"

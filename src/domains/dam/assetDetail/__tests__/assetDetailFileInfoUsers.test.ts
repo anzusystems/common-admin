@@ -86,12 +86,15 @@ const filePanel = () =>
       panel.querySelector('.v-expansion-panel-title')?.textContent?.trim() ===
       uiText('common.damImage.asset.detail.info.file')
   )
+// The chips of the users, not the one of the licence (shown unless the configuration turns it off).
 const userChips = () =>
-  Array.from(filePanel()?.querySelectorAll<HTMLElement>('.v-chip') ?? []).map((chip) => {
-    if (chip.querySelector('.v-progress-circular')) return 'spins'
-    const avatar = chip.querySelector('.v-avatar')?.textContent ?? ''
-    return (chip.textContent ?? '').replace(avatar, '').trim()
-  })
+  Array.from(filePanel()?.querySelectorAll<HTMLElement>('.v-chip') ?? [])
+    .filter((chip) => !chip.closest('[data-cy="asset-licence"]'))
+    .map((chip) => {
+      if (chip.querySelector('.v-progress-circular')) return 'spins'
+      const avatar = chip.querySelector('.v-avatar')?.textContent ?? ''
+      return (chip.textContent ?? '').replace(avatar, '').trim()
+    })
 const usersAsked = () =>
   dam.requests
     .filter((request) => USERS.test(request.url))

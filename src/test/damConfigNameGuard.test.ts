@@ -4,6 +4,8 @@ import { DAM_DEFAULT_STORE, DAM_NAME_ACCESSORS, DAM_NAME_STORE_METHODS } from '@
 import * as damAssetApi from '@/domains/dam/api/damAssetApi'
 import * as assetSelectListActions from '@/domains/dam/assetSelect/composables/assetSelectListActions'
 import * as podcastFilterAndActions from '@/domains/dam/assetSelect/composables/podcastFilterAndActions'
+import * as assetSelectPresets from '@/domains/dam/assetSelect/composables/assetSelectPresets'
+import * as assetSelectPresetControl from '@/domains/dam/assetSelect/composables/assetSelectPresetControl'
 import { useAssetDetailStore } from '@/domains/dam/assetDetail/store/assetDetailStore'
 import * as authorActions from '@/domains/dam/author/composables/authorActions'
 import * as cachedAuthors from '@/domains/dam/author/composables/cachedAuthors'
@@ -39,6 +41,8 @@ const modules: Record<string, unknown>[] = [
   damAssetApi,
   assetSelectListActions,
   podcastFilterAndActions,
+  assetSelectPresets,
+  assetSelectPresetControl,
   authorActions,
   cachedAuthors,
   cachedUsers,

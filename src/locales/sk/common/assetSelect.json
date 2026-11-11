@@ -61,5 +61,10 @@
     "unallowedLicence": "Nemáte práva na licenciu v DAM",
     "noSelectLicence": "Chyba, žiadna licencia na výber",
     "loadingDistributionServices": "Chyba pri načítaní distribučných služieb"
+  },
+  "preset": {
+    "label": "Hľadať v",
+    "groupListViews": "Výbery",
+    "groupLicences": "Licencie"
   }
 }

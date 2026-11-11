@@ -14,6 +14,7 @@ import { damText, forgetAlerts, uiText } from '@/domains/dam/__tests__/support/u
 import AssetImageMetaIcons from '@/domains/dam/assetDetail/components/AssetImageMetaIcons.vue'
 import AssetMetadata from '@/domains/dam/assetDetail/components/AssetMetadata.vue'
 import { useAssetDetailStore } from '@/domains/dam/assetDetail/store/assetDetailStore'
+import { useAssetSelectStore } from '@/domains/dam/assetSelect/store/assetSelectStore'
 import AssetSelectTableRowItem from '@/domains/dam/assetSelect/components/AssetSelectTableRowItem.vue'
 import AssetSelectTilesItem from '@/domains/dam/assetSelect/components/AssetSelectTilesItem.vue'
 import { DamAssetType } from '@/domains/dam/types/Asset'
@@ -22,9 +23,10 @@ import { useDamCachedAssetLicences } from '@/domains/dam/user/composables/cached
 import type { IntegerId } from '@/shared/types/common'
 import { dateNow } from '@/shared/utils/datetime'
 
-// What the DAM sends to every admin and only some show: when an asset is deleted automatically, the asset's
-// licence and the licence's badge. Each is off unless the application turns it on in its DAM configuration
-// (`showAutoDeleteEnabled`, `showLicenceEnabled`, `showLicenceBadgeEnabled`), as admin-ugc turns the file info off.
+// What the DAM sends to every admin: when an asset is deleted automatically, the asset's licence and the licence's
+// badge. Each is shown unless the application turns it off in its DAM configuration (`showAutoDeleteEnabled`,
+// `showLicenceEnabled`, `showLicenceBadgeEnabled`), as admin-ugc turns the file info off. The badge tells the licences
+// of one list apart, so the picker shows it only while it searches in more than one licence.
 
 const { extSystem } = cmsConfiguration
 const LICENCES = /^\/adm\/v1\/asset-licence\?/
@@ -89,8 +91,8 @@ describe('the asset detail', () => {
   const autoDeleteRow = () => wrapper!.find('[data-cy="asset-auto-delete"]')
   const licenceRow = () => wrapper!.find('[data-cy="asset-licence"]')
 
-  it('shows neither the automatic deletion nor the licence, and asks for no licence, by default', async () => {
-    start()
+  it('shows neither the automatic deletion nor the licence, and asks for no licence, where the configuration turns them off', async () => {
+    start({ showAutoDeleteEnabled: false, showLicenceEnabled: false })
     await mountDetail(inThreeDays())
 
     expect(autoDeleteRow().exists()).toBe(false)
@@ -98,23 +100,23 @@ describe('the asset detail', () => {
     expect(licenceQueued()).toBe(false)
   })
 
-  it('shows the time left until the automatic deletion where the configuration turns it on', async () => {
-    start({ showAutoDeleteEnabled: true })
+  it('shows the time left until the automatic deletion by default', async () => {
+    start()
     await mountDetail(inThreeDays())
 
     expect(autoDeleteRow().text()).toContain(damText('asset.model.autoDelete'))
     expect(autoDeleteRow().text()).toContain(uiText('common.time.long.remainingDays', { value: 3 }))
   })
 
-  it('shows no automatic deletion for an asset DAM does not delete, even where it is on', async () => {
-    start({ showAutoDeleteEnabled: true })
+  it('shows no automatic deletion for an asset DAM does not delete', async () => {
+    start()
     await mountDetail(null)
 
     expect(autoDeleteRow().exists()).toBe(false)
   })
 
-  it("shows the asset's licence by name where the configuration turns it on", async () => {
-    start({ showLicenceEnabled: true })
+  it("shows the asset's licence by name by default", async () => {
+    start()
     await mountDetail(null)
 
     expect(licenceRow().text()).toContain(damText('asset.detail.info.field.licence'))
@@ -144,20 +146,32 @@ describe.each([
     await flushPromises()
   }
   const badge = () => wrapper!.find('[data-cy="asset-licence-badge"]')
+  const searchIn = (...licenceIds: IntegerId[]) => useAssetSelectStore(pinia).setSelectedLicenceIds(licenceIds)
 
-  it('shows no licence badge and asks for no licence by default', async () => {
+  it('shows no licence badge and asks for no licence while the picker searches in one licence', async () => {
     start()
+    searchIn(licence)
     await mountTile()
 
     expect(badge().exists()).toBe(false)
     expect(licenceQueued()).toBe(false)
   })
 
-  it("shows the badge of the asset's licence where the configuration turns it on", async () => {
-    start({ showLicenceBadgeEnabled: true })
+  it("shows the badge of the asset's licence while the picker searches in more than one licence", async () => {
+    start()
+    searchIn(licence, licence + 100000)
     await mountTile()
 
     await vi.waitFor(() => expect(badge().text()).toBe('FB'), { timeout: 5000 })
+  })
+
+  it('shows no licence badge and asks for no licence where the configuration turns it off', async () => {
+    start({ showLicenceBadgeEnabled: false })
+    searchIn(licence, licence + 100000)
+    await mountTile()
+
+    expect(badge().exists()).toBe(false)
+    expect(licenceQueued()).toBe(false)
   })
 })
 

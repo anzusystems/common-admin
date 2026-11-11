@@ -23,6 +23,8 @@ export const DAM_NAME_ACCESSORS: Record<string, number> = {
   useCommonAdminImageOptions: 1,
   useAssetSelectActions: 1,
   usePodcastSelectActions: 2,
+  useAssetSelectPresets: 1,
+  useAssetSelectPresetControl: 2,
   useAuthorSelectActions: 2,
   useKeywordSelectActions: 2,
   useImageMassOperations: 1,
