@@ -50,7 +50,7 @@ __metadata:
     postcss: "npm:^8.5.32"
     postcss-html: "npm:^2.0.0"
     rusha: "npm:^0.8.14"
-    sass: "npm:1.108.1"
+    sass: "npm:1.108.2"
     socket.io-client: "npm:4.8.4"
     sortablejs: "npm:^1.15.7"
     stylelint: "npm:17.16.0"
@@ -62,7 +62,7 @@ __metadata:
     unplugin: "npm:3.7.0"
     unplugin-dts: "npm:^1.1.2"
     uuid: "npm:^14.0.3"
-    vite: "npm:8.3.7"
+    vite: "npm:8.3.8"
     vite-plugin-vuetify: "npm:^2.1.3"
     vitest: "npm:^5.1.0"
     vue: "npm:3.5.45"
@@ -93,7 +93,7 @@ __metadata:
     playwright: ^1.65.0
     socket.io-client: ^4.8.4
     sortablejs: ^1.15.7
-    vite: ^8.3.7
+    vite: ^8.3.8
     vitest: ^5.1.0
     vue: ^3.5.45
     vue-i18n: ^11.4.18
@@ -3221,15 +3221,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cssesc@npm:^3.0.0":
-  version: 3.0.0
-  resolution: "cssesc@npm:3.0.0"
-  bin:
-    cssesc: bin/cssesc
-  checksum: 10/0e161912c1306861d8f46e1883be1cbc8b1b2879f0f509287c0db71796e4ddfb97ac96bdfca38f77f452e2c10554e1bb5678c99b07a5cf947a12778f73e47e12
-  languageName: node
-  linkType: hard
-
 "csstype@npm:^3.2.3":
   version: 3.2.3
   resolution: "csstype@npm:3.2.3"
@@ -3576,7 +3567,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-plugin-vue@npm:10.12.1":
+"eslint-plugin-vue@npm:10.12.1, eslint-plugin-vue@npm:^10.8.0":
   version: 10.12.1
   resolution: "eslint-plugin-vue@npm:10.12.1"
   dependencies:
@@ -3597,30 +3588,6 @@ __metadata:
     "@typescript-eslint/parser":
       optional: true
   checksum: 10/0c0d3f4ea1017367bc891e1cd40d005455dce90f71cf1b9c8eaf215a2f938494369f3c808bc3201f6be5933a99d7dee68939e369a08e05fadba09ec88aadd122
-  languageName: node
-  linkType: hard
-
-"eslint-plugin-vue@npm:^10.8.0":
-  version: 10.12.0
-  resolution: "eslint-plugin-vue@npm:10.12.0"
-  dependencies:
-    "@eslint-community/eslint-utils": "npm:^4.9.1"
-    natural-compare: "npm:^1.4.0"
-    nth-check: "npm:^2.1.1"
-    postcss-selector-parser: "npm:^7.1.4"
-    semver: "npm:^7.8.5"
-    xml-name-validator: "npm:^5.0.0"
-  peerDependencies:
-    "@stylistic/eslint-plugin": ^2.0.0 || ^3.0.0 || ^4.0.0 || ^5.0.0
-    "@typescript-eslint/parser": ^7.0.0 || ^8.0.0
-    eslint: ^8.57.0 || ^9.0.0 || ^10.0.0
-    vue-eslint-parser: ^10.3.0
-  peerDependenciesMeta:
-    "@stylistic/eslint-plugin":
-      optional: true
-    "@typescript-eslint/parser":
-      optional: true
-  checksum: 10/bba192e97d6fff05a6d883fac27d37d9c5f67a60e8404c5078f5c3a03363508337cba917d3792224524c30d8f982adb8dcfdb020cef8e78c73935f2030f34b7a
   languageName: node
   linkType: hard
 
@@ -5409,17 +5376,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"postcss-selector-parser@npm:^7.1.4, postcss-selector-parser@npm:^7.1.5, postcss-selector-parser@npm:^7.1.6":
-  version: 7.1.7
-  resolution: "postcss-selector-parser@npm:7.1.7"
-  dependencies:
-    cssesc: "npm:^3.0.0"
-    util-deprecate: "npm:^1.0.2"
-  checksum: 10/9413749ad38d8e22e4a5e47287e5501493238ab73eea276381476933332604df49468451e99a3d6614463fd3ee96655a80821a93949cfe425ecd6acf210535b0
-  languageName: node
-  linkType: hard
-
-"postcss-selector-parser@npm:^7.1.7":
+"postcss-selector-parser@npm:^7.1.5, postcss-selector-parser@npm:^7.1.6, postcss-selector-parser@npm:^7.1.7":
   version: 7.2.0
   resolution: "postcss-selector-parser@npm:7.2.0"
   dependencies:
@@ -5658,9 +5615,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"sass@npm:1.108.1":
-  version: 1.108.1
-  resolution: "sass@npm:1.108.1"
+"sass@npm:1.108.2":
+  version: 1.108.2
+  resolution: "sass@npm:1.108.2"
   dependencies:
     "@parcel/watcher": "npm:^2.4.1"
     chokidar: "npm:^5.0.0"
@@ -5671,7 +5628,7 @@ __metadata:
       optional: true
   bin:
     sass: sass.js
-  checksum: 10/b400b82a03cce7dab07c268fa2ba034ac6d61b95797eabb8aa9639efc00cbe2193e514c2c7e71dd7fab6a4b47223c106562b43afd72f63208a87c191c7694617
+  checksum: 10/44df98c784b0674281833cfcf516cc4474d9efb4d2d62dd045930b2e42b95326b8aaa0d4f41767aeed2ece51d15167028e7213794886d9aff29c2274356d56ef
   languageName: node
   linkType: hard
 
@@ -6352,9 +6309,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vite@npm:8.3.7":
-  version: 8.3.7
-  resolution: "vite@npm:8.3.7"
+"vite@npm:8.3.8":
+  version: 8.3.8
+  resolution: "vite@npm:8.3.8"
   dependencies:
     fsevents: "npm:~2.3.3"
     lightningcss: "npm:^1.33.0"
@@ -6405,7 +6362,7 @@ __metadata:
       optional: true
   bin:
     vite: bin/vite.js
-  checksum: 10/18803d5c9977dd179a17cffef22bf5365f23f815f5bab78e461b3a7d9f213cbf2ccaa5995d4bc01d7bf408c48114e61932ddfd3fab539cbf47444817626b000e
+  checksum: 10/8444028a3515debb9b3c05fe5428c382b1fa7158321789d94e6f844f231a81c3d5ee0eadd92487492924ad5d24f85e48dd96982de4c7b623a3beb1939622af96
   languageName: node
   linkType: hard
 
