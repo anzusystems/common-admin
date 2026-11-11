@@ -6,7 +6,6 @@ import { storeToRefs } from 'pinia'
 import AFilterBooleanSelect from '@/labs/filters/AFilterBooleanSelect.vue'
 import AFilterString from '@/labs/filters/AFilterString.vue'
 import DamKeywordFilterRemoteAutocomplete from '@/components/damImage/uploadQueue/keyword/DamKeywordFilterRemoteAutocomplete.vue'
-import type { IntegerId } from '@/types/common'
 import DamAuthorFilterRemoteAutocomplete from '@/components/damImage/uploadQueue/author/DamAuthorFilterRemoteAutocomplete.vue'
 import DamUserFilterRemoteAutocomplete from '@/components/dam/user/DamUserFilterRemoteAutocomplete.vue'
 import AssetDistributionServiceNameFilter from '@/components/dam/assetSelect/components/filter/AssetDistributionServiceNameFilter.vue'
@@ -58,15 +57,10 @@ const colProps = (name: keyof typeof filterConfig.fields) => {
 }
 
 const assetSelectStore = useAssetSelectStore()
-const { selectConfig, selectedLicenceId, assetType } = storeToRefs(assetSelectStore)
+const { selectedSelectConfig, selectedLicenceIds, assetType } = storeToRefs(assetSelectStore)
 
-const extSystem = computed<IntegerId | undefined>(() => {
-  const found = selectConfig.value.find((config) => config.licence === selectedLicenceId.value)
-  if (found) {
-    return found.extSystem
-  }
-  return undefined
-})
+const extSystem = computed(() => selectedSelectConfig.value?.extSystem)
+const selectedLicenceId = computed(() => selectedSelectConfig.value?.licence)
 
 watch(extSystem, (newValue, oldValue) => {
   if (newValue !== oldValue) {
@@ -149,12 +143,13 @@ watch(extSystem, (newValue, oldValue) => {
       />
     </VCol>
     <VCol
-      v-if="assetType === DamAssetType.Audio && isFilterEnabled('podcastIds')"
+      v-if="extSystem && assetType === DamAssetType.Audio && isFilterEnabled('podcastIds')"
       v-bind="colProps('podcastIds')"
     >
       <FilterPodcastRemoteAutocomplete
-        :key="selectedLicenceId"
-        :licence-id="selectedLicenceId"
+        :key="selectedLicenceIds.join('-')"
+        :ext-system="extSystem"
+        :licence-ids="selectedLicenceIds"
         name="podcastIds"
       />
     </VCol>

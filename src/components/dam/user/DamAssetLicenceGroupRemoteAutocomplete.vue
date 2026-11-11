@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, provide } from 'vue'
+import { computed, provide, watch } from 'vue'
 import type { IntegerId } from '@/types/common'
 import type { AxiosInstance } from 'axios'
 import { cloneDeep } from '@/utils/common'
@@ -18,6 +18,7 @@ const props = withDefaults(
     multiple?: boolean
     clearable?: boolean
     dataCy?: string
+    extSystemId?: IntegerId | null
     hideDetails?: boolean
   }>(),
   {
@@ -26,6 +27,7 @@ const props = withDefaults(
     multiple: false,
     clearable: false,
     dataCy: '',
+    extSystemId: null,
     hideDetails: undefined,
   },
 )
@@ -53,10 +55,19 @@ const { fetchItems, fetchItemsByIds } = useAssetLicenceGroupSelectActions(props.
 const { filterData, filterConfig } = useDamAssetLicenceGroupInnerFilter()
 provide(FilterInnerConfigKey, filterConfig)
 provide(FilterInnerDataKey, filterData)
+
+watch(
+  () => props.extSystemId,
+  (extSystemId) => {
+    filterData.extSystem = extSystemId
+  },
+  { immediate: true },
+)
 </script>
 
 <template>
   <AFormRemoteAutocomplete
+    :key="extSystemId + ''"
     v-model="modelValueComputed"
     v-model:selected="selected"
     :required="required"

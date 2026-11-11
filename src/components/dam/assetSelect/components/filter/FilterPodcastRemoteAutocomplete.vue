@@ -11,7 +11,8 @@ import type { IntegerId } from '@/types/common'
 const props = withDefaults(
   defineProps<{
     name: string
-    licenceId: IntegerId
+    extSystem: IntegerId
+    licenceIds: IntegerId[]
   }>(),
   {},
 )
@@ -20,8 +21,9 @@ const emit = defineEmits<{
 }>()
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { fetchItems, fetchItemsByIds } = usePodcastSelectActions(props.licenceId)
-const { filterData, filterConfig } = usePodcastInnerFilter()
+const { fetchItems, fetchItemsByIds } = usePodcastSelectActions(props.extSystem)
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { filterData, filterConfig } = usePodcastInnerFilter(props.licenceIds)
 provide(FilterInnerConfigKey, filterConfig)
 provide(FilterInnerDataKey, filterData)
 </script>

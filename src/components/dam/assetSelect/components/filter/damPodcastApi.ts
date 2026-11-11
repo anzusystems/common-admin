@@ -5,30 +5,30 @@ import type { DocId, IntegerId } from '@/types/common'
 import { useApiFetchList } from '@/labs/api/useApiFetchList'
 import type { DamPodcastAware } from '@/components/dam/assetSelect/components/filter/podcastFilterAndActions'
 
-const END_POINT = '/adm/v1/podcast/licence/:licenceId'
+const END_POINT = '/adm/v1/podcast/ext-system/:extSystemId'
 const ENTITY = 'podcast'
 
 export const fetchDamPodcastListByIds = (
   client: () => AxiosInstance,
-  licenceId: IntegerId,
+  extSystemId: IntegerId,
   ids: DocId[],
 ) =>
   apiFetchByIds<DamPodcastAware[]>(
     client,
     ids,
     END_POINT,
-    { licenceId },
+    { extSystemId },
     SYSTEM_CORE_DAM,
     ENTITY,
     {},
     false,
   )
 
-export const useFetchDamPodcastList = (client: () => AxiosInstance, licenceId: IntegerId) =>
+export const useFetchDamPodcastList = (client: () => AxiosInstance, extSystemId: IntegerId) =>
   useApiFetchList<DamPodcastAware[]>({
     client,
     system: SYSTEM_CORE_DAM,
     entity: ENTITY,
     urlTemplate: END_POINT,
-    urlParams: { licenceId },
+    urlParams: { extSystemId },
   })

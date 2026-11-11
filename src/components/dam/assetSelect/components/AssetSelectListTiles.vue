@@ -3,17 +3,19 @@ import AssetSelectTilesItem from '@/components/dam/assetSelect/components/AssetS
 import { useGridView } from '@/components/dam/assetSelect/composables/assetSelectGridView'
 import { useAssetSelectActions } from '@/components/dam/assetSelect/composables/assetSelectListActions'
 import { useI18n } from 'vue-i18n'
-import type { IntegerId } from '@/types/common'
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
-    extSystem: IntegerId
+    configName?: string
   }>(),
-  {},
+  {
+    configName: 'default',
+  },
 )
 
 const { gridView } = useGridView()
-const { onItemClick, assetListItems, loader } = useAssetSelectActions()
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { onItemClick, assetListItems, loader } = useAssetSelectActions(props.configName)
 
 const { t } = useI18n()
 </script>
@@ -29,7 +31,7 @@ const { t } = useI18n()
       :index="index"
       :item="item"
       show-meta-icons
-      @item-click="onItemClick($event, extSystem)"
+      @item-click="onItemClick($event)"
     />
   </div>
   <div

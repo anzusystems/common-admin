@@ -45,7 +45,6 @@ import { fetchAuthorListByIds } from '@/components/damImage/uploadQueue/api/auth
 import { useI18n } from 'vue-i18n'
 import type { VBtn } from 'vuetify/components'
 import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/composables/extSystemIdForCached'
-import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
 import {
   type CollabComponentConfig,
   type CollabFieldData,
@@ -83,6 +82,7 @@ const props = withDefaults(
     queueKey: UploadQueueKey
     uploadLicence: IntegerId
     selectLicences: IntegerId[]
+    listViews?: IntegerId[]
     initialImage?: ImageAware | undefined // optional, if available, no need to fetch image data
     configName?: string
     collab?: CollabComponentConfig
@@ -102,16 +102,14 @@ const props = withDefaults(
     damHeight?: undefined | number
   }>(),
   {
+    listViews: () => [],
     configName: 'default',
     collab: undefined,
     collabStatus: CollabStatus.Inactive,
     label: undefined,
     required: false,
     initialImage: undefined,
-    initialMedia: undefined,
     readonly: false,
-    lockable: false,
-    lockedById: undefined,
     dataCy: undefined,
     expandOptions: false,
     expandMetadata: false,
@@ -460,7 +458,6 @@ watch(
   { immediate: true },
 )
 
-const assetSelectStore = useAssetSelectStore()
 const imageMediaWidgetStore = useImageMediaWidgetStore()
 const { detail } = storeToRefs(imageMediaWidgetStore)
 const { getDamConfigExtSystem } = useDamConfigState()
@@ -558,12 +555,9 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
       if (isString(assetRes.metadata.customData?.description)) {
         description = assetRes.metadata.customData.description.trim()
       }
-      if (assetRes.authors.length > 0) {
-        const authorsRes = await fetchAuthorListByIds(
-          damClient,
-          assetSelectStore.selectedSelectConfig.extSystem,
-          assetRes.authors,
-        )
+      const extSystem = await getExtSystemByLicence(assetRes.licence)
+      if (assetRes.authors.length > 0 && extSystem) {
+        const authorsRes = await fetchAuthorListByIds(damClient, extSystem, assetRes.authors)
         source = authorsRes.map((author) => author.name).join(', ')
       } else if (assetRes.authors.length === 0) {
         const configExtSystem = getDamConfigExtSystem(imageWidgetUploadConfig.value!.extSystem)
@@ -663,19 +657,11 @@ const tryImageConfirm = async () => {
   metadataDialogSaving.value = true
   try {
     if (showDamAuthorsInCmsImage.value && asset.value) {
-      if (asset.value.authors.length > 0) {
-        const authorsRes = await fetchAuthorListByIds(
-          damClient,
-          assetSelectStore.selectedSelectConfig.extSystem,
-          asset.value.authors,
-        )
+      const extSystem = await getExtSystemByLicence(asset.value.licence)
+      if (asset.value.authors.length > 0 && extSystem) {
+        const authorsRes = await fetchAuthorListByIds(damClient, extSystem, asset.value.authors)
         detail.value.texts.source = authorsRes.map((author) => author.name).join(', ')
-        await updateAssetAuthors(
-          damClient,
-          endPointAsset,
-          asset.value,
-          assetSelectStore.selectedSelectConfig.extSystem,
-        )
+        await updateAssetAuthors(damClient, endPointAsset, asset.value, extSystem)
         showDamAuthorsInCmsImage.value = false
       }
     }
@@ -1045,6 +1031,7 @@ defineExpose({
     v-model="assetSelectDialog"
     :select-licences="selectLicences"
     :upload-licence="uploadLicence"
+    :list-views="listViews"
     :min-count="1"
     :max-count="1"
     :config-name="configName"

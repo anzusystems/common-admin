@@ -16,7 +16,7 @@ import {
   useFetchDamPodcastList,
 } from '@/components/dam/assetSelect/components/filter/damPodcastApi'
 
-export function usePodcastInnerFilter() {
+export function usePodcastInnerFilter(licenceIds: IntegerId[]) {
   const filterFieldsInner = [
     {
       name: 'title' as const,
@@ -25,6 +25,7 @@ export function usePodcastInnerFilter() {
       type: 'string',
       apiName: 'texts.title',
     },
+    { name: 'licence' as const, variant: 'in', default: licenceIds },
   ] satisfies readonly MakeFilterOption[]
 
   const { filterConfig, filterData } = createFilter(
@@ -42,9 +43,9 @@ export function usePodcastInnerFilter() {
   }
 }
 
-export const usePodcastSelectActions = (licenceId: IntegerId, configName = 'default') => {
+export const usePodcastSelectActions = (extSystemId: IntegerId, configName = 'default') => {
   const { damClient } = useCommonAdminCoreDamOptions(configName)
-  const { executeFetch } = useFetchDamPodcastList(damClient, licenceId)
+  const { executeFetch } = useFetchDamPodcastList(damClient, extSystemId)
 
   const fetchItems = async (
     pagination: Ref<Pagination>,
@@ -60,7 +61,7 @@ export const usePodcastSelectActions = (licenceId: IntegerId, configName = 'defa
   }
 
   const fetchItemsByIds = async (ids: DocId[]) => {
-    const podcasts = await fetchDamPodcastListByIds(damClient, licenceId, ids)
+    const podcasts = await fetchDamPodcastListByIds(damClient, extSystemId, ids)
 
     return <ValueObjectOption<DocId>[]>podcasts.map((podcast: DamPodcastAware) => ({
       title: podcast.texts.title,

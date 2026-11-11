@@ -29,6 +29,7 @@ import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
 import { storeToRefs } from 'pinia'
 import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
 import { type DatatableOrderingOption } from '@/composables/system/datatableColumns'
+import AssetSelectLicencePresetBar from '@/components/dam/assetSelect/components/AssetSelectLicencePresetBar.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -42,6 +43,7 @@ const props = withDefaults(
     onDetailLoadedCallback?: ((asset: AssetDetailItemDto) => void) | undefined
     preselectAssetType?: DamAssetTypeType | undefined
     preselectInPodcast?: boolean | null | undefined
+    listViews?: IntegerId[]
   }>(),
   {
     uploadLicence: undefined,
@@ -51,6 +53,7 @@ const props = withDefaults(
     onDetailLoadedCallback: undefined,
     preselectAssetType: undefined,
     preselectInPodcast: undefined,
+    listViews: () => [],
   },
 )
 
@@ -79,7 +82,7 @@ const {
   detailLoading,
   reset,
   // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-} = useAssetSelectActions('default', props.onDetailLoadedCallback)
+} = useAssetSelectActions(props.configName, props.onDetailLoadedCallback)
 
 const { loadDamConfigAssetCustomFormElements, getDamConfigAssetCustomFormElements } =
   useDamConfigState(damClient)
@@ -87,7 +90,7 @@ const { getOrLoadDamConfigExtSystemByLicences } = useDamConfigState(damClient)
 const assetDetailStore = useAssetDetailStore()
 const { asset } = storeToRefs(assetDetailStore)
 const assetSelectStore = useAssetSelectStore()
-const { selectedLicenceId, assetType } = storeToRefs(assetSelectStore)
+const { selectedSelectConfig, selectedAssets, assetType } = storeToRefs(assetSelectStore)
 
 const selectConfigs = shallowRef<DamConfigLicenceExtSystemReturnType[]>([])
 
@@ -133,7 +136,7 @@ const onClose = () => {
 }
 
 const getCopyToLicenceId = () => {
-  if (copyToLicence.value && props.uploadLicence) {
+  if (copyToLicence.value && showCopyToLicence.value && props.uploadLicence) {
     return props.uploadLicence
   }
   return undefined
@@ -155,9 +158,8 @@ const { gridView } = useGridView()
 const showCopyToLicence = computed(() => {
   return (
     assetType.value === DamAssetType.Image &&
-    selectedLicenceId.value > 0 &&
     !isUndefined(props.uploadLicence) &&
-    selectedLicenceId.value !== props.uploadLicence
+    [...selectedAssets.value.values()].some((item) => item.asset.licence !== props.uploadLicence)
   )
 })
 
@@ -177,12 +179,7 @@ const disabledSubmit = computed(() => {
 })
 
 const extId = computed(() => {
-  if (selectConfigs.value.length === 0) return undefined
-  if (selectedLicenceId.value > 0) {
-    const found = selectConfigs.value.find((config) => config.licence === selectedLicenceId.value)
-    if (found) return found.extSystem
-  }
-  return undefined
+  return selectedSelectConfig.value?.extSystem
 })
 
 const loadingSidebarRight = computed(() => {
@@ -280,6 +277,7 @@ defineExpose({
           @type-change="typeChange"
           @sort-by-change="sortByChange"
         />
+        <AssetSelectLicencePresetBar />
         <div
           class="subject-select__main"
           :class="{
@@ -288,13 +286,16 @@ defineExpose({
           }"
         >
           <div class="subject-select__sidebar system-border-r">
-            <AssetSelectFilter :config-name="configName" />
+            <AssetSelectFilter
+              :config-name="configName"
+              :list-views="listViews"
+            />
           </div>
           <div class="subject-select__content">
             <component
               :is="componentComputed"
               v-if="extId"
-              :ext-system="extId"
+              :config-name="configName"
             />
             <div class="d-flex w-100 align-center justify-center pa-4">
               <ABtnSecondary
