@@ -1,9 +1,9 @@
 {
   "meta": {
-    "detail": "Detail Anzu používateľa",
-    "list": "Zoznam Anzu používateľov",
-    "edit": "Úprava Anzu používateľa",
-    "create": "Vytvorenie Anzu používateľa"
+    "detail": "Detail používateľa",
+    "list": "Zoznam používateľov",
+    "edit": "Úprava používateľa",
+    "create": "Vytvorenie používateľa"
   },
   "model": {
     "id": "ID",

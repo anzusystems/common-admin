@@ -1,9 +1,9 @@
 {
   "meta": {
-    "detail": "Anzu User Detail",
-    "list": "Anzu Users List",
-    "edit": "Anzu User Edit",
-    "create": "Anzu User Create"
+    "detail": "User Detail",
+    "list": "User List",
+    "edit": "User Edit",
+    "create": "User Create"
   },
   "model": {
     "id": "ID",
