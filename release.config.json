@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "repo": "anzusystems/common-admin",
+  "package": "@anzusystems/common-admin",
+  "publish": "npm",
+  "releaseWorkflow": "release-package.yml",
+  "changelogIndex": "CHANGELOG.md",
+  "build": "yarn lib:build",
+  "node": "24",
+  "ci": {
+    "env": {
+      "SKIP_PLAYWRIGHT_INSTALL": "true"
+    },
+    "setup": [
+      "npx playwright install chromium --with-deps"
+    ],
+    "checks": [
+      "yarn ci",
+      "yarn test:run"
+    ]
+  },
+  "pack": {
+    "verify": {
+      "compare": [
+        "dist"
+      ],
+      "allow": [
+        "package.json",
+        "LICENSE",
+        "README.md",
+        "CHANGELOG.md",
+        "src/eslint/**",
+        "src/vite/**"
+      ]
+    }
+  },
+  "requireTestedPrerelease": true,
+  "worktree": {
+    "copy": [
+      ".env.local"
+    ],
+    "install": [
+      "SKIP_PLAYWRIGHT_INSTALL=true yarn install",
+      "npx playwright install chromium"
+    ]
+  },
+  "npmEnvironment": "npmjs-publish"
+}

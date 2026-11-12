@@ -1,0 +1,3 @@
+- **Patch — no finding.** The new detail assertion can fail if provider metadata is not copied into the queue row. Both revised comments match the code: only the selection panel displays that metadata, and DAM receives only the asset ID and provider.
+- **Cycle 1 remains partly unresolved:** the change has no visible effect in the upload queue. The corrected section of [N9.md](/home/volar/projects/anzusystems/common-admin/doc/2.0.0-analyza/podklady/upload/krok5/impl/N9.md:49) says so, but its opening at lines 3–6 still repeats the outdated visibility claim.
+- **Outside the patch:** slot uploads already filter files by format and size, qualifying the note’s “anything can go into a slot” statement. Tests were not run.

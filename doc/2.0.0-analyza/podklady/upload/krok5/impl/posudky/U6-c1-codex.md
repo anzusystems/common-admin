@@ -1,0 +1,3 @@
+Finding: The new size test does not fix the left pane below 1,600 px. With a tall enough viewport, the old `h-100` wrapper could leave the preview at 1,280 × 1,600 and pass the regression test. Pin the pane height and assert it is smaller than 1,600 px. [consumerProfileUploadDialogSingle.test.ts:380](/home/volar/projects/anzusystems/common-admin/src/domains/dam/__tests__/consumerProfileUploadDialogSingle.test.ts:380)
+
+No size or `pictureIsPlaceholder` mismatch found in the reviewed states. Tests were not run, as requested.

@@ -1,0 +1,4 @@
+{
+  "allowAll": "Povoliť všetko",
+  "restrictiveGrantKept": "Ponechaná bola {count} akcia s výslovne nastaveným zamietnutím alebo prístupom iba pre vlastníka | Ponechané boli {count} akcie s výslovne nastaveným zamietnutím alebo prístupom iba pre vlastníka | Ponechaných bolo {count} akcií s výslovne nastaveným zamietnutím alebo prístupom iba pre vlastníka"
+}

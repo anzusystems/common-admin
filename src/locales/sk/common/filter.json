@@ -11,10 +11,22 @@
     "storeTableColumns": "Uložiť aj stĺpce tabuľky",
     "storeTableOrder": "Uložiť aj poradie tabuľky",
     "saveBookmarkOrder": "Uložiť zoradenie",
-    "nameUniqueError": "Názov filtra musí byť unikátny"
+    "nameUniqueError": "Názov filtra musí byť unikátny",
+    "unsavedSection": "Poradie záložiek",
+    "more": "Ďalšie záložky"
   },
   "timeInterval": {
     "from": "Od",
-    "until": "Do"
+    "until": "Do",
+    "options": {
+      "hour1": "1 hodina",
+      "day1": "1 deň",
+      "days7": "7 dní",
+      "days28": "28 dní",
+      "currentMonth": "Prebiehajúci mesiac",
+      "lastMonth": "Minulý mesiac",
+      "last3Months": "Posledné 3 mesiace",
+      "custom": "Vlastné"
+    }
   }
 }

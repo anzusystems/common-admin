@@ -1,0 +1,7 @@
+The cycle’s UI fixes and PATCH-only flow are present. A failed PATCH clears the rotating state and reaches the component’s error alert; leaving the page does not leave a stuck spinner. I found these exceptions:
+
+- The PATCH includes `imageAttributes.rotation`, but the backend fills it from `ratioWidth`, so the note’s claim about the rotation value is inaccurate. GET has the same defect. [ImageAttributesAdmDto.php:40](/home/volar/projects/petit/core-dam/vendor/anzusystems/core-dam-bundle/src/Model/Dto/Image/Embeds/ImageAttributesAdmDto.php:40)
+- The requested equal-ID isolation fails: rotation state and publication use only file ID, and the detail and tab guards do likewise. Equal IDs across assets would block one rotation or apply a result to the wrong asset. Core-dam’s globally unique file IDs make this unreachable with normal backend data. [imageRotationStore.ts:17](/home/volar/projects/anzusystems/admin-dam/src/domains/coreDam/asset/store/imageRotationStore.ts:17) [assetDetailStore.ts:215](/home/volar/projects/anzusystems/admin-dam/src/domains/coreDam/asset/store/assetDetailStore.ts:215) [AssetDetailSidebarROI.vue:92](/home/volar/projects/anzusystems/admin-dam/src/domains/coreDam/asset/components/detail/components/AssetDetailSidebarROI.vue:92)
+- A test comment and its held-GET setup still describe reads after rotation, although the cycle removed that GET. [roiTab.test.ts:388](/home/volar/projects/anzusystems/admin-dam/src/test/asset/roiTab.test.ts:388)
+
+No tests or builds were run.

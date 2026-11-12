@@ -1,0 +1,1 @@
+No findings. The new cases would fail if either exported selector lost or failed to pass on `own`. Tests were not run, as requested.

@@ -1,0 +1,3 @@
+1. **Low — [OP5-D2.md](/home/volar/projects/anzusystems/common-admin/doc/2.0.0-analyza/podklady/upload/krok5/impl/OP5-D2.md:451):** The note says a 403 was already reported before this cycle. These route wrappers pass a raw Axios error to `showErrorsDefault`, which recognizes its own typed errors, so a 403 or 422 previously produced no alert. The new fallback shows one generic system error for either status, not a specific forbidden or validation message.
+
+No code defect found in the cycle patch. The fake server supplies 204 without a body where the backend does. Tests were not run, as requested.

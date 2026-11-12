@@ -1,0 +1,1 @@
+No findings in the requested c2 scope: the route identity check is safe, `hideUpload()` preserves the other full view, and cases 6 and 7 exercise their stated failures. Read-only review; no tests run.

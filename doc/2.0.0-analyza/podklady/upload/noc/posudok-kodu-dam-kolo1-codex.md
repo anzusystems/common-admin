@@ -1,0 +1,17 @@
+## BUG
+
+1. **Poll can undo a final WebSocket update.** [distributionListPoll.ts:80](/home/volar/projects/anzusystems/admin-dam/src/domains/coreDam/asset/composables/distributionListPoll.ts:80) — A poll starts while a row is `waiting`; a notification then updates it to `distributed`; the older poll response returns `waiting` and replaces the whole list. The row regresses and polling restarts. Discard a poll result if the store changed after that read began, or merge it without overwriting newer status updates.
+
+2. **A YouTube authorization request survives dialog closure.** [DistributionNewDialogYoutube.vue:199](/home/volar/projects/anzusystems/admin-dam/src/domains/coreDam/asset/components/detail/components/distribution/DistributionNewDialogYoutube.vue:199) — Close a dialog with a re-check pending, then reopen one for the same service. If the new dialog reaches `waiting_for_login`, the old response can set its shared auth state to `success`. The pending request also survives unmount. Abort it on unmount and guard its result with a dialog-local generation or mounted flag.
+
+3. **Returning to a visible tab can miss the immediate read.** [distributionListPoll.ts:126](/home/volar/projects/anzusystems/admin-dam/src/domains/coreDam/asset/composables/distributionListPoll.ts:126) — Hide and restore the document while a poll request is pending. `readNow()` refuses because `reading` is set; when that request finishes, `finally` schedules the next read 15–60 seconds later. Record a pending return read and run it as soon as the current request settles, or abort and replace that request.
+
+4. **Polling can follow rows from the previous asset.** [distributionListPoll.ts:115](/home/volar/projects/anzusystems/admin-dam/src/domains/coreDam/asset/composables/distributionListPoll.ts:115) — Open asset A with a `waiting` distribution, close it, then open asset B whose initial list read fails. The shared store still contains A’s rows, so B schedules repeated reads based on A’s status. Associate list state with its asset ID and start polling only after a successful read for the current asset.
+
+5. **A single return can produce duplicate authorization checks.** [DistributionNewDialogYoutube.vue:195](/home/volar/projects/anzusystems/admin-dam/src/domains/coreDam/asset/components/detail/components/distribution/DistributionNewDialogYoutube.vue:195) — If a negative `authorized` response finishes between `visibilitychange` and `focus`, both events send a GET. Rapid returns can repeat this without a limit. Coalesce the two events for one return or apply a short cooldown while waiting.
+
+## TEST
+
+1. **The chunk sequence test does not establish serialization.** [uploadSequence.test.ts:79](/home/volar/projects/anzusystems/admin-dam/src/test/upload/uploadSequence.test.ts:79) — A refactor that starts all three chunks concurrently, in index order, and awaits them before finishing can satisfy the asserted request order. Hold the first chunk response and assert that the second request has not started before releasing it.
+
+I checked the ten-file diff, the new poll, the five change-specific tests, and six load-bearing queue characterization files. The accessible-name keys, unresolved-chip fallback, poll cancellation before a user read, and listener removal on unmount looked sound by inspection. I could not verify browser event timing, actual network cancellation, or runtime behavior; I ran no tests, builds, or project linters.

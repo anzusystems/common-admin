@@ -1,0 +1,54 @@
+<script setup lang="ts">
+import ADialogToolbar from '@/domains/ui/components/ADialogToolbar.vue'
+import { useI18n } from 'vue-i18n'
+import type { MediaAware } from '@/domains/dam/types/MediaAware'
+
+withDefaults(
+  defineProps<{
+    modelValue: boolean
+    media: null | MediaAware
+  }>(),
+  {}
+)
+
+const emit = defineEmits<{
+  (e: 'close'): void
+}>()
+
+const { t } = useI18n()
+
+const onDialogModelUpdate = (newValue: boolean) => {
+  if (newValue) return
+  emit('close')
+}
+</script>
+
+<template>
+  <VDialog
+    :model-value="modelValue"
+    :max-width="500"
+    eager
+    @update:model-value="onDialogModelUpdate"
+  >
+    <VCard v-if="modelValue">
+      <ADialogToolbar @cancel="onDialogModelUpdate(false)">
+        {{ t('common.damImage.media.meta.preview') }}
+      </ADialogToolbar>
+      <VCardText>
+        <slot
+          name="preview"
+          :media="media"
+        />
+      </VCardText>
+      <VCardActions>
+        <VSpacer />
+        <ABtnTertiary
+          data-cy="button-close"
+          @click.stop="onDialogModelUpdate(false)"
+        >
+          {{ t('common.button.close') }}
+        </ABtnTertiary>
+      </VCardActions>
+    </VCard>
+  </VDialog>
+</template>

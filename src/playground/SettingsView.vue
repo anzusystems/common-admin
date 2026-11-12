@@ -1,12 +1,12 @@
 <script lang="ts" setup>
 import { useI18n } from 'vue-i18n'
 import { inject } from 'vue'
-import ACard from '@/components/ACard.vue'
-import ALanguageSelect from '@/components/ALanguageSelect.vue'
-import AThemeSelect from '@/components/AThemeSelect.vue'
-import type { LanguageCode } from '@/composables/languageSettings'
-import { modifyLanguageSettings } from '@/composables/languageSettings'
-import { AvailableLanguagesSymbol, DefaultLanguageSymbol } from '@/components/injectionKeys'
+import ACard from '@/domains/ui/components/ACard.vue'
+import ALanguageSelect from '@/domains/system/components/ALanguageSelect.vue'
+import AThemeSelect from '@/domains/system/components/AThemeSelect.vue'
+import type { LanguageCode } from '@/domains/system/composables/languageSettings'
+import { modifyLanguageSettings } from '@/domains/system/composables/languageSettings'
+import { AvailableLanguagesSymbol, DefaultLanguageSymbol } from '@/shared/injectionKeys'
 
 const { t } = useI18n()
 const configAvailableLanguages = inject<LanguageCode[]>(AvailableLanguagesSymbol, [])

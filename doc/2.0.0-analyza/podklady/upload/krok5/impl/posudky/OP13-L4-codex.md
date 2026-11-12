@@ -1,0 +1,7 @@
+I agree with Claude’s Medium finding and four Lows: the stale warning race (`uploadQueueItemRefresh.ts:62-67`), changelog claims (`2.0.0.md:242-245`), orphaned JSDoc (`uploadSettle.ts:656-670`), unpinned public export (`lib.ts:1405`; `publicExportsAdded.test.ts:19`), and inaccurate admin-dam note (`OP13-L4.md:94-102`).
+
+The proposed `statusBefore` guard fixes the cited Uploaded/Stop races and the stale `pending` warning on Failed rows. It still permits stale `error` or `missing` warnings after an external transition to Failed with refresh available. I would silence those too, while preserving `originalUnread` when the pressed refresh itself fails the row (`uploadQueueItemRefresh.ts:62-67`; `uploadSettle.ts:488-511`).
+
+**Fix Save and apply’s silent omission.** Its read can be the third counted 404, turn an Uploaded row Failed, and exclude it from handover without telling the editor (`UploadQueueDialog.vue:157-160,187`; `uploadSettlement.ts:168-179`). Counting genuine missing answers is consistent with point 27; the save action should surface that result.
+
+I found no additional OP13-L4 case of a slow read or whole-request 404 being counted as missing: only `null`/absent assets increment misses, and a successful asset read resets them (`uploadQueuesStore.ts:151-153`; `uploadSettlement.ts:253-255,199-210`). The new API members are optional; I found no test that cannot fail. This was a read-only review; I ran no tests.

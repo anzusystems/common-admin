@@ -1,0 +1,3 @@
+1. **Medium — c1-2 can repeatedly start quiet reads.** [assetDetailStore.ts:201](/home/volar/projects/anzusystems/admin-dam/src/domains/coreDam/asset/store/assetDetailStore.ts:201) remembers only the *last* announced file. Open an undescribed asset, then let processed slot files A and B be reported in this order: notification A, notification B, queue completion A, queue completion B. Each report triggers another asset GET. This contradicts the once-per-file claim in [OP8-D1.md:285](/home/volar/projects/anzusystems/common-admin/doc/2.0.0-analyza/podklady/upload/krok5/impl/OP8-D1.md:285) and [3.0.0.md:178](/home/volar/projects/anzusystems/admin-dam/doc/changelog/3.0.0.md:178).
+
+I found no new test that is inherently unable to fail. I ran no tests or build.

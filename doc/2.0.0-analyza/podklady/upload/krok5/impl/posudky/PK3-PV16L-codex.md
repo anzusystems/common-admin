@@ -1,0 +1,6 @@
+- **PK3 code and tests — bez nálezu.** The six specified keys are left unblocked for the specified fields; the checkbox still scrolls the list. The new tests use fixed scroll positions and, according to [PK3.md](/home/volar/projects/anzusystems/common-admin/doc/2.0.0-analyza/podklady/upload/krok5/impl/PK3.md:50), fail against the earlier snapshots.
+- **PV16-L code and test — bez nálezu.** Omitting `report` preserves reporting; `false` still throws the mapped error. The optional type is compatible with existing calls, and the test covers both settings.
+- **LOW — [navrh-komponenty.md:1238](/home/volar/projects/anzusystems/common-admin/doc/2.0.0-analyza/podklady/upload/krok5/navrh-komponenty.md:1238):** The 4.5 register still says *every* `input` keeps its key. Section 6.2 and the final code exempt checkboxes and five other input types.
+- **Outside the changes, MEDIUM — [UploadQueueEditable.vue:115](/home/volar/projects/anzusystems/common-admin/src/domains/dam/uploadQueue/components/UploadQueueEditable.vue:115):** The existing document listener also captures navigation keys from an unrelated `<select>` and prevents its native keyboard action.
+
+Tests were not run, as requested.

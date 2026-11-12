@@ -1,0 +1,45 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { AuthUnavailableError } from '@/shared/error/AuthUnavailableError'
+import { SessionExpiredError } from '@/shared/error/SessionExpiredError'
+import { AnzuFatalError } from '@/shared/error/AnzuFatalError'
+import { useAlerts } from '@/domains/system/composables/alerts'
+import { commonT } from '@/plugins/i18n'
+
+// Requests stopped by the token refresh reach callers as `AnzuFatalError` with the refresh error in its cause chain.
+// Each used to show the sticky "system error": a page with ten requests got ten
+// during an auth outage, and a signed-out user got one per running request.
+
+vi.mock('@/domains/system/composables/alertsQueue', () => ({ pushAlert: vi.fn() }))
+
+beforeEach(() => {
+  vi.useFakeTimers()
+})
+afterEach(() => {
+  vi.useRealTimers()
+})
+
+describe('what the default error handling shows for a request the token refresh stopped', () => {
+  it('nothing when the session is gone: the logout is already loading', async () => {
+    const { pushAlert } = await import('@/domains/system/composables/alertsQueue')
+    vi.mocked(pushAlert).mockClear()
+    const { showErrorsDefault } = useAlerts()
+
+    expect(showErrorsDefault(new AnzuFatalError(new SessionExpiredError()))).toBe(true)
+    expect(pushAlert).not.toHaveBeenCalled()
+  })
+
+  it('one alert that the sign-in server does not answer, however many requests it stopped', async () => {
+    const { pushAlert } = await import('@/domains/system/composables/alertsQueue')
+    vi.mocked(pushAlert).mockClear()
+    const { showErrorsDefault } = useAlerts()
+    const stopped = () => new AnzuFatalError(new AuthUnavailableError(new Error('503')))
+
+    for (let i = 0; i < 5; i++) expect(showErrorsDefault(stopped())).toBe(true)
+    expect(pushAlert).toHaveBeenCalledTimes(1)
+    expect(vi.mocked(pushAlert).mock.calls[0]![1]).toBe(commonT('common.alert.authUnavailable'))
+
+    vi.advanceTimersByTime(60_000)
+    showErrorsDefault(stopped())
+    expect(pushAlert).toHaveBeenCalledTimes(2)
+  })
+})

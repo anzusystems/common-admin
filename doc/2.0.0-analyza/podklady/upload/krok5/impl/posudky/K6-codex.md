@@ -1,0 +1,5 @@
+**K6 behavior:** No finding. The 37 public members, request path, synchronous queue writes, and DAM callbacks match the snapshot apart from the listed convergences. The installed core source maps match the reviewed library source.
+
+- **Low — Test coverage:** [queueRefresh.test.ts](/home/volar/projects/anzusystems/admin-dam/src/test/queue/queueRefresh.test.ts:379) offers Refresh on a `Failed` row through a mocked button; the real component hides it at [AssetQueueItemEditable.vue](/home/volar/projects/anzusystems/admin-dam/src/domains/coreDam/asset/components/queue/AssetQueueItemEditable.vue:253). That variant cannot exercise the stated UI sequence.
+- **Low — Note accuracy:** [K6.md](/home/volar/projects/anzusystems/common-admin/doc/2.0.0-analyza/podklady/upload/krok5/impl/K6.md:13) says the store has 618 lines; the reviewed file has 617.
+- **Outside K6, low:** [AssetQueueEditable.vue](/home/volar/projects/anzusystems/admin-dam/src/domains/coreDam/asset/components/queue/AssetQueueEditable.vue:37) still shows “still uploading or processing” if a pending refresh answers after its row leaves the queue. This also happened before K6.

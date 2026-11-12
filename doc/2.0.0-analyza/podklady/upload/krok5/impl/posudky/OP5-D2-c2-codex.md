@@ -1,0 +1,1 @@
+No findings in the OP5-D2-c2 patch. Both guards allow the first click and clear their flags after success or handled failure; the new duplicate-click tests would fail without the guards. No changes outside the two guards and tests were found. Tests were not run, as requested.

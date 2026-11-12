@@ -1,0 +1,1 @@
+No additional High, Medium, or Low findings beyond the two known changelog issues. The merge preserves master’s prompt and auto-decline behavior within `next`’s conventions; the dependency resolutions are consistent.

@@ -1,0 +1,129 @@
+{
+  "exitCode": 0,
+  "totals": {
+    "files": 17,
+    "importDeclarations": 23,
+    "propsChanged": 2
+  },
+  "files": {
+    "src/components/EmptySetup.vue": {
+      "template": [
+        "toRaw"
+      ]
+    },
+    "src/components/Macros.vue": {
+      "setup": [
+        "ref"
+      ],
+      "types": [
+        "IntegerId"
+      ]
+    },
+    "src/components/OptionsScript.vue": {
+      "script": [
+        "ref"
+      ]
+    },
+    "src/components/ReadonlyProp.vue": {
+      "setup": [
+        "computed"
+      ]
+    },
+    "src/components/TemplateCast.vue": {
+      "types": [
+        "DocId",
+        "IntegerId"
+      ]
+    },
+    "src/components/TemplateOnly.vue": {
+      "template": [
+        "SYSTEM_CMS",
+        "isUndefined"
+      ]
+    },
+    "src/components/TypedModel.vue": {
+      "setup": [
+        "useI18n"
+      ],
+      "types": [
+        "IntegerId"
+      ]
+    },
+    "src/defaultImport.ts": {
+      "script": [
+        "dayjs"
+      ]
+    },
+    "src/existing.ts": {
+      "script": [
+        "computed",
+        "ref"
+      ],
+      "types": [
+        "ComputedRef"
+      ]
+    },
+    "src/exports.ts": {
+      "script": [
+        "onMounted"
+      ]
+    },
+    "src/keys.ts": {
+      "script": [
+        "reactive"
+      ]
+    },
+    "src/main.ts": {
+      "script": [
+        "createApp"
+      ]
+    },
+    "src/namespaces.ts": {
+      "script": [
+        "computed",
+        "ref",
+        "shallowRef"
+      ]
+    },
+    "src/shadowing.ts": {
+      "script": [
+        "shallowRef",
+        "toRaw"
+      ]
+    },
+    "src/shared/usesSystem.ts": {
+      "script": [
+        "SYSTEM_CMS"
+      ]
+    },
+    "src/test/sample.test.ts": {
+      "script": [
+        "ref"
+      ]
+    },
+    "src/types.ts": {
+      "types": [
+        "DocId",
+        "IntegerId",
+        "Ref",
+        "SYSTEM_CMS"
+      ]
+    }
+  },
+  "props": {
+    "src/components/Macros.vue": {
+      "dev": {
+        "before": "/*@__PURE__*/_mergeModels({\n    id: { type: null, required: false, default: 0 }\n  }, {\n    \"modelValue\": { type: Number },\n    \"modelModifiers\": {},\n  })",
+        "after": "/*@__PURE__*/_mergeModels({\n    id: { type: Number, required: false, default: 0 }\n  }, {\n    \"modelValue\": { type: Number },\n    \"modelModifiers\": {},\n  })"
+      }
+    },
+    "src/components/TypedModel.vue": {
+      "dev": {
+        "before": "{\n    \"modelValue\": { type: null, ...{ required: true } },\n    \"modelModifiers\": {},\n  }",
+        "after": "{\n    \"modelValue\": { type: [Number, null], ...{ required: true } },\n    \"modelModifiers\": {},\n  }"
+      }
+    }
+  },
+  "newCycleEdges": [],
+  "violations": []
+}

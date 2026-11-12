@@ -1,0 +1,3 @@
+- **U2 code and tests: no findings.** The cache and client behavior matches the planned ZK20 change; the supplied CK log reports 70 files and 1,263 tests passing. I did not rerun them.
+- **Low — documentation:** [U2.md:13](</home/volar/projects/anzusystems/common-admin/doc/2.0.0-analyza/podklady/upload/krok5/impl/U2.md:13>) says both forwarding files became 17 lines; each is 16 lines. No behavior impact.
+- **Outside U2: no findings.**

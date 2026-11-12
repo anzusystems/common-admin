@@ -1,0 +1,4 @@
+No findings. The new test covers single-row cancellation during an import request, then a 500 response; its assertions would fail without the error branch’s Stop check. [queueOperations.test.ts](/home/volar/projects/anzusystems/admin-dam/src/test/queue/queueOperations.test.ts:394)
+The request handler is entered before cancellation, so the held response is released deterministically. [fakeDam.ts](/home/volar/projects/anzusystems/admin-dam/src/test/support/fakeDam.ts:120)
+The notes cover the “Zrušiť” path, the scope of `clearQueue`, and the shared author-name batch. [19.md](/home/volar/projects/anzusystems/common-admin/doc/2.0.0-analyza/podklady/upload/krok5/impl/19.md:35), [40.md](/home/volar/projects/anzusystems/common-admin/doc/2.0.0-analyza/podklady/upload/krok5/impl/40.md:34)
+Tests were not run, as requested.

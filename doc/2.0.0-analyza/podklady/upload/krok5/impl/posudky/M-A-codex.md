@@ -1,0 +1,4 @@
+- **Medium — formatting gate:** [uploadMeter.ts:83](/home/volar/projects/anzusystems/common-admin/src/domains/dam/uploadQueue/composables/uploadMeter.ts:83) has `shown =sendingOver`; the configured `format:check` would flag it.
+- **Medium, pre-existing:** [uploadMeter.ts:47](/home/volar/projects/anzusystems/common-admin/src/domains/dam/uploadQueue/composables/uploadMeter.ts:47) clears the curve if the clock moves backward. If that happens just before the final chunk’s answer, speed has only one point, so the final “100%, 0 s” report is lost.
+- **No other finding:** the byte-gated reports match option A; I found no per-second-report dependency in the reviewed library or admin-dam consumers or tests. The new tests use fake time and can catch a missing gate; M-A.md matches the change.
+- Static review only; tests were not run.

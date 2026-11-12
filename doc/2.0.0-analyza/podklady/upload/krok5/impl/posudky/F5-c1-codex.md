@@ -1,0 +1,3 @@
+Low — [lazyMetadata.test.ts:205](/home/volar/projects/anzusystems/admin-dam/src/test/queue/lazyMetadata.test.ts:205): The notification and stale batch supply identical `keywords`, so the test passes even if the batch overwrites the newer form values. Use distinct values and assert that the notification’s values remain.
+
+The F-A guard closes both previously reported races; I found no other code change in the patch. The new tests control response order deterministically. Tests were not run, as requested.

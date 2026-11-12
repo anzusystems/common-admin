@@ -1,0 +1,1 @@
+Confirmed by read-only review: the authors-off guard prevents conflict lookups, the moved config call runs before first use, the new test can catch a missing guard, `config.image!` is type-only, and the note matches the code and reviews. No reachable defect introduced by c1 found.

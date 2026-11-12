@@ -1,0 +1,4 @@
+1. **Patch: no finding.** The test keeps only the requested `offsetParent` and exact child order assertions. The recorded bends show two failures per change for an unpositioned box and for an overlay placed before the picture.
+2. **U6 compatibility: no finding.** The test leaves the box’s size and its position within the left pane open, so either planned fix for finding 64 can satisfy it.
+3. **Cycle 5 note: no finding.** It marks the JS9 gap as accepted, corrects the refuted c3 height claim, and matches the probe’s 734 → 900 px result.
+4. **Outside the change:** Findings 63 and 64 remain tracked; 64 is assigned to U6. No new outside finding. Tests were not run.

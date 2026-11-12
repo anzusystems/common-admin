@@ -1,0 +1,7 @@
+**High: none.** Three findings beyond the listed Lows:
+
+- **Medium** — [ArticleWidgetAiClassification.vue:79](/home/volar/projects/petit/admin-cms/src/domains/cms/article/components/widgets/variant/ArticleWidgetAiClassification.vue:79): the new “Reclassify with AI on publish” switch changes only the local article. Collaborators do not receive the change or a field lock. Use a collaboration aware form switch for `flagsStandard.aiReclassifyOnPublish`.
+- **Medium** — [ScenarioJobVerdictTable.vue:30](/home/volar/projects/petit/admin-cms/src/domains/cms/scenarioJob/components/ScenarioJobVerdictTable.vue:30): a failed verdict request raises a global alert even after its dialog or page has closed. Cancel the request on unmount and guard the result and error handling.
+- **Medium** — [ScenarioJobVerdictTable.vue:27](/home/volar/projects/petit/admin-cms/src/domains/cms/scenarioJob/components/ScenarioJobVerdictTable.vue:27): the verdict table fetches only the first 25 jobs and offers no pagination, so older verdicts become inaccessible. Add pagination or fetch all pages.
+
+The article detail retains the requested load order: multi titles and AI classification together, then related entities. No files were changed and no tests or builds were run.

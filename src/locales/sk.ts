@@ -6,7 +6,9 @@ import anzuUser from '@/locales/sk/common/anzuUser.json'
 import job from '@/locales/sk/common/job.json'
 import log from '@/locales/sk/common/log.json'
 import permission from '@/locales/sk/common/permission.json'
+import permissionEditor from '@/locales/sk/common/permissionEditor.json'
 import permissionGroup from '@/locales/sk/common/permissionGroup.json'
+import userSystem from '@/locales/sk/common/userSystem.json'
 import vuetify from '@/locales/sk/vuetify.json'
 import apiValidation from '@/locales/sk/error/apiValidation.json'
 import apiForbiddenOperation from '@/locales/sk/error/apiForbiddenOperation.json'
@@ -17,8 +19,15 @@ import subjectSelect from '@/locales/sk/common/subjectSelect.json'
 import time from '@/locales/sk/common/time.json'
 import sortable from '@/locales/sk/common/sortable.json'
 import damImage from '@/locales/sk/common/damImage.json'
+import customFormElement from '@/locales/sk/common/customFormElement.json'
+import customForm from '@/locales/sk/common/customForm.json'
+import confirmDialog from '@/locales/sk/common/confirmDialog.json'
+import linkDto from '@/locales/sk/common/linkDto.json'
+import listItemDto from '@/locales/sk/common/listItemDto.json'
+import dayOfWeek from '@/locales/sk/common/dayOfWeek.json'
 import collab from '@/locales/sk/common/collab.json'
 import filter from '@/locales/sk/common/filter.json'
+import routeSettings from '@/locales/sk/common/routeSettings.json'
 import apiTimedOut from '@/locales/sk/error/apiTimedOut.json'
 
 export default {
@@ -31,14 +40,23 @@ export default {
     job,
     log,
     permission,
+    permissionEditor,
     permissionGroup,
+    userSystem,
     assetSelect,
     subjectSelect,
     time,
     sortable,
     damImage,
+    customFormElement,
+    customForm,
+    confirmDialog,
+    linkDto,
+    listItemDto,
+    dayOfWeek,
     collab,
     filter,
+    routeSettings,
   },
   $vuetify: vuetify,
   error: {

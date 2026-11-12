@@ -1,0 +1,3 @@
+**Low — temporal gap in the new case.** The test checks for no “Refresh” only at +70 s. A button briefly offered at the +20 s deadline and removed before +70 s would pass, despite the case’s “never comes” claim. Check immediately after metadata arrives, at +20 s, and later. [queueRowStates.test.ts](/home/volar/projects/anzusystems/admin-dam/src/test/queue/queueRowStates.test.ts:264)
+
+The visibility checks can detect the current `v-show` hiding in happy-dom; the recorded hidden variants failed. `shown()` no longer depends on row order. The new timing case matches today’s watcher and the planned `refreshOffered` wrapper. I found no cycle 2 issue left without a recorded reason. **Outside the change: no findings.** Tests were not run.

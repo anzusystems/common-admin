@@ -1,0 +1,6 @@
+**U4: No findings.** The patch changes no existing tests, and I found no unregistered convergence or change to the default CMS/UGC behavior or backend calls. The new tests make assertions that can fail. This was a read-only review; I did not run tests.
+
+**Outside U4:**
+
+1. **Low — duplicate author conflict chips.** [assetSuggestions.ts:14](/home/volar/projects/anzusystems/krok5-praca/wt/lib-u/src/domains/dam/uploadQueue/composables/assetSuggestions.ts:14) collects IDs without deduplication; [AuthorRemoteAutocompleteWithCached.vue:293](/home/volar/projects/anzusystems/krok5-praca/wt/lib-u/src/domains/dam/author/components/AuthorRemoteAutocompleteWithCached.vue:293) uses each ID as a Vue key. An ID present in multiple suggestions can produce duplicate chips and keys.
+2. **Low — unclear accessible name.** [AuthorRemoteAutocompleteCachedAuthorChipConflicts.vue:43](/home/volar/projects/anzusystems/krok5-praca/wt/lib-u/src/domains/dam/author/components/AuthorRemoteAutocompleteCachedAuthorChipConflicts.vue:43) uses a plus icon for the add action without an explicit action label. These two files are identical to the U4 snapshot.

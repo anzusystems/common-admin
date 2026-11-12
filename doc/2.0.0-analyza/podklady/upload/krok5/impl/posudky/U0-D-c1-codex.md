@@ -1,0 +1,13 @@
+1. **Medium — RD12(b) leaves the late warning unverified.** The tests set `error` after upload but assert only Refresh timing ([queueRowStates.test.ts](/home/volar/projects/anzusystems/admin-dam/src/test/queue/queueRowStates.test.ts:228)). A regression that fails to display the newly arrived warning would pass these cases; the existing warning test starts with the error already present.
+
+2. **Medium — the duplicate assertion depends on layout.** `editPlace()` selects the first child of `.justify-space-between` ([queueRowStates.test.ts](/home/volar/projects/anzusystems/admin-dam/src/test/queue/queueRowStates.test.ts:81)). Moving an edit control elsewhere could let the duplicate test pass; changing that class on both rows could fail it with no user-visible change. The documented bend proves the current insertion point only.
+
+3. **Medium — the missing-`ttsAudio` case can pass without its asset.** `icons(undefined)` returns `[]`, so the assertion for `item(2)` passes if the third tile or row disappears ([assetMetaIconsTts.test.ts](/home/volar/projects/anzusystems/admin-dam/src/test/list/assetMetaIconsTts.test.ts:56), [line 105](/home/volar/projects/anzusystems/admin-dam/src/test/list/assetMetaIconsTts.test.ts:105)). The cases also identify assets by position rather than ID.
+
+4. **Low — TTS assertions pin unrelated rendering details.** They require the icon to be an `img` under `.asset-image__meta-icons` and require the exact complete icon array, including RSS ([assetMetaIconsTts.test.ts](/home/volar/projects/anzusystems/admin-dam/src/test/list/assetMetaIconsTts.test.ts:55)). U3 could preserve the visible TTS icon and title while changing that markup or another icon.
+
+5. **Medium — the author redirect check starts on an artificial route.** The author page is mounted while the router remains at `/`, then the test expects `/` ([authorListCreate.test.ts](/home/volar/projects/anzusystems/admin-dam/src/test/author/authorListCreate.test.ts:51), [line 119](/home/volar/projects/anzusystems/admin-dam/src/test/author/authorListCreate.test.ts:119)). A redirect to `/` would pass here but would navigate away from the real `/authors` page.
+
+6. **Low — the bend record is selective.** The listed bends demonstrate the principal Refresh, duplicate, TTS, validation-scope, and author refresh/redirect failures, but do not cover every new assertion, such as the successful PATCH payload or author POST payload ([U0-D.md](/home/volar/projects/anzusystems/common-admin/doc/2.0.0-analyza/podklady/upload/krok5/impl/U0-D.md:32)).
+
+**Outside the patch:** No findings. Tests were not run, as requested.

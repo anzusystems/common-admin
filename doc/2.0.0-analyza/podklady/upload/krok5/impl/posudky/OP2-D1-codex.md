@@ -1,0 +1,5 @@
+1. **Medium — polling can stop after a superseded read.** A canceled request that still settles late remains in `ownReads`; when the newer read finishes, `duringOwnRead` does not schedule a poll. If the older request never settles, polling stays stopped despite a listed distribution being in progress. The polling test covers only prompt cancellation. [distributionListPoll.ts](/home/volar/projects/anzusystems/admin-dam/src/domains/coreDam/asset/composables/distributionListPoll.ts:135)
+
+2. **Low — a superseded failure can still be logged.** The component suppresses its alert, but it passes the request with the library’s default `report: true`. A late failure after cancellation therefore reaches the API error logger. The test replaces that logger without checking its calls; the step note’s claim that the superseded failure is silent is broader than the code’s behavior. [AssetDetailSidebarDistribution.vue](/home/volar/projects/anzusystems/admin-dam/src/domains/coreDam/asset/components/detail/components/distribution/AssetDetailSidebarDistribution.vue:91)
+
+Outside the changes: no findings. Tests were not run, as requested.

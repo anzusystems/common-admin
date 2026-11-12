@@ -1,0 +1,36 @@
+import { describe, expect, it } from 'vitest'
+// eslint-disable-next-line no-restricted-imports -- this test is about the public entry itself
+import { useCollabState } from '@/lib'
+// eslint-disable-next-line no-restricted-imports -- as above
+import type * as lib from '@/lib'
+
+describe('useCollabState', () => {
+  it('gives an admin the reconnect flag and state, the retry, the room info, the field buffer and gatherBufferData', () => {
+    expect(Object.keys(useCollabState()).sort()).toEqual([
+      'collabConnectionState',
+      'collabFieldDataBufferState',
+      'collabReconnecting',
+      'collabRoomInfoState',
+      'gatherBufferData',
+      'reconnectCollab',
+    ])
+    // @ts-expect-error -- the socket is internal
+    expect(useCollabState().collabSocket).toBeUndefined()
+  })
+
+  it('lets an admin read the connection state, not set it', () => {
+    const { collabConnectionState } = useCollabState()
+    // @ts-expect-error -- readonly
+    collabConnectionState.value = 'rejected'
+    expect(collabConnectionState.value).toBe('connected')
+  })
+
+  it('keeps the socket.io protocol types out of the public entry', () => {
+    // @ts-expect-error -- internal
+    type Events = lib.CollabClientToServerEvents
+    // @ts-expect-error -- internal
+    type Callback = lib.CollabRoomInfoCallback
+    const unused: [Events?, Callback?] = []
+    expect(unused).toEqual([])
+  })
+})

@@ -1,0 +1,5 @@
+**U6 code: no finding.** The visible differences match approved fixes 62 and 64 and register entry ZK23. The adapters preserve the reviewed rendering and save paths; the new cases target both fixes. U6 does not change `src/lib.ts`, exported component props or slots, or the public `AssetDetailItemDto` type. Tests were not run, as requested.
+
+**Documentation — Low:** [upload-postup.md](/home/volar/projects/anzusystems/common-admin/doc/2.0.0-analyza/upload-postup.md:181) still marks finding 62 “to decide,” while [U6.md](/home/volar/projects/anzusystems/common-admin/doc/2.0.0-analyza/podklady/upload/krok5/impl/U6.md:13) and the register record its approved fix.
+
+**Outside U6 — Medium, already recorded:** [UploadQueueDialogSingle.vue](/home/volar/projects/anzusystems/common-admin/src/domains/dam/uploadQueue/components/UploadQueueDialogSingle.vue:208) shows a loader indefinitely for an empty queue (finding 30). [UploadQueueDialogSingleSidebar.vue](/home/volar/projects/anzusystems/common-admin/src/domains/dam/uploadQueue/components/UploadQueueDialogSingleSidebar.vue:59) still omits Refresh for a failed item where refresh could help (finding 25).

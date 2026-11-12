@@ -1,0 +1,3 @@
+**One c2 defect:** If the user leaves the page after a quiet read records `deleting` but before DELETE fails, `deleteAssetOnce` shows the new warning on the destination page. Its catch has no page check. [assetDeleteOnce.ts](/home/volar/projects/anzusystems/admin-dam/src/domains/coreDam/asset/composables/assetDeleteOnce.ts:29)
+
+The listener cleanup, asset note cleanup, and single delivery in `whileOnPage` look correct. This was a read-only review; I ran no tests.

@@ -1,0 +1,49 @@
+# embedVideo
+
+## Features
+- user can insert video from DAM using select dialog with filters.
+- inserted instead of [embedExternal](embed-external.md) when the youtube code entered in the embedExternal dialog is already distributed from DAM
+- pasting a DAM admin URL of a video asset inserts embedVideo (see [paste extensions](../extensions.md#paste-extensions))
+
+## Node schema
+
+```jsonc
+{
+  "name": "embedVideo",
+  "groups": [
+    "embed"
+  ],
+  "attrs": {
+    "id": {
+      "default": null // string | null (uuid of embed)
+    },
+    "changeId": {
+      "default": "" // string
+    }
+  }
+}
+```
+
+## Node JSON example
+
+```json
+{
+  "type": "embedVideo",
+  "attrs": {
+    "id": "ae0a44d6-4c9b-40f8-b44f-30d978cd93fb",
+    "changeId": "75f63c30-168f-11ee-b9a4-edda1c3364ed"
+  }
+}
+```
+
+## API data
+
+```ts
+interface EmbedVideoAware {
+  id: DocId
+  media: Media
+  detail?: {
+    title: string
+  }
+}
+```
