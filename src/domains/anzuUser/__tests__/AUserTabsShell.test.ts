@@ -175,9 +175,9 @@ describe('AUserTabsShell', () => {
     expect(dialog.props('modelValue')).toBe(true)
 
     dialog.vm.$emit('resolve', true)
-    await flushPromises()
 
-    expect(router.currentRoute.value.fullPath).toBe('/content-hub/users/42/edit')
+    // The navigation resumes after the guard's promise settles, a few ticks later than one flush.
+    await vi.waitFor(() => expect(router.currentRoute.value.fullPath).toBe('/content-hub/users/42/edit'))
   })
 
   it('hands the refresh hook to the panels on the page', async () => {
