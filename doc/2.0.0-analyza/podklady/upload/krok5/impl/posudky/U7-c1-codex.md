@@ -1,0 +1,5 @@
+bez nálezu
+
+IM2 preserves mapped `null` and `undefined` as before U7; the test checks both values. [ImageWidgetInner.vue:485](/home/volar/projects/anzusystems/common-admin/src/domains/dam/imageWidget/components/ImageWidgetInner.vue:485) · [damImageWidgetSites.test.ts:198](/home/volar/projects/anzusystems/common-admin/src/domains/dam/imageWidget/__tests__/damImageWidgetSites.test.ts:198)
+
+The IM2–IM5 assertions distinguish asset licence 5 from upload licence 2. The `stop()` case asserts only that no meter wait remains; the note describes that change. [damImageWidgetSites.test.ts:61](/home/volar/projects/anzusystems/common-admin/src/domains/dam/imageWidget/__tests__/damImageWidgetSites.test.ts:61) · [uploadServicePresets.test.ts:567](/home/volar/projects/anzusystems/common-admin/src/domains/dam/uploadQueue/__tests__/uploadServicePresets.test.ts:567) · [U7.md:120](/home/volar/projects/anzusystems/common-admin/doc/2.0.0-analyza/podklady/upload/krok5/impl/U7.md:120). Tests were not run, as requested.

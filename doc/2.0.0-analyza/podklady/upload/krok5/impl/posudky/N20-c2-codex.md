@@ -1,0 +1,5 @@
+[ImageWidgetMultipleInner.vue:363](/home/volar/projects/anzusystems/common-admin/src/domains/dam/imageWidget/components/ImageWidgetMultipleInner.vue:363): A mixed pick loses its selected order. An asset already in the upload licence is added immediately; a copied asset is appended only when the queue is applied, so a selection of X then Y becomes Y then X.
+
+[ImageWidgetMultipleInner.vue:249](/home/volar/projects/anzusystems/common-admin/src/domains/dam/imageWidget/components/ImageWidgetMultipleInner.vue:249): In case (b), the gallery fetches Y’s metadata using the licence currently browsed (A), rather than Y’s licence. Y is added, but its metadata can be lost or the fetch can show an error.
+
+[ImageWidgetsCopyToLicenceFailure.test.ts:212](/home/volar/projects/anzusystems/common-admin/src/domains/dam/imageWidget/__tests__/ImageWidgetsCopyToLicenceFailure.test.ts:212): The new branch tests are deterministic and can detect the targeted copy mistakes, but the mixed-pick test checks neither final image order nor metadata. Tests were not run, as requested.

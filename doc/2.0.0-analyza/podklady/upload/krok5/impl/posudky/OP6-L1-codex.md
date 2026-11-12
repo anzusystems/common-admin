@@ -1,0 +1,7 @@
+1. **Medium — [AAssetSelectMedia.vue](/home/volar/projects/anzusystems/common-admin/src/domains/dam/assetSelect/components/AAssetSelectMedia.vue:209):** `typeChange()` now invalidates the module-wide detail request and clears its shared loading flag. If another asset select instance has a detail read in flight, switching type here discards that instance’s answer and stops its loader too. The new test covers only one instance.
+
+2. **Low — [OP6-L1.md](/home/volar/projects/anzusystems/common-admin/doc/2.0.0-analyza/podklady/upload/krok5/impl/OP6-L1.md:67):** The claim that `texts` belongs to the image for which names were requested is false. Both handlers capture `detail.value.texts` *after* the name lookup; a dialog change during that lookup can bind it to another image. This race also existed before the patch.
+
+3. **Low — [2.0.0.md](/home/volar/projects/anzusystems/common-admin/doc/changelog/2.0.0.md:48):** The removed-prop entry omits `AAssetSelectMedia`, although the patch removes `onDetailLoadedCallback` from it.
+
+**Outside the patch:** no additional finding beyond those already listed in the step note. I found no changed existing test case; the defaults of `holdSaves` and `mountPicker` preserve their earlier behavior. I did not run tests, as requested.

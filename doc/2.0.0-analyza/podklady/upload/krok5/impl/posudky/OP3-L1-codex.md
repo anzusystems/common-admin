@@ -1,0 +1,13 @@
+1. **High — FE-32:** Closing the detail while its own save is still running can start the refresh before DAM stores the authors. The row keeps its author picker, so a later gallery save can reproduce finding 117. Fix this within OP3-L1. [AssetDetailSidebarMetadata.vue:65](/home/volar/projects/anzusystems/common-admin/src/domains/dam/assetDetail/components/AssetDetailSidebarMetadata.vue:65), [ImageWidgetMultipleInner.vue:485](/home/volar/projects/anzusystems/common-admin/src/domains/dam/imageWidget/components/ImageWidgetMultipleInner.vue:485).
+
+2. **Medium — FE-32:** A refresh that finishes after the widget is destroyed can mutate the shared image store of a newly opened gallery, including an editor’s author choice for the same asset. [ImageWidgetMultipleInner.vue:498](/home/volar/projects/anzusystems/common-admin/src/domains/dam/imageWidget/components/ImageWidgetMultipleInner.vue:498).
+
+3. **Medium — FE-32:** Opening another asset while the first refresh runs can change the global `cachedExtSystemId`. The final `offersAuthors` check may then skip the first asset’s rows when the second system disables authors. [ImageWidgetMultipleInner.vue:482](/home/volar/projects/anzusystems/common-admin/src/domains/dam/imageWidget/components/ImageWidgetMultipleInner.vue:482), [ImageWidgetMultipleInner.vue:498](/home/volar/projects/anzusystems/common-admin/src/domains/dam/imageWidget/components/ImageWidgetMultipleInner.vue:498).
+
+4. **Medium — FE-32:** Refreshes are chained, and `saveImages` waits for the chain without a local bound. A request that never settles blocks later detail refreshes and the gallery save; a rejected request is caught and does not block the chain. [ImageWidgetMultipleInner.vue:513](/home/volar/projects/anzusystems/common-admin/src/domains/dam/imageWidget/components/ImageWidgetMultipleInner.vue:513), [ImageWidgetMultipleInner.vue:527](/home/volar/projects/anzusystems/common-admin/src/domains/dam/imageWidget/components/ImageWidgetMultipleInner.vue:527).
+
+5. **Low — FE-32:** If the detail’s initial asset read fails, closing the empty detail retries it and can show the same error twice. This is worth correcting in this step. [ImageWidgetMultipleInner.vue:439](/home/volar/projects/anzusystems/common-admin/src/domains/dam/imageWidget/components/ImageWidgetMultipleInner.vue:439).
+
+6. **Outside this change, low:** The existing `--possibility` style overrides `--over`, so an enabled dropzone never shows its green “file over zone” colors. [AFileDropzone.vue:170](/home/volar/projects/anzusystems/common-admin/src/domains/ui/file/components/AFileDropzone.vue:170).
+
+No findings in FE-33–35, the public API, the changed tests, the step note, changelog, or the three translations. This was a read-only review; no tests were run.

@@ -1,0 +1,3 @@
+**No findings (bez nálezu).** The new checks cover the metadata arrival, 1 ms before 20 seconds, the 20-second mark, and later. `texts(el, true)` can detect a message line hidden by `v-show`: it checks the text node’s parent and ancestors for `display: none`.
+
+The cycle 3 findings are addressed, and I found no new U4/U5 false alarm or determinism issue. **Outside the change:** no findings. Tests were not run, as requested.

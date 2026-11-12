@@ -1,0 +1,1 @@
+No High, Medium, or Low findings. Both commits close the specified issues and follow `next`’s patterns. This was a read-only review; no tests or builds were run.

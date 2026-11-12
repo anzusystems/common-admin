@@ -1,0 +1,1 @@
+No findings in the c3 patch. Review was read-only; tests were not run.

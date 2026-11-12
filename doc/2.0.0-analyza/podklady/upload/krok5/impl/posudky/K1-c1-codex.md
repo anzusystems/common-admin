@@ -1,0 +1,3 @@
+**K1: No findings.** [lib.ts](/home/volar/projects/anzusystems/common-admin/src/lib.ts:1513) exports the three intended request functions under the specified names, and the new [test](/home/volar/projects/anzusystems/common-admin/src/test/publicExportsAdded.test.ts:37) checks their identity. The only finish-call change removes the unused argument; the image endpoint and request payload remain the same ([uploadApi.ts](/home/volar/projects/anzusystems/common-admin/src/domains/dam/api/uploadApi.ts:55), [uploadService.ts](/home/volar/projects/anzusystems/common-admin/src/domains/dam/uploadQueue/composables/uploadService.ts:30)). The patch adds no other public exports.
+
+**Outside the change: No findings.** Review was read only; tests were not run.

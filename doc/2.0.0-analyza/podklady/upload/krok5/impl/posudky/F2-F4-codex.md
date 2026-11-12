@@ -1,0 +1,7 @@
+F2 — **No finding** in the patch; array copies cover the mutable value types used by bulk fill.
+F4 — **No implementation finding** in the patch; the core stops the live run, preserves the server’s failure reason, and starts the next waiting row.
+F4 test — **Low:** [uploadNotificationEvents.test.ts](/home/volar/projects/anzusystems/common-admin/src/domains/dam/uploadQueue/__tests__/uploadNotificationEvents.test.ts:481) uses a real 150 ms wait for cancellation to settle, making that assertion timing dependent.
+F4 test — **Low:** [uploadNotificationEvents.test.ts](/home/volar/projects/anzusystems/common-admin/src/domains/dam/uploadQueue/__tests__/uploadNotificationEvents.test.ts:462) uses single-chunk files, so it does not check that later chunks stay unsent.
+Notes — **Low:** [F2.md](/home/volar/projects/anzusystems/common-admin/doc/2.0.0-analyza/podklady/upload/krok5/impl/F2.md:1) and [F4.md](/home/volar/projects/anzusystems/common-admin/doc/2.0.0-analyza/podklady/upload/krok5/impl/F4.md:1) name `impl-komp-lib`; the owner’s plan assigns both to `impl-jadro-lib`. The register matches the patches.
+Outside these changes — **Low:** [uploadQueuesStore.ts](/home/volar/projects/anzusystems/common-admin/src/domains/dam/uploadQueue/store/uploadQueuesStore.ts:260) assigns the same fetched arrays and custom-data object to every matching row, leaving those rows aliased after a detail update.
+Tests were not run, as requested.

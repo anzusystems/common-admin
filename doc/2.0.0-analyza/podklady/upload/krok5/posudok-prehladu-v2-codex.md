@@ -1,0 +1,3 @@
+**MISLEADING** — [Overview §0, lines 72–74](/home/volar/projects/anzusystems/common-admin/doc/2.0.0-analyza/podklady/upload/krok5/prehlad-zjednotenia.md:72) says the remaining decisions block nothing. [Implementation plan §7, lines 873–875](/home/volar/projects/anzusystems/common-admin/doc/2.0.0-analyza/podklady/upload/krok5/plan-implementacie.md:873) says three owner K-04 reviews block completion of U3, U5c, and U6.
+
+Checked the version 2 changes against the earlier seven findings, both designs, the log, plan §7, relevant code and locale files. The §0 counts still add up; the seven earlier findings are addressed. Read-only review; no files changed or checks run.

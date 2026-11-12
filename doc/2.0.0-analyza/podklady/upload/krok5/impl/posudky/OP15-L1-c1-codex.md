@@ -1,0 +1,5 @@
+M1 is closed when loading succeeds: the gallery loads the selected asset’s external-system fields before showing its detail ([ImageWidgetMultipleInner.vue:525](/home/volar/projects/anzusystems/common-admin/src/domains/dam/imageWidget/components/ImageWidgetMultipleInner.vue:525)).
+
+**Medium — failed load:** If the image-field request fails while another asset type returns nonempty fields, the loader still succeeds and caches `image: []`. The editor sees no image metadata fields, and later openings skip the load ([damConfigState.ts:177](/home/volar/projects/anzusystems/common-admin/src/domains/dam/config/composables/damConfigState.ts:177), [assetDetailExtSystem.ts:22](/home/volar/projects/anzusystems/common-admin/src/domains/dam/assetDetail/composables/assetDetailExtSystem.ts:22)).
+
+A different row or a detail closed during loading cannot replace the current detail; the store discards stale answers ([assetDetailStore.ts:58](/home/volar/projects/anzusystems/common-admin/src/domains/dam/assetDetail/store/assetDetailStore.ts:58)).

@@ -1,0 +1,1 @@
+No findings. Each case targets one distinct write and would fail without its cache mirror. The cases reset Pinia and cache state, and the renamed store ID is unique. Tests were not run, as requested.

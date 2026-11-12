@@ -1,0 +1,4 @@
+- **GAP** — Overview lines 92–97 list the V0 decisions but omit the optional concurrency B decision assigned to V0 in [plan-implementacie.md](/home/volar/projects/anzusystems/common-admin/doc/2.0.0-analyza/podklady/upload/krok5/plan-implementacie.md:970).
+- **MISLEADING** — Overview lines 13 and 97–98 say the U6 K-04 check covers only ZK23. That matches components 4.3, but [plan-implementacie.md](/home/volar/projects/anzusystems/common-admin/doc/2.0.0-analyza/podklady/upload/krok5/plan-implementacie.md:975) still tells the owner to check ZK26 too. The overview does not flag this conflict.
+
+Checked the version 3 changes against all eleven Opus points, core 10.3 §5.2 quotations, components 4.3, plan §7, relevant code, and the §0/§2/register counts. No files were changed; no tests or builds were run.

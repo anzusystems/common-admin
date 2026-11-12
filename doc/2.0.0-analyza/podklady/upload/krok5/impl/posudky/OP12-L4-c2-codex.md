@@ -1,0 +1,2 @@
+Low — The changelog says every clear sends one list request, but clearing to a non-empty default fetches the selected item by ID instead; when the value already equals that default, the watcher does not run. [2.0.0.md](/home/volar/projects/anzusystems/common-admin/doc/changelog/2.0.0.md:212), [AFilterRemoteAutocomplete.vue](/home/volar/projects/anzusystems/common-admin/src/domains/remoteAutocomplete/components/AFilterRemoteAutocomplete.vue:244).
+No other defect found in the requested c2 checks; this was a read-only review.

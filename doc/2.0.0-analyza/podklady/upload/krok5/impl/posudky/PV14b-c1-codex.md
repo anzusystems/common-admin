@@ -1,0 +1,2 @@
+P2 — **The selector boundary remains untested.** The new case mounts [AAssetListInner](/home/volar/projects/anzusystems/common-admin/src/domains/dam/__tests__/damNamedConfigurationComponents.test.ts:440) directly; a loss of `own` in the exported `AAssetSelect` would still pass. Mount that picker to cover (a).
+The granted ACL cases and unfiltered `default` client assertions cover (b) and (c). Review only; tests were not run.

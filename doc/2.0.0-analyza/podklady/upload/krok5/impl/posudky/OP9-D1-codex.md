@@ -1,0 +1,9 @@
+1. **Low — the new “open the asset again” text can briefly give the wrong instruction.** [AssetDetailSidebarMetadata.vue:172](/home/volar/projects/anzusystems/admin-dam/src/domains/coreDam/asset/components/detail/components/AssetDetailSidebarMetadata.vue:172), [assetListActions.ts:102](/home/volar/projects/anzusystems/admin-dam/src/domains/coreDam/asset/components/list/composables/assetListActions.ts:102). Start a full read while the main file is processing; let failure news arrive before an older read returns, then type while the follow-up quiet read is pending. After that read holds Save back, reopening through the same tile within five seconds can skip the full read, leaving Save disabled. The implementation note records this limit, but the changelog says reopening reads the asset whole without qualifying it.
+
+**Outside this patch (two findings):**
+
+2. **Low — a processed first image can still show a placeholder.** [assetDetailStore.ts:189](/home/volar/projects/anzusystems/admin-dam/src/domains/coreDam/asset/store/assetDetailStore.ts:189). Create an empty draft, type metadata, then upload its first image and wait for processing. The quiet read takes the file but leaves the asset status `draft`; the large image component requires `with_file`.
+
+3. **Low — the deletion message is hidden for a failed main file.** [AssetInfobox.vue:31](/home/volar/projects/anzusystems/admin-dam/src/domains/coreDam/asset/components/AssetInfobox.vue:31). Delete an asset whose main file failed. The failure alert takes precedence, so “Asset will be removed soon” does not appear.
+
+I found no weakened existing test or vacuous new test, and no other code, note, or changelog mismatch. This was a read-only review; I did not run tests or builds.
