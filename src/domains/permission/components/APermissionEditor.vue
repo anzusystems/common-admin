@@ -159,7 +159,7 @@ const getGrantOrigin = (subject: string, action: string) => {
             <tr>
               <td
                 :colspan="readonly ? 2 : 3"
-                class="text-headline-small font-weight-bold"
+                class="text-title-large font-weight-bold text-medium-emphasis"
               >
                 {{ translatePermission('subjects', permissionSubject) }}
                 <VBtn
