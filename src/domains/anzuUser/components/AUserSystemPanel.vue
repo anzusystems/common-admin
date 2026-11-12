@@ -86,6 +86,10 @@ const extraState = computed(() => {
 
 const EXTRA_STATE_COLOR = { ok: 'success', warn: 'warning', error: 'error' } as const
 
+const userLine = computed(() =>
+  user.value === null ? '' : [user.value.person.fullName, user.value.email].filter(Boolean).join(' · ')
+)
+
 const canRetry = computed(
   () => axes.value.access === UserSystemAccess.Unavailable || axes.value.access === UserSystemAccess.Unauthenticated
 )
@@ -104,64 +108,65 @@ defineExpose({
 </script>
 
 <template>
-  <div
-    class="d-flex align-center flex-wrap ga-2"
-    :data-cy="`user-system-panel-${descriptor.system}`"
-  >
-    <div class="font-weight-medium">{{ label }}</div>
-    <AUserSystemStatusChip :axes="axes" />
-    <VChip
-      v-if="extraState"
-      :color="EXTRA_STATE_COLOR[extraState.tone]"
-      label
-      size="small"
-    >
-      {{ extraState.label }}: {{ extraState.value }}
-    </VChip>
-    <div
-      v-if="user"
-      class="text-body-small text-medium-emphasis"
-    >
-      {{ user.person.fullName }} · {{ user.email }}
+  <div :data-cy="`user-system-panel-${descriptor.system}`">
+    <div class="d-flex align-center flex-wrap ga-2">
+      <div class="font-weight-medium">{{ label }}</div>
+      <VSpacer />
+      <AUserManageButton
+        v-if="showManage && manageTarget"
+        :target="manageTarget"
+        :system-label="label"
+      />
+      <AUserCreateInSystemButton
+        v-if="showCreate"
+        :system-label="label"
+        :create-note="descriptor.createNote"
+        :will-be-enabled="createEnabled"
+        :loading="creating"
+        :required-metadata="descriptor.requiredMetadata"
+        :user-id="userId"
+        :source="source"
+        @confirm="(user) => emit('create', descriptor, user)"
+      />
+      <span
+        v-if="showNoWriteRight"
+        class="text-body-small text-medium-emphasis"
+        data-cy="user-system-no-write"
+      >
+        {{ t('common.userSystem.state.noWriteRight') }}
+      </span>
+      <VBtn
+        v-if="canRetry"
+        size="small"
+        variant="text"
+        data-cy="user-system-retry"
+        @click="run"
+      >
+        {{ t('common.userSystem.button.retry') }}
+      </VBtn>
+    </div>
+    <div class="d-flex align-center flex-wrap ga-2 mt-1">
+      <AUserSystemStatusChip :axes="axes" />
+      <VChip
+        v-if="extraState"
+        :color="EXTRA_STATE_COLOR[extraState.tone]"
+        label
+        size="small"
+      >
+        {{ extraState.label }}: {{ extraState.value }}
+      </VChip>
+      <div
+        v-if="userLine"
+        class="text-body-small text-medium-emphasis"
+      >
+        {{ userLine }}
+      </div>
     </div>
     <div
       v-if="descriptor.enabledNote"
-      class="text-body-small text-medium-emphasis w-100"
+      class="text-body-small text-medium-emphasis mt-1"
     >
       {{ descriptor.enabledNote }}
     </div>
-    <VSpacer />
-    <AUserManageButton
-      v-if="showManage && manageTarget"
-      :target="manageTarget"
-      :system-label="label"
-    />
-    <AUserCreateInSystemButton
-      v-if="showCreate"
-      :system-label="label"
-      :create-note="descriptor.createNote"
-      :will-be-enabled="createEnabled"
-      :loading="creating"
-      :required-metadata="descriptor.requiredMetadata"
-      :user-id="userId"
-      :source="source"
-      @confirm="(user) => emit('create', descriptor, user)"
-    />
-    <span
-      v-if="showNoWriteRight"
-      class="text-body-small text-medium-emphasis"
-      data-cy="user-system-no-write"
-    >
-      {{ t('common.userSystem.state.noWriteRight') }}
-    </span>
-    <VBtn
-      v-if="canRetry"
-      size="small"
-      variant="text"
-      data-cy="user-system-retry"
-      @click="run"
-    >
-      {{ t('common.userSystem.button.retry') }}
-    </VBtn>
   </div>
 </template>

@@ -55,11 +55,12 @@ defineExpose({
 
 <template>
   <VCard variant="flat">
-    <VCardText class="d-flex flex-column ga-4">
+    <VCardText class="d-flex flex-column ga-3">
       <AUserSystemPanel
-        v-for="descriptor in descriptors"
+        v-for="(descriptor, index) in descriptors"
         :key="descriptor.system"
         ref="panels"
+        :class="{ 'border-b pb-3': index < descriptors.length - 1 }"
         :descriptor="descriptor"
         :user-id="userId"
         :readonly="readonly"
