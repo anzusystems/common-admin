@@ -79,8 +79,7 @@ const confirm = async () => {
       :disabled="disabled"
       :loading="loading"
       size="small"
-      variant="flat"
-      color="primary"
+      variant="text"
       data-cy="user-system-create"
       @click.stop="dialog = true"
     >

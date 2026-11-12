@@ -331,6 +331,7 @@ describe('a system the descriptor says may not be written', () => {
     await search(wrapper, '42')
     expect(wrapper.find('[data-cy="cross-system-toggle-weather"]').exists()).toBe(false)
     expect(wrapper.find('[data-cy="cross-system-bulk-disable"]').exists()).toBe(false)
+    expect(wrapper.find('[data-cy="cross-system-no-write-weather"]').exists()).toBe(true)
     wrapper.unmount()
     mounted = null
 
@@ -338,6 +339,27 @@ describe('a system the descriptor says may not be written', () => {
     await search(wrapper, '42')
     expect(wrapper.find('[data-cy="cross-system-toggle-weather"]').exists()).toBe(true)
     expect(wrapper.find('[data-cy="cross-system-bulk-disable"]').exists()).toBe(true)
+    expect(wrapper.find('[data-cy="cross-system-no-write-weather"]').exists()).toBe(false)
+  })
+
+  it('says the operator may not create where the person is missing, instead of offering create', async () => {
+    const wrapper = await mountOverview([
+      {
+        system: 'weather',
+        get: vi.fn().mockResolvedValue(emptyList()),
+        request: vi.fn().mockResolvedValue({ status: 200, data: person() }),
+      },
+      {
+        system: 'blog',
+        get: vi.fn().mockResolvedValue(emptyList()),
+        request: vi.fn().mockRejectedValue(notFound()),
+        canWrite: () => false,
+      },
+    ])
+    await search(wrapper, '42')
+    const row = wrapper.find('[data-cy="cross-system-row-blog"]')
+    expect(row.find('[data-cy="user-system-create"]').exists()).toBe(false)
+    expect(row.find('[data-cy="cross-system-no-write-blog"]').exists()).toBe(true)
   })
 
   it('does not write a system whose right went away after the dialog was opened', async () => {

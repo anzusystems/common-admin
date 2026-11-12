@@ -490,47 +490,65 @@ defineExpose({
           <template
             v-if="store.results.get(descriptor.system) && isActionable(store.results.get(descriptor.system)!.axes)"
           >
-            <VBtn
-              v-if="descriptorMayWrite(descriptor, 'update')"
-              size="small"
-              variant="text"
-              :loading="rowBusy.has(descriptor.system)"
-              :disabled="blockedByConflict"
-              :data-cy="`cross-system-toggle-${descriptor.system}`"
-              @click="toggleOne(descriptor, !store.results.get(descriptor.system)!.user!.enabled)"
+            <template v-if="descriptorMayWrite(descriptor, 'update')">
+              <VBtn
+                size="small"
+                variant="text"
+                :loading="rowBusy.has(descriptor.system)"
+                :disabled="blockedByConflict"
+                :data-cy="`cross-system-toggle-${descriptor.system}`"
+                @click="toggleOne(descriptor, !store.results.get(descriptor.system)!.user!.enabled)"
+              >
+                {{
+                  store.results.get(descriptor.system)!.user!.enabled
+                    ? t('common.userSystem.bulk.disable.title')
+                    : t('common.userSystem.bulk.enable.title')
+                }}
+              </VBtn>
+              <AUserManageButton
+                v-if="manageTargetFor(descriptor)"
+                :target="manageTargetFor(descriptor)!"
+                :system-label="labelFor(descriptor)"
+              />
+            </template>
+            <span
+              v-else
+              class="text-body-small text-medium-emphasis"
+              :data-cy="`cross-system-no-write-${descriptor.system}`"
             >
-              {{
-                store.results.get(descriptor.system)!.user!.enabled
-                  ? t('common.userSystem.bulk.disable.title')
-                  : t('common.userSystem.bulk.enable.title')
-              }}
-            </VBtn>
-            <AUserManageButton
-              v-if="manageTargetFor(descriptor) && descriptorMayWrite(descriptor, 'update')"
-              :target="manageTargetFor(descriptor)!"
-              :system-label="labelFor(descriptor)"
-            />
+              {{ t('common.userSystem.state.noWriteRight') }}
+            </span>
           </template>
           <!--
             Create is offered only when the person exists somewhere. That is the only way their global id is known.
           -->
-          <AUserCreateInSystemButton
+          <template
             v-else-if="
               foundAnywhere &&
               store.results.get(descriptor.system) &&
-              store.results.get(descriptor.system)!.axes.presence === 'absent' &&
-              descriptorMayWrite(descriptor, 'create')
+              store.results.get(descriptor.system)!.axes.presence === 'absent'
             "
-            :system-label="labelFor(descriptor)"
-            :create-note="descriptor.createNote"
-            :will-be-enabled="sourceEnabled"
-            :loading="rowBusy.has(descriptor.system)"
-            :disabled="blockedByConflict"
-            :required-metadata="descriptor.requiredMetadata"
-            :user-id="store.resolvedId"
-            :source="prefillSource"
-            @confirm="(user) => createFromSource(descriptor, user)"
-          />
+          >
+            <AUserCreateInSystemButton
+              v-if="descriptorMayWrite(descriptor, 'create')"
+              :system-label="labelFor(descriptor)"
+              :create-note="descriptor.createNote"
+              :will-be-enabled="sourceEnabled"
+              :loading="rowBusy.has(descriptor.system)"
+              :disabled="blockedByConflict"
+              :required-metadata="descriptor.requiredMetadata"
+              :user-id="store.resolvedId"
+              :source="prefillSource"
+              @confirm="(user) => createFromSource(descriptor, user)"
+            />
+            <span
+              v-else
+              class="text-body-small text-medium-emphasis"
+              :data-cy="`cross-system-no-write-${descriptor.system}`"
+            >
+              {{ t('common.userSystem.state.noWriteRight') }}
+            </span>
+          </template>
         </div>
       </VCardText>
     </VCard>

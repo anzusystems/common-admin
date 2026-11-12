@@ -65,6 +65,15 @@ const showCreate = computed(
   () => !props.readonly && isAuthoritativelyAbsent(axes.value) && descriptorMayWrite(props.descriptor, 'create')
 )
 
+const showNoWriteRight = computed(
+  () =>
+    (axes.value.load === UserSystemLoad.Loaded &&
+      user.value !== null &&
+      !isUndefined(props.descriptor.manage) &&
+      !descriptorMayWrite(props.descriptor, 'update')) ||
+    (!props.readonly && isAuthoritativelyAbsent(axes.value) && !descriptorMayWrite(props.descriptor, 'create'))
+)
+
 const manageTarget = computed(() => {
   if (user.value === null || isUndefined(props.descriptor.manage)) return null
   return props.descriptor.manage(user.value)
@@ -140,6 +149,13 @@ defineExpose({
       :source="source"
       @confirm="(user) => emit('create', descriptor, user)"
     />
+    <span
+      v-if="showNoWriteRight"
+      class="text-body-small text-medium-emphasis"
+      data-cy="user-system-no-write"
+    >
+      {{ t('common.userSystem.state.noWriteRight') }}
+    </span>
     <VBtn
       v-if="canRetry"
       size="small"
