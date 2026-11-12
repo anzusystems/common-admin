@@ -44,7 +44,6 @@ import AActionCloseButtonHistory from '@/domains/ui/buttons/action/components/AA
 import AActionCreateButton from '@/domains/ui/buttons/action/components/AActionCreateButton.vue'
 import AActionDeleteButton from '@/domains/ui/buttons/action/components/AActionDeleteButton.vue'
 import AActionEditButton from '@/domains/ui/buttons/action/components/AActionEditButton.vue'
-import AActionSaveAndCloseButton from '@/domains/ui/buttons/action/components/AActionSaveAndCloseButton.vue'
 import AActionSaveButton from '@/domains/ui/buttons/action/components/AActionSaveButton.vue'
 import ATableCopyIdButton from '@/domains/ui/buttons/table/components/ATableCopyIdButton.vue'
 import ATableDetailButton from '@/domains/ui/buttons/table/components/ATableDetailButton.vue'
@@ -821,7 +820,6 @@ export {
   AActionCreateButton,
   AActionDeleteButton,
   AActionEditButton,
-  AActionSaveAndCloseButton,
   AActionSaveButton,
   ATableCopyIdButton,
   ATableDetailButton,

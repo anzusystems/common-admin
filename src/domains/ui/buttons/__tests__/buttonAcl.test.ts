@@ -6,7 +6,6 @@ import AActionCreateButton from '@/domains/ui/buttons/action/components/AActionC
 import AActionDeleteButton from '@/domains/ui/buttons/action/components/AActionDeleteButton.vue'
 import AActionEditButton from '@/domains/ui/buttons/action/components/AActionEditButton.vue'
 import AActionSaveButton from '@/domains/ui/buttons/action/components/AActionSaveButton.vue'
-import AActionSaveAndCloseButton from '@/domains/ui/buttons/action/components/AActionSaveAndCloseButton.vue'
 import ATableEditButton from '@/domains/ui/buttons/table/components/ATableEditButton.vue'
 import ATableDetailButton from '@/domains/ui/buttons/table/components/ATableDetailButton.vue'
 import { useAuthStore } from '@/domains/auth/store/authStore'
@@ -36,7 +35,6 @@ const buttons: [string, unknown, Record<string, unknown>][] = [
   ['AActionEditButton', AActionEditButton, routeProps],
   ['AActionDeleteButton', AActionDeleteButton, {}],
   ['AActionSaveButton', AActionSaveButton, {}],
-  ['AActionSaveAndCloseButton', AActionSaveAndCloseButton, {}],
   ['ATableEditButton', ATableEditButton, routeProps],
   ['ATableDetailButton', ATableDetailButton, routeProps],
 ]
