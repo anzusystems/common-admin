@@ -3,6 +3,8 @@ import { storeToRefs } from 'pinia'
 import useVuelidate from '@vuelidate/core'
 import { useAlerts } from '@/domains/system/composables/alerts'
 import { handleRecordLoadError } from '@/domains/system/composables/recordPage'
+import { apiErrorStatus, USER_PROBE_ENTITY } from '@/domains/api/utils/apiErrors'
+import { HTTP_STATUS_NOT_FOUND } from '@/shared/statusCodes'
 import type { AxiosClientFn } from '@/domains/api/utils/client'
 import type { FilterConfig, FilterData } from '@/domains/filters/composables/filterFactory'
 import type { Pagination } from '@/domains/api/composables/pagination'
@@ -92,11 +94,7 @@ export const useAnzuUserActions = (params: AnzuUserActionsParams) => {
   const anzuUserOneStore = useAnzuUserOneStore()
   const { anzuUser, loadingAnzuUser } = storeToRefs(anzuUserOneStore)
 
-  /**
-   * What the server last returned, used to detect edits.
-   * It drives the dot on the owning tab and the leave guard. Switching tabs is not
-   * navigation, so the form stays dirty and the actual leave happens through a panel button.
-   */
+  /** What the server last returned, used to detect edits. It drives the dot on the active tab and the leave guard. */
   const pristine = ref<string>('')
   const snapshot = () => {
     pristine.value = JSON.stringify(anzuUserOneStore.anzuUser)
@@ -104,18 +102,27 @@ export const useAnzuUserActions = (params: AnzuUserActionsParams) => {
 
   const isDirty = computed(() => pristine.value !== '' && pristine.value !== JSON.stringify(anzuUser.value))
 
+  /** Raised by a fetch with `keepOnNotFound` that found no record: the person has no account in this system. */
+  const anzuUserNotFound = ref(false)
+
   /**
    * `true` once loaded, `false` when the page should leave (`handleRecordLoadError`), `undefined`
    * when a newer fetch took over or the request was stopped.
+   * With `keepOnNotFound` a 404 shows no alert and returns `undefined`, so the page stays, and raises `anzuUserNotFound`.
+   * The read is then named `USER_PROBE_ENTITY`, so the app's error logger skips the 404 as it does a probe's.
    */
-  const fetchAnzuUser = async (id: IntegerId, options: { signal?: AbortSignal } = {}): Promise<boolean | undefined> => {
+  const fetchAnzuUser = async (
+    id: IntegerId,
+    options: { signal?: AbortSignal; keepOnNotFound?: boolean } = {}
+  ): Promise<boolean | undefined> => {
     const generation = ++fetchGeneration
     const isLatest = () => fetchGeneration === generation
     anzuUserOneStore.setLoadingAnzuUser(true)
     try {
-      const { execute } = useFetchAnzuUser()
+      const { execute } = useFetchAnzuUser(options.keepOnNotFound ? USER_PROBE_ENTITY : undefined)
       const res = await execute({ urlParams: { id }, signal: options.signal })
       if (!isLatest()) return undefined
+      anzuUserNotFound.value = false
       anzuUserOneStore.setAnzuUser(res)
       // Snapshot after the form settles. Derived fields recompute in a watcher, and an earlier
       // baseline would mark an account with an empty stored full name as edited on open.
@@ -128,6 +135,8 @@ export const useAnzuUserActions = (params: AnzuUserActionsParams) => {
       // Not the previous record: Save would PUT it back to its own id from a page opened for another.
       anzuUserOneStore.reset(system)
       pristine.value = ''
+      anzuUserNotFound.value = options.keepOnNotFound === true && apiErrorStatus(error) === HTTP_STATUS_NOT_FOUND
+      if (anzuUserNotFound.value) return undefined
       return handleRecordLoadError(error) ? false : undefined
     } finally {
       if (isLatest()) anzuUserOneStore.setLoadingAnzuUser(false)
@@ -223,6 +232,7 @@ export const useAnzuUserActions = (params: AnzuUserActionsParams) => {
     cancelAnzuUserList,
     anzuUser,
     loadingAnzuUser,
+    anzuUserNotFound,
     fetchAnzuUser,
     createAnzuUser,
     updateAnzuUser,

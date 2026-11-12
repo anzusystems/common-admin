@@ -1,24 +1,29 @@
 <script lang="ts" setup>
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import AUserSystemPanel from '@/domains/anzuUser/components/AUserSystemPanel.vue'
 import type { AnyUserSystemDescriptor } from '@/domains/anzuUser/composables/userSystemDescriptor'
+import { useUserCreateFromSource } from '@/domains/anzuUser/composables/userCreateFromSource'
 import type { BaseUser } from '@/shared/types/AnzuUser'
 import type { IntegerId } from '@/shared/types/common'
 
-const props = defineProps<{
-  descriptors: AnyUserSystemDescriptor[]
-  userId: IntegerId
-  readonly?: boolean
-  /** Whether an account created from here would be switched on. The dialog states it. */
-  createEnabled?: boolean
-  /** What the owning system holds, to prefill the create form. */
-  source?: BaseUser | null
-  creatingSystem?: string | null
-}>()
+const props = withDefaults(
+  defineProps<{
+    /** The systems this admin does not manage, one row each. */
+    descriptors: AnyUserSystemDescriptor[]
+    userId: IntegerId
+    /** Where an account created from a row copies from, in order of preference; see `useUserCreateFromSource`. */
+    sources: AnyUserSystemDescriptor[]
+    readonly?: boolean
+  }>(),
+  {
+    readonly: false,
+  }
+)
 
-const emit = defineEmits<{
-  (e: 'create', descriptor: AnyUserSystemDescriptor, user: BaseUser): void
-}>()
+const { source, createEnabled, creatingSystem, loadSource, create } = useUserCreateFromSource({
+  userId: () => props.userId,
+  sources: () => props.sources,
+})
 
 /**
  * A read-only list of panels, not `AUserSystemOverview`. The overview adds search, bulk
@@ -31,9 +36,20 @@ const refreshSystem = (system: string) => {
   panels.value[index]?.refresh()
 }
 
+const onCreate = async (target: AnyUserSystemDescriptor, metadata: BaseUser) => {
+  if (await create(target, metadata)) refreshSystem(target.system)
+}
+
+onMounted(loadSource)
+
 defineExpose({
-  refresh: () => panels.value.forEach((panel) => panel?.refresh()),
+  refresh: () => {
+    void loadSource()
+    panels.value.forEach((panel) => panel?.refresh())
+  },
   refreshSystem,
+  /** The source record, for a page that names the person. */
+  source,
 })
 </script>
 
@@ -50,7 +66,7 @@ defineExpose({
         :create-enabled="createEnabled"
         :source="source"
         :creating="creatingSystem === descriptor.system"
-        @create="(target, user) => emit('create', target, user)"
+        @create="onCreate"
       />
     </VCardText>
   </VCard>

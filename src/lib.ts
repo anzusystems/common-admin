@@ -773,7 +773,13 @@ import {
 } from '@/domains/anzuUser/composables/userSystemDescriptor'
 
 import AUserTabsShell from '@/domains/anzuUser/components/AUserTabsShell.vue'
-import { OTHER_SYSTEMS_TAB } from '@/domains/anzuUser/utils/userTabs'
+import AUserOtherSystemsTable from '@/domains/anzuUser/components/AUserOtherSystemsTable.vue'
+import AUserMissingAccount from '@/domains/anzuUser/components/AUserMissingAccount.vue'
+import { OTHER_SYSTEMS_TAB, type UserSystemTab } from '@/domains/anzuUser/utils/userTabs'
+import {
+  useUserCreateFromSource,
+  type UseUserCreateFromSourceOptions,
+} from '@/domains/anzuUser/composables/userCreateFromSource'
 import { USER_PROBE_ENTITY, type UserSystemRefreshHook } from '@/domains/anzuUser/composables/userSystemProbe'
 
 import AUserSystemOverview from '@/domains/anzuUser/components/AUserSystemOverview.vue'
@@ -1528,7 +1534,12 @@ export {
   type UserSystemExtraState,
   type UserSystemManageTarget,
   AUserTabsShell,
+  AUserOtherSystemsTable,
+  AUserMissingAccount,
   OTHER_SYSTEMS_TAB,
+  type UserSystemTab,
+  useUserCreateFromSource,
+  type UseUserCreateFromSourceOptions,
   USER_PROBE_ENTITY,
   type UserSystemRefreshHook,
   AUserSystemOverview,

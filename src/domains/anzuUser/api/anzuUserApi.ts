@@ -45,8 +45,16 @@ export const useAnzuUserApi = <T extends AnzuUser = AnzuUser>({
 
   const useFetchAnzuUserList = () => useApiFetchList<T>({ client, system, entity, ...scope, urlTemplate: endPoint })
 
-  const useFetchAnzuUser = () =>
-    useApiRequest<T, null>({ client, method: 'GET', system, entity, ...scope, urlTemplate: endPoint + '/:id' })
+  /** `requestEntity` names the read in the error context, e.g. `USER_PROBE_ENTITY` where a 404 is expected. */
+  const useFetchAnzuUser = (requestEntity = entity) =>
+    useApiRequest<T, null>({
+      client,
+      method: 'GET',
+      system,
+      entity: requestEntity,
+      ...scope,
+      urlTemplate: endPoint + '/:id',
+    })
 
   const useCreateAnzuUser = () =>
     useApiRequest<T, T>({ client, method: 'POST', system, entity, ...scope, urlTemplate: endPoint })

@@ -94,8 +94,6 @@ const run = () => probe(props.userId)
 
 onMounted(run)
 
-// The panel is never re-created because `VWindowItem` hides it
-// with `v-show`. A new id has to reach it through this watcher.
 watch(() => props.userId, run)
 
 onBeforeUnmount(cancel)

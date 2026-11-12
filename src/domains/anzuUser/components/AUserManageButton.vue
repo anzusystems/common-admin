@@ -38,10 +38,7 @@ const label = computed(() =>
     location="top"
   >
     <template #activator="{ props: tooltipProps }">
-      <!--
-        An anchor, not a click handler, so middle-click, open in new tab and screen reader announcements work.
-        This is also why the tab bar never navigates: `VTab` renders `role="tab"` and cannot carry a link.
-      -->
+      <!-- An anchor, not a click handler, so middle-click, open in new tab and screen reader announcements work. -->
       <span v-bind="tooltipProps">
         <VBtn
           :to="to"

@@ -1,45 +1,28 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount, type VueWrapper } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
-import { createMemoryHistory, createRouter, type Router } from 'vue-router'
+import { defineComponent, h } from 'vue'
+import { createMemoryHistory, createRouter, RouterView, type Router } from 'vue-router'
 import type { AxiosInstance } from 'axios'
 import AUserTabsShell from '@/domains/anzuUser/components/AUserTabsShell.vue'
+import AUserSystemPanel from '@/domains/anzuUser/components/AUserSystemPanel.vue'
+import AUnsavedConfirmDialog from '@/domains/unsavedGuard/components/AUnsavedConfirmDialog.vue'
 import {
   defineUserSystemDescriptor,
   type AnyUserSystemDescriptor,
 } from '@/domains/anzuUser/composables/userSystemDescriptor'
 import { OTHER_SYSTEMS_TAB } from '@/domains/anzuUser/utils/userTabs'
 
-// The tab bar takes its tabs as a prop instead of deriving them from the descriptor array.
-// The list depends on the route, not on what the admin owns. admin-inhouse
-// owns four systems and has two tabs, because the system is part of the path.
+// Every tab is a link to a page of its own. The shell only draws the bar and marks the page shown.
 
-const record = (over: Record<string, unknown> = {}) => ({
-  id: 42,
-  email: 'jozef@sme.sk',
-  person: { firstName: 'Jozef', lastName: 'Mrkvicka', fullName: 'Jozef Mrkvicka' },
-  avatar: { color: '#4CAF50', text: 'JM' },
-  enabled: true,
-  roles: [],
-  permissions: {},
-  permissionGroups: [],
-  resolvedPermissions: {},
-  ...over,
-})
-
-const descriptor = (
-  system: string,
-  label: string,
-  request: ReturnType<typeof vi.fn>,
-  requiredMetadata = false
-): AnyUserSystemDescriptor =>
+const descriptor = (system: string, label: string, request = vi.fn()): AnyUserSystemDescriptor =>
   defineUserSystemDescriptor({
     system,
     label,
     client: () => ({ request }) as unknown as AxiosInstance,
     entity: 'anzuUser',
     isEnabled: () => true,
-    requiredMetadata,
+    requiredMetadata: false,
     idInput: true,
     endpoints: {
       anzuUser: { get: '/adm/v1/anzu-user/:id', put: '/adm/v1/anzu-user/:id', post: '/adm/v1/anzu-user' },
@@ -49,41 +32,51 @@ const descriptor = (
       list: '/adm/v1/anzu-user',
       probe: 'anzuUser',
     },
-    manage: () => ({ kind: 'external', href: 'https://example.test/users/42/edit' }),
   })
+
+const descriptors = [descriptor('cms', 'CMS'), descriptor('contentHub', 'Agentúry'), descriptor('dam', 'DAM')]
+
+const detailTabs = [
+  { system: 'cms', to: { name: 'cms', params: { id: '42' } } },
+  { system: 'contentHub', to: { name: 'contentHub', params: { id: '42' } } },
+]
+const editTabs = [
+  { system: 'cms', to: { name: 'cmsEdit', params: { id: '42' } } },
+  { system: 'contentHub', to: { name: 'contentHubEdit', params: { id: '42' } } },
+]
+const otherSystemsTo = (from: string) => ({ name: 'otherSystems', params: { id: '42' }, query: { from } })
+
+const Blank = { template: '<div />' }
 
 let mounted: VueWrapper | null = null
 let pinia = createPinia()
 let router: Router
 
-const mountShell = async (props: Record<string, unknown> = {}, query = '', navigate = true) => {
-  const request = vi.fn().mockResolvedValue({ status: 200, data: record() })
-  if (navigate) await router.replace('/users/42' + query)
+const mountShell = async (path: string, props: Record<string, unknown> = {}, slot = '<div class="page">page</div>') => {
+  await router.replace(path)
   mounted = mount(AUserTabsShell, {
     global: { plugins: [router, pinia] },
-    props: {
-      userId: 42,
-      owner: 'cms',
-      ownedTabs: ['cms', 'contentHub'],
-      descriptors: [
-        descriptor('cms', 'CMS', request),
-        descriptor('contentHub', 'Agentúry', request),
-        descriptor('dam', 'DAM', request),
-      ],
-      ...props,
-    },
-    slots: { default: '<div class="owner-form">the form</div>' },
+    props: { tabs: detailTabs, otherSystemsTo: otherSystemsTo('cms'), active: 'cms', descriptors, ...props },
+    slots: { default: slot },
   })
   await flushPromises()
-  return { wrapper: mounted, request }
+  return mounted
 }
+
+const tab = (wrapper: VueWrapper, name: string) => wrapper.find(`[data-cy="user-tab-${name}"]`)
 
 beforeEach(async () => {
   pinia = createPinia()
   setActivePinia(pinia)
   router = createRouter({
     history: createMemoryHistory(),
-    routes: [{ path: '/users/:id', component: { template: '<div />' } }],
+    routes: [
+      { path: '/users/:id', name: 'cms', component: Blank },
+      { path: '/users/:id/edit', name: 'cmsEdit', component: Blank },
+      { path: '/content-hub/users/:id', name: 'contentHub', component: Blank },
+      { path: '/content-hub/users/:id/edit', name: 'contentHubEdit', component: Blank },
+      { path: '/users/:id/other-systems', name: 'otherSystems', component: Blank },
+    ],
   })
   await router.push('/users/42')
   await router.isReady()
@@ -95,188 +88,116 @@ afterEach(() => {
 })
 
 describe('AUserTabsShell', () => {
-  it('draws the tabs it was given, in order, plus one for the rest', async () => {
-    const { wrapper } = await mountShell()
+  it('draws the tabs it was given, in order, plus the one for the rest', async () => {
+    const wrapper = await mountShell('/users/42')
 
-    const labels = wrapper.findAll('.v-tab').map((tab) => tab.text())
-    expect(labels[0]).toContain('CMS')
-    expect(labels[1]).toContain('Agentúry')
-    expect(labels[2]).toContain('Other systems')
-    expect(labels).toHaveLength(3)
+    const labels = wrapper.findAll('.v-tab').map((item) => item.text())
+    expect(labels).toEqual(['CMS', 'Agentúry', 'Other systems'])
   })
 
-  it('opens on the owning tab and puts the form in it', async () => {
-    const { wrapper } = await mountShell()
+  it('makes every tab a link to its page', async () => {
+    const wrapper = await mountShell('/users/42')
 
-    expect(wrapper.find('.owner-form').exists()).toBe(true)
+    expect(tab(wrapper, 'cms').attributes('href')).toBe('/users/42')
+    expect(tab(wrapper, 'contentHub').attributes('href')).toBe('/content-hub/users/42')
+    expect(tab(wrapper, OTHER_SYSTEMS_TAB).attributes('href')).toBe('/users/42/other-systems?from=cms')
   })
 
-  it('costs no foreign call until a tab is opened', async () => {
-    // Lazy by construction: `VWindowItem` renders its content on first activation.
-    // The plan dropped the pseudo-tab that would have loaded all eight up front.
-    const { request } = await mountShell()
+  it('links the edit pages from an edit page', async () => {
+    const wrapper = await mountShell('/users/42/edit', { tabs: editTabs })
 
-    expect(request).not.toHaveBeenCalled()
+    expect(tab(wrapper, 'cms').attributes('href')).toBe('/users/42/edit')
+    expect(tab(wrapper, 'contentHub').attributes('href')).toBe('/content-hub/users/42/edit')
   })
 
-  it('writes the open tab into the url with replace, so Back leaves the page', async () => {
-    // Order matters: navigate, then spy, then mount.
-    // The write under test is the one the shell makes when it settles on a tab. Here
-    // it settles on the owning tab because the link named a tab that no longer exists.
-    await router.replace('/users/42?tab=elections')
-    const replace = vi.spyOn(router, 'replace')
-    const push = vi.spyOn(router, 'push')
+  it('selects the tab of the page shown', async () => {
+    const wrapper = await mountShell('/content-hub/users/42', {
+      active: 'contentHub',
+      otherSystemsTo: otherSystemsTo('contentHub'),
+    })
 
-    await mountShell({}, '', false)
-
-    expect(router.currentRoute.value.query.tab).toBe('cms')
-    // `replace`, never `push`: with `push` the Back button would walk through the tabs instead of
-    // leaving the page.
-    expect(replace).toHaveBeenCalled()
-    expect(push).not.toHaveBeenCalled()
+    expect(tab(wrapper, 'contentHub').attributes('aria-selected')).toBe('true')
+    expect(tab(wrapper, 'cms').attributes('aria-selected')).toBe('false')
   })
 
-  it('opens the tab a link names', async () => {
-    const { wrapper } = await mountShell({}, '?tab=' + OTHER_SYSTEMS_TAB)
+  it('selects the other-systems tab on its page', async () => {
+    const wrapper = await mountShell('/users/42/other-systems?from=cms', { active: OTHER_SYSTEMS_TAB })
 
-    expect(wrapper.findAll('.v-window-item').length).toBeGreaterThan(0)
-    expect(router.currentRoute.value.query.tab).toBe(OTHER_SYSTEMS_TAB)
+    expect(tab(wrapper, OTHER_SYSTEMS_TAB).attributes('aria-selected')).toBe('true')
+    expect(tab(wrapper, 'cms').attributes('aria-selected')).toBe('false')
   })
 
-  it('ignores a tab that no longer exists and opens the owning one', async () => {
-    // A system dropped out of the configuration since the link was sent. An error would help nobody.
-    await mountShell({}, '?tab=elections')
+  it('draws no other-systems tab without its link', async () => {
+    const wrapper = await mountShell('/users/42', { otherSystemsTo: undefined })
 
-    await vi.waitFor(() => expect(router.currentRoute.value.query.tab).toBe('cms'))
+    expect(tab(wrapper, OTHER_SYSTEMS_TAB).exists()).toBe(false)
   })
 
-  it('lists exactly the systems that have no tab of their own', async () => {
-    const { wrapper } = await mountShell({}, '?tab=' + OTHER_SYSTEMS_TAB)
-    await flushPromises()
+  it('shows the page below the tabs', async () => {
+    const wrapper = await mountShell('/users/42')
 
-    expect(wrapper.find('[data-cy="user-system-panel-dam"]').exists()).toBe(true)
-    expect(wrapper.find('[data-cy="user-system-panel-cms"]').exists()).toBe(false)
+    expect(wrapper.find('.page').exists()).toBe(true)
   })
 
-  it('marks the owning tab when the form holds unsaved work', async () => {
-    const clean = await mountShell({ unsavedChanges: false })
-    expect(clean.wrapper.find('[data-cy="user-tab-unsaved"]').exists()).toBe(false)
-    clean.wrapper.unmount()
+  it('marks the active tab when the form holds unsaved work', async () => {
+    const clean = await mountShell('/users/42/edit', { tabs: editTabs, unsavedChanges: false })
+    expect(clean.find('[data-cy="user-tab-unsaved"]').exists()).toBe(false)
+    clean.unmount()
 
-    const dirty = await mountShell({ unsavedChanges: true })
-    expect(dirty.wrapper.find('[data-cy="user-tab-unsaved"]').exists()).toBe(true)
+    const dirty = await mountShell('/users/42/edit', { tabs: editTabs, unsavedChanges: true })
+    expect(tab(dirty, 'cms').find('[data-cy="user-tab-unsaved"]').exists()).toBe(true)
+    expect(tab(dirty, 'contentHub').find('[data-cy="user-tab-unsaved"]').exists()).toBe(false)
   })
 
-  it('creates the account the panel offers, copying the owner record as the server holds it', async () => {
-    // The shell owns this because the panel that offers Create is here, and the page would only pass the call through.
-    // Before this, the button opened a dialog whose Confirm did nothing.
-    const owner = vi.fn().mockResolvedValue({ status: 200, data: record({ enabled: true }) })
-    const absent = vi
-      .fn()
-      .mockRejectedValueOnce(
-        Object.assign(new Error('failed'), {
-          isAxiosError: true,
-          config: { url: '/adm/v1/anzu-user/42' },
-          response: { status: 404, data: {} },
-        })
-      )
-      .mockResolvedValue({ status: 201, data: record() })
-
-    await router.replace('/users/42?tab=' + OTHER_SYSTEMS_TAB)
-    mounted = mount(AUserTabsShell, {
+  it('asks before a tab leaves a form with unsaved work', async () => {
+    // A tab is real navigation now, so the shell's route-leave guard is what keeps the edits.
+    const Page = defineComponent({
+      setup: () => () =>
+        h(
+          AUserTabsShell,
+          { tabs: editTabs, otherSystemsTo: otherSystemsTo('cms'), active: 'cms', descriptors, unsavedChanges: true },
+          { default: () => h('div', 'form') }
+        ),
+    })
+    router.addRoute({ path: '/guarded/:id/edit', name: 'guarded', component: Page })
+    await router.replace('/guarded/42/edit')
+    mounted = mount(defineComponent({ setup: () => () => h(RouterView) }), {
       global: { plugins: [router, pinia] },
-      props: {
-        userId: 42,
-        owner: 'cms',
-        ownedTabs: ['cms'],
-        descriptors: [descriptor('cms', 'CMS', owner), descriptor('dam', 'DAM', absent)],
-      },
-      slots: { default: '<div class="owner-form">the form</div>' },
       attachTo: document.body,
     })
     await flushPromises()
-    await vi.waitFor(() => expect(absent).toHaveBeenCalled())
+
+    ;(mounted.find('[data-cy="user-tab-contentHub"]').element as HTMLElement).click()
     await flushPromises()
 
-    const create = document.querySelector('[data-cy="user-system-create"]') as HTMLElement
-    expect(create).not.toBeNull()
-    create.click()
+    expect(router.currentRoute.value.fullPath).toBe('/guarded/42/edit')
+    const dialog = mounted.findComponent(AUnsavedConfirmDialog)
+    expect(dialog.props('modelValue')).toBe(true)
+
+    dialog.vm.$emit('resolve', true)
     await flushPromises()
 
-    // Copying a person into another system copies whether they are enabled.
-    // The dialog has to say a working account is created. In blog and forum that means a public one.
-    expect(document.body.textContent).toContain('The account is created ready to use.')
-
-    const confirm = document.querySelector('[data-cy="user-system-create-confirm"]') as HTMLElement
-    confirm.click()
-    await flushPromises()
-    await vi.waitFor(() => expect(absent.mock.calls.length).toBeGreaterThan(1))
-
-    const posted = absent.mock.calls.find((call) => call[0].method?.toUpperCase() === 'POST')
-    expect(posted).toBeDefined()
-    const body = JSON.parse(posted![0].data)
-    expect(body.email).toBe('jozef@sme.sk')
-    expect(body.enabled).toBe(true)
-    // From the library factory, never assembled: a hand-built body would have the backend fill in
-    // `ROLE_USER`, leaving an account with a role nobody granted.
-    expect(body.roles).toEqual([])
+    expect(router.currentRoute.value.fullPath).toBe('/content-hub/users/42/edit')
   })
 
-  it('will not post a record the target would refuse, and asks for the missing fields instead', async () => {
-    // A person known only in blog, where `person` is not filled, is copied into a system whose profile requires it.
-    // A silent copy leaves an account that the target's own edit form refuses to save.
-    // The form in this dialog exists to prevent that.
-    const owner = vi.fn().mockResolvedValue({
-      status: 200,
-      data: record({ person: { firstName: '', lastName: '', fullName: '' } }),
-    })
-    const absent = vi
-      .fn()
-      .mockRejectedValueOnce(
-        Object.assign(new Error('failed'), {
-          isAxiosError: true,
-          config: { url: '/adm/v1/anzu-user/42' },
-          response: { status: 404, data: {} },
-        })
-      )
-      .mockResolvedValue({ status: 201, data: record() })
-
-    await router.replace('/users/42?tab=' + OTHER_SYSTEMS_TAB)
+  it('hands the refresh hook to the panels on the page', async () => {
+    // A first 401 may be an expired session. Only the app can refresh it, and the panels sit in the slot.
+    const request = vi.fn().mockRejectedValue(
+      Object.assign(new Error('failed'), {
+        isAxiosError: true,
+        config: { url: '/adm/v1/anzu-user/42' },
+        response: { status: 401, data: {} },
+      })
+    )
+    const refreshHook = vi.fn().mockResolvedValue(false)
+    await router.replace('/users/42/other-systems')
     mounted = mount(AUserTabsShell, {
       global: { plugins: [router, pinia] },
-      props: {
-        userId: 42,
-        owner: 'blog',
-        ownedTabs: ['blog'],
-        descriptors: [descriptor('blog', 'Blog', owner), descriptor('cms', 'CMS', absent, true)],
-      },
-      slots: { default: '<div class="owner-form">the form</div>' },
-      attachTo: document.body,
+      props: { tabs: detailTabs, active: OTHER_SYSTEMS_TAB, descriptors, refreshHook },
+      slots: { default: () => h(AUserSystemPanel, { descriptor: descriptor('dam', 'DAM', request), userId: 42 }) },
     })
     await flushPromises()
-    await vi.waitFor(() => expect(absent).toHaveBeenCalled())
-    await flushPromises()
 
-    ;(document.querySelector('[data-cy="user-system-create"]') as HTMLElement).click()
-    await flushPromises()
-    ;(document.querySelector('[data-cy="user-system-create-confirm"]') as HTMLElement).click()
-    await flushPromises()
-
-    expect(absent.mock.calls.some((call) => call[0].method?.toUpperCase() === 'POST')).toBe(false)
-    expect(document.querySelector('[data-cy="user-system-create-confirm"]')).not.toBeNull()
-  })
-
-  it('re-reads the panels when the page says the form was saved', async () => {
-    const { wrapper, request } = await mountShell({}, '?tab=' + OTHER_SYSTEMS_TAB)
-    await vi.waitFor(() => expect(request).toHaveBeenCalled())
-    const before = request.mock.calls.length
-
-    await (wrapper.vm as unknown as { refresh: () => void }).refresh()
-    await flushPromises()
-
-    // `VWindowItem` hides a panel with `v-show` rather than unmounting it, so without this it would
-    // go on showing what it read before the save -- and creating an account elsewhere copies from
-    // exactly that snapshot.
-    expect(request.mock.calls.length).toBeGreaterThan(before)
+    expect(refreshHook).toHaveBeenCalledWith('dam')
   })
 })
