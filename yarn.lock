@@ -14,12 +14,12 @@ __metadata:
     "@mdi/font": "npm:^7.4.47"
     "@sentry/vite-plugin": "npm:11.12.0"
     "@sentry/vue": "npm:^11.12.0"
-    "@tsconfig/node22": "npm:^22.0.6"
+    "@tsconfig/node22": "npm:^22.0.7"
     "@types/node": "npm:^24.19.2"
     "@types/rusha": "npm:^0.8.3"
     "@types/sortablejs": "npm:^1.15.9"
     "@typescript-eslint/parser": "npm:^8.72.2"
-    "@vitejs/plugin-vue": "npm:^6.0.10"
+    "@vitejs/plugin-vue": "npm:^6.0.11"
     "@vitest/browser": "npm:^5.1.0"
     "@vitest/browser-playwright": "npm:^5.1.0"
     "@vitest/ui": "npm:^5.1.0"
@@ -1829,10 +1829,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@tsconfig/node22@npm:^22.0.6":
-  version: 22.0.6
-  resolution: "@tsconfig/node22@npm:22.0.6"
-  checksum: 10/a74c1bf95086b80e8436da7e3e710bebab4c35ab7cf99348ae68c8fab6032387516e9e9b80a868908c570c5af937e0a75821fc994e14a0495e04c5fab04d3c63
+"@tsconfig/node22@npm:^22.0.7":
+  version: 22.0.7
+  resolution: "@tsconfig/node22@npm:22.0.7"
+  checksum: 10/735211abc18d7de76e7363304b4708b859dcb068a8f4e17a9e300922c65e0b63d72c04033e8f185cbb34816679d466609a3ead65e971cbebc031fe11be9227e7
   languageName: node
   linkType: hard
 
@@ -2134,15 +2134,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vitejs/plugin-vue@npm:^6.0.10":
-  version: 6.0.10
-  resolution: "@vitejs/plugin-vue@npm:6.0.10"
+"@vitejs/plugin-vue@npm:^6.0.11":
+  version: 6.0.11
+  resolution: "@vitejs/plugin-vue@npm:6.0.11"
   dependencies:
     "@rolldown/pluginutils": "npm:^1.0.1"
   peerDependencies:
     vite: ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0
-    vue: ^3.2.25 || ^3.6.0-rc.10
-  checksum: 10/00d1cc7768877045e1fe9976b27aeab96433eaa7a93fc8ca4f4e9d8ce8851c8c29459e3bf61a60eee7e9491684109c32ea61afca176ae4784fdb7c501d1eb629
+    vue: ^3.2.25 || ^3.6.0-rc.15
+  checksum: 10/9bbdb70dcdcf9edc76a765e231fe5347ea5963e6bf8e311501e8351b86a56a3c9bacaa7c98f5160e0f50ac35a6f226da16828a9b7e09b20c5bdb9158c663fb57
   languageName: node
   linkType: hard
 
