@@ -119,11 +119,11 @@ jobs:
     outputs:
       tarball-sha512: ${{ steps.pack.outputs.sha512 }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
       - run: corepack enable
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '24'
           cache: 'yarn'
@@ -151,7 +151,7 @@ jobs:
             exit 1
           fi
           echo "sha512=$(sha512sum "$tgz" | cut -d ' ' -f 1)" >> "$GITHUB_OUTPUT"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: manual-package
           path: ${{ runner.temp }}/package.tgz
@@ -174,10 +174,10 @@ jobs:
             echo "::error::The tag $TAG now points to $sha, not to the built commit $GITHUB_SHA; nothing is published."
             exit 1
           fi
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '24'
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: manual-package
           path: ${{ runner.temp }}/package
