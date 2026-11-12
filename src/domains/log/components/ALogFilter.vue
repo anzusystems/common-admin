@@ -4,6 +4,7 @@ import AFilterString from '@/domains/filters/components/AFilterString.vue'
 import AFilterTimeInterval from '@/domains/filters/components/AFilterTimeInterval.vue'
 import AFilterValueObjectOptionsSelect from '@/domains/filters/components/AFilterValueObjectOptionsSelect.vue'
 import AFilterWrapper from '@/domains/filters/components/AFilterWrapper.vue'
+import AFormValueObjectOptionsSelect from '@/domains/form/components/AFormValueObjectOptionsSelect.vue'
 import type { TimeIntervalToolsValue } from '@/domains/filters/composables/filterTimeIntervalTools'
 import { type LogTypeType, useLogType } from '@/domains/log/composables/logType'
 import { useLogLevel } from '@/domains/log/valueObject/LogLevel'
@@ -37,19 +38,10 @@ const { logTypeOptions } = useLogType()
           cols="12"
           sm="4"
         >
-          <!--
-            A plain select, not `AFilterValueObjectOptionsSelect`. That one throws
-            unless the name is a live filter field, and the type is not one.
-            The type picks the endpoint and lives in the route, so it survives a filter reset.
-          -->
-          <VSelect
+          <AFormValueObjectOptionsSelect
             :model-value="type"
             :items="logTypeOptions"
             :label="t('common.log.filter.type')"
-            item-title="title"
-            item-value="value"
-            density="compact"
-            variant="outlined"
             hide-details
             data-cy="filter-log-type"
             @update:model-value="emit('changeType', $event)"
