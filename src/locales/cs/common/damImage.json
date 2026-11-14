@@ -3,7 +3,7 @@
     "model": {
       "texts": {
         "description": "Popis",
-        "source": "Zdroj"
+        "source": "Kredit"
       },
       "flags": {
         "showSource": "Zobraziť zdroj"
@@ -60,6 +60,8 @@
   "asset": {
     "model": {
       "authors": "Autori",
+      "sources": "Zdroje",
+      "sourcesEmpty": "Žádné zdroje",
       "keywords": "Kľúčové slová",
       "mainFileSingleUse": "Jednorazová licencia",
       "autoDelete": "Automatické smazání"
@@ -200,6 +202,7 @@
       "create": "Vytvorenie autora"
     },
     "conflicts": "Konflikt autorov",
+    "sourceFound": "„{name}“ je zdroj, přidali jsme ho do Zdrojů",
     "filterMinChars": "Zadajte minimálne 2 znaky"
   },
   "uploadErrors": {

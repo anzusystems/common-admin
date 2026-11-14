@@ -37,6 +37,11 @@ import { generateUUIDv1 } from '@/utils/generator'
 import ASortableListEditor from '@/labs/listEditor/ASortableListEditor.vue'
 import AImageWidgetSimple from '@/components/damImage/AImageWidgetSimple.vue'
 import { fetchAuthorListByIds } from '@/components/damImage/uploadQueue/api/authorApi'
+import {
+  damCreditFromMap,
+  fetchDamCredit,
+} from '@/components/damImage/uploadQueue/composables/damCredit'
+import type { DamAuthor } from '@/components/damImage/uploadQueue/author/DamAuthor'
 import { useI18n } from 'vue-i18n'
 import useVuelidate from '@vuelidate/core'
 import { AImageMetadataValidationScopeSymbol } from '@/components/damImage/uploadQueue/composables/uploadValidations'
@@ -156,6 +161,8 @@ const fetchImagesOnLoad = async () => {
           ...imageRes,
           damAuthors: found ? found.authors : [],
           showDamAuthors: found ? found.authors.length === 0 : false,
+          damSources: found ? found.sources : [],
+          showDamSources: found ? found.sources.length === 0 : false,
           assetId: found ? found.id : undefined,
         }
       }),
@@ -233,8 +240,12 @@ const afterLimitDialogAdd = () => {
 const assetSelectConfirmMap = async (
   items: AssetSearchListItemDto[],
 ): Promise<ImageStoreItem[]> => {
-  const assetMetadataMap = new Map<DocId, { description: string; authorIds: DocId[] }>()
+  const assetMetadataMap = new Map<
+    DocId,
+    { description: string; authorIds: DocId[]; sourceIds: DocId[] }
+  >()
   const authorsMap = new Map<DocId, string>()
+  const damAuthorsMap = new Map<DocId, DamAuthor>()
   try {
     const idsByLicence: IdsGroupedByLicences = new Map()
     items.forEach((item) => {
@@ -256,6 +267,7 @@ const assetSelectConfirmMap = async (
         assetMetadataMap.set(assetDetail.id, {
           description: mapped.description,
           authorIds: [],
+          sourceIds: [],
         })
         authorsMap.set(assetDetail.id, mapped.source)
       })
@@ -266,15 +278,17 @@ const assetSelectConfirmMap = async (
             ? assetDetail.metadata.customData.description.trim()
             : '',
           authorIds: assetDetail.authors,
+          sourceIds: assetDetail.sources,
         })
       })
       const authorIdsByExtSystem = new Map<IntegerId, Set<DocId>>()
       for (const assetDetail of assetDetails) {
-        if (assetDetail.authors.length === 0) continue
+        if (assetDetail.authors.length === 0 && assetDetail.sources.length === 0) continue
         const extSystem = await getExtSystemByLicence(assetDetail.licence)
         if (!extSystem) continue
         const authorIds = authorIdsByExtSystem.get(extSystem) ?? new Set<DocId>()
         assetDetail.authors.forEach((authorId) => authorIds.add(authorId))
+        assetDetail.sources.forEach((sourceId) => authorIds.add(sourceId))
         authorIdsByExtSystem.set(extSystem, authorIds)
       }
       const authorsRes = await Promise.all(
@@ -283,7 +297,7 @@ const assetSelectConfirmMap = async (
         ),
       )
       authorsRes.flat().forEach((author) => {
-        authorsMap.set(author.id, author.name)
+        damAuthorsMap.set(author.id, author)
       })
     }
   } catch (e) {
@@ -293,6 +307,7 @@ const assetSelectConfirmMap = async (
   return items.map((asset) => {
     maxPosition.value++
     const authorIds = assetMetadataMap.get(asset.id)?.authorIds || []
+    const sourceIds = assetMetadataMap.get(asset.id)?.sourceIds || []
     const description = assetMetadataMap.get(asset.id)?.description ?? ''
 
     if (customAssetSelectMetadataToImageMap) {
@@ -316,23 +331,17 @@ const assetSelectConfirmMap = async (
         position: maxPosition.value,
         damAuthors: [],
         showDamAuthors: false,
+        damSources: [],
+        showDamSources: false,
         assetId: asset.id,
       }
     }
-
-    const authorNames: string[] = []
-    assetMetadataMap.get(asset.id)?.authorIds.forEach((authorId) => {
-      const name = authorsMap.get(authorId)
-      if (!isUndefined(name) && name.trim().length > 0) {
-        authorNames.push(name)
-      }
-    })
 
     return {
       key: generateUUIDv1(),
       texts: {
         description: description,
-        source: authorNames.join(', '),
+        source: damCreditFromMap(damAuthorsMap, sourceIds, authorIds),
       },
       flags: {
         showSource: true,
@@ -348,6 +357,8 @@ const assetSelectConfirmMap = async (
       position: maxPosition.value,
       damAuthors: authorIds,
       showDamAuthors: authorIds.length === 0,
+      damSources: sourceIds,
+      showDamSources: sourceIds.length === 0,
       assetId: asset.id,
     }
   })
@@ -429,6 +440,10 @@ const authorEnabled = computed(() => {
   return !!getDamConfigExtSystem(cachedExtSystemId.value)?.[DamAssetType.Image]?.authors?.enabled
 })
 
+const sourceEnabled = computed(() => {
+  return !!getDamConfigExtSystem(cachedExtSystemId.value)?.[DamAssetType.Image]?.sources?.enabled
+})
+
 const saveImages = async () => {
   // Empty store here means the fetch is pending or failed, not a user deletion — the empty
   // path below would detach every image.
@@ -445,16 +460,25 @@ const saveImages = async () => {
     const assetUpdateItems: AssetAuthorsItems = []
     const imagesRaw = toRaw(images.value)
     for (const image of imagesRaw) {
-      if (authorEnabled.value && image.showDamAuthors && image.assetId) {
-        assetUpdateItems.push({ id: image.assetId, authors: image.damAuthors })
+      const authorsShown = authorEnabled.value && image.showDamAuthors
+      const sourcesShown = sourceEnabled.value && image.showDamSources
+      if ((authorsShown || sourcesShown) && image.assetId) {
+        assetUpdateItems.push({
+          id: image.assetId,
+          authors: image.damAuthors,
+          ...(sourcesShown ? { sources: image.damSources } : {}),
+        })
       }
-      if (authorEnabled.value && image.showDamAuthors && image.damAuthors.length > 0) {
-        const authorsRes = await fetchAuthorListByIds(
+      if (
+        (authorsShown && image.damAuthors.length > 0) ||
+        (sourcesShown && image.damSources.length > 0)
+      ) {
+        image.texts.source = await fetchDamCredit(
           damClient,
           cachedExtSystemId.value,
+          image.damSources,
           image.damAuthors,
         )
-        image.texts.source = authorsRes.map((author) => author.name).join(', ')
       }
     }
     if (assetUpdateItems.length) {
@@ -470,6 +494,8 @@ const saveImages = async () => {
         ...resItem,
         damAuthors: [],
         showDamAuthors: false,
+        damSources: [],
+        showDamSources: false,
         assetId: undefined,
       }
     })
@@ -491,6 +517,10 @@ const saveImages = async () => {
         showDamAuthors: matchedImage
           ? matchedImage.damAuthors.length === 0
           : item.damAuthors.length === 0,
+        damSources: matchedImage ? matchedImage.damSources : item.damSources,
+        showDamSources: matchedImage
+          ? matchedImage.damSources.length === 0
+          : item.damSources.length === 0,
         assetId: item.assetId,
       }
     }
@@ -542,6 +572,8 @@ const createImageStoreItem = (): ImageStoreItem => ({
   position: 0,
   damAuthors: [],
   showDamAuthors: false,
+  damSources: [],
+  showDamSources: false,
   assetId: undefined,
 })
 
@@ -659,6 +691,7 @@ onMounted(() => {
               :source-label="sourceLabel"
               :edit-asset-label="editAssetLabel"
               :author-enabled="authorEnabled"
+              :source-enabled="sourceEnabled"
               @edit-asset="onEditAsset"
               @remove-item="removeItem"
             />

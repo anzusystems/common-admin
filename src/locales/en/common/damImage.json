@@ -3,7 +3,7 @@
     "model": {
       "texts": {
         "description": "Description",
-        "source": "Source"
+        "source": "Credit"
       },
       "flags": {
         "showSource": "Show source"
@@ -58,6 +58,8 @@
   "asset": {
     "model": {
       "authors": "Authors",
+      "sources": "Sources",
+      "sourcesEmpty": "No sources",
       "keywords": "Keywords",
       "mainFileSingleUse": "Single-use license",
       "autoDelete": "Automatic deletion"
@@ -198,6 +200,7 @@
       "create": "Creating author"
     },
     "conflicts": "Author conflicts",
+    "sourceFound": "“{name}” is a source, added to Sources",
     "filterMinChars": "Enter at least 2 characters"
   },
   "uploadErrors": {

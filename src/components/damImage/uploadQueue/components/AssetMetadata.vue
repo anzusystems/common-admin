@@ -16,6 +16,8 @@ import AuthorRemoteAutocompleteWithCached from '@/components/damImage/uploadQueu
 import KeywordRemoteAutocompleteWithCached from '@/components/damImage/uploadQueue/keyword/KeywordRemoteAutocompleteWithCached.vue'
 import { useDamKeywordAssetTypeConfig } from '@/components/damImage/uploadQueue/keyword/damKeywordConfig'
 import { useDamAuthorAssetTypeConfig } from '@/components/damImage/uploadQueue/author/damAuthorConfig'
+import { useDamSourceAssetTypeConfig } from '@/components/damImage/uploadQueue/source/damSourceConfig'
+import type { DamAuthor } from '@/components/damImage/uploadQueue/author/DamAuthor'
 import type { IntegerId } from '@/types/common'
 import ABooleanValue from '@/components/ABooleanValue.vue'
 import ARow from '@/components/ARow.vue'
@@ -81,6 +83,18 @@ const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(
   assetType.value,
   props.extSystem,
 )
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { sourceRequired, sourceEnabled } = useDamSourceAssetTypeConfig(
+  // eslint-disable-next-line vue/no-ref-object-reactivity-loss
+  assetType.value,
+  props.extSystem,
+)
+
+const onSourceFound = (author: DamAuthor) => {
+  if (!asset.value || asset.value.sources.includes(author.id)) return
+  asset.value.sources = [...asset.value.sources, author.id]
+  onAnyMetadataChange()
+}
 
 const { cachedUsers } = useDamCachedUsers()
 
@@ -164,6 +178,32 @@ const autoDeleteIn = computed(() => {
               </VCol>
             </VRow>
             <VRow
+              v-if="sourceEnabled"
+              density="comfortable"
+              class="my-2"
+            >
+              <VCol>
+                <ASystemEntityScope
+                  subject="author"
+                  system="dam"
+                >
+                  <AuthorRemoteAutocompleteWithCached
+                    v-model="asset.sources"
+                    :ext-system="extSystem"
+                    :label="t('common.damImage.asset.model.sources')"
+                    data-cy="custom-field-sources"
+                    source
+                    clearable
+                    multiple
+                    :disabled="readonly"
+                    :required="sourceRequired"
+                    :validation-scope="ADamAssetMetadataValidationScopeSymbol"
+                    @update:model-value="onAnyMetadataChange"
+                  />
+                </ASystemEntityScope>
+              </VCol>
+            </VRow>
+            <VRow
               v-if="authorEnabled"
               density="comfortable"
               class="my-2"
@@ -179,12 +219,14 @@ const autoDeleteIn = computed(() => {
                     :label="t('common.damImage.asset.model.authors')"
                     :author-conflicts="authorConflicts"
                     data-cy="custom-field-authors"
+                    :source="sourceEnabled ? false : undefined"
                     clearable
                     multiple
                     :disabled="readonly"
                     :required="authorRequired"
                     :validation-scope="ADamAssetMetadataValidationScopeSymbol"
                     @update:model-value="onAnyMetadataChange"
+                    @source-found="onSourceFound"
                   />
                 </ASystemEntityScope>
               </VCol>

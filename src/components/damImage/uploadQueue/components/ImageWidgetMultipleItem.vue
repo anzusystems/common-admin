@@ -12,6 +12,7 @@ import {
   useImageValidation,
 } from '@/components/damImage/uploadQueue/composables/uploadValidations'
 import AuthorRemoteAutocompleteWithCached from '@/components/damImage/uploadQueue/author/AuthorRemoteAutocompleteWithCached.vue'
+import type { DamAuthor } from '@/components/damImage/uploadQueue/author/DamAuthor'
 import ASystemEntityScope from '@/components/form/ASystemEntityScope.vue'
 import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/composables/extSystemIdForCached'
 
@@ -19,6 +20,7 @@ const props = withDefaults(
   defineProps<{
     index: number
     authorEnabled: boolean
+    sourceEnabled: boolean
     showSourceEnabled?: boolean
     sourceLabel?: string
     editAssetLabel?: string
@@ -42,10 +44,18 @@ const { cachedExtSystemId } = useExtSystemIdForCached()
 const authorConflicts = ref<DocId[]>([])
 const image = computed(() => imageStore.images[props.index])
 
+const authorsShown = computed(() => !!image.value?.showDamAuthors && props.authorEnabled)
+const sourcesShown = computed(() => !!image.value?.showDamSources && props.sourceEnabled)
+
 const imageSourceRequired = computed(() => {
   if (isNull(image.value) || isUndefined(image.value)) return true
-  return !(image.value.showDamAuthors && props.authorEnabled)
+  return !authorsShown.value && !sourcesShown.value
 })
+
+const onSourceFound = (author: DamAuthor) => {
+  if (image.value.damSources.includes(author.id)) return
+  image.value.damSources = [...image.value.damSources, author.id]
+}
 
 const { v$ } = useImageValidation(image, imageSourceRequired)
 
@@ -98,7 +108,29 @@ const removeItem = () => {
           </VCol>
         </VRow>
         <VRow
-          v-if="image.showDamAuthors && authorEnabled"
+          v-if="sourcesShown"
+          density="comfortable"
+        >
+          <VCol>
+            <ASystemEntityScope
+              subject="author"
+              system="dam"
+            >
+              <AuthorRemoteAutocompleteWithCached
+                v-model="image.damSources"
+                :ext-system="cachedExtSystemId"
+                :label="t('common.damImage.asset.model.sources')"
+                data-cy="custom-field-sources"
+                source
+                clearable
+                multiple
+                :validation-scope="AImageMetadataValidationScopeSymbol"
+              />
+            </ASystemEntityScope>
+          </VCol>
+        </VRow>
+        <VRow
+          v-if="authorsShown"
           density="comfortable"
         >
           <VCol>
@@ -112,15 +144,17 @@ const removeItem = () => {
                 :label="t('common.damImage.asset.model.authors')"
                 :author-conflicts="authorConflicts"
                 data-cy="custom-field-authors"
+                :source="sourcesShown ? false : undefined"
                 clearable
                 multiple
                 :validation-scope="AImageMetadataValidationScopeSymbol"
+                @source-found="onSourceFound"
               />
             </ASystemEntityScope>
           </VCol>
         </VRow>
         <VRow
-          v-else
+          v-if="!authorsShown && !sourcesShown"
           density="comfortable"
         >
           <VCol>

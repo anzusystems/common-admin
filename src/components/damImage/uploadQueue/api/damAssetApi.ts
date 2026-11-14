@@ -26,6 +26,7 @@ import {
 } from '@/model/error/AnzuApiForbiddenOperationError'
 import { AnzuFatalError } from '@/model/error/AnzuFatalError'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
+import { isDamSourceEnabled } from '@/components/damImage/uploadQueue/source/damSourceConfig'
 import { useApiFetchList } from '@/labs/api/useApiFetchList'
 import type { DamMediaFromDam } from '@/types/MediaAware'
 
@@ -40,6 +41,7 @@ export interface AssetMetadataBulkItem {
   id: DocId
   keywords: DocId[]
   authors: DocId[]
+  sources?: DocId[]
   described: boolean
   customData: AssetCustomData
   mainFileSingleUse: boolean | null
@@ -98,9 +100,10 @@ export const bulkUpdateAssetsMetadata = (
   endPoint: string,
   items: UploadQueueItem[],
   mainFileSingleUseOverride: boolean | undefined = undefined,
+  extSystem: IntegerId | undefined = undefined,
 ) => {
   return new Promise<AssetMetadataBulkItem[]>((resolve, reject) => {
-    const bulkItems = listItemsToMetadataBulkItems(items, mainFileSingleUseOverride)
+    const bulkItems = listItemsToMetadataBulkItems(items, mainFileSingleUseOverride, extSystem)
     updateMetadataSequence(client, endPoint, bulkItems)
       .then((responses) => {
         if (bulkItems.length === 0) {
@@ -206,6 +209,7 @@ async function updateMetadataSequence(
 function listItemsToMetadataBulkItems(
   items: UploadQueueItem[],
   mainFileSingleUseOverride: boolean | undefined = undefined,
+  extSystem: IntegerId | undefined = undefined,
 ) {
   const dtoItems: AssetMetadataBulkItem[] = []
   items.forEach((item) => {
@@ -214,6 +218,9 @@ function listItemsToMetadataBulkItems(
         id: item.assetId,
         keywords: item.keywords,
         authors: item.authors,
+        ...(!isUndefined(extSystem) && isDamSourceEnabled(item.assetType, extSystem)
+          ? { sources: item.sources }
+          : {}),
         described: true,
         customData: item.customData,
         mainFileSingleUse: isUndefined(mainFileSingleUseOverride)
@@ -272,6 +279,9 @@ export const updateAssetMetadata = (
       id: asset.id,
       keywords: asset.keywords,
       authors: asset.authors,
+      ...(isDamSourceEnabled(asset.attributes.assetType, extSystem)
+        ? { sources: asset.sources }
+        : {}),
       described: true,
       customData: asset.metadata.customData,
       mainFileSingleUse: mainFileSingleUse,
@@ -309,11 +319,15 @@ export const updateAssetAuthors = (
   endPoint: string,
   asset: AssetDetailItemDto,
   extSystem: IntegerId,
+  withSources = false,
 ) => {
   return new Promise((resolve, reject) => {
     const data: Partial<AssetMetadataBulkItem> = {
       id: asset.id,
       authors: asset.authors,
+      ...(withSources && isDamSourceEnabled(asset.attributes.assetType, extSystem)
+        ? { sources: asset.sources }
+        : {}),
       described: true,
     }
     client()
@@ -348,6 +362,7 @@ export type AssetAuthorsItems = AssetAuthorsItem[]
 export interface AssetAuthorsItem {
   id: DocId
   authors: DocId[]
+  sources?: DocId[]
 }
 
 async function updateAuthorsSequence(

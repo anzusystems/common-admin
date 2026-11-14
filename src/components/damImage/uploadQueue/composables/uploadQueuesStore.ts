@@ -256,6 +256,7 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
             // metadata (from queueItemMetadataProcessed)
             item.keywords = asset.keywords
             item.authors = asset.authors
+            item.sources = asset.sources
             item.customData = asset.metadata.customData
             item.mainFileSingleUse = asset.mainFileSingleUse
             item.mainFileInternal = asset.mainFileInternal
@@ -264,6 +265,7 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
             item.authorConflicts = getAuthorConflicts(asset.metadata.authorSuggestions)
             addToCachedKeywords(item.keywords)
             addToCachedAuthors(item.authors)
+            addToCachedAuthors(item.sources)
             addToCachedAuthors(item.authorConflicts)
             item.canEditMetadata = true
             processUpload(queueKey)
@@ -306,12 +308,14 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
           }
           item.keywords = assetRes.keywords
           item.authors = assetRes.authors
+          item.sources = assetRes.sources
           item.customData = assetRes.metadata.customData
           updateNewNames(assetRes.metadata.authorSuggestions, queue.suggestions.newAuthorNames)
           updateNewNames(assetRes.metadata.keywordSuggestions, queue.suggestions.newKeywordNames)
           item.authorConflicts = getAuthorConflicts(assetRes!.metadata.authorSuggestions)
           addToCachedKeywords(item.keywords)
           addToCachedAuthors(item.authors)
+          addToCachedAuthors(item.sources)
           addToCachedAuthors(item.authorConflicts)
           item.assetId = assetRes.id
           item.mainFileSingleUse = assetRes.mainFileSingleUse
@@ -357,6 +361,7 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
             clearTimeout(item.notificationFallbackTimer)
             item.keywords = asset.keywords
             item.authors = asset.authors
+            item.sources = asset.sources
             item.customData = asset.metadata.customData
             item.mainFileSingleUse = asset.mainFileSingleUse
             item.mainFileInternal = asset.mainFileInternal
@@ -365,6 +370,7 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
             item.authorConflicts = getAuthorConflicts(asset.metadata.authorSuggestions)
             addToCachedKeywords(item.keywords)
             addToCachedAuthors(item.authors)
+            addToCachedAuthors(item.sources)
             addToCachedAuthors(item.authorConflicts)
             item.canEditMetadata = true
           }
@@ -396,12 +402,14 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
             item.mainFileInternal = asset.mainFileInternal
             item.keywords = asset.keywords
             item.authors = asset.authors
+            item.sources = asset.sources
             item.customData = asset.metadata.customData
             updateNewNames(asset.metadata.authorSuggestions, queue.suggestions.newAuthorNames)
             updateNewNames(asset.metadata.keywordSuggestions, queue.suggestions.newKeywordNames)
             item.authorConflicts = getAuthorConflicts(asset.metadata.authorSuggestions)
             addToCachedKeywords(item.keywords)
             addToCachedAuthors(item.authors)
+            addToCachedAuthors(item.sources)
             addToCachedAuthors(item.authorConflicts)
             item.canEditMetadata = true
             processUpload(queueKey)
@@ -450,12 +458,14 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
             clearTimeout(item.notificationFallbackTimer)
             item.keywords = assetRes.keywords
             item.authors = assetRes.authors
+            item.sources = assetRes.sources
             item.customData = assetRes.metadata.customData
             updateNewNames(assetRes.metadata.authorSuggestions, queue.suggestions.newAuthorNames)
             updateNewNames(assetRes.metadata.keywordSuggestions, queue.suggestions.newKeywordNames)
             item.authorConflicts = getAuthorConflicts(assetRes.metadata.authorSuggestions)
             addToCachedKeywords(item.keywords)
             addToCachedAuthors(item.authors)
+            addToCachedAuthors(item.sources)
             addToCachedAuthors(item.authorConflicts)
           }
         })

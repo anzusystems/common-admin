@@ -18,6 +18,8 @@ import { ADamAssetMetadataValidationScopeSymbol } from '@/components/damImage/up
 import { dateTimePretty } from '@/utils/datetime'
 import { useDamKeywordAssetTypeConfig } from '@/components/damImage/uploadQueue/keyword/damKeywordConfig'
 import { useDamAuthorAssetTypeConfig } from '@/components/damImage/uploadQueue/author/damAuthorConfig'
+import { useDamSourceAssetTypeConfig } from '@/components/damImage/uploadQueue/source/damSourceConfig'
+import type { DamAuthor } from '@/components/damImage/uploadQueue/author/DamAuthor'
 import type { IntegerId } from '@/types/common'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 
@@ -79,6 +81,19 @@ const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(
   props.extSystem,
 )
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { sourceRequired, sourceEnabled } = useDamSourceAssetTypeConfig(
+  // eslint-disable-next-line vue/no-ref-object-reactivity-loss
+  assetType.value,
+  props.extSystem,
+)
+
+const onSourceFound = (author: DamAuthor) => {
+  if (!item.value || item.value.sources.includes(author.id)) return
+  item.value.sources = [...item.value.sources, author.id]
+  onAnyMetadataChange()
+}
+
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { mainFileSingleUseEnabled, showFileInfoEnabled } = useCommonAdminCoreDamOptions(
   props.configName,
 )
@@ -132,6 +147,32 @@ const { mainFileSingleUseEnabled, showFileInfoEnabled } = useCommonAdminCoreDamO
                 </VCol>
               </VRow>
               <VRow
+                v-if="sourceEnabled"
+                density="comfortable"
+                class="my-2"
+              >
+                <VCol>
+                  <ASystemEntityScope
+                    subject="author"
+                    system="dam"
+                  >
+                    <AuthorRemoteAutocompleteWithCached
+                      v-model="item.sources"
+                      :label="t('common.damImage.asset.model.sources')"
+                      data-cy="custom-field-sources"
+                      :ext-system="extSystem"
+                      source
+                      clearable
+                      multiple
+                      :disabled="!item.canEditMetadata"
+                      :required="sourceRequired"
+                      :validation-scope="ADamAssetMetadataValidationScopeSymbol"
+                      @update:model-value="onAnyMetadataChange"
+                    />
+                  </ASystemEntityScope>
+                </VCol>
+              </VRow>
+              <VRow
                 v-if="authorEnabled"
                 density="comfortable"
                 class="my-2"
@@ -147,12 +188,14 @@ const { mainFileSingleUseEnabled, showFileInfoEnabled } = useCommonAdminCoreDamO
                       :author-conflicts="authorConflicts"
                       data-cy="custom-field-authors"
                       :ext-system="extSystem"
+                      :source="sourceEnabled ? false : undefined"
                       clearable
                       multiple
                       :disabled="!item.canEditMetadata"
                       :required="authorRequired"
                       :validation-scope="ADamAssetMetadataValidationScopeSymbol"
                       @update:model-value="onAnyMetadataChange"
+                      @source-found="onSourceFound"
                     />
                   </ASystemEntityScope>
                 </VCol>

@@ -128,6 +128,7 @@ onMounted(() => {
   list.value.forEach((item) => {
     addToCachedKeywords(item.keywords)
     addToCachedAuthors(item.authors)
+    addToCachedAuthors(item.sources)
   })
   fetchCachedKeywords()
   fetchCachedAuthors()
@@ -160,6 +161,7 @@ onBeforeUnmount(() => {
             v-model:custom-data="item.customData"
             v-model:keywords="item.keywords"
             v-model:authors="item.authors"
+            v-model:sources="item.sources"
             v-model:main-file-single-use="item.mainFileSingleUse"
             :main-file-single-use-enabled="mainFileSingleUseEnabled"
             :ext-system="extSystem"

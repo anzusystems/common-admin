@@ -8,7 +8,8 @@ import AssetCustomMetadataFormMassOperations from '@/components/damImage/uploadQ
 import AuthorRemoteAutocompleteWithCached from '@/components/damImage/uploadQueue/author/AuthorRemoteAutocompleteWithCached.vue'
 import KeywordRemoteAutocompleteWithCached from '@/components/damImage/uploadQueue/keyword/KeywordRemoteAutocompleteWithCached.vue'
 import { useUploadQueueMassOperations } from '@/components/damImage/uploadQueue/composables/uploadQueueMassOperations'
-import type { IntegerId } from '@/types/common'
+import type { DocId, IntegerId } from '@/types/common'
+import type { DamAuthor } from '@/components/damImage/uploadQueue/author/DamAuthor'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 
 const props = withDefaults(
@@ -22,6 +23,7 @@ const props = withDefaults(
 const massOperationsData = ref({ image: {}, video: {}, audio: {}, document: {} })
 const massOperationsKeywords = ref([])
 const massOperationsAuthors = ref([])
+const massOperationsSources = ref<DocId[]>([])
 
 const { t } = useI18n()
 
@@ -29,7 +31,12 @@ const panels = ref<Array<string>>(['general'])
 
 const uploadQueuesStore = useUploadQueuesStore()
 
-const { replaceEmptyCustomDataValue, replaceEmptyAuthors, replaceEmptyKeywords } =
+const {
+  replaceEmptyCustomDataValue,
+  replaceEmptyAuthors,
+  replaceEmptySources,
+  replaceEmptyKeywords,
+} =
   // eslint-disable-next-line vue/no-setup-props-reactivity-loss
   useUploadQueueMassOperations(props.queueKey)
 
@@ -58,6 +65,17 @@ const fillEmptyAuthors = () => {
 }
 const replaceAuthors = () => {
   replaceEmptyAuthors(massOperationsAuthors.value, true)
+}
+const fillEmptySources = () => {
+  replaceEmptySources(massOperationsSources.value)
+}
+const replaceSources = () => {
+  replaceEmptySources(massOperationsSources.value, true)
+}
+const onSourceFound = (author: DamAuthor) => {
+  if (!massOperationsSources.value.includes(author.id)) {
+    massOperationsSources.value = [...massOperationsSources.value, author.id]
+  }
 }
 const fillAll = (forceReplace = false) => {
   for (const [elementProperty, value] of Object.entries(massOperationsData.value.image)) {
@@ -103,6 +121,9 @@ const fillAll = (forceReplace = false) => {
   if (authorEnabled.value) {
     forceReplace ? replaceAuthors() : fillEmptyAuthors()
   }
+  if (sourceEnabled.value) {
+    forceReplace ? replaceSources() : fillEmptySources()
+  }
   if (keywordEnabled.value) {
     forceReplace ? replaceKeywords() : fillEmptyKeywords()
   }
@@ -110,6 +131,7 @@ const fillAll = (forceReplace = false) => {
 const clearForm = () => {
   massOperationsData.value = { image: {}, video: {}, audio: {}, document: {} }
   if (authorEnabled.value) massOperationsAuthors.value = []
+  if (sourceEnabled.value) massOperationsSources.value = []
   if (keywordEnabled.value) massOperationsKeywords.value = []
 }
 
@@ -129,6 +151,12 @@ const authorEnabled = computed(() => {
   const config = getDamConfigExtSystem(props.extSystem)
   if (!config) return false
   return assetTypes.value.some((type) => !!config[type]?.authors?.enabled)
+})
+
+const sourceEnabled = computed(() => {
+  const config = getDamConfigExtSystem(props.extSystem)
+  if (!config) return false
+  return assetTypes.value.some((type) => !!config[type]?.sources?.enabled)
 })
 
 onMounted(() => {
@@ -154,7 +182,7 @@ onMounted(() => {
           class="v-expansion-panels--compact"
         >
           <VExpansionPanel
-            v-if="keywordEnabled || authorEnabled"
+            v-if="keywordEnabled || authorEnabled || sourceEnabled"
             elevation="0"
             :title="t('common.damImage.asset.massOperations.general')"
             value="general"
@@ -215,6 +243,61 @@ onMounted(() => {
                 </VCol>
               </VRow>
               <VRow
+                v-if="sourceEnabled"
+                density="comfortable"
+                class="my-2"
+              >
+                <VCol>
+                  <ASystemEntityScope
+                    subject="author"
+                    system="dam"
+                  >
+                    <div class="d-flex">
+                      <div style="min-width: 286px">
+                        <AuthorRemoteAutocompleteWithCached
+                          v-model="massOperationsSources"
+                          :label="t('common.damImage.asset.model.sources')"
+                          :ext-system="extSystem"
+                          source
+                          clearable
+                          multiple
+                          :validation-scope="false"
+                        />
+                      </div>
+                      <VBtn
+                        icon
+                        size="small"
+                        variant="text"
+                        class="mr-1"
+                        @click.stop="fillEmptySources"
+                      >
+                        <VIcon icon="mdi-file-arrow-left-right-outline" />
+                        <VTooltip
+                          activator="parent"
+                          location="bottom"
+                        >
+                          {{ t('common.damImage.asset.massOperations.fillOneEmpty') }}
+                        </VTooltip>
+                      </VBtn>
+                      <VBtn
+                        icon
+                        size="small"
+                        variant="text"
+                        @click.stop="replaceSources"
+                      >
+                        <VIcon icon="mdi-file-replace-outline" />
+                        <VTooltip
+                          activator="parent"
+                          location="bottom"
+                        >
+                          {{ t('common.damImage.asset.massOperations.replaceOne') }}
+                        </VTooltip>
+                      </VBtn>
+                    </div>
+                  </ASystemEntityScope>
+                </VCol>
+              </VRow>
+              <VRow
                 v-if="authorEnabled"
                 density="comfortable"
                 class="my-2"
@@ -230,9 +313,11 @@ onMounted(() => {
                           v-model="massOperationsAuthors"
                           :label="t('common.damImage.asset.model.authors')"
                           :ext-system="extSystem"
+                          :source="sourceEnabled ? false : undefined"
                           clearable
                           multiple
                           :validation-scope="false"
+                          @source-found="onSourceFound"
                         />
                       </div>
                       <VBtn

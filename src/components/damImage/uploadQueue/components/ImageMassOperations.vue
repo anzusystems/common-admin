@@ -14,31 +14,42 @@ import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/compo
 import { buildFieldRules } from '@/components/damImage/uploadQueue/composables/uploadValidations'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import { DamAssetType } from '@/types/coreDam/Asset'
+import type { DocId } from '@/types/common'
+import type { DamAuthor } from '@/components/damImage/uploadQueue/author/DamAuthor'
 
-const texts = ref({ description: '', source: '', authors: [] })
+const texts = ref<{ description: string; source: string; authors: DocId[]; sources: DocId[] }>({
+  description: '',
+  source: '',
+  authors: [],
+  sources: [],
+})
+
+const onSourceFound = (author: DamAuthor) => {
+  if (!texts.value.sources.includes(author.id)) {
+    texts.value.sources = [...texts.value.sources, author.id]
+  }
+}
 
 const imageStore = useImageStore()
 const { images } = storeToRefs(imageStore)
-const { replaceEmptyDescription, replaceEmptySource, replaceEmptyAuthors } =
+const { replaceEmptyDescription, replaceEmptySource, replaceEmptyAuthors, replaceEmptySources } =
   useImageMassOperations()
 const { t } = useI18n()
 
-const fillAll = (forceReplace: boolean) => {
+const fillAll = async (forceReplace: boolean) => {
   replaceEmptyDescription(texts.value.description, forceReplace)
-  if (authorEnabled.value && showDamAuthorsAtLeastOne.value) {
-    replaceEmptyAuthors(texts.value.authors, forceReplace)
-  } else {
+  if (authorsShown.value) await replaceEmptyAuthors(texts.value.authors, forceReplace)
+  if (sourcesShown.value) await replaceEmptySources(texts.value.sources, forceReplace)
+  if (!authorsShown.value && !sourcesShown.value) {
     replaceEmptySource(texts.value.source, forceReplace)
   }
 }
 
 const clearForm = () => {
   texts.value.description = ''
-  if (authorEnabled.value && showDamAuthorsAtLeastOne.value) {
-    texts.value.authors = []
-  } else {
-    texts.value.source = ''
-  }
+  if (authorsShown.value) texts.value.authors = []
+  if (sourcesShown.value) texts.value.sources = []
+  if (!authorsShown.value && !sourcesShown.value) texts.value.source = ''
 }
 
 const { cachedExtSystemId } = useExtSystemIdForCached()
@@ -47,6 +58,10 @@ const { getDamConfigExtSystem } = useDamConfigState()
 
 const authorEnabled = computed(() => {
   return !!getDamConfigExtSystem(cachedExtSystemId.value)?.[DamAssetType.Image]?.authors?.enabled
+})
+
+const sourceEnabled = computed(() => {
+  return !!getDamConfigExtSystem(cachedExtSystemId.value)?.[DamAssetType.Image]?.sources?.enabled
 })
 
 const { descriptionValidation, sourceValidation, sourceLabel } = useCommonAdminCoreDamOptions()
@@ -64,6 +79,14 @@ const showDamAuthorsAtLeastOne = computed(() => {
   if (images.value.length === 0) return false
   return images.value.length && images.value.some((item) => item?.showDamAuthors)
 })
+
+const showDamSourcesAtLeastOne = computed(() => {
+  if (images.value.length === 0) return false
+  return images.value.length && images.value.some((item) => item?.showDamSources)
+})
+
+const authorsShown = computed(() => authorEnabled.value && !!showDamAuthorsAtLeastOne.value)
+const sourcesShown = computed(() => sourceEnabled.value && !!showDamSourcesAtLeastOne.value)
 </script>
 
 <template>
@@ -112,7 +135,62 @@ const showDamAuthorsAtLeastOne = computed(() => {
       </VCol>
     </VRow>
     <VRow
-      v-if="authorEnabled && showDamAuthorsAtLeastOne"
+      v-if="sourcesShown"
+      density="comfortable"
+      class="mt-4"
+    >
+      <VCol>
+        <ASystemEntityScope
+          subject="keyword"
+          system="dam"
+        >
+          <div class="d-flex">
+            <div style="flex-grow: 1">
+              <AuthorRemoteAutocompleteWithCached
+                v-model="texts.sources"
+                :ext-system="cachedExtSystemId"
+                :label="t('common.damImage.asset.model.sources')"
+                source
+                clearable
+                multiple
+                :validation-scope="false"
+              />
+            </div>
+            <VBtn
+              icon
+              size="small"
+              variant="text"
+              class="mr-1"
+              @click.stop="replaceEmptySources(texts.sources, false)"
+            >
+              <VIcon icon="mdi-file-arrow-left-right-outline" />
+              <VTooltip
+                activator="parent"
+                location="bottom"
+              >
+                {{ t('common.damImage.asset.massOperations.fillOneEmpty') }}
+              </VTooltip>
+            </VBtn>
+            <VBtn
+              icon
+              size="small"
+              variant="text"
+              @click.stop="replaceEmptySources(texts.sources, true)"
+            >
+              <VIcon icon="mdi-file-replace-outline" />
+              <VTooltip
+                activator="parent"
+                location="bottom"
+              >
+                {{ t('common.damImage.asset.massOperations.replaceOne') }}
+              </VTooltip>
+            </VBtn>
+          </div>
+        </ASystemEntityScope>
+      </VCol>
+    </VRow>
+    <VRow
+      v-if="authorsShown"
       density="comfortable"
       class="mt-4"
     >
@@ -127,9 +205,11 @@ const showDamAuthorsAtLeastOne = computed(() => {
                 v-model="texts.authors"
                 :ext-system="cachedExtSystemId"
                 :label="t('common.damImage.asset.model.authors')"
+                :source="sourcesShown ? false : undefined"
                 clearable
                 multiple
                 :validation-scope="false"
+                @source-found="onSourceFound"
               />
             </div>
             <VBtn
@@ -166,7 +246,7 @@ const showDamAuthorsAtLeastOne = computed(() => {
       </VCol>
     </VRow>
     <VRow
-      v-else
+      v-if="!authorsShown && !sourcesShown"
       density="comfortable"
       class="mt-4"
     >

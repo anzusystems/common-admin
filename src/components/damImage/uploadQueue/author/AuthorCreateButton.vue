@@ -25,6 +25,7 @@ const props = withDefaults(
     extSystem: IntegerId
     initialValue?: string
     disableRedirect?: boolean
+    source?: boolean
     variant?: 'button' | 'icon' | 'listItem'
     buttonT?: string
     buttonClass?: string
@@ -35,6 +36,7 @@ const props = withDefaults(
   {
     initialValue: '',
     disableRedirect: false,
+    source: undefined,
     variant: 'button',
     buttonT: 'common.button.create',
     buttonClass: 'ml-2',
@@ -45,6 +47,7 @@ const props = withDefaults(
 )
 const emit = defineEmits<{
   (e: 'onSuccess', data: DamAuthor): void
+  (e: 'onSourceFound', data: DamAuthor): void
 }>()
 
 const { damClient } = useCommonAdminCoreDamOptions()
@@ -77,7 +80,7 @@ const onCancel = () => {
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { v$ } = useAuthorValidation(author, props.validationScope)
 const { t } = useI18n()
-const { showValidationError, showRecordWas, showErrorsDefault } = useAlerts()
+const { showValidationError, showRecordWas, showErrorsDefault, showInfo } = useAlerts()
 
 const onConfirm = async () => {
   if (buttonLoading.value) return
@@ -90,8 +93,13 @@ const onConfirm = async () => {
       return
     }
     const res = await createAuthor(damClient, author.value)
-    emit('onSuccess', res)
-    showRecordWas('created')
+    if (res.flags.source && props.source === false) {
+      emit('onSourceFound', res)
+      showInfo(t('common.damImage.author.sourceFound', { name: res.name }))
+    } else {
+      emit('onSuccess', res)
+      showRecordWas('created')
+    }
     dialog.value = false
     if (!isUndefined(res.id) && !props.disableRedirect) {
       // router.push({ name: ROUTE.DAM.AUTHOR.DETAIL, params: { id: res.id } })

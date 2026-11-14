@@ -33,6 +33,7 @@ export function useUploadQueueItemFactory() {
       externalProviderMetadata: {},
       keywords: [],
       authors: [],
+      sources: [],
       authorConflicts: [],
       customData: {},
       latestChunkCancelToken: null,

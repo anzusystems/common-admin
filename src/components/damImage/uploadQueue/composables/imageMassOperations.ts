@@ -1,6 +1,8 @@
 import { isUndefined } from '@/utils/common'
 import { useImageStore } from '@/components/damImage/uploadQueue/composables/imageStore'
 import type { DocId } from '@/types/common'
+import type { DamAuthor } from '@/components/damImage/uploadQueue/author/DamAuthor'
+import { damCreditFromMap } from '@/components/damImage/uploadQueue/composables/damCredit'
 import { fetchAuthorListByIds } from '@/components/damImage/uploadQueue/api/authorApi'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/composables/extSystemIdForCached'
@@ -35,25 +37,33 @@ export function useImageMassOperations() {
   const { damClient } = useCommonAdminCoreDamOptions()
   const { cachedExtSystemId } = useExtSystemIdForCached()
 
+  const loadAuthorsMap = async (ids: DocId[]) => {
+    const unique = [...new Set(ids)]
+    if (unique.length === 0) return new Map<DocId, DamAuthor>()
+    const res = await fetchAuthorListByIds(damClient, cachedExtSystemId.value, unique)
+    return new Map(res.map((author) => [author.id, author]))
+  }
+
   const replaceEmptyAuthors = async (value: DocId[], forceReplace = false) => {
-    const authorsMap = new Map<DocId, string>()
-    const authorNames: string[] = []
-    const authorsRes = await fetchAuthorListByIds(damClient, cachedExtSystemId.value, [...value])
-    authorsRes.forEach((author) => {
-      authorsMap.set(author.id, author.name)
-    })
-    value.forEach((authorId) => {
-      const name = authorsMap.get(authorId)
-      if (!isUndefined(name) && name.trim().length > 0) {
-        authorNames.push(name)
-      }
-    })
     const items = imageStore.images
+    const authorsMap = await loadAuthorsMap([...value, ...items.flatMap((item) => item.damSources)])
     for (let i = 0; i < items.length; i++) {
       const item = items[i]
       if (forceReplace || isUndefined(item.damAuthors) || item.damAuthors.length === 0) {
         item.damAuthors = value
-        item.texts.source = authorNames.join(', ')
+        item.texts.source = damCreditFromMap(authorsMap, item.damSources, value)
+      }
+    }
+  }
+
+  const replaceEmptySources = async (value: DocId[], forceReplace = false) => {
+    const items = imageStore.images
+    const authorsMap = await loadAuthorsMap([...value, ...items.flatMap((item) => item.damAuthors)])
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i]
+      if (forceReplace || isUndefined(item.damSources) || item.damSources.length === 0) {
+        item.damSources = value
+        item.texts.source = damCreditFromMap(authorsMap, value, item.damAuthors)
       }
     }
   }
@@ -62,5 +72,6 @@ export function useImageMassOperations() {
     replaceEmptyDescription,
     replaceEmptySource,
     replaceEmptyAuthors,
+    replaceEmptySources,
   }
 }

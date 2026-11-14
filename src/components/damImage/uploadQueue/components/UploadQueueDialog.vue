@@ -96,7 +96,7 @@ const onSave = async () => {
     return
   }
   try {
-    await bulkUpdateAssetsMetadata(damClient, endPointAsset, itemsRaw)
+    await bulkUpdateAssetsMetadata(damClient, endPointAsset, itemsRaw, undefined, props.extSystem)
     showRecordWas('updated')
   } catch (error) {
     console.error(error)
@@ -117,7 +117,13 @@ const onSaveAndApply = async () => {
     return
   }
   try {
-    const res = await bulkUpdateAssetsMetadata(damClient, endPointAsset, itemsRaw)
+    const res = await bulkUpdateAssetsMetadata(
+      damClient,
+      endPointAsset,
+      itemsRaw,
+      undefined,
+      props.extSystem,
+    )
     const mappedItems = customUploadMetadataToImageMap
       ? await customUploadMetadataToImageMap(
           itemsRaw,
@@ -135,6 +141,8 @@ const onSaveAndApply = async () => {
         position: maxPosition.value,
         damAuthors: item.authorIds ?? [],
         showDamAuthors: (item.authorIds ?? []).length === 0,
+        damSources: item.sourceIds ?? [],
+        showDamSources: (item.sourceIds ?? []).length === 0,
         assetId: item.assetId ?? undefined,
       }
     })

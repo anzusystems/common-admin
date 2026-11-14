@@ -12,6 +12,7 @@ import { makeFilterHelper } from '@/composables/filter/filterHelpers'
 export function useAuthorInnerFilter() {
   const filterFieldsInner = [
     { name: 'text' as const, variant: 'search', default: null, type: 'string' },
+    { name: 'source' as const, default: null, type: 'boolean', render: { skip: true } },
   ] satisfies readonly MakeFilterOption[]
 
   const { filterConfig, filterData } = createFilter(

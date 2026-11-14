@@ -22,6 +22,8 @@ import KeywordRemoteAutocompleteWithCached from '@/components/damImage/uploadQue
 import { isNull } from '@/utils/common'
 import { useDamKeywordAssetTypeConfig } from '@/components/damImage/uploadQueue/keyword/damKeywordConfig'
 import { useDamAuthorAssetTypeConfig } from '@/components/damImage/uploadQueue/author/damAuthorConfig'
+import { useDamSourceAssetTypeConfig } from '@/components/damImage/uploadQueue/source/damSourceConfig'
+import type { DamAuthor } from '@/components/damImage/uploadQueue/author/DamAuthor'
 import AActionDeleteButton from '@/components/buttons/action/AActionDeleteButton.vue'
 
 const props = withDefaults(
@@ -32,6 +34,7 @@ const props = withDefaults(
     customData: AssetCustomData
     keywords: DocId[]
     authors: DocId[]
+    sources: DocId[]
     item: UploadQueueItem
     refreshDisabled: boolean
     mainFileSingleUse: boolean | null
@@ -48,6 +51,7 @@ const emit = defineEmits<{
   (e: 'update:customData', data: AssetCustomData): void
   (e: 'update:keywords', data: DocId[]): void
   (e: 'update:authors', data: DocId[]): void
+  (e: 'update:sources', data: DocId[]): void
   (e: 'update:mainFileSingleUse', data: boolean | null): void
   (e: 'cancelItem', data: { index: number; item: UploadQueueItem; queueKey: UploadQueueKey }): void
   (e: 'removeItem', index: number): void
@@ -83,6 +87,19 @@ const authors = computed({
     emit('update:authors', [...newValue])
   },
 })
+
+const sources = computed({
+  get() {
+    return props.sources
+  },
+  set(newValue) {
+    emit('update:sources', [...newValue])
+  },
+})
+
+const onSourceFound = (author: DamAuthor) => {
+  if (!sources.value.includes(author.id)) sources.value = [...sources.value, author.id]
+}
 
 const mainFileSingleUse = computed({
   get() {
@@ -162,6 +179,12 @@ const { keywordRequired, keywordEnabled } = useDamKeywordAssetTypeConfig(
 )
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(
+  // eslint-disable-next-line vue/no-ref-object-reactivity-loss
+  assetType.value,
+  props.extSystem,
+)
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { sourceRequired, sourceEnabled } = useDamSourceAssetTypeConfig(
   // eslint-disable-next-line vue/no-ref-object-reactivity-loss
   assetType.value,
   props.extSystem,
@@ -373,6 +396,31 @@ onUnmounted(() => {
                 </VCol>
               </VRow>
               <VRow
+                v-if="sourceEnabled"
+                density="comfortable"
+                class="my-2"
+              >
+                <VCol>
+                  <ASystemEntityScope
+                    subject="author"
+                    system="dam"
+                  >
+                    <AuthorRemoteAutocompleteWithCached
+                      v-model="sources"
+                      :queue-id="queueKey"
+                      :label="t('common.damImage.asset.model.sources')"
+                      :ext-system="extSystem"
+                      source
+                      clearable
+                      multiple
+                      :required="sourceRequired"
+                      :validation-scope="ADamAssetMetadataValidationScopeSymbol"
+                      :disabled="!item.canEditMetadata"
+                    />
+                  </ASystemEntityScope>
+                </VCol>
+              </VRow>
+              <VRow
                 v-if="authorEnabled"
                 density="comfortable"
                 class="my-2"
@@ -388,11 +436,13 @@ onUnmounted(() => {
                       :label="t('common.damImage.asset.model.authors')"
                       :author-conflicts="item.authorConflicts"
                       :ext-system="extSystem"
+                      :source="sourceEnabled ? false : undefined"
                       clearable
                       multiple
                       :required="authorRequired"
                       :validation-scope="ADamAssetMetadataValidationScopeSymbol"
                       :disabled="!item.canEditMetadata"
+                      @source-found="onSourceFound"
                     />
                   </ASystemEntityScope>
                 </VCol>

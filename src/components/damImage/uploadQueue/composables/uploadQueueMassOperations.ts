@@ -44,9 +44,20 @@ export function useUploadQueueMassOperations(queueKey: UploadQueueKey) {
     }
   }
 
+  const replaceEmptySources = (value: any, forceReplace = false) => {
+    const items = uploadQueuesStore.getQueueItems(queueKey)
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i]
+      if (forceReplace || isUndefined(item.sources) || item.sources.length === 0) {
+        item.sources = value
+      }
+    }
+  }
+
   return {
     replaceEmptyCustomDataValue,
     replaceEmptyKeywords,
     replaceEmptyAuthors,
+    replaceEmptySources,
   }
 }
