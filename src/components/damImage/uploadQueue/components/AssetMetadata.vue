@@ -9,6 +9,7 @@ import AssetCustomMetadataForm from '@/components/damImage/uploadQueue/component
 import ACopyText from '@/components/ACopyText.vue'
 import { prettyBytes } from '@/utils/file'
 import AssetMetadataImageAttributes from '@/components/damImage/uploadQueue/components/AssetMetadataImageAttributes.vue'
+import DamSourcesAuthorsRow from '@/components/damImage/uploadQueue/components/DamSourcesAuthorsRow.vue'
 import ASystemEntityScope from '@/components/form/ASystemEntityScope.vue'
 import { dateDiff, dateNow, dateTimePretty, dateTimeToDate } from '@/utils/datetime'
 import { ADamAssetMetadataValidationScopeSymbol } from '@/components/damImage/uploadQueue/composables/uploadValidations'
@@ -177,12 +178,12 @@ const autoDeleteIn = computed(() => {
                 </ASystemEntityScope>
               </VCol>
             </VRow>
-            <VRow
-              v-if="sourceEnabled"
-              density="comfortable"
+            <DamSourcesAuthorsRow
+              :source-enabled="sourceEnabled"
+              :author-enabled="authorEnabled"
               class="my-2"
             >
-              <VCol>
+              <template #sources>
                 <ASystemEntityScope
                   subject="author"
                   system="dam"
@@ -201,14 +202,8 @@ const autoDeleteIn = computed(() => {
                     @update:model-value="onAnyMetadataChange"
                   />
                 </ASystemEntityScope>
-              </VCol>
-            </VRow>
-            <VRow
-              v-if="authorEnabled"
-              density="comfortable"
-              class="my-2"
-            >
-              <VCol>
+              </template>
+              <template #authors>
                 <ASystemEntityScope
                   subject="author"
                   system="dam"
@@ -229,8 +224,8 @@ const autoDeleteIn = computed(() => {
                     @source-found="onSourceFound"
                   />
                 </ASystemEntityScope>
-              </VCol>
-            </VRow>
+              </template>
+            </DamSourcesAuthorsRow>
             <VRow
               v-if="mainFileSingleUseEnabled"
               density="comfortable"

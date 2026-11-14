@@ -4,7 +4,10 @@ import type { ImageCreateUpdateAware } from '@/types/ImageAware'
 import type { DocId, IntegerId } from '@/types/common'
 import { isNull, isString } from '@/utils/common'
 import type { DamAuthor } from '@/components/damImage/uploadQueue/author/DamAuthor'
-import { damCreditFromMap } from '@/components/damImage/uploadQueue/composables/damCredit'
+import {
+  damCreditFromMap,
+  getDamCreditConfig,
+} from '@/components/damImage/uploadQueue/composables/damCredit'
 import { fetchAuthorListByIds } from '@/components/damImage/uploadQueue/api/authorApi'
 import type { AxiosInstance } from 'axios'
 import type { AssetDetailItemDto } from '@/types/coreDam/Asset'
@@ -84,7 +87,12 @@ export async function mapUploadMetadataToImages(
     return {
       texts: {
         description: description ?? '',
-        source: damCreditFromMap(authorsMap, sourceIds ?? [], authorIds ?? []),
+        source: damCreditFromMap(
+          authorsMap,
+          sourceIds ?? [],
+          authorIds ?? [],
+          getDamCreditConfig(extSystem),
+        ),
       },
       flags: {
         showSource: true,

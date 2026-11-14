@@ -13,6 +13,7 @@ import { useUploadQueuesStore } from '@/components/damImage/uploadQueue/composab
 import type { UploadQueueItem } from '@/types/coreDam/UploadQueue'
 import AuthorRemoteAutocompleteWithCached from '@/components/damImage/uploadQueue/author/AuthorRemoteAutocompleteWithCached.vue'
 import KeywordRemoteAutocompleteWithCached from '@/components/damImage/uploadQueue/keyword/KeywordRemoteAutocompleteWithCached.vue'
+import DamSourcesAuthorsRow from '@/components/damImage/uploadQueue/components/DamSourcesAuthorsRow.vue'
 import ASystemEntityScope from '@/components/form/ASystemEntityScope.vue'
 import { ADamAssetMetadataValidationScopeSymbol } from '@/components/damImage/uploadQueue/composables/uploadValidations'
 import { dateTimePretty } from '@/utils/datetime'
@@ -146,12 +147,12 @@ const { mainFileSingleUseEnabled, showFileInfoEnabled } = useCommonAdminCoreDamO
                   </ASystemEntityScope>
                 </VCol>
               </VRow>
-              <VRow
-                v-if="sourceEnabled"
-                density="comfortable"
+              <DamSourcesAuthorsRow
+                :source-enabled="sourceEnabled"
+                :author-enabled="authorEnabled"
                 class="my-2"
               >
-                <VCol>
+                <template #sources>
                   <ASystemEntityScope
                     subject="author"
                     system="dam"
@@ -170,14 +171,8 @@ const { mainFileSingleUseEnabled, showFileInfoEnabled } = useCommonAdminCoreDamO
                       @update:model-value="onAnyMetadataChange"
                     />
                   </ASystemEntityScope>
-                </VCol>
-              </VRow>
-              <VRow
-                v-if="authorEnabled"
-                density="comfortable"
-                class="my-2"
-              >
-                <VCol>
+                </template>
+                <template #authors>
                   <ASystemEntityScope
                     subject="author"
                     system="dam"
@@ -198,8 +193,8 @@ const { mainFileSingleUseEnabled, showFileInfoEnabled } = useCommonAdminCoreDamO
                       @source-found="onSourceFound"
                     />
                   </ASystemEntityScope>
-                </VCol>
-              </VRow>
+                </template>
+              </DamSourcesAuthorsRow>
               <VRow
                 v-if="mainFileSingleUseEnabled"
                 density="comfortable"

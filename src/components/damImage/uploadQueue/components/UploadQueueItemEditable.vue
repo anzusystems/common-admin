@@ -12,6 +12,7 @@ import {
 import { AssetFileFailReason } from '@/types/coreDam/AssetFile'
 import ATableCopyIdButton from '@/components/buttons/table/ATableCopyIdButton.vue'
 import { prettyBytes } from '@/utils/file'
+import DamSourcesAuthorsRow from '@/components/damImage/uploadQueue/components/DamSourcesAuthorsRow.vue'
 import ASystemEntityScope from '@/components/form/ASystemEntityScope.vue'
 import AssetCustomMetadataForm from '@/components/damImage/uploadQueue/components/AssetCustomMetadataForm.vue'
 import AssetImage from '@/components/damImage/uploadQueue/components/AssetImage.vue'
@@ -395,12 +396,12 @@ onUnmounted(() => {
                   </ASystemEntityScope>
                 </VCol>
               </VRow>
-              <VRow
-                v-if="sourceEnabled"
-                density="comfortable"
+              <DamSourcesAuthorsRow
+                :source-enabled="sourceEnabled"
+                :author-enabled="authorEnabled"
                 class="my-2"
               >
-                <VCol>
+                <template #sources>
                   <ASystemEntityScope
                     subject="author"
                     system="dam"
@@ -418,14 +419,8 @@ onUnmounted(() => {
                       :disabled="!item.canEditMetadata"
                     />
                   </ASystemEntityScope>
-                </VCol>
-              </VRow>
-              <VRow
-                v-if="authorEnabled"
-                density="comfortable"
-                class="my-2"
-              >
-                <VCol>
+                </template>
+                <template #authors>
                   <ASystemEntityScope
                     subject="author"
                     system="dam"
@@ -445,8 +440,8 @@ onUnmounted(() => {
                       @source-found="onSourceFound"
                     />
                   </ASystemEntityScope>
-                </VCol>
-              </VRow>
+                </template>
+              </DamSourcesAuthorsRow>
               <VRow
                 v-if="mainFileSingleUseEnabled"
                 density="comfortable"

@@ -2,7 +2,10 @@ import { isUndefined } from '@/utils/common'
 import { useImageStore } from '@/components/damImage/uploadQueue/composables/imageStore'
 import type { DocId } from '@/types/common'
 import type { DamAuthor } from '@/components/damImage/uploadQueue/author/DamAuthor'
-import { damCreditFromMap } from '@/components/damImage/uploadQueue/composables/damCredit'
+import {
+  damCreditFromMap,
+  getDamCreditConfig,
+} from '@/components/damImage/uploadQueue/composables/damCredit'
 import { fetchAuthorListByIds } from '@/components/damImage/uploadQueue/api/authorApi'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/composables/extSystemIdForCached'
@@ -51,7 +54,13 @@ export function useImageMassOperations() {
       const item = items[i]
       if (forceReplace || isUndefined(item.damAuthors) || item.damAuthors.length === 0) {
         item.damAuthors = value
-        item.texts.source = damCreditFromMap(authorsMap, item.damSources, value)
+        item.damSelectionChanged = true
+        item.texts.source = damCreditFromMap(
+          authorsMap,
+          item.damSources,
+          value,
+          getDamCreditConfig(cachedExtSystemId.value),
+        )
       }
     }
   }
@@ -63,7 +72,13 @@ export function useImageMassOperations() {
       const item = items[i]
       if (forceReplace || isUndefined(item.damSources) || item.damSources.length === 0) {
         item.damSources = value
-        item.texts.source = damCreditFromMap(authorsMap, value, item.damAuthors)
+        item.damSelectionChanged = true
+        item.texts.source = damCreditFromMap(
+          authorsMap,
+          value,
+          item.damAuthors,
+          getDamCreditConfig(cachedExtSystemId.value),
+        )
       }
     }
   }

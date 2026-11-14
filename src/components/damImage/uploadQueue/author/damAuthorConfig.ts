@@ -4,6 +4,11 @@ import { useDamConfigState } from '@/components/damImage/uploadQueue/composables
 import type { IntegerId } from '@/types/common'
 import { isUndefined } from '@/utils/common'
 
+export const isDamAuthorEnabled = (assetType: DamAssetTypeType, extSystem: IntegerId) => {
+  const { getDamConfigExtSystem } = useDamConfigState()
+  return !!getDamConfigExtSystem(extSystem)?.[assetType]?.authors?.enabled
+}
+
 export const useDamAuthorAssetTypeConfig = (assetType: DamAssetTypeType, extSystem: IntegerId) => {
   const { getDamConfigExtSystem } = useDamConfigState()
   const configExtSystem = getDamConfigExtSystem(extSystem)

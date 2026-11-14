@@ -39,7 +39,7 @@ import AImageWidgetSimple from '@/components/damImage/AImageWidgetSimple.vue'
 import { fetchAuthorListByIds } from '@/components/damImage/uploadQueue/api/authorApi'
 import {
   damCreditFromMap,
-  fetchDamCredit,
+  getDamCreditConfig,
 } from '@/components/damImage/uploadQueue/composables/damCredit'
 import type { DamAuthor } from '@/components/damImage/uploadQueue/author/DamAuthor'
 import { useI18n } from 'vue-i18n'
@@ -160,9 +160,7 @@ const fetchImagesOnLoad = async () => {
           key: generateUUIDv1(),
           ...imageRes,
           damAuthors: found ? found.authors : [],
-          showDamAuthors: found ? found.authors.length === 0 : false,
           damSources: found ? found.sources : [],
-          showDamSources: found ? found.sources.length === 0 : false,
           assetId: found ? found.id : undefined,
         }
       }),
@@ -330,9 +328,7 @@ const assetSelectConfirmMap = async (
         },
         position: maxPosition.value,
         damAuthors: [],
-        showDamAuthors: false,
         damSources: [],
-        showDamSources: false,
         assetId: asset.id,
       }
     }
@@ -341,7 +337,12 @@ const assetSelectConfirmMap = async (
       key: generateUUIDv1(),
       texts: {
         description: description,
-        source: damCreditFromMap(damAuthorsMap, sourceIds, authorIds),
+        source: damCreditFromMap(
+          damAuthorsMap,
+          sourceIds,
+          authorIds,
+          getDamCreditConfig(cachedExtSystemId.value),
+        ),
       },
       flags: {
         showSource: true,
@@ -356,9 +357,7 @@ const assetSelectConfirmMap = async (
       },
       position: maxPosition.value,
       damAuthors: authorIds,
-      showDamAuthors: authorIds.length === 0,
       damSources: sourceIds,
-      showDamSources: sourceIds.length === 0,
       assetId: asset.id,
     }
   })
@@ -460,25 +459,12 @@ const saveImages = async () => {
     const assetUpdateItems: AssetAuthorsItems = []
     const imagesRaw = toRaw(images.value)
     for (const image of imagesRaw) {
-      const authorsShown = authorEnabled.value && image.showDamAuthors
-      const sourcesShown = sourceEnabled.value && image.showDamSources
-      if ((authorsShown || sourcesShown) && image.assetId) {
+      if (image.damSelectionChanged && image.assetId) {
         assetUpdateItems.push({
           id: image.assetId,
           authors: image.damAuthors,
-          ...(sourcesShown ? { sources: image.damSources } : {}),
+          ...(sourceEnabled.value ? { sources: image.damSources } : {}),
         })
-      }
-      if (
-        (authorsShown && image.damAuthors.length > 0) ||
-        (sourcesShown && image.damSources.length > 0)
-      ) {
-        image.texts.source = await fetchDamCredit(
-          damClient,
-          cachedExtSystemId.value,
-          image.damSources,
-          image.damAuthors,
-        )
       }
     }
     if (assetUpdateItems.length) {
@@ -493,9 +479,7 @@ const saveImages = async () => {
         key: generateUUIDv1(),
         ...resItem,
         damAuthors: [],
-        showDamAuthors: false,
         damSources: [],
-        showDamSources: false,
         assetId: undefined,
       }
     })
@@ -514,14 +498,8 @@ const saveImages = async () => {
       return {
         ...item,
         damAuthors: matchedImage ? matchedImage.damAuthors : item.damAuthors,
-        showDamAuthors: matchedImage
-          ? matchedImage.damAuthors.length === 0
-          : item.damAuthors.length === 0,
         damSources: matchedImage ? matchedImage.damSources : item.damSources,
-        showDamSources: matchedImage
-          ? matchedImage.damSources.length === 0
-          : item.damSources.length === 0,
-        assetId: item.assetId,
+        assetId: matchedImage ? matchedImage.assetId : item.assetId,
       }
     }
 
@@ -571,9 +549,7 @@ const createImageStoreItem = (): ImageStoreItem => ({
   flags: { showSource: true, internal: false, overrideInternal: false },
   position: 0,
   damAuthors: [],
-  showDamAuthors: false,
   damSources: [],
-  showDamSources: false,
   assetId: undefined,
 })
 

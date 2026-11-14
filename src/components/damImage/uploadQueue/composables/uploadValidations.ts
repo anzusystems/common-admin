@@ -25,11 +25,9 @@ export const ADamAuthorCreateValidationScopeSymbol = Symbol.for(
 export function buildFieldRules(
   config: ImageFieldValidationConfig,
   validators: ReturnType<typeof useValidate>,
-  requiredOverride?: boolean,
 ) {
   const rules: Record<string, unknown> = {}
-  const isRequired = requiredOverride ?? config.required
-  if (isRequired) {
+  if (config.required) {
     rules.required = validators.required
   }
   if (config.min && config.min > 0) {
@@ -43,7 +41,6 @@ export function buildFieldRules(
 
 export function useImageValidation(
   image: Ref<ImageCreateUpdateAware | MediaAware | null>,
-  sourceRequired: Ref<boolean>,
   configName?: string,
 ) {
   const { descriptionValidation, sourceValidation } = useCommonAdminCoreDamOptions(configName)
@@ -54,11 +51,7 @@ export function useImageValidation(
         image: {
           texts: {
             description: buildFieldRules(descriptionValidation, validators),
-            source: buildFieldRules(
-              sourceValidation,
-              validators,
-              sourceValidation.required && sourceRequired.value,
-            ),
+            source: buildFieldRules(sourceValidation, validators),
           },
         },
       }

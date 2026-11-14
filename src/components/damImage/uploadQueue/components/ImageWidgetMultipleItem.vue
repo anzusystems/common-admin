@@ -13,6 +13,10 @@ import {
 } from '@/components/damImage/uploadQueue/composables/uploadValidations'
 import AuthorRemoteAutocompleteWithCached from '@/components/damImage/uploadQueue/author/AuthorRemoteAutocompleteWithCached.vue'
 import type { DamAuthor } from '@/components/damImage/uploadQueue/author/DamAuthor'
+import { useAlerts } from '@/composables/system/alerts'
+import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
+import { fetchDamCredit } from '@/components/damImage/uploadQueue/composables/damCredit'
+import DamSourcesAuthorsRow from '@/components/damImage/uploadQueue/components/DamSourcesAuthorsRow.vue'
 import ASystemEntityScope from '@/components/form/ASystemEntityScope.vue'
 import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/composables/extSystemIdForCached'
 
@@ -44,20 +48,35 @@ const { cachedExtSystemId } = useExtSystemIdForCached()
 const authorConflicts = ref<DocId[]>([])
 const image = computed(() => imageStore.images[props.index])
 
-const authorsShown = computed(() => !!image.value?.showDamAuthors && props.authorEnabled)
-const sourcesShown = computed(() => !!image.value?.showDamSources && props.sourceEnabled)
+const { damClient } = useCommonAdminCoreDamOptions()
+const { showErrorsDefault } = useAlerts()
+let creditRequestId = 0
 
-const imageSourceRequired = computed(() => {
-  if (isNull(image.value) || isUndefined(image.value)) return true
-  return !authorsShown.value && !sourcesShown.value
-})
+const onSelectionChange = async () => {
+  const target = image.value
+  target.damSelectionChanged = true
+  const requestId = ++creditRequestId
+  try {
+    const credit = await fetchDamCredit(
+      damClient,
+      cachedExtSystemId.value,
+      target.damSources,
+      target.damAuthors,
+    )
+    if (requestId !== creditRequestId) return
+    target.texts.source = credit
+  } catch (e) {
+    showErrorsDefault(e)
+  }
+}
 
 const onSourceFound = (author: DamAuthor) => {
   if (image.value.damSources.includes(author.id)) return
   image.value.damSources = [...image.value.damSources, author.id]
+  onSelectionChange()
 }
 
-const { v$ } = useImageValidation(image, imageSourceRequired)
+const { v$ } = useImageValidation(image)
 
 const onEditAsset = () => {
   if (isNull(image.value) || isUndefined(image.value)) return
@@ -107,11 +126,11 @@ const removeItem = () => {
             />
           </VCol>
         </VRow>
-        <VRow
-          v-if="sourcesShown"
-          density="comfortable"
+        <DamSourcesAuthorsRow
+          :source-enabled="sourceEnabled"
+          :author-enabled="authorEnabled"
         >
-          <VCol>
+          <template #sources>
             <ASystemEntityScope
               subject="author"
               system="dam"
@@ -125,15 +144,11 @@ const removeItem = () => {
                 clearable
                 multiple
                 :validation-scope="AImageMetadataValidationScopeSymbol"
+                @update:model-value="onSelectionChange"
               />
             </ASystemEntityScope>
-          </VCol>
-        </VRow>
-        <VRow
-          v-if="authorsShown"
-          density="comfortable"
-        >
-          <VCol>
+          </template>
+          <template #authors>
             <ASystemEntityScope
               subject="author"
               system="dam"
@@ -144,19 +159,17 @@ const removeItem = () => {
                 :label="t('common.damImage.asset.model.authors')"
                 :author-conflicts="authorConflicts"
                 data-cy="custom-field-authors"
-                :source="sourcesShown ? false : undefined"
+                :source="sourceEnabled ? false : undefined"
                 clearable
                 multiple
                 :validation-scope="AImageMetadataValidationScopeSymbol"
+                @update:model-value="onSelectionChange"
                 @source-found="onSourceFound"
               />
             </ASystemEntityScope>
-          </VCol>
-        </VRow>
-        <VRow
-          v-if="!authorsShown && !sourcesShown"
-          density="comfortable"
-        >
+          </template>
+        </DamSourcesAuthorsRow>
+        <VRow density="comfortable">
           <VCol>
             <AFormTextarea
               v-model="image.texts.source"

@@ -5,11 +5,10 @@ import AFormTextarea from '@/components/form/AFormTextarea.vue'
 import { computed, ref } from 'vue'
 import useVuelidate from '@vuelidate/core'
 import { useValidate } from '@/validators/vuelidate/useValidate'
-import { useImageStore } from '@/components/damImage/uploadQueue/composables/imageStore'
+import DamSourcesAuthorsRow from '@/components/damImage/uploadQueue/components/DamSourcesAuthorsRow.vue'
 import ASystemEntityScope from '@/components/form/ASystemEntityScope.vue'
 import AuthorRemoteAutocompleteWithCached from '@/components/damImage/uploadQueue/author/AuthorRemoteAutocompleteWithCached.vue'
 import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/composables/extSystemIdForCached'
-import { storeToRefs } from 'pinia'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import { buildFieldRules } from '@/components/damImage/uploadQueue/composables/uploadValidations'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
@@ -30,26 +29,24 @@ const onSourceFound = (author: DamAuthor) => {
   }
 }
 
-const imageStore = useImageStore()
-const { images } = storeToRefs(imageStore)
 const { replaceEmptyDescription, replaceEmptySource, replaceEmptyAuthors, replaceEmptySources } =
   useImageMassOperations()
 const { t } = useI18n()
 
 const fillAll = async (forceReplace: boolean) => {
   replaceEmptyDescription(texts.value.description, forceReplace)
-  if (authorsShown.value) await replaceEmptyAuthors(texts.value.authors, forceReplace)
-  if (sourcesShown.value) await replaceEmptySources(texts.value.sources, forceReplace)
-  if (!authorsShown.value && !sourcesShown.value) {
+  if (authorEnabled.value) await replaceEmptyAuthors(texts.value.authors, forceReplace)
+  if (sourceEnabled.value) await replaceEmptySources(texts.value.sources, forceReplace)
+  if (!authorEnabled.value && !sourceEnabled.value) {
     replaceEmptySource(texts.value.source, forceReplace)
   }
 }
 
 const clearForm = () => {
   texts.value.description = ''
-  if (authorsShown.value) texts.value.authors = []
-  if (sourcesShown.value) texts.value.sources = []
-  if (!authorsShown.value && !sourcesShown.value) texts.value.source = ''
+  if (authorEnabled.value) texts.value.authors = []
+  if (sourceEnabled.value) texts.value.sources = []
+  if (!authorEnabled.value && !sourceEnabled.value) texts.value.source = ''
 }
 
 const { cachedExtSystemId } = useExtSystemIdForCached()
@@ -74,19 +71,6 @@ const rules = computed(() => ({
   },
 }))
 const v$ = useVuelidate(rules, { texts }, { $scope: false })
-
-const showDamAuthorsAtLeastOne = computed(() => {
-  if (images.value.length === 0) return false
-  return images.value.length && images.value.some((item) => item?.showDamAuthors)
-})
-
-const showDamSourcesAtLeastOne = computed(() => {
-  if (images.value.length === 0) return false
-  return images.value.length && images.value.some((item) => item?.showDamSources)
-})
-
-const authorsShown = computed(() => authorEnabled.value && !!showDamAuthorsAtLeastOne.value)
-const sourcesShown = computed(() => sourceEnabled.value && !!showDamSourcesAtLeastOne.value)
 </script>
 
 <template>
@@ -134,12 +118,12 @@ const sourcesShown = computed(() => sourceEnabled.value && !!showDamSourcesAtLea
         </div>
       </VCol>
     </VRow>
-    <VRow
-      v-if="sourcesShown"
-      density="comfortable"
+    <DamSourcesAuthorsRow
+      :source-enabled="sourceEnabled"
+      :author-enabled="authorEnabled"
       class="mt-4"
     >
-      <VCol>
+      <template #sources>
         <ASystemEntityScope
           subject="keyword"
           system="dam"
@@ -187,14 +171,8 @@ const sourcesShown = computed(() => sourceEnabled.value && !!showDamSourcesAtLea
             </VBtn>
           </div>
         </ASystemEntityScope>
-      </VCol>
-    </VRow>
-    <VRow
-      v-if="authorsShown"
-      density="comfortable"
-      class="mt-4"
-    >
-      <VCol>
+      </template>
+      <template #authors>
         <ASystemEntityScope
           subject="keyword"
           system="dam"
@@ -205,7 +183,7 @@ const sourcesShown = computed(() => sourceEnabled.value && !!showDamSourcesAtLea
                 v-model="texts.authors"
                 :ext-system="cachedExtSystemId"
                 :label="t('common.damImage.asset.model.authors')"
-                :source="sourcesShown ? false : undefined"
+                :source="sourceEnabled ? false : undefined"
                 clearable
                 multiple
                 :validation-scope="false"
@@ -243,10 +221,10 @@ const sourcesShown = computed(() => sourceEnabled.value && !!showDamSourcesAtLea
             </VBtn>
           </div>
         </ASystemEntityScope>
-      </VCol>
-    </VRow>
+      </template>
+    </DamSourcesAuthorsRow>
     <VRow
-      v-if="!authorsShown && !sourcesShown"
+      v-if="!authorEnabled && !sourceEnabled"
       density="comfortable"
       class="mt-4"
     >

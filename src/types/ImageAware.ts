@@ -30,8 +30,7 @@ export interface ImageCreateUpdateAwareKeyed extends ImageCreateUpdateAware {
 
 export interface ImageStoreItem extends ImageCreateUpdateAwareKeyed {
   damAuthors: DocId[]
-  showDamAuthors: boolean
   damSources: DocId[]
-  showDamSources: boolean
+  damSelectionChanged?: boolean
   assetId: undefined | DocId
 }

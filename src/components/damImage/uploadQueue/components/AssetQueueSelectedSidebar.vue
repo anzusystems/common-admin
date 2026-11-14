@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useUploadQueuesStore } from '@/components/damImage/uploadQueue/composables/uploadQueuesStore'
 import { DamAssetType, type DamAssetTypeType } from '@/types/coreDam/Asset'
+import DamSourcesAuthorsRow from '@/components/damImage/uploadQueue/components/DamSourcesAuthorsRow.vue'
 import ASystemEntityScope from '@/components/form/ASystemEntityScope.vue'
 import AssetCustomMetadataFormMassOperations from '@/components/damImage/uploadQueue/components/AssetCustomMetadataFormMassOperations.vue'
 import AuthorRemoteAutocompleteWithCached from '@/components/damImage/uploadQueue/author/AuthorRemoteAutocompleteWithCached.vue'
@@ -199,7 +200,7 @@ onMounted(() => {
                     system="dam"
                   >
                     <div class="d-flex">
-                      <div style="min-width: 286px">
+                      <div style="flex-grow: 1; min-width: 0">
                         <KeywordRemoteAutocompleteWithCached
                           v-model="massOperationsKeywords"
                           :label="t('common.damImage.asset.model.keywords')"
@@ -242,18 +243,18 @@ onMounted(() => {
                   </ASystemEntityScope>
                 </VCol>
               </VRow>
-              <VRow
-                v-if="sourceEnabled"
-                density="comfortable"
+              <DamSourcesAuthorsRow
+                :source-enabled="sourceEnabled"
+                :author-enabled="authorEnabled"
                 class="my-2"
               >
-                <VCol>
+                <template #sources>
                   <ASystemEntityScope
                     subject="author"
                     system="dam"
                   >
                     <div class="d-flex">
-                      <div style="min-width: 286px">
+                      <div style="flex-grow: 1; min-width: 0">
                         <AuthorRemoteAutocompleteWithCached
                           v-model="massOperationsSources"
                           :label="t('common.damImage.asset.model.sources')"
@@ -295,20 +296,14 @@ onMounted(() => {
                       </VBtn>
                     </div>
                   </ASystemEntityScope>
-                </VCol>
-              </VRow>
-              <VRow
-                v-if="authorEnabled"
-                density="comfortable"
-                class="my-2"
-              >
-                <VCol>
+                </template>
+                <template #authors>
                   <ASystemEntityScope
                     subject="author"
                     system="dam"
                   >
                     <div class="d-flex">
-                      <div style="min-width: 286px">
+                      <div style="flex-grow: 1; min-width: 0">
                         <AuthorRemoteAutocompleteWithCached
                           v-model="massOperationsAuthors"
                           :label="t('common.damImage.asset.model.authors')"
@@ -351,8 +346,8 @@ onMounted(() => {
                       </VBtn>
                     </div>
                   </ASystemEntityScope>
-                </VCol>
-              </VRow>
+                </template>
+              </DamSourcesAuthorsRow>
             </VExpansionPanelText>
           </VExpansionPanel>
           <VExpansionPanel

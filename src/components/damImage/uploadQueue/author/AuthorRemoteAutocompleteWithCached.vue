@@ -130,7 +130,7 @@ const onSourceFound = (author: DamAuthor) => {
 }
 
 const sourcesEmptyAttrs = computed(() =>
-  props.source && !loadingLocal.value && search.value.length >= 2
+  props.source && !loadingLocal.value
     ? { 'no-data-text': t('common.damImage.asset.model.sourcesEmpty') }
     : {},
 )
@@ -217,7 +217,8 @@ const showAdd = computed(() => {
       :data-cy="dataCy"
       item-title="name"
       item-value="id"
-      :min-search-chars="2"
+      :min-search-chars="source ? 0 : 2"
+      :prefetch="source ? 'focus' : false"
       v-bind="sourcesEmptyAttrs"
       min-search-text="common.damImage.author.filterMinChars"
       @search-change="searchChange"
