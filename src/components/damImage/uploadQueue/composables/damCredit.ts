@@ -11,17 +11,15 @@ export interface DamCreditConfig {
   creditSeparator: string
 }
 
-const damCreditConfigDefault: DamCreditConfig = {
-  creditFormat: '{sources}/{authors}',
-  creditSeparator: ', ',
-}
-
 export function getDamCreditConfig(extSystem: IntegerId): DamCreditConfig {
   const { getDamConfigExtSystem } = useDamConfigState()
   const sources = getDamConfigExtSystem(extSystem)?.[DamAssetType.Image]?.sources
+  if (isUndefined(sources)) {
+    throw new Error('getDamCreditConfig: Ext system must be initialised.')
+  }
   return {
-    creditFormat: sources?.creditFormat ?? damCreditConfigDefault.creditFormat,
-    creditSeparator: sources?.creditSeparator ?? damCreditConfigDefault.creditSeparator,
+    creditFormat: sources.creditFormat,
+    creditSeparator: sources.creditSeparator,
   }
 }
 

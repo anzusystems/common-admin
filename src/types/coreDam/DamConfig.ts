@@ -59,7 +59,7 @@ export interface DamExtSystemConfigItem {
   mimeTypes: Array<string>
   distribution?: DamDistributionConfig
   authors?: DamExtSystemAssetTypeExifMetadata
-  sources?: DamExtSystemAssetTypeSources
+  sources: DamExtSystemAssetTypeSources
   keywords?: DamExtSystemAssetTypeExifMetadata
   customMetadataPinnedAmount: number
   slots: string[]

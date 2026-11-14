@@ -440,7 +440,7 @@ const authorEnabled = computed(() => {
 })
 
 const sourceEnabled = computed(() => {
-  return !!getDamConfigExtSystem(cachedExtSystemId.value)?.[DamAssetType.Image]?.sources?.enabled
+  return !!getDamConfigExtSystem(cachedExtSystemId.value)?.[DamAssetType.Image]?.sources.enabled
 })
 
 const saveImages = async () => {

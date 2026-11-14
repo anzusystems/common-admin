@@ -6,7 +6,7 @@ import { isUndefined } from '@/utils/common'
 
 export const isDamSourceEnabled = (assetType: DamAssetTypeType, extSystem: IntegerId) => {
   const { getDamConfigExtSystem } = useDamConfigState()
-  return !!getDamConfigExtSystem(extSystem)?.[assetType]?.sources?.enabled
+  return !!getDamConfigExtSystem(extSystem)?.[assetType]?.sources.enabled
 }
 
 export const useDamSourceAssetTypeConfig = (assetType: DamAssetTypeType, extSystem: IntegerId) => {
@@ -18,11 +18,11 @@ export const useDamSourceAssetTypeConfig = (assetType: DamAssetTypeType, extSyst
   }
 
   const sourceEnabled = computed(() => {
-    return !!configExtSystem[assetType]?.sources?.enabled
+    return !!configExtSystem[assetType]?.sources.enabled
   })
 
   const sourceRequired = computed(() => {
-    return !!configExtSystem[assetType]?.sources?.required
+    return !!configExtSystem[assetType]?.sources.required
   })
 
   return {

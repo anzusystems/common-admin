@@ -157,7 +157,7 @@ const authorEnabled = computed(() => {
 const sourceEnabled = computed(() => {
   const config = getDamConfigExtSystem(props.extSystem)
   if (!config) return false
-  return assetTypes.value.some((type) => !!config[type]?.sources?.enabled)
+  return assetTypes.value.some((type) => !!config[type]?.sources.enabled)
 })
 
 onMounted(() => {
