@@ -6,8 +6,7 @@ import { isUndefined } from '@/utils/common'
 
 interface DamAuthorFieldTargets {
   own: (author: DamAuthor) => void
-  sources: (author: DamAuthor) => void
-  authors: (author: DamAuthor) => void
+  other: (author: DamAuthor) => void
 }
 
 /**
@@ -17,7 +16,7 @@ interface DamAuthorFieldTargets {
  */
 export function useDamAuthorFieldRouting() {
   const { t } = useI18n()
-  const { showInfo, showRecordWas } = useAlerts()
+  const { showInfo, showRecordWas, showErrorsDefault } = useAlerts()
 
   const routeToFields = async (
     author: DamAuthor,
@@ -25,18 +24,23 @@ export function useDamAuthorFieldRouting() {
     fetchByIds: (ids: DocId[]) => Promise<DamAuthor[]>,
     targets: DamAuthorFieldTargets,
   ) => {
-    const resolved = author.currentAuthors.length > 0 ? await fetchByIds(author.currentAuthors) : [author]
-    for (const item of resolved) {
-      if (isUndefined(source) || item.flags.source === source) {
-        targets.own(item)
-        if (item.id === author.id) showRecordWas('created')
-      } else if (item.flags.source) {
-        targets.sources(item)
-        showInfo(t('common.damImage.author.sourceFound', { name: item.name }))
-      } else {
-        targets.authors(item)
-        showInfo(t('common.damImage.author.authorFound', { name: item.name }))
+    try {
+      const resolved = author.currentAuthors.length > 0 ? await fetchByIds(author.currentAuthors) : [author]
+      for (const item of resolved) {
+        if (isUndefined(source) || item.flags.source === source) {
+          targets.own(item)
+          if (item.id === author.id) showRecordWas('created')
+          continue
+        }
+        targets.other(item)
+        showInfo(
+          t(item.flags.source ? 'common.damImage.author.sourceFound' : 'common.damImage.author.authorFound', {
+            name: item.name,
+          }),
+        )
       }
+    } catch (error) {
+      showErrorsDefault(error)
     }
   }
 

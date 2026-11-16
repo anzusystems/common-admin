@@ -99,8 +99,8 @@ export const bulkUpdateAssetsMetadata = (
   client: () => AxiosInstance,
   endPoint: string,
   items: UploadQueueItem[],
-  mainFileSingleUseOverride: boolean | undefined = undefined,
-  extSystem: IntegerId | undefined = undefined,
+  mainFileSingleUseOverride: boolean | undefined,
+  extSystem: IntegerId,
 ) => {
   return new Promise<AssetMetadataBulkItem[]>((resolve, reject) => {
     const bulkItems = listItemsToMetadataBulkItems(items, mainFileSingleUseOverride, extSystem)
@@ -208,8 +208,8 @@ async function updateMetadataSequence(
 
 function listItemsToMetadataBulkItems(
   items: UploadQueueItem[],
-  mainFileSingleUseOverride: boolean | undefined = undefined,
-  extSystem: IntegerId | undefined = undefined,
+  mainFileSingleUseOverride: boolean | undefined,
+  extSystem: IntegerId,
 ) {
   const dtoItems: AssetMetadataBulkItem[] = []
   items.forEach((item) => {
@@ -218,7 +218,7 @@ function listItemsToMetadataBulkItems(
         id: item.assetId,
         keywords: item.keywords,
         authors: item.authors,
-        ...(!isUndefined(extSystem) && isDamSourceEnabled(item.assetType, extSystem)
+        ...(isDamSourceEnabled(item.assetType, extSystem)
           ? { sources: item.sources }
           : {}),
         described: true,
@@ -319,13 +319,12 @@ export const updateAssetAuthors = (
   endPoint: string,
   asset: AssetDetailItemDto,
   extSystem: IntegerId,
-  withSources = false,
 ) => {
   return new Promise((resolve, reject) => {
     const data: Partial<AssetMetadataBulkItem> = {
       id: asset.id,
       authors: asset.authors,
-      ...(withSources && isDamSourceEnabled(asset.attributes.assetType, extSystem)
+      ...(isDamSourceEnabled(asset.attributes.assetType, extSystem)
         ? { sources: asset.sources }
         : {}),
       described: true,

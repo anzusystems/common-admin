@@ -14,7 +14,9 @@ import { buildFieldRules } from '@/components/damImage/uploadQueue/composables/u
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import { DamAssetType } from '@/types/coreDam/Asset'
 import type { DocId } from '@/types/common'
-import type { DamAuthor } from '@/components/damImage/uploadQueue/author/DamAuthor'
+import { useImageStore } from '@/components/damImage/uploadQueue/composables/imageStore'
+import { storeToRefs } from 'pinia'
+import { isDamSourceEnabled } from '@/components/damImage/uploadQueue/source/damSourceConfig'
 
 const texts = ref<{ description: string; source: string; authors: DocId[]; sources: DocId[] }>({
   description: '',
@@ -23,36 +25,30 @@ const texts = ref<{ description: string; source: string; authors: DocId[]; sourc
   sources: [],
 })
 
-const onSourceFound = (author: DamAuthor) => {
-  if (!texts.value.sources.includes(author.id)) {
-    texts.value.sources = [...texts.value.sources, author.id]
-  }
-}
-
-const onAuthorFound = (author: DamAuthor) => {
-  if (!texts.value.authors.includes(author.id)) {
-    texts.value.authors = [...texts.value.authors, author.id]
-  }
-}
-
+const imageStore = useImageStore()
+const { images } = storeToRefs(imageStore)
 const { replaceEmptyDescription, replaceEmptySource, replaceEmptyAuthors, replaceEmptySources } =
   useImageMassOperations()
 const { t } = useI18n()
 
 const fillAll = async (forceReplace: boolean) => {
   replaceEmptyDescription(texts.value.description, forceReplace)
+  if (!showDamFields.value) {
+    replaceEmptySource(texts.value.source, forceReplace)
+    return
+  }
   if (authorEnabled.value) await replaceEmptyAuthors(texts.value.authors, forceReplace)
   if (sourceEnabled.value) await replaceEmptySources(texts.value.sources, forceReplace)
-  if (!authorEnabled.value && !sourceEnabled.value) {
-    replaceEmptySource(texts.value.source, forceReplace)
-  }
 }
 
 const clearForm = () => {
   texts.value.description = ''
+  if (!showDamFields.value) {
+    texts.value.source = ''
+    return
+  }
   if (authorEnabled.value) texts.value.authors = []
   if (sourceEnabled.value) texts.value.sources = []
-  if (!authorEnabled.value && !sourceEnabled.value) texts.value.source = ''
 }
 
 const { cachedExtSystemId } = useExtSystemIdForCached()
@@ -63,9 +59,11 @@ const authorEnabled = computed(() => {
   return !!getDamConfigExtSystem(cachedExtSystemId.value)?.[DamAssetType.Image]?.authors?.enabled
 })
 
-const sourceEnabled = computed(() => {
-  return !!getDamConfigExtSystem(cachedExtSystemId.value)?.[DamAssetType.Image]?.sources.enabled
-})
+const sourceEnabled = computed(() => isDamSourceEnabled(DamAssetType.Image, cachedExtSystemId.value))
+
+const showDamFields = computed(
+  () => (authorEnabled.value || sourceEnabled.value) && images.value.some((item) => item?.showDamAuthors),
+)
 
 const { descriptionValidation, sourceValidation, sourceLabel } = useCommonAdminCoreDamOptions()
 const validators = useValidate()
@@ -125,26 +123,27 @@ const v$ = useVuelidate(rules, { texts }, { $scope: false })
       </VCol>
     </VRow>
     <DamSourcesAuthorsRow
+      v-if="showDamFields"
       :source-enabled="sourceEnabled"
       :author-enabled="authorEnabled"
       class="mt-4"
     >
       <template #sources>
         <ASystemEntityScope
-          subject="keyword"
+          subject="author"
           system="dam"
         >
           <div class="d-flex">
             <div style="flex-grow: 1">
               <AuthorRemoteAutocompleteWithCached
                 v-model="texts.sources"
+                v-model:counterpart="texts.authors"
                 :ext-system="cachedExtSystemId"
                 :label="t('common.damImage.asset.model.sources')"
                 source
                 clearable
                 multiple
                 :validation-scope="false"
-                @author-found="onAuthorFound"
               />
             </div>
             <VBtn
@@ -181,20 +180,20 @@ const v$ = useVuelidate(rules, { texts }, { $scope: false })
       </template>
       <template #authors>
         <ASystemEntityScope
-          subject="keyword"
+          subject="author"
           system="dam"
         >
           <div class="d-flex">
             <div style="flex-grow: 1">
               <AuthorRemoteAutocompleteWithCached
                 v-model="texts.authors"
+                v-model:counterpart="texts.sources"
                 :ext-system="cachedExtSystemId"
                 :label="t('common.damImage.asset.model.authors')"
                 :source="sourceEnabled ? false : undefined"
                 clearable
                 multiple
                 :validation-scope="false"
-                @source-found="onSourceFound"
               />
             </div>
             <VBtn
@@ -231,7 +230,7 @@ const v$ = useVuelidate(rules, { texts }, { $scope: false })
       </template>
     </DamSourcesAuthorsRow>
     <VRow
-      v-if="!authorEnabled && !sourceEnabled"
+      v-else
       density="comfortable"
       class="mt-4"
     >

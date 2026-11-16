@@ -11,8 +11,11 @@ const props = withDefaults(
   defineProps<{
     name: string
     extSystem: IntegerId
+    source?: boolean
   }>(),
-  {},
+  {
+    source: undefined,
+  },
 )
 const emit = defineEmits<{
   (e: 'change'): void
@@ -22,6 +25,7 @@ const emit = defineEmits<{
 const { fetchItemsMinimal, fetchItemsMinimalByIds } = useAuthorSelectActions(props.extSystem)
 
 const { filterData, filterConfig } = useAuthorInnerFilter()
+filterData.source = props.source ?? null
 provide(FilterInnerConfigKey, filterConfig)
 provide(FilterInnerDataKey, filterData)
 

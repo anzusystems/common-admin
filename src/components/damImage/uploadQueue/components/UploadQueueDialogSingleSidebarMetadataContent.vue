@@ -22,7 +22,6 @@ import { dateTimePretty } from '@/utils/datetime'
 import { useDamKeywordAssetTypeConfig } from '@/components/damImage/uploadQueue/keyword/damKeywordConfig'
 import { useDamAuthorAssetTypeConfig } from '@/components/damImage/uploadQueue/author/damAuthorConfig'
 import { useDamSourceAssetTypeConfig } from '@/components/damImage/uploadQueue/source/damSourceConfig'
-import type { DamAuthor } from '@/components/damImage/uploadQueue/author/DamAuthor'
 import type { IntegerId } from '@/types/common'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 
@@ -98,18 +97,6 @@ const credit = useDamCreditPreview(
   () => item.value?.authors ?? [],
 )
 
-const onSourceFound = (author: DamAuthor) => {
-  if (!item.value || item.value.sources.includes(author.id)) return
-  item.value.sources = [...item.value.sources, author.id]
-  onAnyMetadataChange()
-}
-
-const onAuthorFound = (author: DamAuthor) => {
-  if (!item.value || item.value.authors.includes(author.id)) return
-  item.value.authors = [...item.value.authors, author.id]
-  onAnyMetadataChange()
-}
-
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { mainFileSingleUseEnabled, showFileInfoEnabled } = useCommonAdminCoreDamOptions(
   props.configName,
@@ -176,6 +163,7 @@ const { mainFileSingleUseEnabled, showFileInfoEnabled } = useCommonAdminCoreDamO
                   >
                     <AuthorRemoteAutocompleteWithCached
                       v-model="item.sources"
+                      v-model:counterpart="item.authors"
                       :label="t('common.damImage.asset.model.sources')"
                       data-cy="custom-field-sources"
                       :ext-system="extSystem"
@@ -186,7 +174,7 @@ const { mainFileSingleUseEnabled, showFileInfoEnabled } = useCommonAdminCoreDamO
                       :required="sourceRequired"
                       :validation-scope="ADamAssetMetadataValidationScopeSymbol"
                       @update:model-value="onAnyMetadataChange"
-                      @author-found="onAuthorFound"
+                      @update:counterpart="onAnyMetadataChange"
                     />
                   </ASystemEntityScope>
                 </template>
@@ -197,6 +185,7 @@ const { mainFileSingleUseEnabled, showFileInfoEnabled } = useCommonAdminCoreDamO
                   >
                     <AuthorRemoteAutocompleteWithCached
                       v-model="item.authors"
+                      v-model:counterpart="item.sources"
                       :label="t('common.damImage.asset.model.authors')"
                       :author-conflicts="authorConflicts"
                       data-cy="custom-field-authors"
@@ -208,7 +197,7 @@ const { mainFileSingleUseEnabled, showFileInfoEnabled } = useCommonAdminCoreDamO
                       :required="authorRequired"
                       :validation-scope="ADamAssetMetadataValidationScopeSymbol"
                       @update:model-value="onAnyMetadataChange"
-                      @source-found="onSourceFound"
+                      @update:counterpart="onAnyMetadataChange"
                     />
                   </ASystemEntityScope>
                 </template>

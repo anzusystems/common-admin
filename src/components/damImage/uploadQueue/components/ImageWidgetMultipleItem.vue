@@ -12,7 +12,6 @@ import {
   useImageValidation,
 } from '@/components/damImage/uploadQueue/composables/uploadValidations'
 import AuthorRemoteAutocompleteWithCached from '@/components/damImage/uploadQueue/author/AuthorRemoteAutocompleteWithCached.vue'
-import type { DamAuthor } from '@/components/damImage/uploadQueue/author/DamAuthor'
 import { useAlerts } from '@/composables/system/alerts'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import { fetchDamCredit } from '@/components/damImage/uploadQueue/composables/damCredit'
@@ -70,18 +69,6 @@ const onSelectionChange = async () => {
   } catch (e) {
     showErrorsDefault(e)
   }
-}
-
-const onSourceFound = (author: DamAuthor) => {
-  if (image.value.damSources.includes(author.id)) return
-  image.value.damSources = [...image.value.damSources, author.id]
-  onSelectionChange()
-}
-
-const onAuthorFound = (author: DamAuthor) => {
-  if (image.value.damAuthors.includes(author.id)) return
-  image.value.damAuthors = [...image.value.damAuthors, author.id]
-  onSelectionChange()
 }
 
 const { getDamConfigExtSystem } = useDamConfigState()
@@ -159,6 +146,7 @@ const removeItem = () => {
             >
               <AuthorRemoteAutocompleteWithCached
                 v-model="image.damSources"
+                v-model:counterpart="image.damAuthors"
                 :ext-system="cachedExtSystemId"
                 :label="t('common.damImage.asset.model.sources')"
                 data-cy="custom-field-sources"
@@ -168,7 +156,7 @@ const removeItem = () => {
                 multiple
                 :validation-scope="AImageMetadataValidationScopeSymbol"
                 @update:model-value="onSelectionChange"
-                @author-found="onAuthorFound"
+                @update:counterpart="onSelectionChange"
               />
             </ASystemEntityScope>
           </template>
@@ -179,6 +167,7 @@ const removeItem = () => {
             >
               <AuthorRemoteAutocompleteWithCached
                 v-model="image.damAuthors"
+                v-model:counterpart="image.damSources"
                 :ext-system="cachedExtSystemId"
                 :label="t('common.damImage.asset.model.authors')"
                 :author-conflicts="authorConflicts"
@@ -189,7 +178,7 @@ const removeItem = () => {
                 multiple
                 :validation-scope="AImageMetadataValidationScopeSymbol"
                 @update:model-value="onSelectionChange"
-                @source-found="onSourceFound"
+                @update:counterpart="onSelectionChange"
               />
             </ASystemEntityScope>
           </template>

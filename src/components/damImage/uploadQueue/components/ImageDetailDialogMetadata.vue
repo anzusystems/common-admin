@@ -28,7 +28,6 @@ import { isDamAuthorEnabled } from '@/components/damImage/uploadQueue/author/dam
 import { fetchDamCredit } from '@/components/damImage/uploadQueue/composables/damCredit'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import DamSourcesAuthorsRow from '@/components/damImage/uploadQueue/components/DamSourcesAuthorsRow.vue'
-import type { DamAuthor } from '@/components/damImage/uploadQueue/author/DamAuthor'
 import ARow from '@/components/ARow.vue'
 import DamAdminAssetLink from '@/components/dam/DamAdminAssetLink.vue'
 import { isNull } from '@/utils/common'
@@ -123,18 +122,6 @@ const onSelectionChange = async () => {
   }
 }
 
-const onSourceFound = (author: DamAuthor) => {
-  if (!asset.value || asset.value.sources.includes(author.id)) return
-  asset.value.sources = [...asset.value.sources, author.id]
-  onSelectionChange()
-}
-
-const onAuthorFound = (author: DamAuthor) => {
-  if (!asset.value || asset.value.authors.includes(author.id)) return
-  asset.value.authors = [...asset.value.authors, author.id]
-  onSelectionChange()
-}
-
 const imageMedia = computed<ImageCreateUpdateAware | undefined>(() => {
   if (!isMediaAware(detail.value) || isNull(detail.value.damMedia.imageFileId)) return undefined
 
@@ -224,6 +211,7 @@ defineExpose({
           >
             <AuthorRemoteAutocompleteWithCached
               v-model="asset.sources"
+              v-model:counterpart="asset.authors"
               :ext-system="cachedExtSystemId"
               :label="t('common.damImage.asset.model.sources')"
               data-cy="custom-field-sources"
@@ -233,7 +221,7 @@ defineExpose({
               multiple
               :validation-scope="AImageMetadataValidationScopeSymbol"
               @update:model-value="onSelectionChange"
-              @author-found="onAuthorFound"
+              @update:counterpart="onSelectionChange"
             />
           </ASystemEntityScope>
         </template>
@@ -244,6 +232,7 @@ defineExpose({
           >
             <AuthorRemoteAutocompleteWithCached
               v-model="asset.authors"
+              v-model:counterpart="asset.sources"
               :ext-system="cachedExtSystemId"
               :label="t('common.damImage.asset.model.authors')"
               :author-conflicts="authorConflicts"
@@ -254,7 +243,7 @@ defineExpose({
               multiple
               :validation-scope="AImageMetadataValidationScopeSymbol"
               @update:model-value="onSelectionChange"
-              @source-found="onSourceFound"
+              @update:counterpart="onSelectionChange"
             />
           </ASystemEntityScope>
         </template>
@@ -348,6 +337,7 @@ defineExpose({
               >
                 <AuthorRemoteAutocompleteWithCached
                   v-model="asset.sources"
+                  v-model:counterpart="asset.authors"
                   :ext-system="cachedExtSystemId"
                   :label="t('common.damImage.asset.model.sources')"
                   data-cy="custom-field-sources"
@@ -357,7 +347,7 @@ defineExpose({
                   multiple
                   :validation-scope="AImageMetadataValidationScopeSymbol"
                   @update:model-value="onSelectionChange"
-                  @author-found="onAuthorFound"
+                  @update:counterpart="onSelectionChange"
                 />
               </ASystemEntityScope>
             </template>
@@ -368,6 +358,7 @@ defineExpose({
               >
                 <AuthorRemoteAutocompleteWithCached
                   v-model="asset.authors"
+                  v-model:counterpart="asset.sources"
                   :ext-system="cachedExtSystemId"
                   :label="t('common.damImage.asset.model.authors')"
                   :author-conflicts="authorConflicts"
@@ -378,7 +369,7 @@ defineExpose({
                   multiple
                   :validation-scope="AImageMetadataValidationScopeSymbol"
                   @update:model-value="onSelectionChange"
-                  @source-found="onSourceFound"
+                  @update:counterpart="onSelectionChange"
                 />
               </ASystemEntityScope>
             </template>

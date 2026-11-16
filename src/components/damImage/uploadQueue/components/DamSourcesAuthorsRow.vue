@@ -59,7 +59,7 @@ const { t } = useI18n()
 <style lang="scss" scoped>
 // Side by side with the slash mirrors the credit "{sources}/{authors}". Below 560 px a field gets too
 // narrow for a typical author chip (~220 px at the 90th percentile), so the fields stack without the
-// slash; the rendered credit below shows the same shape. Sources are short (TASR, SME), hence 2:3.
+// slash; the rendered credit below shows the same shape. Sources are short agency names, hence 2:3.
 .a-dam-sources-authors {
   container-type: inline-size;
 }

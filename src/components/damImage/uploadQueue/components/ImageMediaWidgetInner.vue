@@ -661,7 +661,13 @@ const tryImageConfirm = async () => {
     if (assetSelectionChanged.value && asset.value) {
       const extSystem = await getExtSystemByLicence(asset.value.licence)
       if (extSystem) {
-        await updateAssetAuthors(damClient, endPointAsset, asset.value, extSystem, true)
+        detail.value.texts.source = await fetchDamCredit(
+          damClient,
+          extSystem,
+          asset.value.sources,
+          asset.value.authors,
+        )
+        await updateAssetAuthors(damClient, endPointAsset, asset.value, extSystem)
         assetSelectionChanged.value = false
       }
     }

@@ -10,7 +10,6 @@ import AuthorRemoteAutocompleteWithCached from '@/components/damImage/uploadQueu
 import KeywordRemoteAutocompleteWithCached from '@/components/damImage/uploadQueue/keyword/KeywordRemoteAutocompleteWithCached.vue'
 import { useUploadQueueMassOperations } from '@/components/damImage/uploadQueue/composables/uploadQueueMassOperations'
 import type { DocId, IntegerId } from '@/types/common'
-import type { DamAuthor } from '@/components/damImage/uploadQueue/author/DamAuthor'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 
 const props = withDefaults(
@@ -72,17 +71,6 @@ const fillEmptySources = () => {
 }
 const replaceSources = () => {
   replaceEmptySources(massOperationsSources.value, true)
-}
-const onSourceFound = (author: DamAuthor) => {
-  if (!massOperationsSources.value.includes(author.id)) {
-    massOperationsSources.value = [...massOperationsSources.value, author.id]
-  }
-}
-
-const onAuthorFound = (author: DamAuthor) => {
-  if (!massOperationsAuthors.value.includes(author.id)) {
-    massOperationsAuthors.value = [...massOperationsAuthors.value, author.id]
-  }
 }
 const fillAll = (forceReplace = false) => {
   for (const [elementProperty, value] of Object.entries(massOperationsData.value.image)) {
@@ -263,13 +251,13 @@ onMounted(() => {
                       <div style="flex-grow: 1; min-width: 0">
                         <AuthorRemoteAutocompleteWithCached
                           v-model="massOperationsSources"
+                          v-model:counterpart="massOperationsAuthors"
                           :label="t('common.damImage.asset.model.sources')"
                           :ext-system="extSystem"
                           source
                           clearable
                           multiple
                           :validation-scope="false"
-                          @author-found="onAuthorFound"
                         />
                       </div>
                       <VBtn
@@ -313,13 +301,13 @@ onMounted(() => {
                       <div style="flex-grow: 1; min-width: 0">
                         <AuthorRemoteAutocompleteWithCached
                           v-model="massOperationsAuthors"
+                          v-model:counterpart="massOperationsSources"
                           :label="t('common.damImage.asset.model.authors')"
                           :ext-system="extSystem"
                           :source="sourceEnabled ? false : undefined"
                           clearable
                           multiple
                           :validation-scope="false"
-                          @source-found="onSourceFound"
                         />
                       </div>
                       <VBtn

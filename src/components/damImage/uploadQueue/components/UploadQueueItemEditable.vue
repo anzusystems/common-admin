@@ -26,7 +26,6 @@ import { isNull } from '@/utils/common'
 import { useDamKeywordAssetTypeConfig } from '@/components/damImage/uploadQueue/keyword/damKeywordConfig'
 import { useDamAuthorAssetTypeConfig } from '@/components/damImage/uploadQueue/author/damAuthorConfig'
 import { useDamSourceAssetTypeConfig } from '@/components/damImage/uploadQueue/source/damSourceConfig'
-import type { DamAuthor } from '@/components/damImage/uploadQueue/author/DamAuthor'
 import AActionDeleteButton from '@/components/buttons/action/AActionDeleteButton.vue'
 
 const props = withDefaults(
@@ -107,14 +106,6 @@ const credit = useDamCreditPreview(
   () => sources.value,
   () => authors.value,
 )
-
-const onSourceFound = (author: DamAuthor) => {
-  if (!sources.value.includes(author.id)) sources.value = [...sources.value, author.id]
-}
-
-const onAuthorFound = (author: DamAuthor) => {
-  if (!authors.value.includes(author.id)) authors.value = [...authors.value, author.id]
-}
 
 const mainFileSingleUse = computed({
   get() {
@@ -423,6 +414,7 @@ onUnmounted(() => {
                   >
                     <AuthorRemoteAutocompleteWithCached
                       v-model="sources"
+                      v-model:counterpart="authors"
                       :queue-id="queueKey"
                       :label="t('common.damImage.asset.model.sources')"
                       :ext-system="extSystem"
@@ -432,7 +424,6 @@ onUnmounted(() => {
                       :required="sourceRequired"
                       :validation-scope="ADamAssetMetadataValidationScopeSymbol"
                       :disabled="!item.canEditMetadata"
-                      @author-found="onAuthorFound"
                     />
                   </ASystemEntityScope>
                 </template>
@@ -443,6 +434,7 @@ onUnmounted(() => {
                   >
                     <AuthorRemoteAutocompleteWithCached
                       v-model="authors"
+                      v-model:counterpart="sources"
                       :queue-id="queueKey"
                       :label="t('common.damImage.asset.model.authors')"
                       :author-conflicts="item.authorConflicts"
@@ -453,7 +445,6 @@ onUnmounted(() => {
                       :required="authorRequired"
                       :validation-scope="ADamAssetMetadataValidationScopeSymbol"
                       :disabled="!item.canEditMetadata"
-                      @source-found="onSourceFound"
                     />
                   </ASystemEntityScope>
                 </template>

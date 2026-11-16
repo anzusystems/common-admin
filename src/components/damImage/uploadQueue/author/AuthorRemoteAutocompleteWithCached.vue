@@ -56,9 +56,9 @@ const props = withDefaults(
 )
 const emit = defineEmits<{
   (e: 'update:modelValue', data: DocId | null | DocId[]): void
-  (e: 'sourceFound', data: DamAuthor): void
-  (e: 'authorFound', data: DamAuthor): void
 }>()
+
+const counterpart = defineModel<DocId[] | undefined>('counterpart', { default: undefined })
 
 const modelValueComputed = computed({
   get() {
@@ -121,25 +121,19 @@ const { addManualToCachedAuthors } = useDamCachedAuthors()
 
 const afterCreate = (author: DamAuthor) => {
   addManualToCachedAuthors(author)
+  search.value = ''
   if (isArray(modelValueComputed.value)) {
-    modelValueComputed.value = [...modelValueComputed.value, author.id]
-    search.value = ''
+    addAuthor(author.id)
     return
   }
   modelValueComputed.value = author.id
-  search.value = ''
 }
 
-const onSourceFound = (author: DamAuthor) => {
+const addToCounterpart = (author: DamAuthor) => {
   addManualToCachedAuthors(author)
   search.value = ''
-  emit('sourceFound', author)
-}
-
-const onAuthorFound = (author: DamAuthor) => {
-  addManualToCachedAuthors(author)
-  search.value = ''
-  emit('authorFound', author)
+  if (!counterpart.value || counterpart.value.includes(author.id)) return
+  counterpart.value = [...counterpart.value, author.id]
 }
 
 const { damClient } = useCommonAdminCoreDamOptions()
@@ -147,8 +141,7 @@ const { routeToFields } = useDamAuthorFieldRouting()
 const onCreated = (author: DamAuthor) =>
   routeToFields(author, props.source, (ids) => fetchAuthorListByIds(damClient, props.extSystem, ids), {
     own: afterCreate,
-    sources: onSourceFound,
-    authors: onAuthorFound,
+    other: addToCounterpart,
   })
 
 const { can } = defineAuth<AclValue>(SYSTEM_DAM)
@@ -301,7 +294,10 @@ const showAdd = computed(() => {
         </VListItem>
       </template>
     </AFormRemoteAutocompleteWithCached>
-    <div v-show="!disabled && canCreate">
+    <div
+      v-if="canCreate"
+      v-show="!disabled"
+    >
       <AuthorCreateButton
         ref="authorCreateButton"
         variant="icon"

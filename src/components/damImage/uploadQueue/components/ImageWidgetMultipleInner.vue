@@ -51,6 +51,8 @@ import { ImageWidgetUploadConfig } from '@/components/damImage/composables/image
 import { fetchAssetListByFileIdsMultipleLicences } from '@/components/damImage/uploadQueue/api/damfetchAssetListByFileIdsMultipleLicences'
 import { copyToLicence } from '@/components/damImage/uploadQueue/api/damImageApi'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
+import { isDamSourceEnabled } from '@/components/damImage/uploadQueue/source/damSourceConfig'
+import { fetchDamCredit } from '@/components/damImage/uploadQueue/composables/damCredit'
 import { splitAssetsForCopyToLicence } from '@/components/damImage/uploadQueue/composables/splitAssetsForCopyToLicence'
 
 const props = withDefaults(
@@ -442,9 +444,7 @@ const authorEnabled = computed(() => {
   return !!getDamConfigExtSystem(cachedExtSystemId.value)?.[DamAssetType.Image]?.authors?.enabled
 })
 
-const sourceEnabled = computed(() => {
-  return !!getDamConfigExtSystem(cachedExtSystemId.value)?.[DamAssetType.Image]?.sources.enabled
-})
+const sourceEnabled = computed(() => isDamSourceEnabled(DamAssetType.Image, cachedExtSystemId.value))
 
 const saveImages = async () => {
   // Empty store here means the fetch is pending or failed, not a user deletion — the empty
@@ -463,6 +463,12 @@ const saveImages = async () => {
     const imagesRaw = toRaw(images.value)
     for (const image of imagesRaw) {
       if (image.showDamAuthors && image.damSelectionChanged && image.assetId) {
+        image.texts.source = await fetchDamCredit(
+          damClient,
+          cachedExtSystemId.value,
+          image.damSources,
+          image.damAuthors,
+        )
         assetUpdateItems.push({
           id: image.assetId,
           authors: image.damAuthors,

@@ -6,7 +6,7 @@
         "source": "Credit"
       },
       "flags": {
-        "showSource": "Show source"
+        "showSource": "Show credit"
       }
     },
     "meta": {
@@ -204,7 +204,10 @@
     "conflicts": "Author conflicts",
     "sourceFound": "“{name}” is a source, added to Sources",
     "authorFound": "“{name}” is an author, added to Authors",
-    "filterMinChars": "Enter at least 2 characters"
+    "filterMinChars": "Enter at least 2 characters",
+    "validation": {
+      "sourceType": "A source must have a type"
+    }
   },
   "uploadErrors": {
     "unknownError": "System error. Please try again later or contact the administrator.",

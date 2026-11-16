@@ -20,7 +20,6 @@ import KeywordRemoteAutocompleteWithCached from '@/components/damImage/uploadQue
 import { useDamKeywordAssetTypeConfig } from '@/components/damImage/uploadQueue/keyword/damKeywordConfig'
 import { useDamAuthorAssetTypeConfig } from '@/components/damImage/uploadQueue/author/damAuthorConfig'
 import { useDamSourceAssetTypeConfig } from '@/components/damImage/uploadQueue/source/damSourceConfig'
-import type { DamAuthor } from '@/components/damImage/uploadQueue/author/DamAuthor'
 import type { IntegerId } from '@/types/common'
 import ABooleanValue from '@/components/ABooleanValue.vue'
 import ARow from '@/components/ARow.vue'
@@ -100,18 +99,6 @@ const credit = useDamCreditPreview(
   () => asset.value?.sources ?? [],
   () => asset.value?.authors ?? [],
 )
-
-const onSourceFound = (author: DamAuthor) => {
-  if (!asset.value || asset.value.sources.includes(author.id)) return
-  asset.value.sources = [...asset.value.sources, author.id]
-  onAnyMetadataChange()
-}
-
-const onAuthorFound = (author: DamAuthor) => {
-  if (!asset.value || asset.value.authors.includes(author.id)) return
-  asset.value.authors = [...asset.value.authors, author.id]
-  onAnyMetadataChange()
-}
 
 const { cachedUsers } = useDamCachedUsers()
 
@@ -207,6 +194,7 @@ const autoDeleteIn = computed(() => {
                 >
                   <AuthorRemoteAutocompleteWithCached
                     v-model="asset.sources"
+                    v-model:counterpart="asset.authors"
                     :ext-system="extSystem"
                     :label="t('common.damImage.asset.model.sources')"
                     data-cy="custom-field-sources"
@@ -217,7 +205,7 @@ const autoDeleteIn = computed(() => {
                     :required="sourceRequired"
                     :validation-scope="ADamAssetMetadataValidationScopeSymbol"
                     @update:model-value="onAnyMetadataChange"
-                    @author-found="onAuthorFound"
+                    @update:counterpart="onAnyMetadataChange"
                   />
                 </ASystemEntityScope>
               </template>
@@ -228,6 +216,7 @@ const autoDeleteIn = computed(() => {
                 >
                   <AuthorRemoteAutocompleteWithCached
                     v-model="asset.authors"
+                    v-model:counterpart="asset.sources"
                     :ext-system="extSystem"
                     :label="t('common.damImage.asset.model.authors')"
                     :author-conflicts="authorConflicts"
@@ -239,7 +228,7 @@ const autoDeleteIn = computed(() => {
                     :required="authorRequired"
                     :validation-scope="ADamAssetMetadataValidationScopeSymbol"
                     @update:model-value="onAnyMetadataChange"
-                    @source-found="onSourceFound"
+                    @update:counterpart="onAnyMetadataChange"
                   />
                 </ASystemEntityScope>
               </template>
