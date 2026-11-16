@@ -1,6 +1,10 @@
 import type { AxiosInstance } from 'axios'
+import { computed, type MaybeRefOrGetter, toValue } from 'vue'
 import type { DocId, IntegerId } from '@/types/common'
-import type { DamAuthor } from '@/components/damImage/uploadQueue/author/DamAuthor'
+import type {
+  DamAuthor,
+  DamAuthorMinimal,
+} from '@/components/damImage/uploadQueue/author/DamAuthor'
 import { fetchAuthorListByIds } from '@/components/damImage/uploadQueue/api/authorApi'
 import { isUndefined } from '@/utils/common'
 import { DamAssetType } from '@/types/coreDam/Asset'
@@ -23,16 +27,18 @@ export function getDamCreditConfig(extSystem: IntegerId): DamCreditConfig {
   }
 }
 
-const joinNames = (items: DamAuthor[], separator: string) =>
+type DamCreditName = Pick<DamAuthorMinimal, 'name' | 'hiddenInCredit'>
+
+const joinNames = (items: DamCreditName[], separator: string) =>
   items
-    .filter((item) => !item.flags.hiddenInCredit)
+    .filter((item) => !item.hiddenInCredit)
     .map((item) => item.name.trim())
     .filter((name) => name.length > 0)
     .join(separator)
 
 export function damCredit(
-  sources: DamAuthor[],
-  authors: DamAuthor[],
+  sources: DamCreditName[],
+  authors: DamCreditName[],
   config: DamCreditConfig,
 ): string {
   const sourcesText = joinNames(sources, config.creditSeparator)
@@ -52,8 +58,28 @@ export function damCreditFromMap(
   config: DamCreditConfig,
 ): string {
   const pick = (ids: DocId[]) =>
-    ids.map((id) => authorsMap.get(id)).filter((item): item is DamAuthor => !isUndefined(item))
+    ids
+      .map((id) => authorsMap.get(id))
+      .filter((item): item is DamAuthor => !isUndefined(item))
+      .map((item) => ({ name: item.name, hiddenInCredit: item.flags.hiddenInCredit }))
   return damCredit(pick(sourceIds), pick(authorIds), config)
+}
+
+export function useDamCreditPreview(
+  getCached: (id: DocId) => DamCreditName | undefined,
+  extSystem: MaybeRefOrGetter<IntegerId>,
+  sourceIds: MaybeRefOrGetter<DocId[]>,
+  authorIds: MaybeRefOrGetter<DocId[]>,
+) {
+  const pick = (ids: DocId[]) =>
+    ids.map((id) => getCached(id)).filter((item): item is DamCreditName => !isUndefined(item))
+  return computed(() =>
+    damCredit(
+      pick(toValue(sourceIds)),
+      pick(toValue(authorIds)),
+      getDamCreditConfig(toValue(extSystem)),
+    ),
+  )
 }
 
 export async function fetchDamCredit(

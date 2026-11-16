@@ -194,13 +194,16 @@
       "agency": "Agency"
     },
     "button": {
-      "add": "Add new author"
+      "add": "Add new author",
+      "addSource": "Add new source"
     },
     "meta": {
-      "create": "Creating author"
+      "create": "Creating author",
+      "createSource": "Create source"
     },
     "conflicts": "Author conflicts",
     "sourceFound": "“{name}” is a source, added to Sources",
+    "authorFound": "“{name}” is an author, added to Authors",
     "filterMinChars": "Enter at least 2 characters"
   },
   "uploadErrors": {

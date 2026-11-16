@@ -13,6 +13,8 @@ import { AssetFileFailReason } from '@/types/coreDam/AssetFile'
 import ATableCopyIdButton from '@/components/buttons/table/ATableCopyIdButton.vue'
 import { prettyBytes } from '@/utils/file'
 import DamSourcesAuthorsRow from '@/components/damImage/uploadQueue/components/DamSourcesAuthorsRow.vue'
+import { useDamCachedAuthors } from '@/components/damImage/uploadQueue/author/cachedAuthors'
+import { useDamCreditPreview } from '@/components/damImage/uploadQueue/composables/damCredit'
 import ASystemEntityScope from '@/components/form/ASystemEntityScope.vue'
 import AssetCustomMetadataForm from '@/components/damImage/uploadQueue/components/AssetCustomMetadataForm.vue'
 import AssetImage from '@/components/damImage/uploadQueue/components/AssetImage.vue'
@@ -98,8 +100,20 @@ const sources = computed({
   },
 })
 
+const { getCachedAuthor } = useDamCachedAuthors()
+const credit = useDamCreditPreview(
+  getCachedAuthor,
+  () => props.extSystem,
+  () => sources.value,
+  () => authors.value,
+)
+
 const onSourceFound = (author: DamAuthor) => {
   if (!sources.value.includes(author.id)) sources.value = [...sources.value, author.id]
+}
+
+const onAuthorFound = (author: DamAuthor) => {
+  if (!authors.value.includes(author.id)) authors.value = [...authors.value, author.id]
 }
 
 const mainFileSingleUse = computed({
@@ -399,6 +413,7 @@ onUnmounted(() => {
               <DamSourcesAuthorsRow
                 :source-enabled="sourceEnabled"
                 :author-enabled="authorEnabled"
+                :credit="credit"
                 class="my-2"
               >
                 <template #sources>
@@ -417,6 +432,7 @@ onUnmounted(() => {
                       :required="sourceRequired"
                       :validation-scope="ADamAssetMetadataValidationScopeSymbol"
                       :disabled="!item.canEditMetadata"
+                      @author-found="onAuthorFound"
                     />
                   </ASystemEntityScope>
                 </template>

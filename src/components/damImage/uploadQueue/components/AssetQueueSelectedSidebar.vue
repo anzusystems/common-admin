@@ -23,7 +23,7 @@ const props = withDefaults(
 
 const massOperationsData = ref({ image: {}, video: {}, audio: {}, document: {} })
 const massOperationsKeywords = ref([])
-const massOperationsAuthors = ref([])
+const massOperationsAuthors = ref<DocId[]>([])
 const massOperationsSources = ref<DocId[]>([])
 
 const { t } = useI18n()
@@ -76,6 +76,12 @@ const replaceSources = () => {
 const onSourceFound = (author: DamAuthor) => {
   if (!massOperationsSources.value.includes(author.id)) {
     massOperationsSources.value = [...massOperationsSources.value, author.id]
+  }
+}
+
+const onAuthorFound = (author: DamAuthor) => {
+  if (!massOperationsAuthors.value.includes(author.id)) {
+    massOperationsAuthors.value = [...massOperationsAuthors.value, author.id]
   }
 }
 const fillAll = (forceReplace = false) => {
@@ -263,6 +269,7 @@ onMounted(() => {
                           clearable
                           multiple
                           :validation-scope="false"
+                          @author-found="onAuthorFound"
                         />
                       </div>
                       <VBtn

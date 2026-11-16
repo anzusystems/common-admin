@@ -13,6 +13,8 @@ export function useAuthorInnerFilter() {
   const filterFieldsInner = [
     { name: 'text' as const, variant: 'search', default: null, type: 'string' },
     { name: 'source' as const, default: null, type: 'boolean', render: { skip: true } },
+    // Merged authors are not offered; the API keeps canBeCurrentAuthor false exactly for authors with current authors.
+    { name: 'canBeCurrentAuthor' as const, default: true, type: 'boolean', render: { skip: true } },
   ] satisfies readonly MakeFilterOption[]
 
   const { filterConfig, filterData } = createFilter(

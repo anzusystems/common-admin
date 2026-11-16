@@ -160,6 +160,7 @@ const fetchImagesOnLoad = async () => {
           key: generateUUIDv1(),
           ...imageRes,
           damAuthors: found ? found.authors : [],
+          showDamAuthors: found ? found.authors.length === 0 && found.sources.length === 0 : false,
           damSources: found ? found.sources : [],
           assetId: found ? found.id : undefined,
         }
@@ -328,6 +329,7 @@ const assetSelectConfirmMap = async (
         },
         position: maxPosition.value,
         damAuthors: [],
+        showDamAuthors: false,
         damSources: [],
         assetId: asset.id,
       }
@@ -357,6 +359,7 @@ const assetSelectConfirmMap = async (
       },
       position: maxPosition.value,
       damAuthors: authorIds,
+      showDamAuthors: authorIds.length === 0 && sourceIds.length === 0,
       damSources: sourceIds,
       assetId: asset.id,
     }
@@ -459,7 +462,7 @@ const saveImages = async () => {
     const assetUpdateItems: AssetAuthorsItems = []
     const imagesRaw = toRaw(images.value)
     for (const image of imagesRaw) {
-      if (image.damSelectionChanged && image.assetId) {
+      if (image.showDamAuthors && image.damSelectionChanged && image.assetId) {
         assetUpdateItems.push({
           id: image.assetId,
           authors: image.damAuthors,
@@ -479,6 +482,7 @@ const saveImages = async () => {
         key: generateUUIDv1(),
         ...resItem,
         damAuthors: [],
+        showDamAuthors: false,
         damSources: [],
         assetId: undefined,
       }
@@ -498,6 +502,9 @@ const saveImages = async () => {
       return {
         ...item,
         damAuthors: matchedImage ? matchedImage.damAuthors : item.damAuthors,
+        showDamAuthors: matchedImage
+          ? matchedImage.damAuthors.length === 0 && matchedImage.damSources.length === 0
+          : item.damAuthors.length === 0 && item.damSources.length === 0,
         damSources: matchedImage ? matchedImage.damSources : item.damSources,
         assetId: matchedImage ? matchedImage.assetId : item.assetId,
       }
@@ -549,6 +556,7 @@ const createImageStoreItem = (): ImageStoreItem => ({
   flags: { showSource: true, internal: false, overrideInternal: false },
   position: 0,
   damAuthors: [],
+  showDamAuthors: false,
   damSources: [],
   assetId: undefined,
 })

@@ -10,6 +10,8 @@ import ACopyText from '@/components/ACopyText.vue'
 import { prettyBytes } from '@/utils/file'
 import AssetMetadataImageAttributes from '@/components/damImage/uploadQueue/components/AssetMetadataImageAttributes.vue'
 import DamSourcesAuthorsRow from '@/components/damImage/uploadQueue/components/DamSourcesAuthorsRow.vue'
+import { useDamCachedAuthors } from '@/components/damImage/uploadQueue/author/cachedAuthors'
+import { useDamCreditPreview } from '@/components/damImage/uploadQueue/composables/damCredit'
 import ASystemEntityScope from '@/components/form/ASystemEntityScope.vue'
 import { dateDiff, dateNow, dateTimePretty, dateTimeToDate } from '@/utils/datetime'
 import { ADamAssetMetadataValidationScopeSymbol } from '@/components/damImage/uploadQueue/composables/uploadValidations'
@@ -91,9 +93,23 @@ const { sourceRequired, sourceEnabled } = useDamSourceAssetTypeConfig(
   props.extSystem,
 )
 
+const { getCachedAuthor } = useDamCachedAuthors()
+const credit = useDamCreditPreview(
+  getCachedAuthor,
+  () => props.extSystem,
+  () => asset.value?.sources ?? [],
+  () => asset.value?.authors ?? [],
+)
+
 const onSourceFound = (author: DamAuthor) => {
   if (!asset.value || asset.value.sources.includes(author.id)) return
   asset.value.sources = [...asset.value.sources, author.id]
+  onAnyMetadataChange()
+}
+
+const onAuthorFound = (author: DamAuthor) => {
+  if (!asset.value || asset.value.authors.includes(author.id)) return
+  asset.value.authors = [...asset.value.authors, author.id]
   onAnyMetadataChange()
 }
 
@@ -181,6 +197,7 @@ const autoDeleteIn = computed(() => {
             <DamSourcesAuthorsRow
               :source-enabled="sourceEnabled"
               :author-enabled="authorEnabled"
+              :credit="credit"
               class="my-2"
             >
               <template #sources>
@@ -200,6 +217,7 @@ const autoDeleteIn = computed(() => {
                     :required="sourceRequired"
                     :validation-scope="ADamAssetMetadataValidationScopeSymbol"
                     @update:model-value="onAnyMetadataChange"
+                    @author-found="onAuthorFound"
                   />
                 </ASystemEntityScope>
               </template>

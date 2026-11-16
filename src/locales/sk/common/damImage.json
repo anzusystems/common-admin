@@ -194,13 +194,16 @@
       "agency": "Agentúra"
     },
     "button": {
-      "add": "Pridať nového autora"
+      "add": "Pridať nového autora",
+      "addSource": "Pridať nový zdroj"
     },
     "meta": {
-      "create": "Vytvorenie autora"
+      "create": "Vytvorenie autora",
+      "createSource": "Vytvorenie zdroja"
     },
     "conflicts": "Konflikt autorov",
     "sourceFound": "„{name}“ je zdroj, pridali sme ho do Zdrojov",
+    "authorFound": "„{name}“ je autor, pridali sme ho do Autorov",
     "filterMinChars": "Zadajte minimálne 2 znaky"
   },
   "uploadErrors": {

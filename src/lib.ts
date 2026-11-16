@@ -98,6 +98,7 @@ import ImageMassOperations from '@/components/damImage/uploadQueue/components/Im
 import AImagePublicInput from '@/components/damImage/AImagePublicInput.vue'
 import ACropperjs from '@/components/ACropperjs.vue'
 import DamAssetImageRoiSelect from '@/components/damImage/uploadQueue/components/DamAssetImageRoiSelect.vue'
+import DamSourcesAuthorsRow from '@/components/damImage/uploadQueue/components/DamSourcesAuthorsRow.vue'
 import type { ACropperjsExposed } from '@/components/damImage/uploadQueue/composables/cropperJsService'
 import {
   cropToRegion,
@@ -412,6 +413,7 @@ import type {
   SortableItemWithParentDataAware,
 } from '@/components/sortable/sortableUtils'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
+import { useDamCreditPreview } from '@/components/damImage/uploadQueue/composables/damCredit'
 import {
   type DamDistributionConfig,
   type DamDistributionRequirementsCategorySelectConfig,
@@ -477,6 +479,7 @@ import {
 } from '@/components/damImage/uploadQueue/author/DamAuthorType'
 import { useDamKeywordFactory } from '@/components/damImage/uploadQueue/keyword/KeywordFactory'
 import { useDamAuthorFactory } from '@/components/damImage/uploadQueue/author/AuthorFactory'
+import { useDamAuthorFieldRouting } from '@/components/damImage/uploadQueue/author/authorFieldRouting'
 import type { DamCurrentUserDto } from '@/types/coreDam/DamCurrentUser'
 import { fetchDamCurrentUser } from '@/components/damImage/uploadQueue/api/damCurrentUserApi'
 import type { DamAssetLicence, DamAssetLicenceMinimal } from '@/types/coreDam/AssetLicence'
@@ -744,6 +747,7 @@ export {
   ACropperjs,
   type ACropperjsExposed,
   DamAssetImageRoiSelect,
+  DamSourcesAuthorsRow,
   ACollabLockedByUser,
   ACollabCountdown,
   ACollabManagement,
@@ -797,6 +801,7 @@ export {
   useCustomDataForm,
   useCustomDataFormElementType,
   useDamConfigState,
+  useDamCreditPreview,
   useUploadQueueItemFactory,
   useDamUploadChunkSize,
   useDamAcceptTypeAndSizeHelper,
@@ -807,6 +812,7 @@ export {
   useDropzoneGlobalDragState,
   useDamKeywordFactory,
   useDamAuthorFactory,
+  useDamAuthorFieldRouting,
   useDamAuthorType,
   useDamDistributionServiceType,
   useDamAssetLicenceInnerFilter,

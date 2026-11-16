@@ -15,6 +15,7 @@ export interface DamAuthorMinimal {
   name: string
   identifier: string
   reviewed: boolean
+  hiddenInCredit: boolean
 }
 
 export interface DamAuthor

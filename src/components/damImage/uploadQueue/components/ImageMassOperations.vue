@@ -29,6 +29,12 @@ const onSourceFound = (author: DamAuthor) => {
   }
 }
 
+const onAuthorFound = (author: DamAuthor) => {
+  if (!texts.value.authors.includes(author.id)) {
+    texts.value.authors = [...texts.value.authors, author.id]
+  }
+}
+
 const { replaceEmptyDescription, replaceEmptySource, replaceEmptyAuthors, replaceEmptySources } =
   useImageMassOperations()
 const { t } = useI18n()
@@ -138,6 +144,7 @@ const v$ = useVuelidate(rules, { texts }, { $scope: false })
                 clearable
                 multiple
                 :validation-scope="false"
+                @author-found="onAuthorFound"
               />
             </div>
             <VBtn

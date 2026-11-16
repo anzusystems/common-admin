@@ -117,6 +117,7 @@ const emit = defineEmits<{
 
 const modelValue = defineModel<IntegerIdNullable>({ required: true })
 const assetSelectionChanged = ref(false)
+const showDamAuthorsInCmsImage = ref(false)
 
 // Collaboration
 const { collabOptions } = useCommonAdminCollabOptions()
@@ -411,6 +412,7 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
   imageMediaWidgetStore.setDetail(null)
   assetDetailStore.setAsset(null)
   assetSelectionChanged.value = false
+  showDamAuthorsInCmsImage.value = false
   let description = ''
   let source = ''
   if (data.type === 'asset') {
@@ -442,8 +444,10 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
         const extSystem = await getExtSystemByLicence(assetRes.licence)
         if ((assetRes.authors.length > 0 || assetRes.sources.length > 0) && extSystem) {
           source = await fetchDamCredit(damClient, extSystem, assetRes.sources, assetRes.authors)
+        } else if (assetRes.authors.length === 0 && assetRes.sources.length === 0) {
+          showDamAuthorsInCmsImage.value = true
+          asset.value = assetRes
         }
-        asset.value = assetRes
       }
     } catch (e) {
       showErrorsDefault(e)
@@ -514,6 +518,7 @@ const onEditAsset = async (assetFileId: DocId) => {
 
 const onMetadataDialogClose = () => {
   assetSelectionChanged.value = false
+  showDamAuthorsInCmsImage.value = false
   imageMediaWidgetStore.setDetail(null)
   assetDetailStore.setAsset(null)
   metadataDialog.value = false
@@ -530,6 +535,7 @@ const onMetadataDialogConfirm = async () => {
         assetSelectionChanged.value = false
       }
     }
+    showDamAuthorsInCmsImage.value = false
     const res = detail.value.id
       ? await imageApi.updateImage(imageClient, detail.value.id, detail.value)
       : await imageApi.createImage(imageClient, detail.value)
@@ -826,6 +832,7 @@ defineExpose({
     <ImageDetailDialogMetadata
       ref="detailDialogMetadataComponent"
       v-model="metadataDialog"
+      :show-dam-authors="showDamAuthorsInCmsImage"
       :show-source-enabled="showSourceEnabled"
       :source-label="sourceLabel"
       :edit-asset-label="editAssetLabel"

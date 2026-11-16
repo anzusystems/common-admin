@@ -19,6 +19,8 @@ import { fetchDamCredit } from '@/components/damImage/uploadQueue/composables/da
 import DamSourcesAuthorsRow from '@/components/damImage/uploadQueue/components/DamSourcesAuthorsRow.vue'
 import ASystemEntityScope from '@/components/form/ASystemEntityScope.vue'
 import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/composables/extSystemIdForCached'
+import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
+import { DamAssetType } from '@/types/coreDam/Asset'
 
 const props = withDefaults(
   defineProps<{
@@ -76,7 +78,24 @@ const onSourceFound = (author: DamAuthor) => {
   onSelectionChange()
 }
 
-const { v$ } = useImageValidation(image)
+const onAuthorFound = (author: DamAuthor) => {
+  if (image.value.damAuthors.includes(author.id)) return
+  image.value.damAuthors = [...image.value.damAuthors, author.id]
+  onSelectionChange()
+}
+
+const { getDamConfigExtSystem } = useDamConfigState()
+const imageConfig = computed(
+  () => getDamConfigExtSystem(cachedExtSystemId.value)?.[DamAssetType.Image],
+)
+
+const showDamSelection = computed(
+  () => !!image.value?.showDamAuthors && (props.sourceEnabled || props.authorEnabled),
+)
+
+const imageSourceRequired = computed(() => !showDamSelection.value)
+
+const { v$ } = useImageValidation(image, imageSourceRequired)
 
 const onEditAsset = () => {
   if (isNull(image.value) || isUndefined(image.value)) return
@@ -127,8 +146,11 @@ const removeItem = () => {
           </VCol>
         </VRow>
         <DamSourcesAuthorsRow
+          v-if="showDamSelection"
           :source-enabled="sourceEnabled"
           :author-enabled="authorEnabled"
+          :credit="image.texts.source"
+          :credit-label="sourceLabel"
         >
           <template #sources>
             <ASystemEntityScope
@@ -140,11 +162,13 @@ const removeItem = () => {
                 :ext-system="cachedExtSystemId"
                 :label="t('common.damImage.asset.model.sources')"
                 data-cy="custom-field-sources"
+                :required="!!imageConfig?.sources.required"
                 source
                 clearable
                 multiple
                 :validation-scope="AImageMetadataValidationScopeSymbol"
                 @update:model-value="onSelectionChange"
+                @author-found="onAuthorFound"
               />
             </ASystemEntityScope>
           </template>
@@ -159,6 +183,7 @@ const removeItem = () => {
                 :label="t('common.damImage.asset.model.authors')"
                 :author-conflicts="authorConflicts"
                 data-cy="custom-field-authors"
+                :required="!!imageConfig?.authors?.required"
                 :source="sourceEnabled ? false : undefined"
                 clearable
                 multiple
@@ -169,7 +194,10 @@ const removeItem = () => {
             </ASystemEntityScope>
           </template>
         </DamSourcesAuthorsRow>
-        <VRow density="comfortable">
+        <VRow
+          v-else
+          density="comfortable"
+        >
           <VCol>
             <AFormTextarea
               v-model="image.texts.source"

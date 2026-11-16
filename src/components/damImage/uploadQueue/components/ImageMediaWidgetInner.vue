@@ -214,6 +214,7 @@ const uploadQueuesStore = useUploadQueuesStore()
 const { uploadQueueDialog } = useUploadQueueDialog()
 
 const assetSelectionChanged = ref(false)
+const showDamAuthorsInCmsImage = ref(false)
 const resImageMedia = ref<null | ImageCreateUpdateAware | MediaAware>(null)
 const clickMenuOpened = ref(false)
 const assetSelectDialog = ref(false)
@@ -468,6 +469,7 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
   assetDetailStore.setAsset(null)
   // metadataDialog.value = true
   assetSelectionChanged.value = false
+  showDamAuthorsInCmsImage.value = false
   let description = ''
   let source = ''
   const selectedAsset = data.value[0]
@@ -558,8 +560,10 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
       const extSystem = await getExtSystemByLicence(assetRes.licence)
       if ((assetRes.authors.length > 0 || assetRes.sources.length > 0) && extSystem) {
         source = await fetchDamCredit(damClient, extSystem, assetRes.sources, assetRes.authors)
+      } else if (assetRes.authors.length === 0 && assetRes.sources.length === 0) {
+        showDamAuthorsInCmsImage.value = true
+        asset.value = assetRes
       }
-      asset.value = assetRes
     } catch (e) {
       showErrorsDefault(e)
     }
@@ -625,6 +629,7 @@ const onEditAsset = async (assetFileId: DocId) => {
 
 const onMetadataDialogClose = () => {
   assetSelectionChanged.value = false
+  showDamAuthorsInCmsImage.value = false
   imageMediaWidgetStore.setDetail(null)
   assetDetailStore.setAsset(null)
   metadataDialog.value = false
@@ -660,6 +665,7 @@ const tryImageConfirm = async () => {
         assetSelectionChanged.value = false
       }
     }
+    showDamAuthorsInCmsImage.value = false
     const res = detail.value.id
       ? await imageApi.updateImage(imageClient, detail.value.id, detail.value)
       : await imageApi.createImage(imageClient, detail.value)
@@ -1004,6 +1010,7 @@ defineExpose({
     <ImageDetailDialogMetadata
       ref="detailDialogMetadataComponent"
       v-model="metadataDialog"
+      :show-dam-authors="showDamAuthorsInCmsImage"
       :show-source-enabled="showSourceEnabled"
       :source-label="sourceLabel"
       :edit-asset-label="editAssetLabel"

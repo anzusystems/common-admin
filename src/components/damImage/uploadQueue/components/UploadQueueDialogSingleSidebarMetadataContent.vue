@@ -14,6 +14,8 @@ import type { UploadQueueItem } from '@/types/coreDam/UploadQueue'
 import AuthorRemoteAutocompleteWithCached from '@/components/damImage/uploadQueue/author/AuthorRemoteAutocompleteWithCached.vue'
 import KeywordRemoteAutocompleteWithCached from '@/components/damImage/uploadQueue/keyword/KeywordRemoteAutocompleteWithCached.vue'
 import DamSourcesAuthorsRow from '@/components/damImage/uploadQueue/components/DamSourcesAuthorsRow.vue'
+import { useDamCachedAuthors } from '@/components/damImage/uploadQueue/author/cachedAuthors'
+import { useDamCreditPreview } from '@/components/damImage/uploadQueue/composables/damCredit'
 import ASystemEntityScope from '@/components/form/ASystemEntityScope.vue'
 import { ADamAssetMetadataValidationScopeSymbol } from '@/components/damImage/uploadQueue/composables/uploadValidations'
 import { dateTimePretty } from '@/utils/datetime'
@@ -88,9 +90,23 @@ const { sourceRequired, sourceEnabled } = useDamSourceAssetTypeConfig(
   props.extSystem,
 )
 
+const { getCachedAuthor } = useDamCachedAuthors()
+const credit = useDamCreditPreview(
+  getCachedAuthor,
+  () => props.extSystem,
+  () => item.value?.sources ?? [],
+  () => item.value?.authors ?? [],
+)
+
 const onSourceFound = (author: DamAuthor) => {
   if (!item.value || item.value.sources.includes(author.id)) return
   item.value.sources = [...item.value.sources, author.id]
+  onAnyMetadataChange()
+}
+
+const onAuthorFound = (author: DamAuthor) => {
+  if (!item.value || item.value.authors.includes(author.id)) return
+  item.value.authors = [...item.value.authors, author.id]
   onAnyMetadataChange()
 }
 
@@ -150,6 +166,7 @@ const { mainFileSingleUseEnabled, showFileInfoEnabled } = useCommonAdminCoreDamO
               <DamSourcesAuthorsRow
                 :source-enabled="sourceEnabled"
                 :author-enabled="authorEnabled"
+                :credit="credit"
                 class="my-2"
               >
                 <template #sources>
@@ -169,6 +186,7 @@ const { mainFileSingleUseEnabled, showFileInfoEnabled } = useCommonAdminCoreDamO
                       :required="sourceRequired"
                       :validation-scope="ADamAssetMetadataValidationScopeSymbol"
                       @update:model-value="onAnyMetadataChange"
+                      @author-found="onAuthorFound"
                     />
                   </ASystemEntityScope>
                 </template>

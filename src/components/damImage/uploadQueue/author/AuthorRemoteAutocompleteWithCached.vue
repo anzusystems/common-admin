@@ -19,6 +19,12 @@ import AuthorCreateButton from '@/components/damImage/uploadQueue/author/AuthorC
 import ARow from '@/components/ARow.vue'
 import { FilterInnerConfigKey, FilterInnerDataKey } from '@/labs/filters/filterInjectionKeys'
 import { useAuthorInnerFilter } from '@/components/damImage/uploadQueue/author/AuthorFilter'
+import { defineAuth } from '@/composables/auth/defineAuth'
+import type { AclValue } from '@/types/Permission'
+import { SYSTEM_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
+import { fetchAuthorListByIds } from '@/components/damImage/uploadQueue/api/authorApi'
+import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
+import { useDamAuthorFieldRouting } from '@/components/damImage/uploadQueue/author/authorFieldRouting'
 
 const props = withDefaults(
   defineProps<{
@@ -51,6 +57,7 @@ const props = withDefaults(
 const emit = defineEmits<{
   (e: 'update:modelValue', data: DocId | null | DocId[]): void
   (e: 'sourceFound', data: DamAuthor): void
+  (e: 'authorFound', data: DamAuthor): void
 }>()
 
 const modelValueComputed = computed({
@@ -129,6 +136,24 @@ const onSourceFound = (author: DamAuthor) => {
   emit('sourceFound', author)
 }
 
+const onAuthorFound = (author: DamAuthor) => {
+  addManualToCachedAuthors(author)
+  search.value = ''
+  emit('authorFound', author)
+}
+
+const { damClient } = useCommonAdminCoreDamOptions()
+const { routeToFields } = useDamAuthorFieldRouting()
+const onCreated = (author: DamAuthor) =>
+  routeToFields(author, props.source, (ids) => fetchAuthorListByIds(damClient, props.extSystem, ids), {
+    own: afterCreate,
+    sources: onSourceFound,
+    authors: onAuthorFound,
+  })
+
+const { can } = defineAuth<AclValue>(SYSTEM_DAM)
+const canCreate = computed(() => !props.source || can('dam_source_create'))
+
 const sourcesEmptyAttrs = computed(() =>
   props.source && !loadingLocal.value
     ? { 'no-data-text': t('common.damImage.asset.model.sourcesEmpty') }
@@ -152,19 +177,19 @@ const removeLastComma = (value: string) => {
 }
 
 const onEnterKeyup = () => {
-  if (props.source) return
+  if (!canCreate.value) return
   const value = removeLastComma(search.value)
   authorCreateButton.value?.open(value)
 }
 
 const onCommaKeyup = () => {
-  if (props.source) return
+  if (!canCreate.value) return
   const value = removeLastComma(search.value)
   authorCreateButton.value?.open(value)
 }
 
 const showAdd = computed(() => {
-  if (props.source || loadingLocal.value) return false
+  if (!canCreate.value || loadingLocal.value) return false
   if (search.value.length < 2 || search.value.length > 255) return false
   if (fetchedItemsMinimal.value.size === 0) return true
   return ![...fetchedItemsMinimal.value.values()].some(
@@ -276,7 +301,7 @@ const showAdd = computed(() => {
         </VListItem>
       </template>
     </AFormRemoteAutocompleteWithCached>
-    <div v-show="!disabled && !source">
+    <div v-show="!disabled && canCreate">
       <AuthorCreateButton
         ref="authorCreateButton"
         variant="icon"
@@ -286,8 +311,7 @@ const showAdd = computed(() => {
         :source="source"
         disable-redirect
         :disabled="disabled"
-        @on-success="afterCreate"
-        @on-source-found="onSourceFound"
+        @on-success="onCreated"
       />
     </div>
   </div>

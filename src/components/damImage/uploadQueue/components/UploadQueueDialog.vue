@@ -140,6 +140,7 @@ const onSaveAndApply = async () => {
         ...item,
         position: maxPosition.value,
         damAuthors: item.authorIds ?? [],
+        showDamAuthors: (item.authorIds ?? []).length === 0 && (item.sourceIds ?? []).length === 0,
         damSources: item.sourceIds ?? [],
         assetId: item.assetId ?? undefined,
       }

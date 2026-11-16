@@ -33,19 +33,22 @@ import ARow from '@/components/ARow.vue'
 import DamAdminAssetLink from '@/components/dam/DamAdminAssetLink.vue'
 import { isNull } from '@/utils/common'
 import { DamMediaType } from '@/types/MediaAware'
+import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     modelValue: boolean
     saving: boolean
     loading: boolean
     expand?: boolean
+    showDamAuthors?: boolean
     showSourceEnabled?: boolean
     sourceLabel?: string
     editAssetLabel?: string
   }>(),
   {
     expand: false,
+    showDamAuthors: false,
     showSourceEnabled: true,
     sourceLabel: undefined,
     editAssetLabel: undefined,
@@ -86,6 +89,17 @@ const authorEnabled = computed(() =>
   isDamAuthorEnabled(DamAssetType.Image, cachedExtSystemId.value),
 )
 
+const { getDamConfigExtSystem } = useDamConfigState()
+const imageConfig = computed(
+  () => getDamConfigExtSystem(cachedExtSystemId.value)?.[DamAssetType.Image],
+)
+
+const showDamSelection = computed(
+  () => props.showDamAuthors && !!asset.value && (sourceEnabled.value || authorEnabled.value),
+)
+
+const imageSourceRequired = computed(() => !showDamSelection.value)
+
 const { damClient } = useCommonAdminCoreDamOptions()
 const { showValidationError, showErrorsDefault } = useAlerts()
 let creditRequestId = 0
@@ -115,6 +129,12 @@ const onSourceFound = (author: DamAuthor) => {
   onSelectionChange()
 }
 
+const onAuthorFound = (author: DamAuthor) => {
+  if (!asset.value || asset.value.authors.includes(author.id)) return
+  asset.value.authors = [...asset.value.authors, author.id]
+  onSelectionChange()
+}
+
 const imageMedia = computed<ImageCreateUpdateAware | undefined>(() => {
   if (!isMediaAware(detail.value) || isNull(detail.value.damMedia.imageFileId)) return undefined
 
@@ -137,7 +157,7 @@ const imageMedia = computed<ImageCreateUpdateAware | undefined>(() => {
   }
 })
 
-const { v$ } = useImageValidation(detail)
+const { v$ } = useImageValidation(detail, imageSourceRequired)
 
 const onConfirm = () => {
   v$.value.$touch()
@@ -191,9 +211,11 @@ defineExpose({
         </VCol>
       </VRow>
       <DamSourcesAuthorsRow
-        v-if="asset"
+        v-if="showDamSelection && asset"
         :source-enabled="sourceEnabled"
         :author-enabled="authorEnabled"
+        :credit="detail.texts.source"
+        :credit-label="sourceLabel"
       >
         <template #sources>
           <ASystemEntityScope
@@ -205,11 +227,13 @@ defineExpose({
               :ext-system="cachedExtSystemId"
               :label="t('common.damImage.asset.model.sources')"
               data-cy="custom-field-sources"
+              :required="!!imageConfig?.sources.required"
               source
               clearable
               multiple
               :validation-scope="AImageMetadataValidationScopeSymbol"
               @update:model-value="onSelectionChange"
+              @author-found="onAuthorFound"
             />
           </ASystemEntityScope>
         </template>
@@ -224,6 +248,7 @@ defineExpose({
               :label="t('common.damImage.asset.model.authors')"
               :author-conflicts="authorConflicts"
               data-cy="custom-field-authors"
+              :required="!!imageConfig?.authors?.required"
               :source="sourceEnabled ? false : undefined"
               clearable
               multiple
@@ -234,7 +259,7 @@ defineExpose({
           </ASystemEntityScope>
         </template>
       </DamSourcesAuthorsRow>
-      <VRow>
+      <VRow v-else>
         <VCol>
           <AFormTextarea
             v-model="detail.texts.source"
@@ -263,7 +288,7 @@ defineExpose({
   <VDialog
     v-else
     :model-value="modelValue"
-    :max-width="500"
+    :max-width="640"
     :fullscreen="mdAndDown"
     eager
     @update:model-value="onDialogModelUpdate"
@@ -310,9 +335,11 @@ defineExpose({
             </VCol>
           </VRow>
           <DamSourcesAuthorsRow
-            v-if="asset"
+            v-if="showDamSelection && asset"
             :source-enabled="sourceEnabled"
             :author-enabled="authorEnabled"
+            :credit="detail.texts.source"
+            :credit-label="sourceLabel"
           >
             <template #sources>
               <ASystemEntityScope
@@ -324,11 +351,13 @@ defineExpose({
                   :ext-system="cachedExtSystemId"
                   :label="t('common.damImage.asset.model.sources')"
                   data-cy="custom-field-sources"
+                  :required="!!imageConfig?.sources.required"
                   source
                   clearable
                   multiple
                   :validation-scope="AImageMetadataValidationScopeSymbol"
                   @update:model-value="onSelectionChange"
+                  @author-found="onAuthorFound"
                 />
               </ASystemEntityScope>
             </template>
@@ -343,6 +372,7 @@ defineExpose({
                   :label="t('common.damImage.asset.model.authors')"
                   :author-conflicts="authorConflicts"
                   data-cy="custom-field-authors"
+                  :required="!!imageConfig?.authors?.required"
                   :source="sourceEnabled ? false : undefined"
                   clearable
                   multiple
@@ -353,7 +383,7 @@ defineExpose({
               </ASystemEntityScope>
             </template>
           </DamSourcesAuthorsRow>
-          <VRow>
+          <VRow v-else>
             <VCol>
               <AFormTextarea
                 v-model="detail.texts.source"
