@@ -13,8 +13,6 @@ import { useUploadQueuesStore } from '@/components/damImage/uploadQueue/composab
 import type { UploadQueueItem } from '@/types/coreDam/UploadQueue'
 import KeywordRemoteAutocompleteWithCached from '@/components/damImage/uploadQueue/keyword/KeywordRemoteAutocompleteWithCached.vue'
 import DamSourcesAuthorsFields from '@/components/damImage/uploadQueue/components/DamSourcesAuthorsFields.vue'
-import { useDamCachedAuthors } from '@/components/damImage/uploadQueue/author/cachedAuthors'
-import { useDamCreditPreview } from '@/components/damImage/uploadQueue/composables/damCredit'
 import ASystemEntityScope from '@/components/form/ASystemEntityScope.vue'
 import { ADamAssetMetadataValidationScopeSymbol } from '@/components/damImage/uploadQueue/composables/uploadValidations'
 import { dateTimePretty } from '@/utils/datetime'
@@ -88,14 +86,6 @@ const { sourceRequired, sourceEnabled } = useDamSourceAssetTypeConfig(
   props.extSystem,
 )
 
-const { getCachedAuthor } = useDamCachedAuthors()
-const credit = useDamCreditPreview(
-  getCachedAuthor,
-  () => props.extSystem,
-  () => item.value?.sources ?? [],
-  () => item.value?.authors ?? [],
-)
-
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { mainFileSingleUseEnabled, showFileInfoEnabled } = useCommonAdminCoreDamOptions(
   props.configName,
@@ -160,7 +150,7 @@ const { mainFileSingleUseEnabled, showFileInfoEnabled } = useCommonAdminCoreDamO
                 :disabled="!item.canEditMetadata"
                 :validation-scope="ADamAssetMetadataValidationScopeSymbol"
                 :author-conflicts="authorConflicts"
-                :credit="credit"
+                show-credit
                 class="my-2"
                 @change="onAnyMetadataChange"
               />

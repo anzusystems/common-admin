@@ -5,8 +5,10 @@ import type { ValidationScope } from '@/types/Validation'
 import ASystemEntityScope from '@/components/form/ASystemEntityScope.vue'
 import AuthorRemoteAutocompleteWithCached from '@/components/damImage/uploadQueue/author/AuthorRemoteAutocompleteWithCached.vue'
 import DamSourcesAuthorsRow from '@/components/damImage/uploadQueue/components/DamSourcesAuthorsRow.vue'
+import { useDamCachedAuthors } from '@/components/damImage/uploadQueue/author/cachedAuthors'
+import { useDamCreditPreview } from '@/components/damImage/uploadQueue/composables/damCredit'
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     extSystem: IntegerId
     sourceEnabled: boolean
@@ -17,7 +19,7 @@ withDefaults(
     validationScope?: ValidationScope
     authorConflicts?: DocId[]
     queueId?: string
-    credit?: string
+    showCredit?: boolean
     creditLabel?: string
   }>(),
   {
@@ -28,7 +30,7 @@ withDefaults(
     validationScope: undefined,
     authorConflicts: undefined,
     queueId: undefined,
-    credit: '',
+    showCredit: false,
     creditLabel: undefined,
   },
 )
@@ -41,13 +43,16 @@ const sources = defineModel<DocId[]>('sources', { required: true })
 const authors = defineModel<DocId[]>('authors', { required: true })
 
 const { t } = useI18n()
+
+const { getCachedAuthor } = useDamCachedAuthors()
+const credit = useDamCreditPreview(getCachedAuthor, () => props.extSystem, sources, authors)
 </script>
 
 <template>
   <DamSourcesAuthorsRow
     :source-enabled="sourceEnabled"
     :author-enabled="authorEnabled"
-    :credit="credit"
+    :credit="showCredit ? credit : ''"
     :credit-label="creditLabel"
   >
     <template #sources>

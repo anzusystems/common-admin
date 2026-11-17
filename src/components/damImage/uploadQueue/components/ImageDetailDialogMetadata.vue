@@ -23,8 +23,6 @@ import { DamAssetType, type DamAssetTypeType } from '@/types/coreDam/Asset'
 import type { ImageCreateUpdateAware } from '@/types/ImageAware'
 import { isDamSourceEnabled } from '@/components/damImage/uploadQueue/source/damSourceConfig'
 import { isDamAuthorEnabled } from '@/components/damImage/uploadQueue/author/damAuthorConfig'
-import { useDamCachedAuthors } from '@/components/damImage/uploadQueue/author/cachedAuthors'
-import { useDamCreditPreview } from '@/components/damImage/uploadQueue/composables/damCredit'
 import DamSourcesAuthorsFields from '@/components/damImage/uploadQueue/components/DamSourcesAuthorsFields.vue'
 import ARow from '@/components/ARow.vue'
 import DamAdminAssetLink from '@/components/dam/DamAdminAssetLink.vue'
@@ -98,14 +96,6 @@ const showDamSelection = computed(
 const imageSourceRequired = computed(() => !showDamSelection.value)
 
 const { showValidationError } = useAlerts()
-
-const { getCachedAuthor } = useDamCachedAuthors()
-const credit = useDamCreditPreview(
-  getCachedAuthor,
-  cachedExtSystemId,
-  () => asset.value?.sources ?? [],
-  () => asset.value?.authors ?? [],
-)
 
 const imageMedia = computed<ImageCreateUpdateAware | undefined>(() => {
   if (!isMediaAware(detail.value) || isNull(detail.value.damMedia.imageFileId)) return undefined
@@ -193,7 +183,7 @@ defineExpose({
         :author-required="!!imageConfig?.authors?.required"
         :validation-scope="AImageMetadataValidationScopeSymbol"
         :author-conflicts="authorConflicts"
-        :credit="credit"
+        show-credit
         :credit-label="sourceLabel"
         @change="emit('selectionChange')"
       />
@@ -283,7 +273,7 @@ defineExpose({
             :author-required="!!imageConfig?.authors?.required"
             :validation-scope="AImageMetadataValidationScopeSymbol"
             :author-conflicts="authorConflicts"
-            :credit="credit"
+            show-credit
             :credit-label="sourceLabel"
             @change="emit('selectionChange')"
           />

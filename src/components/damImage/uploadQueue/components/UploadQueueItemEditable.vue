@@ -13,8 +13,6 @@ import { AssetFileFailReason } from '@/types/coreDam/AssetFile'
 import ATableCopyIdButton from '@/components/buttons/table/ATableCopyIdButton.vue'
 import { prettyBytes } from '@/utils/file'
 import DamSourcesAuthorsFields from '@/components/damImage/uploadQueue/components/DamSourcesAuthorsFields.vue'
-import { useDamCachedAuthors } from '@/components/damImage/uploadQueue/author/cachedAuthors'
-import { useDamCreditPreview } from '@/components/damImage/uploadQueue/composables/damCredit'
 import ASystemEntityScope from '@/components/form/ASystemEntityScope.vue'
 import AssetCustomMetadataForm from '@/components/damImage/uploadQueue/components/AssetCustomMetadataForm.vue'
 import AssetImage from '@/components/damImage/uploadQueue/components/AssetImage.vue'
@@ -97,14 +95,6 @@ const sources = computed({
     emit('update:sources', [...newValue])
   },
 })
-
-const { getCachedAuthor } = useDamCachedAuthors()
-const credit = useDamCreditPreview(
-  getCachedAuthor,
-  () => props.extSystem,
-  () => sources.value,
-  () => authors.value,
-)
 
 const mainFileSingleUse = computed({
   get() {
@@ -412,7 +402,7 @@ onUnmounted(() => {
                 :disabled="!item.canEditMetadata"
                 :validation-scope="ADamAssetMetadataValidationScopeSymbol"
                 :author-conflicts="item.authorConflicts"
-                :credit="credit"
+                show-credit
                 class="my-2"
               />
               <VRow

@@ -11,8 +11,6 @@ import {
   AImageMetadataValidationScopeSymbol,
   useImageValidation,
 } from '@/components/damImage/uploadQueue/composables/uploadValidations'
-import { useDamCachedAuthors } from '@/components/damImage/uploadQueue/author/cachedAuthors'
-import { useDamCreditPreview } from '@/components/damImage/uploadQueue/composables/damCredit'
 import DamSourcesAuthorsFields from '@/components/damImage/uploadQueue/components/DamSourcesAuthorsFields.vue'
 import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/composables/extSystemIdForCached'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
@@ -45,14 +43,6 @@ const { t } = useI18n()
 const { cachedExtSystemId } = useExtSystemIdForCached()
 const authorConflicts = ref<DocId[]>([])
 const image = computed(() => imageStore.images[props.index])
-
-const { getCachedAuthor } = useDamCachedAuthors()
-const credit = useDamCreditPreview(
-  getCachedAuthor,
-  cachedExtSystemId,
-  () => image.value.damSources,
-  () => image.value.damAuthors,
-)
 
 const { getDamConfigExtSystem } = useDamConfigState()
 const imageConfig = computed(
@@ -126,7 +116,7 @@ const removeItem = () => {
           :author-required="!!imageConfig?.authors?.required"
           :validation-scope="AImageMetadataValidationScopeSymbol"
           :author-conflicts="authorConflicts"
-          :credit="credit"
+          show-credit
           :credit-label="sourceLabel"
           @change="image.damSelectionChanged = true"
         />

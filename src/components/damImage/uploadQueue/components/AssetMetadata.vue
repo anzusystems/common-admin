@@ -10,8 +10,6 @@ import ACopyText from '@/components/ACopyText.vue'
 import { prettyBytes } from '@/utils/file'
 import AssetMetadataImageAttributes from '@/components/damImage/uploadQueue/components/AssetMetadataImageAttributes.vue'
 import DamSourcesAuthorsFields from '@/components/damImage/uploadQueue/components/DamSourcesAuthorsFields.vue'
-import { useDamCachedAuthors } from '@/components/damImage/uploadQueue/author/cachedAuthors'
-import { useDamCreditPreview } from '@/components/damImage/uploadQueue/composables/damCredit'
 import ASystemEntityScope from '@/components/form/ASystemEntityScope.vue'
 import { dateDiff, dateNow, dateTimePretty, dateTimeToDate } from '@/utils/datetime'
 import { ADamAssetMetadataValidationScopeSymbol } from '@/components/damImage/uploadQueue/composables/uploadValidations'
@@ -89,14 +87,6 @@ const { sourceRequired, sourceEnabled } = useDamSourceAssetTypeConfig(
   // eslint-disable-next-line vue/no-ref-object-reactivity-loss
   assetType.value,
   props.extSystem,
-)
-
-const { getCachedAuthor } = useDamCachedAuthors()
-const credit = useDamCreditPreview(
-  getCachedAuthor,
-  () => props.extSystem,
-  () => asset.value?.sources ?? [],
-  () => asset.value?.authors ?? [],
 )
 
 const { cachedUsers } = useDamCachedUsers()
@@ -191,7 +181,7 @@ const autoDeleteIn = computed(() => {
               :disabled="readonly"
               :validation-scope="ADamAssetMetadataValidationScopeSymbol"
               :author-conflicts="authorConflicts"
-              :credit="credit"
+              show-credit
               class="my-2"
               @change="onAnyMetadataChange"
             />
