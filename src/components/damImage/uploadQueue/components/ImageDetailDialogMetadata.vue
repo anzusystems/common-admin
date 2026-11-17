@@ -10,8 +10,6 @@ import {
   useImageValidation,
 } from '@/components/damImage/uploadQueue/composables/uploadValidations'
 import { useAlerts } from '@/composables/system/alerts'
-import AuthorRemoteAutocompleteWithCached from '@/components/damImage/uploadQueue/author/AuthorRemoteAutocompleteWithCached.vue'
-import ASystemEntityScope from '@/components/form/ASystemEntityScope.vue'
 import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
 import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/composables/extSystemIdForCached'
 import { computed } from 'vue'
@@ -25,9 +23,9 @@ import { DamAssetType, type DamAssetTypeType } from '@/types/coreDam/Asset'
 import type { ImageCreateUpdateAware } from '@/types/ImageAware'
 import { isDamSourceEnabled } from '@/components/damImage/uploadQueue/source/damSourceConfig'
 import { isDamAuthorEnabled } from '@/components/damImage/uploadQueue/author/damAuthorConfig'
-import { fetchDamCredit } from '@/components/damImage/uploadQueue/composables/damCredit'
-import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
-import DamSourcesAuthorsRow from '@/components/damImage/uploadQueue/components/DamSourcesAuthorsRow.vue'
+import { useDamCachedAuthors } from '@/components/damImage/uploadQueue/author/cachedAuthors'
+import { useDamCreditPreview } from '@/components/damImage/uploadQueue/composables/damCredit'
+import DamSourcesAuthorsFields from '@/components/damImage/uploadQueue/components/DamSourcesAuthorsFields.vue'
 import ARow from '@/components/ARow.vue'
 import DamAdminAssetLink from '@/components/dam/DamAdminAssetLink.vue'
 import { isNull } from '@/utils/common'
@@ -99,28 +97,15 @@ const showDamSelection = computed(
 
 const imageSourceRequired = computed(() => !showDamSelection.value)
 
-const { damClient } = useCommonAdminCoreDamOptions()
-const { showValidationError, showErrorsDefault } = useAlerts()
-let creditRequestId = 0
+const { showValidationError } = useAlerts()
 
-const onSelectionChange = async () => {
-  if (!asset.value || !isImageCreateUpdateAware(detail.value)) return
-  emit('selectionChange')
-  const target = detail.value
-  const requestId = ++creditRequestId
-  try {
-    const credit = await fetchDamCredit(
-      damClient,
-      cachedExtSystemId.value,
-      asset.value.sources,
-      asset.value.authors,
-    )
-    if (requestId !== creditRequestId || detail.value !== target) return
-    target.texts.source = credit
-  } catch (e) {
-    showErrorsDefault(e)
-  }
-}
+const { getCachedAuthor } = useDamCachedAuthors()
+const credit = useDamCreditPreview(
+  getCachedAuthor,
+  cachedExtSystemId,
+  () => asset.value?.sources ?? [],
+  () => asset.value?.authors ?? [],
+)
 
 const imageMedia = computed<ImageCreateUpdateAware | undefined>(() => {
   if (!isMediaAware(detail.value) || isNull(detail.value.damMedia.imageFileId)) return undefined
@@ -197,57 +182,21 @@ defineExpose({
           />
         </VCol>
       </VRow>
-      <DamSourcesAuthorsRow
+      <DamSourcesAuthorsFields
         v-if="showDamSelection && asset"
+        v-model:sources="asset.sources"
+        v-model:authors="asset.authors"
+        :ext-system="cachedExtSystemId"
         :source-enabled="sourceEnabled"
         :author-enabled="authorEnabled"
-        :credit="detail.texts.source"
+        :source-required="!!imageConfig?.sources.required"
+        :author-required="!!imageConfig?.authors?.required"
+        :validation-scope="AImageMetadataValidationScopeSymbol"
+        :author-conflicts="authorConflicts"
+        :credit="credit"
         :credit-label="sourceLabel"
-      >
-        <template #sources>
-          <ASystemEntityScope
-            subject="author"
-            system="dam"
-          >
-            <AuthorRemoteAutocompleteWithCached
-              v-model="asset.sources"
-              v-model:counterpart="asset.authors"
-              :ext-system="cachedExtSystemId"
-              :label="t('common.damImage.asset.model.sources')"
-              data-cy="custom-field-sources"
-              :required="!!imageConfig?.sources.required"
-              source
-              clearable
-              multiple
-              :validation-scope="AImageMetadataValidationScopeSymbol"
-              @update:model-value="onSelectionChange"
-              @update:counterpart="onSelectionChange"
-            />
-          </ASystemEntityScope>
-        </template>
-        <template #authors>
-          <ASystemEntityScope
-            subject="author"
-            system="dam"
-          >
-            <AuthorRemoteAutocompleteWithCached
-              v-model="asset.authors"
-              v-model:counterpart="asset.sources"
-              :ext-system="cachedExtSystemId"
-              :label="t('common.damImage.asset.model.authors')"
-              :author-conflicts="authorConflicts"
-              data-cy="custom-field-authors"
-              :required="!!imageConfig?.authors?.required"
-              :source="sourceEnabled ? false : undefined"
-              clearable
-              multiple
-              :validation-scope="AImageMetadataValidationScopeSymbol"
-              @update:model-value="onSelectionChange"
-              @update:counterpart="onSelectionChange"
-            />
-          </ASystemEntityScope>
-        </template>
-      </DamSourcesAuthorsRow>
+        @change="emit('selectionChange')"
+      />
       <VRow v-else>
         <VCol>
           <AFormTextarea
@@ -323,57 +272,21 @@ defineExpose({
               />
             </VCol>
           </VRow>
-          <DamSourcesAuthorsRow
+          <DamSourcesAuthorsFields
             v-if="showDamSelection && asset"
+            v-model:sources="asset.sources"
+            v-model:authors="asset.authors"
+            :ext-system="cachedExtSystemId"
             :source-enabled="sourceEnabled"
             :author-enabled="authorEnabled"
-            :credit="detail.texts.source"
+            :source-required="!!imageConfig?.sources.required"
+            :author-required="!!imageConfig?.authors?.required"
+            :validation-scope="AImageMetadataValidationScopeSymbol"
+            :author-conflicts="authorConflicts"
+            :credit="credit"
             :credit-label="sourceLabel"
-          >
-            <template #sources>
-              <ASystemEntityScope
-                subject="author"
-                system="dam"
-              >
-                <AuthorRemoteAutocompleteWithCached
-                  v-model="asset.sources"
-                  v-model:counterpart="asset.authors"
-                  :ext-system="cachedExtSystemId"
-                  :label="t('common.damImage.asset.model.sources')"
-                  data-cy="custom-field-sources"
-                  :required="!!imageConfig?.sources.required"
-                  source
-                  clearable
-                  multiple
-                  :validation-scope="AImageMetadataValidationScopeSymbol"
-                  @update:model-value="onSelectionChange"
-                  @update:counterpart="onSelectionChange"
-                />
-              </ASystemEntityScope>
-            </template>
-            <template #authors>
-              <ASystemEntityScope
-                subject="author"
-                system="dam"
-              >
-                <AuthorRemoteAutocompleteWithCached
-                  v-model="asset.authors"
-                  v-model:counterpart="asset.sources"
-                  :ext-system="cachedExtSystemId"
-                  :label="t('common.damImage.asset.model.authors')"
-                  :author-conflicts="authorConflicts"
-                  data-cy="custom-field-authors"
-                  :required="!!imageConfig?.authors?.required"
-                  :source="sourceEnabled ? false : undefined"
-                  clearable
-                  multiple
-                  :validation-scope="AImageMetadataValidationScopeSymbol"
-                  @update:model-value="onSelectionChange"
-                  @update:counterpart="onSelectionChange"
-                />
-              </ASystemEntityScope>
-            </template>
-          </DamSourcesAuthorsRow>
+            @change="emit('selectionChange')"
+          />
           <VRow v-else>
             <VCol>
               <AFormTextarea

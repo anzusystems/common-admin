@@ -20,6 +20,7 @@ import type { ImageStoreItem } from '@/types/ImageAware'
 import type { DocId, IntegerId } from '@/types/common'
 import { generateUUIDv1 } from '@/utils/generator'
 import { mapUploadMetadataToImages } from '@/components/damImage/uploadQueue/composables/metadataToImageMap'
+import { hasNoDamCredit } from '@/components/damImage/uploadQueue/composables/damCredit'
 import { useImageStore } from '@/components/damImage/uploadQueue/composables/imageStore'
 import { storeToRefs } from 'pinia'
 import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
@@ -140,7 +141,7 @@ const onSaveAndApply = async () => {
         ...item,
         position: maxPosition.value,
         damAuthors: item.authorIds ?? [],
-        showDamAuthors: (item.authorIds ?? []).length === 0 && (item.sourceIds ?? []).length === 0,
+        showDamAuthors: hasNoDamCredit(item.authorIds ?? [], item.sourceIds ?? []),
         damSources: item.sourceIds ?? [],
         assetId: item.assetId ?? undefined,
       }

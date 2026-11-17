@@ -8,13 +8,13 @@ import type {
 import { fetchAuthorListByIds } from '@/components/damImage/uploadQueue/api/authorApi'
 import { isUndefined } from '@/utils/common'
 import { DamAssetType } from '@/types/coreDam/Asset'
+import type { DamExtSystemAssetTypeSources } from '@/types/coreDam/DamConfig'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 
-export interface DamCreditConfig {
-  creditFormat: string
-  creditSourcesSeparator: string
-  creditAuthorsSeparator: string
-}
+export type DamCreditConfig = Pick<
+  DamExtSystemAssetTypeSources,
+  'creditFormat' | 'creditSourcesSeparator' | 'creditAuthorsSeparator'
+>
 
 export function getDamCreditConfig(extSystem: IntegerId): DamCreditConfig {
   const { getDamConfigExtSystem } = useDamConfigState()
@@ -22,12 +22,11 @@ export function getDamCreditConfig(extSystem: IntegerId): DamCreditConfig {
   if (isUndefined(sources)) {
     throw new Error('getDamCreditConfig: Ext system must be initialised.')
   }
-  return {
-    creditFormat: sources.creditFormat,
-    creditSourcesSeparator: sources.creditSourcesSeparator,
-    creditAuthorsSeparator: sources.creditAuthorsSeparator,
-  }
+  return sources
 }
+
+export const hasNoDamCredit = (authorIds: DocId[], sourceIds: DocId[]) =>
+  authorIds.length === 0 && sourceIds.length === 0
 
 type DamCreditName = Pick<DamAuthorMinimal, 'name' | 'hiddenInCredit'>
 
@@ -84,17 +83,26 @@ export function useDamCreditPreview(
   )
 }
 
+export async function fetchDamAuthorsMap(
+  client: () => AxiosInstance,
+  extSystem: IntegerId,
+  ids: DocId[],
+): Promise<Map<DocId, DamAuthor>> {
+  const unique = [...new Set(ids)]
+  if (unique.length === 0) return new Map()
+  const authors = await fetchAuthorListByIds(client, extSystem, unique)
+  return new Map(authors.map((author) => [author.id, author]))
+}
+
 export async function fetchDamCredit(
   client: () => AxiosInstance,
   extSystem: IntegerId,
   sourceIds: DocId[],
   authorIds: DocId[],
 ): Promise<string> {
-  const ids = [...new Set([...sourceIds, ...authorIds])]
-  if (ids.length === 0) return ''
-  const authors = await fetchAuthorListByIds(client, extSystem, ids)
+  if (hasNoDamCredit(authorIds, sourceIds)) return ''
   return damCreditFromMap(
-    new Map(authors.map((author) => [author.id, author])),
+    await fetchDamAuthorsMap(client, extSystem, [...sourceIds, ...authorIds]),
     sourceIds,
     authorIds,
     getDamCreditConfig(extSystem),

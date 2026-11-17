@@ -5,9 +5,7 @@ import AFormTextarea from '@/components/form/AFormTextarea.vue'
 import { computed, ref } from 'vue'
 import useVuelidate from '@vuelidate/core'
 import { useValidate } from '@/validators/vuelidate/useValidate'
-import DamSourcesAuthorsRow from '@/components/damImage/uploadQueue/components/DamSourcesAuthorsRow.vue'
-import ASystemEntityScope from '@/components/form/ASystemEntityScope.vue'
-import AuthorRemoteAutocompleteWithCached from '@/components/damImage/uploadQueue/author/AuthorRemoteAutocompleteWithCached.vue'
+import DamSourcesAuthorsFields from '@/components/damImage/uploadQueue/components/DamSourcesAuthorsFields.vue'
 import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/composables/extSystemIdForCached'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import { buildFieldRules } from '@/components/damImage/uploadQueue/composables/uploadValidations'
@@ -31,14 +29,14 @@ const { replaceEmptyDescription, replaceEmptySource, replaceEmptyAuthors, replac
   useImageMassOperations()
 const { t } = useI18n()
 
-const fillAll = async (forceReplace: boolean) => {
+const fillAll = (forceReplace: boolean) => {
   replaceEmptyDescription(texts.value.description, forceReplace)
   if (!showDamFields.value) {
     replaceEmptySource(texts.value.source, forceReplace)
     return
   }
-  if (authorEnabled.value) await replaceEmptyAuthors(texts.value.authors, forceReplace)
-  if (sourceEnabled.value) await replaceEmptySources(texts.value.sources, forceReplace)
+  if (authorEnabled.value) replaceEmptyAuthors(texts.value.authors, forceReplace)
+  if (sourceEnabled.value) replaceEmptySources(texts.value.sources, forceReplace)
 }
 
 const clearForm = () => {
@@ -122,113 +120,79 @@ const v$ = useVuelidate(rules, { texts }, { $scope: false })
         </div>
       </VCol>
     </VRow>
-    <DamSourcesAuthorsRow
+    <DamSourcesAuthorsFields
       v-if="showDamFields"
+      v-model:sources="texts.sources"
+      v-model:authors="texts.authors"
+      :ext-system="cachedExtSystemId"
       :source-enabled="sourceEnabled"
       :author-enabled="authorEnabled"
+      :validation-scope="false"
       class="mt-4"
     >
-      <template #sources>
-        <ASystemEntityScope
-          subject="author"
-          system="dam"
+      <template #sources-append>
+        <VBtn
+          icon
+          size="small"
+          variant="text"
+          class="mr-1"
+          @click.stop="replaceEmptySources(texts.sources, false)"
         >
-          <div class="d-flex">
-            <div style="flex-grow: 1">
-              <AuthorRemoteAutocompleteWithCached
-                v-model="texts.sources"
-                v-model:counterpart="texts.authors"
-                :ext-system="cachedExtSystemId"
-                :label="t('common.damImage.asset.model.sources')"
-                source
-                clearable
-                multiple
-                :validation-scope="false"
-              />
-            </div>
-            <VBtn
-              icon
-              size="small"
-              variant="text"
-              class="mr-1"
-              @click.stop="replaceEmptySources(texts.sources, false)"
-            >
-              <VIcon icon="mdi-file-arrow-left-right-outline" />
-              <VTooltip
-                activator="parent"
-                location="bottom"
-              >
-                {{ t('common.damImage.asset.massOperations.fillOneEmpty') }}
-              </VTooltip>
-            </VBtn>
-            <VBtn
-              icon
-              size="small"
-              variant="text"
-              @click.stop="replaceEmptySources(texts.sources, true)"
-            >
-              <VIcon icon="mdi-file-replace-outline" />
-              <VTooltip
-                activator="parent"
-                location="bottom"
-              >
-                {{ t('common.damImage.asset.massOperations.replaceOne') }}
-              </VTooltip>
-            </VBtn>
-          </div>
-        </ASystemEntityScope>
-      </template>
-      <template #authors>
-        <ASystemEntityScope
-          subject="author"
-          system="dam"
+          <VIcon icon="mdi-file-arrow-left-right-outline" />
+          <VTooltip
+            activator="parent"
+            location="bottom"
+          >
+            {{ t('common.damImage.asset.massOperations.fillOneEmpty') }}
+          </VTooltip>
+        </VBtn>
+        <VBtn
+          icon
+          size="small"
+          variant="text"
+          @click.stop="replaceEmptySources(texts.sources, true)"
         >
-          <div class="d-flex">
-            <div style="flex-grow: 1">
-              <AuthorRemoteAutocompleteWithCached
-                v-model="texts.authors"
-                v-model:counterpart="texts.sources"
-                :ext-system="cachedExtSystemId"
-                :label="t('common.damImage.asset.model.authors')"
-                :source="sourceEnabled ? false : undefined"
-                clearable
-                multiple
-                :validation-scope="false"
-              />
-            </div>
-            <VBtn
-              icon
-              size="small"
-              variant="text"
-              class="mr-1"
-              @click.stop="replaceEmptyAuthors(texts.authors, false)"
-            >
-              <VIcon icon="mdi-file-arrow-left-right-outline" />
-              <VTooltip
-                activator="parent"
-                location="bottom"
-              >
-                {{ t('common.damImage.asset.massOperations.fillOneEmpty') }}
-              </VTooltip>
-            </VBtn>
-            <VBtn
-              icon
-              size="small"
-              variant="text"
-              @click.stop="replaceEmptyAuthors(texts.authors, true)"
-            >
-              <VIcon icon="mdi-file-replace-outline" />
-              <VTooltip
-                activator="parent"
-                location="bottom"
-              >
-                {{ t('common.damImage.asset.massOperations.replaceOne') }}
-              </VTooltip>
-            </VBtn>
-          </div>
-        </ASystemEntityScope>
+          <VIcon icon="mdi-file-replace-outline" />
+          <VTooltip
+            activator="parent"
+            location="bottom"
+          >
+            {{ t('common.damImage.asset.massOperations.replaceOne') }}
+          </VTooltip>
+        </VBtn>
       </template>
-    </DamSourcesAuthorsRow>
+      <template #authors-append>
+        <VBtn
+          icon
+          size="small"
+          variant="text"
+          class="mr-1"
+          @click.stop="replaceEmptyAuthors(texts.authors, false)"
+        >
+          <VIcon icon="mdi-file-arrow-left-right-outline" />
+          <VTooltip
+            activator="parent"
+            location="bottom"
+          >
+            {{ t('common.damImage.asset.massOperations.fillOneEmpty') }}
+          </VTooltip>
+        </VBtn>
+        <VBtn
+          icon
+          size="small"
+          variant="text"
+          @click.stop="replaceEmptyAuthors(texts.authors, true)"
+        >
+          <VIcon icon="mdi-file-replace-outline" />
+          <VTooltip
+            activator="parent"
+            location="bottom"
+          >
+            {{ t('common.damImage.asset.massOperations.replaceOne') }}
+          </VTooltip>
+        </VBtn>
+      </template>
+    </DamSourcesAuthorsFields>
     <VRow
       v-else
       density="comfortable"

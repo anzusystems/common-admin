@@ -41,7 +41,7 @@ import {
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import UploadQueueDialogSingle from '@/components/damImage/uploadQueue/components/UploadQueueDialogSingle.vue'
 import { useUploadQueueDialog } from '@/components/damImage/uploadQueue/composables/uploadQueueDialog'
-import { fetchDamCredit } from '@/components/damImage/uploadQueue/composables/damCredit'
+import { fetchDamCredit, hasNoDamCredit } from '@/components/damImage/uploadQueue/composables/damCredit'
 import { useI18n } from 'vue-i18n'
 import type { VBtn } from 'vuetify/components'
 import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/composables/extSystemIdForCached'
@@ -557,12 +557,14 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
       if (isString(assetRes.metadata.customData?.description)) {
         description = assetRes.metadata.customData.description.trim()
       }
-      const extSystem = await getExtSystemByLicence(assetRes.licence)
-      if ((assetRes.authors.length > 0 || assetRes.sources.length > 0) && extSystem) {
-        source = await fetchDamCredit(damClient, extSystem, assetRes.sources, assetRes.authors)
-      } else if (assetRes.authors.length === 0 && assetRes.sources.length === 0) {
+      if (hasNoDamCredit(assetRes.authors, assetRes.sources)) {
         showDamAuthorsInCmsImage.value = true
         asset.value = assetRes
+      } else {
+        const config = await getOrLoadDamConfigExtSystemByLicence(assetRes.licence)
+        if (config) {
+          source = await fetchDamCredit(damClient, config.extSystem, assetRes.sources, assetRes.authors)
+        }
       }
     } catch (e) {
       showErrorsDefault(e)
@@ -608,16 +610,16 @@ const {
   replaceFromDamLabel,
 } = useCommonAdminCoreDamOptions()
 
-const { getExtSystemByLicence } = useDamConfigState(damClient)
+const { getOrLoadDamConfigExtSystemByLicence } = useDamConfigState(damClient)
 
 const onEditAsset = async (assetFileId: DocId) => {
   assetLoading.value = true
   assetDialog.value = props.queueKey
   try {
     const assetRes = await fetchAssetByFileId(damClient, endPointAsset, assetFileId)
-    const extSystem = await getExtSystemByLicence(assetRes.licence)
-    if (extSystem) {
-      cachedExtSystemId.value = extSystem
+    const config = await getOrLoadDamConfigExtSystemByLicence(assetRes.licence)
+    if (config) {
+      cachedExtSystemId.value = config.extSystem
     }
     assetDetailStore.setAsset(assetRes)
   } catch (e) {
@@ -659,15 +661,15 @@ const tryImageConfirm = async () => {
   metadataDialogSaving.value = true
   try {
     if (assetSelectionChanged.value && asset.value) {
-      const extSystem = await getExtSystemByLicence(asset.value.licence)
-      if (extSystem) {
+      const config = await getOrLoadDamConfigExtSystemByLicence(asset.value.licence)
+      if (config) {
         detail.value.texts.source = await fetchDamCredit(
           damClient,
-          extSystem,
+          config.extSystem,
           asset.value.sources,
           asset.value.authors,
         )
-        await updateAssetAuthors(damClient, endPointAsset, asset.value, extSystem)
+        await updateAssetAuthors(damClient, endPointAsset, asset.value, config.extSystem)
         assetSelectionChanged.value = false
       }
     }

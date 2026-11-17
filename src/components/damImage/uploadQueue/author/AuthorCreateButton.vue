@@ -188,7 +188,6 @@ defineExpose({
               v-model="author.type"
               :label="t('common.damImage.author.model.type')"
               :items="authorTypeOptions"
-              :v="v$.author.type"
               data-cy="author-type"
               @keyup.enter="onConfirm"
             />

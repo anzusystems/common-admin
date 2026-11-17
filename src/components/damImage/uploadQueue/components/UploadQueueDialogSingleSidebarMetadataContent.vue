@@ -11,9 +11,8 @@ import { prettyBytes } from '@/utils/file'
 import AssetMetadataImageAttributes from '@/components/damImage/uploadQueue/components/AssetMetadataImageAttributes.vue'
 import { useUploadQueuesStore } from '@/components/damImage/uploadQueue/composables/uploadQueuesStore'
 import type { UploadQueueItem } from '@/types/coreDam/UploadQueue'
-import AuthorRemoteAutocompleteWithCached from '@/components/damImage/uploadQueue/author/AuthorRemoteAutocompleteWithCached.vue'
 import KeywordRemoteAutocompleteWithCached from '@/components/damImage/uploadQueue/keyword/KeywordRemoteAutocompleteWithCached.vue'
-import DamSourcesAuthorsRow from '@/components/damImage/uploadQueue/components/DamSourcesAuthorsRow.vue'
+import DamSourcesAuthorsFields from '@/components/damImage/uploadQueue/components/DamSourcesAuthorsFields.vue'
 import { useDamCachedAuthors } from '@/components/damImage/uploadQueue/author/cachedAuthors'
 import { useDamCreditPreview } from '@/components/damImage/uploadQueue/composables/damCredit'
 import ASystemEntityScope from '@/components/form/ASystemEntityScope.vue'
@@ -150,58 +149,21 @@ const { mainFileSingleUseEnabled, showFileInfoEnabled } = useCommonAdminCoreDamO
                   </ASystemEntityScope>
                 </VCol>
               </VRow>
-              <DamSourcesAuthorsRow
+              <DamSourcesAuthorsFields
+                v-model:sources="item.sources"
+                v-model:authors="item.authors"
+                :ext-system="extSystem"
                 :source-enabled="sourceEnabled"
                 :author-enabled="authorEnabled"
+                :source-required="sourceRequired"
+                :author-required="authorRequired"
+                :disabled="!item.canEditMetadata"
+                :validation-scope="ADamAssetMetadataValidationScopeSymbol"
+                :author-conflicts="authorConflicts"
                 :credit="credit"
                 class="my-2"
-              >
-                <template #sources>
-                  <ASystemEntityScope
-                    subject="author"
-                    system="dam"
-                  >
-                    <AuthorRemoteAutocompleteWithCached
-                      v-model="item.sources"
-                      v-model:counterpart="item.authors"
-                      :label="t('common.damImage.asset.model.sources')"
-                      data-cy="custom-field-sources"
-                      :ext-system="extSystem"
-                      source
-                      clearable
-                      multiple
-                      :disabled="!item.canEditMetadata"
-                      :required="sourceRequired"
-                      :validation-scope="ADamAssetMetadataValidationScopeSymbol"
-                      @update:model-value="onAnyMetadataChange"
-                      @update:counterpart="onAnyMetadataChange"
-                    />
-                  </ASystemEntityScope>
-                </template>
-                <template #authors>
-                  <ASystemEntityScope
-                    subject="author"
-                    system="dam"
-                  >
-                    <AuthorRemoteAutocompleteWithCached
-                      v-model="item.authors"
-                      v-model:counterpart="item.sources"
-                      :label="t('common.damImage.asset.model.authors')"
-                      :author-conflicts="authorConflicts"
-                      data-cy="custom-field-authors"
-                      :ext-system="extSystem"
-                      :source="sourceEnabled ? false : undefined"
-                      clearable
-                      multiple
-                      :disabled="!item.canEditMetadata"
-                      :required="authorRequired"
-                      :validation-scope="ADamAssetMetadataValidationScopeSymbol"
-                      @update:model-value="onAnyMetadataChange"
-                      @update:counterpart="onAnyMetadataChange"
-                    />
-                  </ASystemEntityScope>
-                </template>
-              </DamSourcesAuthorsRow>
+                @change="onAnyMetadataChange"
+              />
               <VRow
                 v-if="mainFileSingleUseEnabled"
                 density="comfortable"

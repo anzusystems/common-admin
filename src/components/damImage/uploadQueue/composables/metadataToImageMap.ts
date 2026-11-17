@@ -3,12 +3,11 @@ import type { UploadQueueItem } from '@/types/coreDam/UploadQueue'
 import type { ImageCreateUpdateAware } from '@/types/ImageAware'
 import type { DocId, IntegerId } from '@/types/common'
 import { isNull, isString } from '@/utils/common'
-import type { DamAuthor } from '@/components/damImage/uploadQueue/author/DamAuthor'
 import {
   damCreditFromMap,
+  fetchDamAuthorsMap,
   getDamCreditConfig,
 } from '@/components/damImage/uploadQueue/composables/damCredit'
-import { fetchAuthorListByIds } from '@/components/damImage/uploadQueue/api/authorApi'
 import type { AxiosInstance } from 'axios'
 import type { AssetDetailItemDto } from '@/types/coreDam/Asset'
 
@@ -55,24 +54,14 @@ export async function mapUploadMetadataToImages(
     })
   })
 
-  // Collect unique author IDs and batch-fetch names only if needed
-  const authorIdsToFetch = new Set<DocId>()
-  assetMetadataMap.forEach((assetMeta) => {
-    assetMeta.authorIds.forEach((authorId) => {
-      authorIdsToFetch.add(authorId)
-    })
-    assetMeta.sourceIds.forEach((sourceId) => {
-      authorIdsToFetch.add(sourceId)
-    })
-  })
-
-  const authorsMap = new Map<DocId, DamAuthor>()
-  if (authorIdsToFetch.size > 0) {
-    const authorsRes = await fetchAuthorListByIds(damClient, extSystem, [...authorIdsToFetch])
-    authorsRes.forEach((author) => {
-      authorsMap.set(author.id, author)
-    })
-  }
+  const authorsMap = await fetchDamAuthorsMap(
+    damClient,
+    extSystem,
+    [...assetMetadataMap.values()].flatMap((assetMeta) => [
+      ...assetMeta.authorIds,
+      ...assetMeta.sourceIds,
+    ]),
+  )
 
   // Filter valid queue items and map to results
   const validItems = queueItems.filter(

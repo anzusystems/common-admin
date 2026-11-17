@@ -415,6 +415,10 @@ import type {
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import { useDamCreditPreview } from '@/components/damImage/uploadQueue/composables/damCredit'
 import {
+  isDamSourceEnabled,
+  useDamSourceAssetTypeConfig,
+} from '@/components/damImage/uploadQueue/source/damSourceConfig'
+import {
   type DamDistributionConfig,
   type DamDistributionRequirementsCategorySelectConfig,
   type DamDistributionRequirementsConfig,
@@ -802,6 +806,8 @@ export {
   useCustomDataFormElementType,
   useDamConfigState,
   useDamCreditPreview,
+  isDamSourceEnabled,
+  useDamSourceAssetTypeConfig,
   useUploadQueueItemFactory,
   useDamUploadChunkSize,
   useDamAcceptTypeAndSizeHelper,

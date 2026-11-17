@@ -13,7 +13,6 @@ import { DamAssetType } from '@/types/coreDam/Asset'
 import FilterPodcastRemoteAutocomplete from '@/components/dam/assetSelect/components/filter/FilterPodcastRemoteAutocomplete.vue'
 import AFilterTimeInterval from '@/labs/filters/AFilterTimeInterval.vue'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
-import { isDamSourceEnabled } from '@/components/damImage/uploadQueue/source/damSourceConfig'
 
 const props = withDefaults(
   defineProps<{
@@ -62,7 +61,6 @@ const { selectedSelectConfig, selectedLicenceIds, assetType } = storeToRefs(asse
 
 const extSystem = computed(() => selectedSelectConfig.value?.extSystem)
 const selectedLicenceId = computed(() => selectedSelectConfig.value?.licence)
-const sourceEnabled = computed(() => !!extSystem.value && isDamSourceEnabled(assetType.value, extSystem.value))
 
 watch(extSystem, (newValue, oldValue) => {
   if (newValue !== oldValue) {
@@ -105,7 +103,6 @@ watch(extSystem, (newValue, oldValue) => {
           :key="extSystem"
           name="authorIds"
           :ext-system="extSystem"
-          :source="sourceEnabled ? false : undefined"
         />
       </VCol>
     </template>

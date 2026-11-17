@@ -206,6 +206,15 @@ async function updateMetadataSequence(
   return responses
 }
 
+function creditFields(
+  assetType: DamAssetTypeType,
+  extSystem: IntegerId,
+  authors: DocId[],
+  sources: DocId[],
+): Pick<AssetMetadataBulkItem, 'authors' | 'sources'> {
+  return isDamSourceEnabled(assetType, extSystem) ? { authors, sources } : { authors }
+}
+
 function listItemsToMetadataBulkItems(
   items: UploadQueueItem[],
   mainFileSingleUseOverride: boolean | undefined,
@@ -217,10 +226,7 @@ function listItemsToMetadataBulkItems(
       dtoItems.push({
         id: item.assetId,
         keywords: item.keywords,
-        authors: item.authors,
-        ...(isDamSourceEnabled(item.assetType, extSystem)
-          ? { sources: item.sources }
-          : {}),
+        ...creditFields(item.assetType, extSystem, item.authors, item.sources),
         described: true,
         customData: item.customData,
         mainFileSingleUse: isUndefined(mainFileSingleUseOverride)
@@ -278,10 +284,7 @@ export const updateAssetMetadata = (
     const data: AssetMetadataBulkItem = {
       id: asset.id,
       keywords: asset.keywords,
-      authors: asset.authors,
-      ...(isDamSourceEnabled(asset.attributes.assetType, extSystem)
-        ? { sources: asset.sources }
-        : {}),
+      ...creditFields(asset.attributes.assetType, extSystem, asset.authors, asset.sources),
       described: true,
       customData: asset.metadata.customData,
       mainFileSingleUse: mainFileSingleUse,
@@ -323,10 +326,7 @@ export const updateAssetAuthors = (
   return new Promise((resolve, reject) => {
     const data: Partial<AssetMetadataBulkItem> = {
       id: asset.id,
-      authors: asset.authors,
-      ...(isDamSourceEnabled(asset.attributes.assetType, extSystem)
-        ? { sources: asset.sources }
-        : {}),
+      ...creditFields(asset.attributes.assetType, extSystem, asset.authors, asset.sources),
       described: true,
     }
     client()
@@ -361,13 +361,13 @@ export type AssetAuthorsItems = AssetAuthorsItem[]
 export interface AssetAuthorsItem {
   id: DocId
   authors: DocId[]
-  sources?: DocId[]
+  sources: DocId[]
 }
 
 async function updateAuthorsSequence(
   client: () => AxiosInstance,
   endPoint: string,
-  items: AssetAuthorsItems,
+  items: Pick<AssetMetadataBulkItem, 'id' | 'authors' | 'sources'>[],
 ) {
   const totalCalls = Math.ceil(items.length / BULK_METADATA_LIMIT)
   const responses: AxiosResponse[] = []
@@ -385,10 +385,16 @@ async function updateAuthorsSequence(
 export const bulkUpdateAssetsAuthors = (
   client: () => AxiosInstance,
   endPoint: string,
+  assetType: DamAssetTypeType,
+  extSystem: IntegerId,
   items: AssetAuthorsItems,
 ) => {
   return new Promise<AssetMetadataBulkItem[]>((resolve, reject) => {
-    updateAuthorsSequence(client, endPoint, items)
+    const dtoItems = items.map((item) => ({
+      id: item.id,
+      ...creditFields(assetType, extSystem, item.authors, item.sources),
+    }))
+    updateAuthorsSequence(client, endPoint, dtoItems)
       .then((responses) => {
         if (items.length === 0) {
           return resolve([])

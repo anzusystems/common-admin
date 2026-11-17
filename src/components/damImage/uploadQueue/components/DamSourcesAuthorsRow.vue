@@ -47,7 +47,7 @@ const { t } = useI18n()
       </div>
     </div>
     <ARow
-      v-if="credit.length > 0"
+      v-if="sourceEnabled && credit.length > 0"
       :title="creditLabel ?? t('common.damImage.image.model.texts.source')"
       :value="credit"
       class="pb-5"
