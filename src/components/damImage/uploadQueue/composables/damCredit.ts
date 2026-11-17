@@ -12,7 +12,8 @@ import { useDamConfigState } from '@/components/damImage/uploadQueue/composables
 
 export interface DamCreditConfig {
   creditFormat: string
-  creditSeparator: string
+  creditSourcesSeparator: string
+  creditAuthorsSeparator: string
 }
 
 export function getDamCreditConfig(extSystem: IntegerId): DamCreditConfig {
@@ -23,7 +24,8 @@ export function getDamCreditConfig(extSystem: IntegerId): DamCreditConfig {
   }
   return {
     creditFormat: sources.creditFormat,
-    creditSeparator: sources.creditSeparator,
+    creditSourcesSeparator: sources.creditSourcesSeparator,
+    creditAuthorsSeparator: sources.creditAuthorsSeparator,
   }
 }
 
@@ -41,8 +43,8 @@ export function damCredit(
   authors: DamCreditName[],
   config: DamCreditConfig,
 ): string {
-  const sourcesText = joinNames(sources, config.creditSeparator)
-  const authorsText = joinNames(authors, config.creditSeparator)
+  const sourcesText = joinNames(sources, config.creditSourcesSeparator)
+  const authorsText = joinNames(authors, config.creditAuthorsSeparator)
   if (sourcesText.length > 0 && authorsText.length > 0) {
     return config.creditFormat
       .replace('{sources}', () => sourcesText)

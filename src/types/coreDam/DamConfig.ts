@@ -115,7 +115,8 @@ export interface DamExtSystemAssetTypeExifMetadata {
 
 export interface DamExtSystemAssetTypeSources extends DamExtSystemAssetTypeExifMetadata {
   creditFormat: string
-  creditSeparator: string
+  creditSourcesSeparator: string
+  creditAuthorsSeparator: string
 }
 
 export const DamDistributionServiceType = {

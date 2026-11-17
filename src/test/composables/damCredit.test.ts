@@ -1,13 +1,17 @@
 import { describe, expect, it } from 'vitest'
 import { damCredit } from '@/components/damImage/uploadQueue/composables/damCredit'
 
-const config = { creditFormat: '{sources}/{authors}', creditSeparator: ', ' }
+const config = {
+  creditFormat: '{sources}/{authors}',
+  creditSourcesSeparator: '/',
+  creditAuthorsSeparator: ', ',
+}
 const named = (...names: string[]) => names.map((name) => ({ name, hiddenInCredit: false }))
 
 describe('damCredit', () => {
   it('composes sources and authors by the format', () => {
-    expect(damCredit(named('Acme', 'Globex'), named('Jane Doe', 'John Roe'), config)).toBe(
-      'Acme, Globex/Jane Doe, John Roe',
+    expect(damCredit(named('TASR', 'SITA'), named('Jozef Jakubčo', 'Janko Mrkvička'), config)).toBe(
+      'TASR/SITA/Jozef Jakubčo, Janko Mrkvička',
     )
   })
 
@@ -26,8 +30,14 @@ describe('damCredit', () => {
     expect(damCredit(named('A$&B'), named("C$'D"), config)).toBe("A$&B/C$'D")
   })
 
-  it('follows a custom format and separator', () => {
-    const custom = { creditFormat: '{authors} / {sources}', creditSeparator: '; ' }
-    expect(damCredit(named('Acme', 'Globex'), named('Jane Doe'), custom)).toBe('Jane Doe / Acme; Globex')
+  it('follows a custom format and separators', () => {
+    const custom = {
+      creditFormat: '{authors} / {sources}',
+      creditSourcesSeparator: ' | ',
+      creditAuthorsSeparator: '; ',
+    }
+    expect(damCredit(named('Acme', 'Globex'), named('Jane Doe', 'John Roe'), custom)).toBe(
+      'Jane Doe; John Roe / Acme | Globex',
+    )
   })
 })
