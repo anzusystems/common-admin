@@ -1,22 +1,22 @@
 <script lang="ts" setup>
 import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useCollabHelpers } from '@/components/collab/composables/collabHelpers'
+import { useCollabHelpers } from '@/domains/collab/composables/collabHelpers'
 import { useCachedUsers } from '@/playground/collabView/cachedUsers'
-import { useCollabRoom } from '@/components/collab/composables/collabRoom'
+import { useCollabRoom } from '@/domains/collab/composables/collabRoom'
 import { onBeforeUnmount, onMounted, ref } from 'vue'
-import type { CollabConfig } from '@/components/collab/types/Collab'
-import { useCollabState } from '@/components/collab/composables/collabState'
-import AActionCloseButton from '@/components/buttons/action/AActionCloseButton.vue'
-import AFormTextarea from '@/components/form/AFormTextarea.vue'
-import AFormTextField from '@/components/form/AFormTextField.vue'
-import AFormSwitch from '@/components/form/AFormSwitch.vue'
-import AFormDatetimePicker from '@/components/form/AFormDatetimePicker.vue'
-import AFormFlagDatetimePicker from '@/components/form/AFormFlagDatetimePicker.vue'
-import ACollabManagement from '@/components/collab/components/ACollabManagement.vue'
-import { useCollabCurrentUserId } from '@/components/collab/composables/collabCurrentUserId'
-import AImageWidget from '@/components/damImage/AImageWidget.vue'
-import { useCollabAnyDataChange } from '@/components/collab/composables/collabAnyDataChange'
+import type { CollabConfig } from '@/domains/collab/types/Collab'
+import { useCollabState } from '@/domains/collab/composables/collabState'
+import AFormTextarea from '@/domains/form/components/AFormTextarea.vue'
+import AFormTextField from '@/domains/form/components/AFormTextField.vue'
+import AFormSwitch from '@/domains/form/components/AFormSwitch.vue'
+import AFormDatetimePicker from '@/domains/form/components/AFormDatetimePicker.vue'
+import AFormFlagDatetimePicker from '@/domains/form/components/AFormFlagDatetimePicker.vue'
+import ACollabManagement from '@/domains/collab/components/ACollabManagement.vue'
+import { useCollabCurrentUserId } from '@/domains/collab/composables/collabCurrentUserId'
+import AImageWidget from '@/domains/dam/imageWidget/components/AImageWidget.vue'
+import AActionCloseButtonHistory from '@/domains/ui/buttons/action/components/AActionCloseButtonHistory.vue'
+import { useCollabAnyDataChange } from '@/domains/collab/composables/collabAnyDataChange'
 
 const model = ref({
   inputOne: '',
@@ -89,7 +89,7 @@ onBeforeUnmount(() => {
 <template>
   <ActionbarWrapper>
     <template #buttons>
-      <AActionCloseButton route-name="home" />
+      <AActionCloseButtonHistory fallback-route-name="home" />
     </template>
   </ActionbarWrapper>
 
@@ -103,9 +103,7 @@ onBeforeUnmount(() => {
         :cached-users="cachedUsers"
         is-edit
       />
-      <h2 class="text-headline-small mt-5 mb-3">
-        Playground
-      </h2>
+      <h2 class="text-headline-small mt-5 mb-3">Playground</h2>
       <div>
         <VRow>
           <VCol cols="8">
@@ -161,17 +159,11 @@ onBeforeUnmount(() => {
             />
           </VCol>
         </VRow>
-        <h2 class="text-headline-small mb-2">
-          Room Info
-        </h2>
+        <h2 class="text-headline-small mb-2">Room Info</h2>
         <pre>{{ collabRoomInfo }}</pre>
-        <h2 class="text-headline-small mt-5 mb-2">
-          Room Locks
-        </h2>
+        <h2 class="text-headline-small mt-5 mb-2">Room Locks</h2>
         <pre>{{ collabRoomLocks }}</pre>
-        <h2 class="text-headline-small mt-5 mb-2">
-          Room Data buffer
-        </h2>
+        <h2 class="text-headline-small mt-5 mb-2">Room Data buffer</h2>
         <pre>{{ collabFieldDataBufferState }}</pre>
       </div>
     </VCardText>

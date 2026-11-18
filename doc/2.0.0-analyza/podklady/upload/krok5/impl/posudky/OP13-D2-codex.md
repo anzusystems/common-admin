@@ -1,0 +1,10 @@
+I agree with Claude’s M1–M3 and L1–L7 findings. Two qualifications affect the proposed fixes:
+
+- **M1:** Revert 9(a). A processed file does not prove autocomplete ran: NAXOS inserts processed files with `autocompletedMetadata=0` and `described=false` (`BulkAssetInserter.php:184,231-233`; `asset_migration.php:25`), while `assetDetailStore.ts:230,255` assumes it did.
+- **M2:** A whole re-read is the safe short-term choice, but it discards the text point 16 promised to keep. It also leaves the stale form savable if that GET fails (`AssetFooterSelectedFull.vue:83-90`). Ask the owner to choose the behavior. A sound merge is larger: the form tracks only one touched flag (`assetDetailStore.ts:32`), while Save sends keywords, authors and custom data together (`assetApi.ts:368-378`).
+- **M3 and L1–L3:** Agreed: correct the contradictory changelog (`3.0.0.md:133,173,182,184,188,236`), close against the requested asset (`AssetDetailDialog.vue:66-69`), address the provider loader (`ExternalProviderAssetDetailDialog.vue:99-108`), and document the listed visible effects.
+- **L4:** Agreed, but Claude’s proposed `assetDeleteOnItsWay` check alone has a gap: the marker clears before the caller reports its own deletion (`assetDeleteOnce.ts:20-25`; `AssetDetailSidebarMetadata.vue:125-129`).
+- **L5–L7:** Agreed. The history race is narrow and inferred (`whileOnPage.ts:20-31`; `vue-router.js:1457-1461`); the test gaps and stale comment are concrete (`olderLimitsPanel.test.ts:462-489`; `AssetFileDetailView.vue:122-124`).
+- **Additional misfire:** The listener accepts a double click *anywhere* while the leave question is open. Double-clicking inside that dialog after one tile click can make “Leave anyway” open the tile’s detail (`assetListActions.ts:370-388`).
+
+This was a read-only code review; I ran no tests.

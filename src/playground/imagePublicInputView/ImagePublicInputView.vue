@@ -1,9 +1,9 @@
 <script lang="ts" setup>
 import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
-import AImagePublicInput from '@/components/damImage/AImagePublicInput.vue'
+import AImagePublicInput from '@/domains/dam/imageWidget/components/AImagePublicInput.vue'
 import { ref } from 'vue'
-import type { IntegerIdNullable } from '@/types/common'
-import ADialogToolbar from '@/components/ADialogToolbar.vue'
+import type { IntegerIdNullable } from '@/shared/types/common'
+import ADialogToolbar from '@/domains/ui/components/ADialogToolbar.vue'
 
 const dialog = ref(false)
 const saving = ref(false)
@@ -29,9 +29,7 @@ const onDialogConfirm = async () => {
   <VCard>
     <VCardTitle>Image public input</VCardTitle>
     <VCardText>
-      <ABtnPrimary @click.stop="dialog = true">
-        Open
-      </ABtnPrimary>
+      <ABtnPrimary @click.stop="dialog = true">Open</ABtnPrimary>
       <VDialog
         v-model="dialog"
         :width="500"
@@ -40,9 +38,7 @@ const onDialogConfirm = async () => {
           v-if="dialog"
           data-cy="delete-panel"
         >
-          <ADialogToolbar @on-cancel="dialog = false">
-            Example dialog, like embed dialog
-          </ADialogToolbar>
+          <ADialogToolbar @cancel="dialog = false"> Example dialog, like embed dialog </ADialogToolbar>
           <VCardText>
             <AImagePublicInput
               ref="imagePublicInputComponent"
@@ -52,9 +48,7 @@ const onDialogConfirm = async () => {
           </VCardText>
           <VCardActions>
             <VSpacer />
-            <ABtnTertiary @click.stop="dialog = false">
-              Cancel
-            </ABtnTertiary>
+            <ABtnTertiary @click.stop="dialog = false">Cancel</ABtnTertiary>
             <ABtnPrimary
               :loading="saving"
               @click.stop="onDialogConfirm"

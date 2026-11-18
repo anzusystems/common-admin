@@ -1,9 +1,5 @@
 import { ref } from 'vue'
-import {
-  createFilter,
-  createFilterStore,
-  type MakeFilterOption,
-} from '@/labs/filters/filterFactory'
+import { createFilter, createFilterStore, type MakeFilterOption } from '@/domains/filters/composables/filterFactory'
 
 const datatableHiddenColumns = ref([])
 

@@ -1,0 +1,5 @@
+**U3: bez nálezu (no findings).** The patch matches the planned registry convergences; I found no additional change to rendering, requests, paths, or ext system. Plugin options match between the app and test setup, and [U3.md](/home/volar/projects/anzusystems/common-admin/doc/2.0.0-analyza/podklady/upload/krok5/impl/U3.md) matches the patch and recorded checks.
+
+**Outside the changed files — LOW:** [queueRowValidation.test.ts:55](/home/volar/projects/anzusystems/admin-dam/src/test/queue/queueRowValidation.test.ts:55) still mocks the old image component. After U3 the row uses the library image, so this mock is inert. U3.md records the issue and defers the test change to U5c.
+
+I ran no tests. The supplied [CK log](/home/volar/projects/anzusystems/krok5-praca/vysledky/U3-ck.log:3430) records 1,275 passing tests and a successful build.

@@ -1,0 +1,3 @@
+**No findings (bez nálezu).** Both revised assertions fail if the message line or “View original” link is hidden with `v-show`. `texts(el, true)` also excludes text when the entire overlay is hidden, so removing `visible()` loses no coverage for those cases.
+
+No U4/U5 false alarm found. The cycle 4 findings are addressed, including the corrected `c3-refresh-flash` explanation and CK c3 entry. **Outside the change:** no findings. This was a read-only review; tests were not run.

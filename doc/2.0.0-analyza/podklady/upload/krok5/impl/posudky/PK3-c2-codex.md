@@ -1,0 +1,3 @@
+1. **Finding** — `src/domains/dam/uploadQueue/components/UploadQueueEditable.vue:78`: The guard also suppresses queue scrolling from a snackbar action or another unrelated overlay. That changes behavior beyond field menus.
+2. **Tests** — `src/domains/dam/uploadQueue/__tests__/uploadQueueListHosted.test.ts:272`: The select, menu, and dialog cases can fail and are deterministic. Omitting `defaultPrevented` for the menu is justified because Vuetify handles some of those keys itself. The menu case does not exercise a menu nested inside the dialog.
+3. **Outside the change** — no findings.

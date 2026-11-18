@@ -1,0 +1,26 @@
+### Breaking changes
+
+Most of these are mechanical, and `scripts/codemod-2.0.mjs` makes them in an admin (`node …/codemod-2.0.mjs --write`, then `yarn format`). The rest are listed per item.
+
+**Plugin**
+- **`i18n` is a required plugin option.** The library translates through the admin's instance (`app.use(AnzuSystemsCommonAdmin, { i18n, … })`), so its own `i18n` export and the copy of the messages the admins kept in it are gone. The instance has to be in composition mode: `createI18n<[MessageSchema], LanguageCode, false>({ legacy: false, … })`. `loadLanguageMessages` no longer calls `setLocaleMessage` or sets the locale on the library's instance, and code that imported `i18n` from the library imports the admin's own instead. `commonPluralRules` holds the sk and cs rules, and `mergeCommonMessages(messagesSk, appMessages)` deep merges an admin's messages into the library's.
+- **`Acl` is no longer registered globally.** Import it like any other component. `vue/no-undef-components` catches a missing import once `Acl` is removed from its `ignorePatterns`; without the import, the gated content would render for everyone. Admins declare their ACL values once, in `interface AclRegistry { acl: AclValue }`, instead of redeclaring `AclValue` in `declare module '@anzusystems/common-admin'`. That redeclaration was a duplicate identifier and left `requiredPermissions` untyped.
+
+**Components**
+- **Events without the `on` prefix**: `ADialogToolbar` `@cancel`, `ACreateDialog` `@open`, `@close`, `@confirm`, `@success`, `@error`, `ASubjectSelect` `@open`, `@page-change`, `@confirm`, `@fetch-next-page`, `AAssetSelect` `@confirm`, `ABtnSplit` `@click`, `ACachedChip` `@close`, `ADatetimePicker` `@open`, `@close`. `@on-cancel` and the like no longer fire, and vue-tsc does not report them, so use the codemod or the `recommended()` eslint preset, which flags the old names.
+- **The components without the `A` prefix get it**: `ADamAdminAssetLink`, `ADamAssetImageRoiSelect`, `ADamAssetLicenceRemoteAutocomplete`, `ADamAssetLicenceGroupRemoteAutocomplete`, `ADamAuthorFilterRemoteAutocomplete`, `ADamDistributionServiceSelect`, `ADamExtSystemRemoteAutocomplete`, `ADamExternalProviderAssetSelect`, `ADamKeywordFilterRemoteAutocomplete`, `ADamUserFilterRemoteAutocomplete`, `AFiltersSelected`, `AImageMassOperations`.
+- **`ANestedSortableListEditor` drops the aliases kept from `ASortableNested`**: `addAfterId`, `addChildToId`, `removeById`, `updateData`, `resetDirtyBaseline`, `clearUnsavedState` and `hasUnsavedChanges`. Use `addItem(item, { afterId | parentId, asFirstChild, childrenAllowed })`, `deleteItem`, `updateItem`, `commit()` and `hasUnsaved`. The aliases also committed the whole tree after every call, so call `commit()` yourself where that was intended.
+- **`AImageWidget` and `AImageWidgetMultiple` take a static DAM configuration**: `coreDam.configs[name].staticConfig` covers an admin that reaches the DAM only through its own backend. The widgets then send no configuration requests and skip the check against the DAM user. A new `AAssetList` takes the place of `AAssetListInner`. `AImageWidgetInner`, `AImageWidgetMultipleInner`, `AAssetListInner` and the `ImageWidgetUploadConfig` key are no longer exported.
+- **`v` is typed**: form fields take `v?: AFormFieldValidation | null` (`$errors`, `$invalid`, `$path`, `$touch`) instead of `any`. Anything returned by `useVuelidate` fits; a hand-made object has to match the interface.
+
+**Composables and stores**
+- **`useDamConfigStore` and `useImageStore` are no longer exported.** `useDamConfig()` reads the DAM configuration as read-only refs, and loading stays in `useDamConfigState`. The image widgets reset the image store themselves, so a gallery no longer carries images or positions over from the previous one. Remove any `useImageStore().reset()` calls.
+- **`useCollabState()` returns `collabReconnecting`, `collabRoomInfoState`, `collabFieldDataBufferState` and `gatherBufferData`.** The socket and the socket.io protocol types (`CollabClientToServerEvents`, `CollabServerToClientEvents`, the `*Callback` and `*Status` types, …) are internal. `useCollabRoom` takes `fetchCachedUsers: () => Promise<unknown>`.
+- **`useI18n` is no longer re-exported**: import it from `vue-i18n`.
+- **`SystemScopeSymbol` and `SubjectScopeSymbol` are renamed to `SystemScopeKey` and `SubjectScopeKey`**, and `useSystemEntityScope()` returns what the nearest `ASystemEntityScope` provides.
+- **`useRouteHistory` and `navigateBack` type route names with vue-router's `RouteRecordName`**, so a typed router checks `skipRouteNames` and `fallbackRouteName`, and `history` holds `{ name, fullPath }` entries. Reading `history` no longer ends in TS2589. A route name widened to `string` needs `as const`.
+
+**Types and utils**
+- **`UploadQueueItem.latestChunkCancelToken` is now `latestChunkAbortController: AbortController | null`.** Upload requests pass `signal` instead of axios's deprecated `CancelToken`.
+- **`dateDiff` and `dateToUtc` no longer expose dayjs types**: `dateDiff(d1: Date, d2: Date, unit?: DateDiffUnit)` and `dateToUtc(date: Date | string | number, …)`.
+- **Removed legacy types**: `FilterStore` (use `FilterData`), `SortableNested` and `SortableNestedItem` (use `NestedTree` and `NestedTreeNode`), `SortableItemWithParentDataAware`, and the socket.io types listed above.

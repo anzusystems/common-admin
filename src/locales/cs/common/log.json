@@ -13,7 +13,7 @@
     "userId": "ID uživatele",
     "datetimeFrom": "Datum od",
     "datetimeTo": "Datum do",
-    "message": "Správa",
+    "message": "Zpráva",
     "appVersion": "Verze",
     "resourceName": "Název entity",
     "resourceIds": "ID entity"
@@ -22,7 +22,7 @@
     "id": "ID",
     "datetime": "Datum",
     "levelName": "Úroveň",
-    "message": "Správa",
+    "message": "Zpráva",
     "context": {
       "appVersion": "Verze",
       "requestOriginAppVersion": "Originální verze",

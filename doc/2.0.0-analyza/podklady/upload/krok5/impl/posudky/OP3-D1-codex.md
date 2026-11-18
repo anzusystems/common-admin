@@ -1,0 +1,5 @@
+1. **Low — documentation:** [Changelog line 181](/home/volar/projects/anzusystems/admin-dam/doc/changelog/3.0.0.md:181) says the deleted row stays out regardless of the read. As the step note acknowledges, an already running tab read can restore it.
+2. **Low — documentation:** [Changelog line 184](/home/volar/projects/anzusystems/admin-dam/doc/changelog/3.0.0.md:184) says the save dialog cannot close, but hiding advanced settings or closing the tab can still unmount it during a save. The step note records this limit.
+3. **Medium — outside this change:** [DistributionCancelDialog.vue:36](/home/volar/projects/anzusystems/admin-dam/src/domains/coreDam/asset/components/detail/components/distribution/DistributionCancelDialog.vue:36) has the analogous stale-row issue after a successful stop and failed reload; polling eventually removes the row.
+
+No defect found in the two code fixes or their changed tests. Tests were not run, as requested.

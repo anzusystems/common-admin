@@ -1,0 +1,5 @@
+1. **Low — The test cannot detect a service-only text change.** [uploadFailures.test.ts](/home/volar/projects/anzusystems/admin-dam/src/test/queue/uploadFailures.test.ts:318) checks the final row text. The DAM store computes and writes that text from the rejection at [uploadQueuesStore.ts](/home/volar/projects/anzusystems/admin-dam/src/domains/coreDam/asset/store/uploadQueuesStore.ts:691), overwriting a text the service may have written earlier. K3 could therefore write the library text in the service and still pass K0 if the store writes `unknownError` afterward. This does not weaken the stated check of what the user sees.
+
+The other requested checks have no finding: the case uses fake time throughout, covers the four retries within `EVERY_RETRY`, asserts exactly one alert and no completion PATCH, and adds no mocks of the service or store. The K0 note reports a passing baseline and failing text and alert mutations; I did not run tests, as requested.
+
+**Outside the change:** no findings.

@@ -2,6 +2,11 @@
   "system": "System",
   "notSelected": "Not selected",
   "all": "All",
+  "link": "Link",
+  "text": "Text",
+  "url": "URL",
+  "external": "External link",
+  "nofollow": "Nofollow",
   "boolean": {
     "true": "Yes",
     "false": "No"
@@ -10,8 +15,10 @@
     "createdAt": "Created",
     "modifiedAt": "Modified",
     "created": "Created",
-    "modified": "Modified"
+    "modified": "Modified",
+    "userUnavailable": "The user could not be loaded"
   },
+  "cachedUnavailable": "The record could not be loaded",
   "filterPlaceholder": {
     "eq": "Exact match",
     "contains": "Anywhere in the text",

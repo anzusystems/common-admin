@@ -1,0 +1,1 @@
+No findings. The collab cases would fail if either widget requested a lock before returning; the mixed selection cases check that accepted files continue to the queue. Tests were not run, as requested.

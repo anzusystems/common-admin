@@ -1,0 +1,2 @@
+No findings (bez nálezu). The asset ID check clears a previous asset’s list and preserves the current asset’s list on a failed read ([distributionListStore.ts:93](/home/volar/projects/anzusystems/admin-dam/src/domains/coreDam/asset/store/distributionListStore.ts:93)). The tests check both failure paths ([distributionListPoll.test.ts:672](/home/volar/projects/anzusystems/admin-dam/src/test/distribution/distributionListPoll.test.ts:672)).
+Tests were not run, as requested.

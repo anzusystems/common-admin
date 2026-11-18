@@ -1,0 +1,1 @@
+No findings (bez nálezu). Read-only review; no tests or build were run.

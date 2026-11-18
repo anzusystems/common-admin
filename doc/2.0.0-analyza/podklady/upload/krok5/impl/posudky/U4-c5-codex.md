@@ -1,0 +1,9 @@
+The cycle 5 repair has **no finding**: the default list, remove action, cancel action, and sidebar panels follow `queueKey` again, with no added store calls apparent from the code.
+
+The new cases assert both queues before and after the key change. The supplied cycle 4 mutation results show they can fail for stale lookups; I did not run tests.
+
+A **remaining U4 difference outside this patch**: cancellation now ignores the row event’s `queueKey` and uses the list’s current key. A stale row event can therefore target the wrong queue; the new test supplies matching keys. [Current list](/home/volar/projects/anzusystems/krok5-praca/wt/lib-u/src/domains/dam/uploadQueue/components/UploadQueueEditable.vue:153), [pre U4 list](/home/volar/projects/anzusystems/krok5-praca/snap/U4/src/domains/dam/uploadQueue/components/UploadQueueEditable.vue:44).
+
+The reported mass-fill issue is confirmed and predates U4: panels follow the new key, while fill operations retain the key from sidebar creation. [Binding](/home/volar/projects/anzusystems/krok5-praca/wt/lib-u/src/domains/dam/uploadQueue/components/uploadQueueBindings.ts:93), [pre U4 sidebar](/home/volar/projects/anzusystems/krok5-praca/snap/U4/src/domains/dam/uploadQueue/components/AssetQueueSelectedSidebar.vue:34).
+
+Other outside-change findings remain: duplicate author conflict IDs produce duplicate render keys, and the conflict chip’s plus control lacks an explicit accessible label. [Conflicts](/home/volar/projects/anzusystems/krok5-praca/wt/lib-u/src/domains/dam/author/components/AuthorRemoteAutocompleteWithCached.vue:98), [chip](/home/volar/projects/anzusystems/krok5-praca/wt/lib-u/src/domains/dam/author/components/AuthorRemoteAutocompleteCachedAuthorChipConflicts.vue:37).

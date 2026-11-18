@@ -1,0 +1,6 @@
+**Cycle 2 findings**
+
+- **Medium — JS23 remains partly unguarded.** The new [real-detail save case](/home/volar/projects/anzusystems/krok5-praca/wt/lib-u/src/domains/dam/assetDetail/__tests__/assetDetailDialog.test.ts:384) checks the PATCH and success alert, but leaves `updateUploadStore` false. Removing the [write back to the upload queue](/home/volar/projects/anzusystems/krok5-praca/wt/lib-u/src/domains/dam/assetDetail/components/AssetDetailSidebarMetadata.vue:59) would pass. It also never checks the “Save” label or loading state becoming true; waiting for loading to be false can pass immediately.
+- **Low — JS9 can give misleading results.** The [layout case](/home/volar/projects/anzusystems/krok5-praca/wt/lib-u/src/domains/dam/assetDetail/__tests__/assetDetailDialog.test.ts:296) inspects a stub’s parent and the `position-relative` class. An inline positioned wrapper could pass, while a visually equivalent U6 layout using that class could fail. It does not establish the real image’s sizing.
+
+The other first-cycle gaps are addressed in the patch. IM9’s unobservable licence and position are explicitly accepted; the `images.calls` assertions can fail according to the recorded bends. I found no new determinism issue. **Outside the change: no finding.** Tests were not run.

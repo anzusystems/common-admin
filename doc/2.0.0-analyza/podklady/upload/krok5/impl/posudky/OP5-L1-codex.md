@@ -1,0 +1,7 @@
+1. **Medium — FE-54:** [imageDialogDamAuthors.ts:97](/home/volar/projects/anzusystems/common-admin/src/domains/dam/imageWidget/composables/imageDialogDamAuthors.ts:97), [ImageWidgetInner.vue:608](/home/volar/projects/anzusystems/common-admin/src/domains/dam/imageWidget/components/ImageWidgetInner.vue:608), [ImageMediaWidgetInner.vue:751](/home/volar/projects/anzusystems/common-admin/src/domains/dam/imageWidget/components/ImageMediaWidgetInner.vue:751). Close the image dialog while the asset reread is pending, then reopen metadata for the same image before it finishes: the reread can write the source into the new dialog. If Confirm was pressed before the close, its waiting continuation can confirm and save that reopened dialog without a new press. The media widget has the same path. The read and pending confirmation need to be tied to the dialog opening that started them.
+
+**Outside the OP5-L1 change**
+
+2. **Medium — existing race:** [assetSelectListActions.ts:129](/home/volar/projects/anzusystems/common-admin/src/domains/dam/assetSelect/composables/assetSelectListActions.ts:129). A tile click still writes directly to the shared detail store. If its read finishes after a queue asset detail opens, it can replace the asset shown in that detail; `readBesideDetail` guards only the reread after closing.
+
+I found no further supported defect in the reviewed changes, tests, note, or changelog. Tests were not run, as requested.

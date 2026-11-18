@@ -1,0 +1,5 @@
+1. **Medium — [AssetDetailSidebarMetadata.vue:75](/home/volar/projects/anzusystems/admin-dam/src/domains/coreDam/asset/components/detail/components/AssetDetailSidebarMetadata.vue:75):** The detail and list sidebar track pending saves separately but share `metadataAreTouched`. If a sidebar save starts, the detail then saves successfully, and the sidebar save fails last, the sidebar restores the flag. The next neighbour move asks about changes already saved; the sidebar’s Save button also stays highlighted.
+
+2. **Medium — [assetDetailStore.ts:65](/home/volar/projects/anzusystems/admin-dam/src/domains/coreDam/asset/store/assetDetailStore.ts:65):** The confirmation is not tied to the asset or detail request it was opened for. A read already in flight through `refreshActiveItem` can replace the asset while the question remains open. Choosing “leave” then starts a neighbour read for the newly loaded asset, beyond the move the user confirmed.
+
+3. **Outside the change — no new finding.** The documented limits remain. I found no additional FE-42 or FE-43 defect, ineffective test, or note/changelog mismatch. This was a read-only review; I did not run tests.

@@ -1,0 +1,3 @@
+- **Medium — test coverage:** [customMetadataForms.test.ts](/home/volar/projects/anzusystems/krok5-praca/snap/U5b/src/test/queue/customMetadataForms.test.ts:293) loses checks that two edited fields retain both values and that filling an untouched field passes `undefined`. The surviving [massOperationsRows.test.ts](/home/volar/projects/anzusystems/admin-dam/src/test/queue/massOperationsRows.test.ts:171) does not replace those checks.
+- **Low — implementation note:** [U5b.md](/home/volar/projects/anzusystems/common-admin/doc/2.0.0-analyza/podklady/upload/krok5/impl/U5b.md:25) says all four removed cases are covered; the two checks above are not.
+- **Behavior and findings outside U5b:** no findings. The recorded CK is green (72 files, 1,272 tests); I did not run tests.

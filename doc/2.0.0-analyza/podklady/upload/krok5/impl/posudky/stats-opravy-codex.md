@@ -1,0 +1,7 @@
+**Verdict: fixes incomplete.** The query, cursor and polling fixes address their findings, but repeated failures still produce one log record per request. This was a read-only check; I ran no tests or builds.
+
+- **Collaboration:** M1 and L1, L3, L4, L6, L7 **resolved**. L2 and L5 **not resolved**, as recorded in A3. Cross-review logging finding **not resolved**: [dampedLogHelper.ts](/home/volar/projects/petit/collaboration/src/util/helper/dampedLogHelper.ts:14) logs every suppressed failure at debug. With the production `LOG_LEVEL=debug` recorded in B4, a Redis outage still writes a record for every live poll.
+- **Core-cms:** H1 **resolved in code** by separate `id` and `docId` lookups; the cited EXPLAIN used a small dev database, so the production-size plan remains unverified. The response body is unchanged and `articles` uses `docId ?? entityId`. M1 **partly resolved**: warnings and Sentry are limited, but [AnzuCollaborationClient.php](/home/volar/projects/petit/core-cms/src/HttpClient/AnzuCollaborationClient.php:182) writes an info log for every later failure. During an ingress outage, each open dashboard can generate three such records every 10 seconds. Low 1–3 **resolved**; Low 4–5 **not resolved**; Low 6 **partly resolved** by log and timeout tests, with no read-disabled test or production-size query-plan check.
+- **Admin-cms:** M1, M2 and Low 1–5, L7 **resolved**. L6 **not resolved**, as recorded in A7.
+
+**New High/Medium regressions introduced by the fixes:** none identified.

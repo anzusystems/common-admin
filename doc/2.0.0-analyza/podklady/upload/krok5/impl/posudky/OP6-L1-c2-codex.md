@@ -1,0 +1,1 @@
+1. No findings in the c2 patch. This was a read-only review; tests were not run.

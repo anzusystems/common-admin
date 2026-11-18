@@ -1,0 +1,13 @@
+**Verdict: no blocking finding.** I found no verified High or Medium issue in the reviewed code and installed Socket.IO, Engine.IO, Hocuspocus, and `ws` dependencies. This was a read-only review; I did not run tests.
+
+The stated deployment origins are compared as exact strings by [allowedOrigin.ts](/home/volar/projects/anzusystems/krok5-praca/collab-next-wt/src/util/allowedOrigin.ts:9). Lookalikes cannot pass either server’s handshake check. Empty values, `*`, and whitespace admit nobody. `^.*` does admit any nonempty origin, but only when explicitly configured as a regex. A missing `Origin` is refused. The local `.env.dist` regex remains usable for its intended local hosts.
+
+Hocuspocus checks `documentName` before reading cookies or loading the document in [authorizeDocument.ts](/home/volar/projects/anzusystems/krok5-praca/collab-next-wt/src/server/document/authorizeDocument.ts:10). The trailing colon prevents room `cms:article:1` from authorizing `cms:article:10:body`. The subsequent Socket.IO room lookup is exact, so an editor with a socket only in room A cannot use that connection to open the documented shape of room B’s document. URL decoding does not change that relationship. Own-room editing still passes.
+
+The tests cover a real Socket.IO handshake with the production-like exact value, Hocuspocus rejection of a lookalike under an exact value, foreign and prefix-lookalike documents, and an own document. [Socket.IO test](/home/volar/projects/anzusystems/krok5-praca/collab-next-wt/test/collaboration.test.ts:57) · [Hocuspocus tests](/home/volar/projects/anzusystems/krok5-praca/collab-next-wt/test/hocuspocus.test.ts:130)
+
+**Low items:**
+
+- The [read-only info-room unit test](/home/volar/projects/anzusystems/krok5-praca/collab-next-wt/test/authorizeDocument.test.ts:52) supplies a socket that real Socket.IO’s `.in(room)` would not return. The integration test correctly shows an info-room-only user is refused. This is an existing behavior, not a new editor lockout.
+- The prefix rule would also match a document of a hypothetical nested room named `cms:article:1:sub`. I found no such room or stored-document shape in the reviewed code. [authorizeDocument.ts](/home/volar/projects/anzusystems/krok5-praca/collab-next-wt/src/server/document/authorizeDocument.ts:16)
+- The [local regex](/home/volar/projects/anzusystems/krok5-praca/collab-next-wt/.env.dist:11) has an unescaped dot before `sme.localhost`, so it accepts extra local hostnames. It does not affect the stated exact-origin deployments.

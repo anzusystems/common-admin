@@ -1,10 +1,10 @@
 <script lang="ts" setup>
-import AAdminSwitcher from '@/components/AAdminSwitcher.vue'
-import ACurrentUserDropdown from '@/components/ACurrentUserDropdown.vue'
+import AAdminSwitcher from '@/domains/system/components/AAdminSwitcher.vue'
+import ACurrentUserDropdown from '@/domains/ui/components/ACurrentUserDropdown.vue'
 import { currentUser } from '@/playground/system/currentUser'
 import { computed } from 'vue'
 import { mapFullToMinimal } from '@/playground/collabView/cachedUsers'
-import type { AnzuUser } from '@/types/AnzuUser'
+import type { AnzuUser } from '@/shared/types/AnzuUser'
 
 const userMinimal = computed(() => {
   return mapFullToMinimal(currentUser.value as AnzuUser)
@@ -13,9 +13,7 @@ const userMinimal = computed(() => {
 
 <template>
   <div class="align-center justify-space-evenly py-1">
-    <AAdminSwitcher
-      config-url="https://web-static-common.smedata.sk/1.10.0/admin-switcher/config.localhost.json"
-    />
+    <AAdminSwitcher config-url="https://web-static-common.smedata.sk/1.10.0/admin-switcher/config.localhost.json" />
     <ACurrentUserDropdown
       :current-user="userMinimal"
       settings-route-name="settings"

@@ -1,0 +1,11 @@
+1. **Medium — c1-6:** The preview uses one `changes` counter across all video files. If a save for file A is pending, the user changes file B and returns to A, a failure of A’s save cannot restore A’s saved image because B’s change advanced the counter. [AssetDetailSidebarImagePreview.vue](/home/volar/projects/anzusystems/admin-dam/src/domains/coreDam/asset/components/detail/components/AssetDetailSidebarImagePreview.vue:70)
+
+2. **Medium — c1-4:** A slot action can retain the list page’s injected callback after that page is left. If the next page loads the same asset before the action answers, the asset ID guard passes and the old list callback starts a read into the new page’s shared detail store. [AssetListView.vue](/home/volar/projects/anzusystems/admin-dam/src/domains/coreDam/asset/components/list/AssetListView.vue:62), [assetDetailFileChange.ts](/home/volar/projects/anzusystems/admin-dam/src/domains/coreDam/asset/components/detail/composables/assetDetailFileChange.ts:28)
+
+3. **Low — c1-8:** The changelog says a second slot-action press does nothing, then says the change “was sent a second time.” The handlers return when the slot loader is active. [3.0.0.md](/home/volar/projects/anzusystems/admin-dam/doc/changelog/3.0.0.md:153), [assetDetailSidebarSlotsActions.ts](/home/volar/projects/anzusystems/admin-dam/src/domains/coreDam/asset/components/detail/composables/assetDetailSidebarSlotsActions.ts:77)
+
+4. **Outside the c1 change — Medium:** Video slot reads are unordered. A slower response for an earlier slot selection can replace the file shown for a later selection. [AssetDetailSidebarImagePreview.vue](/home/volar/projects/anzusystems/admin-dam/src/domains/coreDam/asset/components/detail/components/AssetDetailSidebarImagePreview.vue:48)
+
+5. **Outside the c1 change — Medium:** A slot-list response for an asset already left can still replace the shared slot list of the next asset. [assetDetailSidebarSlotsActions.ts](/home/volar/projects/anzusystems/admin-dam/src/domains/coreDam/asset/components/detail/composables/assetDetailSidebarSlotsActions.ts:31)
+
+No finding on ineffective or weakened tests. This was a read-only review; tests were not run.

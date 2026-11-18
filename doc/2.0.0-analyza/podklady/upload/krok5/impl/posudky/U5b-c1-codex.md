@@ -1,0 +1,1 @@
+No findings (bez nálezu). Both checks are restored through the real library sidebar: the row assertions can catch a lost field value, and the store spy can catch a value other than `undefined`. Tests were not run.

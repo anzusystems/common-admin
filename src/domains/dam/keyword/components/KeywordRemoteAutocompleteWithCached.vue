@@ -1,0 +1,296 @@
+<script lang="ts" setup>
+import type { DocId, IntegerId } from '@/shared/types/common'
+import type { ValidationScope } from '@/shared/types/Validation'
+import { computed, provide, ref } from 'vue'
+import { useValidate } from '@/shared/validators/vuelidate/useValidate'
+import useVuelidate from '@vuelidate/core'
+import { useKeywordSelectActions } from '@/domains/dam/keyword/composables/keywordActions'
+import {
+  useCachedKeywordsForRemoteAutocomplete,
+  useDamCachedKeywords,
+} from '@/domains/dam/keyword/composables/cachedKeywords'
+import type { DamKeyword } from '@/domains/dam/keyword/types/DamKeyword'
+import { isArray, isUndefined } from '@/shared/utils/common'
+import AFormRemoteAutocompleteWithCached from '@/domains/remoteAutocomplete/components/AFormRemoteAutocompleteWithCached.vue'
+import KeywordRemoteAutocompleteCachedKeywordChip from '@/domains/dam/keyword/components/KeywordRemoteAutocompleteCachedKeywordChip.vue'
+import { createKeyword } from '@/domains/dam/keyword/api/keywordApi'
+import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
+import { useAlerts } from '@/domains/system/composables/alerts'
+import { useDamKeywordFactory } from '@/domains/dam/keyword/factory/KeywordFactory'
+import { useDamConfigState } from '@/domains/dam/config/composables/damConfigState'
+import ARow from '@/domains/ui/components/ARow.vue'
+import { useKeywordInnerFilter } from '@/domains/dam/keyword/filter/KeywordFilter'
+import { FilterInnerConfigKey, FilterInnerDataKey } from '@/domains/filters/utils/filterInjectionKeys'
+import { useAclAllowed } from '@/domains/auth/composables/aclAllowed'
+import type { DamFieldsDisabledAs } from '@/domains/dam/uploadQueue/components/uploadQueueBindings'
+import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
+
+const props = withDefaults(
+  defineProps<{
+    modelValue: DocId | null | DocId[] | any
+    extSystem: IntegerId
+    queueId?: string | undefined
+    label?: string | undefined
+    required?: boolean | null
+    disabled?: boolean | undefined
+    multiple?: boolean
+    clearable?: boolean
+    dataCy?: string
+    validationScope?: ValidationScope
+    /** How it looks while disabled: keyword chips (current library behaviour), or the input switched off. */
+    disabledAs?: DamFieldsDisabledAs
+    /** DAM configuration to use. Defaults to the parent component's, else `default`. */
+    configName?: string
+  }>(),
+  {
+    label: undefined,
+    queueId: undefined,
+    required: null,
+    disabled: undefined,
+    multiple: false,
+    clearable: false,
+    dataCy: undefined,
+    validationScope: undefined,
+    disabledAs: 'chips',
+    configName: undefined,
+  }
+)
+const emit = defineEmits<{
+  (e: 'update:modelValue', data: DocId | null | DocId[]): void
+}>()
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const damConfigName = useDamConfigName(props.configName)
+
+const modelValueComputed = computed({
+  get() {
+    return props.modelValue
+  },
+  set(newValue) {
+    emit('update:modelValue', [...newValue])
+  },
+})
+
+const search = ref<string>('')
+const loadingLocal = ref(false)
+const fetchedItemsMinimal = ref<Map<IntegerId | DocId, any>>(new Map())
+
+const requiredComputed = computed(() => !!props.required)
+
+const { requiredIf } = useValidate()
+
+const rules = {
+  modelValueComputed: {
+    required: requiredIf(requiredComputed),
+  },
+}
+
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const v$ = useVuelidate(rules, { modelValueComputed }, { $scope: props.validationScope })
+
+const { damClient, endPointKeyword, keywordCreateAcl } = useCommonAdminCoreDamOptions(damConfigName)
+const createAllowed = useAclAllowed(keywordCreateAcl ?? undefined)
+const { getDamConfigExtSystem } = useDamConfigState(undefined, damConfigName)
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const configExtSystem = getDamConfigExtSystem(props.extSystem)
+if (isUndefined(configExtSystem)) {
+  throw new Error('KeywordRemoteAutocompleteWithCached: Ext system must be initialised.')
+}
+
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { fetchItemsMinimal } = useKeywordSelectActions(props.extSystem, damConfigName)
+
+const { filterData, filterConfig } = useKeywordInnerFilter()
+provide(FilterInnerConfigKey, filterConfig)
+provide(FilterInnerDataKey, filterData)
+
+const addNewKeywordText = ref('')
+
+const searchChange = (newValue: string) => {
+  if (newValue.length > 0) addNewKeywordText.value = removeLastComma(newValue)
+}
+
+const { addManualToCachedKeywords } = useDamCachedKeywords(damConfigName)
+// The inner input reads this cache only once.
+const useCachedOfName = () => useCachedKeywordsForRemoteAutocomplete(damConfigName)
+
+const afterCreate = (keyword: DamKeyword) => {
+  addManualToCachedKeywords(keyword)
+  if (isArray(modelValueComputed.value)) {
+    modelValueComputed.value = [...modelValueComputed.value, keyword.id]
+    search.value = ''
+    return
+  }
+  modelValueComputed.value = keyword.id
+  search.value = ''
+}
+
+const itemSlotIsSelected = (item: DocId) => {
+  if (isArray(modelValueComputed.value)) {
+    return modelValueComputed.value.includes(item)
+  } else if (modelValueComputed.value) {
+    return modelValueComputed.value === item
+  }
+  return false
+}
+
+const { showErrorsDefault } = useAlerts()
+const { createDefault } = useDamKeywordFactory()
+
+const createOrSelectKeyword = async (name: string) => {
+  const keywordCreate = createDefault(props.extSystem, true)
+  keywordCreate.name = removeLastComma(name)
+  if (keywordCreate.name.length < 2) return
+  try {
+    const keywordRes = await createKeyword(damClient, endPointKeyword, keywordCreate)
+    afterCreate(keywordRes)
+  } catch (error) {
+    showErrorsDefault(error)
+  }
+}
+
+const removeLastComma = (value: string) => {
+  if (value.endsWith(',')) return value.slice(0, -1)
+  return value
+}
+
+const onEnterKeyup = () => {
+  if (!createAllowed.value) return
+  const value = removeLastComma(search.value)
+  createOrSelectKeyword(value)
+}
+
+const onCommaKeyup = () => {
+  if (!createAllowed.value) return
+  const value = removeLastComma(search.value)
+  createOrSelectKeyword(value)
+}
+
+const showAdd = computed(() => {
+  if (!createAllowed.value) return false
+  if (loadingLocal.value) return false
+  if (search.value.length < 2 || search.value.length > 255) return false
+  if (fetchedItemsMinimal.value.size === 0) return true
+  return ![...fetchedItemsMinimal.value.values()].some(
+    (item) => item.name?.toLowerCase() === search.value!.toLowerCase()
+  )
+})
+</script>
+
+<template>
+  <div class="d-flex">
+    <ARow
+      v-if="disabled && disabledAs === 'chips' && multiple"
+      :title="label"
+    >
+      <KeywordRemoteAutocompleteCachedKeywordChip
+        v-for="id in modelValueComputed"
+        :id="id"
+        :key="id"
+        :queue-id="queueId"
+        force-rounded
+        class="mr-1 mb-1"
+      />
+    </ARow>
+    <ARow
+      v-else-if="disabled && disabledAs === 'chips' && !multiple"
+      :title="label"
+    >
+      <KeywordRemoteAutocompleteCachedKeywordChip
+        :id="modelValueComputed"
+        :key="modelValueComputed"
+        :queue-id="queueId"
+        force-rounded
+      />
+    </ARow>
+    <AFormRemoteAutocompleteWithCached
+      v-else
+      v-model="modelValueComputed"
+      v-model:search="search"
+      v-model:loading-local="loadingLocal"
+      v-model:fetched-items-minimal="fetchedItemsMinimal"
+      :use-cached="useCachedOfName"
+      :v="v$"
+      :required="requiredComputed"
+      :label="label"
+      :fetch-items-minimal="fetchItemsMinimal"
+      :multiple="multiple"
+      :clearable="clearable"
+      :disabled="disabled || undefined"
+      filter-by-field="text"
+      :filter-sort-by="null"
+      item-title="name"
+      item-value="id"
+      :data-cy="dataCy"
+      :min-search-chars="2"
+      min-search-text="common.damImage.keyword.filterMinChars"
+      @search-change="searchChange"
+      @keyup.enter="onEnterKeyup"
+      @keyup.,="onCommaKeyup"
+    >
+      <template #item="{ props: itemSlotProps, item: itemSlotItem }">
+        <VListItem
+          v-if="itemSlotItem"
+          v-bind="itemSlotProps"
+          @click.prevent=""
+        >
+          <template
+            v-if="multiple"
+            #prepend
+          >
+            <VCheckboxBtn
+              :model-value="itemSlotIsSelected(itemSlotItem.value)"
+              :ripple="false"
+            />
+          </template>
+          <template #title>
+            <KeywordRemoteAutocompleteCachedKeywordChip
+              :id="itemSlotItem.value"
+              :key="itemSlotItem.value"
+              :queue-id="queueId"
+              :title="itemSlotItem.title"
+              text-only
+            />
+          </template>
+        </VListItem>
+      </template>
+      <!--
+        Pass only the chip's close. Its other props (`onMousedown`)
+        would stop a press on the chip from opening the list.
+      -->
+      <template #chip="{ props: chipSlotProps, item: chipSlotItem }">
+        <KeywordRemoteAutocompleteCachedKeywordChip
+          v-if="chipSlotItem"
+          :id="chipSlotItem.value"
+          :key="chipSlotItem.value"
+          :chip-props="{ 'onClick:close': chipSlotProps['onClick:close'] }"
+          :queue-id="queueId"
+          :title="chipSlotItem.title"
+          force-rounded
+        />
+      </template>
+      <template #append-item>
+        <VListItem
+          v-if="showAdd"
+          class="a-keywords-append-item"
+        >
+          <ABtnSecondary
+            size="small"
+            :text="addNewKeywordText"
+            prepend-icon="mdi-plus-circle"
+            @click.stop="onCommaKeyup"
+          />
+        </VListItem>
+      </template>
+    </AFormRemoteAutocompleteWithCached>
+  </div>
+</template>
+
+<style lang="scss" scoped>
+.a-keywords-append-item {
+  position: sticky;
+  bottom: 0;
+  // Use the menu surface color. A white bar showed in the dark theme.
+  background-color: rgb(var(--v-theme-surface));
+  transform: translateY(8px);
+}
+</style>

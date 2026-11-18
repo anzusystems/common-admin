@@ -1,0 +1,9 @@
+## c1 findings
+
+**High:** None verified.
+
+**Medium — The package check is only partially fixed.** [manual-build:144–149](/home/volar/projects/anzusystems/common-admin/.github/workflows/release-package.yml:144) checks the version and `dist/` filenames, but does not check file contents or reject unexpected files outside `dist/`. The configured [release-tools check](/home/volar/projects/anzusystems/release-tools/lib/package-check.mjs:123) does both. For example, a future `files` change could add `internal/` to the tarball; the new comparison would pass and manual publication could include those files. The earlier missing-`dist/` scenario **is fixed**.
+
+**Low — Process-substitution failures are masked.** At [manual-build:149](/home/volar/projects/anzusystems/common-admin/.github/workflows/release-package.yml:149), `diff` can return success even if a command inside `<(...)` fails; `bash -e` does not catch that failure. I reproduced the shell behavior. A failure that still produces matching lists would pass this check; that failure during a real `yarn pack` is **not verified**.
+
+**Moved-tag Medium: fixed.** The publish job [resolves the current tag and compares its commit with `GITHUB_SHA`](/home/volar/projects/anzusystems/common-admin/.github/workflows/release-package.yml:167). GitHub documents commit lookup by tag and the required `contents: read` permission ([commit API](https://docs.github.com/en/rest/commits/commits)); that permission is present. GitHub defines the release event SHA as the tagged commit ([release events](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows)). A live annotated-tag run and an actual npm publish with these permissions are **not verified**. No other High or Medium issue in c1 was verified.

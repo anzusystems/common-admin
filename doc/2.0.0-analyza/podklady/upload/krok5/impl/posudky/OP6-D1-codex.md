@@ -1,0 +1,7 @@
+1. **Medium — FE‑61:** [assetListStore.ts:43](/home/volar/projects/anzusystems/admin-dam/src/domains/coreDam/asset/store/assetListStore.ts:43). A pending asset ID is checked against the panel only when a list response arrives. If the panel shows A, then B, then A again while no tile is active, the next list can reactivate A. The decided rule says the remembered ID must be forgotten when the panel stops showing A.
+
+2. **Medium — P3, visible limit:** [AssetListView.vue:87](/home/volar/projects/anzusystems/admin-dam/src/domains/coreDam/asset/components/list/AssetListView.vue:87). While the leave question is open, `trackNavigation` makes `onPage()` false. For example, a failed file-route refresh of dirty metadata is suppressed at [assetListActions.ts:332](/home/volar/projects/anzusystems/admin-dam/src/domains/coreDam/asset/components/list/composables/assetListActions.ts:332); answering “Stay” does not show the error later. The implementation note acknowledges this limit, but the changelog does not tell users about it.
+
+3. **Medium — test gap:** [sidebarUnsavedLeave.test.ts:275](/home/volar/projects/anzusystems/admin-dam/src/test/list/sidebarUnsavedLeave.test.ts:275). The Back cases use memory history and dispatch a separate synthetic `popstate` after `router.back()`, with a caller supplied `replaced` state. They exercise Vuetify’s guards, but cannot establish the event order or history state of a real browser Back action.
+
+**Out of change:** no additional finding. This was a read-only review; I did not run tests.

@@ -1,0 +1,5 @@
+**Patch: no findings.** The three cases reach the open panel for each type and check both bottom-button calls through the host binding. A wrong loop `assetType` or a binding bypass would fail the exact assertions; the setup is deterministic.
+
+The form’s `assetType` assertion covers ZK7 without fixing custom-field configuration that U5b may change. The cycle 2 test gap is addressed. The tests were not run, as requested.
+
+**Outside the patch:** The two previously reported low-severity issues remain: [duplicate author conflict IDs](/home/volar/projects/anzusystems/krok5-praca/wt/lib-u/src/domains/dam/uploadQueue/composables/assetSuggestions.ts:14) and an [add action without an explicit accessible label](/home/volar/projects/anzusystems/krok5-praca/wt/lib-u/src/domains/dam/author/components/AuthorRemoteAutocompleteCachedAuthorChipConflicts.vue:43).

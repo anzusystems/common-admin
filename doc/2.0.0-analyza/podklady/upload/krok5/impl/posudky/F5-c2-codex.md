@@ -1,0 +1,1 @@
+No findings. The notification case catches removal of the form guard; the omitted-asset case catches removal of the Loading guard. Both control response order deterministically. Tests were not run.

@@ -1,0 +1,3 @@
+1. **Low — The side type can misrepresent the active preset.** [uploadService.ts](/home/volar/projects/anzusystems/common-admin/src/domains/dam/uploadQueue/composables/uploadService.ts:80): `useDamUpload<'adminDam'>(item)` is valid because `preset` is optional, but the function selects the library preset at line 87 and returns a run branded `adminDam` at line 319. This defeats the design’s guarantee that the future admin-dam queue core accepts only admin-dam runs. Separate overloads for calls with and without a preset would enforce it.
+
+Outside this change: no findings. This was a read-only review; I did not run tests.

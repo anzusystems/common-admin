@@ -1,0 +1,5 @@
+No findings in the requested scope.
+
+- “Leave anyway” resolves the question before navigation resumes; the loader’s later “stay” answer has no pending question to change. “Stay” returns before selection or loading. The neighbour is read once ([assetDetailStore.ts:72](/home/volar/projects/anzusystems/admin-dam/src/domains/coreDam/asset/store/assetDetailStore.ts:72), [assetListActions.ts:396](/home/volar/projects/anzusystems/admin-dam/src/domains/coreDam/asset/components/list/composables/assetListActions.ts:396)).
+- The `showLoader` and `setAsset` callers in `src` introduce no unwanted cancellation or loop in this path ([assetDetailStore.ts:95](/home/volar/projects/anzusystems/admin-dam/src/domains/coreDam/asset/store/assetDetailStore.ts:95)).
+- Both new cases can fail: the first checks that the question closes *before* the reread answers; the second checks direct `setAsset` ([detailNeighbour.test.ts:495](/home/volar/projects/anzusystems/admin-dam/src/test/list/detailNeighbour.test.ts:495), [detailNeighbour.test.ts:544](/home/volar/projects/anzusystems/admin-dam/src/test/list/detailNeighbour.test.ts:544)). Tests were not run, as requested.

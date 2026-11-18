@@ -1,0 +1,5 @@
+1. **P2 — [uploadUi.ts:242](/home/volar/projects/anzusystems/admin-dam/src/test/support/uploadUi.ts:242):** The tracker records a duplicate `addEventListener` call even when happy-dom ignores it. At stop, it removes the listener that existed before the case. This contradicts the [note’s claim](/home/volar/projects/anzusystems/common-admin/doc/2.0.0-analyza/podklady/upload/krok5/impl/OP7-T1.md) that earlier listeners are preserved and could affect a later case.
+
+2. **P2 — [uploadUi.ts:215](/home/volar/projects/anzusystems/admin-dam/src/test/support/uploadUi.ts:215):** If `app.unmount()` throws, execution never reaches `removeListeners()`. The window and document methods remain replaced, and the next `startUploadUi()` sees recording as already active. Cleanup needs to run even when unmount fails.
+
+Read-only review; no tests were run.

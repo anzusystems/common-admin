@@ -1,14 +1,14 @@
 <script lang="ts" setup>
 import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
-import AImageWidgetSimple from '@/components/damImage/AImageWidgetSimple.vue'
-import AImageWidget from '@/components/damImage/AImageWidget.vue'
+import AImageWidgetSimple from '@/domains/dam/imageWidget/components/AImageWidgetSimple.vue'
+import AImageWidget from '@/domains/dam/imageWidget/components/AImageWidget.vue'
 import { ref } from 'vue'
-import type { IntegerIdNullable } from '@/types/common'
-import ADialogToolbar from '@/components/ADialogToolbar.vue'
+import type { IntegerIdNullable } from '@/shared/types/common'
+import ADialogToolbar from '@/domains/ui/components/ADialogToolbar.vue'
 import useVuelidate from '@vuelidate/core'
-import AImageMediaWidget from '@/components/damImage/AImageMediaWidget.vue'
-import { isImageCreateUpdateAware } from '@/components/damImage/uploadQueue/composables/imageMediaWidgetStore'
-import type { MediaAware } from '@/types/MediaAware'
+import AImageMediaWidget from '@/domains/dam/imageWidget/components/AImageMediaWidget.vue'
+import { isImageCreateUpdateAware } from '@/domains/dam/imageWidget/store/imageMediaWidgetStore'
+import type { MediaAware } from '@/domains/dam/types/MediaAware'
 
 const imageId = ref<IntegerIdNullable>(null)
 const imageId2 = ref<IntegerIdNullable>(null)
@@ -44,9 +44,7 @@ const saveInsideDialog = () => {
             :model-value="imageId"
             label="Simple image view"
           >
-            <template #append="{ image }">
-              DAM ID: {{ image?.dam.damId }}
-            </template>
+            <template #append="{ image }">DAM ID: {{ image?.dam.damId }}</template>
           </AImageWidgetSimple>
         </VCol>
         <VCol cols="4">
@@ -67,9 +65,7 @@ const saveInsideDialog = () => {
             label="Lead image 2 with global validation test"
           />
           <div>isvalid (should be always true, use scope, always): {{ isValid }}</div>
-          <VBtn @click.stop="validate">
-            validate should not fire nested widget validation
-          </VBtn>
+          <VBtn @click.stop="validate">validate should not fire nested widget validation</VBtn>
         </VCol>
       </VRow>
       <VRow>
@@ -89,17 +85,13 @@ const saveInsideDialog = () => {
         </VCol>
         <VCol cols="4">
           Expanded actions & metadata - only one at once in dialogs like embed:
-          <VBtn @click.stop="dialog = true">
-            Open dialog
-          </VBtn>
+          <VBtn @click.stop="dialog = true">Open dialog</VBtn>
           <VDialog
             v-model="dialog"
             :max-width="500"
           >
             <VCard v-if="dialog">
-              <ADialogToolbar @on-cancel="dialog = false">
-                test
-              </ADialogToolbar>
+              <ADialogToolbar @cancel="dialog = false">test</ADialogToolbar>
               <VCardText>
                 <VRow>
                   <VCol>
@@ -118,9 +110,7 @@ const saveInsideDialog = () => {
               </VCardText>
               <VCardActions>
                 <VSpacer />
-                <ABtnPrimary @click.stop="saveInsideDialog">
-                  Confirm
-                </ABtnPrimary>
+                <ABtnPrimary @click.stop="saveInsideDialog">Confirm</ABtnPrimary>
               </VCardActions>
             </VCard>
           </VDialog>

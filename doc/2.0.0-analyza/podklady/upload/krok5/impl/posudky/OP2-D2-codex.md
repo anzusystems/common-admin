@@ -1,0 +1,5 @@
+1. **Medium — changed:** [DistributionCancelDialog.vue:26](/home/volar/projects/anzusystems/admin-dam/src/domains/coreDam/asset/components/detail/components/distribution/DistributionCancelDialog.vue:26): If the user closes the dialog during DELETE and opens it for another distribution, the new dialog inherits the loading state and ignores Confirm. When the first DELETE succeeds, [line 36](/home/volar/projects/anzusystems/admin-dam/src/domains/coreDam/asset/components/detail/components/distribution/DistributionCancelDialog.vue:36) closes that new dialog.
+
+2. **Medium — outside the patches:** [DistributionManageDialog.vue:51](/home/volar/projects/anzusystems/admin-dam/src/domains/coreDam/asset/components/detail/components/distribution/forms/DistributionManageDialog.vue:51): Cancel during a pending save unmounts the dialog, but the PATCH continues. A successful response shows a success message while the unmounted component’s reload event is dropped, leaving the list stale. This behavior is present in the snapshot.
+
+No other findings from static review. Tests were not run, as requested.

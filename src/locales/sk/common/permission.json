@@ -11,7 +11,7 @@
   "grantOrigin": {
     "role": "Rola",
     "group": "Skupina",
-    "user": "Užívateľ",
+    "user": "Používateľ",
     "defaultGrant": "Default"
   }
 }

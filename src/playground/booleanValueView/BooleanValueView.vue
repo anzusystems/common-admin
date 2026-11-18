@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import ABooleanValue from '@/components/ABooleanValue.vue'
-import ARow from '@/components/ARow.vue'
+import ABooleanValue from '@/domains/ui/components/ABooleanValue.vue'
+import ARow from '@/domains/ui/components/ARow.vue'
 import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
 </script>
 
