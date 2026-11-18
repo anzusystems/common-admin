@@ -241,6 +241,7 @@ function sidebarEditor() {
         { text: 'google_mymap', link: '/editor/scraper/google_mymap/' },
         { text: 'idnes_video', link: '/editor/scraper/idnes_video/' },
         { text: 'iframe_basic', link: '/editor/scraper/iframe_basic/' },
+        { text: 'infogram_visual', link: '/editor/scraper/infogram_visual/' },
         { text: 'instagram_post', link: '/editor/scraper/instagram_post/' },
         { text: 'instagram_reel', link: '/editor/scraper/instagram_reel/' },
         { text: 'jw_video', link: '/editor/scraper/jw_video/' },

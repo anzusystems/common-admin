@@ -28,6 +28,7 @@
 - [google_mymap](/editor/scraper/google_mymap/)
 - [idnes_video](/editor/scraper/idnes_video/)
 - [iframe_basic](/editor/scraper/iframe_basic/)
+- [infogram_visual](/editor/scraper/infogram_visual/)
 - [instagram_post](/editor/scraper/instagram_post/)
 - [instagram_reel](/editor/scraper/instagram_reel/)
 - [jw_video](/editor/scraper/jw_video/)
