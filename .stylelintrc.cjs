@@ -18,7 +18,6 @@ module.exports = {
     "comment-empty-line-before": null,
     "custom-property-empty-line-before": null,
     "comment-whitespace-inside": null,
-    "declaration-block-single-line-max-declarations": null,
     "scss/at-else-closing-brace-newline-after": null,
     "scss/at-else-closing-brace-space-after": null,
     "scss/at-else-empty-line-before": null,

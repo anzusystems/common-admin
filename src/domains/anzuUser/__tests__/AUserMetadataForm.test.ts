@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import useVuelidate from '@vuelidate/core'
-import { defineComponent, h, ref } from 'vue'
+import { defineComponent, h, reactive, ref } from 'vue'
 import { flushPromises, mount, type VueWrapper } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import AUserMetadataForm from '@/domains/anzuUser/components/AUserMetadataForm.vue'
@@ -24,7 +24,8 @@ let pinia = createPinia()
 const mountForm = async (value: BaseUser, props: Record<string, unknown> = {}) => {
   mounted = mount(AUserMetadataForm, {
     global: { plugins: [pinia] },
-    props: { user: value, ...props },
+    // The pages hand the form a reactive user it edits in place; test utils 2.6 keep a plain prop shallow.
+    props: { user: reactive(value), ...props },
   })
   await flushPromises()
   return mounted
