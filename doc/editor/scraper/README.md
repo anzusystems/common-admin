@@ -90,6 +90,7 @@ type Seconds = number
 - [google_mymap](google_mymap.md)
 - [idnes_video](idnes_video.md)
 - [iframe_basic](iframe_basic.md)
+- [infogram_visual](infogram_visual.md)
 - [instagram_post](instagram_post.md)
 - [instagram_reel](instagram_reel.md)
 - [jw_video](jw_video.md)
