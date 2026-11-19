@@ -10,8 +10,6 @@ import {
   useImageValidation,
 } from '@/components/damImage/uploadQueue/composables/uploadValidations'
 import { useAlerts } from '@/composables/system/alerts'
-import AuthorRemoteAutocompleteWithCached from '@/components/damImage/uploadQueue/author/AuthorRemoteAutocompleteWithCached.vue'
-import ASystemEntityScope from '@/components/form/ASystemEntityScope.vue'
 import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
 import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/composables/extSystemIdForCached'
 import { computed } from 'vue'
@@ -23,10 +21,14 @@ import {
 } from '@/components/damImage/uploadQueue/composables/imageMediaWidgetStore'
 import { DamAssetType, type DamAssetTypeType } from '@/types/coreDam/Asset'
 import type { ImageCreateUpdateAware } from '@/types/ImageAware'
+import { isDamSourceEnabled } from '@/components/damImage/uploadQueue/source/damSourceConfig'
+import { isDamAuthorEnabled } from '@/components/damImage/uploadQueue/author/damAuthorConfig'
+import DamSourcesAuthorsFields from '@/components/damImage/uploadQueue/components/DamSourcesAuthorsFields.vue'
 import ARow from '@/components/ARow.vue'
 import DamAdminAssetLink from '@/components/dam/DamAdminAssetLink.vue'
 import { isNull } from '@/utils/common'
 import { DamMediaType } from '@/types/MediaAware'
+import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 
 const props = withDefaults(
   defineProps<{
@@ -50,6 +52,7 @@ const props = withDefaults(
 
 const emit = defineEmits<{
   (e: 'editAsset', data: DocId): void
+  (e: 'selectionChange'): void
   (e: 'onConfirm'): void
   (e: 'onClose'): void
 }>()
@@ -73,9 +76,26 @@ const type = computed<DamAssetTypeType | null>(() => {
   return null
 })
 
-const imageSourceRequired = computed(() => {
-  return !props.showDamAuthors
-})
+const sourceEnabled = computed(() =>
+  isDamSourceEnabled(DamAssetType.Image, cachedExtSystemId.value),
+)
+
+const authorEnabled = computed(() =>
+  isDamAuthorEnabled(DamAssetType.Image, cachedExtSystemId.value),
+)
+
+const { getDamConfigExtSystem } = useDamConfigState()
+const imageConfig = computed(
+  () => getDamConfigExtSystem(cachedExtSystemId.value)?.[DamAssetType.Image],
+)
+
+const showDamSelection = computed(
+  () => props.showDamAuthors && !!asset.value && (sourceEnabled.value || authorEnabled.value),
+)
+
+const imageSourceRequired = computed(() => !showDamSelection.value)
+
+const { showValidationError } = useAlerts()
 
 const imageMedia = computed<ImageCreateUpdateAware | undefined>(() => {
   if (!isMediaAware(detail.value) || isNull(detail.value.damMedia.imageFileId)) return undefined
@@ -100,8 +120,6 @@ const imageMedia = computed<ImageCreateUpdateAware | undefined>(() => {
 })
 
 const { v$ } = useImageValidation(detail, imageSourceRequired)
-
-const { showValidationError } = useAlerts()
 
 const onConfirm = () => {
   v$.value.$touch()
@@ -154,25 +172,21 @@ defineExpose({
           />
         </VCol>
       </VRow>
-      <VRow v-if="showDamAuthors && asset">
-        <VCol>
-          <ASystemEntityScope
-            subject="author"
-            system="dam"
-          >
-            <AuthorRemoteAutocompleteWithCached
-              v-model="asset.authors"
-              :ext-system="cachedExtSystemId"
-              :label="t('common.damImage.asset.model.authors')"
-              :author-conflicts="authorConflicts"
-              data-cy="custom-field-authors"
-              clearable
-              multiple
-              :validation-scope="AImageMetadataValidationScopeSymbol"
-            />
-          </ASystemEntityScope>
-        </VCol>
-      </VRow>
+      <DamSourcesAuthorsFields
+        v-if="showDamSelection && asset"
+        v-model:sources="asset.sources"
+        v-model:authors="asset.authors"
+        :ext-system="cachedExtSystemId"
+        :source-enabled="sourceEnabled"
+        :author-enabled="authorEnabled"
+        :source-required="!!imageConfig?.sources.required"
+        :author-required="!!imageConfig?.authors?.required"
+        :validation-scope="AImageMetadataValidationScopeSymbol"
+        :author-conflicts="authorConflicts"
+        show-credit
+        :credit-label="sourceLabel"
+        @change="emit('selectionChange')"
+      />
       <VRow v-else>
         <VCol>
           <AFormTextarea
@@ -202,7 +216,7 @@ defineExpose({
   <VDialog
     v-else
     :model-value="modelValue"
-    :max-width="500"
+    :max-width="640"
     :fullscreen="mdAndDown"
     eager
     @update:model-value="onDialogModelUpdate"
@@ -248,25 +262,21 @@ defineExpose({
               />
             </VCol>
           </VRow>
-          <VRow v-if="showDamAuthors && asset">
-            <VCol>
-              <ASystemEntityScope
-                subject="author"
-                system="dam"
-              >
-                <AuthorRemoteAutocompleteWithCached
-                  v-model="asset.authors"
-                  :ext-system="cachedExtSystemId"
-                  :label="t('common.damImage.asset.model.authors')"
-                  :author-conflicts="authorConflicts"
-                  data-cy="custom-field-authors"
-                  clearable
-                  multiple
-                  :validation-scope="AImageMetadataValidationScopeSymbol"
-                />
-              </ASystemEntityScope>
-            </VCol>
-          </VRow>
+          <DamSourcesAuthorsFields
+            v-if="showDamSelection && asset"
+            v-model:sources="asset.sources"
+            v-model:authors="asset.authors"
+            :ext-system="cachedExtSystemId"
+            :source-enabled="sourceEnabled"
+            :author-enabled="authorEnabled"
+            :source-required="!!imageConfig?.sources.required"
+            :author-required="!!imageConfig?.authors?.required"
+            :validation-scope="AImageMetadataValidationScopeSymbol"
+            :author-conflicts="authorConflicts"
+            show-credit
+            :credit-label="sourceLabel"
+            @change="emit('selectionChange')"
+          />
           <VRow v-else>
             <VCol>
               <AFormTextarea

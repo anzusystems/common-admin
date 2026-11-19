@@ -20,6 +20,7 @@ import type { ImageStoreItem } from '@/types/ImageAware'
 import type { DocId, IntegerId } from '@/types/common'
 import { generateUUIDv1 } from '@/utils/generator'
 import { mapUploadMetadataToImages } from '@/components/damImage/uploadQueue/composables/metadataToImageMap'
+import { hasNoDamCredit } from '@/components/damImage/uploadQueue/composables/damCredit'
 import { useImageStore } from '@/components/damImage/uploadQueue/composables/imageStore'
 import { storeToRefs } from 'pinia'
 import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
@@ -96,7 +97,7 @@ const onSave = async () => {
     return
   }
   try {
-    await bulkUpdateAssetsMetadata(damClient, endPointAsset, itemsRaw)
+    await bulkUpdateAssetsMetadata(damClient, endPointAsset, itemsRaw, undefined, props.extSystem)
     showRecordWas('updated')
   } catch (error) {
     console.error(error)
@@ -117,7 +118,13 @@ const onSaveAndApply = async () => {
     return
   }
   try {
-    const res = await bulkUpdateAssetsMetadata(damClient, endPointAsset, itemsRaw)
+    const res = await bulkUpdateAssetsMetadata(
+      damClient,
+      endPointAsset,
+      itemsRaw,
+      undefined,
+      props.extSystem,
+    )
     const mappedItems = customUploadMetadataToImageMap
       ? await customUploadMetadataToImageMap(
           itemsRaw,
@@ -134,7 +141,8 @@ const onSaveAndApply = async () => {
         ...item,
         position: maxPosition.value,
         damAuthors: item.authorIds ?? [],
-        showDamAuthors: (item.authorIds ?? []).length === 0,
+        showDamAuthors: hasNoDamCredit(item.authorIds ?? [], item.sourceIds ?? []),
+        damSources: item.sourceIds ?? [],
         assetId: item.assetId ?? undefined,
       }
     })

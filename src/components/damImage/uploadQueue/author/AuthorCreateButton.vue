@@ -25,6 +25,7 @@ const props = withDefaults(
     extSystem: IntegerId
     initialValue?: string
     disableRedirect?: boolean
+    source?: boolean
     variant?: 'button' | 'icon' | 'listItem'
     buttonT?: string
     buttonClass?: string
@@ -35,6 +36,7 @@ const props = withDefaults(
   {
     initialValue: '',
     disableRedirect: false,
+    source: undefined,
     variant: 'button',
     buttonT: 'common.button.create',
     buttonClass: 'ml-2',
@@ -66,6 +68,7 @@ const onClick = (textOverride: string | undefined) => {
     throw new Error('AuthorCreateButton: Ext system must be initialised.')
   }
   author.value = createDefault(props.extSystem, true)
+  author.value.flags.source = props.source === true
   textOverride ? (author.value.name = textOverride) : (author.value.name = props.initialValue)
   dialog.value = true
 }
@@ -77,7 +80,7 @@ const onCancel = () => {
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { v$ } = useAuthorValidation(author, props.validationScope)
 const { t } = useI18n()
-const { showValidationError, showRecordWas, showErrorsDefault } = useAlerts()
+const { showValidationError, showErrorsDefault } = useAlerts()
 
 const onConfirm = async () => {
   if (buttonLoading.value) return
@@ -91,7 +94,6 @@ const onConfirm = async () => {
     }
     const res = await createAuthor(damClient, author.value)
     emit('onSuccess', res)
-    showRecordWas('created')
     dialog.value = false
     if (!isUndefined(res.id) && !props.disableRedirect) {
       // router.push({ name: ROUTE.DAM.AUTHOR.DETAIL, params: { id: res.id } })
@@ -144,7 +146,7 @@ defineExpose({
       activator="parent"
       location="bottom"
     >
-      {{ t('common.damImage.author.button.add') }}
+      {{ t(source ? 'common.damImage.author.button.addSource' : 'common.damImage.author.button.add') }}
     </VTooltip>
   </VBtn>
   <VDialog v-model="dialog">
@@ -155,7 +157,7 @@ defineExpose({
       data-cy="create-panel"
     >
       <ADialogToolbar @on-cancel="onCancel">
-        {{ t('common.damImage.author.meta.create') }}
+        {{ t(source ? 'common.damImage.author.meta.createSource' : 'common.damImage.author.meta.create') }}
       </ADialogToolbar>
       <VCardText>
         <ASystemEntityScope

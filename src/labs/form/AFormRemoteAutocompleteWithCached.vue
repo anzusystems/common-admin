@@ -46,6 +46,7 @@ const props = withDefaults(
     itemValue?: string
     minSearchChars?: number
     minSearchText?: string | undefined
+    prefetch?: 'focus' | false
   }>(),
   {
     label: undefined,
@@ -62,6 +63,7 @@ const props = withDefaults(
     itemValue: 'id',
     minSearchChars: 2,
     minSearchText: undefined,
+    prefetch: false,
   },
 )
 const emit = defineEmits<{
@@ -140,6 +142,9 @@ const { pagination } = usePagination(
 
 const onFocus = () => {
   isFocused.value = true
+  if (props.prefetch === 'focus' && fetchedItemsMinimal.value.size === 0 && !loadingLocal.value) {
+    apiSearch(search.value)
+  }
   emit('focus', modelValue.value)
 }
 

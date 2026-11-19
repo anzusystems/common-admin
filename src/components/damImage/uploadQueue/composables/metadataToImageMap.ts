@@ -2,13 +2,18 @@ import type { AssetMetadataBulkItem } from '@/components/damImage/uploadQueue/ap
 import type { UploadQueueItem } from '@/types/coreDam/UploadQueue'
 import type { ImageCreateUpdateAware } from '@/types/ImageAware'
 import type { DocId, IntegerId } from '@/types/common'
-import { isNull, isString, isUndefined } from '@/utils/common'
-import { fetchAuthorListByIds } from '@/components/damImage/uploadQueue/api/authorApi'
+import { isNull, isString } from '@/utils/common'
+import {
+  damCreditFromMap,
+  fetchDamAuthorsMap,
+  getDamCreditConfig,
+} from '@/components/damImage/uploadQueue/composables/damCredit'
 import type { AxiosInstance } from 'axios'
 import type { AssetDetailItemDto } from '@/types/coreDam/Asset'
 
 export interface UploadMetadataToImageMapItem extends ImageCreateUpdateAware {
   authorIds: DocId[]
+  sourceIds?: DocId[]
   assetId: DocId | undefined
 }
 
@@ -35,7 +40,7 @@ export async function mapUploadMetadataToImages(
   // Build assetId -> { description, authorIds } map
   const assetMetadataMap = new Map<
     DocId,
-    { description: string; authorIds: DocId[]; mainFileInternal: boolean }
+    { description: string; authorIds: DocId[]; sourceIds: DocId[]; mainFileInternal: boolean }
   >()
 
   bulkItems.forEach((bulkItem) => {
@@ -44,25 +49,19 @@ export async function mapUploadMetadataToImages(
         ? bulkItem.customData.description.trim()
         : '',
       authorIds: bulkItem.authors,
+      sourceIds: bulkItem.sources ?? [],
       mainFileInternal: bulkItem.mainFileInternal ?? false,
     })
   })
 
-  // Collect unique author IDs and batch-fetch names only if needed
-  const authorIdsToFetch = new Set<DocId>()
-  assetMetadataMap.forEach((assetMeta) => {
-    assetMeta.authorIds.forEach((authorId) => {
-      authorIdsToFetch.add(authorId)
-    })
-  })
-
-  const authorsMap = new Map<DocId, string>()
-  if (authorIdsToFetch.size > 0) {
-    const authorsRes = await fetchAuthorListByIds(damClient, extSystem, [...authorIdsToFetch])
-    authorsRes.forEach((author) => {
-      authorsMap.set(author.id, author.name)
-    })
-  }
+  const authorsMap = await fetchDamAuthorsMap(
+    damClient,
+    extSystem,
+    [...assetMetadataMap.values()].flatMap((assetMeta) => [
+      ...assetMeta.authorIds,
+      ...assetMeta.sourceIds,
+    ]),
+  )
 
   // Filter valid queue items and map to results
   const validItems = queueItems.filter(
@@ -72,20 +71,17 @@ export async function mapUploadMetadataToImages(
   return validItems.map((queueItem) => {
     const description = assetMetadataMap.get(queueItem.assetId!)?.description
     const authorIds = assetMetadataMap.get(queueItem.assetId!)?.authorIds
-    const authorNames: string[] = []
-    if (authorIds) {
-      authorIds.forEach((authorId) => {
-        const name = authorsMap.get(authorId)
-        if (!isUndefined(name) && name.trim().length > 0) {
-          authorNames.push(name)
-        }
-      })
-    }
+    const sourceIds = assetMetadataMap.get(queueItem.assetId!)?.sourceIds
 
     return {
       texts: {
         description: description ?? '',
-        source: authorNames.join(', '),
+        source: damCreditFromMap(
+          authorsMap,
+          sourceIds ?? [],
+          authorIds ?? [],
+          getDamCreditConfig(extSystem),
+        ),
       },
       flags: {
         showSource: true,
@@ -99,6 +95,7 @@ export async function mapUploadMetadataToImages(
         internal: assetMetadataMap.get(queueItem.assetId!)?.mainFileInternal ?? false,
       },
       authorIds: authorIds || [],
+      sourceIds: sourceIds || [],
       assetId: queueItem.assetId || undefined,
     }
   })

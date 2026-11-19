@@ -41,7 +41,7 @@ import {
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import UploadQueueDialogSingle from '@/components/damImage/uploadQueue/components/UploadQueueDialogSingle.vue'
 import { useUploadQueueDialog } from '@/components/damImage/uploadQueue/composables/uploadQueueDialog'
-import { fetchAuthorListByIds } from '@/components/damImage/uploadQueue/api/authorApi'
+import { fetchDamCredit, hasNoDamCredit } from '@/components/damImage/uploadQueue/composables/damCredit'
 import { useI18n } from 'vue-i18n'
 import type { VBtn } from 'vuetify/components'
 import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/composables/extSystemIdForCached'
@@ -213,6 +213,7 @@ const { widgetImageToDamImageUrl, damImageIdToDamImageUrl } = useImageActions(im
 const uploadQueuesStore = useUploadQueuesStore()
 const { uploadQueueDialog } = useUploadQueueDialog()
 
+const assetSelectionChanged = ref(false)
 const showDamAuthorsInCmsImage = ref(false)
 const resImageMedia = ref<null | ImageCreateUpdateAware | MediaAware>(null)
 const clickMenuOpened = ref(false)
@@ -460,13 +461,14 @@ watch(
 
 const imageMediaWidgetStore = useImageMediaWidgetStore()
 const { detail } = storeToRefs(imageMediaWidgetStore)
-const { getDamConfigExtSystem } = useDamConfigState()
 
 const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
   if (data.type !== 'asset' || !data.value[0]) return
   metadataDialogLoading.value = true
   imageMediaWidgetStore.setDetail(null)
+  assetDetailStore.setAsset(null)
   // metadataDialog.value = true
+  assetSelectionChanged.value = false
   showDamAuthorsInCmsImage.value = false
   let description = ''
   let source = ''
@@ -555,15 +557,13 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
       if (isString(assetRes.metadata.customData?.description)) {
         description = assetRes.metadata.customData.description.trim()
       }
-      const extSystem = await getExtSystemByLicence(assetRes.licence)
-      if (assetRes.authors.length > 0 && extSystem) {
-        const authorsRes = await fetchAuthorListByIds(damClient, extSystem, assetRes.authors)
-        source = authorsRes.map((author) => author.name).join(', ')
-      } else if (assetRes.authors.length === 0) {
-        const configExtSystem = getDamConfigExtSystem(imageWidgetUploadConfig.value!.extSystem)
-        if (configExtSystem?.[DamAssetType.Image]?.authors?.enabled) {
-          showDamAuthorsInCmsImage.value = true
-          asset.value = assetRes
+      if (hasNoDamCredit(assetRes.authors, assetRes.sources)) {
+        showDamAuthorsInCmsImage.value = true
+        asset.value = assetRes
+      } else {
+        const config = await getOrLoadDamConfigExtSystemByLicence(assetRes.licence)
+        if (config) {
+          source = await fetchDamCredit(damClient, config.extSystem, assetRes.sources, assetRes.authors)
         }
       }
     } catch (e) {
@@ -610,16 +610,16 @@ const {
   replaceFromDamLabel,
 } = useCommonAdminCoreDamOptions()
 
-const { getExtSystemByLicence } = useDamConfigState(damClient)
+const { getOrLoadDamConfigExtSystemByLicence } = useDamConfigState(damClient)
 
 const onEditAsset = async (assetFileId: DocId) => {
   assetLoading.value = true
   assetDialog.value = props.queueKey
   try {
     const assetRes = await fetchAssetByFileId(damClient, endPointAsset, assetFileId)
-    const extSystem = await getExtSystemByLicence(assetRes.licence)
-    if (extSystem) {
-      cachedExtSystemId.value = extSystem
+    const config = await getOrLoadDamConfigExtSystemByLicence(assetRes.licence)
+    if (config) {
+      cachedExtSystemId.value = config.extSystem
     }
     assetDetailStore.setAsset(assetRes)
   } catch (e) {
@@ -630,7 +630,10 @@ const onEditAsset = async (assetFileId: DocId) => {
 }
 
 const onMetadataDialogClose = () => {
+  assetSelectionChanged.value = false
+  showDamAuthorsInCmsImage.value = false
   imageMediaWidgetStore.setDetail(null)
+  assetDetailStore.setAsset(null)
   metadataDialog.value = false
 }
 
@@ -642,6 +645,7 @@ const tryMediaConfirm = async () => {
     mediaModel.value = detail.value
     imageModel.value = null
     imageMediaWidgetStore.setDetail(null)
+    assetDetailStore.setAsset(null)
     reloadMedia(mediaModel.value)
     emit('afterMetadataSaveSuccess')
     releaseFieldLock.value(mediaModel.value.id)
@@ -656,15 +660,20 @@ const tryImageConfirm = async () => {
   if (!isImageCreateUpdateAware(detail.value)) return
   metadataDialogSaving.value = true
   try {
-    if (showDamAuthorsInCmsImage.value && asset.value) {
-      const extSystem = await getExtSystemByLicence(asset.value.licence)
-      if (asset.value.authors.length > 0 && extSystem) {
-        const authorsRes = await fetchAuthorListByIds(damClient, extSystem, asset.value.authors)
-        detail.value.texts.source = authorsRes.map((author) => author.name).join(', ')
-        await updateAssetAuthors(damClient, endPointAsset, asset.value, extSystem)
-        showDamAuthorsInCmsImage.value = false
+    if (assetSelectionChanged.value && asset.value) {
+      const config = await getOrLoadDamConfigExtSystemByLicence(asset.value.licence)
+      if (config) {
+        detail.value.texts.source = await fetchDamCredit(
+          damClient,
+          config.extSystem,
+          asset.value.sources,
+          asset.value.authors,
+        )
+        await updateAssetAuthors(damClient, endPointAsset, asset.value, config.extSystem)
+        assetSelectionChanged.value = false
       }
     }
+    showDamAuthorsInCmsImage.value = false
     const res = detail.value.id
       ? await imageApi.updateImage(imageClient, detail.value.id, detail.value)
       : await imageApi.createImage(imageClient, detail.value)
@@ -672,6 +681,7 @@ const tryImageConfirm = async () => {
     imageModel.value = res.id
     mediaModel.value = null
     imageMediaWidgetStore.setDetail(null)
+    assetDetailStore.setAsset(null)
     await reloadImage(res, res.id, true)
     emit('afterMetadataSaveSuccess')
     releaseFieldLock.value(res.id)
@@ -1016,6 +1026,7 @@ defineExpose({
       :saving="metadataDialogSaving"
       :loading="metadataDialogLoading"
       @edit-asset="onEditAsset"
+      @selection-change="assetSelectionChanged = true"
       @on-confirm="onMetadataDialogConfirm"
       @on-close="onMetadataDialogClose"
     >

@@ -11,13 +11,14 @@ import { prettyBytes } from '@/utils/file'
 import AssetMetadataImageAttributes from '@/components/damImage/uploadQueue/components/AssetMetadataImageAttributes.vue'
 import { useUploadQueuesStore } from '@/components/damImage/uploadQueue/composables/uploadQueuesStore'
 import type { UploadQueueItem } from '@/types/coreDam/UploadQueue'
-import AuthorRemoteAutocompleteWithCached from '@/components/damImage/uploadQueue/author/AuthorRemoteAutocompleteWithCached.vue'
 import KeywordRemoteAutocompleteWithCached from '@/components/damImage/uploadQueue/keyword/KeywordRemoteAutocompleteWithCached.vue'
+import DamSourcesAuthorsFields from '@/components/damImage/uploadQueue/components/DamSourcesAuthorsFields.vue'
 import ASystemEntityScope from '@/components/form/ASystemEntityScope.vue'
 import { ADamAssetMetadataValidationScopeSymbol } from '@/components/damImage/uploadQueue/composables/uploadValidations'
 import { dateTimePretty } from '@/utils/datetime'
 import { useDamKeywordAssetTypeConfig } from '@/components/damImage/uploadQueue/keyword/damKeywordConfig'
 import { useDamAuthorAssetTypeConfig } from '@/components/damImage/uploadQueue/author/damAuthorConfig'
+import { useDamSourceAssetTypeConfig } from '@/components/damImage/uploadQueue/source/damSourceConfig'
 import type { IntegerId } from '@/types/common'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 
@@ -79,6 +80,13 @@ const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(
   props.extSystem,
 )
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { sourceRequired, sourceEnabled } = useDamSourceAssetTypeConfig(
+  // eslint-disable-next-line vue/no-ref-object-reactivity-loss
+  assetType.value,
+  props.extSystem,
+)
+
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { mainFileSingleUseEnabled, showFileInfoEnabled } = useCommonAdminCoreDamOptions(
   props.configName,
 )
@@ -131,32 +139,21 @@ const { mainFileSingleUseEnabled, showFileInfoEnabled } = useCommonAdminCoreDamO
                   </ASystemEntityScope>
                 </VCol>
               </VRow>
-              <VRow
-                v-if="authorEnabled"
-                density="comfortable"
+              <DamSourcesAuthorsFields
+                v-model:sources="item.sources"
+                v-model:authors="item.authors"
+                :ext-system="extSystem"
+                :source-enabled="sourceEnabled"
+                :author-enabled="authorEnabled"
+                :source-required="sourceRequired"
+                :author-required="authorRequired"
+                :disabled="!item.canEditMetadata"
+                :validation-scope="ADamAssetMetadataValidationScopeSymbol"
+                :author-conflicts="authorConflicts"
+                show-credit
                 class="my-2"
-              >
-                <VCol>
-                  <ASystemEntityScope
-                    subject="author"
-                    system="dam"
-                  >
-                    <AuthorRemoteAutocompleteWithCached
-                      v-model="item.authors"
-                      :label="t('common.damImage.asset.model.authors')"
-                      :author-conflicts="authorConflicts"
-                      data-cy="custom-field-authors"
-                      :ext-system="extSystem"
-                      clearable
-                      multiple
-                      :disabled="!item.canEditMetadata"
-                      :required="authorRequired"
-                      :validation-scope="ADamAssetMetadataValidationScopeSymbol"
-                      @update:model-value="onAnyMetadataChange"
-                    />
-                  </ASystemEntityScope>
-                </VCol>
-              </VRow>
+                @change="onAnyMetadataChange"
+              />
               <VRow
                 v-if="mainFileSingleUseEnabled"
                 density="comfortable"

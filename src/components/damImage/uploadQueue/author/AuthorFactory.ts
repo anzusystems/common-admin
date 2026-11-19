@@ -14,6 +14,8 @@ export function useDamAuthorFactory() {
       flags: {
         reviewed: reviewed ?? false,
         canBeCurrentAuthor: true,
+        source: false,
+        hiddenInCredit: false,
       },
       currentAuthors: [],
       childAuthors: [],

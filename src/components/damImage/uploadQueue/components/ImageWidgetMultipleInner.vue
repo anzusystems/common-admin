@@ -36,7 +36,14 @@ import type { ImageStoreItem } from '@/types/ImageAware'
 import { generateUUIDv1 } from '@/utils/generator'
 import ASortableListEditor from '@/labs/listEditor/ASortableListEditor.vue'
 import AImageWidgetSimple from '@/components/damImage/AImageWidgetSimple.vue'
-import { fetchAuthorListByIds } from '@/components/damImage/uploadQueue/api/authorApi'
+import {
+  damCreditFromMap,
+  fetchDamAuthorsMap,
+  fetchDamCredit,
+  getDamCreditConfig,
+  hasNoDamCredit,
+} from '@/components/damImage/uploadQueue/composables/damCredit'
+import type { DamAuthor } from '@/components/damImage/uploadQueue/author/DamAuthor'
 import { useI18n } from 'vue-i18n'
 import useVuelidate from '@vuelidate/core'
 import { AImageMetadataValidationScopeSymbol } from '@/components/damImage/uploadQueue/composables/uploadValidations'
@@ -46,6 +53,7 @@ import { ImageWidgetUploadConfig } from '@/components/damImage/composables/image
 import { fetchAssetListByFileIdsMultipleLicences } from '@/components/damImage/uploadQueue/api/damfetchAssetListByFileIdsMultipleLicences'
 import { copyToLicence } from '@/components/damImage/uploadQueue/api/damImageApi'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
+import { isDamSourceEnabled } from '@/components/damImage/uploadQueue/source/damSourceConfig'
 import { splitAssetsForCopyToLicence } from '@/components/damImage/uploadQueue/composables/splitAssetsForCopyToLicence'
 
 const props = withDefaults(
@@ -155,7 +163,8 @@ const fetchImagesOnLoad = async () => {
           key: generateUUIDv1(),
           ...imageRes,
           damAuthors: found ? found.authors : [],
-          showDamAuthors: found ? found.authors.length === 0 : false,
+          showDamAuthors: found ? hasNoDamCredit(found.authors, found.sources) : false,
+          damSources: found ? found.sources : [],
           assetId: found ? found.id : undefined,
         }
       }),
@@ -233,8 +242,12 @@ const afterLimitDialogAdd = () => {
 const assetSelectConfirmMap = async (
   items: AssetSearchListItemDto[],
 ): Promise<ImageStoreItem[]> => {
-  const assetMetadataMap = new Map<DocId, { description: string; authorIds: DocId[] }>()
+  const assetMetadataMap = new Map<
+    DocId,
+    { description: string; authorIds: DocId[]; sourceIds: DocId[] }
+  >()
   const authorsMap = new Map<DocId, string>()
+  const damAuthorsMap = new Map<DocId, DamAuthor>()
   try {
     const idsByLicence: IdsGroupedByLicences = new Map()
     items.forEach((item) => {
@@ -256,6 +269,7 @@ const assetSelectConfirmMap = async (
         assetMetadataMap.set(assetDetail.id, {
           description: mapped.description,
           authorIds: [],
+          sourceIds: [],
         })
         authorsMap.set(assetDetail.id, mapped.source)
       })
@@ -266,24 +280,25 @@ const assetSelectConfirmMap = async (
             ? assetDetail.metadata.customData.description.trim()
             : '',
           authorIds: assetDetail.authors,
+          sourceIds: assetDetail.sources,
         })
       })
-      const authorIdsByExtSystem = new Map<IntegerId, Set<DocId>>()
+      const authorIdsByExtSystem = new Map<IntegerId, DocId[]>()
       for (const assetDetail of assetDetails) {
-        if (assetDetail.authors.length === 0) continue
-        const extSystem = await getExtSystemByLicence(assetDetail.licence)
-        if (!extSystem) continue
-        const authorIds = authorIdsByExtSystem.get(extSystem) ?? new Set<DocId>()
-        assetDetail.authors.forEach((authorId) => authorIds.add(authorId))
-        authorIdsByExtSystem.set(extSystem, authorIds)
+        if (hasNoDamCredit(assetDetail.authors, assetDetail.sources)) continue
+        const config = await getOrLoadDamConfigExtSystemByLicence(assetDetail.licence)
+        if (!config) continue
+        const authorIds = authorIdsByExtSystem.get(config.extSystem) ?? []
+        authorIds.push(...assetDetail.authors, ...assetDetail.sources)
+        authorIdsByExtSystem.set(config.extSystem, authorIds)
       }
-      const authorsRes = await Promise.all(
+      const authorsMaps = await Promise.all(
         [...authorIdsByExtSystem].map(([extSystem, authorIds]) =>
-          fetchAuthorListByIds(damClient, extSystem, [...authorIds]),
+          fetchDamAuthorsMap(damClient, extSystem, authorIds),
         ),
       )
-      authorsRes.flat().forEach((author) => {
-        authorsMap.set(author.id, author.name)
+      authorsMaps.forEach((fetched) => {
+        fetched.forEach((author) => damAuthorsMap.set(author.id, author))
       })
     }
   } catch (e) {
@@ -293,6 +308,7 @@ const assetSelectConfirmMap = async (
   return items.map((asset) => {
     maxPosition.value++
     const authorIds = assetMetadataMap.get(asset.id)?.authorIds || []
+    const sourceIds = assetMetadataMap.get(asset.id)?.sourceIds || []
     const description = assetMetadataMap.get(asset.id)?.description ?? ''
 
     if (customAssetSelectMetadataToImageMap) {
@@ -316,23 +332,21 @@ const assetSelectConfirmMap = async (
         position: maxPosition.value,
         damAuthors: [],
         showDamAuthors: false,
+        damSources: [],
         assetId: asset.id,
       }
     }
-
-    const authorNames: string[] = []
-    assetMetadataMap.get(asset.id)?.authorIds.forEach((authorId) => {
-      const name = authorsMap.get(authorId)
-      if (!isUndefined(name) && name.trim().length > 0) {
-        authorNames.push(name)
-      }
-    })
 
     return {
       key: generateUUIDv1(),
       texts: {
         description: description,
-        source: authorNames.join(', '),
+        source: damCreditFromMap(
+          damAuthorsMap,
+          sourceIds,
+          authorIds,
+          getDamCreditConfig(cachedExtSystemId.value),
+        ),
       },
       flags: {
         showSource: true,
@@ -347,7 +361,8 @@ const assetSelectConfirmMap = async (
       },
       position: maxPosition.value,
       damAuthors: authorIds,
-      showDamAuthors: authorIds.length === 0,
+      showDamAuthors: hasNoDamCredit(authorIds, sourceIds),
+      damSources: sourceIds,
       assetId: asset.id,
     }
   })
@@ -390,9 +405,9 @@ const onEditAsset = async (assetFileId: DocId) => {
   assetDialog.value = props.queueKey
   try {
     const asset = await fetchAssetByFileId(damClient, endPointAsset, assetFileId)
-    const extSystem = await getExtSystemByLicence(asset.licence)
-    if (extSystem) {
-      cachedExtSystemId.value = extSystem
+    const config = await getOrLoadDamConfigExtSystemByLicence(asset.licence)
+    if (config) {
+      cachedExtSystemId.value = config.extSystem
     }
     assetDetailStore.setAsset(asset)
   } catch (e) {
@@ -423,11 +438,13 @@ const actionLibrary = () => {
 
 const v$ = useVuelidate({ $scope: AImageMetadataValidationScopeSymbol })
 
-const { getDamConfigExtSystem, getExtSystemByLicence } = useDamConfigState(damClient)
+const { getDamConfigExtSystem, getOrLoadDamConfigExtSystemByLicence } = useDamConfigState(damClient)
 
 const authorEnabled = computed(() => {
   return !!getDamConfigExtSystem(cachedExtSystemId.value)?.[DamAssetType.Image]?.authors?.enabled
 })
+
+const sourceEnabled = computed(() => isDamSourceEnabled(DamAssetType.Image, cachedExtSystemId.value))
 
 const saveImages = async () => {
   // Empty store here means the fetch is pending or failed, not a user deletion — the empty
@@ -445,20 +462,28 @@ const saveImages = async () => {
     const assetUpdateItems: AssetAuthorsItems = []
     const imagesRaw = toRaw(images.value)
     for (const image of imagesRaw) {
-      if (authorEnabled.value && image.showDamAuthors && image.assetId) {
-        assetUpdateItems.push({ id: image.assetId, authors: image.damAuthors })
-      }
-      if (authorEnabled.value && image.showDamAuthors && image.damAuthors.length > 0) {
-        const authorsRes = await fetchAuthorListByIds(
+      if (image.showDamAuthors && image.damSelectionChanged && image.assetId) {
+        image.texts.source = await fetchDamCredit(
           damClient,
           cachedExtSystemId.value,
+          image.damSources,
           image.damAuthors,
         )
-        image.texts.source = authorsRes.map((author) => author.name).join(', ')
+        assetUpdateItems.push({
+          id: image.assetId,
+          authors: image.damAuthors,
+          sources: image.damSources,
+        })
       }
     }
     if (assetUpdateItems.length) {
-      await bulkUpdateAssetsAuthors(damClient, endPointAsset, assetUpdateItems)
+      await bulkUpdateAssetsAuthors(
+        damClient,
+        endPointAsset,
+        DamAssetType.Image,
+        cachedExtSystemId.value,
+        assetUpdateItems,
+      )
     }
     const resItems = await imageApi.bulkUpdateImages(imageClient, imagesRaw)
     const ids: IntegerId[] = []
@@ -470,6 +495,7 @@ const saveImages = async () => {
         ...resItem,
         damAuthors: [],
         showDamAuthors: false,
+        damSources: [],
         assetId: undefined,
       }
     })
@@ -489,9 +515,10 @@ const saveImages = async () => {
         ...item,
         damAuthors: matchedImage ? matchedImage.damAuthors : item.damAuthors,
         showDamAuthors: matchedImage
-          ? matchedImage.damAuthors.length === 0
-          : item.damAuthors.length === 0,
-        assetId: item.assetId,
+          ? hasNoDamCredit(matchedImage.damAuthors, matchedImage.damSources)
+          : hasNoDamCredit(item.damAuthors, item.damSources),
+        damSources: matchedImage ? matchedImage.damSources : item.damSources,
+        assetId: matchedImage ? matchedImage.assetId : item.assetId,
       }
     }
 
@@ -542,6 +569,7 @@ const createImageStoreItem = (): ImageStoreItem => ({
   position: 0,
   damAuthors: [],
   showDamAuthors: false,
+  damSources: [],
   assetId: undefined,
 })
 
@@ -659,6 +687,7 @@ onMounted(() => {
               :source-label="sourceLabel"
               :edit-asset-label="editAssetLabel"
               :author-enabled="authorEnabled"
+              :source-enabled="sourceEnabled"
               @edit-asset="onEditAsset"
               @remove-item="removeItem"
             />

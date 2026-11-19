@@ -3,10 +3,10 @@
     "model": {
       "texts": {
         "description": "Popis",
-        "source": "Zdroj"
+        "source": "Kredit"
       },
       "flags": {
-        "showSource": "Zobraziť zdroj"
+        "showSource": "Zobrazit kredit"
       }
     },
     "meta": {
@@ -60,6 +60,8 @@
   "asset": {
     "model": {
       "authors": "Autori",
+      "sources": "Zdroje",
+      "sourcesEmpty": "Žádné zdroje",
       "keywords": "Kľúčové slová",
       "mainFileSingleUse": "Jednorazová licencia",
       "autoDelete": "Automatické smazání"
@@ -194,12 +196,16 @@
       "agency": "Agentúra"
     },
     "button": {
-      "add": "Pridať nového autora"
+      "add": "Pridať nového autora",
+      "addSource": "Přidat nový zdroj"
     },
     "meta": {
-      "create": "Vytvorenie autora"
+      "create": "Vytvorenie autora",
+      "createSource": "Vytvoření zdroje"
     },
     "conflicts": "Konflikt autorov",
+    "sourceFound": "„{name}“ je zdroj, přidali jsme ho do Zdrojů",
+    "authorFound": "„{name}“ je autor, přidali jsme ho do Autorů",
     "filterMinChars": "Zadajte minimálne 2 znaky"
   },
   "uploadErrors": {

@@ -3,10 +3,10 @@
     "model": {
       "texts": {
         "description": "Description",
-        "source": "Source"
+        "source": "Credit"
       },
       "flags": {
-        "showSource": "Show source"
+        "showSource": "Show credit"
       }
     },
     "meta": {
@@ -58,6 +58,8 @@
   "asset": {
     "model": {
       "authors": "Authors",
+      "sources": "Sources",
+      "sourcesEmpty": "No sources",
       "keywords": "Keywords",
       "mainFileSingleUse": "Single-use license",
       "autoDelete": "Automatic deletion"
@@ -192,12 +194,16 @@
       "agency": "Agency"
     },
     "button": {
-      "add": "Add new author"
+      "add": "Add new author",
+      "addSource": "Add new source"
     },
     "meta": {
-      "create": "Creating author"
+      "create": "Creating author",
+      "createSource": "Create source"
     },
     "conflicts": "Author conflicts",
+    "sourceFound": "“{name}” is a source, added to Sources",
+    "authorFound": "“{name}” is an author, added to Authors",
     "filterMinChars": "Enter at least 2 characters"
   },
   "uploadErrors": {

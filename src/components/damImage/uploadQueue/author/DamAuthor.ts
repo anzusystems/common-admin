@@ -6,6 +6,8 @@ import type { DamAuthorTypeType } from '@/components/damImage/uploadQueue/author
 export interface Flags {
   reviewed: boolean
   canBeCurrentAuthor: boolean
+  source: boolean
+  hiddenInCredit: boolean
 }
 
 export interface DamAuthorMinimal {
@@ -13,6 +15,7 @@ export interface DamAuthorMinimal {
   name: string
   identifier: string
   reviewed: boolean
+  hiddenInCredit: boolean
 }
 
 export interface DamAuthor

@@ -9,13 +9,14 @@ import AssetCustomMetadataForm from '@/components/damImage/uploadQueue/component
 import ACopyText from '@/components/ACopyText.vue'
 import { prettyBytes } from '@/utils/file'
 import AssetMetadataImageAttributes from '@/components/damImage/uploadQueue/components/AssetMetadataImageAttributes.vue'
+import DamSourcesAuthorsFields from '@/components/damImage/uploadQueue/components/DamSourcesAuthorsFields.vue'
 import ASystemEntityScope from '@/components/form/ASystemEntityScope.vue'
 import { dateDiff, dateNow, dateTimePretty, dateTimeToDate } from '@/utils/datetime'
 import { ADamAssetMetadataValidationScopeSymbol } from '@/components/damImage/uploadQueue/composables/uploadValidations'
-import AuthorRemoteAutocompleteWithCached from '@/components/damImage/uploadQueue/author/AuthorRemoteAutocompleteWithCached.vue'
 import KeywordRemoteAutocompleteWithCached from '@/components/damImage/uploadQueue/keyword/KeywordRemoteAutocompleteWithCached.vue'
 import { useDamKeywordAssetTypeConfig } from '@/components/damImage/uploadQueue/keyword/damKeywordConfig'
 import { useDamAuthorAssetTypeConfig } from '@/components/damImage/uploadQueue/author/damAuthorConfig'
+import { useDamSourceAssetTypeConfig } from '@/components/damImage/uploadQueue/source/damSourceConfig'
 import type { IntegerId } from '@/types/common'
 import ABooleanValue from '@/components/ABooleanValue.vue'
 import ARow from '@/components/ARow.vue'
@@ -77,6 +78,12 @@ const { keywordRequired, keywordEnabled } = useDamKeywordAssetTypeConfig(
 )
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(
+  // eslint-disable-next-line vue/no-ref-object-reactivity-loss
+  assetType.value,
+  props.extSystem,
+)
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { sourceRequired, sourceEnabled } = useDamSourceAssetTypeConfig(
   // eslint-disable-next-line vue/no-ref-object-reactivity-loss
   assetType.value,
   props.extSystem,
@@ -163,32 +170,21 @@ const autoDeleteIn = computed(() => {
                 </ASystemEntityScope>
               </VCol>
             </VRow>
-            <VRow
-              v-if="authorEnabled"
-              density="comfortable"
+            <DamSourcesAuthorsFields
+              v-model:sources="asset.sources"
+              v-model:authors="asset.authors"
+              :ext-system="extSystem"
+              :source-enabled="sourceEnabled"
+              :author-enabled="authorEnabled"
+              :source-required="sourceRequired"
+              :author-required="authorRequired"
+              :disabled="readonly"
+              :validation-scope="ADamAssetMetadataValidationScopeSymbol"
+              :author-conflicts="authorConflicts"
+              show-credit
               class="my-2"
-            >
-              <VCol>
-                <ASystemEntityScope
-                  subject="author"
-                  system="dam"
-                >
-                  <AuthorRemoteAutocompleteWithCached
-                    v-model="asset.authors"
-                    :ext-system="extSystem"
-                    :label="t('common.damImage.asset.model.authors')"
-                    :author-conflicts="authorConflicts"
-                    data-cy="custom-field-authors"
-                    clearable
-                    multiple
-                    :disabled="readonly"
-                    :required="authorRequired"
-                    :validation-scope="ADamAssetMetadataValidationScopeSymbol"
-                    @update:model-value="onAnyMetadataChange"
-                  />
-                </ASystemEntityScope>
-              </VCol>
-            </VRow>
+              @change="onAnyMetadataChange"
+            />
             <VRow
               v-if="mainFileSingleUseEnabled"
               density="comfortable"

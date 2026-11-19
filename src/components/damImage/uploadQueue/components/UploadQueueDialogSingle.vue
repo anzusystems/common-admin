@@ -108,6 +108,7 @@ const asset = computed<AssetDetailItemDto | null>(() => {
     mainFile: null,
     keywords: [],
     authors: [],
+    sources: [],
     podcasts: [],
     metadata: {
       authorSuggestions: {},
@@ -245,6 +246,7 @@ const onSave = async () => {
       endPointAsset,
       items.value,
       assetDetailStore.mainFileSingleUse,
+      props.extSystem,
     )
     showRecordWas('updated')
   } catch (error) {
@@ -260,6 +262,7 @@ const onSaveAndApply = async () => {
       endPointAsset,
       items.value,
       assetDetailStore.mainFileSingleUse,
+      props.extSystem,
     )
     if (!assetsMetadataRes[0]) {
       throw new Error('Fatal error updating asset metadata')

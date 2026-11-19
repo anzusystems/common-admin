@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { DocId, IntegerId } from '@/types/common'
 import type { ValidationScope } from '@/types/Validation'
-import { computed, provide, ref } from 'vue'
+import { computed, provide, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useValidate } from '@/validators/vuelidate/useValidate'
 import useVuelidate from '@vuelidate/core'
@@ -19,6 +19,12 @@ import AuthorCreateButton from '@/components/damImage/uploadQueue/author/AuthorC
 import ARow from '@/components/ARow.vue'
 import { FilterInnerConfigKey, FilterInnerDataKey } from '@/labs/filters/filterInjectionKeys'
 import { useAuthorInnerFilter } from '@/components/damImage/uploadQueue/author/AuthorFilter'
+import { defineAuth } from '@/composables/auth/defineAuth'
+import type { AclValue } from '@/types/Permission'
+import { SYSTEM_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
+import { fetchAuthorListByIds } from '@/components/damImage/uploadQueue/api/authorApi'
+import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
+import { useDamAuthorFieldRouting } from '@/components/damImage/uploadQueue/author/authorFieldRouting'
 
 const props = withDefaults(
   defineProps<{
@@ -29,6 +35,7 @@ const props = withDefaults(
     required?: boolean | null
     disabled?: boolean | undefined
     multiple?: boolean
+    source?: boolean
     clearable?: boolean
     authorConflicts?: DocId[]
     dataCy?: string
@@ -40,6 +47,7 @@ const props = withDefaults(
     required: null,
     disabled: undefined,
     multiple: false,
+    source: undefined,
     clearable: false,
     authorConflicts: undefined,
     dataCy: undefined,
@@ -49,6 +57,8 @@ const props = withDefaults(
 const emit = defineEmits<{
   (e: 'update:modelValue', data: DocId | null | DocId[]): void
 }>()
+
+const counterpart = defineModel<DocId[] | undefined>('counterpart', { default: undefined })
 
 const modelValueComputed = computed({
   get() {
@@ -86,6 +96,14 @@ const { filterData, filterConfig } = useAuthorInnerFilter()
 provide(FilterInnerConfigKey, filterConfig)
 provide(FilterInnerDataKey, filterData)
 
+watch(
+  () => props.source,
+  (source) => {
+    filterData.source = source ?? null
+  },
+  { immediate: true },
+)
+
 const addAuthor = async (id: null | DocId | undefined) => {
   if (!id) return
   if (!modelValueComputed.value.includes(id)) {
@@ -103,14 +121,37 @@ const { addManualToCachedAuthors } = useDamCachedAuthors()
 
 const afterCreate = (author: DamAuthor) => {
   addManualToCachedAuthors(author)
+  search.value = ''
   if (isArray(modelValueComputed.value)) {
-    modelValueComputed.value = [...modelValueComputed.value, author.id]
-    search.value = ''
+    addAuthor(author.id)
     return
   }
   modelValueComputed.value = author.id
-  search.value = ''
 }
+
+const addToCounterpart = (author: DamAuthor) => {
+  addManualToCachedAuthors(author)
+  search.value = ''
+  if (!counterpart.value || counterpart.value.includes(author.id)) return
+  counterpart.value = [...counterpart.value, author.id]
+}
+
+const { damClient } = useCommonAdminCoreDamOptions()
+const { routeToFields } = useDamAuthorFieldRouting()
+const onCreated = (author: DamAuthor) =>
+  routeToFields(author, props.source, (ids) => fetchAuthorListByIds(damClient, props.extSystem, ids), {
+    own: afterCreate,
+    other: addToCounterpart,
+  })
+
+const { can } = defineAuth<AclValue>(SYSTEM_DAM)
+const canCreate = computed(() => !props.source || can('dam_source_create'))
+
+const sourcesEmptyAttrs = computed(() =>
+  props.source && !loadingLocal.value
+    ? { 'no-data-text': t('common.damImage.asset.model.sourcesEmpty') }
+    : {},
+)
 
 const itemSlotIsSelected = (item: DocId) => {
   if (isArray(modelValueComputed.value)) {
@@ -129,17 +170,19 @@ const removeLastComma = (value: string) => {
 }
 
 const onEnterKeyup = () => {
+  if (!canCreate.value) return
   const value = removeLastComma(search.value)
   authorCreateButton.value?.open(value)
 }
 
 const onCommaKeyup = () => {
+  if (!canCreate.value) return
   const value = removeLastComma(search.value)
   authorCreateButton.value?.open(value)
 }
 
 const showAdd = computed(() => {
-  if (loadingLocal.value) return false
+  if (!canCreate.value || loadingLocal.value) return false
   if (search.value.length < 2 || search.value.length > 255) return false
   if (fetchedItemsMinimal.value.size === 0) return true
   return ![...fetchedItemsMinimal.value.values()].some(
@@ -192,7 +235,9 @@ const showAdd = computed(() => {
       :data-cy="dataCy"
       item-title="name"
       item-value="id"
-      :min-search-chars="2"
+      :min-search-chars="source ? 0 : 2"
+      :prefetch="source ? 'focus' : false"
+      v-bind="sourcesEmptyAttrs"
       min-search-text="common.damImage.author.filterMinChars"
       @search-change="searchChange"
       @keyup.enter="onEnterKeyup"
@@ -249,16 +294,20 @@ const showAdd = computed(() => {
         </VListItem>
       </template>
     </AFormRemoteAutocompleteWithCached>
-    <div v-show="!disabled">
+    <div
+      v-if="canCreate"
+      v-show="!disabled"
+    >
       <AuthorCreateButton
         ref="authorCreateButton"
         variant="icon"
         :ext-system="extSystem"
         data-cy="add-author"
         :initial-value="addNewAuthorText"
+        :source="source"
         disable-redirect
         :disabled="disabled"
-        @on-success="afterCreate"
+        @on-success="onCreated"
       />
     </div>
   </div>

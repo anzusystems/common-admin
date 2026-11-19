@@ -11,14 +11,16 @@ import {
   AImageMetadataValidationScopeSymbol,
   useImageValidation,
 } from '@/components/damImage/uploadQueue/composables/uploadValidations'
-import AuthorRemoteAutocompleteWithCached from '@/components/damImage/uploadQueue/author/AuthorRemoteAutocompleteWithCached.vue'
-import ASystemEntityScope from '@/components/form/ASystemEntityScope.vue'
+import DamSourcesAuthorsFields from '@/components/damImage/uploadQueue/components/DamSourcesAuthorsFields.vue'
 import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/composables/extSystemIdForCached'
+import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
+import { DamAssetType } from '@/types/coreDam/Asset'
 
 const props = withDefaults(
   defineProps<{
     index: number
     authorEnabled: boolean
+    sourceEnabled: boolean
     showSourceEnabled?: boolean
     sourceLabel?: string
     editAssetLabel?: string
@@ -42,10 +44,16 @@ const { cachedExtSystemId } = useExtSystemIdForCached()
 const authorConflicts = ref<DocId[]>([])
 const image = computed(() => imageStore.images[props.index])
 
-const imageSourceRequired = computed(() => {
-  if (isNull(image.value) || isUndefined(image.value)) return true
-  return !(image.value.showDamAuthors && props.authorEnabled)
-})
+const { getDamConfigExtSystem } = useDamConfigState()
+const imageConfig = computed(
+  () => getDamConfigExtSystem(cachedExtSystemId.value)?.[DamAssetType.Image],
+)
+
+const showDamSelection = computed(
+  () => !!image.value?.showDamAuthors && (props.sourceEnabled || props.authorEnabled),
+)
+
+const imageSourceRequired = computed(() => !showDamSelection.value)
 
 const { v$ } = useImageValidation(image, imageSourceRequired)
 
@@ -97,28 +105,21 @@ const removeItem = () => {
             />
           </VCol>
         </VRow>
-        <VRow
-          v-if="image.showDamAuthors && authorEnabled"
-          density="comfortable"
-        >
-          <VCol>
-            <ASystemEntityScope
-              subject="author"
-              system="dam"
-            >
-              <AuthorRemoteAutocompleteWithCached
-                v-model="image.damAuthors"
-                :ext-system="cachedExtSystemId"
-                :label="t('common.damImage.asset.model.authors')"
-                :author-conflicts="authorConflicts"
-                data-cy="custom-field-authors"
-                clearable
-                multiple
-                :validation-scope="AImageMetadataValidationScopeSymbol"
-              />
-            </ASystemEntityScope>
-          </VCol>
-        </VRow>
+        <DamSourcesAuthorsFields
+          v-if="showDamSelection"
+          v-model:sources="image.damSources"
+          v-model:authors="image.damAuthors"
+          :ext-system="cachedExtSystemId"
+          :source-enabled="sourceEnabled"
+          :author-enabled="authorEnabled"
+          :source-required="!!imageConfig?.sources.required"
+          :author-required="!!imageConfig?.authors?.required"
+          :validation-scope="AImageMetadataValidationScopeSymbol"
+          :author-conflicts="authorConflicts"
+          show-credit
+          :credit-label="sourceLabel"
+          @change="image.damSelectionChanged = true"
+        />
         <VRow
           v-else
           density="comfortable"
