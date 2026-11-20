@@ -77,6 +77,7 @@ useEventListener(document, 'keydown', (event: KeyboardEvent) => {
         </div>
         <VBtn
           v-tooltip="t('common.button.close')"
+          :aria-label="t('common.button.close')"
           icon="mdi-close"
           variant="text"
           size="small"
