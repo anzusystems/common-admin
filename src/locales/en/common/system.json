@@ -18,6 +18,12 @@
       "mostRelevant": "Most relevant",
       "mostRecent": "Most recent",
       "oldest": "Oldest"
+    },
+    "liveListing": {
+      "newRecords": "{count} new record | {count} new records",
+      "failed": "The list could not be refreshed. Trying again.",
+      "changes": "Load changes",
+      "degraded": "Instant updates are down; the list is checked every few seconds."
     }
   },
   "modal": {

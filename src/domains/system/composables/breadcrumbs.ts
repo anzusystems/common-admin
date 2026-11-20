@@ -15,6 +15,11 @@ export interface Breadcrumbs {
 
 export interface BreadcrumbOptions {
   linkLastItem: boolean
+  /**
+   * What names the page in the browser tab: an item index (negative from the end), its own text, or a getter.
+   * Default: the item `useBrowserTitle` is configured with, the last one unless set otherwise.
+   */
+  browserTitle?: number | string | (() => string)
 }
 
 export const defaultOptions: BreadcrumbOptions = {

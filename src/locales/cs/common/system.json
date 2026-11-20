@@ -18,6 +18,12 @@
       "mostRelevant": "Nejrelevantnější",
       "mostRecent": "Nejnovější",
       "oldest": "Nejstarší"
+    },
+    "liveListing": {
+      "newRecords": "Přibyl {count} záznam | Přibyly {count} záznamy | Přibylo {count} záznamů",
+      "failed": "Seznam se nepodařilo obnovit. Zkoušíme znovu.",
+      "changes": "Načíst změny",
+      "degraded": "Okamžitá upozornění nefungují, seznam kontrolujeme každých pár sekund."
     }
   },
   "modal": {

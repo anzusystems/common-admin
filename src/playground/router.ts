@@ -15,6 +15,7 @@ import TableView from '@/playground/tableView/TableView.vue'
 import BtnSplitView from '@/playground/btnSplitView/BtnSplitView.vue'
 import AssetSelectView from '@/playground/assetSelectView/AssetSelectView.vue'
 import ApiFetchListBatchView from '@/playground/apiFetchListBatchView/ApiFetchListBatchView.vue'
+import LiveListingView from '@/playground/liveListingView/LiveListingView.vue'
 import ImageView from '@/playground/imageView/ImageView.vue'
 import FileView from '@/playground/fileView/FileView.vue'
 import ListEditorView from '@/playground/listEditorView/ListEditorView.vue'
@@ -180,6 +181,11 @@ const router = createRouter({
       path: '/view/fetch-batch',
       name: 'view-fetch-batch',
       component: ApiFetchListBatchView,
+    },
+    {
+      path: '/view/live-listing',
+      name: 'view-live-listing',
+      component: LiveListingView,
     },
     {
       path: '/view/collab-detail',

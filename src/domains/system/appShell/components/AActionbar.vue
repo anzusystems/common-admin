@@ -1,9 +1,10 @@
 <script lang="ts" setup>
 import type { RouteLocationAsRelativeGeneric, RouteLocationRaw } from 'vue-router'
 import { useRoute } from 'vue-router'
-import { computed } from 'vue'
+import { computed, onBeforeUnmount, watch } from 'vue'
 import { actionbarSlot, type TeleportSlot } from '@/domains/system/appShell/composables/teleportSlot'
 import type { BreadcrumbItem, Breadcrumbs } from '@/domains/system/composables/breadcrumbs'
+import { registerBrowserTitleBreadcrumbs } from '@/domains/system/composables/browserTitle'
 import { isString, isUndefined } from '@/shared/utils/common'
 
 const props = withDefaults(
@@ -27,6 +28,18 @@ const props = withDefaults(
 const route = useRoute()
 
 const Source = computed(() => (props.target ?? actionbarSlot).Source)
+
+// Only the app bar's breadcrumbs name the page in the browser tab; another target is a part of the page.
+let unregisterBrowserTitle: (() => void) | undefined
+watch(
+  () => (props.target ? undefined : props.breadcrumbs),
+  (breadcrumbs) => {
+    unregisterBrowserTitle?.()
+    unregisterBrowserTitle = breadcrumbs ? registerBrowserTitleBreadcrumbs(breadcrumbs) : undefined
+  },
+  { immediate: true }
+)
+onBeforeUnmount(() => unregisterBrowserTitle?.())
 
 const byName = (item: BreadcrumbItem): RouteLocationRaw => {
   const location: RouteLocationAsRelativeGeneric = { name: item.routeName }

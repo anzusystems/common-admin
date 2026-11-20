@@ -18,6 +18,12 @@
       "mostRelevant": "Najrelevantnejšie",
       "mostRecent": "Najnovšie",
       "oldest": "Najstaršie"
+    },
+    "liveListing": {
+      "newRecords": "Pribudol {count} záznam | Pribudli {count} záznamy | Pribudlo {count} záznamov",
+      "failed": "Zoznam sa nepodarilo obnoviť. Skúšame znova.",
+      "changes": "Načítať zmeny",
+      "degraded": "Okamžité upozornenia nefungujú, zoznam kontrolujeme každých pár sekúnd."
     }
   },
   "modal": {

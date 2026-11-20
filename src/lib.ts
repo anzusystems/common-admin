@@ -1620,3 +1620,27 @@ export type {
   UploadQueueListBinding,
   UploadQueueMassOperationsBinding,
 } from '@/domains/dam/uploadQueue/components/uploadQueueBindings'
+export { LIVE_LISTING_INTERVAL, useLiveListing } from '@/domains/filters/datatable/composables/useLiveListing'
+export type {
+  LiveListingInterval,
+  LiveListingKey,
+  LiveListingNewness,
+  LiveListingProbeOptions,
+  UseLiveListingOptions,
+} from '@/domains/filters/datatable/composables/useLiveListing'
+export { default as ALiveListingPill } from '@/domains/filters/datatable/components/ALiveListingPill.vue'
+export {
+  formatBrowserTitle,
+  useBrowserTitle,
+  useBrowserTitleBadge,
+  useBrowserTitlePage,
+} from '@/domains/system/composables/browserTitle'
+export type { BrowserTitleFavicon, BrowserTitleOptions } from '@/domains/system/composables/browserTitle'
+export { useSeenRecords } from '@/domains/filters/datatable/composables/useSeenRecords'
+export type { UseSeenRecordsOptions } from '@/domains/filters/datatable/composables/useSeenRecords'
+export { useDatatableSidePanel } from '@/domains/filters/datatable/composables/useDatatableSidePanel'
+export type {
+  DatatableSidePanelWidth,
+  UseDatatableSidePanelOptions,
+} from '@/domains/filters/datatable/composables/useDatatableSidePanel'
+export { default as ADatatableSidePanel } from '@/domains/filters/datatable/components/ADatatableSidePanel.vue'
