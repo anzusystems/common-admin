@@ -20,7 +20,7 @@
     "./eslint": "./src/eslint/plugin.mjs",
     "./*": "./*"
   },
-  "version": "1.51.0",
+  "version": "1.52.0-single-use-87269.1",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
