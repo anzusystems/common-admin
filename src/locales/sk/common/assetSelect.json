@@ -67,9 +67,11 @@
     "groupLicences": "Licencie"
   },
   "usage": {
-    "used": "Použité {count}×",
-    "places": "Posledné: {places}",
-    "openList": "Zobraziť v zozname obrázkov"
+    "tab": "Použitie",
+    "usedBy": "Používajú ho",
+    "noOtherHolder": "Nepoužíva ho iný záznam.",
+    "andMore": "a ďalšie ({count})",
+    "openList": "Zobraziť všetky použitia"
   },
   "holder": {
     "articleKindStandard": "článok",

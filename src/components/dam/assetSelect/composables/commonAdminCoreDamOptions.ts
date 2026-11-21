@@ -72,6 +72,7 @@ export function useCommonAdminCoreDamOptions(configName: string = 'default') {
     simpleAssetSidebarEnabled:
       commonAdminCoreDamOptions.value.configs[configName].simpleAssetSidebar ?? false,
     singleUseUsageUrl: commonAdminCoreDamOptions.value.configs[configName].singleUseUsageUrl,
+    singleUsePlaceUrl: commonAdminCoreDamOptions.value.configs[configName].singleUsePlaceUrl,
   }
 }
 

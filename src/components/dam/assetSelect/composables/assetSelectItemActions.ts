@@ -67,6 +67,10 @@ export function useAssetItemActions(item: Readonly<Ref<AssetSelectListItem>>) {
 
   const disabledReason = computed(() => item.value.disabledReason)
 
+  const singleUse = computed(() => asset.value.mainFile?.flags.singleUse ?? false)
+
+  const singleUseOtherHolderCount = computed(() => asset.value.singleUseUsage?.otherHolderCount ?? 0)
+
   return {
     asset,
     assetType,
@@ -75,5 +79,7 @@ export function useAssetItemActions(item: Readonly<Ref<AssetSelectListItem>>) {
     tableImageProperties,
     licenceBadge,
     disabledReason,
+    singleUse,
+    singleUseOtherHolderCount,
   }
 }

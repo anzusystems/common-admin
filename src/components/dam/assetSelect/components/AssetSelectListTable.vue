@@ -53,7 +53,6 @@ const { onItemClick, assetListItems, loader } = useAssetSelectActions(props.conf
         :index="index"
         :item="item"
         show-meta-icons
-        :config-name="configName"
         @item-click="onItemClick($event)"
       />
       <tr v-if="!loader && assetListItems.length === 0">

@@ -4,7 +4,6 @@ import type { AssetSelectListItem } from '@/services/stores/coreDam/assetSelectS
 import { useAssetItemActions } from '@/components/dam/assetSelect/composables/assetSelectItemActions'
 import AssetImagePreview from '@/components/dam/assetSelect/components/AssetImagePreview.vue'
 import type { DocId } from '@/types/common'
-import AssetSelectSingleUseUsage from '@/components/dam/assetSelect/components/AssetSelectSingleUseUsage.vue'
 import { toRef } from 'vue'
 
 const props = withDefaults(
@@ -12,11 +11,9 @@ const props = withDefaults(
     index: number
     item: AssetSelectListItem
     showMetaIcons?: boolean
-    configName?: string
   }>(),
   {
     showMetaIcons: false,
-    configName: 'default',
   },
 )
 
@@ -34,8 +31,16 @@ const onItemClick = () => {
 
 const item = toRef(props, 'item')
 
-const { asset, assetType, assetStatus, imageProperties, licenceBadge, disabledReason } =
-  useAssetItemActions(item)
+const {
+  asset,
+  assetType,
+  assetStatus,
+  imageProperties,
+  licenceBadge,
+  disabledReason,
+  singleUse,
+  singleUseOtherHolderCount,
+} = useAssetItemActions(item)
 </script>
 
 <template>
@@ -73,6 +78,8 @@ const { asset, assetType, assetStatus, imageProperties, licenceBadge, disabledRe
         :asset-file-properties="item.asset.assetFileProperties"
         :show-meta-icons="showMetaIcons"
         :licence-badge="licenceBadge"
+        :single-use="singleUse"
+        :single-use-other-holder-count="singleUseOtherHolderCount"
       />
       <div class="asset-list-tiles__item-text text-body-small px-2 py-1">
         <div class="d-flex align-center justify-space-between position-relative">
@@ -81,11 +88,6 @@ const { asset, assetType, assetStatus, imageProperties, licenceBadge, disabledRe
           </div>
         </div>
       </div>
-      <AssetSelectSingleUseUsage
-        class="px-2 pb-1"
-        :item="item"
-        :config-name="configName"
-      />
     </div>
   </div>
 </template>

@@ -31,7 +31,6 @@ const { t } = useI18n()
       :index="index"
       :item="item"
       show-meta-icons
-      :config-name="configName"
       @item-click="onItemClick($event)"
     />
   </div>

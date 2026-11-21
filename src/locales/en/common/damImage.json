@@ -144,7 +144,9 @@
       "2k": "2K",
       "qhd": "QHD",
       "4k": "4K",
-      "8k": "8K"
+      "8k": "8K",
+      "singleUse": "Single use image",
+      "singleUseOtherHolders": "Single use image, also used by other records: {count}"
     },
     "assetFileFailReason": {
       "none": "None",

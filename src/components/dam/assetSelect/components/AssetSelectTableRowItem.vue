@@ -8,18 +8,15 @@ import { prettyBytes } from '@/utils/file'
 import ADatetime from '@/components/datetime/ADatetime.vue'
 import { toRef } from 'vue'
 import AssetImageMetaIcons from '@/components/damImage/uploadQueue/components/AssetImageMetaIcons.vue'
-import AssetSelectSingleUseUsage from '@/components/dam/assetSelect/components/AssetSelectSingleUseUsage.vue'
 
 const props = withDefaults(
   defineProps<{
     index: number
     item: AssetSelectListItem
     showMetaIcons?: boolean
-    configName?: string
   }>(),
   {
     showMetaIcons: false,
-    configName: 'default',
   },
 )
 
@@ -34,8 +31,16 @@ const IMAGE_WIDTH = 128
 
 const item = toRef(props, 'item')
 
-const { asset, tableImageProperties, assetType, assetStatus, licenceBadge, disabledReason } =
-  useAssetItemActions(item)
+const {
+  asset,
+  tableImageProperties,
+  assetType,
+  assetStatus,
+  licenceBadge,
+  disabledReason,
+  singleUse,
+  singleUseOtherHolderCount,
+} = useAssetItemActions(item)
 
 const onItemClick = () => {
   emit('itemClick', { assetId: asset.value.id, index: props.index })
@@ -78,10 +83,6 @@ const onItemClick = () => {
     </td>
     <td>
       {{ asset.texts.displayTitle || t('commonCoreDam.asset.list.noTitle') }}
-      <AssetSelectSingleUseUsage
-        :item="item"
-        :config-name="configName"
-      />
     </td>
     <td>
       <ADatetime :date-time="asset.createdAt" />
@@ -91,6 +92,8 @@ const onItemClick = () => {
         :asset-file-properties="item.asset.assetFileProperties"
         :asset-type="assetType"
         :licence-badge="licenceBadge"
+        :single-use="singleUse"
+        :single-use-other-holder-count="singleUseOtherHolderCount"
         disable-absolute
       />
     </td>

@@ -67,9 +67,11 @@
     "groupLicences": "Licences"
   },
   "usage": {
-    "used": "Used {count}×",
-    "places": "Latest: {places}",
-    "openList": "Show in the image list"
+    "tab": "Usage",
+    "usedBy": "Used by",
+    "noOtherHolder": "No other record uses it.",
+    "andMore": "and {count} more",
+    "openList": "Show all usages"
   },
   "holder": {
     "articleKindStandard": "article",
