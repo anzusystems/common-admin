@@ -11,6 +11,8 @@ import { isAnzuApiForbiddenOperationError } from '@/model/error/AnzuApiForbidden
 import { isAnzuApiDependencyExistsError } from '@/model/error/AnzuApiDependencyExistsError'
 import { isAnzuApiTimeoutError } from '@/model/error/AnzuApiTimeoutError'
 import { isAnzuApiAxiosError } from '@/model/error/AnzuApiAxiosError'
+import { resolveImageSaveErrorMessage } from '@/components/damImage/composables/imageSaveErrors'
+import { extractImageSaveErrorInfo } from '@/components/damImage/uploadQueue/api/imageApiCms'
 
 const DEFAULT_DURATION_SECONDS = 3
 
@@ -194,6 +196,12 @@ export function useAlerts() {
     }
     if (isAnzuApiTimeoutError(error)) {
       showErrorT('error.apiTimedOut.message', duration)
+      return true
+    }
+    // Any save that writes image rows (an article, a gallery, a person) can be refused by the single use rule.
+    const imageSaveErrorMessage = resolveImageSaveErrorMessage(extractImageSaveErrorInfo(error), i18n.global.t)
+    if (imageSaveErrorMessage) {
+      showError(imageSaveErrorMessage, duration)
       return true
     }
     if (isAnzuApiAxiosError(error)) {

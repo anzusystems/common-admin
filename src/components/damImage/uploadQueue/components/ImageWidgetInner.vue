@@ -66,7 +66,6 @@ import {
   isImageCreateUpdateAware,
   useImageMediaWidgetStore,
 } from '@/components/damImage/uploadQueue/composables/imageMediaWidgetStore'
-import { useImageSaveErrorMessage } from '@/components/damImage/composables/imageSaveErrors'
 
 const props = withDefaults(
   defineProps<{
@@ -209,7 +208,6 @@ if (isUndefined(imageWidgetUploadConfig) || isUndefined(imageWidgetUploadConfig.
 const { t } = useI18n()
 
 const { showErrorsDefault, showError } = useAlerts()
-const { showImageSaveError } = useImageSaveErrorMessage()
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const imageOptions = useCommonAdminImageOptions(props.configName)
@@ -552,7 +550,7 @@ const onMetadataDialogConfirm = async () => {
       await writeCreditToSavedAsset(res.dam.damId, pendingCredit.authors, pendingCredit.sources)
     }
   } catch (e) {
-    showImageSaveError(e)
+    showErrorsDefault(e)
   } finally {
     metadataDialogSaving.value = false
   }

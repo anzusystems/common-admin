@@ -49,8 +49,6 @@ import { ImageWidgetUploadConfig } from '@/components/damImage/composables/image
 import { fetchAssetListByFileIdsMultipleLicences } from '@/components/damImage/uploadQueue/api/damfetchAssetListByFileIdsMultipleLicences'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import { isDamSourceEnabled } from '@/components/damImage/uploadQueue/source/damSourceConfig'
-import { extractImageSaveErrorInfo } from '@/components/damImage/uploadQueue/api/imageApiCms'
-import { resolveImageSaveErrorMessage } from '@/components/damImage/composables/imageSaveErrors'
 
 const props = withDefaults(
   defineProps<{
@@ -108,7 +106,7 @@ if (isUndefined(imageWidgetUploadConfig) || isUndefined(imageWidgetUploadConfig.
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const imageOptions = useCommonAdminImageOptions(props.configName)
 const { imageClient, imageApi } = imageOptions
-const { showErrorsDefault, showError, showValidationError, showUnknownError } = useAlerts()
+const { showErrorsDefault, showValidationError, showUnknownError } = useAlerts()
 const uploadButtonComponent = ref<InstanceType<any> | null>(null)
 
 const { uploadSizes, uploadAccept } = useDamAcceptTypeAndSizeHelper(
@@ -515,11 +513,6 @@ const saveImages = async () => {
     emit('update:modelValue', ids)
     return true
   } catch (e) {
-    const message = resolveImageSaveErrorMessage(extractImageSaveErrorInfo(e), t)
-    if (message) {
-      showError(message)
-      return false
-    }
     // showErrorsDefault reports nothing for non-Anzu errors; its boolean return is for this fallback.
     if (!showErrorsDefault(e)) showUnknownError()
     return false

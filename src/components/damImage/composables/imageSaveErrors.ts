@@ -1,11 +1,5 @@
-import { useAlerts } from '@/composables/system/alerts'
-import { i18n } from '@/plugins/i18n'
 import type { ComposerTranslation } from 'vue-i18n'
-import {
-  extractImageSaveErrorInfo,
-  type ImageSaveErrorInfo,
-  type KnownSingleUseReason,
-} from '@/components/damImage/uploadQueue/api/imageApiCms'
+import type { ImageSaveErrorInfo, KnownSingleUseReason } from '@/components/damImage/uploadQueue/api/imageApiCms'
 import { resolveHolderName } from '@/components/dam/assetSelect/composables/assetSelectDisabledReason'
 
 const SINGLE_USE_REASON_MESSAGE: Partial<Record<KnownSingleUseReason, string>> = {
@@ -49,22 +43,4 @@ export function resolveImageSaveErrorMessage(
   return holder
     ? t('common.damImage.image.error.singleUseViolation', { damId, holder })
     : t('common.damImage.image.error.singleUseViolationUnknownHolder', { damId })
-}
-
-// Callers wire this up outside component setup too, where `useI18n()` would throw - the global
-// instance is what `useAlerts` reads as well.
-export function useImageSaveErrorMessage() {
-  const { showErrorsDefault, showError } = useAlerts()
-  const { t } = i18n.global
-
-  const showImageSaveError = (e: unknown) => {
-    const message = resolveImageSaveErrorMessage(extractImageSaveErrorInfo(e), t)
-    if (!message) {
-      showErrorsDefault(e)
-      return
-    }
-    showError(message)
-  }
-
-  return { showImageSaveError }
 }

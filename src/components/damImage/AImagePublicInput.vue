@@ -5,7 +5,6 @@ import {
   type ImageCreateUpdateAware,
   type ImageOwner,
 } from '@/types/ImageAware'
-import { useImageSaveErrorMessage } from '@/components/damImage/composables/imageSaveErrors'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import { fetchAssetByFileId } from '@/components/damImage/uploadQueue/api/damAssetApi'
 import { cloneDeep, isDocId, isNull, isString } from '@/utils/common'
@@ -58,7 +57,6 @@ const { damClient, endPointAsset, sourceLabel, descriptionValidation, sourceVali
 const { widgetImageToDamImageOriginalUrl } = useImageActions(imageOptions)
 
 const { showErrorsDefault, showValidationError } = useAlerts()
-const { showImageSaveError } = useImageSaveErrorMessage()
 const { t } = useI18n()
 
 const extractUUID = (url: string): string | undefined => {
@@ -149,7 +147,7 @@ const submit = async () => {
     modelValue.value = imageRes.id
     return Promise.resolve({ asset: asset, image: imageRes })
   } catch (e) {
-    showImageSaveError(e)
+    showErrorsDefault(e)
   }
 }
 
