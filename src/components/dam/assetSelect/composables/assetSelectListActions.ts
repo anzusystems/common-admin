@@ -89,7 +89,8 @@ export function useAssetSelectActions(
     if (assetSelectStore.selectedLicenceIds.length === 0) return false
     resolveTypeFilter(assetSelectStore.assetType, assetSelectStore.inPodcast)
     filterData.licences = assetSelectStore.selectedLicenceIds
-    filterData.singleUseUsage = true
+    filterData.singleUseUsage =
+      !isNull(assetSelectStore.selectability) && assetSelectStore.assetType === DamAssetType.Image
     const usageHolder = assetSelectStore.selectability?.usageHolder ?? null
     filterData.usageHolderName = usageHolder?.name ?? null
     filterData.usageHolderId = isNull(usageHolder) ? null : String(usageHolder.id)

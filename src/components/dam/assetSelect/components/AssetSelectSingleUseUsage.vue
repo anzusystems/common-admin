@@ -56,6 +56,7 @@ const url = computed(() => {
         rel="noopener noreferrer"
         class="ml-1 d-inline-flex"
         :title="t('common.assetSelect.usage.openList')"
+        :aria-label="t('common.assetSelect.usage.openList')"
         @click.stop
       >
         <VIcon

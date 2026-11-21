@@ -79,7 +79,11 @@
     "minutePost": "minútový príspevok",
     "liveBlogPost": "príspevok live blogu",
     "postSuggestion": "návrh príspevku",
-    "liveBlogFeed": "live blog"
+    "liveBlogFeed": "live blog",
+    "boxItem": "box item",
+    "boxItemHistory": "história box itemu",
+    "notification": "notifikácia",
+    "externalBoxItemArticle": "box item článku"
   },
   "disabledReason": {
     "singleUseNotAllowed": "Jednorazový obrázok sem nemožno vložiť. Typ záznamu jednorazové obrázky nepodporuje alebo záznam ešte nie je uložený.",

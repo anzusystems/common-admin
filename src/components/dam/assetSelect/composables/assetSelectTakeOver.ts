@@ -31,7 +31,7 @@ export function useAssetSelectTakeOver(options: {
     () =>
       showTakeOver.value &&
       selectedOutsideUploadLicence.value.some(
-        (item) => getCachedAssetLicence(item.asset.licence)?.flags.directUseAllowed === false,
+        (item) => getCachedAssetLicence(item.asset.licence)?.flags?.directUseAllowed === false,
       ),
   )
 

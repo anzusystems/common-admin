@@ -79,7 +79,11 @@
     "minutePost": "minute post",
     "liveBlogPost": "live blog post",
     "postSuggestion": "post suggestion",
-    "liveBlogFeed": "live blog"
+    "liveBlogFeed": "live blog",
+    "boxItem": "box item",
+    "boxItemHistory": "box item history",
+    "notification": "notification",
+    "externalBoxItemArticle": "article box item"
   },
   "disabledReason": {
     "singleUseNotAllowed": "A single use image cannot be placed here. This record type does not support single use images or the record is not saved yet.",

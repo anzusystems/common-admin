@@ -416,6 +416,7 @@ import type {
 } from '@/components/sortable/sortableUtils'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import { useDamCreditPreview } from '@/components/damImage/uploadQueue/composables/damCredit'
+import { useImageSaveErrorMessage } from '@/components/damImage/composables/imageSaveErrors'
 import {
   isDamSourceEnabled,
   useDamSourceAssetTypeConfig,
@@ -810,6 +811,7 @@ export {
   useCustomDataFormElementType,
   useDamConfigState,
   useDamCreditPreview,
+  useImageSaveErrorMessage,
   isDamSourceEnabled,
   useDamSourceAssetTypeConfig,
   useUploadQueueItemFactory,

@@ -42,7 +42,7 @@ export const resolveDisabledReason = (
   const singleUseReason = resolveSingleUseReason(asset, options)
   if (singleUseReason) return singleUseReason
 
-  const directUseAllowed = licence?.flags.directUseAllowed ?? true
+  const directUseAllowed = licence?.flags?.directUseAllowed ?? true
   if (!directUseAllowed && asset.attributes.assetType !== DamAssetType.Image) {
     return t('common.assetSelect.disabledReason.directUseDisabledNotImage')
   }

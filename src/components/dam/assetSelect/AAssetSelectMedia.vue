@@ -120,6 +120,7 @@ const onOpen = () => {
   }
 
   reset()
+  takeOverModel.value = false
   initStoreContext(
     selectConfigLocal,
     assetType.value,

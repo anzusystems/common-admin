@@ -659,7 +659,6 @@ const tryImageConfirm = async () => {
           asset.value.authors,
         )
         pendingCredit = { authors: asset.value.authors, sources: asset.value.sources }
-        assetSelectionChanged.value = false
       }
     }
     showDamAuthorsInCmsImage.value = false
@@ -667,6 +666,7 @@ const tryImageConfirm = async () => {
     const res = detail.value.id
       ? await imageApi.updateImage(imageClient, detail.value.id, detail.value)
       : await imageApi.createImage(imageClient, detail.value)
+    assetSelectionChanged.value = false
     metadataDialog.value = false
     imageModel.value = res.id
     mediaModel.value = null
