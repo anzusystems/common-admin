@@ -156,7 +156,7 @@ export function useAssetSelectActions(
     try {
       const asset = await fetchAsset(damClient, endPointAsset, data.assetId)
       cachedExtSystemId.value = assetSelectStore.selectedSelectConfig.extSystem
-      addToCachedAuthors(asset.authors)
+      addToCachedAuthors(asset.authors, asset.sources)
       addToCachedKeywords(asset.keywords)
       if (showFileInfoEnabled) {
         addToCachedUsers(asset.modifiedBy, asset.createdBy)

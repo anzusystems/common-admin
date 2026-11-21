@@ -79,7 +79,8 @@ export const filterFieldsList = [
     exclude: true,
     render: { skip: true },
   },
-  { name: 'mainFileSingleUse' as const, default: false },
+  // The picker lists single use photos too; whether one may be picked is decided per tile (`disabledReasons`).
+  { name: 'mainFileSingleUse' as const, default: null },
   // Set by the asset picker only: DAM answers `singleUseUsage` of the listed single use files for this holder.
   {
     name: 'singleUseUsage' as const,
