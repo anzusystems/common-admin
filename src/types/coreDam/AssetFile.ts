@@ -38,6 +38,8 @@ interface FileAttributes {
   originFileName: string
   originUrl: string
   failReason: AssetFileFailReasonType
+  // Empty string = not a take-over copy; otherwise the id of the root file of the group.
+  takenOverFromId: DocId
 }
 
 export const AssetFileLinkType = {

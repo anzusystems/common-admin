@@ -31,6 +31,7 @@ const { t } = useI18n()
       :index="index"
       :item="item"
       show-meta-icons
+      :config-name="configName"
       @item-click="onItemClick($event)"
     />
   </div>
@@ -110,6 +111,11 @@ $bg-color-actions-dark: #1a1a1a;
 
     &--pointer {
       cursor: pointer;
+    }
+
+    // Dimmed, not blocked: the tile stays clickable so the detail panel can explain why it cannot be used.
+    &--disabled {
+      opacity: 0.5;
     }
   }
 

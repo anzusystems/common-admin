@@ -352,6 +352,8 @@ import {
   type AssetMetadataDto,
   type AssetMetadataSuggestions,
   type AssetSearchListItemDto,
+  type AssetSingleUseUsage,
+  type AssetSingleUseUsagePlace,
   DamAssetStatus,
   DamAssetStatusDefault,
   type DamAssetStatusType,
@@ -402,7 +404,7 @@ import type {
   CustomDataFormElementAttributes,
   CustomDataValue,
 } from '@/components/customDataForm/CustomDataForm'
-import type { AssetSelectReturnData } from '@/types/coreDam/AssetSelect'
+import type { AssetSelectReturnData, AssetSelectUsageHolder } from '@/types/coreDam/AssetSelect'
 import type { SortableItem, SortablePropItem } from '@/components/sortable/sortableActions'
 import type {
   SortableNested,
@@ -458,10 +460,12 @@ import {
   DamNotificationName,
   type DamNotificationNameType,
 } from '@/components/damImage/uploadQueue/composables/damNotificationsEventBus'
-import type {
-  ImageAware,
-  ImageCreateUpdateAware,
-  ImageCreateUpdateAwareKeyed,
+import {
+  applyImageOwner,
+  type ImageAware,
+  type ImageCreateUpdateAware,
+  type ImageCreateUpdateAwareKeyed,
+  type ImageOwner,
 } from '@/types/ImageAware'
 import type {
   DamAuthor,
@@ -905,6 +909,7 @@ export {
   type RecordWasType,
   type UrlParams,
   type AssetSelectReturnData,
+  type AssetSelectUsageHolder,
   type SortablePropItem,
   type SortableItem,
   type SortableNestedItem,
@@ -913,6 +918,8 @@ export {
   type SortableItemWithParentDataAware,
   type AssetFileProperties,
   type AssetSearchListItemDto,
+  type AssetSingleUseUsage,
+  type AssetSingleUseUsagePlace,
   type AssetDetailItemDto,
   type AssetMetadataDto,
   type AssetCustomData,
@@ -988,6 +995,8 @@ export {
   type DamNotificationNameType,
   DamNotificationName,
   type ImageAware,
+  type ImageOwner,
+  applyImageOwner,
   type ImageCreateUpdateAware,
   type ImageCreateUpdateAwareKeyed,
   type UploadMetadataToImageMapFn,

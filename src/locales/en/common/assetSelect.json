@@ -33,7 +33,8 @@
       "noItemsFound": "No matching assets found",
       "pickExactCount": "Select assets: {count}. Selected: {selected}.",
       "pickRangeCount": "Select from {minCount} to {maxCount} assets. Selected: {selected}.",
-      "copyToLicence": "Copy to licence"
+      "copyToLicence": "Copy to licence",
+      "copyToLicenceLocked": "The image licence does not allow direct use, it is always copied."
     }
   },
   "filter": {
@@ -64,5 +65,26 @@
     "label": "Search in",
     "groupListViews": "Selections",
     "groupLicences": "Licences"
+  },
+  "usage": {
+    "used": "Used {count}×",
+    "places": "Latest: {places}",
+    "openList": "Show in the image list"
+  },
+  "holder": {
+    "articleKindStandard": "article",
+    "gallery": "gallery",
+    "person": "person",
+    "organization": "organization",
+    "minutePost": "minute post",
+    "liveBlogPost": "live blog post",
+    "postSuggestion": "post suggestion",
+    "liveBlogFeed": "live blog"
+  },
+  "disabledReason": {
+    "singleUseNotAllowed": "A single use image cannot be placed here. This record type does not support single use images or the record is not saved yet.",
+    "singleUseBlocked": "The image is single use and already used by another record ({count}×).",
+    "directUseDisabledNotImage": "This licence can be used for images only.",
+    "directUseDisabledNoUploadLicence": "The target licence for taking the image over is missing."
   }
 }

@@ -1,5 +1,11 @@
 <script setup lang="ts">
-import type { ImageAware, ImageCreateUpdateAware } from '@/types/ImageAware'
+import {
+  applyImageOwner,
+  type ImageAware,
+  type ImageCreateUpdateAware,
+  type ImageOwner,
+} from '@/types/ImageAware'
+import { useImageSaveErrorMessage } from '@/components/damImage/composables/imageSaveErrors'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import { fetchAssetByFileId } from '@/components/damImage/uploadQueue/api/damAssetApi'
 import { cloneDeep, isDocId, isNull, isString } from '@/utils/common'
@@ -21,12 +27,14 @@ const props = withDefaults(
   defineProps<{
     selectLicences: IntegerId[]
     image?: ImageAware | undefined // optional, if available, no need to fetch image data
+    owner?: ImageOwner | null
     configName?: string
     labelT?: string | undefined
     dataCy?: string | undefined
   }>(),
   {
     image: undefined,
+    owner: null,
     configName: 'default',
     labelT: 'common.damImage.public.idOrUrl',
     dataCy: undefined,
@@ -50,6 +58,7 @@ const { damClient, endPointAsset, sourceLabel, descriptionValidation, sourceVali
 const { widgetImageToDamImageOriginalUrl } = useImageActions(imageOptions)
 
 const { showErrorsDefault, showValidationError } = useAlerts()
+const { showImageSaveError } = useImageSaveErrorMessage()
 const { t } = useI18n()
 
 const extractUUID = (url: string): string | undefined => {
@@ -129,6 +138,7 @@ const submit = async () => {
       },
       position: 0,
     }
+    applyImageOwner(data, props.owner)
     if (resImage.value?.id) {
       data.id = resImage.value.id
     }
@@ -139,7 +149,7 @@ const submit = async () => {
     modelValue.value = imageRes.id
     return Promise.resolve({ asset: asset, image: imageRes })
   } catch (e) {
-    showErrorsDefault(e)
+    showImageSaveError(e)
   }
 }
 

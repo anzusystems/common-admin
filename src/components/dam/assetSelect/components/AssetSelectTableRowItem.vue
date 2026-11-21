@@ -8,15 +8,18 @@ import { prettyBytes } from '@/utils/file'
 import ADatetime from '@/components/datetime/ADatetime.vue'
 import { toRef } from 'vue'
 import AssetImageMetaIcons from '@/components/damImage/uploadQueue/components/AssetImageMetaIcons.vue'
+import AssetSelectSingleUseUsage from '@/components/dam/assetSelect/components/AssetSelectSingleUseUsage.vue'
 
 const props = withDefaults(
   defineProps<{
     index: number
     item: AssetSelectListItem
     showMetaIcons?: boolean
+    configName?: string
   }>(),
   {
     showMetaIcons: false,
+    configName: 'default',
   },
 )
 
@@ -31,7 +34,8 @@ const IMAGE_WIDTH = 128
 
 const item = toRef(props, 'item')
 
-const { asset, tableImageProperties, assetType, assetStatus, licenceBadge } = useAssetItemActions(item)
+const { asset, tableImageProperties, assetType, assetStatus, licenceBadge, disabledReason } =
+  useAssetItemActions(item)
 
 const onItemClick = () => {
   emit('itemClick', { assetId: asset.value.id, index: props.index })
@@ -41,7 +45,11 @@ const onItemClick = () => {
 <template>
   <tr
     class="a-datatable__row"
-    :class="{ 'a-datatable__row--selected': item.selected }"
+    :class="{
+      'a-datatable__row--selected': item.selected,
+      'a-datatable__row--disabled': disabledReason,
+    }"
+    :title="disabledReason ?? undefined"
     @click.stop.exact="onItemClick"
   >
     <td>
@@ -70,6 +78,10 @@ const onItemClick = () => {
     </td>
     <td>
       {{ asset.texts.displayTitle || t('commonCoreDam.asset.list.noTitle') }}
+      <AssetSelectSingleUseUsage
+        :item="item"
+        :config-name="configName"
+      />
     </td>
     <td>
       <ADatetime :date-time="asset.createdAt" />

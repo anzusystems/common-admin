@@ -54,6 +54,19 @@ interface Metadata {
   customData: any
 }
 
+export interface AssetSingleUseUsagePlace {
+  resourceName: string
+  resourceId: string | number
+  imageId: IntegerId
+}
+
+export interface AssetSingleUseUsage {
+  totalCount: number
+  otherHolderCount: number
+  blocked: boolean
+  places: AssetSingleUseUsagePlace[]
+}
+
 export interface AssetSearchListItemDto
   extends AnzuUserAndTimeTrackingAware, ResourceNameSystemAware {
   id: DocId
@@ -68,6 +81,8 @@ export interface AssetSearchListItemDto
   mainFileInternal: Readonly<boolean | null>
   mainFileOverrideInternal: Readonly<boolean | null>
   autoDeleteAt: Readonly<DatetimeUTCNullable>
+  // Present only for a single use main file of a list requested by the asset picker (singleUseUsage).
+  singleUseUsage?: Readonly<AssetSingleUseUsage | null>
 }
 
 export interface AssetDetailItemDto extends AnzuUserAndTimeTrackingAware, ResourceNameSystemAware {
@@ -104,21 +119,3 @@ export type AssetExternalProviderMetadata = Record<
   string,
   string | number | number[] | string[] | boolean
 >
-
-export interface DamImageCopyToLicenceRequestItem {
-  asset: DocId
-  targetAssetLicence: IntegerId
-}
-
-export type DamImageCopyToLicenceRequest = Array<DamImageCopyToLicenceRequestItem>
-
-export interface DamImageCopyToLicenceResponseItem {
-  asset: DocId
-  targetAsset: DocId
-  targetMainFile: DocId
-  targetAssetLicence: IntegerId
-  result: 'exists' | 'copy' | 'notAllowed' | 'unassigned'
-  assetConflicts: DocId[]
-}
-
-export type DamImageCopyToLicenceResponse = Array<DamImageCopyToLicenceResponseItem>

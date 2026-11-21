@@ -65,6 +65,8 @@ export function useAssetItemActions(item: Readonly<Ref<AssetSelectListItem>>) {
 
   const licenceBadge = computed(() => getCachedAssetLicence(asset.value.licence)?.badge ?? '')
 
+  const disabledReason = computed(() => item.value.disabledReason)
+
   return {
     asset,
     assetType,
@@ -72,5 +74,6 @@ export function useAssetItemActions(item: Readonly<Ref<AssetSelectListItem>>) {
     imageProperties,
     tableImageProperties,
     licenceBadge,
+    disabledReason,
   }
 }

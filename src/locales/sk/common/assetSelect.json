@@ -33,7 +33,8 @@
       "noItemsFound": "Žiadne nájdené assety",
       "pickExactCount": "Vyberte assety: {count}. Zvolených: {selected}.",
       "pickRangeCount": "Vyberte od {minCount} do {maxCount} assetov. Zvolených: {selected}.",
-      "copyToLicence": "Kopírovať do licencie"
+      "copyToLicence": "Kopírovať do licencie",
+      "copyToLicenceLocked": "Licencia obrázka nedovoľuje priame použitie, kopíruje sa vždy."
     }
   },
   "filter": {
@@ -64,5 +65,26 @@
     "label": "Hľadať v",
     "groupListViews": "Výbery",
     "groupLicences": "Licencie"
+  },
+  "usage": {
+    "used": "Použité {count}×",
+    "places": "Posledné: {places}",
+    "openList": "Zobraziť v zozname obrázkov"
+  },
+  "holder": {
+    "articleKindStandard": "článok",
+    "gallery": "galéria",
+    "person": "osoba",
+    "organization": "organizácia",
+    "minutePost": "minútový príspevok",
+    "liveBlogPost": "príspevok live blogu",
+    "postSuggestion": "návrh príspevku",
+    "liveBlogFeed": "live blog"
+  },
+  "disabledReason": {
+    "singleUseNotAllowed": "Jednorazový obrázok sem nemožno vložiť. Typ záznamu jednorazové obrázky nepodporuje alebo záznam ešte nie je uložený.",
+    "singleUseBlocked": "Obrázok je jednorazový a už ho používa iný záznam ({count}×).",
+    "directUseDisabledNotImage": "Túto licenciu možno použiť len pre obrázky.",
+    "directUseDisabledNoUploadLicence": "Chýba cieľová licencia na prevzatie obrázka."
   }
 }

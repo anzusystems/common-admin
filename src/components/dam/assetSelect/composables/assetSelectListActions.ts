@@ -20,6 +20,7 @@ import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/compo
 import { cloneDeep, isNull, isUndefined } from '@/utils/common'
 import { useDamCachedUsers } from '@/components/damImage/uploadQueue/author/cachedUsers'
 import { useDamCachedAssetLicences } from '@/components/damImage/composables/cachedDamAssetLicences'
+import { resolveDisabledReasons } from '@/components/dam/assetSelect/composables/assetSelectDisabledReason'
 import { useSidebar } from '@/components/dam/assetSelect/composables/assetSelectFilterSidebar'
 import { SORT_BY_SCORE_DATE } from '@/composables/system/datatableColumns'
 import { useFilterClearHelpers } from '@/labs/filters/filterFactory'
@@ -40,13 +41,20 @@ export function useAssetSelectActions(
   const { damClient, endPointAsset, showFileInfoEnabled } = useCommonAdminCoreDamOptions(configName)
 
   const assetSelectStore = useAssetSelectStore()
-  const { selectedCount, selectedAssets, assetListItems, loader } = storeToRefs(assetSelectStore)
+  const { selectedCount, selectedHasDisabled, selectedAssets, assetListItems, loader } =
+    storeToRefs(assetSelectStore)
   const assetDetailStore = useAssetDetailStore()
   const { openSidebarRight } = useSidebar()
   const { mdAndDown } = useDisplay()
 
   const { showErrorsDefault } = useAlerts()
   const { filterData, filterConfig } = useAssetListFilter()
+  const {
+    getCachedAssetLicence,
+    addToCachedAssetLicences,
+    fetchCachedAssetLicences,
+    fetchCachedAssetLicencesImmediate,
+  } = useDamCachedAssetLicences()
 
   const resolveTypeFilter = (assetType: DamAssetTypeType, inPodcast: boolean | null) => {
     if (inPodcast === true) {
@@ -81,7 +89,25 @@ export function useAssetSelectActions(
     if (assetSelectStore.selectedLicenceIds.length === 0) return false
     resolveTypeFilter(assetSelectStore.assetType, assetSelectStore.inPodcast)
     filterData.licences = assetSelectStore.selectedLicenceIds
+    filterData.singleUseUsage = true
+    const usageHolder = assetSelectStore.selectability?.usageHolder ?? null
+    filterData.usageHolderName = usageHolder?.name ?? null
+    filterData.usageHolderId = isNull(usageHolder) ? null : String(usageHolder.id)
     return true
+  }
+
+  // The selectability lives in the store, not in this instance: the initial listing, the filter and
+  // the picker's licence watcher all fetch through different instances.
+  const applyDisabledReasons = async (items: AssetSelectListItem[]) => {
+    const selectability = assetSelectStore.selectability
+    if (isNull(selectability)) return
+    // An uncached licence answers from a placeholder that allows direct use, so the licences of the page
+    // are loaded before the reasons are resolved.
+    addToCachedAssetLicences(items.map((item) => item.asset.licence))
+    await fetchCachedAssetLicencesImmediate()
+    assetSelectStore.setDisabledReasons(
+      resolveDisabledReasons(items, getCachedAssetLicence, selectability),
+    )
   }
 
   const fetchAssetList = async () => {
@@ -92,6 +118,7 @@ export function useAssetSelectActions(
       const list = await fetchLatestList(request)
       if (isNull(list)) return
       assetSelectStore.setList(list)
+      await applyDisabledReasons(assetSelectStore.assetListItems)
     } catch (error) {
       if (request === latestListRequest) showErrorsDefault(error)
     } finally {
@@ -107,7 +134,7 @@ export function useAssetSelectActions(
       assetSelectStore.showLoader()
       const list = await fetchLatestList(request)
       if (isNull(list)) return
-      assetSelectStore.appendList(list)
+      await applyDisabledReasons(assetSelectStore.appendList(list))
     } catch (error) {
       if (request === latestListRequest) showErrorsDefault(error)
     } finally {
@@ -118,7 +145,6 @@ export function useAssetSelectActions(
   const { addToCachedAuthors, fetchCachedAuthors } = useDamCachedAuthors()
   const { addToCachedKeywords, fetchCachedKeywords } = useDamCachedKeywords()
   const { addToCachedUsers, fetchCachedUsers } = useDamCachedUsers()
-  const { addToCachedAssetLicences, fetchCachedAssetLicences } = useDamCachedAssetLicences()
 
   const onItemClick = async (data: { assetId: DocId; index: number }) => {
     const { cachedExtSystemId } = useExtSystemIdForCached()
@@ -160,6 +186,9 @@ export function useAssetSelectActions(
   const reset = async () => {
     latestListRequest++
     clearAll(filterData, filterConfig)
+    filterData.singleUseUsage = false
+    filterData.usageHolderName = null
+    filterData.usageHolderId = null
     pagination.value.page = 1
     assetSelectStore.reset(true)
     assetDetailStore.reset()
@@ -189,6 +218,7 @@ export function useAssetSelectActions(
     filterData,
     filterConfig,
     selectedCount,
+    selectedHasDisabled,
     selectedAssets,
     pagination,
     loader,

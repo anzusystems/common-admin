@@ -9,17 +9,13 @@ import ImageWidgetMultipleItem from '@/components/damImage/uploadQueue/component
 import { storeToRefs } from 'pinia'
 import { useCommonAdminImageOptions } from '@/components/damImage/composables/commonAdminImageOptions'
 import { useAlerts } from '@/composables/system/alerts'
-import {
-  type AssetSearchListItemDto,
-  DamAssetType,
-  type DamImageCopyToLicenceResponse,
-} from '@/types/coreDam/Asset'
+import { type AssetSearchListItemDto, DamAssetType } from '@/types/coreDam/Asset'
 import AAssetSelect from '@/components/dam/assetSelect/AAssetSelect.vue'
 import AFileInput from '@/components/file/AFileInput.vue'
 import AImageDropzone from '@/components/file/AFileDropzone.vue'
 import { useDamAcceptTypeAndSizeHelper } from '@/components/damImage/uploadQueue/composables/acceptTypeAndSizeHelper'
 import { useUploadQueuesStore } from '@/components/damImage/uploadQueue/composables/uploadQueuesStore'
-import type { AssetSelectReturnData } from '@/types/coreDam/AssetSelect'
+import type { AssetSelectReturnData, AssetSelectUsageHolder } from '@/types/coreDam/AssetSelect'
 import UploadQueueDialog from '@/components/damImage/uploadQueue/components/UploadQueueDialog.vue'
 import { useUploadQueueDialog } from '@/components/damImage/uploadQueue/composables/uploadQueueDialog'
 import AssetDetailDialog from '@/components/damImage/uploadQueue/components/AssetDetailDialog.vue'
@@ -32,7 +28,7 @@ import {
 } from '@/components/damImage/uploadQueue/api/damAssetApi'
 import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
-import type { ImageStoreItem } from '@/types/ImageAware'
+import { applyImageOwner, type ImageOwner, type ImageStoreItem } from '@/types/ImageAware'
 import { generateUUIDv1 } from '@/utils/generator'
 import ASortableListEditor from '@/labs/listEditor/ASortableListEditor.vue'
 import AImageWidgetSimple from '@/components/damImage/AImageWidgetSimple.vue'
@@ -51,10 +47,10 @@ import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/compo
 import ImageWidgetMultipleLimitDialog from '@/components/damImage/uploadQueue/components/ImageWidgetMultipleLimitDialog.vue'
 import { ImageWidgetUploadConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
 import { fetchAssetListByFileIdsMultipleLicences } from '@/components/damImage/uploadQueue/api/damfetchAssetListByFileIdsMultipleLicences'
-import { copyToLicence } from '@/components/damImage/uploadQueue/api/damImageApi'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import { isDamSourceEnabled } from '@/components/damImage/uploadQueue/source/damSourceConfig'
-import { splitAssetsForCopyToLicence } from '@/components/damImage/uploadQueue/composables/splitAssetsForCopyToLicence'
+import { extractImageSaveErrorInfo } from '@/components/damImage/uploadQueue/api/imageApiCms'
+import { resolveImageSaveErrorMessage } from '@/components/damImage/composables/imageSaveErrors'
 
 const props = withDefaults(
   defineProps<{
@@ -72,6 +68,9 @@ const props = withDefaults(
     widgetIdentifierId?: string | undefined
     callDeleteApiOnRemove?: boolean
     skipCurrentUserCheck?: boolean
+    owner?: ImageOwner | null
+    singleUseAllowed?: boolean
+    usageHolder?: AssetSelectUsageHolder | null
   }>(),
   {
     listViews: () => [],
@@ -84,6 +83,9 @@ const props = withDefaults(
     widgetIdentifierId: undefined,
     callDeleteApiOnRemove: false,
     skipCurrentUserCheck: false,
+    owner: null,
+    singleUseAllowed: true,
+    usageHolder: null,
   },
 )
 
@@ -106,7 +108,7 @@ if (isUndefined(imageWidgetUploadConfig) || isUndefined(imageWidgetUploadConfig.
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const imageOptions = useCommonAdminImageOptions(props.configName)
 const { imageClient, imageApi } = imageOptions
-const { showErrorsDefault, showValidationError, showErrorT, showUnknownError } = useAlerts()
+const { showErrorsDefault, showError, showValidationError, showUnknownError } = useAlerts()
 const uploadButtonComponent = ref<InstanceType<any> | null>(null)
 
 const { uploadSizes, uploadAccept } = useDamAcceptTypeAndSizeHelper(
@@ -208,39 +210,13 @@ const onDrop = (files: File[]) => {
   uploadQueueDialog.value = props.queueKey
 }
 
-const onCopyToLicence = (data: DamImageCopyToLicenceResponse) => {
-  if (data.length === 0) return
-  const config = imageWidgetUploadConfig.value
-  if (isUndefined(config)) return
-  cachedExtSystemId.value = config.extSystem
-  data.forEach((item) => {
-    if (item.result === 'copy') {
-      uploadQueuesStore.addByCopyToLicence(props.queueKey, config.extSystem, config.licence, [
-        item.targetAsset,
-      ])
-    } else if (item.result === 'exists') {
-      uploadQueuesStore.addByCopyToLicence(props.queueKey, config.extSystem, config.licence, [
-        item.targetAsset,
-      ])
-      uploadQueuesStore.queueItemDuplicate(
-        item.targetAsset,
-        item.targetMainFile,
-        DamAssetType.Image,
-      )
-    } else {
-      showErrorT('damImage.queueItem.errorUnableToCopyToLicence')
-      return
-    }
-  })
-  uploadQueueDialog.value = props.queueKey
-}
-
 const afterLimitDialogAdd = () => {
   uploadQueueDialog.value = props.queueKey
 }
 
 const assetSelectConfirmMap = async (
   items: AssetSearchListItemDto[],
+  forceTakeOver: boolean,
 ): Promise<ImageStoreItem[]> => {
   const assetMetadataMap = new Map<
     DocId,
@@ -328,6 +304,8 @@ const assetSelectConfirmMap = async (
           regionPosition: 0,
           licenceId: asset.licence,
           internal: asset.mainFileInternal ?? false,
+          uploadLicenceId: props.uploadLicence,
+          forceTakeOver: forceTakeOver && asset.licence !== props.uploadLicence,
         },
         position: maxPosition.value,
         damAuthors: [],
@@ -358,6 +336,8 @@ const assetSelectConfirmMap = async (
         regionPosition: 0,
         licenceId: asset.licence,
         internal: asset.mainFileInternal ?? false,
+        uploadLicenceId: props.uploadLicence,
+        forceTakeOver: forceTakeOver && asset.licence !== props.uploadLicence,
       },
       position: maxPosition.value,
       damAuthors: authorIds,
@@ -370,22 +350,7 @@ const assetSelectConfirmMap = async (
 
 const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
   if (data.type !== 'asset' || data.value.length === 0) return
-  const targetLicence = data.copyToLicence
-  const { toCopy, toAdd } = splitAssetsForCopyToLicence(data.value, targetLicence)
-  if (!isUndefined(targetLicence) && toCopy.length > 0) {
-    try {
-      const copyRes = await copyToLicence(
-        damClient,
-        endPointAsset,
-        toCopy.map((asset) => ({ asset: asset.id, targetAssetLicence: targetLicence })),
-      )
-      onCopyToLicence(copyRes)
-    } catch (e) {
-      showErrorsDefault(e)
-    }
-  }
-  if (toAdd.length === 0) return
-  imageStore.addImages(await assetSelectConfirmMap(toAdd))
+  imageStore.addImages(await assetSelectConfirmMap(data.value, data.forceTakeOver))
 }
 
 const assetDetailStore = useAssetDetailStore()
@@ -446,6 +411,31 @@ const authorEnabled = computed(() => {
 
 const sourceEnabled = computed(() => isDamSourceEnabled(DamAssetType.Image, cachedExtSystemId.value))
 
+// The saved images may use files taken over into another licence, so the credit goes to the assets of the
+// saved files, not to the assets that were picked. A failed write must not undo the images already saved.
+const writeCreditToSavedAssets = async (
+  credits: Array<{ damId: DocId; authors: DocId[]; sources: DocId[] }>,
+) => {
+  try {
+    const itemsByExtSystem = new Map<IntegerId, AssetAuthorsItems>()
+    for (const credit of credits) {
+      const savedAsset = await fetchAssetByFileId(damClient, endPointAsset, credit.damId)
+      const config = await getOrLoadDamConfigExtSystemByLicence(savedAsset.licence)
+      if (!config) continue
+      const items = itemsByExtSystem.get(config.extSystem) ?? []
+      items.push({ id: savedAsset.id, authors: credit.authors, sources: credit.sources })
+      itemsByExtSystem.set(config.extSystem, items)
+    }
+    await Promise.all(
+      [...itemsByExtSystem].map(([extSystem, items]) =>
+        bulkUpdateAssetsAuthors(damClient, endPointAsset, DamAssetType.Image, extSystem, items),
+      ),
+    )
+  } catch (e) {
+    showErrorsDefault(e)
+  }
+}
+
 const saveImages = async () => {
   // Empty store here means the fetch is pending or failed, not a user deletion — the empty
   // path below would detach every image.
@@ -459,9 +449,9 @@ const saveImages = async () => {
     return false
   }
   try {
-    const assetUpdateItems: AssetAuthorsItems = []
+    const pendingCredits: Array<{ index: number; authors: DocId[]; sources: DocId[] }> = []
     const imagesRaw = toRaw(images.value)
-    for (const image of imagesRaw) {
+    for (const [index, image] of imagesRaw.entries()) {
       if (image.showDamAuthors && image.damSelectionChanged && image.assetId) {
         image.texts.source = await fetchDamCredit(
           damClient,
@@ -469,23 +459,18 @@ const saveImages = async () => {
           image.damSources,
           image.damAuthors,
         )
-        assetUpdateItems.push({
-          id: image.assetId,
-          authors: image.damAuthors,
-          sources: image.damSources,
-        })
+        pendingCredits.push({ index, authors: image.damAuthors, sources: image.damSources })
       }
     }
-    if (assetUpdateItems.length) {
-      await bulkUpdateAssetsAuthors(
-        damClient,
-        endPointAsset,
-        DamAssetType.Image,
-        cachedExtSystemId.value,
-        assetUpdateItems,
-      )
-    }
+    imagesRaw.forEach((image) => applyImageOwner(image, props.owner))
     const resItems = await imageApi.bulkUpdateImages(imageClient, imagesRaw)
+    const savedCredits = pendingCredits.flatMap(({ index, authors, sources }) => {
+      const saved = resItems[index]
+      return saved ? [{ damId: saved.dam.damId, authors, sources }] : []
+    })
+    if (savedCredits.length) {
+      await writeCreditToSavedAssets(savedCredits)
+    }
     const ids: IntegerId[] = []
     const items = resItems.map((resItem) => {
       ids.push(resItem.id)
@@ -530,6 +515,11 @@ const saveImages = async () => {
     emit('update:modelValue', ids)
     return true
   } catch (e) {
+    const message = resolveImageSaveErrorMessage(extractImageSaveErrorInfo(e), t)
+    if (message) {
+      showError(message)
+      return false
+    }
     // showErrorsDefault reports nothing for non-Anzu errors; its boolean return is for this fallback.
     if (!showErrorsDefault(e)) showUnknownError()
     return false
@@ -636,6 +626,8 @@ onMounted(() => {
       :max-count="50"
       :asset-type="DamAssetType.Image"
       :skip-current-user-check="skipCurrentUserCheck"
+      :single-use-allowed="singleUseAllowed"
+      :usage-holder="usageHolder"
       :config-name="configName"
       return-type="asset"
       @on-confirm="onAssetSelectConfirm"

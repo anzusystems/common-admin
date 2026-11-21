@@ -80,6 +80,27 @@ export const filterFieldsList = [
     render: { skip: true },
   },
   { name: 'mainFileSingleUse' as const, default: false },
+  // Set by the asset picker only: DAM answers `singleUseUsage` of the listed single use files for this holder.
+  {
+    name: 'singleUseUsage' as const,
+    default: false,
+    clearable: false,
+    render: { skip: true, selected: false },
+  },
+  {
+    name: 'usageHolderName' as const,
+    default: null,
+    type: 'string',
+    clearable: false,
+    render: { skip: true, selected: false },
+  },
+  {
+    name: 'usageHolderId' as const,
+    default: null,
+    type: 'string',
+    clearable: false,
+    render: { skip: true, selected: false },
+  },
 ] satisfies readonly MakeFilterOption[]
 
 const listFiltersStore = createFilterStore(filterFieldsList)

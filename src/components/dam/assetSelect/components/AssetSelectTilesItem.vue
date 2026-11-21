@@ -4,6 +4,7 @@ import type { AssetSelectListItem } from '@/services/stores/coreDam/assetSelectS
 import { useAssetItemActions } from '@/components/dam/assetSelect/composables/assetSelectItemActions'
 import AssetImagePreview from '@/components/dam/assetSelect/components/AssetImagePreview.vue'
 import type { DocId } from '@/types/common'
+import AssetSelectSingleUseUsage from '@/components/dam/assetSelect/components/AssetSelectSingleUseUsage.vue'
 import { toRef } from 'vue'
 
 const props = withDefaults(
@@ -11,9 +12,11 @@ const props = withDefaults(
     index: number
     item: AssetSelectListItem
     showMetaIcons?: boolean
+    configName?: string
   }>(),
   {
     showMetaIcons: false,
+    configName: 'default',
   },
 )
 
@@ -31,7 +34,8 @@ const onItemClick = () => {
 
 const item = toRef(props, 'item')
 
-const { asset, assetType, assetStatus, imageProperties, licenceBadge } = useAssetItemActions(item)
+const { asset, assetType, assetStatus, imageProperties, licenceBadge, disabledReason } =
+  useAssetItemActions(item)
 </script>
 
 <template>
@@ -40,7 +44,9 @@ const { asset, assetType, assetStatus, imageProperties, licenceBadge } = useAsse
     :class="{
       'asset-list-tiles__item--selected': item.selected,
       'asset-list-tiles__item--active': item.active,
+      'asset-list-tiles__item--disabled': disabledReason,
     }"
+    :title="disabledReason ?? undefined"
     @click.stop.exact="onItemClick"
   >
     <div class="asset-list-tiles__item-card">
@@ -75,6 +81,11 @@ const { asset, assetType, assetStatus, imageProperties, licenceBadge } = useAsse
           </div>
         </div>
       </div>
+      <AssetSelectSingleUseUsage
+        class="px-2 pb-1"
+        :item="item"
+        :config-name="configName"
+      />
     </div>
   </div>
 </template>

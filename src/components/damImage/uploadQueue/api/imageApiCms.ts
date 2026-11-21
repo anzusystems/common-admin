@@ -1,12 +1,14 @@
-import type { AxiosInstance, AxiosResponse } from 'axios'
+import axios, { type AxiosInstance, type AxiosResponse } from 'axios'
 import { apiCreateOne } from '@/services/api/apiCreateOne'
 import { apiUpdateOne } from '@/services/api/apiUpdateOne'
 import { apiDeleteOne } from '@/services/api/apiDeleteOne'
 import { apiFetchOne } from '@/services/api/apiFetchOne'
-import type { IntegerId } from '@/types/common'
+import type { DocId, IntegerId } from '@/types/common'
 import type { ImageAware, ImageCreateUpdateAware } from '@/types/ImageAware'
 import { apiFetchByIds } from '@/services/api/apiFetchByIds'
 import { HTTP_STATUS_OK } from '@/composables/statusCodes'
+import { isAnzuFatalError } from '@/model/error/AnzuFatalError'
+import { isAnzuApiAxiosError } from '@/model/error/AnzuApiAxiosError'
 
 const END_POINT = '/adm/v1/image'
 export const ENTITY = 'image'
@@ -39,6 +41,63 @@ export const updateImage = (
 
 export const deleteImage = (client: () => AxiosInstance, id: IntegerId) =>
   apiDeleteOne<ImageAware>(client, END_POINT + '/:id', { id }, SYSTEM_CMS, ENTITY)
+
+const KNOWN_IMAGE_ERROR_CODES = ['image_take_over_failed', 'image_single_use_violation'] as const
+export type KnownImageErrorCode = (typeof KNOWN_IMAGE_ERROR_CODES)[number]
+
+// Mirrors the reasons of core-cms image_single_use_violation; an unknown reason falls back to the generic wording.
+export const KNOWN_SINGLE_USE_REASONS = [
+  'exclusivity_conflict',
+  'shared_gallery',
+  'invalid_owner',
+  'single_use_copy',
+  'gallery_copy',
+  'restore_conflict',
+] as const
+export type KnownSingleUseReason = (typeof KNOWN_SINGLE_USE_REASONS)[number]
+
+// `image_take_over_failed` carries its own reason vocabulary.
+const KNOWN_REASONS = [
+  ...KNOWN_SINGLE_USE_REASONS,
+  'take_over_rejected',
+  'take_over_exception',
+] as const
+export type KnownReason = (typeof KNOWN_REASONS)[number]
+
+export interface ImageSaveErrorInfo {
+  code: KnownImageErrorCode
+  reason?: KnownReason
+  damId?: DocId
+  holderResourceName?: string
+  holderResourceId?: string
+}
+
+export const extractImageSaveErrorInfo = (error: unknown): ImageSaveErrorInfo | undefined => {
+  const axiosError =
+    isAnzuFatalError(error) || isAnzuApiAxiosError(error)
+      ? error.cause
+      : axios.isAxiosError(error)
+        ? error
+        : undefined
+  if (!axios.isAxiosError(axiosError)) return undefined
+  const data = axiosError.response?.data
+  if (!data || typeof data.error !== 'string') return undefined
+  if (!(KNOWN_IMAGE_ERROR_CODES as readonly string[]).includes(data.error)) return undefined
+  return {
+    code: data.error as KnownImageErrorCode,
+    reason:
+      typeof data.reason === 'string' && (KNOWN_REASONS as readonly string[]).includes(data.reason)
+        ? (data.reason as KnownReason)
+        : undefined,
+    damId: typeof data.damId === 'string' ? data.damId : undefined,
+    holderResourceName:
+      typeof data.holderResourceName === 'string' ? data.holderResourceName : undefined,
+    holderResourceId:
+      typeof data.holderResourceId === 'string' || typeof data.holderResourceId === 'number'
+        ? String(data.holderResourceId)
+        : undefined,
+  }
+}
 
 export const bulkUpdateImages = (client: () => AxiosInstance, items: ImageCreateUpdateAware[]) => {
   return new Promise<ImageAware[]>((resolve, reject) => {

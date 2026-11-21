@@ -8,7 +8,7 @@ import type { AxiosInstance } from 'axios'
 import { initCommonAdminImageOptions } from '@/components/damImage/composables/commonAdminImageOptions'
 import { initCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import { initCommonAdminCollabOptions } from '@/components/collab/composables/commonAdminCollabOptions'
-import type { IntegerId } from '@/types/common'
+import type { DocId, IntegerId } from '@/types/common'
 import type { ImageAware, ImageCreateUpdateAware } from '@/types/ImageAware'
 import type {
   UploadMetadataToImageMapFn,
@@ -77,6 +77,8 @@ export interface CommonAdminCoreDamConfig {
   customAssetSelectMetadataToImageMap?: AssetSelectMetadataToImageMapFn
   assetListEnabledFilters?: string[]
   simpleAssetSidebar?: boolean
+  // Url of the image list of the CMS admin filtered by the single use group; without it the picker shows no link.
+  singleUseUsageUrl?: (groupId: DocId) => string
 }
 
 export type CommonAdminCoreDamOptions =

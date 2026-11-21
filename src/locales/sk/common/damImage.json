@@ -24,6 +24,19 @@
       "texts": {
         "description": "Ak prepíšete popis na tomto mieste, nezmeníte ho v úložisku obrázkov."
       }
+    },
+    "error": {
+      "takeOverRejected": "Tento obrázok sa nedá prevziať do našej licencie. Vyberte iný.",
+      "takeOverUnavailable": "Preberanie obrázkov je momentálne nedostupné. Skúste to o chvíľu, iný obrázok teraz nepomôže. Ak to trvá, kontaktujte správcu.",
+      "singleUseViolation": "Obrázok {damId} je jednorazový a už ho používa iný záznam ({holder}). Vyberte iný obrázok.",
+      "singleUseViolationUnknownHolder": "Obrázok {damId} je jednorazový a už ho používa iný záznam. Vyberte iný obrázok.",
+      "singleUseViolationUnknownImage": "Jeden z vybraných obrázkov je jednorazový a už ho používa iný záznam ({holder}). Vyberte iný obrázok.",
+      "singleUseViolationUnidentified": "Jeden z vybraných obrázkov je jednorazový a už ho používa iný záznam. Vyberte iný obrázok.",
+      "singleUseCopy": "Obrázok {damId} patrí záznamu ({holder}), sem sa skopírovať nedá.",
+      "sharedGallery": "Galéria obsahuje jednorazový obrázok, takže môže byť vložená len na jednom mieste. Odoberte ju z ostatných miest alebo z nej jednorazový obrázok vyberte.",
+      "invalidOwner": "Jednorazový obrázok sem vložiť nemožno, cieľový záznam jednorazové obrázky nepodporuje.",
+      "galleryCopy": "Galéria obsahuje jednorazový obrázok a nedá sa kopírovať.",
+      "restoreConflict": "Záznam obsahuje jednorazový obrázok, ktorý už používa iný záznam, preto sa nedá obnoviť."
     }
   },
   "media": {
@@ -52,8 +65,7 @@
     "error": "Chyba",
     "copyAssetId": "Kopírovať asset ID",
     "stillUploadingOrProcessing": "Asset sa stále nahráva alebo spracováva serverom",
-    "removeFromQueue": "Ostrániť z fronty nahrávania?",
-    "errorUnableToCopyToLicence": "Chyba, nie je možné kopírovať assety do licencie"
+    "removeFromQueue": "Ostrániť z fronty nahrávania?"
   },
   "asset": {
     "model": {

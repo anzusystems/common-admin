@@ -53,6 +53,7 @@ const { onItemClick, assetListItems, loader } = useAssetSelectActions(props.conf
         :index="index"
         :item="item"
         show-meta-icons
+        :config-name="configName"
         @item-click="onItemClick($event)"
       />
       <tr v-if="!loader && assetListItems.length === 0">
@@ -66,3 +67,10 @@ const { onItemClick, assetListItems, loader } = useAssetSelectActions(props.conf
     </tbody>
   </VTable>
 </template>
+
+<style lang="scss">
+// Dimmed, not blocked: the row stays clickable so the detail panel can explain why it cannot be used.
+.a-datatable__row--disabled {
+  opacity: 0.5;
+}
+</style>
