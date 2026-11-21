@@ -27,6 +27,7 @@ import { useDamConfigState } from '@/components/damImage/uploadQueue/composables
 import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
 import { cloneDeep, isUndefined } from '@/utils/common'
 import AssetMetadata from '@/components/damImage/uploadQueue/components/AssetMetadata.vue'
+import AssetSelectDetailTabs from '@/components/dam/assetSelect/components/AssetSelectDetailTabs.vue'
 import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
 import { storeToRefs } from 'pinia'
 import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
@@ -98,11 +99,11 @@ const { asset } = storeToRefs(assetDetailStore)
 const assetSelectStore = useAssetSelectStore()
 const { selectedSelectConfig, selectedHasDisabled } = storeToRefs(assetSelectStore)
 
-const openedAssetDisabledReason = computed(
-  () =>
-    assetSelectStore.assetListItems.find((item) => item.asset.id === asset.value?.id)
-      ?.disabledReason ?? null,
+const openedItem = computed(() =>
+  assetSelectStore.assetListItems.find((item) => item.asset.id === asset.value?.id),
 )
+
+const openedAssetDisabledReason = computed(() => openedItem.value?.disabledReason ?? null)
 
 const selectConfigs = shallowRef<DamConfigLicenceExtSystemReturnType[]>([])
 
@@ -353,15 +354,20 @@ defineExpose({
                   {{ openedAssetDisabledReason }}
                 </VAlert>
               </div>
-              <slot
-                name="sidebar-prepend"
-                :asset="asset"
-              />
-              <AssetMetadata
-                v-if="extId && !customFormConfigLoading"
-                :ext-system="extId"
-                readonly
-              />
+              <AssetSelectDetailTabs
+                :item="openedItem"
+                :config-name="configName"
+              >
+                <slot
+                  name="sidebar-prepend"
+                  :asset="asset"
+                />
+                <AssetMetadata
+                  v-if="extId && !customFormConfigLoading"
+                  :ext-system="extId"
+                  readonly
+                />
+              </AssetSelectDetailTabs>
             </div>
           </div>
         </div>

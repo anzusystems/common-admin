@@ -92,7 +92,9 @@ const assetDetailStore = useAssetDetailStore()
 const { asset, dialog } = storeToRefs(assetDetailStore)
 const assetSelectStore = useAssetSelectStore()
 const { selectedLicenceIds, selectedSelectConfig } = storeToRefs(assetSelectStore)
-const activeItem = computed(() => assetSelectStore.assetListItems.find((item) => item.active))
+const openedItem = computed(() =>
+  assetSelectStore.assetListItems.find((item) => item.asset.id === asset.value?.id),
+)
 
 const { sidebarRight, closeSidebarRight, closeSidebarLeft } = useSidebar()
 const { mdAndDown } = useDisplay()
@@ -368,7 +370,7 @@ onUnmounted(() => {
           class="w-100"
         >
           <AssetSelectDetailTabs
-            :item="activeItem"
+            :item="openedItem"
             :config-name="configName"
           >
             <slot
@@ -412,7 +414,7 @@ onUnmounted(() => {
             class="w-100"
           >
             <AssetSelectDetailTabs
-              :item="activeItem"
+              :item="openedItem"
               :config-name="configName"
             >
               <slot
