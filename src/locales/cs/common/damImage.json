@@ -32,11 +32,9 @@
       "singleUseViolationUnknownHolder": "Obrázek {damId} je jednorázový a už ho používá jiný záznam. Vyberte jiný obrázek.",
       "singleUseViolationUnknownImage": "Jeden z vybraných obrázků je jednorázový a už ho používá jiný záznam ({holder}). Vyberte jiný obrázek.",
       "singleUseViolationUnidentified": "Jeden z vybraných obrázků je jednorázový a už ho používá jiný záznam. Vyberte jiný obrázek.",
-      "singleUseCopy": "Obrázek {damId} patří záznamu ({holder}), sem se zkopírovat nedá.",
       "sharedGallery": "Galerie obsahuje jednorázový obrázek, takže může být vložena jen na jednom místě. Odeberte ji z ostatních míst nebo z ní jednorázový obrázek odeberte.",
       "invalidOwner": "Jednorázový obrázek sem vložit nelze, cílový záznam jednorázové obrázky nepodporuje.",
-      "galleryCopy": "Galerie obsahuje jednorázový obrázek a nelze ji kopírovat.",
-      "restoreConflict": "Záznam obsahuje jednorázový obrázek, který už používá jiný záznam, proto ho nelze obnovit."
+      "galleryCopy": "Galerie obsahuje jednorázový obrázek a nelze ji kopírovat."
     }
   },
   "media": {

@@ -226,9 +226,23 @@ describe('useAssetSelectActions', () => {
     expect(listedIds(filter.store)).toEqual(['listed'])
   })
 
-  it('lists single use photos too, the tile decides whether one may be picked', () => {
-    expect(useAssetListFilter().filterData.mainFileSingleUse).toBeNull()
-  })
+  it.each([
+    [true, null],
+    [false, false],
+  ])(
+    'lists single use photos only for a record type that may use them (allowed %s)',
+    async (singleUseAllowed, mainFileSingleUse) => {
+      const { actions, store } = mountActions()
+      executeFetch.mockResolvedValue([])
+      store.setSelectedLicenceIds([10])
+      store.setSelectability({ singleUseAllowed, uploadLicence: undefined, usageHolder: null })
+
+      await actions.fetchAssetListDebounced()
+      await flushPromises()
+
+      expect(useAssetListFilter().filterData.mainFileSingleUse).toBe(mainFileSingleUse)
+    },
+  )
 
   it('loads the sources of the clicked asset for the detail, not only its authors', async () => {
     const { actions, store } = mountActions()

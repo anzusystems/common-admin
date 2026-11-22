@@ -32,11 +32,9 @@
       "singleUseViolationUnknownHolder": "Image {damId} is single use and already used by another record. Choose another image.",
       "singleUseViolationUnknownImage": "One of the selected images is single use and already used by another record ({holder}). Choose another image.",
       "singleUseViolationUnidentified": "One of the selected images is single use and already used by another record. Choose another image.",
-      "singleUseCopy": "Image {damId} belongs to a record ({holder}), it cannot be copied here.",
       "sharedGallery": "The gallery contains a single use image, so it can be placed in one place only. Remove it from the other places or remove the single use image from it.",
       "invalidOwner": "A single use image cannot be placed here, the target record does not support single use images.",
-      "galleryCopy": "The gallery contains a single use image and cannot be copied.",
-      "restoreConflict": "The record contains a single use image already used by another record, so it cannot be restored."
+      "galleryCopy": "The gallery contains a single use image and cannot be copied."
     }
   },
   "media": {

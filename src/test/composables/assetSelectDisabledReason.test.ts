@@ -10,7 +10,7 @@ import {
 import type { DamAssetLicenceCached } from '@/types/coreDam/AssetLicence'
 import type { AssetSelectabilityOptions } from '@/services/stores/coreDam/assetSelectStore'
 
-type Selectability = Pick<AssetSelectabilityOptions, 'singleUseAllowed' | 'uploadLicence'>
+type Selectability = Pick<AssetSelectabilityOptions, 'uploadLicence'>
 
 const asset = (
   singleUse: boolean,
@@ -26,7 +26,6 @@ const asset = (
   }) as unknown as AssetSearchListItemDto
 
 const options = (partial: Partial<Selectability>): Selectability => ({
-  singleUseAllowed: true,
   uploadLicence: undefined,
   ...partial,
 })
@@ -66,24 +65,10 @@ describe('resolveDisabledReason', () => {
     ],
     ['unused single use photo', asset(true), undefined, options({}), null],
     [
-      'single use not allowed for the subject',
-      asset(true),
-      undefined,
-      options({ singleUseAllowed: false }),
-      reason('singleUseNotAllowed'),
-    ],
-    [
-      'single use not allowed wins over blocked',
-      asset(true, { blocked: true, otherHolderCount: 1 }),
-      undefined,
-      options({ singleUseAllowed: false }),
-      reason('singleUseNotAllowed'),
-    ],
-    [
       'photo that is not single use ignores the single use rules',
       asset(false, { blocked: true, otherHolderCount: 1 }),
       undefined,
-      options({ singleUseAllowed: false }),
+      options({}),
       null,
     ],
     [

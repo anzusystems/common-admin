@@ -50,9 +50,7 @@ export const KNOWN_SINGLE_USE_REASONS = [
   'exclusivity_conflict',
   'shared_gallery',
   'invalid_owner',
-  'single_use_copy',
   'gallery_copy',
-  'restore_conflict',
 ] as const
 export type KnownSingleUseReason = (typeof KNOWN_SINGLE_USE_REASONS)[number]
 

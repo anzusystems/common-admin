@@ -6,6 +6,9 @@ import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/compo
 import { resolveHolderName } from '@/components/dam/assetSelect/composables/assetSelectDisabledReason'
 import AChipNoLink from '@/components/AChipNoLink.vue'
 import { COMMON_CONFIG } from '@/model/commonConfig'
+import { dateTimePretty } from '@/utils/datetime'
+import { isNull } from '@/utils/common'
+import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
 
 const props = withDefaults(
   defineProps<{
@@ -22,7 +25,19 @@ const { t } = useI18n()
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { singleUseUsageUrl, singleUsePlaceUrl } = useCommonAdminCoreDamOptions(props.configName)
 
+const assetSelectStore = useAssetSelectStore()
+
 const usage = computed(() => props.item.asset.singleUseUsage ?? null)
+
+const ownPick = computed(() => {
+  const holderPickedAt = usage.value?.holderPickedAt ?? null
+  const holderName = assetSelectStore.selectability?.usageHolder?.name
+  if (isNull(holderPickedAt) || !holderName) return null
+  return t('common.assetSelect.usage.ownPick', {
+    holder: resolveHolderName(holderName),
+    date: dateTimePretty(holderPickedAt),
+  })
+})
 
 const places = computed(() =>
   (usage.value?.places ?? []).map((place) => {
@@ -31,6 +46,9 @@ const places = computed(() =>
       key: `${place.resourceName}:${place.resourceId}`,
       title: `${name.charAt(0).toUpperCase()}${name.slice(1)} (${place.resourceId})`,
       url: singleUsePlaceUrl?.(place.resourceName, place.resourceId),
+      pickedAt: isNull(place.pickedAt)
+        ? null
+        : t('common.assetSelect.usage.pickedAt', { date: dateTimePretty(place.pickedAt) }),
     }
   }),
 )
@@ -52,12 +70,19 @@ const allUsagesUrl = computed(() => {
       {{ t('common.assetSelect.usage.usedBy') }}
     </h4>
     <div
-      v-if="places.length > 0"
-      class="d-flex flex-wrap align-center ga-1 my-1"
+      v-if="ownPick"
+      class="text-body-medium my-1"
     >
-      <template
+      {{ ownPick }}
+    </div>
+    <div
+      v-if="places.length > 0"
+      class="d-flex flex-column align-start ga-2 my-1"
+    >
+      <div
         v-for="place in places"
         :key="place.key"
+        class="d-flex flex-column align-start"
       >
         <VChip
           v-if="place.url"
@@ -73,7 +98,13 @@ const allUsagesUrl = computed(() => {
         <AChipNoLink v-else>
           {{ place.title }}
         </AChipNoLink>
-      </template>
+        <span
+          v-if="place.pickedAt"
+          class="text-body-small text-medium-emphasis mt-1"
+        >
+          {{ place.pickedAt }}
+        </span>
+      </div>
       <span
         v-if="moreCount > 0"
         class="text-body-small text-medium-emphasis"
@@ -87,19 +118,16 @@ const allUsagesUrl = computed(() => {
     >
       {{ t('common.assetSelect.usage.noOtherHolder') }}
     </div>
-    <a
+    <VBtn
       v-if="allUsagesUrl"
-      :href="allUsagesUrl"
+      :append-icon="COMMON_CONFIG.CHIP.ICON.LINK_EXTERNAL"
+      size="small"
+      class="mt-2"
       target="_blank"
       rel="noopener noreferrer"
-      class="d-inline-flex align-center text-body-medium mt-2"
+      :href="allUsagesUrl"
     >
       {{ t('common.assetSelect.usage.openList') }}
-      <VIcon
-        icon="mdi-open-in-new"
-        size="small"
-        class="ml-1"
-      />
-    </a>
+    </VBtn>
   </div>
 </template>

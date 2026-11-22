@@ -58,12 +58,14 @@ export interface AssetSingleUseUsagePlace {
   resourceName: string
   resourceId: string | number
   imageId: IntegerId
+  pickedAt: DatetimeUTCNullable
 }
 
 export interface AssetSingleUseUsage {
   totalCount: number
   otherHolderCount: number
   blocked: boolean
+  holderPickedAt: DatetimeUTCNullable
   places: AssetSingleUseUsagePlace[]
 }
 

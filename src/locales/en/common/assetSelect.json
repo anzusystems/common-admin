@@ -71,6 +71,8 @@
     "usedBy": "Used by",
     "noOtherHolder": "No other record uses it.",
     "andMore": "and {count} more",
+    "ownPick": "This record ({holder}) · picked {date}",
+    "pickedAt": "picked {date}",
     "openList": "Show all usages"
   },
   "holder": {
@@ -88,7 +90,6 @@
     "externalBoxItemArticle": "article box item"
   },
   "disabledReason": {
-    "singleUseNotAllowed": "A single use image cannot be placed here. This record type does not support single use images or the record is not saved yet.",
     "singleUseBlocked": "The image is single use and already used by another record ({count}×).",
     "directUseDisabledNotImage": "This licence can be used for images only.",
     "directUseDisabledNoUploadLicence": "The target licence for taking the image over is missing."

@@ -71,6 +71,8 @@
     "usedBy": "Používají ho",
     "noOtherHolder": "Nepoužívá ho jiný záznam.",
     "andMore": "a další ({count})",
+    "ownPick": "Tento záznam ({holder}) · vybráno {date}",
+    "pickedAt": "vybráno {date}",
     "openList": "Zobrazit všechna použití"
   },
   "holder": {
@@ -88,7 +90,6 @@
     "externalBoxItemArticle": "box item článku"
   },
   "disabledReason": {
-    "singleUseNotAllowed": "Jednorázový obrázek sem nelze vložit. Typ záznamu jednorázové obrázky nepodporuje nebo záznam ještě není uložen.",
     "singleUseBlocked": "Obrázek je jednorázový a už ho používá jiný záznam ({count}×).",
     "directUseDisabledNotImage": "Tuto licenci lze použít jen pro obrázky.",
     "directUseDisabledNoUploadLicence": "Chybí cílová licence pro převzetí obrázku."

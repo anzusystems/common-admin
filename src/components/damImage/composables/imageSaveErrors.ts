@@ -6,7 +6,6 @@ const SINGLE_USE_REASON_MESSAGE: Partial<Record<KnownSingleUseReason, string>> =
   shared_gallery: 'common.damImage.image.error.sharedGallery',
   invalid_owner: 'common.damImage.image.error.invalidOwner',
   gallery_copy: 'common.damImage.image.error.galleryCopy',
-  restore_conflict: 'common.damImage.image.error.restoreConflict',
 }
 
 export function resolveImageSaveErrorMessage(
@@ -32,9 +31,6 @@ export function resolveImageSaveErrorMessage(
   const damId = errorInfo.damId ?? ''
   const holder = errorInfo.holderResourceName ? resolveHolderName(errorInfo.holderResourceName) : ''
 
-  if (errorInfo.reason === 'single_use_copy' && damId && holder) {
-    return t('common.damImage.image.error.singleUseCopy', { damId, holder })
-  }
   if (!damId) {
     return holder
       ? t('common.damImage.image.error.singleUseViolationUnknownImage', { holder })

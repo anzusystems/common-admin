@@ -14,16 +14,10 @@ export const resolveHolderName = (resourceName: string): string => {
   return te(key) ? t(key) : resourceName
 }
 
-export const resolveSingleUseReason = (
-  asset: AssetSearchListItemDto,
-  options: Pick<AssetSelectabilityOptions, 'singleUseAllowed'>,
-): string | null => {
+export const resolveSingleUseReason = (asset: AssetSearchListItemDto): string | null => {
   const { t } = i18n.global
   if (!(asset.mainFile?.flags.singleUse ?? false)) return null
 
-  if (!options.singleUseAllowed) {
-    return t('common.assetSelect.disabledReason.singleUseNotAllowed')
-  }
   if (asset.singleUseUsage?.blocked) {
     return t('common.assetSelect.disabledReason.singleUseBlocked', {
       count: asset.singleUseUsage.otherHolderCount,
@@ -36,10 +30,10 @@ export const resolveSingleUseReason = (
 export const resolveDisabledReason = (
   asset: AssetSearchListItemDto,
   licence: DamAssetLicenceCached | undefined,
-  options: Pick<AssetSelectabilityOptions, 'singleUseAllowed' | 'uploadLicence'>,
+  options: Pick<AssetSelectabilityOptions, 'uploadLicence'>,
 ): string | null => {
   const { t } = i18n.global
-  const singleUseReason = resolveSingleUseReason(asset, options)
+  const singleUseReason = resolveSingleUseReason(asset)
   if (singleUseReason) return singleUseReason
 
   const directUseAllowed = licence?.flags?.directUseAllowed ?? true
@@ -56,7 +50,7 @@ export const resolveDisabledReason = (
 export const resolveDisabledReasons = (
   items: AssetSelectListItem[],
   getCachedAssetLicence: (id: IntegerId) => DamAssetLicenceCached | undefined,
-  options: Pick<AssetSelectabilityOptions, 'singleUseAllowed' | 'uploadLicence'>,
+  options: Pick<AssetSelectabilityOptions, 'uploadLicence'>,
 ): Map<DocId, string | null> => {
   const reasons = new Map<DocId, string | null>()
 

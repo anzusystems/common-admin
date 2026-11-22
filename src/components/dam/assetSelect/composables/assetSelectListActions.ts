@@ -84,11 +84,13 @@ export function useAssetSelectActions(
     return list
   }
 
-  // DAM searches only the licences the picker chose; without one there is nothing to ask for.
+  // DAM searches only the licences the picker chose; without one there is nothing to ask for. A record
+  // type that may not use a single use photo does not list one at all.
   const prepareListRequest = () => {
     if (assetSelectStore.selectedLicenceIds.length === 0) return false
     resolveTypeFilter(assetSelectStore.assetType, assetSelectStore.inPodcast)
     filterData.licences = assetSelectStore.selectedLicenceIds
+    filterData.mainFileSingleUse = assetSelectStore.selectability?.singleUseAllowed === false ? false : null
     filterData.singleUseUsage =
       !isNull(assetSelectStore.selectability) && assetSelectStore.assetType === DamAssetType.Image
     const usageHolder = assetSelectStore.selectability?.usageHolder ?? null

@@ -43,26 +43,6 @@ describe('resolveImageSaveErrorMessage', () => {
       message('galleryCopy'),
     ],
     [
-      'restore conflict',
-      { code: 'image_single_use_violation', reason: 'restore_conflict' },
-      message('restoreConflict'),
-    ],
-    [
-      'copy refused names the source holder',
-      {
-        code: 'image_single_use_violation',
-        reason: 'single_use_copy',
-        damId: DAM_ID,
-        holderResourceName: 'articleKindStandard',
-      },
-      `${message('singleUseCopy')} {"damId":"${DAM_ID}","holder":"articleKindStandard"}`,
-    ],
-    [
-      'copy refused without a holder',
-      { code: 'image_single_use_violation', reason: 'single_use_copy', damId: DAM_ID },
-      `${message('singleUseViolationUnknownHolder')} {"damId":"${DAM_ID}"}`,
-    ],
-    [
       'exclusivity conflict with photo and holder',
       {
         code: 'image_single_use_violation',

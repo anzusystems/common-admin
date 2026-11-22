@@ -71,12 +71,14 @@
     "usedBy": "Používajú ho",
     "noOtherHolder": "Nepoužíva ho iný záznam.",
     "andMore": "a ďalšie ({count})",
+    "ownPick": "Tento záznam ({holder}) · vybraté {date}",
+    "pickedAt": "vybraté {date}",
     "openList": "Zobraziť všetky použitia"
   },
   "holder": {
     "articleKindStandard": "článok",
     "gallery": "galéria",
-    "person": "osoba",
+    "person": "osobnosť",
     "organization": "organizácia",
     "minutePost": "minútový príspevok",
     "liveBlogPost": "príspevok live blogu",
@@ -88,7 +90,6 @@
     "externalBoxItemArticle": "box item článku"
   },
   "disabledReason": {
-    "singleUseNotAllowed": "Jednorazový obrázok sem nemožno vložiť. Typ záznamu jednorazové obrázky nepodporuje alebo záznam ešte nie je uložený.",
     "singleUseBlocked": "Obrázok je jednorazový a už ho používa iný záznam ({count}×).",
     "directUseDisabledNotImage": "Túto licenciu možno použiť len pre obrázky.",
     "directUseDisabledNoUploadLicence": "Chýba cieľová licencia na prevzatie obrázka."
