@@ -8,11 +8,11 @@ import AChipNoLink from '@/components/AChipNoLink.vue'
 import { COMMON_CONFIG } from '@/model/commonConfig'
 import { dateTimePretty } from '@/utils/datetime'
 import { isNull } from '@/utils/common'
-import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
 
 const props = withDefaults(
   defineProps<{
     asset: AssetSearchListItemDto
+    holderName: string | null
     configName?: string
   }>(),
   {
@@ -25,16 +25,13 @@ const { t } = useI18n()
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { singleUseUsageUrl, singleUsePlaceUrl } = useCommonAdminCoreDamOptions(props.configName)
 
-const assetSelectStore = useAssetSelectStore()
-
 const usage = computed(() => props.asset.singleUseUsage ?? null)
 
 const ownPick = computed(() => {
   const holderPickedAt = usage.value?.holderPickedAt ?? null
-  const holderName = assetSelectStore.selectability?.usageHolder?.name
-  if (isNull(holderPickedAt) || !holderName) return null
+  if (isNull(holderPickedAt) || isNull(props.holderName)) return null
   return t('common.assetSelect.usage.ownPick', {
-    holder: resolveHolderName(holderName),
+    holder: resolveHolderName(props.holderName),
     date: dateTimePretty(holderPickedAt),
   })
 })

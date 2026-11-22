@@ -73,31 +73,39 @@ export function useAssetSelectUsageRefresh(configName = 'default') {
   }
 }
 
+export interface SingleUseUsageCheck {
+  asset: AssetSearchListItemDto
+  holderName: string | null
+  failed: boolean
+}
+
 export function useSingleUseUsageCheck(configName = 'default') {
   const { fetchSingleUseUsage } = useSingleUseUsageFetch(configName)
   const { showErrorsDefault } = useAlerts()
-  const singleUseAsset = ref<AssetSearchListItemDto | null>(null)
+  const singleUseCheck = ref<SingleUseUsageCheck | null>(null)
 
   const checkSingleUseUsage = async (
     asset: AssetSearchListItemDto,
     usageHolder: AssetSelectUsageHolder | null,
   ) => {
-    singleUseAsset.value = null
+    singleUseCheck.value = null
     if (!asset.mainFile?.flags.singleUse) return
+    const holderName = usageHolder?.name ?? null
     try {
       const usage = await fetchSingleUseUsage(asset, usageHolder)
-      singleUseAsset.value = { ...asset, singleUseUsage: usage }
+      singleUseCheck.value = { asset: { ...asset, singleUseUsage: usage }, holderName, failed: false }
     } catch (error) {
+      singleUseCheck.value = { asset, holderName, failed: true }
       showErrorsDefault(error)
     }
   }
 
   const clearSingleUseUsage = () => {
-    singleUseAsset.value = null
+    singleUseCheck.value = null
   }
 
   return {
-    singleUseAsset,
+    singleUseCheck,
     checkSingleUseUsage,
     clearSingleUseUsage,
   }

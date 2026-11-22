@@ -19,11 +19,7 @@ import {
   isMediaAware,
   useImageMediaWidgetStore,
 } from '@/components/damImage/uploadQueue/composables/imageMediaWidgetStore'
-import {
-  type AssetSearchListItemDto,
-  DamAssetType,
-  type DamAssetTypeType,
-} from '@/types/coreDam/Asset'
+import { DamAssetType, type DamAssetTypeType } from '@/types/coreDam/Asset'
 import type { ImageCreateUpdateAware } from '@/types/ImageAware'
 import { isDamSourceEnabled } from '@/components/damImage/uploadQueue/source/damSourceConfig'
 import { isDamAuthorEnabled } from '@/components/damImage/uploadQueue/author/damAuthorConfig'
@@ -34,6 +30,7 @@ import { isNull } from '@/utils/common'
 import { DamMediaType } from '@/types/MediaAware'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import AssetSelectSingleUseUsage from '@/components/dam/assetSelect/components/AssetSelectSingleUseUsage.vue'
+import type { SingleUseUsageCheck } from '@/components/dam/assetSelect/composables/assetSelectSingleUseUsage'
 
 const props = withDefaults(
   defineProps<{
@@ -45,7 +42,7 @@ const props = withDefaults(
     showSourceEnabled?: boolean
     sourceLabel?: string
     editAssetLabel?: string
-    singleUseAsset?: AssetSearchListItemDto | null
+    singleUseCheck?: SingleUseUsageCheck | null
     configName?: string
   }>(),
   {
@@ -54,7 +51,7 @@ const props = withDefaults(
     showSourceEnabled: true,
     sourceLabel: undefined,
     editAssetLabel: undefined,
-    singleUseAsset: null,
+    singleUseCheck: null,
     configName: 'default',
   },
 )
@@ -130,10 +127,13 @@ const imageMedia = computed<ImageCreateUpdateAware | undefined>(() => {
 
 const { v$ } = useImageValidation(detail, imageSourceRequired)
 
-const singleUseBlocked = computed(() => props.singleUseAsset?.singleUseUsage?.blocked ?? false)
+const singleUseBlocked = computed(
+  () => (props.singleUseCheck?.failed || props.singleUseCheck?.asset.singleUseUsage?.blocked) ?? false,
+)
 
 const singleUseWarning = computed(() => {
-  const usage = props.singleUseAsset?.singleUseUsage
+  if (props.singleUseCheck?.failed) return t('common.assetSelect.usage.checkFailed')
+  const usage = props.singleUseCheck?.asset.singleUseUsage
   if (!usage || usage.otherHolderCount === 0) return null
   return usage.blocked
     ? t('common.assetSelect.disabledReason.singleUseBlocked', { count: usage.otherHolderCount })
@@ -176,7 +176,7 @@ defineExpose({
     </VRow>
     <template v-if="isImageCreateUpdateAware(detail)">
       <VAlert
-        v-if="singleUseWarning && singleUseAsset"
+        v-if="singleUseWarning && singleUseCheck"
         type="warning"
         class="mb-4"
       >
@@ -184,7 +184,9 @@ defineExpose({
           {{ singleUseWarning }}
         </div>
         <AssetSelectSingleUseUsage
-          :asset="singleUseAsset"
+          v-if="!singleUseCheck.failed"
+          :asset="singleUseCheck.asset"
+          :holder-name="singleUseCheck.holderName"
           :config-name="configName"
         />
       </VAlert>
@@ -280,7 +282,7 @@ defineExpose({
             />
           </div>
           <VAlert
-            v-if="singleUseWarning && singleUseAsset"
+            v-if="singleUseWarning && singleUseCheck"
             type="warning"
             class="mb-4"
           >
@@ -288,7 +290,9 @@ defineExpose({
               {{ singleUseWarning }}
             </div>
             <AssetSelectSingleUseUsage
-              :asset="singleUseAsset"
+              v-if="!singleUseCheck.failed"
+              :asset="singleUseCheck.asset"
+              :holder-name="singleUseCheck.holderName"
               :config-name="configName"
             />
           </VAlert>

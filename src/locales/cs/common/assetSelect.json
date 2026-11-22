@@ -74,7 +74,8 @@
     "ownPick": "Tento záznam ({holder}) · vybráno {date}",
     "pickedAt": "vybráno {date}",
     "openList": "Zobrazit všechna použití",
-    "usedElsewhere": "Obrázek je jednorázový a používá ho i jiný záznam ({count}×)."
+    "usedElsewhere": "Obrázek je jednorázový a používá ho i jiný záznam ({count}×).",
+    "checkFailed": "Nepodařilo se ověřit, kde se jednorázový obrázek používá. Vyberte ho znovu."
   },
   "holder": {
     "articleKindStandard": "článek",

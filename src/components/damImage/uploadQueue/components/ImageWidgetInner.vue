@@ -480,7 +480,7 @@ const {
 const { getOrLoadDamConfigExtSystemByLicence } = useDamConfigState(damClient)
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { singleUseAsset, checkSingleUseUsage, clearSingleUseUsage } = useSingleUseUsageCheck(props.configName)
+const { singleUseCheck, checkSingleUseUsage, clearSingleUseUsage } = useSingleUseUsageCheck(props.configName)
 
 const onEditAsset = async (assetFileId: DocId) => {
   assetLoading.value = true
@@ -851,7 +851,7 @@ defineExpose({
       :expand="expandMetadata"
       :saving="metadataDialogSaving"
       :loading="metadataDialogLoading"
-      :single-use-asset="singleUseAsset"
+      :single-use-check="singleUseCheck"
       :config-name="configName"
       :type="DamAssetType.Image"
       @edit-asset="onEditAsset"

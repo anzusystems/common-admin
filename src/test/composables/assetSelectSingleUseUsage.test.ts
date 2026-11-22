@@ -128,7 +128,7 @@ describe('single use usage of one asset', () => {
     await check.checkSingleUseUsage(asset('a', false), { name: 'person', id: 5 })
 
     expect(executeFetch).not.toHaveBeenCalled()
-    expect(check.singleUseAsset.value).toBeNull()
+    expect(check.singleUseCheck.value).toBeNull()
   })
 
   it('holds the fresh usage of a picked single use photo until it is cleared', async () => {
@@ -140,9 +140,20 @@ describe('single use usage of one asset', () => {
     await flushPromises()
 
     expect(sentFilter()).toMatchObject({ usageHolderName: null, usageHolderId: null })
-    expect(check.singleUseAsset.value?.singleUseUsage).toEqual(fresh)
+    expect(check.singleUseCheck.value).toMatchObject({ holderName: null, failed: false })
+    expect(check.singleUseCheck.value?.asset.singleUseUsage).toEqual(fresh)
 
     check.clearSingleUseUsage()
-    expect(check.singleUseAsset.value).toBeNull()
+    expect(check.singleUseCheck.value).toBeNull()
+  })
+
+  it('marks the check failed when DAM does not answer, so the dialog cannot confirm', async () => {
+    const { check } = mountComposables()
+    executeFetch.mockRejectedValueOnce(new Error('dam down'))
+
+    await check.checkSingleUseUsage(asset('a', true, null), { name: 'articleKindStandard', id: 'doc' })
+    await flushPromises()
+
+    expect(check.singleUseCheck.value).toMatchObject({ holderName: 'articleKindStandard', failed: true })
   })
 })

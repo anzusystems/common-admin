@@ -74,7 +74,8 @@
     "ownPick": "This record ({holder}) · picked {date}",
     "pickedAt": "picked {date}",
     "openList": "Show all usages",
-    "usedElsewhere": "The image is single use and another record uses it too ({count}×)."
+    "usedElsewhere": "The image is single use and another record uses it too ({count}×).",
+    "checkFailed": "The usage of the single use image could not be checked. Pick it again."
   },
   "holder": {
     "articleKindStandard": "article",
