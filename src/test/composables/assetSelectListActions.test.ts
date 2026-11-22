@@ -6,9 +6,12 @@ import { useAssetSelectActions } from '@/components/dam/assetSelect/composables/
 import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
 import type { AssetSearchListItemDto } from '@/types/coreDam/Asset'
 import type { Pagination } from '@/labs/filters/pagination'
+import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
+import { useDamCachedAuthors } from '@/components/damImage/uploadQueue/author/cachedAuthors'
 
-const { executeFetch, showErrorsDefault, debounce } = vi.hoisted(() => ({
+const { executeFetch, damGet, showErrorsDefault, debounce } = vi.hoisted(() => ({
   executeFetch: vi.fn(),
+  damGet: vi.fn(),
   showErrorsDefault: vi.fn(),
   debounce: { real: false },
 }))
@@ -31,7 +34,7 @@ vi.mock(
       typeof import('@/components/dam/assetSelect/composables/commonAdminCoreDamOptions')
     >()),
     useCommonAdminCoreDamOptions: () => ({
-      damClient: vi.fn(),
+      damClient: () => ({ get: damGet }),
       endPointAsset: '/adm/v1/asset',
       showFileInfoEnabled: false,
     }),
@@ -220,6 +223,22 @@ describe('useAssetSelectActions', () => {
 
     expect(executeFetch).toHaveBeenCalledTimes(1)
     expect(listedIds(filter.store)).toEqual(['listed'])
+  })
+
+  it('loads the sources of the clicked asset for the detail, not only its authors', async () => {
+    const { actions, store } = mountActions()
+    store.setSelectConfig([{ licence: 10, extSystem: 1 }] as DamConfigLicenceExtSystemReturnType[])
+    store.setList([asset('clicked')])
+    damGet.mockResolvedValue({
+      status: 200,
+      data: { id: 'clicked', authors: ['author-id'], sources: ['source-id'], keywords: [] },
+    })
+
+    await actions.onItemClick({ assetId: 'clicked', index: 0 })
+
+    const { hasCachedAuthor } = useDamCachedAuthors()
+    expect(hasCachedAuthor('author-id')).toBe(true)
+    expect(hasCachedAuthor('source-id')).toBe(true)
   })
 
   it('asks DAM for no next page without a licence', async () => {
