@@ -73,7 +73,8 @@
     "andMore": "a další ({count})",
     "ownPick": "Tento záznam ({holder}) · vybráno {date}",
     "pickedAt": "vybráno {date}",
-    "openList": "Zobrazit všechna použití"
+    "openList": "Zobrazit všechna použití",
+    "usedElsewhere": "Obrázek je jednorázový a používá ho i jiný záznam ({count}×)."
   },
   "holder": {
     "articleKindStandard": "článek",

@@ -73,7 +73,8 @@
     "andMore": "and {count} more",
     "ownPick": "This record ({holder}) · picked {date}",
     "pickedAt": "picked {date}",
-    "openList": "Show all usages"
+    "openList": "Show all usages",
+    "usedElsewhere": "The image is single use and another record uses it too ({count}×)."
   },
   "holder": {
     "articleKindStandard": "article",

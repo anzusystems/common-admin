@@ -40,6 +40,7 @@ import {
   updateAssetAuthors,
 } from '@/components/damImage/uploadQueue/api/damAssetApi'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
+import { useSingleUseUsageCheck } from '@/components/dam/assetSelect/composables/assetSelectSingleUseUsage'
 import UploadQueueDialogSingle from '@/components/damImage/uploadQueue/components/UploadQueueDialogSingle.vue'
 import { useUploadQueueDialog } from '@/components/damImage/uploadQueue/composables/uploadQueueDialog'
 import { fetchDamCredit, hasNoDamCredit } from '@/components/damImage/uploadQueue/composables/damCredit'
@@ -404,6 +405,7 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
   if (data.type === 'asset') {
     if (!data.value[0] || !data.value[0].mainFile) return
     metadataDialog.value = true
+    const usageCheck = checkSingleUseUsage(data.value[0], props.usageHolder)
     try {
       const assetRes = await fetchAsset(damClient, endPointAsset, data.value[0].id)
       if (customAssetSelectMetadataToImageMap) {
@@ -450,6 +452,7 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
     if (!isNull(modelValue.value)) {
       image.id = modelValue.value
     }
+    await usageCheck
     imageMediaWidgetStore.setDetail(image)
     metadataDialogLoading.value = false
     if (props.expandMetadata) {
@@ -476,6 +479,9 @@ const {
 
 const { getOrLoadDamConfigExtSystemByLicence } = useDamConfigState(damClient)
 
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { singleUseAsset, checkSingleUseUsage, clearSingleUseUsage } = useSingleUseUsageCheck(props.configName)
+
 const onEditAsset = async (assetFileId: DocId) => {
   assetLoading.value = true
   assetDialog.value = props.queueKey
@@ -496,6 +502,7 @@ const onEditAsset = async (assetFileId: DocId) => {
 const onMetadataDialogClose = () => {
   assetSelectionChanged.value = false
   showDamAuthorsInCmsImage.value = false
+  clearSingleUseUsage()
   imageMediaWidgetStore.setDetail(null)
   assetDetailStore.setAsset(null)
   metadataDialog.value = false
@@ -540,6 +547,7 @@ const onMetadataDialogConfirm = async () => {
       : await imageApi.createImage(imageClient, detail.value)
     assetSelectionChanged.value = false
     metadataDialog.value = false
+    clearSingleUseUsage()
     modelValue.value = res.id
     imageMediaWidgetStore.setDetail(null)
     assetDetailStore.setAsset(null)
@@ -581,6 +589,7 @@ const onAssetUploadConfirm = (items: ImageCreateUpdateAware[]) => {
   if (!isNull(modelValue.value)) {
     items[0].id = modelValue.value
   }
+  clearSingleUseUsage()
   imageMediaWidgetStore.setDetail(items[0])
   metadataDialog.value = true
   if (props.expandMetadata) {
@@ -842,6 +851,8 @@ defineExpose({
       :expand="expandMetadata"
       :saving="metadataDialogSaving"
       :loading="metadataDialogLoading"
+      :single-use-asset="singleUseAsset"
+      :config-name="configName"
       :type="DamAssetType.Image"
       @edit-asset="onEditAsset"
       @selection-change="assetSelectionChanged = true"

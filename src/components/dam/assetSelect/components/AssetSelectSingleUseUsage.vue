@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import type { AssetSelectListItem } from '@/services/stores/coreDam/assetSelectStore'
+import type { AssetSearchListItemDto } from '@/types/coreDam/Asset'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import { resolveHolderName } from '@/components/dam/assetSelect/composables/assetSelectDisabledReason'
 import AChipNoLink from '@/components/AChipNoLink.vue'
@@ -12,7 +12,7 @@ import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
 
 const props = withDefaults(
   defineProps<{
-    item: AssetSelectListItem
+    asset: AssetSearchListItemDto
     configName?: string
   }>(),
   {
@@ -27,7 +27,7 @@ const { singleUseUsageUrl, singleUsePlaceUrl } = useCommonAdminCoreDamOptions(pr
 
 const assetSelectStore = useAssetSelectStore()
 
-const usage = computed(() => props.item.asset.singleUseUsage ?? null)
+const usage = computed(() => props.asset.singleUseUsage ?? null)
 
 const ownPick = computed(() => {
   const holderPickedAt = usage.value?.holderPickedAt ?? null
@@ -58,7 +58,7 @@ const moreCount = computed(() =>
 )
 
 const allUsagesUrl = computed(() => {
-  const mainFile = props.item.asset.mainFile
+  const mainFile = props.asset.mainFile
   if (!singleUseUsageUrl || !mainFile) return undefined
   return singleUseUsageUrl(mainFile.fileAttributes.takenOverFromId || mainFile.id)
 })

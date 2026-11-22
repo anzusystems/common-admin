@@ -19,7 +19,11 @@ import {
   isMediaAware,
   useImageMediaWidgetStore,
 } from '@/components/damImage/uploadQueue/composables/imageMediaWidgetStore'
-import { DamAssetType, type DamAssetTypeType } from '@/types/coreDam/Asset'
+import {
+  type AssetSearchListItemDto,
+  DamAssetType,
+  type DamAssetTypeType,
+} from '@/types/coreDam/Asset'
 import type { ImageCreateUpdateAware } from '@/types/ImageAware'
 import { isDamSourceEnabled } from '@/components/damImage/uploadQueue/source/damSourceConfig'
 import { isDamAuthorEnabled } from '@/components/damImage/uploadQueue/author/damAuthorConfig'
@@ -29,6 +33,7 @@ import DamAdminAssetLink from '@/components/dam/DamAdminAssetLink.vue'
 import { isNull } from '@/utils/common'
 import { DamMediaType } from '@/types/MediaAware'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
+import AssetSelectSingleUseUsage from '@/components/dam/assetSelect/components/AssetSelectSingleUseUsage.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -40,6 +45,8 @@ const props = withDefaults(
     showSourceEnabled?: boolean
     sourceLabel?: string
     editAssetLabel?: string
+    singleUseAsset?: AssetSearchListItemDto | null
+    configName?: string
   }>(),
   {
     expand: false,
@@ -47,6 +54,8 @@ const props = withDefaults(
     showSourceEnabled: true,
     sourceLabel: undefined,
     editAssetLabel: undefined,
+    singleUseAsset: null,
+    configName: 'default',
   },
 )
 
@@ -121,7 +130,18 @@ const imageMedia = computed<ImageCreateUpdateAware | undefined>(() => {
 
 const { v$ } = useImageValidation(detail, imageSourceRequired)
 
+const singleUseBlocked = computed(() => props.singleUseAsset?.singleUseUsage?.blocked ?? false)
+
+const singleUseWarning = computed(() => {
+  const usage = props.singleUseAsset?.singleUseUsage
+  if (!usage || usage.otherHolderCount === 0) return null
+  return usage.blocked
+    ? t('common.assetSelect.disabledReason.singleUseBlocked', { count: usage.otherHolderCount })
+    : t('common.assetSelect.usage.usedElsewhere', { count: usage.otherHolderCount })
+})
+
 const onConfirm = () => {
+  if (singleUseBlocked.value) return
   v$.value.$touch()
   if (v$.value.$invalid) {
     showValidationError()
@@ -155,6 +175,19 @@ defineExpose({
       </VCol>
     </VRow>
     <template v-if="isImageCreateUpdateAware(detail)">
+      <VAlert
+        v-if="singleUseWarning && singleUseAsset"
+        type="warning"
+        class="mb-4"
+      >
+        <div class="mb-2">
+          {{ singleUseWarning }}
+        </div>
+        <AssetSelectSingleUseUsage
+          :asset="singleUseAsset"
+          :config-name="configName"
+        />
+      </VAlert>
       <VRow>
         <VCol>
           <VBtn @click.stop="onEditAsset">
@@ -246,6 +279,19 @@ defineExpose({
               :image="detail"
             />
           </div>
+          <VAlert
+            v-if="singleUseWarning && singleUseAsset"
+            type="warning"
+            class="mb-4"
+          >
+            <div class="mb-2">
+              {{ singleUseWarning }}
+            </div>
+            <AssetSelectSingleUseUsage
+              :asset="singleUseAsset"
+              :config-name="configName"
+            />
+          </VAlert>
           <VRow>
             <VCol>
               <VBtn @click.stop="onEditAsset">
@@ -361,7 +407,7 @@ defineExpose({
         <VSpacer />
         <ABtnPrimary
           :loading="saving"
-          :disabled="loading"
+          :disabled="loading || singleUseBlocked"
           @click.stop="onConfirm"
         >
           {{ t('common.button.confirm') }}

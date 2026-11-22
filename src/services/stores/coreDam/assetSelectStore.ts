@@ -1,5 +1,9 @@
 import { acceptHMRUpdate, defineStore } from 'pinia'
-import type { AssetSearchListItemDto, DamAssetTypeType } from '@/types/coreDam/Asset'
+import type {
+  AssetSearchListItemDto,
+  AssetSingleUseUsage,
+  DamAssetTypeType,
+} from '@/types/coreDam/Asset'
 import { DamAssetTypeDefault } from '@/types/coreDam/Asset'
 import type { DocId, IntegerId } from '@/types/common'
 import { computed, ref, toRaw } from 'vue'
@@ -119,6 +123,12 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
       const reason = reasons.get(item.asset.id)
       if (reason === undefined) return
       item.disabledReason = reason
+    })
+  }
+
+  function setSingleUseUsage(assetId: DocId, usage: AssetSingleUseUsage | null) {
+    assetListItems.value.forEach((item) => {
+      if (item.asset.id === assetId) item.asset.singleUseUsage = usage
     })
   }
 
@@ -309,6 +319,7 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
     setList,
     appendList,
     setDisabledReasons,
+    setSingleUseUsage,
     toggleSelectedByIndex,
     clearSelected,
     reset,

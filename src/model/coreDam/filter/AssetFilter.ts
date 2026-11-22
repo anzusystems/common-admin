@@ -118,3 +118,19 @@ export function useAssetListFilter() {
     filterData,
   }
 }
+
+const singleUseUsageFilterFields = [
+  { name: 'licences' as const, default: [] },
+  { name: 'assetAndMainFileIds' as const, default: null, type: 'string' },
+  { name: 'singleUseUsage' as const, default: true },
+  { name: 'usageHolderName' as const, default: null, type: 'string' },
+  { name: 'usageHolderId' as const, default: null, type: 'string' },
+] satisfies readonly MakeFilterOption[]
+
+export function useAssetSingleUseUsageFilter() {
+  return createFilter(singleUseUsageFilterFields, createFilterStore(singleUseUsageFilterFields), {
+    elastic: true,
+    system: SYSTEM_CORE_DAM,
+    subject: ENTITY,
+  })
+}
