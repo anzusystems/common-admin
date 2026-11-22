@@ -4,14 +4,19 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { createPinia, type Pinia } from 'pinia'
 import { useAssetSelectActions } from '@/components/dam/assetSelect/composables/assetSelectListActions'
 import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
-import type { AssetSearchListItemDto } from '@/types/coreDam/Asset'
+import {
+  DamAssetType,
+  type AssetSearchListItemDto,
+  type AssetSingleUseUsage,
+} from '@/types/coreDam/Asset'
 import type { Pagination } from '@/labs/filters/pagination'
 import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
 import { useAssetListFilter } from '@/model/coreDam/filter/AssetFilter'
 import { useDamCachedAuthors } from '@/components/damImage/uploadQueue/author/cachedAuthors'
 
-const { executeFetch, damGet, showErrorsDefault, debounce } = vi.hoisted(() => ({
+const { executeFetch, fetchUsage, damGet, showErrorsDefault, debounce } = vi.hoisted(() => ({
   executeFetch: vi.fn(),
+  fetchUsage: vi.fn(),
   damGet: vi.fn(),
   showErrorsDefault: vi.fn(),
   debounce: { real: false },
@@ -38,9 +43,16 @@ vi.mock(
       damClient: () => ({ get: damGet }),
       endPointAsset: '/adm/v1/asset',
       showFileInfoEnabled: false,
+      fetchSingleUseUsage: fetchUsage,
     }),
   }),
 )
+
+vi.mock('@/components/dam/user/assetLicenceApi', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/components/dam/user/assetLicenceApi')>()),
+  fetchDamAssetLicenceListByIds: () =>
+    Promise.resolve([{ id: 10, name: 'Licence', badge: 'L', flags: { directUseAllowed: true } }]),
+}))
 
 vi.mock('@/labs/api/useApiFetchList', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/labs/api/useApiFetchList')>()),
@@ -53,7 +65,28 @@ vi.mock('@/composables/system/alerts', async (importOriginal) => {
 })
 
 const asset = (id: string) =>
-  ({ id, licence: 10, mainFile: { id: `file-${id}` } }) as unknown as AssetSearchListItemDto
+  ({
+    id,
+    licence: 10,
+    mainFile: { id: `file-${id}`, flags: { singleUse: false }, fileAttributes: { takenOverFromId: '' } },
+    attributes: { assetType: DamAssetType.Image },
+  }) as unknown as AssetSearchListItemDto
+
+const singleUseAsset = (id: string, takenOverFromId = '') =>
+  ({
+    ...asset(id),
+    mainFile: { id: `file-${id}`, flags: { singleUse: true }, fileAttributes: { takenOverFromId } },
+  }) as unknown as AssetSearchListItemDto
+
+const usage = (blocked: boolean): AssetSingleUseUsage => ({
+  totalCount: 1,
+  otherHolderCount: blocked ? 1 : 0,
+  blocked,
+  holderPickedAt: null,
+  places: [],
+})
+
+const usageHolder = { name: 'articleKindStandard', id: 42 }
 
 const deferredList = () => {
   let resolve!: (list: AssetSearchListItemDto[]) => void
@@ -111,6 +144,8 @@ describe('useAssetSelectActions', () => {
   beforeEach(() => {
     pinia = createPinia()
     executeFetch.mockReset()
+    fetchUsage.mockReset()
+    fetchUsage.mockResolvedValue({})
     showErrorsDefault.mockReset()
   })
 
@@ -294,5 +329,90 @@ describe('useAssetSelectActions', () => {
 
     expect(listedIds(store)).toEqual(['newer'])
     expect(store.loader).toBe(false)
+  })
+
+  describe('single use usage of a page', () => {
+    const selectableStore = (store: ReturnType<typeof useAssetSelectStore>) => {
+      store.setSelectedLicenceIds([10])
+      store.setSelectability({ singleUseAllowed: true, uploadLicence: undefined, usageHolder })
+    }
+
+    it('asks the host once per page for the distinct groups of the single use photos', async () => {
+      const { actions, store } = mountActions()
+      selectableStore(store)
+      const audio = {
+        ...singleUseAsset('e'),
+        attributes: { assetType: DamAssetType.Audio },
+      } as unknown as AssetSearchListItemDto
+      executeFetch.mockResolvedValue([
+        singleUseAsset('a', 'group-1'),
+        singleUseAsset('b', 'group-1'),
+        singleUseAsset('c'),
+        asset('d'),
+        audio,
+      ])
+      fetchUsage.mockResolvedValue({ 'group-1': usage(true), 'file-c': usage(false) })
+
+      await actions.fetchAssetListDebounced()
+      await flushPromises()
+
+      expect(fetchUsage).toHaveBeenCalledTimes(1)
+      expect(fetchUsage).toHaveBeenCalledWith(['group-1', 'file-c'], usageHolder)
+      const [a, b, c, d] = store.assetListItems
+      expect(a.asset.singleUseUsage).toEqual(usage(true))
+      expect(b.asset.singleUseUsage).toEqual(usage(true))
+      expect(c.asset.singleUseUsage).toEqual(usage(false))
+      expect(d.asset.singleUseUsage).toBeUndefined()
+      expect(a.disabledReason).toBeTruthy()
+      expect(b.disabledReason).toBeTruthy()
+      expect(c.disabledReason).toBeNull()
+    })
+
+    it('asks again for the next page with the groups of that page only', async () => {
+      const { actions, store } = mountActions()
+      selectableStore(store)
+      executeFetch
+        .mockResolvedValueOnce([singleUseAsset('a', 'group-1')])
+        .mockResolvedValueOnce([singleUseAsset('b', 'group-2')])
+
+      await actions.fetchAssetListDebounced()
+      await flushPromises()
+      await actions.fetchNextPage()
+      await flushPromises()
+
+      expect(fetchUsage).toHaveBeenCalledTimes(2)
+      expect(fetchUsage).toHaveBeenLastCalledWith(['group-2'], usageHolder)
+    })
+
+    it('asks nobody without selectability or without a single use photo', async () => {
+      const { actions, store } = mountActions()
+      store.setSelectedLicenceIds([10])
+      executeFetch.mockResolvedValue([singleUseAsset('a')])
+
+      await actions.fetchAssetListDebounced()
+      await flushPromises()
+      store.setSelectability({ singleUseAllowed: true, uploadLicence: undefined, usageHolder })
+      executeFetch.mockResolvedValue([asset('b')])
+      await actions.fetchAssetListDebounced()
+      await flushPromises()
+
+      expect(fetchUsage).not.toHaveBeenCalled()
+    })
+
+    it('shows the error and leaves the photos selectable when the host rejects', async () => {
+      const { actions, store } = mountActions()
+      selectableStore(store)
+      const error = new Error('host down')
+      executeFetch.mockResolvedValue([singleUseAsset('a', 'group-1')])
+      fetchUsage.mockRejectedValue(error)
+
+      await actions.fetchAssetListDebounced()
+      await flushPromises()
+
+      expect(showErrorsDefault).toHaveBeenCalledWith(error)
+      expect(listedIds(store)).toEqual(['a'])
+      expect(store.assetListItems[0].disabledReason).toBeNull()
+      expect(store.loader).toBe(false)
+    })
   })
 })

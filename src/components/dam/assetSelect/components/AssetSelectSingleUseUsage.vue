@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import type { AssetSearchListItemDto } from '@/types/coreDam/Asset'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import { resolveHolderName } from '@/components/dam/assetSelect/composables/assetSelectDisabledReason'
+import { getSingleUseGroupId } from '@/components/dam/assetSelect/composables/assetSelectSingleUseUsage'
 import AChipNoLink from '@/components/AChipNoLink.vue'
 import { COMMON_CONFIG } from '@/model/commonConfig'
 import { dateTimePretty } from '@/utils/datetime'
@@ -55,9 +56,9 @@ const moreCount = computed(() =>
 )
 
 const allUsagesUrl = computed(() => {
-  const mainFile = props.asset.mainFile
-  if (!singleUseUsageUrl || !mainFile) return undefined
-  return singleUseUsageUrl(mainFile.fileAttributes.takenOverFromId || mainFile.id)
+  const groupId = getSingleUseGroupId(props.asset)
+  if (!singleUseUsageUrl || isNull(groupId)) return undefined
+  return singleUseUsageUrl(groupId)
 })
 </script>
 

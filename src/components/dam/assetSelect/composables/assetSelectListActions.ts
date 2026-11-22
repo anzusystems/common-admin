@@ -10,6 +10,8 @@ import { type AssetDetailItemDto, DamAssetType, type DamAssetTypeType } from '@/
 import { usePagination } from '@/labs/filters/pagination'
 import { useAlerts } from '@/composables/system/alerts'
 import type { DocId } from '@/types/common'
+import type { AssetSelectUsageHolder } from '@/types/coreDam/AssetSelect'
+import { getSingleUseGroupId } from '@/components/dam/assetSelect/composables/assetSelectSingleUseUsage'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import { fetchAsset, useFetchAssetListByLicences } from '@/components/damImage/uploadQueue/api/damAssetApi'
 import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
@@ -38,7 +40,8 @@ export function useAssetSelectActions(
   configName = 'default',
   onDetailLoadedCallback?: (asset: AssetDetailItemDto) => void,
 ) {
-  const { damClient, endPointAsset, showFileInfoEnabled } = useCommonAdminCoreDamOptions(configName)
+  const { damClient, endPointAsset, showFileInfoEnabled, fetchSingleUseUsage } =
+    useCommonAdminCoreDamOptions(configName)
 
   const assetSelectStore = useAssetSelectStore()
   const { selectedCount, selectedHasDisabled, selectedAssets, assetListItems, loader } =
@@ -91,12 +94,38 @@ export function useAssetSelectActions(
     resolveTypeFilter(assetSelectStore.assetType, assetSelectStore.inPodcast)
     filterData.licences = assetSelectStore.selectedLicenceIds
     filterData.mainFileSingleUse = assetSelectStore.selectability?.singleUseAllowed === false ? false : null
-    filterData.singleUseUsage =
-      !isNull(assetSelectStore.selectability) && assetSelectStore.assetType === DamAssetType.Image
-    const usageHolder = assetSelectStore.selectability?.usageHolder ?? null
-    filterData.usageHolderName = usageHolder?.name ?? null
-    filterData.usageHolderId = isNull(usageHolder) ? null : String(usageHolder.id)
     return true
+  }
+
+  // A failed lookup leaves the photos selectable: the host is the only one who knows the usage.
+  const applySingleUseUsage = async (
+    items: AssetSelectListItem[],
+    usageHolder: AssetSelectUsageHolder | null,
+  ) => {
+    if (isUndefined(fetchSingleUseUsage)) return
+    const groupIds = new Map<DocId, DocId[]>()
+    items.forEach((item) => {
+      const groupId = getSingleUseGroupId(item.asset)
+      if (
+        isNull(groupId) ||
+        !item.asset.mainFile?.flags.singleUse ||
+        item.asset.attributes.assetType !== DamAssetType.Image
+      ) {
+        return
+      }
+      groupIds.set(groupId, [...(groupIds.get(groupId) ?? []), item.asset.id])
+    })
+    if (groupIds.size === 0) return
+    try {
+      const usages = await fetchSingleUseUsage([...groupIds.keys()], usageHolder)
+      groupIds.forEach((assetIds, groupId) => {
+        const usage = usages[groupId]
+        if (isUndefined(usage)) return
+        assetIds.forEach((assetId) => assetSelectStore.setSingleUseUsage(assetId, usage))
+      })
+    } catch (error) {
+      showErrorsDefault(error)
+    }
   }
 
   // The selectability lives in the store, not in this instance: the initial listing, the filter and
@@ -104,6 +133,7 @@ export function useAssetSelectActions(
   const applyDisabledReasons = async (items: AssetSelectListItem[]) => {
     const selectability = assetSelectStore.selectability
     if (isNull(selectability)) return
+    await applySingleUseUsage(items, selectability.usageHolder)
     // An uncached licence answers from a placeholder that allows direct use, so the licences of the page
     // are loaded before the reasons are resolved.
     addToCachedAssetLicences(items.map((item) => item.asset.licence))
@@ -189,9 +219,6 @@ export function useAssetSelectActions(
   const reset = async () => {
     latestListRequest++
     clearAll(filterData, filterConfig)
-    filterData.singleUseUsage = false
-    filterData.usageHolderName = null
-    filterData.usageHolderId = null
     pagination.value.page = 1
     assetSelectStore.reset(true)
     assetDetailStore.reset()

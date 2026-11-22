@@ -9,8 +9,8 @@ import {
 import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
 import type { AssetSearchListItemDto, AssetSingleUseUsage } from '@/types/coreDam/Asset'
 
-const { executeFetch, showErrorsDefault } = vi.hoisted(() => ({
-  executeFetch: vi.fn(),
+const { fetchUsage, showErrorsDefault } = vi.hoisted(() => ({
+  fetchUsage: vi.fn(),
   showErrorsDefault: vi.fn(),
 }))
 
@@ -20,17 +20,9 @@ vi.mock(
     ...(await importOriginal<
       typeof import('@/components/dam/assetSelect/composables/commonAdminCoreDamOptions')
     >()),
-    useCommonAdminCoreDamOptions: () => ({
-      damClient: () => ({}),
-      endPointAsset: '/adm/v1/asset',
-    }),
+    useCommonAdminCoreDamOptions: () => ({ fetchSingleUseUsage: fetchUsage }),
   }),
 )
-
-vi.mock('@/labs/api/useApiFetchList', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@/labs/api/useApiFetchList')>()),
-  useApiFetchList: () => ({ executeFetch }),
-}))
 
 vi.mock('@/composables/system/alerts', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/composables/system/alerts')>()
@@ -42,19 +34,30 @@ const usage = (partial: Partial<AssetSingleUseUsage> = {}): AssetSingleUseUsage 
   otherHolderCount: 1,
   blocked: false,
   holderPickedAt: null,
-  places: [{ resourceName: 'person', resourceId: 5, imageId: 9, pickedAt: null }],
+  places: [{ resourceName: 'person', resourceId: 5, pickedAt: null }],
   ...partial,
 })
 
-const asset = (id: string, singleUse = true, singleUseUsage: AssetSingleUseUsage | null = null) =>
+const asset = (
+  id: string,
+  singleUse = true,
+  singleUseUsage: AssetSingleUseUsage | null = null,
+  takenOverFromId = '',
+) =>
   ({
     id,
     licence: 10,
-    mainFile: { id: `file-${id}`, flags: { singleUse } },
+    mainFile: { id: `file-${id}`, flags: { singleUse }, fileAttributes: { takenOverFromId } },
     singleUseUsage,
   }) as unknown as AssetSearchListItemDto
 
-const sentFilter = () => executeFetch.mock.calls[0][1]
+const deferred = <T>() => {
+  let resolve!: (value: T) => void
+  const promise = new Promise<T>((onResolve) => {
+    resolve = onResolve
+  })
+  return { promise, resolve }
+}
 
 let pinia: Pinia
 
@@ -76,36 +79,38 @@ const mountComposables = () => {
   return { refresh, check, store }
 }
 
+const holder = { name: 'articleKindStandard', id: 42 }
+
 describe('single use usage of one asset', () => {
   beforeEach(() => {
     pinia = createPinia()
-    executeFetch.mockReset()
+    fetchUsage.mockReset()
     showErrorsDefault.mockReset()
   })
 
-  it('refreshes the usage of the listed asset for the usage holder of the picker', async () => {
+  it('refreshes the usage of the listed asset by its group for the usage holder of the picker', async () => {
     const { refresh, store } = mountComposables()
-    store.setList([asset('a', true, usage({ otherHolderCount: 0, places: [] })), asset('b')])
-    store.setSelectability({
-      singleUseAllowed: true,
-      uploadLicence: undefined,
-      usageHolder: { name: 'articleKindStandard', id: 42 },
-    })
+    store.setList([asset('a', true, usage({ otherHolderCount: 0, places: [] }), 'group-a'), asset('b')])
+    store.setSelectability({ singleUseAllowed: true, uploadLicence: undefined, usageHolder: holder })
     const fresh = usage({ otherHolderCount: 1, blocked: true })
-    executeFetch.mockResolvedValueOnce([asset('a', true, fresh)])
+    fetchUsage.mockResolvedValueOnce({ 'group-a': fresh })
 
     await refresh.refreshUsage(store.assetListItems[0].asset)
 
-    expect(sentFilter()).toMatchObject({
-      licences: [10],
-      assetAndMainFileIds: 'a',
-      singleUseUsage: true,
-      usageHolderName: 'articleKindStandard',
-      usageHolderId: '42',
-    })
+    expect(fetchUsage).toHaveBeenCalledWith(['group-a'], holder)
     expect(store.assetListItems[0].asset.singleUseUsage).toEqual(fresh)
     expect(store.assetListItems[1].asset.singleUseUsage).toBeNull()
     expect(refresh.usageLoading.value).toBe(false)
+  })
+
+  it('uses the main file as the group of a photo that was not taken over', async () => {
+    const { refresh, store } = mountComposables()
+    store.setList([asset('a', true, usage())])
+    fetchUsage.mockResolvedValueOnce({ 'file-a': usage() })
+
+    await refresh.refreshUsage(store.assetListItems[0].asset)
+
+    expect(fetchUsage).toHaveBeenCalledWith(['file-a'], null)
   })
 
   it('keeps the listed usage and shows the error when the refresh fails', async () => {
@@ -113,7 +118,7 @@ describe('single use usage of one asset', () => {
     const listed = usage()
     store.setList([asset('a', true, listed)])
     const error = new Error('timeout')
-    executeFetch.mockRejectedValueOnce(error)
+    fetchUsage.mockRejectedValueOnce(error)
 
     await refresh.refreshUsage(store.assetListItems[0].asset)
 
@@ -122,24 +127,58 @@ describe('single use usage of one asset', () => {
     expect(refresh.usageLoading.value).toBe(false)
   })
 
-  it('does not ask DAM about a picked photo that is not single use', async () => {
+  it('keeps the listed usage when the answer has no entry for the group', async () => {
+    const { refresh, store } = mountComposables()
+    const listed = usage()
+    store.setList([asset('a', true, listed)])
+    fetchUsage.mockResolvedValueOnce({})
+
+    await refresh.refreshUsage(store.assetListItems[0].asset)
+
+    expect(store.assetListItems[0].asset.singleUseUsage).toEqual(listed)
+    expect(refresh.usageLoading.value).toBe(false)
+  })
+
+  it('does not let a slower older refresh overwrite the newer one or clear its loading', async () => {
+    const { refresh, store } = mountComposables()
+    store.setList([asset('a', true, usage())])
+    const older = deferred<Record<string, AssetSingleUseUsage>>()
+    const newer = deferred<Record<string, AssetSingleUseUsage>>()
+    fetchUsage.mockReturnValueOnce(older.promise).mockReturnValueOnce(newer.promise)
+    const listed = store.assetListItems[0].asset
+    const olderRefresh = refresh.refreshUsage(listed)
+    const newerRefresh = refresh.refreshUsage(listed)
+    const freshNewer = usage({ totalCount: 7 })
+
+    older.resolve({ 'file-a': usage({ totalCount: 3 }) })
+    await olderRefresh
+    expect(refresh.usageLoading.value).toBe(true)
+    expect(store.assetListItems[0].asset.singleUseUsage).not.toEqual(usage({ totalCount: 3 }))
+
+    newer.resolve({ 'file-a': freshNewer })
+    await newerRefresh
+    expect(store.assetListItems[0].asset.singleUseUsage).toEqual(freshNewer)
+    expect(refresh.usageLoading.value).toBe(false)
+  })
+
+  it('does not ask the host about a picked photo that is not single use', async () => {
     const { check } = mountComposables()
 
-    await check.checkSingleUseUsage(asset('a', false), { name: 'person', id: 5 })
+    await check.checkSingleUseUsage(asset('a', false), holder)
 
-    expect(executeFetch).not.toHaveBeenCalled()
+    expect(fetchUsage).not.toHaveBeenCalled()
     expect(check.singleUseCheck.value).toBeNull()
   })
 
   it('holds the fresh usage of a picked single use photo until it is cleared', async () => {
     const { check } = mountComposables()
     const fresh = usage({ blocked: true })
-    executeFetch.mockResolvedValueOnce([asset('a', true, fresh)])
+    fetchUsage.mockResolvedValueOnce({ 'file-a': fresh })
 
     await check.checkSingleUseUsage(asset('a', true, null), null)
     await flushPromises()
 
-    expect(sentFilter()).toMatchObject({ usageHolderName: null, usageHolderId: null })
+    expect(fetchUsage).toHaveBeenCalledWith(['file-a'], null)
     expect(check.singleUseCheck.value).toMatchObject({ holderName: null, failed: false })
     expect(check.singleUseCheck.value?.asset.singleUseUsage).toEqual(fresh)
 
@@ -147,13 +186,54 @@ describe('single use usage of one asset', () => {
     expect(check.singleUseCheck.value).toBeNull()
   })
 
-  it('marks the check failed when DAM does not answer, so the dialog cannot confirm', async () => {
+  it('marks the check failed when the host does not answer, so the dialog cannot confirm', async () => {
     const { check } = mountComposables()
-    executeFetch.mockRejectedValueOnce(new Error('dam down'))
+    fetchUsage.mockRejectedValueOnce(new Error('host down'))
 
-    await check.checkSingleUseUsage(asset('a', true, null), { name: 'articleKindStandard', id: 'doc' })
+    await check.checkSingleUseUsage(asset('a', true, null), holder)
     await flushPromises()
 
     expect(check.singleUseCheck.value).toMatchObject({ holderName: 'articleKindStandard', failed: true })
+  })
+
+  it('marks the check failed when the answer has no entry for the group', async () => {
+    const { check } = mountComposables()
+    fetchUsage.mockResolvedValueOnce({})
+
+    await check.checkSingleUseUsage(asset('a', true, null), holder)
+    await flushPromises()
+
+    expect(check.singleUseCheck.value).toMatchObject({ failed: true })
+  })
+
+  it('does not let a slower older check overwrite the newer one', async () => {
+    const { check } = mountComposables()
+    const older = deferred<Record<string, AssetSingleUseUsage>>()
+    const newer = deferred<Record<string, AssetSingleUseUsage>>()
+    fetchUsage.mockReturnValueOnce(older.promise).mockReturnValueOnce(newer.promise)
+    const olderCheck = check.checkSingleUseUsage(asset('a'), holder)
+    const newerCheck = check.checkSingleUseUsage(asset('b'), holder)
+    const freshNewer = usage({ totalCount: 7 })
+
+    newer.resolve({ 'file-b': freshNewer })
+    await newerCheck
+    older.resolve({ 'file-a': usage({ totalCount: 3 }) })
+    await olderCheck
+
+    expect(check.singleUseCheck.value?.asset.id).toBe('b')
+    expect(check.singleUseCheck.value?.asset.singleUseUsage).toEqual(freshNewer)
+  })
+
+  it('does not bring back a check that was cleared while it was running', async () => {
+    const { check } = mountComposables()
+    const pending = deferred<Record<string, AssetSingleUseUsage>>()
+    fetchUsage.mockReturnValueOnce(pending.promise)
+    const running = check.checkSingleUseUsage(asset('a'), holder)
+
+    check.clearSingleUseUsage()
+    pending.resolve({ 'file-a': usage() })
+    await running
+
+    expect(check.singleUseCheck.value).toBeNull()
   })
 })

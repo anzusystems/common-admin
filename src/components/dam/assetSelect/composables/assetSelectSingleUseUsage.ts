@@ -1,33 +1,32 @@
 import { ref } from 'vue'
 import type { AssetSearchListItemDto, AssetSingleUseUsage } from '@/types/coreDam/Asset'
+import type { DocId } from '@/types/common'
 import type { AssetSelectUsageHolder } from '@/types/coreDam/AssetSelect'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
-import { useFetchAssetListByLicences } from '@/components/damImage/uploadQueue/api/damAssetApi'
-import { useAssetSingleUseUsageFilter } from '@/model/coreDam/filter/AssetFilter'
-import { usePagination } from '@/labs/filters/pagination'
 import { useAlerts } from '@/composables/system/alerts'
 import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
-import { isNull } from '@/utils/common'
+import { isNull, isUndefined } from '@/utils/common'
 import { useDamCachedAssetLicences } from '@/components/damImage/composables/cachedDamAssetLicences'
 import { resolveDisabledReasons } from '@/components/dam/assetSelect/composables/assetSelectDisabledReason'
 
-// DAM answers the usage only inside the licence search, so one asset is searched by its id.
+export const getSingleUseGroupId = (asset: AssetSearchListItemDto): DocId | null => {
+  const mainFile = asset.mainFile
+  if (isUndefined(mainFile) || isNull(mainFile)) return null
+  return mainFile.fileAttributes.takenOverFromId || mainFile.id
+}
+
 export function useSingleUseUsageFetch(configName = 'default') {
-  const { damClient, endPointAsset } = useCommonAdminCoreDamOptions(configName)
+  const { fetchSingleUseUsage: fetchUsageByGroups } = useCommonAdminCoreDamOptions(configName)
 
   const fetchSingleUseUsage = async (
     asset: AssetSearchListItemDto,
     usageHolder: AssetSelectUsageHolder | null,
   ): Promise<AssetSingleUseUsage | null> => {
-    const { executeFetch } = useFetchAssetListByLicences(damClient, endPointAsset)
-    const { filterData, filterConfig } = useAssetSingleUseUsageFilter()
-    const { pagination } = usePagination(null)
-    filterData.licences = [asset.licence]
-    filterData.assetAndMainFileIds = asset.id
-    filterData.usageHolderName = usageHolder?.name ?? null
-    filterData.usageHolderId = isNull(usageHolder) ? null : String(usageHolder.id)
-    const list = await executeFetch(pagination, filterData, filterConfig)
-    return list.find((item) => item.id === asset.id)?.singleUseUsage ?? null
+    const groupId = getSingleUseGroupId(asset)
+    if (isUndefined(fetchUsageByGroups) || isNull(groupId)) return null
+    const usage = (await fetchUsageByGroups([groupId], usageHolder))[groupId]
+    if (isUndefined(usage)) throw new Error(`Single use usage of group ${groupId} was not returned.`)
+    return usage
   }
 
   return {
@@ -41,14 +40,17 @@ export function useAssetSelectUsageRefresh(configName = 'default') {
   const { fetchSingleUseUsage } = useSingleUseUsageFetch(configName)
   const { showErrorsDefault } = useAlerts()
   const usageLoading = ref(false)
+  let latestRefresh = 0
 
   const refreshUsage = async (asset: AssetSearchListItemDto) => {
+    const request = ++latestRefresh
     usageLoading.value = true
     try {
       const usage = await fetchSingleUseUsage(
         asset,
         assetSelectStore.selectability?.usageHolder ?? null,
       )
+      if (request !== latestRefresh) return
       assetSelectStore.setSingleUseUsage(asset.id, usage)
       const selectability = assetSelectStore.selectability
       if (!isNull(selectability)) {
@@ -61,9 +63,9 @@ export function useAssetSelectUsageRefresh(configName = 'default') {
         )
       }
     } catch (error) {
-      showErrorsDefault(error)
+      if (request === latestRefresh) showErrorsDefault(error)
     } finally {
-      usageLoading.value = false
+      if (request === latestRefresh) usageLoading.value = false
     }
   }
 
@@ -83,24 +85,29 @@ export function useSingleUseUsageCheck(configName = 'default') {
   const { fetchSingleUseUsage } = useSingleUseUsageFetch(configName)
   const { showErrorsDefault } = useAlerts()
   const singleUseCheck = ref<SingleUseUsageCheck | null>(null)
+  let latestCheck = 0
 
   const checkSingleUseUsage = async (
     asset: AssetSearchListItemDto,
     usageHolder: AssetSelectUsageHolder | null,
   ) => {
+    const request = ++latestCheck
     singleUseCheck.value = null
     if (!asset.mainFile?.flags.singleUse) return
     const holderName = usageHolder?.name ?? null
     try {
       const usage = await fetchSingleUseUsage(asset, usageHolder)
+      if (request !== latestCheck) return
       singleUseCheck.value = { asset: { ...asset, singleUseUsage: usage }, holderName, failed: false }
     } catch (error) {
+      if (request !== latestCheck) return
       singleUseCheck.value = { asset, holderName, failed: true }
       showErrorsDefault(error)
     }
   }
 
   const clearSingleUseUsage = () => {
+    latestCheck++
     singleUseCheck.value = null
   }
 

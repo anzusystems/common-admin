@@ -4,7 +4,11 @@ import { computed, inject, onMounted, ref, type ShallowRef, toRaw } from 'vue'
 import { isString, isUndefined } from '@/utils/common'
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
 import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
-import { useImageStore } from '@/components/damImage/uploadQueue/composables/imageStore'
+import {
+  buildImageDamRef,
+  keepSentDamCredit,
+  useImageStore,
+} from '@/components/damImage/uploadQueue/composables/imageStore'
 import ImageWidgetMultipleItem from '@/components/damImage/uploadQueue/components/ImageWidgetMultipleItem.vue'
 import { storeToRefs } from 'pinia'
 import { useCommonAdminImageOptions } from '@/components/damImage/composables/commonAdminImageOptions'
@@ -297,14 +301,7 @@ const assetSelectConfirmMap = async (
           internal: false,
           overrideInternal: false,
         },
-        dam: {
-          damId: asset.mainFile!.id,
-          regionPosition: 0,
-          licenceId: asset.licence,
-          internal: asset.mainFileInternal ?? false,
-          uploadLicenceId: props.uploadLicence,
-          forceTakeOver: forceTakeOver && asset.licence !== props.uploadLicence,
-        },
+        dam: buildImageDamRef(asset, props.uploadLicence, forceTakeOver),
         position: maxPosition.value,
         damAuthors: [],
         showDamAuthors: false,
@@ -329,14 +326,7 @@ const assetSelectConfirmMap = async (
         internal: false,
         overrideInternal: false,
       },
-      dam: {
-        damId: asset.mainFile!.id,
-        regionPosition: 0,
-        licenceId: asset.licence,
-        internal: asset.mainFileInternal ?? false,
-        uploadLicenceId: props.uploadLicence,
-        forceTakeOver: forceTakeOver && asset.licence !== props.uploadLicence,
-      },
+      dam: buildImageDamRef(asset, props.uploadLicence, forceTakeOver),
       position: maxPosition.value,
       damAuthors: authorIds,
       showDamAuthors: hasNoDamCredit(authorIds, sourceIds),
@@ -489,23 +479,7 @@ const saveImages = async () => {
       return true
     }
 
-    const getUpdatedItem = async (item: ImageStoreItem): Promise<ImageStoreItem> => {
-      const matchedImage = imageStore.images.find(
-        (storeItem) => storeItem.dam.damId === item.dam.damId,
-      )
-
-      return {
-        ...item,
-        damAuthors: matchedImage ? matchedImage.damAuthors : item.damAuthors,
-        showDamAuthors: matchedImage
-          ? hasNoDamCredit(matchedImage.damAuthors, matchedImage.damSources)
-          : hasNoDamCredit(item.damAuthors, item.damSources),
-        damSources: matchedImage ? matchedImage.damSources : item.damSources,
-        assetId: matchedImage ? matchedImage.assetId : item.assetId,
-      }
-    }
-
-    const updatedItems = await Promise.all(items.map((item) => getUpdatedItem(item)))
+    const updatedItems = items.map((item, index) => keepSentDamCredit(item, imagesRaw[index]))
     imageStore.setImages(updatedItems)
     // Rows passed explicitly: setImages just replaced their keys, bare commit() would read the
     // not-yet-rerendered prop.

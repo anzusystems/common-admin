@@ -57,7 +57,6 @@ interface Metadata {
 export interface AssetSingleUseUsagePlace {
   resourceName: string
   resourceId: string | number
-  imageId: IntegerId
   pickedAt: DatetimeUTCNullable
 }
 
@@ -83,7 +82,7 @@ export interface AssetSearchListItemDto
   mainFileInternal: Readonly<boolean | null>
   mainFileOverrideInternal: Readonly<boolean | null>
   autoDeleteAt: Readonly<DatetimeUTCNullable>
-  // Present only for a single use main file of a list requested by the asset picker (singleUseUsage).
+  // Filled by the asset picker from the host's `fetchSingleUseUsage`, only for a single use main file.
   singleUseUsage?: Readonly<AssetSingleUseUsage | null>
 }
 

@@ -22,7 +22,6 @@ import type {
 } from '@/types/coreDam/DamConfig'
 import { cloneDeep, isDefined, isUndefined } from '@/utils/common'
 import AssetMetadata from '@/components/damImage/uploadQueue/components/AssetMetadata.vue'
-import AssetSelectDetailTabs from '@/components/dam/assetSelect/components/AssetSelectDetailTabs.vue'
 import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
 import { storeToRefs } from 'pinia'
 import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
@@ -92,9 +91,6 @@ const assetDetailStore = useAssetDetailStore()
 const { asset, dialog } = storeToRefs(assetDetailStore)
 const assetSelectStore = useAssetSelectStore()
 const { selectedLicenceIds, selectedSelectConfig } = storeToRefs(assetSelectStore)
-const openedItem = computed(() =>
-  assetSelectStore.assetListItems.find((item) => item.asset.id === asset.value?.id),
-)
 
 const { sidebarRight, closeSidebarRight, closeSidebarLeft } = useSidebar()
 const { mdAndDown } = useDisplay()
@@ -369,22 +365,17 @@ onUnmounted(() => {
           v-else
           class="w-100"
         >
-          <AssetSelectDetailTabs
-            :item="openedItem"
-            :config-name="configName"
-          >
-            <slot
-              name="sidebar-prepend"
-              :asset="asset"
-            />
-            <AssetMetadata
-              v-if="extId && !customFormConfigLoading"
-              :ext-system="extId"
-              readonly
-              show-edit-button
-              @edit-in-dam="onOpenEditDialog"
-            />
-          </AssetSelectDetailTabs>
+          <slot
+            name="sidebar-prepend"
+            :asset="asset"
+          />
+          <AssetMetadata
+            v-if="extId && !customFormConfigLoading"
+            :ext-system="extId"
+            readonly
+            show-edit-button
+            @edit-in-dam="onOpenEditDialog"
+          />
         </div>
       </div>
     </div>
@@ -413,22 +404,17 @@ onUnmounted(() => {
             v-else-if="asset"
             class="w-100"
           >
-            <AssetSelectDetailTabs
-              :item="openedItem"
-              :config-name="configName"
-            >
-              <slot
-                name="sidebar-prepend"
-                :asset="asset"
-              />
-              <AssetMetadata
-                v-if="extId && !customFormConfigLoading"
-                :ext-system="extId"
-                readonly
-                show-edit-button
-                @edit-in-dam="onOpenEditDialog"
-              />
-            </AssetSelectDetailTabs>
+            <slot
+              name="sidebar-prepend"
+              :asset="asset"
+            />
+            <AssetMetadata
+              v-if="extId && !customFormConfigLoading"
+              :ext-system="extId"
+              readonly
+              show-edit-button
+              @edit-in-dam="onOpenEditDialog"
+            />
           </div>
         </VCardText>
         <VCardActions>

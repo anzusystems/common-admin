@@ -81,27 +81,6 @@ export const filterFieldsList = [
   },
   // The picker lists single use photos too; whether one may be picked is decided per tile (`disabledReasons`).
   { name: 'mainFileSingleUse' as const, default: null },
-  // Set by the asset picker only: DAM answers `singleUseUsage` of the listed single use files for this holder.
-  {
-    name: 'singleUseUsage' as const,
-    default: false,
-    clearable: false,
-    render: { skip: true, selected: false },
-  },
-  {
-    name: 'usageHolderName' as const,
-    default: null,
-    type: 'string',
-    clearable: false,
-    render: { skip: true, selected: false },
-  },
-  {
-    name: 'usageHolderId' as const,
-    default: null,
-    type: 'string',
-    clearable: false,
-    render: { skip: true, selected: false },
-  },
 ] satisfies readonly MakeFilterOption[]
 
 const listFiltersStore = createFilterStore(filterFieldsList)
@@ -117,20 +96,4 @@ export function useAssetListFilter() {
     filterConfig,
     filterData,
   }
-}
-
-const singleUseUsageFilterFields = [
-  { name: 'licences' as const, default: [] },
-  { name: 'assetAndMainFileIds' as const, default: null, type: 'string' },
-  { name: 'singleUseUsage' as const, default: true },
-  { name: 'usageHolderName' as const, default: null, type: 'string' },
-  { name: 'usageHolderId' as const, default: null, type: 'string' },
-] satisfies readonly MakeFilterOption[]
-
-export function useAssetSingleUseUsageFilter() {
-  return createFilter(singleUseUsageFilterFields, createFilterStore(singleUseUsageFilterFields), {
-    elastic: true,
-    system: SYSTEM_CORE_DAM,
-    subject: ENTITY,
-  })
 }
