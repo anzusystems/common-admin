@@ -30,13 +30,13 @@ export function resolveImageSaveErrorMessage(
 
   const damId = errorInfo.damId ?? ''
   const holder = errorInfo.holderResourceName ? resolveHolderName(errorInfo.holderResourceName) : ''
+  const key =
+    errorInfo.reason === 'restore_conflict'
+      ? 'common.damImage.image.error.restoreConflict'
+      : 'common.damImage.image.error.singleUseViolation'
 
   if (!damId) {
-    return holder
-      ? t('common.damImage.image.error.singleUseViolationUnknownImage', { holder })
-      : t('common.damImage.image.error.singleUseViolationUnidentified')
+    return holder ? t(`${key}UnknownImage`, { holder }) : t(`${key}Unidentified`)
   }
-  return holder
-    ? t('common.damImage.image.error.singleUseViolation', { damId, holder })
-    : t('common.damImage.image.error.singleUseViolationUnknownHolder', { damId })
+  return holder ? t(key, { damId, holder }) : t(`${key}UnknownHolder`, { damId })
 }

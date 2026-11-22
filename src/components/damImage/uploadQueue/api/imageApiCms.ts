@@ -51,6 +51,7 @@ export const KNOWN_SINGLE_USE_REASONS = [
   'shared_gallery',
   'invalid_owner',
   'gallery_copy',
+  'restore_conflict',
 ] as const
 export type KnownSingleUseReason = (typeof KNOWN_SINGLE_USE_REASONS)[number]
 

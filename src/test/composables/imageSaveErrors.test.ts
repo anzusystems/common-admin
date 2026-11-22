@@ -76,6 +76,21 @@ describe('resolveImageSaveErrorMessage', () => {
       { code: 'image_single_use_violation', reason: 'exclusivity_conflict' },
       message('singleUseViolationUnidentified'),
     ],
+    [
+      'restore conflict with photo and holder',
+      {
+        code: 'image_single_use_violation',
+        reason: 'restore_conflict',
+        damId: DAM_ID,
+        holderResourceName: 'gallery',
+      },
+      `${message('restoreConflict')} {"damId":"${DAM_ID}","holder":"gallery"}`,
+    ],
+    [
+      'restore conflict the server could not identify',
+      { code: 'image_single_use_violation', reason: 'restore_conflict' },
+      message('restoreConflictUnidentified'),
+    ],
   ])('%s', (_name, errorInfo, expected) => {
     expect(resolveImageSaveErrorMessage(errorInfo, t)).toBe(expected)
   })

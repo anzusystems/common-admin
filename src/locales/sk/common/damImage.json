@@ -32,6 +32,10 @@
       "singleUseViolationUnknownHolder": "Obrázok {damId} je jednorazový a už ho používa iný záznam. Vyberte iný obrázok.",
       "singleUseViolationUnknownImage": "Jeden z vybraných obrázkov je jednorazový a už ho používa iný záznam ({holder}). Vyberte iný obrázok.",
       "singleUseViolationUnidentified": "Jeden z vybraných obrázkov je jednorazový a už ho používa iný záznam. Vyberte iný obrázok.",
+      "restoreConflict": "Článok sa neobnovil: jednorazový obrázok {damId} už používa iný záznam ({holder}).",
+      "restoreConflictUnknownHolder": "Článok sa neobnovil: jednorazový obrázok {damId} už používa iný záznam.",
+      "restoreConflictUnknownImage": "Článok sa neobnovil: jeden z jeho jednorazových obrázkov už používa iný záznam ({holder}).",
+      "restoreConflictUnidentified": "Článok sa neobnovil: jeden z jeho jednorazových obrázkov už používa iný záznam.",
       "sharedGallery": "Galéria obsahuje jednorazový obrázok, takže môže byť vložená len na jednom mieste. Odoberte ju z ostatných miest alebo z nej jednorazový obrázok vyberte.",
       "invalidOwner": "Jednorazový obrázok sem vložiť nemožno, cieľový záznam jednorazové obrázky nepodporuje.",
       "galleryCopy": "Galéria obsahuje jednorazový obrázok a nedá sa kopírovať."
