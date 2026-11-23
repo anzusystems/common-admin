@@ -76,7 +76,7 @@ const mountComposables = () => {
   return { refresh, check, store }
 }
 
-const holder = { name: 'articleKindStandard', id: 42 }
+const holder = { resourceName: 'articleKindStandard', resourceId: 42 }
 
 describe('single use usage of one asset', () => {
   beforeEach(() => {

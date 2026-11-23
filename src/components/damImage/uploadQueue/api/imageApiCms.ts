@@ -60,7 +60,9 @@ export const fetchSingleUseUsage = async (
       client().get(END_POINT + '/single-use-usage', {
         params: {
           groupIds: groupIds.slice(offset, offset + SINGLE_USE_USAGE_GROUP_LIMIT).join(','),
-          ...(usageHolder ? { holderName: usageHolder.name, holderId: usageHolder.id } : {}),
+          ...(usageHolder
+            ? { holderResourceName: usageHolder.resourceName, holderResourceId: usageHolder.resourceId }
+            : {}),
         },
       }),
     )

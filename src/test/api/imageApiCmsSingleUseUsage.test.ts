@@ -25,12 +25,12 @@ describe('fetchSingleUseUsage', () => {
   })
 
   it('keys the usage by group id and sends the holder only when present', async () => {
-    const usages = await fetchSingleUseUsage(client, ['a', 'b'], { name: 'article', id: 5 })
+    const usages = await fetchSingleUseUsage(client, ['a', 'b'], { resourceName: 'article', resourceId: 5 })
 
     expect(Object.keys(usages)).toEqual(['a', 'b'])
     expect(usages.a).not.toHaveProperty('groupId')
     expect(get).toHaveBeenCalledWith('/adm/v1/image/single-use-usage', {
-      params: { groupIds: 'a,b', holderName: 'article', holderId: 5 },
+      params: { groupIds: 'a,b', holderResourceName: 'article', holderResourceId: 5 },
     })
 
     get.mockClear()

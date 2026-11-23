@@ -1,6 +1,6 @@
 import type { ComposerTranslation } from 'vue-i18n'
 import type { ImageSaveErrorInfo, KnownSingleUseReason } from '@/components/damImage/uploadQueue/api/imageApiCms'
-import { resolveHolderName } from '@/components/dam/assetSelect/composables/assetSelectDisabledReason'
+import { resolveHolderLabel } from '@/components/dam/assetSelect/composables/assetSelectDisabledReason'
 
 const SINGLE_USE_REASON_MESSAGE: Partial<Record<KnownSingleUseReason, string>> = {
   shared_gallery: 'common.damImage.image.error.sharedGallery',
@@ -29,7 +29,7 @@ export function resolveImageSaveErrorMessage(
   }
 
   const damId = errorInfo.damId ?? ''
-  const holder = errorInfo.holderResourceName ? resolveHolderName(errorInfo.holderResourceName) : ''
+  const holder = errorInfo.holderResourceName ? resolveHolderLabel(errorInfo.holderResourceName) : ''
   const key =
     errorInfo.reason === 'restore_conflict'
       ? 'common.damImage.image.error.restoreConflict'

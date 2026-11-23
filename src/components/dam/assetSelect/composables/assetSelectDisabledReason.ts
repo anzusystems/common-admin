@@ -12,7 +12,7 @@ import type {
   AssetSelectListItem,
 } from '@/services/stores/coreDam/assetSelectStore'
 
-export const resolveHolderName = (resourceName: string): string => {
+export const resolveHolderLabel = (resourceName: string): string => {
   const { t, te } = i18n.global
   const key = `common.assetSelect.holder.${resourceName}`
   return te(key) ? t(key) : t('common.assetSelect.holderOther')

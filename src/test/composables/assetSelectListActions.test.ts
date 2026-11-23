@@ -96,7 +96,7 @@ const usage = (blocked: boolean): AssetSingleUseUsage => ({
   usages: [],
 })
 
-const usageHolder = { name: 'articleKindStandard', id: 42 }
+const usageHolder = { resourceName: 'articleKindStandard', resourceId: 42 }
 
 const deferredList = () => {
   let resolve!: (list: AssetSearchListItemDto[]) => void

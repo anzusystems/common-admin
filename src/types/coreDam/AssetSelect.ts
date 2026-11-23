@@ -33,6 +33,6 @@ interface AssetSelectReturnAsset {
 }
 
 export interface AssetSelectUsageHolder {
-  name: string
-  id: string | number
+  resourceName: string
+  resourceId: string | number
 }

@@ -9,7 +9,7 @@ import {
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import {
   formatSingleUseUsageCount,
-  resolveHolderName,
+  resolveHolderLabel,
 } from '@/components/dam/assetSelect/composables/assetSelectDisabledReason'
 import { getSingleUseGroupId } from '@/components/dam/assetSelect/composables/assetSelectSingleUseUsage'
 import AChipNoLink from '@/components/AChipNoLink.vue'
@@ -43,7 +43,7 @@ const statusShown = computed(() => {
 })
 
 const toEntry = (entry: AssetSingleUseUsageEntry) => {
-  const name = resolveHolderName(entry.resourceName)
+  const name = resolveHolderLabel(entry.resourceName)
   return {
     key: `${entry.resourceName}:${entry.resourceId}`,
     title: `${name.charAt(0).toUpperCase()}${name.slice(1)} (${entry.resourceId})`,
