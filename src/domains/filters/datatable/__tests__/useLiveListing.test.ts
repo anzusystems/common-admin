@@ -1,6 +1,7 @@
 /* eslint-disable vue/no-ref-object-reactivity-loss -- tests read the state of the composable imperatively */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { effectScope, ref } from 'vue'
+
 import { useLiveListing, type UseLiveListingOptions } from '@/domains/filters/datatable/composables/useLiveListing'
 
 type Row = { id: number }
@@ -301,6 +302,39 @@ describe('useLiveListing', () => {
     const loading = ref(false)
     const { live } = setup(records, { loading })
     live.markLoaded(records.value, { newestFirst: true })
+    live.markChanged()
+    loading.value = true
+    loading.value = false
+    live.markLoaded(records.value, { newestFirst: true })
+    expect(live.changed.value).toBe(false)
+  })
+
+  it('keeps a change signalled while the first load ran, with loading given', async () => {
+    const records = ref(rows(2, 1))
+    const loading = ref(false)
+    const { live } = setup(records, { loading })
+    loading.value = true
+    live.markChanged()
+    expect(live.changed.value).toBe(false)
+    loading.value = false
+    live.markLoaded(records.value, { newestFirst: true })
+    expect(live.changed.value).toBe(true)
+  })
+
+  it('keeps a change signalled while a first load that started before the live listing ran, with loading given', async () => {
+    const records = ref(rows(2, 1))
+    const loading = ref(true)
+    const { live } = setup(records, { loading })
+    live.markChanged()
+    loading.value = false
+    live.markLoaded(records.value, { newestFirst: true })
+    expect(live.changed.value).toBe(true)
+  })
+
+  it('forgets a change signalled before the first load, with loading given', async () => {
+    const records = ref(rows(2, 1))
+    const loading = ref(false)
+    const { live } = setup(records, { loading })
     live.markChanged()
     loading.value = true
     loading.value = false

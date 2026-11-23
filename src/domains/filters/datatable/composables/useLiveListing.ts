@@ -372,11 +372,12 @@ export function useLiveListing<T>(options: UseLiveListingOptions<T>) {
    * another status, which no count shows. The pill offers it while nothing new is counted.
    */
   const markChanged = () => {
-    // Before the first load nothing is shown that could change.
-    if (disposed || generation === 0) return
+    // Before the first load nothing is shown that could change, but a change signalled while that load runs (given
+    // by `loading`) may be missing from what it reads: the first `markLoaded` offers it.
+    if (disposed || (generation === 0 && loadingFrom === undefined)) return
     signals += 1
     changedAtSignal = signals
-    changed.value = true
+    if (generation > 0) changed.value = true
   }
 
   const reloadOnClick = async () => {
@@ -426,7 +427,8 @@ export function useLiveListing<T>(options: UseLiveListingOptions<T>) {
       (value, before) => {
         if (value && !before) loadingFrom = signals
       },
-      { flush: 'sync' }
+      // A list may start its first load before it creates the live listing.
+      { flush: 'sync', immediate: true }
     )
   }
 

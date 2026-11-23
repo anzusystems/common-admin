@@ -37,18 +37,9 @@ const text = computed(() => {
 
 <template>
   <div class="a-live-listing-pill">
-    <VChip
-      v-if="failed"
-      color="warning"
-      variant="flat"
-      size="small"
-      prepend-icon="mdi-alert-outline"
-      class="a-live-listing-pill__item"
-    >
-      {{ t('common.system.datatable.liveListing.failed') }}
-    </VChip>
+    <!-- An offered reload stays clickable after a failed probe: the click loads the list anyway. -->
     <VBtn
-      v-else-if="count > 0"
+      v-if="count > 0"
       color="primary"
       size="small"
       rounded="pill"
@@ -69,6 +60,16 @@ const text = computed(() => {
     >
       {{ t('common.system.datatable.liveListing.changes') }}
     </VBtn>
+    <VChip
+      v-else-if="failed"
+      color="warning"
+      variant="flat"
+      size="small"
+      prepend-icon="mdi-alert-outline"
+      class="a-live-listing-pill__item"
+    >
+      {{ t('common.system.datatable.liveListing.failed') }}
+    </VChip>
     <VChip
       v-else-if="degraded"
       color="warning"

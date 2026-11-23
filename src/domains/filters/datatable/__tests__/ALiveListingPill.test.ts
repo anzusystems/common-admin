@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
+import { describe, expect, it } from 'vitest'
+
 import ALiveListingPill from '@/domains/filters/datatable/components/ALiveListingPill.vue'
 
 describe('ALiveListingPill', () => {
@@ -26,10 +27,16 @@ describe('ALiveListingPill', () => {
     wrapper.unmount()
   })
 
-  it('shows the failure in place of the count', () => {
-    const wrapper = mount(ALiveListingPill, { props: { count: 2, failed: true } })
+  it('tells a failed probe when nothing is offered, and keeps an offered reload clickable after it', async () => {
+    const wrapper = mount(ALiveListingPill, { props: { count: 0, failed: true } })
     expect(wrapper.find('button').exists()).toBe(false)
     expect(wrapper.text()).toBe('The list could not be refreshed. Trying again.')
+    await wrapper.setProps({ changed: true })
+    expect(wrapper.text()).toBe('Load changes')
+    await wrapper.find('button').trigger('click')
+    expect(wrapper.emitted('click')).toHaveLength(1)
+    await wrapper.setProps({ count: 2 })
+    expect(wrapper.text()).toBe('2 new records')
     wrapper.unmount()
   })
 
