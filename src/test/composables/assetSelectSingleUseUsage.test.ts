@@ -176,7 +176,7 @@ describe('single use usage of one asset', () => {
     await flushPromises()
 
     expect(fetchUsage).toHaveBeenCalledWith(['file-a'], null)
-    expect(check.singleUseCheck.value).toMatchObject({ holderName: null, failed: false })
+    expect(check.singleUseCheck.value).toMatchObject({ failed: false })
     expect(check.singleUseCheck.value?.asset.singleUseUsage).toEqual(fresh)
 
     check.clearSingleUseUsage()
@@ -190,7 +190,7 @@ describe('single use usage of one asset', () => {
     await check.checkSingleUseUsage(asset('a', true, null), holder)
     await flushPromises()
 
-    expect(check.singleUseCheck.value).toMatchObject({ holderName: 'articleKindStandard', failed: true })
+    expect(check.singleUseCheck.value).toMatchObject({ failed: true })
   })
 
   it('marks the check failed when the answer has no entry for the group', async () => {

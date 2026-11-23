@@ -77,7 +77,6 @@ export function useAssetSelectUsageRefresh(configName = 'default') {
 
 export interface SingleUseUsageCheck {
   asset: AssetSearchListItemDto
-  holderName: string | null
   failed: boolean
 }
 
@@ -94,14 +93,13 @@ export function useSingleUseUsageCheck(configName = 'default') {
     const request = ++latestCheck
     singleUseCheck.value = null
     if (!asset.mainFile?.flags.singleUse) return
-    const holderName = usageHolder?.name ?? null
     try {
       const usage = await fetchSingleUseUsage(asset, usageHolder)
       if (request !== latestCheck) return
-      singleUseCheck.value = { asset: { ...asset, singleUseUsage: usage }, holderName, failed: false }
+      singleUseCheck.value = { asset: { ...asset, singleUseUsage: usage }, failed: false }
     } catch (error) {
       if (request !== latestCheck) return
-      singleUseCheck.value = { asset, holderName, failed: true }
+      singleUseCheck.value = { asset, failed: true }
       showErrorsDefault(error)
     }
   }

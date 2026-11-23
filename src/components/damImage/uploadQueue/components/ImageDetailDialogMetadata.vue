@@ -29,8 +29,12 @@ import DamAdminAssetLink from '@/components/dam/DamAdminAssetLink.vue'
 import { isNull } from '@/utils/common'
 import { DamMediaType } from '@/types/MediaAware'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
-import AssetSelectSingleUseUsage from '@/components/dam/assetSelect/components/AssetSelectSingleUseUsage.vue'
-import type { SingleUseUsageCheck } from '@/components/dam/assetSelect/composables/assetSelectSingleUseUsage'
+import {
+  getSingleUseGroupId,
+  type SingleUseUsageCheck,
+} from '@/components/dam/assetSelect/composables/assetSelectSingleUseUsage'
+import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
+import { COMMON_CONFIG } from '@/model/commonConfig'
 
 const props = withDefaults(
   defineProps<{
@@ -140,6 +144,15 @@ const singleUseWarning = computed(() => {
     : t('common.assetSelect.usage.usedElsewhere', { count: usage.otherHolderCount })
 })
 
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { singleUseUsageUrl } = useCommonAdminCoreDamOptions(props.configName)
+
+const singleUseAllUsagesUrl = computed(() => {
+  if (!props.singleUseCheck || props.singleUseCheck.failed || !singleUseUsageUrl) return undefined
+  const groupId = getSingleUseGroupId(props.singleUseCheck.asset)
+  return isNull(groupId) ? undefined : singleUseUsageUrl(groupId)
+})
+
 const onConfirm = () => {
   if (singleUseBlocked.value) return
   v$.value.$touch()
@@ -183,12 +196,16 @@ defineExpose({
         <div class="mb-2">
           {{ singleUseWarning }}
         </div>
-        <AssetSelectSingleUseUsage
-          v-if="!singleUseCheck.failed"
-          :asset="singleUseCheck.asset"
-          :holder-name="singleUseCheck.holderName"
-          :config-name="configName"
-        />
+        <VBtn
+          v-if="singleUseAllUsagesUrl"
+          :append-icon="COMMON_CONFIG.CHIP.ICON.LINK_EXTERNAL"
+          size="small"
+          target="_blank"
+          rel="noopener noreferrer"
+          :href="singleUseAllUsagesUrl"
+        >
+          {{ t('common.assetSelect.usage.openList') }}
+        </VBtn>
       </VAlert>
       <VRow>
         <VCol>
@@ -289,12 +306,16 @@ defineExpose({
             <div class="mb-2">
               {{ singleUseWarning }}
             </div>
-            <AssetSelectSingleUseUsage
-              v-if="!singleUseCheck.failed"
-              :asset="singleUseCheck.asset"
-              :holder-name="singleUseCheck.holderName"
-              :config-name="configName"
-            />
+            <VBtn
+              v-if="singleUseAllUsagesUrl"
+              :append-icon="COMMON_CONFIG.CHIP.ICON.LINK_EXTERNAL"
+              size="small"
+              target="_blank"
+              rel="noopener noreferrer"
+              :href="singleUseAllUsagesUrl"
+            >
+              {{ t('common.assetSelect.usage.openList') }}
+            </VBtn>
           </VAlert>
           <VRow>
             <VCol>
