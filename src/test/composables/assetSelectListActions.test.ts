@@ -43,10 +43,16 @@ vi.mock(
       damClient: () => ({ get: damGet }),
       endPointAsset: '/adm/v1/asset',
       showFileInfoEnabled: false,
-      fetchSingleUseUsage: fetchUsage,
     }),
   }),
 )
+
+vi.mock('@/components/damImage/composables/commonAdminImageOptions', async (importOriginal) => ({
+  ...(await importOriginal<
+    typeof import('@/components/damImage/composables/commonAdminImageOptions')
+  >()),
+  useImageSingleUseUsageFetch: () => fetchUsage,
+}))
 
 vi.mock('@/components/dam/user/assetLicenceApi', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/components/dam/user/assetLicenceApi')>()),

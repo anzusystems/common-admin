@@ -13,6 +13,7 @@ import type { DocId } from '@/types/common'
 import type { AssetSelectUsageHolder } from '@/types/coreDam/AssetSelect'
 import { getSingleUseGroupId } from '@/components/dam/assetSelect/composables/assetSelectSingleUseUsage'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
+import { useImageSingleUseUsageFetch } from '@/components/damImage/composables/commonAdminImageOptions'
 import { fetchAsset, useFetchAssetListByLicences } from '@/components/damImage/uploadQueue/api/damAssetApi'
 import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
 import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
@@ -40,8 +41,8 @@ export function useAssetSelectActions(
   configName = 'default',
   onDetailLoadedCallback?: (asset: AssetDetailItemDto) => void,
 ) {
-  const { damClient, endPointAsset, showFileInfoEnabled, fetchSingleUseUsage } =
-    useCommonAdminCoreDamOptions(configName)
+  const { damClient, endPointAsset, showFileInfoEnabled } = useCommonAdminCoreDamOptions(configName)
+  const fetchSingleUseUsage = useImageSingleUseUsageFetch(configName)
 
   const assetSelectStore = useAssetSelectStore()
   const { selectedCount, selectedHasDisabled, selectedAssets, assetListItems, loader } =
@@ -97,7 +98,7 @@ export function useAssetSelectActions(
     return true
   }
 
-  // A failed lookup leaves the photos selectable: the host is the only one who knows the usage.
+  // A failed lookup leaves the photos selectable: the save in core-cms checks the photo again.
   const applySingleUseUsage = async (
     items: AssetSelectListItem[],
     usageHolder: AssetSelectUsageHolder | null,

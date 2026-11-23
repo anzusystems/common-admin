@@ -14,15 +14,12 @@ const { fetchUsage, showErrorsDefault } = vi.hoisted(() => ({
   showErrorsDefault: vi.fn(),
 }))
 
-vi.mock(
-  '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions',
-  async (importOriginal) => ({
-    ...(await importOriginal<
-      typeof import('@/components/dam/assetSelect/composables/commonAdminCoreDamOptions')
-    >()),
-    useCommonAdminCoreDamOptions: () => ({ fetchSingleUseUsage: fetchUsage }),
-  }),
-)
+vi.mock('@/components/damImage/composables/commonAdminImageOptions', async (importOriginal) => ({
+  ...(await importOriginal<
+    typeof import('@/components/damImage/composables/commonAdminImageOptions')
+  >()),
+  useImageSingleUseUsageFetch: () => fetchUsage,
+}))
 
 vi.mock('@/composables/system/alerts', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/composables/system/alerts')>()

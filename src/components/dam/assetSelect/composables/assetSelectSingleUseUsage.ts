@@ -2,7 +2,7 @@ import { ref } from 'vue'
 import type { AssetSearchListItemDto, AssetSingleUseUsage } from '@/types/coreDam/Asset'
 import type { DocId } from '@/types/common'
 import type { AssetSelectUsageHolder } from '@/types/coreDam/AssetSelect'
-import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
+import { useImageSingleUseUsageFetch } from '@/components/damImage/composables/commonAdminImageOptions'
 import { useAlerts } from '@/composables/system/alerts'
 import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
 import { isNull, isUndefined } from '@/utils/common'
@@ -16,7 +16,7 @@ export const getSingleUseGroupId = (asset: AssetSearchListItemDto): DocId | null
 }
 
 export function useSingleUseUsageFetch(configName = 'default') {
-  const { fetchSingleUseUsage: fetchUsageByGroups } = useCommonAdminCoreDamOptions(configName)
+  const fetchUsageByGroups = useImageSingleUseUsageFetch(configName)
 
   const fetchSingleUseUsage = async (
     asset: AssetSearchListItemDto,

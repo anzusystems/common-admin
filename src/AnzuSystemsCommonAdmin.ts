@@ -46,6 +46,11 @@ export interface CommonAdminImageConfig {
       client: () => AxiosInstance,
       items: ImageCreateUpdateAware[],
     ) => Promise<ImageAware[]>
+    fetchSingleUseUsage: (
+      client: () => AxiosInstance,
+      groupIds: DocId[],
+      usageHolder: AssetSelectUsageHolder | null,
+    ) => Promise<Record<DocId, AssetSingleUseUsage>>
   }
 }
 
@@ -81,11 +86,6 @@ export interface CommonAdminCoreDamConfig {
   simpleAssetSidebar?: boolean
   // Url of the image list of the CMS admin filtered by the single use group; without it the picker shows no link.
   singleUseUsageUrl?: (groupId: DocId) => string
-  // Usage of single use photos by group id; without it the picker asks nobody and blocks nothing.
-  fetchSingleUseUsage?: (
-    groupIds: DocId[],
-    usageHolder: AssetSelectUsageHolder | null,
-  ) => Promise<Record<DocId, AssetSingleUseUsage>>
   // Url of a record that uses a single use photo; without it the record is shown without a link.
   singleUsePlaceUrl?: (resourceName: string, resourceId: string | number) => string | undefined
 }

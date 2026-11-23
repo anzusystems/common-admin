@@ -5,6 +5,8 @@ import { apiDeleteOne } from '@/services/api/apiDeleteOne'
 import { apiFetchOne } from '@/services/api/apiFetchOne'
 import type { DocId, IntegerId } from '@/types/common'
 import type { ImageAware, ImageCreateUpdateAware } from '@/types/ImageAware'
+import type { AssetSingleUseUsage } from '@/types/coreDam/Asset'
+import type { AssetSelectUsageHolder } from '@/types/coreDam/AssetSelect'
 import { apiFetchByIds } from '@/services/api/apiFetchByIds'
 import { HTTP_STATUS_OK } from '@/composables/statusCodes'
 import { isAnzuFatalError } from '@/model/error/AnzuFatalError'
@@ -15,6 +17,7 @@ export const ENTITY = 'image'
 export const SYSTEM_CMS = 'cms'
 
 const BULK_METADATA_LIMIT = 20
+const SINGLE_USE_USAGE_GROUP_LIMIT = 100
 
 export const fetchImageListByIds = (client: () => AxiosInstance, ids: IntegerId[]) =>
   apiFetchByIds<ImageAware[]>(client, ids, END_POINT, {}, SYSTEM_CMS, ENTITY)
@@ -41,6 +44,35 @@ export const updateImage = (
 
 export const deleteImage = (client: () => AxiosInstance, id: IntegerId) =>
   apiDeleteOne<ImageAware>(client, END_POINT + '/:id', { id }, SYSTEM_CMS, ENTITY)
+
+interface SingleUseUsageItem extends AssetSingleUseUsage {
+  groupId: DocId
+}
+
+export const fetchSingleUseUsage = async (
+  client: () => AxiosInstance,
+  groupIds: DocId[],
+  usageHolder: AssetSelectUsageHolder | null,
+): Promise<Record<DocId, AssetSingleUseUsage>> => {
+  const requests: Promise<AxiosResponse<{ data: SingleUseUsageItem[] }>>[] = []
+  for (let offset = 0; offset < groupIds.length; offset += SINGLE_USE_USAGE_GROUP_LIMIT) {
+    requests.push(
+      client().get(END_POINT + '/single-use-usage', {
+        params: {
+          groupIds: groupIds.slice(offset, offset + SINGLE_USE_USAGE_GROUP_LIMIT).join(','),
+          ...(usageHolder ? { holderName: usageHolder.name, holderId: usageHolder.id } : {}),
+        },
+      }),
+    )
+  }
+  const usages: Record<DocId, AssetSingleUseUsage> = {}
+  for (const response of await Promise.all(requests)) {
+    for (const { groupId, ...usage } of response.data.data) {
+      usages[groupId] = usage
+    }
+  }
+  return usages
+}
 
 const KNOWN_IMAGE_ERROR_CODES = ['image_take_over_failed', 'image_single_use_violation'] as const
 export type KnownImageErrorCode = (typeof KNOWN_IMAGE_ERROR_CODES)[number]
