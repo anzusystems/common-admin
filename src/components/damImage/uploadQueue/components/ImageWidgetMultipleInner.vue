@@ -385,7 +385,7 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
     try {
       const copyRes = await copyToLicence(
         damClient,
-        endPointAsset,
+        endPointImage,
         toCopy.map((asset) => ({ asset: asset.id, targetAssetLicence: targetLicence })),
       )
       onCopyToLicence(copyRes)
@@ -402,6 +402,7 @@ const { loading: assetLoading, dialog: assetDialog } = storeToRefs(assetDetailSt
 const {
   damClient,
   endPointAsset,
+  endPointImage,
   showSourceEnabled,
   sourceLabel,
   editAssetLabel,
