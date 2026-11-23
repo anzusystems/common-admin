@@ -165,9 +165,8 @@ const singleUseAllUsagesUrl = computed(() => {
 })
 
 const onConfirm = () => {
-  if (singleUseBlocked.value) return
   v$.value.$touch()
-  if (v$.value.$invalid) {
+  if (singleUseBlocked.value || v$.value.$invalid) {
     showValidationError()
     return
   }
