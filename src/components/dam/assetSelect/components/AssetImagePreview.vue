@@ -26,7 +26,7 @@ const props = withDefaults(
     assetFileProperties?: AssetFileProperties | undefined
     licenceBadge?: string
     singleUse?: boolean
-    singleUseOtherHolderCount?: number
+    singleUseUsageCount?: number
   }>(),
   {
     assetType: DamAssetType.Image,
@@ -42,7 +42,7 @@ const props = withDefaults(
     assetFileProperties: undefined,
     licenceBadge: '',
     singleUse: false,
-    singleUseOtherHolderCount: 0,
+    singleUseUsageCount: 0,
   },
 )
 const emit = defineEmits<{
@@ -118,7 +118,7 @@ const showIconComputed = computed(() => {
       :asset-type="assetType"
       :licence-badge="licenceBadge"
       :single-use="singleUse"
-      :single-use-other-holder-count="singleUseOtherHolderCount"
+      :single-use-usage-count="singleUseUsageCount"
     />
   </div>
   <div
@@ -150,7 +150,7 @@ const showIconComputed = computed(() => {
       :asset-type="assetType"
       :licence-badge="licenceBadge"
       :single-use="singleUse"
-      :single-use-other-holder-count="singleUseOtherHolderCount"
+      :single-use-usage-count="singleUseUsageCount"
     />
   </div>
 </template>

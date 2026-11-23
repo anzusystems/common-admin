@@ -23,13 +23,13 @@ const props = withDefaults(
     disableAbsolute?: boolean
     licenceBadge?: string
     singleUse?: boolean
-    singleUseOtherHolderCount?: number
+    singleUseUsageCount?: number
   }>(),
   {
     disableAbsolute: false,
     licenceBadge: '',
     singleUse: false,
-    singleUseOtherHolderCount: 0,
+    singleUseUsageCount: 0,
   },
 )
 
@@ -79,9 +79,9 @@ const checkDistributions = (icons: string[], titles: string[]) => {
 }
 
 const singleUseTitle = computed(() =>
-  props.singleUseOtherHolderCount > 0
-    ? t('common.damImage.asset.metaIcons.singleUseOtherHolders', {
-        count: formatSingleUseUsageCount(props.singleUseOtherHolderCount),
+  props.singleUseUsageCount > 0
+    ? t('common.damImage.asset.metaIcons.singleUseUsages', {
+        count: formatSingleUseUsageCount(props.singleUseUsageCount),
       })
     : t('common.damImage.asset.metaIcons.singleUse'),
 )
@@ -121,7 +121,7 @@ const data = computed(() => {
     <span
       v-if="singleUse"
       class="asset-image__licence-badge"
-      :class="{ 'asset-image__single-use-badge--other-holders': singleUseOtherHolderCount > 0 }"
+      :class="{ 'asset-image__single-use-badge--shared': singleUseUsageCount > 0 }"
       role="img"
       :aria-label="singleUseTitle"
       :title="singleUseTitle"
@@ -129,7 +129,7 @@ const data = computed(() => {
     >
       1×
       <VIcon
-        v-if="singleUseOtherHolderCount > 0"
+        v-if="singleUseUsageCount > 0"
         icon="mdi-alert"
         size="12"
         class="ml-1"
@@ -176,7 +176,7 @@ const data = computed(() => {
     line-height: 1;
   }
 
-  .asset-image__single-use-badge--other-holders {
+  .asset-image__single-use-badge--shared {
     width: auto;
     padding: 0 6px;
     border-radius: 13px;

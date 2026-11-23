@@ -70,7 +70,7 @@ export function useAssetItemActions(item: Readonly<Ref<AssetSelectListItem>>) {
 
   const singleUse = computed(() => asset.value.mainFile?.flags.singleUse ?? false)
 
-  const singleUseOtherHolderCount = computed(() =>
+  const singleUseUsageCount = computed(() =>
     resolveSingleUseWarningCount(asset.value.singleUseUsage),
   )
 
@@ -83,6 +83,6 @@ export function useAssetItemActions(item: Readonly<Ref<AssetSelectListItem>>) {
     licenceBadge,
     disabledReason,
     singleUse,
-    singleUseOtherHolderCount,
+    singleUseUsageCount,
   }
 }

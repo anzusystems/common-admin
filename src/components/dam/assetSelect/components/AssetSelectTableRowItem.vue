@@ -39,7 +39,7 @@ const {
   licenceBadge,
   disabledReason,
   singleUse,
-  singleUseOtherHolderCount,
+  singleUseUsageCount,
 } = useAssetItemActions(item)
 
 const onItemClick = () => {
@@ -93,7 +93,7 @@ const onItemClick = () => {
         :asset-type="assetType"
         :licence-badge="licenceBadge"
         :single-use="singleUse"
-        :single-use-other-holder-count="singleUseOtherHolderCount"
+        :single-use-usage-count="singleUseUsageCount"
         disable-absolute
       />
     </td>

@@ -19,8 +19,10 @@ export const resolveHolderName = (resourceName: string): string => {
   return te(key) ? t(key) : resourceName
 }
 
+const SINGLE_USE_USAGE_COUNT_SHOWN = 10
+
 export const formatSingleUseUsageCount = (usageCount: number): string =>
-  usageCount > 10 ? '10+' : String(usageCount)
+  usageCount > SINGLE_USE_USAGE_COUNT_SHOWN ? `${SINGLE_USE_USAGE_COUNT_SHOWN}+` : String(usageCount)
 
 export const resolveSingleUseWarningCount = (
   usage: AssetSingleUseUsage | null | undefined,

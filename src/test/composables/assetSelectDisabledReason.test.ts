@@ -1,6 +1,9 @@
 /// <reference types="vite/client" />
 import { describe, expect, it } from 'vitest'
-import { resolveDisabledReason } from '@/components/dam/assetSelect/composables/assetSelectDisabledReason'
+import {
+  formatSingleUseUsageCount,
+  resolveDisabledReason,
+} from '@/components/dam/assetSelect/composables/assetSelectDisabledReason'
 import {
   DamAssetType,
   type AssetSearchListItemDto,
@@ -111,5 +114,15 @@ describe('resolveDisabledReason', () => {
     ],
   ])('%s', (_name, item, licence, selectability, expected) => {
     expect(resolveDisabledReason(item, licence, selectability)).toBe(expected)
+  })
+})
+
+describe('formatSingleUseUsageCount', () => {
+  it.each([
+    [1, '1'],
+    [10, '10'],
+    [11, '10+'],
+  ])('%i → %s', (usageCount, expected) => {
+    expect(formatSingleUseUsageCount(usageCount)).toBe(expected)
   })
 })

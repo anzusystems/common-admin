@@ -148,7 +148,7 @@
       "4k": "4K",
       "8k": "8K",
       "singleUse": "Jednorazový obrázok",
-      "singleUseOtherHolders": "Jednorazový obrázok, používajú ho aj iné záznamy: {count}"
+      "singleUseUsages": "Jednorazový obrázok, počet použití: {count}"
     },
     "assetFileFailReason": {
       "none": "Žiadny",

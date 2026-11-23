@@ -28,14 +28,14 @@ describe('AssetImageMetaIcons single use badge', () => {
     const badge = badgeOf(mountIcons({ singleUse: true }))
 
     expect(badge.text()).toBe('1×')
-    expect(badge.classes()).not.toContain('asset-image__single-use-badge--other-holders')
+    expect(badge.classes()).not.toContain('asset-image__single-use-badge--shared')
     expect(badge.find('.mdi-alert').exists()).toBe(false)
   })
 
-  it('adds a warning icon, not only a colour, and names the count when other records use the photo', () => {
-    const badge = badgeOf(mountIcons({ singleUse: true, singleUseOtherHolderCount: 2 }))
+  it('adds a warning icon, not only a colour, and names the usage count when the photo is shared', () => {
+    const badge = badgeOf(mountIcons({ singleUse: true, singleUseUsageCount: 2 }))
 
-    expect(badge.classes()).toContain('asset-image__single-use-badge--other-holders')
+    expect(badge.classes()).toContain('asset-image__single-use-badge--shared')
     expect(badge.find('.mdi-alert').exists()).toBe(true)
     expect(badge.attributes('aria-label')).toContain('2')
   })
