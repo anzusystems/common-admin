@@ -237,11 +237,12 @@ const onCopyToLicence = (data: DamImageCopyToLicenceResponse) => {
         DamAssetType.Image,
       )
     } else {
-      showErrorT('damImage.queueItem.errorUnableToCopyToLicence')
-      return
+      showErrorT('common.damImage.queueItem.errorUnableToCopyToLicence')
     }
   })
-  uploadQueueDialog.value = props.queueKey
+  if (data.some((item) => item.result === 'copy' || item.result === 'exists')) {
+    uploadQueueDialog.value = props.queueKey
+  }
 }
 
 const afterLimitDialogAdd = () => {
@@ -390,7 +391,7 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
       )
       onCopyToLicence(copyRes)
     } catch (e) {
-      showErrorsDefault(e)
+      if (!showErrorsDefault(e)) showUnknownError()
     }
   }
   if (toAdd.length === 0) return
