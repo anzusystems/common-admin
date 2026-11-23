@@ -97,8 +97,12 @@
     "boxItem": "box item",
     "boxItemHistory": "box item history",
     "notification": "notification",
-    "externalBoxItemArticle": "article box item"
+    "externalBoxItemArticle": "article box item",
+    "page": "page",
+    "crossBox": "cross box",
+    "relatedItemKindLink": "related link"
   },
+  "holderOther": "other record",
   "disabledReason": {
     "singleUseBlocked": "The image is single use and already used by another record ({count}×).",
     "singleUseNotAllowed": "The image is single use and this record cannot use it.",

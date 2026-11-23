@@ -7,6 +7,7 @@ const t = ((key: string, args?: Record<string, unknown>) =>
   args ? `${key} ${JSON.stringify(args)}` : key) as unknown as ComposerTranslation
 
 const DAM_ID = '0d584443-2718-470a-b9b1-92d2d9c7447c'
+const UNTRANSLATED_HOLDER = 'common.assetSelect.holderOther'
 const message = (key: string) => `common.damImage.image.error.${key}`
 
 describe('resolveImageSaveErrorMessage', () => {
@@ -50,7 +51,7 @@ describe('resolveImageSaveErrorMessage', () => {
         damId: DAM_ID,
         holderResourceName: 'gallery',
       },
-      `${message('singleUseViolation')} {"damId":"${DAM_ID}","holder":"gallery"}`,
+      `${message('singleUseViolation')} {"damId":"${DAM_ID}","holder":"${UNTRANSLATED_HOLDER}"}`,
     ],
     [
       'exclusivity conflict with an empty holder',
@@ -69,7 +70,7 @@ describe('resolveImageSaveErrorMessage', () => {
         reason: 'exclusivity_conflict',
         holderResourceName: 'gallery',
       },
-      `${message('singleUseViolationUnknownImage')} {"holder":"gallery"}`,
+      `${message('singleUseViolationUnknownImage')} {"holder":"${UNTRANSLATED_HOLDER}"}`,
     ],
     [
       'exclusivity conflict the server could not identify',
@@ -84,7 +85,7 @@ describe('resolveImageSaveErrorMessage', () => {
         damId: DAM_ID,
         holderResourceName: 'gallery',
       },
-      `${message('restoreConflict')} {"damId":"${DAM_ID}","holder":"gallery"}`,
+      `${message('restoreConflict')} {"damId":"${DAM_ID}","holder":"${UNTRANSLATED_HOLDER}"}`,
     ],
     [
       'restore conflict the server could not identify',

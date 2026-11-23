@@ -16,7 +16,7 @@ import type {
 export const resolveHolderName = (resourceName: string): string => {
   const { t, te } = i18n.global
   const key = `common.assetSelect.holder.${resourceName}`
-  return te(key) ? t(key) : resourceName
+  return te(key) ? t(key) : t('common.assetSelect.holderOther')
 }
 
 const SINGLE_USE_USAGE_COUNT_SHOWN = 10

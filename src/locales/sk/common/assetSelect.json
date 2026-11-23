@@ -97,8 +97,12 @@
     "boxItem": "box item",
     "boxItemHistory": "história box itemu",
     "notification": "notifikácia",
-    "externalBoxItemArticle": "box item článku"
+    "externalBoxItemArticle": "box item článku",
+    "page": "stránka",
+    "crossBox": "cross box",
+    "relatedItemKindLink": "súvisiaci odkaz"
   },
+  "holderOther": "iný záznam",
   "disabledReason": {
     "singleUseBlocked": "Obrázok je jednorazový a už ho používa iný záznam ({count}×).",
     "singleUseNotAllowed": "Obrázok je jednorazový a tento záznam ho nemôže použiť.",
