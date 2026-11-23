@@ -1,9 +1,12 @@
 <script lang="ts" setup>
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import type { AssetSearchListItemDto } from '@/types/coreDam/Asset'
+import type { AssetSearchListItemDto, AssetSingleUseUsageEntry } from '@/types/coreDam/Asset'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
-import { resolveHolderName } from '@/components/dam/assetSelect/composables/assetSelectDisabledReason'
+import {
+  formatSingleUseUsageCount,
+  resolveHolderName,
+} from '@/components/dam/assetSelect/composables/assetSelectDisabledReason'
 import { getSingleUseGroupId } from '@/components/dam/assetSelect/composables/assetSelectSingleUseUsage'
 import AChipNoLink from '@/components/AChipNoLink.vue'
 import { COMMON_CONFIG } from '@/model/commonConfig'
@@ -13,7 +16,6 @@ import { isNull } from '@/utils/common'
 const props = withDefaults(
   defineProps<{
     asset: AssetSearchListItemDto
-    holderName: string | null
     configName?: string
   }>(),
   {
@@ -28,31 +30,24 @@ const { singleUseUsageUrl, singleUsePlaceUrl } = useCommonAdminCoreDamOptions(pr
 
 const usage = computed(() => props.asset.singleUseUsage ?? null)
 
-const ownPick = computed(() => {
-  const holderPickedAt = usage.value?.holderPickedAt ?? null
-  if (isNull(holderPickedAt) || isNull(props.holderName)) return null
-  return t('common.assetSelect.usage.ownPick', {
-    holder: resolveHolderName(props.holderName),
-    date: dateTimePretty(holderPickedAt),
-  })
-})
+const toEntry = (entry: AssetSingleUseUsageEntry) => {
+  const name = resolveHolderName(entry.resourceName)
+  return {
+    key: `${entry.resourceName}:${entry.resourceId}`,
+    title: `${name.charAt(0).toUpperCase()}${name.slice(1)} (${entry.resourceId})`,
+    url: singleUsePlaceUrl?.(entry.resourceName, entry.resourceId),
+    pickedAt: t('common.assetSelect.usage.pickedAt', { date: dateTimePretty(entry.pickedAt) }),
+  }
+}
 
-const places = computed(() =>
-  (usage.value?.places ?? []).map((place) => {
-    const name = resolveHolderName(place.resourceName)
-    return {
-      key: `${place.resourceName}:${place.resourceId}`,
-      title: `${name.charAt(0).toUpperCase()}${name.slice(1)} (${place.resourceId})`,
-      url: singleUsePlaceUrl?.(place.resourceName, place.resourceId),
-      pickedAt: isNull(place.pickedAt)
-        ? null
-        : t('common.assetSelect.usage.pickedAt', { date: dateTimePretty(place.pickedAt) }),
-    }
-  }),
-)
+const holder = computed(() => (usage.value?.holder ? toEntry(usage.value.holder) : null))
+
+const usages = computed(() => (usage.value?.usages ?? []).map(toEntry))
+
+const usageCountLabel = computed(() => formatSingleUseUsageCount(usage.value?.usageCount ?? 0))
 
 const moreCount = computed(() =>
-  Math.max(0, (usage.value?.otherHolderCount ?? 0) - places.value.length),
+  Math.max(0, (usage.value?.usageCount ?? 0) - usages.value.length),
 )
 
 const allUsagesUrl = computed(() => {
@@ -63,59 +58,70 @@ const allUsagesUrl = computed(() => {
 </script>
 
 <template>
-  <div>
-    <h4 class="font-weight-bold text-label-large">
-      {{ t('common.assetSelect.usage.usedBy') }}
-    </h4>
-    <div
-      v-if="ownPick"
-      class="text-body-medium my-1"
-    >
-      {{ ownPick }}
+  <div v-if="usage">
+    <div class="text-body-medium my-1">
+      {{ t(`common.assetSelect.usage.status.${usage.status}`) }}
     </div>
-    <div
-      v-if="places.length > 0"
-      class="d-flex flex-column align-start ga-2 my-1"
-    >
-      <div
-        v-for="place in places"
-        :key="place.key"
-        class="d-flex flex-column align-start"
-      >
+    <template v-if="holder">
+      <h4 class="font-weight-bold text-label-large mt-3">
+        {{ t('common.assetSelect.usage.holder') }}
+      </h4>
+      <div class="d-flex flex-column align-start my-1">
         <VChip
-          v-if="place.url"
-          :href="place.url"
+          v-if="holder.url"
+          :href="holder.url"
           target="_blank"
           rel="noopener noreferrer"
           label
           size="small"
           :append-icon="COMMON_CONFIG.CHIP.ICON.LINK_EXTERNAL"
         >
-          {{ place.title }}
+          {{ holder.title }}
         </VChip>
         <AChipNoLink v-else>
-          {{ place.title }}
+          {{ holder.title }}
         </AChipNoLink>
-        <span
-          v-if="place.pickedAt"
-          class="text-body-small text-medium-emphasis mt-1"
-        >
-          {{ place.pickedAt }}
+        <span class="text-body-small text-medium-emphasis mt-1">
+          {{ holder.pickedAt }}
         </span>
       </div>
-      <span
-        v-if="moreCount > 0"
-        class="text-body-small text-medium-emphasis"
-      >
-        {{ t('common.assetSelect.usage.andMore', { count: moreCount }) }}
-      </span>
-    </div>
-    <div
-      v-else
-      class="text-body-medium my-1"
-    >
-      {{ t('common.assetSelect.usage.noOtherHolder') }}
-    </div>
+    </template>
+    <template v-if="usages.length > 0">
+      <h4 class="font-weight-bold text-label-large mt-3">
+        {{ t('common.assetSelect.usage.usedBy', { count: usageCountLabel }) }}
+      </h4>
+      <div class="d-flex flex-column align-start ga-2 my-1">
+        <div
+          v-for="entry in usages"
+          :key="entry.key"
+          class="d-flex flex-column align-start"
+        >
+          <VChip
+            v-if="entry.url"
+            :href="entry.url"
+            target="_blank"
+            rel="noopener noreferrer"
+            label
+            size="small"
+            :append-icon="COMMON_CONFIG.CHIP.ICON.LINK_EXTERNAL"
+          >
+            {{ entry.title }}
+          </VChip>
+          <AChipNoLink v-else>
+            {{ entry.title }}
+          </AChipNoLink>
+          <span class="text-body-small text-medium-emphasis mt-1">
+            {{ entry.pickedAt }}
+          </span>
+        </div>
+        <span
+          v-if="moreCount > 0"
+          class="text-body-small text-medium-emphasis"
+        >
+          {{ t('common.assetSelect.usage.andMore', { count: moreCount }) }}
+        </span>
+      </div>
+    </template>
     <VBtn
       v-if="allUsagesUrl"
       :append-icon="COMMON_CONFIG.CHIP.ICON.LINK_EXTERNAL"

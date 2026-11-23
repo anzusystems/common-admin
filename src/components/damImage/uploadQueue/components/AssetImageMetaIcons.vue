@@ -13,6 +13,7 @@ import {
   ICON_SLOTS,
   LOW_DIMENSION,
 } from '@/components/damImage/uploadQueue/composables/assetImageIconsConfig'
+import { formatSingleUseUsageCount } from '@/components/dam/assetSelect/composables/assetSelectDisabledReason'
 import { useDamConfigStore } from '@/components/damImage/uploadQueue/composables/damConfigStore'
 
 const props = withDefaults(
@@ -79,7 +80,9 @@ const checkDistributions = (icons: string[], titles: string[]) => {
 
 const singleUseTitle = computed(() =>
   props.singleUseOtherHolderCount > 0
-    ? t('common.damImage.asset.metaIcons.singleUseOtherHolders', { count: props.singleUseOtherHolderCount })
+    ? t('common.damImage.asset.metaIcons.singleUseOtherHolders', {
+        count: formatSingleUseUsageCount(props.singleUseOtherHolderCount),
+      })
     : t('common.damImage.asset.metaIcons.singleUse'),
 )
 

@@ -19,7 +19,7 @@ import {
   isMediaAware,
   useImageMediaWidgetStore,
 } from '@/components/damImage/uploadQueue/composables/imageMediaWidgetStore'
-import { DamAssetType, type DamAssetTypeType } from '@/types/coreDam/Asset'
+import { AssetSingleUseUsageStatus, DamAssetType, type DamAssetTypeType } from '@/types/coreDam/Asset'
 import type { ImageCreateUpdateAware } from '@/types/ImageAware'
 import { isDamSourceEnabled } from '@/components/damImage/uploadQueue/source/damSourceConfig'
 import { isDamAuthorEnabled } from '@/components/damImage/uploadQueue/author/damAuthorConfig'
@@ -33,6 +33,7 @@ import {
   getSingleUseGroupId,
   type SingleUseUsageCheck,
 } from '@/components/dam/assetSelect/composables/assetSelectSingleUseUsage'
+import { formatSingleUseUsageCount } from '@/components/dam/assetSelect/composables/assetSelectDisabledReason'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import { COMMON_CONFIG } from '@/model/commonConfig'
 
@@ -138,10 +139,20 @@ const singleUseBlocked = computed(
 const singleUseWarning = computed(() => {
   if (props.singleUseCheck?.failed) return t('common.assetSelect.usage.checkFailed')
   const usage = props.singleUseCheck?.asset.singleUseUsage
-  if (!usage || usage.otherHolderCount === 0) return null
-  return usage.blocked
-    ? t('common.assetSelect.disabledReason.singleUseBlocked', { count: usage.otherHolderCount })
-    : t('common.assetSelect.usage.usedElsewhere', { count: usage.otherHolderCount })
+  if (!usage) return null
+  const count = formatSingleUseUsageCount(usage.usageCount)
+  switch (usage.status) {
+    case AssetSingleUseUsageStatus.NotAllowed:
+      return t('common.assetSelect.disabledReason.singleUseNotAllowed')
+    case AssetSingleUseUsageStatus.Conflict:
+      return usage.blocked
+        ? t('common.assetSelect.disabledReason.singleUseBlocked', { count })
+        : t('common.assetSelect.usage.usedElsewhere', { count })
+    case AssetSingleUseUsageStatus.OwnShared:
+      return t('common.assetSelect.usage.usedBySeveral', { count })
+    default:
+      return null
+  }
 })
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss

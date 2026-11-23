@@ -7,18 +7,20 @@ const client = () => ({ get }) as unknown as AxiosInstance
 
 const item = (groupId: string) => ({
   groupId,
-  totalCount: 1,
-  otherHolderCount: 0,
+  holder: null,
+  status: 'free',
   blocked: false,
-  holderPickedAt: null,
-  places: [],
+  usageCount: 0,
+  usages: [],
 })
 
 describe('fetchSingleUseUsage', () => {
   beforeEach(() => {
     get.mockReset()
     get.mockImplementation((_url: string, config: { params: { groupIds: string } }) =>
-      Promise.resolve({ data: { totalCount: 0, data: config.params.groupIds.split(',').map(item) } }),
+      Promise.resolve({
+        data: { totalCount: 0, data: config.params.groupIds.split(',').map(item) },
+      }),
     )
   })
 

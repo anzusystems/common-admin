@@ -27,11 +27,11 @@ vi.mock('@/composables/system/alerts', async (importOriginal) => {
 })
 
 const usage = (partial: Partial<AssetSingleUseUsage> = {}): AssetSingleUseUsage => ({
-  totalCount: 1,
-  otherHolderCount: 1,
+  holder: { resourceName: 'person', resourceId: 5, pickedAt: '2026-01-01T10:00:00Z' },
+  status: 'conflict',
   blocked: false,
-  holderPickedAt: null,
-  places: [{ resourceName: 'person', resourceId: 5, pickedAt: null }],
+  usageCount: 1,
+  usages: [{ resourceName: 'person', resourceId: 5, pickedAt: '2026-01-01T10:00:00Z' }],
   ...partial,
 })
 
@@ -87,9 +87,16 @@ describe('single use usage of one asset', () => {
 
   it('refreshes the usage of the listed asset by its group for the usage holder of the picker', async () => {
     const { refresh, store } = mountComposables()
-    store.setList([asset('a', true, usage({ otherHolderCount: 0, places: [] }), 'group-a'), asset('b')])
-    store.setSelectability({ singleUseAllowed: true, uploadLicence: undefined, usageHolder: holder })
-    const fresh = usage({ otherHolderCount: 1, blocked: true })
+    store.setList([
+      asset('a', true, usage({ status: 'free', usageCount: 0, usages: [] }), 'group-a'),
+      asset('b'),
+    ])
+    store.setSelectability({
+      singleUseAllowed: true,
+      uploadLicence: undefined,
+      usageHolder: holder,
+    })
+    const fresh = usage({ usageCount: 1, blocked: true })
     fetchUsage.mockResolvedValueOnce({ 'group-a': fresh })
 
     await refresh.refreshUsage(store.assetListItems[0].asset)
@@ -145,12 +152,12 @@ describe('single use usage of one asset', () => {
     const listed = store.assetListItems[0].asset
     const olderRefresh = refresh.refreshUsage(listed)
     const newerRefresh = refresh.refreshUsage(listed)
-    const freshNewer = usage({ totalCount: 7 })
+    const freshNewer = usage({ usageCount: 7 })
 
-    older.resolve({ 'file-a': usage({ totalCount: 3 }) })
+    older.resolve({ 'file-a': usage({ usageCount: 3 }) })
     await olderRefresh
     expect(refresh.usageLoading.value).toBe(true)
-    expect(store.assetListItems[0].asset.singleUseUsage).not.toEqual(usage({ totalCount: 3 }))
+    expect(store.assetListItems[0].asset.singleUseUsage).not.toEqual(usage({ usageCount: 3 }))
 
     newer.resolve({ 'file-a': freshNewer })
     await newerRefresh
@@ -210,11 +217,11 @@ describe('single use usage of one asset', () => {
     fetchUsage.mockReturnValueOnce(older.promise).mockReturnValueOnce(newer.promise)
     const olderCheck = check.checkSingleUseUsage(asset('a'), holder)
     const newerCheck = check.checkSingleUseUsage(asset('b'), holder)
-    const freshNewer = usage({ totalCount: 7 })
+    const freshNewer = usage({ usageCount: 7 })
 
     newer.resolve({ 'file-b': freshNewer })
     await newerCheck
-    older.resolve({ 'file-a': usage({ totalCount: 3 }) })
+    older.resolve({ 'file-a': usage({ usageCount: 3 }) })
     await olderCheck
 
     expect(check.singleUseCheck.value?.asset.id).toBe('b')

@@ -68,13 +68,21 @@
   },
   "usage": {
     "tab": "Použitie",
-    "usedBy": "Používajú ho",
-    "noOtherHolder": "Nepoužíva ho iný záznam.",
+    "usedBy": "Používajú ho ({count})",
+    "holder": "Držiteľ",
     "andMore": "a ďalšie ({count})",
-    "ownPick": "Tento záznam ({holder}) · vybraté {date}",
     "pickedAt": "vybraté {date}",
     "openList": "Zobraziť všetky použitia",
     "usedElsewhere": "Obrázok je jednorazový a používa ho aj iný záznam ({count}×).",
+    "usedBySeveral": "Obrázok je jednorazový a používa ho viac záznamov ({count}×).",
+    "status": {
+      "notAllowed": "Tento záznam nemôže použiť jednorazový obrázok.",
+      "placement": "Tento záznam obrázok len umiestňuje, nedrží ho.",
+      "free": "Obrázok zatiaľ nikto nepoužíva.",
+      "own": "Obrázok používa len tento záznam.",
+      "ownShared": "Obrázok používa tento záznam, ale aj iné záznamy.",
+      "conflict": "Obrázok už používa iný záznam."
+    },
     "checkFailed": "Nepodarilo sa overiť, kde sa jednorazový obrázok používa. Vyberte ho znova."
   },
   "holder": {
@@ -93,6 +101,7 @@
   },
   "disabledReason": {
     "singleUseBlocked": "Obrázok je jednorazový a už ho používa iný záznam ({count}×).",
+    "singleUseNotAllowed": "Obrázok je jednorazový a tento záznam ho nemôže použiť.",
     "directUseDisabledNotImage": "Túto licenciu možno použiť len pre obrázky.",
     "directUseDisabledNoUploadLicence": "Chýba cieľová licencia na prevzatie obrázka."
   }

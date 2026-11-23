@@ -4,7 +4,10 @@ import { useI18n } from 'vue-i18n'
 import type { AssetSelectListItem } from '@/services/stores/coreDam/assetSelectStore'
 import AssetSelectSingleUseUsage from '@/components/dam/assetSelect/components/AssetSelectSingleUseUsage.vue'
 import { useAssetSelectUsageRefresh } from '@/components/dam/assetSelect/composables/assetSelectSingleUseUsage'
-import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
+import {
+  formatSingleUseUsageCount,
+  resolveSingleUseWarningCount,
+} from '@/components/dam/assetSelect/composables/assetSelectDisabledReason'
 
 const props = withDefaults(
   defineProps<{
@@ -23,11 +26,7 @@ const { t } = useI18n()
 
 const activeTab = ref(TAB_METADATA)
 
-const assetSelectStore = useAssetSelectStore()
-
-const holderName = computed(() => assetSelectStore.selectability?.usageHolder?.name ?? null)
-
-const otherHolderCount = computed(() => props.item?.asset.singleUseUsage?.otherHolderCount ?? 0)
+const usageWarningCount = computed(() => resolveSingleUseWarningCount(props.item?.asset.singleUseUsage))
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { usageLoading, refreshUsage } = useAssetSelectUsageRefresh(props.configName)
@@ -54,13 +53,13 @@ watch([activeTab, () => props.item?.asset.id], ([tab]) => {
       >
         {{ t('common.assetSelect.usage.tab') }}
         <VChip
-          v-if="otherHolderCount > 0"
+          v-if="usageWarningCount > 0"
           color="warning"
           variant="flat"
           size="x-small"
           class="ml-2"
         >
-          {{ otherHolderCount }}
+          {{ formatSingleUseUsageCount(usageWarningCount) }}
         </VChip>
       </VTab>
     </VTabs>
@@ -74,7 +73,6 @@ watch([activeTab, () => props.item?.asset.id], ([tab]) => {
     <AssetSelectSingleUseUsage
       v-else
       :asset="item.asset"
-      :holder-name="holderName"
       :config-name="configName"
       class="pa-3"
     />

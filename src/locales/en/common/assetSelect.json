@@ -68,13 +68,21 @@
   },
   "usage": {
     "tab": "Usage",
-    "usedBy": "Used by",
-    "noOtherHolder": "No other record uses it.",
+    "usedBy": "Used by ({count})",
+    "holder": "Holder",
     "andMore": "and {count} more",
-    "ownPick": "This record ({holder}) · picked {date}",
     "pickedAt": "picked {date}",
     "openList": "Show all usages",
     "usedElsewhere": "The image is single use and another record uses it too ({count}×).",
+    "usedBySeveral": "The image is single use and several records use it ({count}×).",
+    "status": {
+      "notAllowed": "This record cannot use a single use image.",
+      "placement": "This record only places the image, it does not hold it.",
+      "free": "Nobody uses the image yet.",
+      "own": "Only this record uses the image.",
+      "ownShared": "This record uses the image, and other records use it too.",
+      "conflict": "Another record already uses the image."
+    },
     "checkFailed": "The usage of the single use image could not be checked. Pick it again."
   },
   "holder": {
@@ -93,6 +101,7 @@
   },
   "disabledReason": {
     "singleUseBlocked": "The image is single use and already used by another record ({count}×).",
+    "singleUseNotAllowed": "The image is single use and this record cannot use it.",
     "directUseDisabledNotImage": "This licence can be used for images only.",
     "directUseDisabledNoUploadLicence": "The target licence for taking the image over is missing."
   }

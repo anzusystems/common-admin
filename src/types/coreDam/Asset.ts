@@ -1,4 +1,10 @@
-import type { DatetimeUTCNullable, DocId, DocIdNullable, IntegerId } from '@/types/common'
+import type {
+  DatetimeUTC,
+  DatetimeUTCNullable,
+  DocId,
+  DocIdNullable,
+  IntegerId,
+} from '@/types/common'
 import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTrackingAware'
 import type { ResourceNameSystemAware } from '@/types/ResourceNameSystemAware'
 import type { AssetFile } from '@/types/coreDam/AssetFile'
@@ -54,18 +60,29 @@ interface Metadata {
   customData: any
 }
 
-export interface AssetSingleUseUsagePlace {
+export const AssetSingleUseUsageStatus = {
+  NotAllowed: 'notAllowed',
+  Placement: 'placement',
+  Free: 'free',
+  Own: 'own',
+  OwnShared: 'ownShared',
+  Conflict: 'conflict',
+} as const
+export type AssetSingleUseUsageStatusType =
+  (typeof AssetSingleUseUsageStatus)[keyof typeof AssetSingleUseUsageStatus]
+
+export interface AssetSingleUseUsageEntry {
   resourceName: string
-  resourceId: string | number
-  pickedAt: DatetimeUTCNullable
+  resourceId: IntegerId
+  pickedAt: DatetimeUTC
 }
 
 export interface AssetSingleUseUsage {
-  totalCount: number
-  otherHolderCount: number
+  holder: AssetSingleUseUsageEntry | null
+  status: AssetSingleUseUsageStatusType
   blocked: boolean
-  holderPickedAt: DatetimeUTCNullable
-  places: AssetSingleUseUsagePlace[]
+  usageCount: number
+  usages: AssetSingleUseUsageEntry[]
 }
 
 export interface AssetSearchListItemDto

@@ -1,5 +1,10 @@
 import { i18n } from '@/plugins/i18n'
-import { DamAssetType, type AssetSearchListItemDto } from '@/types/coreDam/Asset'
+import {
+  AssetSingleUseUsageStatus,
+  DamAssetType,
+  type AssetSearchListItemDto,
+  type AssetSingleUseUsage,
+} from '@/types/coreDam/Asset'
 import type { DamAssetLicenceCached } from '@/types/coreDam/AssetLicence'
 import type { DocId, IntegerId } from '@/types/common'
 import { isUndefined } from '@/utils/common'
@@ -14,17 +19,32 @@ export const resolveHolderName = (resourceName: string): string => {
   return te(key) ? t(key) : resourceName
 }
 
+export const formatSingleUseUsageCount = (usageCount: number): string =>
+  usageCount > 10 ? '10+' : String(usageCount)
+
+export const resolveSingleUseWarningCount = (
+  usage: AssetSingleUseUsage | null | undefined,
+): number =>
+  usage &&
+  (usage.status === AssetSingleUseUsageStatus.Conflict ||
+    usage.status === AssetSingleUseUsageStatus.OwnShared)
+    ? usage.usageCount
+    : 0
+
 export const resolveSingleUseReason = (asset: AssetSearchListItemDto): string | null => {
   const { t } = i18n.global
   if (!(asset.mainFile?.flags.singleUse ?? false)) return null
 
-  if (asset.singleUseUsage?.blocked) {
-    return t('common.assetSelect.disabledReason.singleUseBlocked', {
-      count: asset.singleUseUsage.otherHolderCount,
-    })
+  const usage = asset.singleUseUsage
+  if (!usage?.blocked) return null
+
+  if (usage.status === AssetSingleUseUsageStatus.NotAllowed) {
+    return t('common.assetSelect.disabledReason.singleUseNotAllowed')
   }
 
-  return null
+  return t('common.assetSelect.disabledReason.singleUseBlocked', {
+    count: formatSingleUseUsageCount(usage.usageCount),
+  })
 }
 
 export const resolveDisabledReason = (

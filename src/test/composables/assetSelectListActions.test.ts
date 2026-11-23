@@ -74,7 +74,11 @@ const asset = (id: string) =>
   ({
     id,
     licence: 10,
-    mainFile: { id: `file-${id}`, flags: { singleUse: false }, fileAttributes: { takenOverFromId: '' } },
+    mainFile: {
+      id: `file-${id}`,
+      flags: { singleUse: false },
+      fileAttributes: { takenOverFromId: '' },
+    },
     attributes: { assetType: DamAssetType.Image },
   }) as unknown as AssetSearchListItemDto
 
@@ -85,11 +89,11 @@ const singleUseAsset = (id: string, takenOverFromId = '') =>
   }) as unknown as AssetSearchListItemDto
 
 const usage = (blocked: boolean): AssetSingleUseUsage => ({
-  totalCount: 1,
-  otherHolderCount: blocked ? 1 : 0,
+  holder: null,
+  status: blocked ? 'conflict' : 'free',
   blocked,
-  holderPickedAt: null,
-  places: [],
+  usageCount: blocked ? 1 : 0,
+  usages: [],
 })
 
 const usageHolder = { name: 'articleKindStandard', id: 42 }

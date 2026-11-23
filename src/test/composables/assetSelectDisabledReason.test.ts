@@ -21,7 +21,7 @@ const asset = (
     attributes: { assetType },
     mainFile: { flags: { singleUse } },
     singleUseUsage: usage
-      ? { totalCount: 1, otherHolderCount: 0, blocked: false, places: [], ...usage }
+      ? { holder: null, status: 'free', blocked: false, usageCount: 0, usages: [], ...usage }
       : null,
   }) as unknown as AssetSearchListItemDto
 
@@ -51,14 +51,31 @@ describe('resolveDisabledReason', () => {
   >([
     [
       'single use photo blocked by another holder',
-      asset(true, { blocked: true, otherHolderCount: 1 }),
+      asset(true, { status: 'conflict', blocked: true, usageCount: 1 }),
       undefined,
       options({}),
       reason('singleUseBlocked'),
     ],
     [
+      'single use photo on an entity that may not use it',
+      asset(true, { status: 'notAllowed', blocked: true }),
+      undefined,
+      options({}),
+      reason('singleUseNotAllowed'),
+    ],
+    ...(['placement', 'free', 'own', 'ownShared'] as const).map(
+      (status) =>
+        [
+          `single use photo with status ${status} is not blocked`,
+          asset(true, { status, usageCount: 1 }),
+          undefined,
+          options({}),
+          null,
+        ] as [string, AssetSearchListItemDto, undefined, Selectability, string | null],
+    ),
+    [
       'single use photo used elsewhere in warn mode',
-      asset(true, { totalCount: 2, otherHolderCount: 1, blocked: false }),
+      asset(true, { status: 'conflict', usageCount: 2, blocked: false }),
       undefined,
       options({}),
       null,
@@ -66,7 +83,7 @@ describe('resolveDisabledReason', () => {
     ['unused single use photo', asset(true), undefined, options({}), null],
     [
       'photo that is not single use ignores the single use rules',
-      asset(false, { blocked: true, otherHolderCount: 1 }),
+      asset(false, { status: 'conflict', blocked: true, usageCount: 1 }),
       undefined,
       options({}),
       null,

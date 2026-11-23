@@ -1,6 +1,7 @@
 import { computed, type Ref } from 'vue'
 import type { AssetSearchListItemDto } from '@/types/coreDam/Asset'
 import type { AssetSelectListItem } from '@/services/stores/coreDam/assetSelectStore'
+import { resolveSingleUseWarningCount } from '@/components/dam/assetSelect/composables/assetSelectDisabledReason'
 import { useDamCachedAssetLicences } from '@/components/damImage/composables/cachedDamAssetLicences'
 
 const IMAGE_HEIGHT = 200
@@ -69,7 +70,9 @@ export function useAssetItemActions(item: Readonly<Ref<AssetSelectListItem>>) {
 
   const singleUse = computed(() => asset.value.mainFile?.flags.singleUse ?? false)
 
-  const singleUseOtherHolderCount = computed(() => asset.value.singleUseUsage?.otherHolderCount ?? 0)
+  const singleUseOtherHolderCount = computed(() =>
+    resolveSingleUseWarningCount(asset.value.singleUseUsage),
+  )
 
   return {
     asset,
