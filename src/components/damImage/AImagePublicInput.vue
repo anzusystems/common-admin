@@ -24,6 +24,7 @@ import { buildFieldRules } from '@/components/damImage/uploadQueue/composables/u
 
 const props = withDefaults(
   defineProps<{
+    uploadLicence: IntegerId
     selectLicences: IntegerId[]
     image?: ImageAware | undefined // optional, if available, no need to fetch image data
     owner?: ImageOwner | null
@@ -133,6 +134,7 @@ const submit = async () => {
         licenceId: asset.licence,
         regionPosition: 0,
         internal: asset.mainFileInternal ?? false,
+        uploadLicenceId: props.uploadLicence,
       },
       position: 0,
     }

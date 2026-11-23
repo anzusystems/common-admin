@@ -444,7 +444,6 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
         regionPosition: 0,
         licenceId: data.value[0].licence,
         internal: data.value[0].mainFileInternal ?? false,
-        uploadLicenceId: props.uploadLicence,
         forceTakeOver: data.forceTakeOver,
       },
       position: 1,
@@ -542,6 +541,7 @@ const onMetadataDialogConfirm = async () => {
     }
     showDamAuthorsInCmsImage.value = false
     applyImageOwner(detail.value, props.owner)
+    detail.value.dam.uploadLicenceId = props.uploadLicence
     const res = detail.value.id
       ? await imageApi.updateImage(imageClient, detail.value.id, detail.value)
       : await imageApi.createImage(imageClient, detail.value)

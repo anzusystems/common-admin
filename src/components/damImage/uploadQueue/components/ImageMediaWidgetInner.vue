@@ -556,7 +556,6 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
         regionPosition: 0,
         licenceId: selectedAsset.licence,
         internal: selectedAsset.mainFileInternal ?? false,
-        uploadLicenceId: props.uploadLicence,
         forceTakeOver: data.forceTakeOver,
       },
       position: 1,
@@ -669,6 +668,7 @@ const tryImageConfirm = async () => {
     }
     showDamAuthorsInCmsImage.value = false
     applyImageOwner(detail.value, props.owner)
+    detail.value.dam.uploadLicenceId = props.uploadLicence
     const res = detail.value.id
       ? await imageApi.updateImage(imageClient, detail.value.id, detail.value)
       : await imageApi.createImage(imageClient, detail.value)

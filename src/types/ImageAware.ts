@@ -16,7 +16,7 @@ export interface ImageAware {
     licenceId: IntegerId
     regionPosition: number
     internal: boolean
-    // Request-only: licence the server takes the image over into when the asset is not usable directly.
+    // Request-only, required when an image is picked: licence the server takes it over into when needed.
     uploadLicenceId?: IntegerId
     // Request-only: take over an asset of another licence even when it could be used directly.
     forceTakeOver?: boolean

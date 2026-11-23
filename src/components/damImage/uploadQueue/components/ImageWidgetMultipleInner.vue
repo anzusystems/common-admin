@@ -5,7 +5,6 @@ import { isString, isUndefined } from '@/utils/common'
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
 import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
 import {
-  buildImageDamRef,
   keepSentDamCredit,
   useImageStore,
 } from '@/components/damImage/uploadQueue/composables/imageStore'
@@ -13,7 +12,11 @@ import ImageWidgetMultipleItem from '@/components/damImage/uploadQueue/component
 import { storeToRefs } from 'pinia'
 import { useCommonAdminImageOptions } from '@/components/damImage/composables/commonAdminImageOptions'
 import { useAlerts } from '@/composables/system/alerts'
-import { type AssetSearchListItemDto, DamAssetType } from '@/types/coreDam/Asset'
+import {
+  type AssetSearchListItemDto,
+  DamAssetType,
+  type DamImageCopyToLicenceResponse,
+} from '@/types/coreDam/Asset'
 import AAssetSelect from '@/components/dam/assetSelect/AAssetSelect.vue'
 import AFileInput from '@/components/file/AFileInput.vue'
 import AImageDropzone from '@/components/file/AFileDropzone.vue'
@@ -51,8 +54,10 @@ import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/compo
 import ImageWidgetMultipleLimitDialog from '@/components/damImage/uploadQueue/components/ImageWidgetMultipleLimitDialog.vue'
 import { ImageWidgetUploadConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
 import { fetchAssetListByFileIdsMultipleLicences } from '@/components/damImage/uploadQueue/api/damfetchAssetListByFileIdsMultipleLicences'
+import { copyToLicence } from '@/components/damImage/uploadQueue/api/damImageApi'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import { isDamSourceEnabled } from '@/components/damImage/uploadQueue/source/damSourceConfig'
+import { splitAssetsForCopyToLicence } from '@/components/damImage/uploadQueue/composables/splitAssetsForCopyToLicence'
 
 const props = withDefaults(
   defineProps<{
@@ -110,7 +115,7 @@ if (isUndefined(imageWidgetUploadConfig) || isUndefined(imageWidgetUploadConfig.
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const imageOptions = useCommonAdminImageOptions(props.configName)
 const { imageClient, imageApi } = imageOptions
-const { showErrorsDefault, showValidationError, showUnknownError } = useAlerts()
+const { showErrorsDefault, showValidationError, showErrorT, showUnknownError } = useAlerts()
 const uploadButtonComponent = ref<InstanceType<any> | null>(null)
 
 const { uploadSizes, uploadAccept } = useDamAcceptTypeAndSizeHelper(
@@ -212,13 +217,39 @@ const onDrop = (files: File[]) => {
   uploadQueueDialog.value = props.queueKey
 }
 
+const onCopyToLicence = (data: DamImageCopyToLicenceResponse) => {
+  if (data.length === 0) return
+  const config = imageWidgetUploadConfig.value
+  if (isUndefined(config)) return
+  cachedExtSystemId.value = config.extSystem
+  data.forEach((item) => {
+    if (item.result === 'copy') {
+      uploadQueuesStore.addByCopyToLicence(props.queueKey, config.extSystem, config.licence, [
+        item.targetAsset,
+      ])
+    } else if (item.result === 'exists') {
+      uploadQueuesStore.addByCopyToLicence(props.queueKey, config.extSystem, config.licence, [
+        item.targetAsset,
+      ])
+      uploadQueuesStore.queueItemDuplicate(
+        item.targetAsset,
+        item.targetMainFile,
+        DamAssetType.Image,
+      )
+    } else {
+      showErrorT('damImage.queueItem.errorUnableToCopyToLicence')
+      return
+    }
+  })
+  uploadQueueDialog.value = props.queueKey
+}
+
 const afterLimitDialogAdd = () => {
   uploadQueueDialog.value = props.queueKey
 }
 
 const assetSelectConfirmMap = async (
   items: AssetSearchListItemDto[],
-  forceTakeOver: boolean,
 ): Promise<ImageStoreItem[]> => {
   const assetMetadataMap = new Map<
     DocId,
@@ -301,7 +332,12 @@ const assetSelectConfirmMap = async (
           internal: false,
           overrideInternal: false,
         },
-        dam: buildImageDamRef(asset, props.uploadLicence, forceTakeOver),
+        dam: {
+          damId: asset.mainFile!.id,
+          regionPosition: 0,
+          licenceId: asset.licence,
+          internal: asset.mainFileInternal ?? false,
+        },
         position: maxPosition.value,
         damAuthors: [],
         showDamAuthors: false,
@@ -326,7 +362,12 @@ const assetSelectConfirmMap = async (
         internal: false,
         overrideInternal: false,
       },
-      dam: buildImageDamRef(asset, props.uploadLicence, forceTakeOver),
+      dam: {
+        damId: asset.mainFile!.id,
+        regionPosition: 0,
+        licenceId: asset.licence,
+        internal: asset.mainFileInternal ?? false,
+      },
       position: maxPosition.value,
       damAuthors: authorIds,
       showDamAuthors: hasNoDamCredit(authorIds, sourceIds),
@@ -338,7 +379,22 @@ const assetSelectConfirmMap = async (
 
 const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
   if (data.type !== 'asset' || data.value.length === 0) return
-  imageStore.addImages(await assetSelectConfirmMap(data.value, data.forceTakeOver))
+  const targetLicence = data.forceTakeOver ? props.uploadLicence : undefined
+  const { toCopy, toAdd } = splitAssetsForCopyToLicence(data.value, targetLicence)
+  if (!isUndefined(targetLicence) && toCopy.length > 0) {
+    try {
+      const copyRes = await copyToLicence(
+        damClient,
+        endPointAsset,
+        toCopy.map((asset) => ({ asset: asset.id, targetAssetLicence: targetLicence })),
+      )
+      onCopyToLicence(copyRes)
+    } catch (e) {
+      showErrorsDefault(e)
+    }
+  }
+  if (toAdd.length === 0) return
+  imageStore.addImages(await assetSelectConfirmMap(toAdd))
 }
 
 const assetDetailStore = useAssetDetailStore()
@@ -450,7 +506,10 @@ const saveImages = async () => {
         pendingCredits.push({ index, authors: image.damAuthors, sources: image.damSources })
       }
     }
-    imagesRaw.forEach((image) => applyImageOwner(image, props.owner))
+    imagesRaw.forEach((image) => {
+      applyImageOwner(image, props.owner)
+      image.dam.uploadLicenceId = props.uploadLicence
+    })
     const resItems = await imageApi.bulkUpdateImages(imageClient, imagesRaw)
     const savedCredits = pendingCredits.flatMap(({ index, authors, sources }) => {
       const saved = resItems[index]

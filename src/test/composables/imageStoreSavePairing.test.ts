@@ -1,18 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import {
-  buildImageDamRef,
-  keepSentDamCredit,
-} from '@/components/damImage/uploadQueue/composables/imageStore'
+import { keepSentDamCredit } from '@/components/damImage/uploadQueue/composables/imageStore'
 import type { ImageStoreItem } from '@/types/ImageAware'
-import type { AssetSearchListItemDto } from '@/types/coreDam/Asset'
-
-const asset = (licence: number) =>
-  ({
-    id: 'asset-1',
-    licence,
-    mainFile: { id: 'file-1' },
-    mainFileInternal: false,
-  }) as unknown as AssetSearchListItemDto
 
 const item = (damId: string, partial: Partial<ImageStoreItem> = {}) =>
   ({
@@ -41,18 +29,5 @@ describe('keepSentDamCredit', () => {
 
   it('offers the authors again when the sent item had no credit', () => {
     expect(keepSentDamCredit(item('b'), item('a')).showDamAuthors).toBe(true)
-  })
-})
-
-describe('buildImageDamRef', () => {
-  it.each([
-    ['switch on, foreign licence', true, 5, true],
-    ['switch off, foreign licence', false, 5, false],
-    ['switch on, upload licence', true, 1, false],
-  ])('sets forceTakeOver for %s', (_name, forceTakeOver, assetLicence, expected) => {
-    const dam = buildImageDamRef(asset(assetLicence), 1, forceTakeOver)
-
-    expect(dam.forceTakeOver).toBe(expected)
-    expect(dam).toMatchObject({ damId: 'file-1', licenceId: assetLicence, uploadLicenceId: 1 })
   })
 })

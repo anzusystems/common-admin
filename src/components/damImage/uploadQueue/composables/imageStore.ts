@@ -1,22 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import type { ImageAware, ImageStoreItem } from '@/types/ImageAware'
-import type { AssetSearchListItemDto } from '@/types/coreDam/Asset'
-import type { IntegerId } from '@/types/common'
+import type { ImageStoreItem } from '@/types/ImageAware'
 import { hasNoDamCredit } from '@/components/damImage/uploadQueue/composables/damCredit'
-
-export const buildImageDamRef = (
-  asset: AssetSearchListItemDto,
-  uploadLicence: IntegerId | undefined,
-  forceTakeOver: boolean,
-): ImageAware['dam'] => ({
-  damId: asset.mainFile!.id,
-  regionPosition: 0,
-  licenceId: asset.licence,
-  internal: asset.mainFileInternal ?? false,
-  uploadLicenceId: uploadLicence,
-  forceTakeOver: forceTakeOver && asset.licence !== uploadLicence,
-})
 
 // A taken-over image comes back with another damId, so the saved row is paired with the sent one by position.
 export const keepSentDamCredit = (saved: ImageStoreItem, sent: ImageStoreItem): ImageStoreItem => ({
