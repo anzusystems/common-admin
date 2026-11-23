@@ -3,7 +3,6 @@ import {
   AssetSingleUseUsageStatus,
   DamAssetType,
   type AssetSearchListItemDto,
-  type AssetSingleUseUsage,
 } from '@/types/coreDam/Asset'
 import type { DamAssetLicenceCached } from '@/types/coreDam/AssetLicence'
 import type { DocId, IntegerId } from '@/types/common'
@@ -24,14 +23,14 @@ const SINGLE_USE_USAGE_COUNT_SHOWN = 10
 export const formatSingleUseUsageCount = (usageCount: number): string =>
   usageCount > SINGLE_USE_USAGE_COUNT_SHOWN ? `${SINGLE_USE_USAGE_COUNT_SHOWN}+` : String(usageCount)
 
-export const resolveSingleUseWarningCount = (
-  usage: AssetSingleUseUsage | null | undefined,
-): number =>
-  usage &&
-  (usage.status === AssetSingleUseUsageStatus.Conflict ||
-    usage.status === AssetSingleUseUsageStatus.OwnShared)
+export const resolveSingleUseWarningCount = (asset: AssetSearchListItemDto): number => {
+  const usage = asset.singleUseUsage
+  return asset.mainFile?.flags.singleUse &&
+    (usage?.status === AssetSingleUseUsageStatus.Conflict ||
+      usage?.status === AssetSingleUseUsageStatus.OwnShared)
     ? usage.usageCount
     : 0
+}
 
 export const resolveSingleUseReason = (asset: AssetSearchListItemDto): string | null => {
   const { t } = i18n.global

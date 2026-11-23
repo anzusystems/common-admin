@@ -70,9 +70,7 @@ export function useAssetItemActions(item: Readonly<Ref<AssetSelectListItem>>) {
 
   const singleUse = computed(() => asset.value.mainFile?.flags.singleUse ?? false)
 
-  const singleUseUsageCount = computed(() =>
-    resolveSingleUseWarningCount(asset.value.singleUseUsage),
-  )
+  const singleUseUsageCount = computed(() => resolveSingleUseWarningCount(asset.value))
 
   return {
     asset,

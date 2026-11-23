@@ -26,19 +26,21 @@ const { t } = useI18n()
 
 const activeTab = ref(TAB_METADATA)
 
-const usageWarningCount = computed(() => resolveSingleUseWarningCount(props.item?.asset.singleUseUsage))
+const usageWarningCount = computed(() =>
+  props.item ? resolveSingleUseWarningCount(props.item.asset) : 0,
+)
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { usageLoading, refreshUsage } = useAssetSelectUsageRefresh(props.configName)
+const { usageLoading, hasUsage, refreshUsage } = useAssetSelectUsageRefresh(props.configName)
 
 watch([activeTab, () => props.item?.asset.id], ([tab]) => {
-  if (tab !== TAB_USAGE || !props.item?.asset.singleUseUsage) return
+  if (tab !== TAB_USAGE || !props.item || !hasUsage(props.item.asset)) return
   refreshUsage(props.item.asset)
 })
 </script>
 
 <template>
-  <template v-if="item?.asset.singleUseUsage">
+  <template v-if="item && hasUsage(item.asset)">
     <VTabs
       v-model="activeTab"
       show-arrows

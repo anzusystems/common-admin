@@ -1,7 +1,11 @@
 <script lang="ts" setup>
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import type { AssetSearchListItemDto, AssetSingleUseUsageEntry } from '@/types/coreDam/Asset'
+import {
+  type AssetSearchListItemDto,
+  type AssetSingleUseUsageEntry,
+  AssetSingleUseUsageStatus,
+} from '@/types/coreDam/Asset'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import {
   formatSingleUseUsageCount,
@@ -30,6 +34,14 @@ const { singleUseUsageUrl, singleUsePlaceUrl } = useCommonAdminCoreDamOptions(pr
 
 const usage = computed(() => props.asset.singleUseUsage ?? null)
 
+const singleUse = computed(() => props.asset.mainFile?.flags.singleUse ?? false)
+
+const statusShown = computed(() => {
+  if (!usage.value) return null
+  if (singleUse.value) return usage.value.status
+  return usage.value.usageCount === 0 ? AssetSingleUseUsageStatus.Free : null
+})
+
 const toEntry = (entry: AssetSingleUseUsageEntry) => {
   const name = resolveHolderName(entry.resourceName)
   return {
@@ -40,7 +52,7 @@ const toEntry = (entry: AssetSingleUseUsageEntry) => {
   }
 }
 
-const holder = computed(() => (usage.value?.holder ? toEntry(usage.value.holder) : null))
+const holder = computed(() => (singleUse.value && usage.value?.holder ? toEntry(usage.value.holder) : null))
 
 const usages = computed(() => (usage.value?.usages ?? []).map(toEntry))
 
@@ -59,8 +71,11 @@ const allUsagesUrl = computed(() => {
 
 <template>
   <div v-if="usage">
-    <div class="text-body-medium my-1">
-      {{ t(`common.assetSelect.usage.status.${usage.status}`) }}
+    <div
+      v-if="statusShown"
+      class="text-body-medium my-1"
+    >
+      {{ t(`common.assetSelect.usage.status.${statusShown}`) }}
     </div>
     <template v-if="holder">
       <h4 class="font-weight-bold text-label-large mt-3">

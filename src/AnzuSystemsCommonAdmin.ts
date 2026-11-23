@@ -84,9 +84,9 @@ export interface CommonAdminCoreDamConfig {
   customAssetSelectMetadataToImageMap?: AssetSelectMetadataToImageMapFn
   assetListEnabledFilters?: string[]
   simpleAssetSidebar?: boolean
-  // Url of the image list of the CMS admin filtered by the single use group; without it the picker shows no link.
+  // Url of the image list of the CMS admin filtered by the photo group; without it the picker shows no link.
   singleUseUsageUrl?: (groupId: DocId) => string
-  // Url of a record that uses a single use photo; without it the record is shown without a link.
+  // Url of a record that uses a photo; without it the record is shown without a link.
   singleUsePlaceUrl?: (resourceName: string, resourceId: string | number) => string | undefined
 }
 

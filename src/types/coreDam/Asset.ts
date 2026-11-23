@@ -99,7 +99,8 @@ export interface AssetSearchListItemDto
   mainFileInternal: Readonly<boolean | null>
   mainFileOverrideInternal: Readonly<boolean | null>
   autoDeleteAt: Readonly<DatetimeUTCNullable>
-  // Filled by the asset picker from the CMS (`imageApi.fetchSingleUseUsage`), only for a single use main file.
+  // Filled by the asset picker from the CMS (`imageApi.fetchSingleUseUsage`): for a single use image with the list,
+  // for any other image when its usage tab opens.
   singleUseUsage?: Readonly<AssetSingleUseUsage | null>
 }
 

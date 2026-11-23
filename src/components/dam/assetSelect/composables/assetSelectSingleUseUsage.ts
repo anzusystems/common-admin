@@ -1,5 +1,9 @@
 import { ref } from 'vue'
-import type { AssetSearchListItemDto, AssetSingleUseUsage } from '@/types/coreDam/Asset'
+import {
+  type AssetSearchListItemDto,
+  type AssetSingleUseUsage,
+  DamAssetType,
+} from '@/types/coreDam/Asset'
 import type { DocId } from '@/types/common'
 import type { AssetSelectUsageHolder } from '@/types/coreDam/AssetSelect'
 import { useImageSingleUseUsageFetch } from '@/components/damImage/composables/commonAdminImageOptions'
@@ -29,15 +33,21 @@ export function useSingleUseUsageFetch(configName = 'default') {
     return usage
   }
 
+  const hasUsage = (asset: AssetSearchListItemDto): boolean =>
+    !isUndefined(fetchUsageByGroups) &&
+    asset.attributes.assetType === DamAssetType.Image &&
+    !isNull(getSingleUseGroupId(asset))
+
   return {
     fetchSingleUseUsage,
+    hasUsage,
   }
 }
 
 export function useAssetSelectUsageRefresh(configName = 'default') {
   const assetSelectStore = useAssetSelectStore()
   const { getCachedAssetLicence } = useDamCachedAssetLicences()
-  const { fetchSingleUseUsage } = useSingleUseUsageFetch(configName)
+  const { fetchSingleUseUsage, hasUsage } = useSingleUseUsageFetch(configName)
   const { showErrorsDefault } = useAlerts()
   const usageLoading = ref(false)
   let latestRefresh = 0
@@ -71,6 +81,7 @@ export function useAssetSelectUsageRefresh(configName = 'default') {
 
   return {
     usageLoading,
+    hasUsage,
     refreshUsage,
   }
 }
