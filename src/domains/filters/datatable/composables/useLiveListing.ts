@@ -53,6 +53,12 @@ export interface UseLiveListingOptions<T> {
   minIntervalMs?: number
   /** Wait after a signal, so a burst of signals ends in one probe. */
   debounceMs?: number
+  /**
+   * Whether the list is loading, for loads not started by the pill (a filter, the user's own change): a change
+   * signalled after such a load started stays offered after its `markLoaded`, as the load may have read the record
+   * before it changed. Without it such a load forgets every change offered.
+   */
+  loading?: MaybeRefOrGetter<boolean>
 }
 
 const RETURN_PROBE_GAP_MS = 2000
@@ -109,6 +115,9 @@ export function useLiveListing<T>(options: UseLiveListingOptions<T>) {
   let baselineScope: string | undefined = undefined
   // With `unseen` newness: the keys the user has seen listed under the baseline scope.
   const seenKeys = new Set<LiveListingKey>()
+  // With `unseen` newness: the oldest record of the last full load when it filled the probe. An unseen record below
+  // it reached the first page because listed ones left the filter, not because it entered.
+  let seenFloor: LiveListingKey | undefined = undefined
   // Bumped by every full load: answers of probes started before it are dropped.
   let generation = 0
   let controller: AbortController | undefined = undefined
@@ -127,13 +136,21 @@ export function useLiveListing<T>(options: UseLiveListingOptions<T>) {
   let signals = 0
   let changedAtSignal = 0
   let applyingFrom: number | undefined = undefined
+  // The signals counted when the current or last load given by `loading` started.
+  let loadingFrom: number | undefined = undefined
   let applying: Promise<void> | undefined = undefined
   let disposed = false
 
   const visibility = useDocumentVisibility()
 
   const isNew = (key: LiveListingKey) => {
-    if (newness === 'unseen') return baseline !== undefined && !seenKeys.has(key)
+    if (newness === 'unseen') {
+      return (
+        baseline !== undefined &&
+        !seenKeys.has(key) &&
+        (seenFloor === undefined || compareLiveListingKeys(key, seenFloor) > 0)
+      )
+    }
     return baseline === null || (baseline !== undefined && compareLiveListingKeys(key, baseline) > 0)
   }
 
@@ -147,15 +164,24 @@ export function useLiveListing<T>(options: UseLiveListingOptions<T>) {
     baselineScope = scope
   }
 
-  const see = (items: T[]) => {
-    if (newness === 'unseen') items.forEach((item) => seenKeys.add(options.key(item)))
-  }
-
   const newestKey = (items: T[]) =>
     items.reduce<LiveListingKey | null>((newest, item) => {
       const key = options.key(item)
       return newest === null || compareLiveListingKeys(key, newest) > 0 ? key : newest
     }, null)
+
+  const oldestKey = (items: T[]) =>
+    items.reduce<LiveListingKey | undefined>((oldest, item) => {
+      const key = options.key(item)
+      return oldest === undefined || compareLiveListingKeys(key, oldest) < 0 ? key : oldest
+    }, undefined)
+
+  const see = (items: T[]) => {
+    if (newness !== 'unseen') return
+    items.forEach((item) => seenKeys.add(options.key(item)))
+    // Fewer records than the probe asks for were all there were under the filter, so nothing can slide in.
+    seenFloor = items.length >= probeLimit ? oldestKey(items) : undefined
+  }
 
   const abortProbe = () => {
     controller?.abort()
@@ -306,13 +332,20 @@ export function useLiveListing<T>(options: UseLiveListingOptions<T>) {
    * Otherwise `newest` gives it: what the probe returns under the loaded filters (one record, with `unseen` newness
    * `probeLimit`), asked for when the load started, so a record created while the list loaded is counted, at worst
    * one the list shows. Without it one probe after the load finds the baseline and takes such a record as seen.
-   * A switch to another page needs no report.
+   * A switch to another page needs no report. The changes offered end, except those signalled while the pill's
+   * reload or a load given by `loading` ran.
    */
   const markLoaded = (items: T[], loaded: { newestFirst: boolean; newest?: T[] }) => {
     generation += 1
     if (signalPending()) probeWanted = true
-    // A change signalled while the pill's reload ran may be newer than what it loaded.
-    changed.value = applyingFrom !== undefined && changedAtSignal > applyingFrom
+    // A change signalled while the load ran (the pill's reload, or one given by `loading`) may be newer than what it
+    // loaded.
+    const loadFrom =
+      applyingFrom !== undefined && loadingFrom !== undefined
+        ? Math.min(applyingFrom, loadingFrom)
+        : (applyingFrom ?? loadingFrom)
+    changed.value = loadFrom !== undefined && changedAtSignal > loadFrom
+    if (!toValue(options.loading)) loadingFrom = undefined
     abortProbe()
     clearTimers()
     count.value = 0
@@ -361,6 +394,8 @@ export function useLiveListing<T>(options: UseLiveListingOptions<T>) {
     signalTimer = undefined
     const loadsBefore = generation
     applyingFrom = signals
+    // The start of an earlier load that reported nothing says nothing about this one.
+    if (!toValue(options.loading)) loadingFrom = undefined
     try {
       await options.reload()
     } finally {
@@ -383,6 +418,16 @@ export function useLiveListing<T>(options: UseLiveListingOptions<T>) {
       applying = undefined
     })
     return applying
+  }
+
+  if (options.loading !== undefined) {
+    watch(
+      () => Boolean(toValue(options.loading)),
+      (value, before) => {
+        if (value && !before) loadingFrom = signals
+      },
+      { flush: 'sync' }
+    )
   }
 
   watch(

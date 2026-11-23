@@ -237,6 +237,25 @@ describe('useLiveListing', () => {
     expect(live.count.value).toBe(1)
   })
 
+  it('counts no record that slid onto the first page when listed ones left the filter, with unseen newness', async () => {
+    const records = ref(rows(20, 18, 16, 14, 12, 10, 8))
+    const { live } = setup(records, { newness: 'unseen', probeLimit: 5, max: 4 })
+    live.markLoaded(records.value.slice(0, 5), { newestFirst: true })
+    // 18 and 16 leave the filter, 10 slides onto the first page; 15 enters below the newest one and is new.
+    records.value = rows(20, 15, 14, 12, 10, 8)
+    await vi.advanceTimersByTimeAsync(10_000)
+    expect(live.count.value).toBe(1)
+  })
+
+  it('counts an unseen record older than every listed one when the whole filter was listed, with unseen newness', async () => {
+    const records = ref(rows(5, 3, 2))
+    const { live } = setup(records, { newness: 'unseen', probeLimit: 5, max: 4 })
+    live.markLoaded(records.value, { newestFirst: true })
+    records.value = rows(5, 3, 2, 1)
+    await vi.advanceTimersByTimeAsync(10_000)
+    expect(live.count.value).toBe(1)
+  })
+
   it('takes what the probe finds as seen when the list is not newest first, with unseen newness', async () => {
     const records = ref(rows(5, 3))
     const { live, probe } = setup(records, { newness: 'unseen' })
@@ -263,6 +282,42 @@ describe('useLiveListing', () => {
     await live.apply()
     expect(reload).toHaveBeenCalledTimes(1)
     expect(live.changed.value).toBe(false)
+  })
+
+  it('keeps a change signalled while a load not started by the click ran, with loading given', async () => {
+    const records = ref(rows(2, 1))
+    const loading = ref(false)
+    const { live } = setup(records, { loading })
+    live.markLoaded(records.value, { newestFirst: true })
+    loading.value = true
+    live.markChanged()
+    loading.value = false
+    live.markLoaded(records.value, { newestFirst: true })
+    expect(live.changed.value).toBe(true)
+  })
+
+  it('forgets a change signalled before a load not started by the click, with loading given', async () => {
+    const records = ref(rows(2, 1))
+    const loading = ref(false)
+    const { live } = setup(records, { loading })
+    live.markLoaded(records.value, { newestFirst: true })
+    live.markChanged()
+    loading.value = true
+    loading.value = false
+    live.markLoaded(records.value, { newestFirst: true })
+    expect(live.changed.value).toBe(false)
+  })
+
+  it('keeps a change signalled after the load ended but before it was reported, with loading given', async () => {
+    const records = ref(rows(2, 1))
+    const loading = ref(false)
+    const { live } = setup(records, { loading })
+    live.markLoaded(records.value, { newestFirst: true })
+    loading.value = true
+    loading.value = false
+    live.markChanged()
+    live.markLoaded(records.value, { newestFirst: true })
+    expect(live.changed.value).toBe(true)
   })
 
   it('keeps the changes offered and goes on probing when the reload after the click fails', async () => {
