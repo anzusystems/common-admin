@@ -114,15 +114,15 @@ const { addManualToCachedKeywords } = useDamCachedKeywords(damConfigName)
 // The inner input reads this cache only once.
 const useCachedOfName = () => useCachedKeywordsForRemoteAutocomplete(damConfigName)
 
+// By `multiple`, not by the value: a multiple input may start as null.
 const afterCreate = (keyword: DamKeyword) => {
   addManualToCachedKeywords(keyword)
-  if (isArray(modelValueComputed.value)) {
-    modelValueComputed.value = [...modelValueComputed.value, keyword.id]
-    search.value = ''
+  search.value = ''
+  if (props.multiple) {
+    modelValueComputed.value = [...(isArray(modelValueComputed.value) ? modelValueComputed.value : []), keyword.id]
     return
   }
   modelValueComputed.value = keyword.id
-  search.value = ''
 }
 
 const itemSlotIsSelected = (item: DocId) => {

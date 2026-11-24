@@ -121,6 +121,31 @@ describe.each(inputs)('the single input of %s', (_which, input, _chip, id) => {
   })
 })
 
+describe('an author conflict pressed in a single input of authors', () => {
+  const press = async (modelValue: string | null) => {
+    await mountInput(AuthorRemoteAutocompleteWithCached, {
+      modelValue,
+      multiple: false,
+      authorConflicts: ['author-2'],
+    })
+    wrapper!.findComponent(AuthorRemoteAutocompleteCachedAuthorChipConflicts).vm.$emit('addAuthor', 'author-2')
+    await flushPromises()
+  }
+
+  it('becomes the value of an empty input', async () => {
+    await press(null)
+
+    expect(wrapper!.emitted('update:modelValue')).toEqual([['author-2']])
+  })
+
+  // A single value is a string: `includes` would find the conflict inside another id and do nothing.
+  it.each(['author-1', 'author-22'])('takes the place of %s', async (value) => {
+    await press(value)
+
+    expect(wrapper!.emitted('update:modelValue')).toEqual([['author-2']])
+  })
+})
+
 describe('"+" of a single input of sources', () => {
   const found = (over: Record<string, unknown>) => ({
     id: 'found-1',
@@ -140,6 +165,16 @@ describe('"+" of a single input of sources', () => {
     await flushPromises()
 
     expect(wrapper!.emitted('update:modelValue')).toEqual([['found-1']])
+  })
+
+  it('puts the one it created into a multiple input that started empty as null, as a list', async () => {
+    signInToDam(extSystem, ['dam_source_create'])
+    await mountInput(AuthorRemoteAutocompleteWithCached, { modelValue: null, multiple: true, source: true })
+
+    wrapper!.findComponent(AuthorCreateButton).vm.$emit('success', found({}))
+    await flushPromises()
+
+    expect(wrapper!.emitted('update:modelValue')).toEqual([[['found-1']]])
   })
 
   it('leaves the input as it is when it found an author, which is no source', async () => {
@@ -206,6 +241,17 @@ describe('creating a keyword under a grant the configuration names', () => {
 
     await vi.waitFor(() => expect(created()).toHaveLength(1))
     expect(dam.body(created()[0]!)).toMatchObject({ name: 'new keyword', extSystem })
+  })
+
+  it('puts the keyword it created into a multiple input that started empty as null, as a list', async () => {
+    signInToDam(extSystem, ['dam_keyword_create'])
+    await mountInput(KeywordRemoteAutocompleteWithCached, { modelValue: null })
+    wrapper!.findComponent(Input).vm.$emit('update:search', 'new keyword')
+    await flushPromises()
+    await entered('Enter')
+
+    // The fake server answers with the id the form sent, which is empty: what matters is the list.
+    await vi.waitFor(() => expect(wrapper!.emitted('update:modelValue')).toEqual([[[expect.any(String)]]]))
   })
 })
 

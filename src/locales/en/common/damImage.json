@@ -222,6 +222,8 @@
     "conflicts": "Author conflicts",
     "sourceFound": "“{name}” is a source, added to Sources",
     "authorFound": "“{name}” is an author, added to Authors",
+    "sourceNotAuthor": "“{name}” is a source and cannot be used as an author",
+    "authorNotSource": "“{name}” is an author and cannot be used as a source",
     "filterMinChars": "Enter at least 2 characters"
   },
   "uploadErrors": {

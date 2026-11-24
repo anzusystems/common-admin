@@ -10,7 +10,7 @@ import {
   useDamCachedAuthorsForRemoteAutocomplete,
 } from '@/domains/dam/author/composables/cachedAuthors'
 import type { DamAuthor } from '@/domains/dam/author/types/DamAuthor'
-import { isArray } from '@/shared/utils/common'
+import { isArray, isUndefined } from '@/shared/utils/common'
 import AFormRemoteAutocompleteWithCached from '@/domains/remoteAutocomplete/components/AFormRemoteAutocompleteWithCached.vue'
 import AuthorRemoteAutocompleteCachedAuthorChip from '@/domains/dam/author/components/AuthorRemoteAutocompleteCachedAuthorChip.vue'
 import AuthorRemoteAutocompleteCachedAuthorChipConflicts from '@/domains/dam/author/components/AuthorRemoteAutocompleteCachedAuthorChipConflicts.vue'
@@ -127,11 +127,15 @@ const offeredConflicts = computed(() =>
   )
 )
 
-const addAuthor = async (id: null | DocId | undefined) => {
+// By `multiple`, not by the value: a single value is a string, which `includes` would search for a substring.
+const addAuthor = (id: null | DocId | undefined) => {
   if (!id) return
-  if (!modelValueComputed.value.includes(id)) {
-    modelValueComputed.value = [...modelValueComputed.value, id]
+  if (!props.multiple) {
+    modelValueComputed.value = id
+    return
   }
+  const list = isArray(modelValueComputed.value) ? (modelValueComputed.value as DocId[]) : []
+  if (!list.includes(id)) modelValueComputed.value = [...list, id]
 }
 
 const addNewAuthorText = ref('')
@@ -161,15 +165,23 @@ const onCreated = async (author: DamAuthor) => {
     (ids) => fetchAuthorListByIds(damClient, endPointAuthor, props.extSystem, ids),
     {
       own: (item) => own.push(item),
-      other: (item) => other.push(item),
+      // Without a field of the other kind (`v-model:counterpart`) the author is not added anywhere.
+      other: (item) => {
+        other.push(item)
+        return !isUndefined(counterpart.value)
+      },
     }
   )
   own.forEach((item) => addManualToCachedAuthors(item))
   other.forEach((item) => addManualToCachedAuthors(item))
   if (own.length + other.length > 0) search.value = ''
   if (own.length > 0) {
-    if (isArray(modelValueComputed.value)) modelValueComputed.value = withNew(modelValueComputed.value as DocId[], own)
-    else modelValueComputed.value = own.at(-1)!.id
+    if (props.multiple) {
+      modelValueComputed.value = withNew(
+        isArray(modelValueComputed.value) ? (modelValueComputed.value as DocId[]) : [],
+        own
+      )
+    } else modelValueComputed.value = own.at(-1)!.id
   }
   if (other.length > 0 && counterpart.value) counterpart.value = withNew(counterpart.value, other)
 }

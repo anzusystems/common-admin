@@ -222,6 +222,8 @@
     "conflicts": "Konflikt autorov",
     "sourceFound": "„{name}“ je zdroj, pridali sme ho do Zdrojov",
     "authorFound": "„{name}“ je autor, pridali sme ho do Autorov",
+    "sourceNotAuthor": "„{name}“ je zdroj, ako autor sa použiť nedá",
+    "authorNotSource": "„{name}“ je autor, ako zdroj sa použiť nedá",
     "filterMinChars": "Zadajte minimálne 2 znaky"
   },
   "uploadErrors": {

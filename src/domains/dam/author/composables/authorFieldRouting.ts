@@ -6,7 +6,8 @@ import { isUndefined } from '@/shared/utils/common'
 
 interface DamAuthorFieldTargets {
   own: (author: DamAuthor) => void
-  other: (author: DamAuthor) => void
+  /** Returns `false` when there is no field of the other kind to take the author. */
+  other: (author: DamAuthor) => boolean | void
 }
 
 /**
@@ -16,7 +17,7 @@ interface DamAuthorFieldTargets {
  */
 export function useDamAuthorFieldRouting() {
   const { t } = useI18n()
-  const { showInfo, showRecordWas, showErrorsDefault } = useAlerts()
+  const { showInfo, showWarning, showRecordWas, showErrorsDefault } = useAlerts()
 
   const routeToFields = async (
     author: DamAuthor,
@@ -32,11 +33,18 @@ export function useDamAuthorFieldRouting() {
           if (item.id === author.id) showRecordWas('created')
           continue
         }
-        targets.other(item)
+        const name = { name: item.name }
+        if (targets.other(item) === false) {
+          showWarning(
+            t(
+              item.flags.source ? 'common.damImage.author.sourceNotAuthor' : 'common.damImage.author.authorNotSource',
+              name
+            )
+          )
+          continue
+        }
         showInfo(
-          t(item.flags.source ? 'common.damImage.author.sourceFound' : 'common.damImage.author.authorFound', {
-            name: item.name,
-          })
+          t(item.flags.source ? 'common.damImage.author.sourceFound' : 'common.damImage.author.authorFound', name)
         )
       }
     } catch (error) {
