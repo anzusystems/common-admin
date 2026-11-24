@@ -1,9 +1,21 @@
 import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
+import { h } from 'vue'
+import { VCard } from 'vuetify/components'
 
 import ALiveListingPill from '@/domains/filters/datatable/components/ALiveListingPill.vue'
 
 describe('ALiveListingPill', () => {
+  it('lets a card around the list clip without becoming the box the pill sticks in', () => {
+    const wrapper = mount(
+      { render: () => h(VCard, null, () => h(ALiveListingPill, { count: 2 })) },
+      { attachTo: document.body }
+    )
+    expect(getComputedStyle(wrapper.find('.v-card').element).overflow).toBe('clip')
+    expect(getComputedStyle(wrapper.find('.a-live-listing-pill').element).position).toBe('sticky')
+    wrapper.unmount()
+  })
+
   it('shows nothing without new records', () => {
     const wrapper = mount(ALiveListingPill, { props: { count: 0 } })
     expect(wrapper.find('.a-live-listing-pill__item').exists()).toBe(false)

@@ -98,4 +98,10 @@ const text = computed(() => {
     margin-top: 0.25rem;
   }
 }
+
+// A card clips its content with overflow: hidden, which also makes it the box the pill sticks in, so the pill would
+// scroll away with the list; clip cuts the same edges and leaves the pill stuck to the window.
+.v-card:has(.a-live-listing-pill) {
+  overflow: clip;
+}
 </style>

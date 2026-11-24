@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { mount, type VueWrapper } from '@vue/test-utils'
-import { effectScope, nextTick, ref } from 'vue'
+import { effectScope, h, nextTick, ref } from 'vue'
+import { VCard } from 'vuetify/components'
 import ADatatableSidePanel from '@/domains/filters/datatable/components/ADatatableSidePanel.vue'
 import { useDatatableSidePanel } from '@/domains/filters/datatable/composables/useDatatableSidePanel'
 
@@ -29,6 +30,15 @@ describe('ADatatableSidePanel', () => {
     expect(panel.attributes('style')).toContain('width: 420px')
     expect(panel.text()).toContain('Title')
     expect(panel.text()).toContain('Text')
+  })
+
+  it('lets a card around the list clip without becoming the box the panel sticks in', () => {
+    wrapper = mount(
+      { render: () => h(VCard, null, () => h(ADatatableSidePanel, { open: true, width: 360 })) },
+      { attachTo: document.body }
+    )
+    expect(getComputedStyle(wrapper.find('.v-card').element).overflow).toBe('clip')
+    expect(getComputedStyle(wrapper.find('.a-datatable-side-panel__panel').element).position).toBe('sticky')
   })
 
   it('closes on Esc and on the close button, but leaves Esc to an open dialog', async () => {

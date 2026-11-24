@@ -35,6 +35,8 @@ const loadList = async () => {
 />
 ```
 
+The pill sticks to the top of the window while the list scrolls. In a `VCard` its styles turn the card's `overflow: hidden` into `clip`, which cuts the same edges without stopping the pill; any other scroll container between the list and the window still stops it.
+
 `LIVE_LISTING_INTERVAL` probes every 10 s in a visible browser tab and every minute in a hidden one. A probe runs at once when the user comes back to the tab, and none runs above `max` (9+) until the click.
 
 ## Rules

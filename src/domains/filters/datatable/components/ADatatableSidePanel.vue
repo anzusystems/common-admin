@@ -144,4 +144,9 @@ useEventListener(document, 'keydown', (event: KeyboardEvent) => {
     padding: 1rem;
   }
 }
+
+// A card around the list clips with overflow: hidden, which keeps the panel from sticking; clip cuts the same edges.
+.v-card:has(.a-datatable-side-panel__panel) {
+  overflow: clip;
+}
 </style>
