@@ -19,7 +19,7 @@ import {
   isMediaAware,
   useImageMediaWidgetStore,
 } from '@/components/damImage/uploadQueue/composables/imageMediaWidgetStore'
-import { AssetSingleUseUsageStatus, DamAssetType, type DamAssetTypeType } from '@/types/coreDam/Asset'
+import { DamAssetType, type DamAssetTypeType } from '@/types/coreDam/Asset'
 import type { ImageCreateUpdateAware } from '@/types/ImageAware'
 import { isDamSourceEnabled } from '@/components/damImage/uploadQueue/source/damSourceConfig'
 import { isDamAuthorEnabled } from '@/components/damImage/uploadQueue/author/damAuthorConfig'
@@ -29,13 +29,8 @@ import DamAdminAssetLink from '@/components/dam/DamAdminAssetLink.vue'
 import { isNull } from '@/utils/common'
 import { DamMediaType } from '@/types/MediaAware'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
-import {
-  getSingleUseGroupId,
-  type SingleUseUsageCheck,
-} from '@/components/dam/assetSelect/composables/assetSelectSingleUseUsage'
-import { formatSingleUseUsageCount } from '@/components/dam/assetSelect/composables/assetSelectDisabledReason'
-import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
-import { COMMON_CONFIG } from '@/model/commonConfig'
+import type { SingleUseUsageCheck } from '@/components/dam/assetSelect/composables/assetSelectSingleUseUsage'
+import ImageDetailSingleUseWarning from '@/components/damImage/uploadQueue/components/ImageDetailSingleUseWarning.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -136,34 +131,6 @@ const singleUseBlocked = computed(
   () => (props.singleUseCheck?.failed || props.singleUseCheck?.asset.singleUseUsage?.blocked) ?? false,
 )
 
-const singleUseWarning = computed(() => {
-  if (props.singleUseCheck?.failed) return t('common.assetSelect.usage.checkFailed')
-  const usage = props.singleUseCheck?.asset.singleUseUsage
-  if (!usage) return null
-  const count = formatSingleUseUsageCount(usage.usageCount)
-  switch (usage.status) {
-    case AssetSingleUseUsageStatus.NotAllowed:
-      return t('common.assetSelect.disabledReason.singleUseNotAllowed')
-    case AssetSingleUseUsageStatus.Conflict:
-      return usage.blocked
-        ? t('common.assetSelect.disabledReason.singleUseBlocked', { count })
-        : t('common.assetSelect.usage.usedElsewhere', { count })
-    case AssetSingleUseUsageStatus.OwnShared:
-      return t('common.assetSelect.usage.usedBySeveral', { count })
-    default:
-      return null
-  }
-})
-
-// eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { singleUseUsageUrl } = useCommonAdminCoreDamOptions(props.configName)
-
-const singleUseAllUsagesUrl = computed(() => {
-  if (!props.singleUseCheck || props.singleUseCheck.failed || !singleUseUsageUrl) return undefined
-  const groupId = getSingleUseGroupId(props.singleUseCheck.asset)
-  return isNull(groupId) ? undefined : singleUseUsageUrl(groupId)
-})
-
 const onConfirm = () => {
   v$.value.$touch()
   if (singleUseBlocked.value || v$.value.$invalid) {
@@ -198,25 +165,11 @@ defineExpose({
       </VCol>
     </VRow>
     <template v-if="isImageCreateUpdateAware(detail)">
-      <VAlert
-        v-if="singleUseWarning && singleUseCheck"
-        type="warning"
-        class="mb-4"
-      >
-        <div class="mb-2">
-          {{ singleUseWarning }}
-        </div>
-        <VBtn
-          v-if="singleUseAllUsagesUrl"
-          :append-icon="COMMON_CONFIG.CHIP.ICON.LINK_EXTERNAL"
-          size="small"
-          target="_blank"
-          rel="noopener noreferrer"
-          :href="singleUseAllUsagesUrl"
-        >
-          {{ t('common.assetSelect.usage.openList') }}
-        </VBtn>
-      </VAlert>
+      <ImageDetailSingleUseWarning
+        v-if="singleUseCheck"
+        :single-use-check="singleUseCheck"
+        :config-name="configName"
+      />
       <VRow>
         <VCol>
           <VBtn @click.stop="onEditAsset">
@@ -308,25 +261,11 @@ defineExpose({
               :image="detail"
             />
           </div>
-          <VAlert
-            v-if="singleUseWarning && singleUseCheck"
-            type="warning"
-            class="mb-4"
-          >
-            <div class="mb-2">
-              {{ singleUseWarning }}
-            </div>
-            <VBtn
-              v-if="singleUseAllUsagesUrl"
-              :append-icon="COMMON_CONFIG.CHIP.ICON.LINK_EXTERNAL"
-              size="small"
-              target="_blank"
-              rel="noopener noreferrer"
-              :href="singleUseAllUsagesUrl"
-            >
-              {{ t('common.assetSelect.usage.openList') }}
-            </VBtn>
-          </VAlert>
+          <ImageDetailSingleUseWarning
+            v-if="singleUseCheck"
+            :single-use-check="singleUseCheck"
+            :config-name="configName"
+          />
           <VRow>
             <VCol>
               <VBtn @click.stop="onEditAsset">

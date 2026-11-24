@@ -1,28 +1,33 @@
 import type { ComposerTranslation } from 'vue-i18n'
-import type { ImageSaveErrorInfo, KnownSingleUseReason } from '@/components/damImage/uploadQueue/api/imageApiCms'
+import {
+  ImageSaveErrorCode,
+  type ImageSaveErrorInfo,
+  ImageSaveErrorReason,
+  type ImageSaveErrorReasonType,
+} from '@/components/damImage/uploadQueue/api/imageApiCms'
 import { resolveHolderLabel } from '@/components/dam/assetSelect/composables/assetSelectDisabledReason'
 
-const SINGLE_USE_REASON_MESSAGE: Partial<Record<KnownSingleUseReason, string>> = {
-  shared_gallery: 'common.damImage.image.error.sharedGallery',
-  invalid_owner: 'common.damImage.image.error.invalidOwner',
-  gallery_copy: 'common.damImage.image.error.galleryCopy',
+const SINGLE_USE_REASON_MESSAGE: Partial<Record<ImageSaveErrorReasonType, string>> = {
+  [ImageSaveErrorReason.SharedGallery]: 'common.damImage.image.error.sharedGallery',
+  [ImageSaveErrorReason.InvalidOwner]: 'common.damImage.image.error.invalidOwner',
+  [ImageSaveErrorReason.GalleryCopy]: 'common.damImage.image.error.galleryCopy',
 }
 
 export function resolveImageSaveErrorMessage(
   errorInfo: ImageSaveErrorInfo | undefined,
   t: ComposerTranslation,
 ): string | undefined {
-  if (errorInfo?.code === 'image_take_over_failed') {
-    return errorInfo.reason === 'take_over_rejected'
+  if (errorInfo?.code === ImageSaveErrorCode.TakeOverFailed) {
+    return errorInfo.reason === ImageSaveErrorReason.TakeOverRejected
       ? t('common.damImage.image.error.takeOverRejected')
       : t('common.damImage.image.error.takeOverUnavailable')
   }
-  if (errorInfo?.code !== 'image_single_use_violation') {
+  if (errorInfo?.code !== ImageSaveErrorCode.SingleUseViolation) {
     return undefined
   }
 
   const fixedMessage = errorInfo.reason
-    ? SINGLE_USE_REASON_MESSAGE[errorInfo.reason as KnownSingleUseReason]
+    ? SINGLE_USE_REASON_MESSAGE[errorInfo.reason]
     : undefined
   if (fixedMessage) {
     return t(fixedMessage)
@@ -31,7 +36,7 @@ export function resolveImageSaveErrorMessage(
   const damId = errorInfo.damId ?? ''
   const holder = errorInfo.holderResourceName ? resolveHolderLabel(errorInfo.holderResourceName) : ''
   const key =
-    errorInfo.reason === 'restore_conflict'
+    errorInfo.reason === ImageSaveErrorReason.RestoreConflict
       ? 'common.damImage.image.error.restoreConflict'
       : 'common.damImage.image.error.singleUseViolation'
 
