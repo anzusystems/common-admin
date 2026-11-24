@@ -28,11 +28,12 @@ export function getDamCreditConfig(extSystem: IntegerId): DamCreditConfig {
 export const hasNoDamCredit = (authorIds: DocId[], sourceIds: DocId[]) =>
   authorIds.length === 0 && sourceIds.length === 0
 
-type DamCreditName = Pick<DamAuthorMinimal, 'name' | 'hiddenInCredit'>
+type DamCreditName = Pick<DamAuthorMinimal, 'name' | 'hiddenInCredit' | 'priority'>
 
 const joinNames = (items: DamCreditName[], separator: string) =>
   items
     .filter((item) => !item.hiddenInCredit)
+    .sort((a, b) => b.priority - a.priority)
     .map((item) => item.name.trim())
     .filter((name) => name.length > 0)
     .join(separator)
@@ -62,7 +63,11 @@ export function damCreditFromMap(
     ids
       .map((id) => authorsMap.get(id))
       .filter((item): item is DamAuthor => !isUndefined(item))
-      .map((item) => ({ name: item.name, hiddenInCredit: item.flags.hiddenInCredit }))
+      .map((item) => ({
+        name: item.name,
+        hiddenInCredit: item.flags.hiddenInCredit,
+        priority: item.priority,
+      }))
   return damCredit(pick(sourceIds), pick(authorIds), config)
 }
 
