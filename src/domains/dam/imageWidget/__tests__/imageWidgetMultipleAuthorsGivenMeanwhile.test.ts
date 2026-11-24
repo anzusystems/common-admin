@@ -218,9 +218,9 @@ describe('the save of the widget of several images, with authors of the DAM pick
       expect(calls()).toEqual(['fetchImageListByIds'])
       expect(shownAlerts()).toEqual(givenMeanwhileSaid)
       expect(uiText('common.damImage.image.meta.galleryAuthorsGivenMeanwhile')).toBe(
-        'The assets of some images have been given authors in the Media Library in the meantime. Images without a ' +
-          'source of their own now have their names; the authors you picked were not saved, and nothing was saved. ' +
-          'Check and save again.'
+        'The assets of some images have been given sources or authors in the Media Library in the meantime. ' +
+          'Images without a credit of their own now have theirs; the sources and authors you picked were not saved, ' +
+          'and nothing was saved. Check and save again.'
       )
       expect(useAlertsQueue().value.at(-1)!.timeout).toBe(-1)
       expect(asRows()).toEqual([[12, 'asset-12', ['author-3'], false, shown]])

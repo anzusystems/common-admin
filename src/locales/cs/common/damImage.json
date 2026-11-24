@@ -11,8 +11,8 @@
     },
     "meta": {
       "edit": "Upravit obrázek",
-      "authorsGivenMeanwhile": "Asset mezitím dostal autory v DAM. Pokud obrázek neměl vlastní zdroj, má nyní jejich jména; vybraní autoři se neuložili. Zkontrolujte a potvrďte znovu.",
-      "galleryAuthorsGivenMeanwhile": "Assety některých obrázků mezitím dostaly autory v DAM. Obrázky bez vlastního zdroje mají nyní jejich jména; vybraní autoři se neuložili a nic se neuložilo. Zkontrolujte a uložte znovu."
+      "authorsGivenMeanwhile": "Asset mezitím dostal zdroje nebo autory v DAM. Pokud obrázek neměl vlastní kredit, má nyní jejich kredit; vybrané zdroje a autoři se neuložili. Zkontrolujte a potvrďte znovu.",
+      "galleryAuthorsGivenMeanwhile": "Assety některých obrázků mezitím dostaly zdroje nebo autory v DAM. Obrázky bez vlastního kreditu mají nyní jejich kredit; vybrané zdroje a autoři se neuložili a nic se neuložilo. Zkontrolujte a uložte znovu."
     },
     "button": {
       "options": "Upravit obrázek",

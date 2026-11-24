@@ -51,7 +51,7 @@ export function useImageMassOperations(configName: string) {
    * Falls back to the configured ext system when the licence is unknown (or, for the format, not loaded).
    * One lookup per ext system; the fallback was previously used for every row.
    */
-  const replaceEmptySelections = async (picks: DamSelectionPicks, forceReplace = false) => {
+  const fillSelections = async (picks: DamSelectionPicks, forceReplace: boolean) => {
     if (imageStore.readonly) return
     // Empty picks fill nothing. Writing them would only clear the rows' sources.
     const fields = (Object.keys(picks) as DamSelectionField[]).filter(
@@ -112,6 +112,16 @@ export function useImageMassOperations(configName: string) {
       )
       imageStore.noteSourceOfPick(item)
     })
+  }
+
+  // Fills run one after the other. One pressed while another still loads names waits for it, so it starts from
+  // the lists the first wrote and the credit keeps the names of both. Run at once, the later write left the
+  // names of the earlier fill out of the credit.
+  let lastFill: Promise<void> = Promise.resolve()
+  const replaceEmptySelections = (picks: DamSelectionPicks, forceReplace = false) => {
+    const fill = lastFill.then(() => fillSelections(picks, forceReplace))
+    lastFill = fill.catch(() => undefined)
+    return fill
   }
 
   const replaceEmptyAuthors = (value: DocId[], forceReplace = false) =>

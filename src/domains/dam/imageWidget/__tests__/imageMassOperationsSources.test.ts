@@ -82,6 +82,16 @@ describe('useImageMassOperations sources', () => {
     expect(store.images[0]!.texts.source).toBe('')
   })
 
+  it('keeps the names of both in the credit when a second fill is pressed while the first loads names', async () => {
+    const store = useImageStore()
+    store.setImages([row({})])
+    const operations = useImageMassOperations('default')
+    await Promise.all([operations.replaceEmptySources(['tasr']), operations.replaceEmptyAuthors(['jane'])])
+    expect(store.images[0]!.damSources).toEqual(['tasr'])
+    expect(store.images[0]!.damAuthors).toEqual(['jane'])
+    expect(store.images[0]!.texts.source).toBe('TASR/JANE')
+  })
+
   it('leaves out names hidden in credit', async () => {
     fetchAuthorListByIds.mockImplementation(async (_client, _endPoint, _extSystem, ids: string[]) =>
       ids.map((id) => named(id, id === 'tasr'))

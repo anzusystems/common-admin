@@ -277,8 +277,8 @@ describe.each<[string, Component]>([
 
     expect(useAlertsQueue().value.at(-1)!.timeout).toBe(-1)
     expect(uiText('common.damImage.image.meta.authorsGivenMeanwhile')).toBe(
-      'The asset has been given authors in the Media Library in the meantime. If the image had no source of its own, ' +
-        'it now has their names; the authors you picked were not saved. Check and confirm again.'
+      'The asset has been given sources or authors in the Media Library in the meantime. If the image had no credit ' +
+        'of its own, it now has theirs; the sources and authors you picked were not saved. Check and confirm again.'
     )
     expect(readsOf('asset-9')).toHaveLength(3)
     expect(authorsWritten()).toEqual([])
