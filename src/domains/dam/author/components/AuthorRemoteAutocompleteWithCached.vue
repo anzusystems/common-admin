@@ -78,7 +78,8 @@ const modelValueComputed = computed({
     return props.modelValue
   },
   set(newValue) {
-    emit('update:modelValue', [...newValue])
+    // Without `multiple` the value is one id or null, which spread would break into characters or throw on.
+    emit('update:modelValue', isArray(newValue) ? [...newValue] : newValue)
   },
 })
 

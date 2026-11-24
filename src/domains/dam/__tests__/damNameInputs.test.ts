@@ -100,6 +100,61 @@ describe.each(inputs)('the input of %s', (_which, input, chip, id) => {
   })
 })
 
+// Without `multiple` an input holds one id or null, as a licence's default source does.
+describe.each(inputs)('the single input of %s', (_which, input, _chip, id) => {
+  it('hands on the one id picked', async () => {
+    await mountInput(input, { modelValue: null, multiple: false })
+
+    wrapper!.findComponent(Input).vm.$emit('update:modelValue', id)
+    await flushPromises()
+
+    expect(wrapper!.emitted('update:modelValue')).toEqual([[id]])
+  })
+
+  it('hands on null when cleared', async () => {
+    await mountInput(input, { modelValue: id, multiple: false })
+
+    wrapper!.findComponent(Input).vm.$emit('update:modelValue', null)
+    await flushPromises()
+
+    expect(wrapper!.emitted('update:modelValue')).toEqual([[null]])
+  })
+})
+
+describe('"+" of a single input of sources', () => {
+  const found = (over: Record<string, unknown>) => ({
+    id: 'found-1',
+    name: 'Agency',
+    identifier: '',
+    flags: { reviewed: false, source: true, hiddenInCredit: false },
+    currentAuthors: [],
+    childAuthors: [],
+    ...over,
+  })
+
+  it('puts the source it created or found into the input', async () => {
+    signInToDam(extSystem, ['dam_source_create'])
+    await mountInput(AuthorRemoteAutocompleteWithCached, { modelValue: null, multiple: false, source: true })
+
+    wrapper!.findComponent(AuthorCreateButton).vm.$emit('success', found({}))
+    await flushPromises()
+
+    expect(wrapper!.emitted('update:modelValue')).toEqual([['found-1']])
+  })
+
+  it('leaves the input as it is when it found an author, which is no source', async () => {
+    signInToDam(extSystem, ['dam_source_create'])
+    await mountInput(AuthorRemoteAutocompleteWithCached, { modelValue: null, multiple: false, source: true })
+
+    wrapper!
+      .findComponent(AuthorCreateButton)
+      .vm.$emit('success', found({ flags: { reviewed: false, source: false, hiddenInCredit: false } }))
+    await flushPromises()
+
+    expect(wrapper!.emitted('update:modelValue')).toBeUndefined()
+  })
+})
+
 describe('the "+" button of the input of authors', () => {
   it('is hidden while the input is disabled, by default', async () => {
     await mountInput(AuthorRemoteAutocompleteWithCached, { modelValue: [], disabled: true })
