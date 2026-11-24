@@ -272,13 +272,16 @@ describe('useAssetSelectActions', () => {
   })
 
   it.each([
-    [true, null],
-    [false, false],
+    [DamAssetType.Image, true, null],
+    [DamAssetType.Image, false, false],
+    [DamAssetType.Video, true, false],
+    [DamAssetType.Audio, true, false],
   ])(
-    'lists single use photos only for a record type that may use them (allowed %s)',
-    async (singleUseAllowed, mainFileSingleUse) => {
+    'lists single use assets only as photos for a record type that may use them (%s, allowed %s)',
+    async (assetType, singleUseAllowed, mainFileSingleUse) => {
       const { actions, store } = mountActions()
       executeFetch.mockResolvedValue([])
+      store.setAssetType(assetType)
       store.setSelectedLicenceIds([10])
       store.setSelectability({ singleUseAllowed, uploadLicence: undefined, usageHolder: null })
 
