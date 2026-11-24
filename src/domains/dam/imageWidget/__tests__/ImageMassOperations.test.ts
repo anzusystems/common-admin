@@ -70,6 +70,7 @@ const mountWithImages = () => {
       dam: { damId: 'file-1', licenceId: 1, regionPosition: 0, internal: false },
       position: 1,
       damAuthors: [],
+      damSources: [],
       showDamAuthors: true,
       assetId: 'asset-1',
     },

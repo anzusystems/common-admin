@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { DocId, IntegerId } from '@/shared/types/common'
 import type { ValidationScope } from '@/shared/types/Validation'
-import { computed, provide, ref } from 'vue'
+import { computed, provide, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useValidate } from '@/shared/validators/vuelidate/useValidate'
 import useVuelidate from '@vuelidate/core'
@@ -23,6 +23,8 @@ import { useAclAllowed } from '@/domains/auth/composables/aclAllowed'
 import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
 import type { DamFieldsDisabledAs } from '@/domains/dam/uploadQueue/components/uploadQueueBindings'
 import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
+import { fetchAuthorListByIds } from '@/domains/dam/author/api/authorApi'
+import { useDamAuthorFieldRouting } from '@/domains/dam/author/composables/authorFieldRouting'
 
 const props = withDefaults(
   defineProps<{
@@ -33,6 +35,11 @@ const props = withDefaults(
     required?: boolean | null
     disabled?: boolean | undefined
     multiple?: boolean
+    /**
+     * The field kind: `true` for sources, `false` for authors that are not sources.
+     * Undefined (sources off) offers every author.
+     */
+    source?: boolean
     clearable?: boolean
     authorConflicts?: DocId[]
     dataCy?: string
@@ -48,6 +55,7 @@ const props = withDefaults(
     required: null,
     disabled: undefined,
     multiple: false,
+    source: undefined,
     clearable: false,
     authorConflicts: undefined,
     dataCy: undefined,
@@ -61,6 +69,9 @@ const emit = defineEmits<{
 }>()
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const damConfigName = useDamConfigName(props.configName)
+
+// The field of the other kind. An author created here that is of that kind goes there.
+const counterpart = defineModel<DocId[] | undefined>('counterpart', { default: undefined })
 
 const modelValueComputed = computed({
   get() {
@@ -93,12 +104,20 @@ const v$ = useVuelidate(rules, { modelValueComputed }, { $scope: props.validatio
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { fetchItemsMinimal } = useAuthorSelectActions(props.extSystem, damConfigName)
 
-const { authorCreateAcl } = useCommonAdminCoreDamOptions(damConfigName)
-const createAllowed = useAclAllowed(authorCreateAcl ?? undefined)
+const { authorCreateAcl, sourceCreateAcl, damClient, endPointAuthor } = useCommonAdminCoreDamOptions(damConfigName)
+const createAllowed = useAclAllowed(() => (props.source ? sourceCreateAcl : authorCreateAcl) ?? undefined)
 
 const { filterData, filterConfig } = useAuthorInnerFilter()
 provide(FilterInnerConfigKey, filterConfig)
 provide(FilterInnerDataKey, filterData)
+
+watch(
+  () => props.source,
+  (source) => {
+    filterData.source = source ?? null
+  },
+  { immediate: true }
+)
 
 // Authors the input already has are not offered again.
 const offeredConflicts = computed(() =>
@@ -124,16 +143,39 @@ const { addManualToCachedAuthors } = useDamCachedAuthors(damConfigName)
 // The inner input reads this cache only once.
 const useCachedOfName = () => useDamCachedAuthorsForRemoteAutocomplete(damConfigName)
 
-const afterCreate = (author: DamAuthor) => {
-  addManualToCachedAuthors(author)
-  if (isArray(modelValueComputed.value)) {
-    modelValueComputed.value = [...modelValueComputed.value, author.id]
-    search.value = ''
-    return
+const withNew = (list: DocId[], authors: DamAuthor[]) => [
+  ...list,
+  ...authors.map((author) => author.id).filter((id, index, ids) => !list.includes(id) && ids.indexOf(id) === index),
+]
+
+const { routeToFields } = useDamAuthorFieldRouting()
+// A merged author may resolve to several current authors. Each field takes those of its kind in one write:
+// written one by one, each write started from the list before the previous one reached the parent.
+const onCreated = async (author: DamAuthor) => {
+  const own: DamAuthor[] = []
+  const other: DamAuthor[] = []
+  await routeToFields(
+    author,
+    props.source,
+    (ids) => fetchAuthorListByIds(damClient, endPointAuthor, props.extSystem, ids),
+    {
+      own: (item) => own.push(item),
+      other: (item) => other.push(item),
+    }
+  )
+  own.forEach((item) => addManualToCachedAuthors(item))
+  other.forEach((item) => addManualToCachedAuthors(item))
+  if (own.length + other.length > 0) search.value = ''
+  if (own.length > 0) {
+    if (isArray(modelValueComputed.value)) modelValueComputed.value = withNew(modelValueComputed.value as DocId[], own)
+    else modelValueComputed.value = own.at(-1)!.id
   }
-  modelValueComputed.value = author.id
-  search.value = ''
+  if (other.length > 0 && counterpart.value) counterpart.value = withNew(counterpart.value, other)
 }
+
+const sourcesEmptyAttrs = computed(() =>
+  props.source && !loadingLocal.value ? { 'no-data-text': t('common.damImage.asset.model.sourcesEmpty') } : {}
+)
 
 const itemSlotIsSelected = (item: DocId) => {
   if (isArray(modelValueComputed.value)) {
@@ -219,7 +261,9 @@ const showAdd = computed(() => {
       :data-cy="dataCy"
       item-title="name"
       item-value="id"
-      :min-search-chars="2"
+      :min-search-chars="source ? 0 : 2"
+      :prefetch="source ? 'focus' : false"
+      v-bind="sourcesEmptyAttrs"
       min-search-text="common.damImage.author.filterMinChars"
       @search-change="searchChange"
       @keyup.enter="onEnterKeyup"
@@ -289,9 +333,11 @@ const showAdd = computed(() => {
         :ext-system="extSystem"
         data-cy="add-author"
         :initial-value="addNewAuthorText"
+        :source="source"
+        :notify-created="false"
         disable-redirect
         :disabled="disabled"
-        @success="afterCreate"
+        @success="onCreated"
       />
     </div>
   </div>

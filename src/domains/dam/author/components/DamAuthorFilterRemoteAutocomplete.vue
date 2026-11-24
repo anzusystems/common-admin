@@ -12,10 +12,13 @@ const props = withDefaults(
   defineProps<{
     name: string
     extSystem: IntegerId
+    /** `true` offers only sources, `false` only authors that are not sources. Undefined offers all. */
+    source?: boolean
     /** DAM configuration to use. Defaults to the parent component's, else `default`. */
     configName?: string
   }>(),
   {
+    source: undefined,
     configName: undefined,
   }
 )
@@ -29,6 +32,7 @@ const damConfigName = useDamConfigName(props.configName)
 const { fetchItemsMinimal, fetchItemsMinimalByIds } = useAuthorSelectActions(props.extSystem, damConfigName)
 
 const { filterData, filterConfig } = useAuthorInnerFilter()
+filterData.source = props.source ?? null
 provide(FilterInnerConfigKey, filterConfig)
 provide(FilterInnerDataKey, filterData)
 

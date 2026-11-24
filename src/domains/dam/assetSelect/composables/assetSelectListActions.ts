@@ -223,7 +223,7 @@ export function useAssetSelectActions(configName: string) {
           // Set again for the shown read. The value is per configuration, and another
           // widget may have overwritten it since the click when its upload or copy ended.
           cachedExtSystemId.value = extSystem
-          addToCachedAuthors(asset.authors)
+          addToCachedAuthors(asset.authors, asset.sources)
           addToCachedKeywords(asset.keywords)
           if (showFileInfoEnabled) {
             addToCachedUsers(asset.modifiedBy, asset.createdBy)

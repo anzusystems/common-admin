@@ -1295,7 +1295,14 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
     const saveInDetail = async (authors: DocId[]) => {
       const { damClient, endPointAsset } = useCommonAdminCoreDamOptions('default')
       detail().asset!.authors = authors
-      await updateAssetMetadata(damClient, endPointAsset, detail().asset!, extSystem, detail().mainFileSingleUse)
+      await updateAssetMetadata(
+        damClient,
+        endPointAsset,
+        detail().asset!,
+        extSystem,
+        detail().mainFileSingleUse,
+        'default'
+      )
       await flushPromises()
     }
     const closeDetail = async (widget: VueWrapper) => {

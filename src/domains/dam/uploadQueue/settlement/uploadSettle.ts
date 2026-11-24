@@ -146,6 +146,7 @@ export function mergeLoadedMetadata(
   const { updateNewNames, getAuthorConflicts } = useAssetSuggestions()
   if (isEmptyMetadataValue(row.keywords)) row.keywords = [...(asset.keywords ?? [])]
   if (isEmptyMetadataValue(row.authors)) row.authors = [...(asset.authors ?? [])]
+  if (isEmptyMetadataValue(row.sources)) row.sources = [...(asset.sources ?? [])]
   const customData: Record<string, unknown> = isObject(asset.metadata.customData)
     ? { ...asset.metadata.customData }
     : {}
@@ -163,7 +164,7 @@ export function mergeLoadedMetadata(
   updateNewNames(asset.metadata.keywordSuggestions ?? {}, queue.suggestions.newKeywordNames)
   row.authorConflicts = getAuthorConflicts(authorSuggestions)
   caches.addKeywords(row.keywords)
-  caches.addAuthors(row.authors)
+  caches.addAuthors([...row.authors, ...(row.sources ?? [])])
   caches.addAuthors(row.authorConflicts)
 }
 
@@ -591,13 +592,14 @@ export function createUploadSettle(
       if (original.mainFile?.links?.image_detail) row.imagePreview = original.mainFile.links.image_detail
       row.keywords = [...(original.keywords ?? [])]
       row.authors = [...(original.authors ?? [])]
+      row.sources = [...(original.sources ?? [])]
       row.customData = isObject(original.metadata.customData) ? { ...original.metadata.customData } : {}
       updateNewNames(authorSuggestions, queue.suggestions.newAuthorNames)
       updateNewNames(original.metadata.keywordSuggestions ?? {}, queue.suggestions.newKeywordNames)
       row.authorConflicts = getAuthorConflicts(authorSuggestions)
       const caches = cachesOf(queueKey)
       caches.addKeywords(row.keywords)
-      caches.addAuthors(row.authors)
+      caches.addAuthors([...row.authors, ...(row.sources ?? [])])
       caches.addAuthors(row.authorConflicts)
       row.assetId = original.id
       row.mainFileSingleUse = original.mainFileSingleUse

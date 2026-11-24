@@ -1,3 +1,4 @@
+import { DAM_CREDIT_CONFIG_DEFAULT } from '@/domains/dam/author/composables/damCredit'
 import axios from 'axios'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
@@ -30,6 +31,7 @@ const ASSET = '/ugc/v1/asset'
 
 let dam: FakeDam
 beforeEach(() => {
+  setActivePinia(createPinia())
   dam = createFakeDam({ asset: ASSET, image: '/ugc/v1/image' })
 })
 
@@ -58,7 +60,7 @@ describe('the bulk save of the metadata of a queue', () => {
       mainFileSingleUse: true,
     })
 
-    const answer = await bulkUpdateAssetsMetadata(dam.client, ASSET, [item])
+    const answer = await bulkUpdateAssetsMetadata(dam.client, ASSET, [item], undefined, 1, 'default')
 
     expect(saves().map((request) => `${request.method} ${request.url}`)).toEqual([
       'PATCH /ugc/v1/asset/metadata-bulk-update',
@@ -95,8 +97,16 @@ describe('the bulk save of the metadata of a queue', () => {
     )
     const item = row('asset-1', { fileId: 'file-1', customData: { description: 'typed' } })
 
-    const answer = await bulkUpdateAssetsMetadata(dam.client, ASSET, [item])
-    const images = await mapUploadMetadataToImages([item], answer, dam.client, 4, 1, '/ugc/v1/author')
+    const answer = await bulkUpdateAssetsMetadata(dam.client, ASSET, [item], undefined, 1, 'default')
+    const images = await mapUploadMetadataToImages(
+      [item],
+      answer,
+      dam.client,
+      4,
+      1,
+      '/ugc/v1/author',
+      DAM_CREDIT_CONFIG_DEFAULT
+    )
 
     expect(sent()[0]).not.toHaveProperty('mainFileInternal')
     expect(sent()[0]).not.toHaveProperty('mainFileOverrideInternal')
@@ -112,7 +122,7 @@ describe('the bulk save of the metadata of a queue', () => {
     ['is switched off', false, false],
     ['is switched on', true, true],
   ])('sends the single-use switch of a row also when it %s', async (_what, mainFileSingleUse, sentAs) => {
-    await bulkUpdateAssetsMetadata(dam.client, ASSET, [row('asset-1', { mainFileSingleUse })])
+    await bulkUpdateAssetsMetadata(dam.client, ASSET, [row('asset-1', { mainFileSingleUse })], undefined, 1, 'default')
 
     expect(sent()[0]).toHaveProperty('mainFileSingleUse', sentAs)
   })
@@ -122,7 +132,7 @@ describe('the bulk save of the metadata of a queue', () => {
     async (given) => {
       const rows = [row('asset-1', { mainFileSingleUse: !given }), row('asset-2', { mainFileSingleUse: null })]
 
-      await bulkUpdateAssetsMetadata(dam.client, ASSET, rows, given)
+      await bulkUpdateAssetsMetadata(dam.client, ASSET, rows, given, 1, 'default')
 
       expect(sent().map((one) => one.mainFileSingleUse)).toEqual([given, given])
     }
@@ -138,7 +148,7 @@ describe('the bulk save of the metadata of a queue', () => {
       row('asset-also-editable', { status: UploadQueueItemStatus.Processing }),
     ]
 
-    await bulkUpdateAssetsMetadata(dam.client, ASSET, rows)
+    await bulkUpdateAssetsMetadata(dam.client, ASSET, rows, undefined, 1, 'default')
 
     expect(sent().map((one) => one.id)).toEqual(['asset-editable', 'asset-also-editable'])
   })
@@ -147,7 +157,7 @@ describe('the bulk save of the metadata of a queue', () => {
     const rows = Array.from({ length: 23 }, (_, index) => row(`asset-${index}`))
     const holding = dam.hold('PATCH', dam.routes.bulkMetadata)
 
-    const saving = bulkUpdateAssetsMetadata(dam.client, ASSET, rows)
+    const saving = bulkUpdateAssetsMetadata(dam.client, ASSET, rows, undefined, 1, 'default')
     await new Promise((resolve) => setTimeout(resolve, 50))
     expect(saves()).toHaveLength(1)
     holding.release()
@@ -163,10 +173,14 @@ describe('the bulk save of the metadata of a queue', () => {
   })
 
   it('asks for nothing and answers with nothing when no row is to be saved', async () => {
-    const answer = await bulkUpdateAssetsMetadata(dam.client, ASSET, [
-      row(null),
-      row('asset-1', { canEditMetadata: false }),
-    ])
+    const answer = await bulkUpdateAssetsMetadata(
+      dam.client,
+      ASSET,
+      [row(null), row('asset-1', { canEditMetadata: false })],
+      undefined,
+      1,
+      'default'
+    )
 
     expect(answer).toEqual([])
     expect(dam.requests).toEqual([])
@@ -175,7 +189,7 @@ describe('the bulk save of the metadata of a queue', () => {
   it.each([201, 204, 422, 500])('is refused when a request is answered with %s', async (status) => {
     dam.reply(() => ({ status, data: [] }))
 
-    const outcome = await bulkUpdateAssetsMetadata(dam.client, ASSET, [row('asset-1')]).then(
+    const outcome = await bulkUpdateAssetsMetadata(dam.client, ASSET, [row('asset-1')], undefined, 1, 'default').then(
       () => 'resolved',
       () => 'rejected'
     )
@@ -188,7 +202,7 @@ describe('the bulk save of the metadata of a queue', () => {
     let request = 0
     dam.reply(() => (++request === 2 ? { status: 500 } : undefined))
 
-    const outcome = await bulkUpdateAssetsMetadata(dam.client, ASSET, rows).then(
+    const outcome = await bulkUpdateAssetsMetadata(dam.client, ASSET, rows, undefined, 1, 'default').then(
       () => 'resolved',
       () => 'rejected'
     )
@@ -209,7 +223,7 @@ describe('the save of the metadata of one asset', () => {
       mainFileOverrideInternal: true,
     })
 
-    await updateAssetMetadata(dam.client, ASSET, asset, 4, true)
+    await updateAssetMetadata(dam.client, ASSET, asset, 4, true, 'default')
 
     expect(saves().map((request) => request.url)).toEqual(['/ugc/v1/asset/metadata-bulk-update'])
     expect(sent()).toEqual([
@@ -225,7 +239,7 @@ describe('the save of the metadata of one asset', () => {
   })
 
   it('sends the single-use switch also when the caller does not know it', async () => {
-    await updateAssetMetadata(dam.client, ASSET, damAsset('asset-1'), 4, null)
+    await updateAssetMetadata(dam.client, ASSET, damAsset('asset-1'), 4, null, 'default')
 
     expect(sent()[0]).toHaveProperty('mainFileSingleUse', null)
   })
@@ -257,7 +271,7 @@ describe('the save of the authors of one asset', () => {
   afterEach(() => setApiErrorLogger(defaultApiErrorLogger))
 
   it('sends the id and the authors of the asset alone, as a list of one, and marks the asset described', async () => {
-    await updateAssetAuthors(dam.client, ASSET, asset())
+    await updateAssetAuthors(dam.client, ASSET, asset(), 1, 'default')
 
     expect(saves().map((request) => `${request.method} ${request.url}`)).toEqual([
       'PATCH /ugc/v1/asset/metadata-bulk-update',
@@ -285,7 +299,7 @@ describe('the save of the authors of one asset', () => {
       data: { contextId: 'context', error: 'validation_failed', fields: { '[0].authors': ['error_field_empty'] } },
     }))
 
-    const failure = await settled(updateAssetAuthors(dam.client, ASSET, asset()))
+    const failure = await settled(updateAssetAuthors(dam.client, ASSET, asset(), 1, 'default'))
 
     expect(failure).toBeInstanceOf(AnzuApiValidationError)
     expect(shownAlerts()).toEqual([])
@@ -300,20 +314,32 @@ describe('the save of the authors of one asset', () => {
 // failures are converted, not nobody signed in, a user without permission, or a validation refusal.
 // The bulk save of a queue builds on the answer. The other two read nothing from it.
 describe.each([
-  ['the bulk save of a queue', () => bulkUpdateAssetsMetadata(dam.client, ASSET, [row('asset-1')]), true],
+  [
+    'the bulk save of a queue',
+    () => bulkUpdateAssetsMetadata(dam.client, ASSET, [row('asset-1')], undefined, 1, 'default'),
+    true,
+  ],
   [
     'the save of the metadata of one asset',
-    () => updateAssetMetadata(dam.client, ASSET, damAsset('asset-1'), 4, null),
+    () => updateAssetMetadata(dam.client, ASSET, damAsset('asset-1'), 4, null, 'default'),
     false,
   ],
   [
     'the save of the authors of a gallery',
-    () => bulkUpdateAssetsAuthors(dam.client, ASSET, [{ id: 'asset-1', authors: ['author-1'] }]),
+    () =>
+      bulkUpdateAssetsAuthors(
+        dam.client,
+        ASSET,
+        DamAssetType.Image,
+        1,
+        [{ id: 'asset-1', authors: ['author-1'] }],
+        'default'
+      ),
     false,
   ],
   [
     'the save of the authors of one asset',
-    () => updateAssetAuthors(dam.client, ASSET, damAsset('asset-1', { authors: ['author-1'] })),
+    () => updateAssetAuthors(dam.client, ASSET, damAsset('asset-1', { authors: ['author-1'] }), 1, 'default'),
     false,
   ],
 ])('%s that fails', (_name, save: () => Promise<unknown>, readsTheAnswer) => {
@@ -442,7 +468,7 @@ describe('a save refused by validation, as the user is told it', () => {
         : undefined
     )
 
-    const failure = await bulkUpdateAssetsMetadata(dam.client, ASSET, rows).then(
+    const failure = await bulkUpdateAssetsMetadata(dam.client, ASSET, rows, undefined, 1, 'default').then(
       () => undefined,
       (error: unknown) => error
     )

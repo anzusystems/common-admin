@@ -5,8 +5,8 @@ import type { DocId } from '@/shared/types/common'
 import { isArray, isNull, isUndefined } from '@/shared/utils/common'
 
 // Bulk operations of an upload queue over the given rows. They
-// read only `assetType`, `customData`, `keywords` and `authors`.
-// Public as `uploadQueueFillCustomDataValue`, `…Keywords`, `…Authors`.
+// read only `assetType`, `customData`, `keywords`, `authors` and `sources`.
+// Public as `uploadQueueFillCustomDataValue`, `…Keywords`, `…Authors`, `…Sources`.
 // Each filled row gets its own list (Z24). A list shared by rows
 // and the source form would change in all of them on any edit.
 
@@ -53,6 +53,21 @@ export function fillAuthors(
     if (accepts && !accepts(item)) continue
     if (forceReplace || isUndefined(item.authors) || item.authors.length === 0) {
       item.authors = [...value]
+    }
+  }
+}
+
+/** `accepts`: rows that may take them. Without it, every row. */
+export function fillSources(
+  items: UploadQueueItem[],
+  value: DocId[],
+  forceReplace = false,
+  accepts?: (item: UploadQueueItem) => boolean
+) {
+  for (const item of items) {
+    if (accepts && !accepts(item)) continue
+    if (forceReplace || isUndefined(item.sources) || item.sources.length === 0) {
+      item.sources = [...value]
     }
   }
 }

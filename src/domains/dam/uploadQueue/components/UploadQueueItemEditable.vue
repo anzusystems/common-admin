@@ -15,12 +15,13 @@ import { prettyBytes } from '@/shared/utils/file'
 import ASystemEntityScope from '@/domains/form/components/ASystemEntityScope.vue'
 import AssetCustomMetadataForm from '@/domains/dam/assetDetail/components/AssetCustomMetadataForm.vue'
 import AssetImage from '@/domains/dam/assetDetail/components/AssetImage.vue'
-import AuthorRemoteAutocompleteWithCached from '@/domains/dam/author/components/AuthorRemoteAutocompleteWithCached.vue'
+import DamSourcesAuthorsFields from '@/domains/dam/author/components/DamSourcesAuthorsFields.vue'
 import { ADamAssetMetadataValidationScopeSymbol } from '@/domains/dam/composables/uploadValidations'
 import KeywordRemoteAutocompleteWithCached from '@/domains/dam/keyword/components/KeywordRemoteAutocompleteWithCached.vue'
-import { isNull } from '@/shared/utils/common'
+import { isNull, isUndefined } from '@/shared/utils/common'
 import { useDamKeywordAssetTypeConfig } from '@/domains/dam/keyword/composables/damKeywordConfig'
 import { useDamAuthorAssetTypeConfig } from '@/domains/dam/author/composables/damAuthorConfig'
+import { useDamSourceAssetTypeConfig } from '@/domains/dam/author/composables/damSourceConfig'
 import AActionDeleteButton from '@/domains/ui/buttons/action/components/AActionDeleteButton.vue'
 import { SHOW_REFRESH_AFTER_SECONDS } from '@/domains/dam/uploadQueue/composables/uploadQueueItemRefresh'
 import UploadQueueItemErrorOverlay from '@/domains/dam/uploadQueue/components/UploadQueueItemErrorOverlay.vue'
@@ -35,6 +36,11 @@ const props = withDefaults(
     customData: AssetCustomData
     keywords: DocId[]
     authors: DocId[]
+    /**
+     * The row shows sources only when the host binds them (`v-model:sources`) and the ext system has them.
+     * Otherwise its authors field offers every author, as before sources.
+     */
+    sources?: DocId[]
     item: UploadQueueItem
     refreshDisabled: boolean
     mainFileSingleUse: boolean | null
@@ -64,6 +70,7 @@ const props = withDefaults(
     configName?: string
   }>(),
   {
+    sources: undefined,
     mainFileSingleUseEnabled: true,
     disableDoneAnimation: false,
     refreshMayHelp: false,
@@ -87,6 +94,7 @@ const emit = defineEmits<{
   (e: 'update:customData', data: AssetCustomData): void
   (e: 'update:keywords', data: DocId[]): void
   (e: 'update:authors', data: DocId[]): void
+  (e: 'update:sources', data: DocId[]): void
   (e: 'update:mainFileSingleUse', data: boolean | null): void
   (e: 'cancelItem', data: { index: number; item: UploadQueueItem; queueKey: UploadQueueKey }): void
   (e: 'removeItem', index: number): void
@@ -131,6 +139,15 @@ const authors = computed({
   },
   set(newValue) {
     emit('update:authors', [...newValue])
+  },
+})
+
+const sources = computed({
+  get() {
+    return props.sources ?? []
+  },
+  set(newValue) {
+    emit('update:sources', [...newValue])
   },
 })
 
@@ -232,6 +249,15 @@ const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(
   props.extSystem,
   damConfigName
 )
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { sourceRequired, sourceEnabled: sourceEnabledForType } = useDamSourceAssetTypeConfig(
+  // eslint-disable-next-line vue/no-ref-object-reactivity-loss
+  assetType.value,
+  props.extSystem,
+  damConfigName
+)
+// A host that does not hand the sources over would show a field whose picks go nowhere.
+const sourceEnabled = computed(() => sourceEnabledForType.value && !isUndefined(props.sources))
 
 watch(
   () => props.item.status,
@@ -446,32 +472,22 @@ onUnmounted(() => {
                   </ASystemEntityScope>
                 </VCol>
               </VRow>
-              <VRow
-                v-if="authorEnabled"
-                density="compact"
+              <DamSourcesAuthorsFields
+                v-model:sources="sources"
+                v-model:authors="authors"
+                :ext-system="extSystem"
+                :queue-id="queueKey"
+                :source-enabled="sourceEnabled"
+                :author-enabled="authorEnabled"
+                :source-required="sourceRequired"
+                :author-required="authorRequired"
+                :disabled="!item.canEditMetadata"
+                :disabled-as="disabledFieldsAs"
+                :validation-scope="metadataValidationScope"
+                :author-conflicts="item.authorConflicts"
+                show-credit
                 class="my-2"
-              >
-                <VCol>
-                  <ASystemEntityScope
-                    subject="author"
-                    system="dam"
-                  >
-                    <AuthorRemoteAutocompleteWithCached
-                      v-model="authors"
-                      :queue-id="queueKey"
-                      :label="t('common.damImage.asset.model.authors')"
-                      :author-conflicts="item.authorConflicts"
-                      :ext-system="extSystem"
-                      clearable
-                      multiple
-                      :required="authorRequired"
-                      :validation-scope="metadataValidationScope"
-                      :disabled="!item.canEditMetadata"
-                      :disabled-as="disabledFieldsAs"
-                    />
-                  </ASystemEntityScope>
-                </VCol>
-              </VRow>
+              />
               <VRow
                 v-if="mainFileSingleUseEnabled"
                 density="compact"

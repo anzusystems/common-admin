@@ -1638,7 +1638,14 @@ describe.each(consumerProfiles)('the widget of several images under the $name', 
     const saveInDetail = async (authors: DocId[]) => {
       const { damClient, endPointAsset } = useCommonAdminCoreDamOptions('default')
       detail().asset!.authors = authors
-      await updateAssetMetadata(damClient, endPointAsset, detail().asset!, extSystem, detail().mainFileSingleUse)
+      await updateAssetMetadata(
+        damClient,
+        endPointAsset,
+        detail().asset!,
+        extSystem,
+        detail().mainFileSingleUse,
+        'default'
+      )
       await flushPromises()
     }
     const mountDetailForm = async () => {

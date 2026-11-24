@@ -393,7 +393,14 @@ describe.each<[string, Component]>([
     const { damClient, endPointAsset } = useCommonAdminCoreDamOptions('default')
     const asset = useAssetDetailStore(pinia).asset!
     asset.authors = ['author-9']
-    await updateAssetMetadata(damClient, endPointAsset, asset, extSystem, useAssetDetailStore(pinia).mainFileSingleUse)
+    await updateAssetMetadata(
+      damClient,
+      endPointAsset,
+      asset,
+      extSystem,
+      useAssetDetailStore(pinia).mainFileSingleUse,
+      'default'
+    )
     widget.findComponent({ name: 'AssetDetailDialogFrame' }).vm.$emit('close')
     await vi.waitFor(() => expect(offered(widget)).toBeNull())
     await damNamesAsked()

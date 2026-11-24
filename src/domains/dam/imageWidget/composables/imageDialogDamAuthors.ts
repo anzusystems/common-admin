@@ -1,7 +1,7 @@
 import { computed, onBeforeUnmount, ref, shallowRef, watch } from 'vue'
 import { fetchAsset } from '@/domains/dam/api/damAssetApi'
 import { useAssetDetailStore } from '@/domains/dam/assetDetail/store/assetDetailStore'
-import { fetchAuthorListByIds } from '@/domains/dam/author/api/authorApi'
+import { fetchDamCredit, hasNoDamCredit, useDamCreditConfig } from '@/domains/dam/author/composables/damCredit'
 import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
 import { useExtSystemIdForCached } from '@/domains/dam/composables/extSystemIdForCached'
 import { useDamConfigState } from '@/domains/dam/config/composables/damConfigState'
@@ -18,7 +18,7 @@ interface HeldAsset {
   file: DocId
 }
 
-/** Result of re-reading the held asset: the asset with its author names, or the failure. */
+/** Result of re-reading the held asset: the asset with its credit, or the failure. */
 export type HeldAssetAnew =
   | { of: HeldAsset; asset: AssetDetailItemDto; names: string }
   | { of: HeldAsset; failure: unknown }
@@ -27,11 +27,11 @@ export type HeldAssetAnew =
 type DetailAssetRead = { of: HeldAsset; asset: AssetDetailItemDto; names: string }
 
 // Sequential requests of a read after a detail closes: the rest of the detail save, the asset,
-// the asset licence (once per page), and the author names.
+// the asset licence (once per page), and the names of its sources and authors.
 const REQUESTS_OF_A_DETAIL_ASSET_READ = 4
 
 /**
- * Fills an empty source with the authors' names once the held asset turns out to have authors.
+ * Fills an empty source with the credit once the held asset turns out to have sources or authors.
  * The pick creates the image with an empty source, and the dialog hides the source while it offers the pick.
  * So an empty or whitespace-only source belongs to the pick. A non-empty source came from a save elsewhere and stays.
  */
@@ -40,7 +40,8 @@ export const giveNamesToEmptySource = (image: ImageCreateUpdateAware, names: str
 }
 
 /**
- * DAM authors the single-image widget dialog offers in place of a source, for a library-picked asset that has none.
+ * DAM sources and authors the single-image widget dialog offers in place of a source,
+ * for a library-picked asset that has neither.
  * The widget holds the asset and the file it was read for, and offers its authors only in that file's image dialog.
  * Do not use the asset detail store: it is shared per page by the picker,
  * detail and other widgets, which caused wrong authors to be saved.
@@ -53,6 +54,7 @@ export function useImageDialogDamAuthors(
 ) {
   const { damClient, endPointAsset, endPointAuthor } = useCommonAdminCoreDamOptions(configName)
   const { getExtSystemByLicence } = useDamConfigState(damClient, configName)
+  const creditConfigOf = useDamCreditConfig(configName)
   const { cachedExtSystemId } = useExtSystemIdForCached(configName)
   const assetDetailStore = useAssetDetailStore()
   const { showErrorsDefault, showErrorT, showUnknownError } = useAlerts()
@@ -98,21 +100,32 @@ export function useImageDialogDamAuthors(
     if (asset) asset.authors = authors
   }
 
+  const pickDamSources = (sources: DocId[]) => {
+    const asset = damAuthorsAsset.value
+    if (asset) asset.sources = sources
+  }
+
   /**
-   * Author names resolve under the ext system of the asset licence.
+   * The credit resolves under the ext system of the asset licence: its names, and its format once loaded.
    * Falls back to `pageExtSystem` when the licence has none.
    */
   const namesOf = async (asset: AssetDetailItemDto, pageExtSystem: IntegerId) => {
     const extSystem = (await getExtSystemByLicence(asset.licence)) ?? pageExtSystem
-    const authorsRes = await fetchAuthorListByIds(damClient, endPointAuthor, extSystem, asset.authors)
-    return authorsRes.map((author) => author.name).join(', ')
+    return fetchDamCredit(
+      damClient,
+      endPointAuthor,
+      extSystem,
+      asset.sources,
+      asset.authors,
+      creditConfigOf(extSystem, pageExtSystem)
+    )
   }
 
   /**
-   * The "edit asset" detail may have added authors, so the asset is read again.
+   * The "edit asset" detail may have added sources or authors, so the asset is read again.
    * The read waits for the detail save that was pending on close. An earlier read returns the old asset.
-   * If the asset now has authors, the author pick is dropped and an
-   * empty image source takes their names. An existing source stays.
+   * If the asset now has either, the pick is dropped and an
+   * empty image source takes their credit. An existing source stays.
    * `pageExtSystem` is the ext system configured when the detail closed. It is used when the licence gives none.
    */
   const takeAuthorsOfDetailAsset = async (
@@ -123,12 +136,12 @@ export function useImageDialogDamAuthors(
     try {
       await detailSave
       const asset = await fetchAsset(damClient, endPointAsset, of.asset.id)
-      const source = asset.authors.length > 0 ? await namesOf(asset, pageExtSystem) : ''
+      const source = hasNoDamCredit(asset.authors, asset.sources) ? '' : await namesOf(asset, pageExtSystem)
       const read = { of, asset, names: source }
       // Unmounted, turned read-only, or now holding another pick's asset: write nothing.
       if (unmounted || readonly() || held.value !== of) return read
-      if (asset.authors.length === 0) {
-        of.asset = { ...asset, authors: of.asset.authors }
+      if (hasNoDamCredit(asset.authors, asset.sources)) {
+        of.asset = { ...asset, authors: of.asset.authors, sources: of.asset.sources }
         return read
       }
       // Write only into the image the asset was read for. The dialog may have closed or show another image.
@@ -233,7 +246,11 @@ export function useImageDialogDamAuthors(
       if (afterDetail?.of === of) return afterDetail
       try {
         const asset = await fetchAsset(damClient, endPointAsset, of.asset.id)
-        return { of, asset, names: asset.authors.length > 0 ? await namesOf(asset, pageExtSystem) : '' }
+        return {
+          of,
+          asset,
+          names: hasNoDamCredit(asset.authors, asset.sources) ? '' : await namesOf(asset, pageExtSystem),
+        }
       } catch (failure) {
         return { of, failure }
       }
@@ -242,8 +259,8 @@ export function useImageDialogDamAuthors(
 
   /**
    * Applies a `readHeldAnew` result to the shown image of that file.
-   * Without authors the fresh asset becomes the held one, so picks from a dialog closed without confirm do not return.
-   * With authors the pick goes and an empty source takes their names (`giveNamesToEmptySource`).
+   * Without sources and authors the fresh asset becomes the held one, so picks from a dialog closed without
+   * confirm do not return. With either the pick goes and an empty source takes their credit (`giveNamesToEmptySource`).
    * A failed read is reported once and the dialog shows the source until
    * a new image is shown. The asset stays held for the next "edit image".
    */
@@ -255,7 +272,7 @@ export function useImageDialogDamAuthors(
       if (held.value === anew.of) staleIn.value = image
       return
     }
-    if (anew.asset.authors.length === 0) {
+    if (hasNoDamCredit(anew.asset.authors, anew.asset.sources)) {
       if (held.value === anew.of) anew.of.asset = anew.asset
       return
     }
@@ -276,14 +293,14 @@ export function useImageDialogDamAuthors(
   }
 
   /**
-   * Read right before picked authors are written into `asset`. Returns names of authors
+   * Read right before picked sources and authors are written into `asset`. Returns the credit of those
    * given elsewhere meanwhile, or `null` if none. Throws if they cannot be read.
-   * Not atomic: an author added between this read and the write is still overwritten.
+   * Not atomic: one added between this read and the write is still overwritten.
    */
   const authorsGivenMeanwhile = async (asset: AssetDetailItemDto) => {
     const pageExtSystem = cachedExtSystemId.value
     const read = await fetchAsset(damClient, endPointAsset, asset.id)
-    return read.authors.length > 0 ? namesOf(read, pageExtSystem) : null
+    return hasNoDamCredit(read.authors, read.sources) ? null : namesOf(read, pageExtSystem)
   }
 
   return {
@@ -291,6 +308,7 @@ export function useImageDialogDamAuthors(
     offerDamAuthorsOf,
     offerNoDamAuthors,
     pickDamAuthors,
+    pickDamSources,
     onAssetDetailClose,
     holdConfirmForDetailAssetRead,
     readHeldAnew,

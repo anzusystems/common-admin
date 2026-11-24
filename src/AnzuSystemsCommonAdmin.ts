@@ -124,6 +124,8 @@ export interface CommonAdminCoreDamConfig {
   keywordCreateAcl?: AclValue | null
   /** The same for an author, also the "+" button. */
   authorCreateAcl?: AclValue | null
+  /** The same for a source (an author flagged as source). Default: `dam_source_create`. `null` checks none. */
+  sourceCreateAcl?: AclValue | null
   mainFileSingleUseEnabled?: boolean
   /**
    * Copying a picked asset into the widget's upload licence: the asset

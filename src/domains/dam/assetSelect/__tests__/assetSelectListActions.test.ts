@@ -81,6 +81,17 @@ describe('useAssetSelectActions races', () => {
     expect(useAssetDetailStore().asset?.id).toBe('B')
   })
 
+  it('loads the sources of the clicked asset for the detail, not only its authors', async () => {
+    const { actions, store } = setup()
+    const added = vi.spyOn(noop, 'addToCachedAuthors')
+    store.setList([asset('A')])
+    const clicked = actions.onItemClick({ assetId: 'A', index: 0 }, 1)
+    api.detail.get('A').resolve({ ...asset('A'), authors: ['author-id'], sources: ['source-id'] })
+    await clicked
+    expect(added).toHaveBeenCalledWith(['author-id'], ['source-id'])
+    added.mockRestore()
+  })
+
   it('asks for the same page again after a failed next page', async () => {
     const { actions } = setup()
     actions.pagination.value.page = 1

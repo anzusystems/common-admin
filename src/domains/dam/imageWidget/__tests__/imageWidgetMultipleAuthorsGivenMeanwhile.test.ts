@@ -445,7 +445,14 @@ describe('the detail of the asset of a row of the widget of several images, once
   const saveInDetail = async (authors: DocId[]) => {
     const { damClient, endPointAsset } = useCommonAdminCoreDamOptions('default')
     detail().asset!.authors = authors
-    await updateAssetMetadata(damClient, endPointAsset, detail().asset!, extSystem, detail().mainFileSingleUse)
+    await updateAssetMetadata(
+      damClient,
+      endPointAsset,
+      detail().asset!,
+      extSystem,
+      detail().mainFileSingleUse,
+      'default'
+    )
     await flushPromises()
   }
   const closeDetail = async () => {

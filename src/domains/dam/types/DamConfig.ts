@@ -59,6 +59,7 @@ export interface DamExtSystemConfigItem {
   mimeTypes: Array<string>
   distribution?: DamDistributionConfig
   authors?: DamExtSystemAssetTypeExifMetadata
+  sources?: DamExtSystemAssetTypeSources
   keywords?: DamExtSystemAssetTypeExifMetadata
   customMetadataPinnedAmount: number
   slots: string[]
@@ -109,6 +110,12 @@ export interface DamDistributionRequirementsCategorySelectConfig {
 export interface DamExtSystemAssetTypeExifMetadata {
   enabled: boolean
   required: boolean
+}
+
+export interface DamExtSystemAssetTypeSources extends DamExtSystemAssetTypeExifMetadata {
+  creditFormat: string
+  creditSourcesSeparator: string
+  creditAuthorsSeparator: string
 }
 
 export const DamDistributionServiceType = {

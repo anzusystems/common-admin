@@ -2,7 +2,12 @@ import { type MaybeRefOrGetter, toValue } from 'vue'
 import type { UploadQueueKey } from '@/domains/dam/types/UploadQueue'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
 import type { DamAssetTypeType } from '@/domains/dam/types/Asset'
-import { fillAuthors, fillCustomDataValue, fillKeywords } from '@/domains/dam/uploadQueue/core/uploadQueueFill'
+import {
+  fillAuthors,
+  fillCustomDataValue,
+  fillKeywords,
+  fillSources,
+} from '@/domains/dam/uploadQueue/core/uploadQueueFill'
 
 export function useUploadQueueMassOperations(queueKey: MaybeRefOrGetter<UploadQueueKey>) {
   const uploadQueuesStore = useUploadQueuesStore()
@@ -22,9 +27,14 @@ export function useUploadQueueMassOperations(queueKey: MaybeRefOrGetter<UploadQu
     fillAuthors(uploadQueuesStore.getQueueItems(toValue(queueKey)), value, forceReplace)
   }
 
+  const replaceEmptySources = (value: any, forceReplace = false) => {
+    fillSources(uploadQueuesStore.getQueueItems(toValue(queueKey)), value, forceReplace)
+  }
+
   return {
     replaceEmptyCustomDataValue,
     replaceEmptyKeywords,
     replaceEmptyAuthors,
+    replaceEmptySources,
   }
 }

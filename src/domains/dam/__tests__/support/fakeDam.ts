@@ -116,6 +116,7 @@ export const damAsset = (id: DocId, parts: Partial<AssetDetailItemDto> = {}): As
   mainFile: null,
   keywords: [],
   authors: [],
+  sources: [],
   podcasts: [],
   metadata: { authorSuggestions: {}, keywordSuggestions: {}, customData: {} },
   siblingToAsset: null,

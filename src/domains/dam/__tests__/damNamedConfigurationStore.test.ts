@@ -299,9 +299,14 @@ describe('a refused save of metadata under a named configuration', () => {
         : undefined
     )
 
-    const refused = await updateAssetMetadata(own.client, OWN.asset, damAsset('own-asset-1'), EXT, false).catch(
-      (error: unknown) => error
-    )
+    const refused = await updateAssetMetadata(
+      own.client,
+      OWN.asset,
+      damAsset('own-asset-1'),
+      EXT,
+      false,
+      'default'
+    ).catch((error: unknown) => error)
     showMetadataSaveError(refused, EXT, 'own')
 
     expect(shownAlerts()).toHaveLength(1)

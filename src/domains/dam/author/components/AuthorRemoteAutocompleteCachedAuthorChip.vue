@@ -1,5 +1,6 @@
 <script lang="ts" setup>
-import { computed, inject } from 'vue'
+import { computed, inject, ref, useTemplateRef } from 'vue'
+import { useResizeObserver } from '@vueuse/core'
 import { useDamCachedAuthors } from '@/domains/dam/author/composables/cachedAuthors'
 import {
   libraryUploadQueueSuggestions,
@@ -78,6 +79,13 @@ const displayTitle = computed(() => {
   return ''
 })
 
+const nameElement = useTemplateRef<HTMLElement>('name')
+const nameTruncated = ref(false)
+useResizeObserver(nameElement, () => {
+  if (!nameElement.value) return
+  nameTruncated.value = nameElement.value.scrollWidth > nameElement.value.clientWidth
+})
+
 const displayReviewed = computed(() => {
   if (props.forceReviewed) return true
   if (cached.value?.reviewed) return true
@@ -88,7 +96,7 @@ const { t } = useI18n()
 </script>
 
 <template>
-  <div :class="containerClass">
+  <div :class="[containerClass, 'a-author-chip']">
     <template v-if="isNull(id) || isUndefined(id)">
       <slot name="empty">-</slot>
     </template>
@@ -118,16 +126,20 @@ const { t } = useI18n()
       :size="size"
       :append-icon="displayNewIcon"
       :label="forceRounded ? undefined : true"
-      :title="displayReviewed ? t('common.damImage.author.model.flags.reviewed') : undefined"
       close-label="common.button.remove"
     >
-      {{ displayTitle }}
+      <span
+        ref="name"
+        class="text-truncate"
+      >
+        {{ displayTitle }}
+      </span>
       <VTooltip
-        v-if="unresolved"
+        v-if="unresolved || nameTruncated"
         activator="parent"
         location="bottom"
       >
-        {{ t('common.model.cachedUnavailable') }}
+        {{ unresolved ? t('common.model.cachedUnavailable') : displayTitle }}
       </VTooltip>
       <VProgressCircular
         v-if="!loaded && title.length === 0"
@@ -146,3 +158,14 @@ const { t } = useI18n()
     </VChip>
   </div>
 </template>
+
+<style lang="scss" scoped>
+// A long author name must not push the chip over the field's clear and menu icons.
+.a-author-chip {
+  max-width: 100%;
+}
+
+.a-author-chip :deep(.v-chip__content) {
+  min-width: 0;
+}
+</style>

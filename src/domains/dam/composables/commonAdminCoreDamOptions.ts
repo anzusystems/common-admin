@@ -96,6 +96,9 @@ export function useCommonAdminCoreDamOptions(configName: string) {
     roiUpdateAcl: resolveRoiUpdateAcl(commonAdminCoreDamOptions.value.configs[configName]),
     keywordCreateAcl: commonAdminCoreDamOptions.value.configs[configName].keywordCreateAcl,
     authorCreateAcl: commonAdminCoreDamOptions.value.configs[configName].authorCreateAcl,
+    sourceCreateAcl: isUndefined(commonAdminCoreDamOptions.value.configs[configName].sourceCreateAcl)
+      ? 'dam_source_create'
+      : commonAdminCoreDamOptions.value.configs[configName].sourceCreateAcl,
     mainFileSingleUseEnabled: commonAdminCoreDamOptions.value.configs[configName].mainFileSingleUseEnabled ?? true,
     // Passed as configured. Readers treat it as on unless `false`.
     copyToLicenceEnabled: commonAdminCoreDamOptions.value.configs[configName].copyToLicenceEnabled,

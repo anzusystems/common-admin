@@ -34,6 +34,7 @@ import { useDamNotificationsEventBus } from '@/domains/dam/composables/damNotifi
 import { useDamConfigStore, useDamConfigStoreOf } from '@/domains/dam/config/store/damConfigStore'
 import { seedDamConfigOf } from '@/domains/dam/__tests__/support/namedDamConfig'
 import { useExtSystemIdForCached } from '@/domains/dam/composables/extSystemIdForCached'
+import { useImageStore } from '@/domains/dam/imageWidget/store/imageStore'
 import ImageMediaWidgetInner from '@/domains/dam/imageWidget/components/ImageMediaWidgetInner.vue'
 import ImageWidgetInner from '@/domains/dam/imageWidget/components/ImageWidgetInner.vue'
 import ImageWidgetMultipleInner from '@/domains/dam/imageWidget/components/ImageWidgetMultipleInner.vue'
@@ -229,6 +230,20 @@ describe('the names of authors and keywords, under a named DAM configuration', (
   })
 
   it('are looked up there by the mass operation of the image widget that fills the authors', async () => {
+    // Names are looked up only for rows that take the pick.
+    useImageStore().setImages([
+      {
+        key: 'k1',
+        texts: { description: '', source: '' },
+        flags: { showSource: true, internal: false, overrideInternal: false },
+        dam: { damId: 'file-1', licenceId: 1, regionPosition: 0, internal: false },
+        position: 1,
+        damAuthors: [],
+        damSources: [],
+        showDamAuthors: true,
+        assetId: 'asset-1',
+      },
+    ])
     await useImageMassOperations('own').replaceEmptyAuthors(['author-1'])
 
     expect(asked(own)).toEqual([`GET ${OWN_AUTHOR}/ext-system/${extSystem}/search`])

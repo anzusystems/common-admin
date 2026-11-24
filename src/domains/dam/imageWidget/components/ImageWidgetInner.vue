@@ -30,7 +30,7 @@ import {
 import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
 import UploadQueueDialogSingle from '@/domains/dam/uploadQueue/components/UploadQueueDialogSingle.vue'
 import { useUploadQueueDialog } from '@/domains/dam/uploadQueue/composables/useUploadQueueDialog'
-import { fetchAuthorListByIds } from '@/domains/dam/author/api/authorApi'
+import { fetchDamCredit, hasNoDamCredit, useDamCreditConfig } from '@/domains/dam/author/composables/damCredit'
 import { useI18n } from 'vue-i18n'
 import { useExtSystemIdForCached } from '@/domains/dam/composables/extSystemIdForCached'
 import { useAssetSelectStore } from '@/domains/dam/assetSelect/store/assetSelectStore'
@@ -259,6 +259,7 @@ const {
   offerDamAuthorsOf,
   offerNoDamAuthors,
   pickDamAuthors,
+  pickDamSources,
   onAssetDetailClose,
   holdConfirmForDetailAssetRead,
   readHeldAnew,
@@ -698,21 +699,27 @@ const pickAsset = async (data: AssetSelectReturnData, thisPick: symbol) => {
         if (isString(assetRes.metadata.customData?.description)) {
           description = assetRes.metadata.customData.description.trim()
         }
-        if (assetRes.authors.length > 0) {
-          // Under the ext system of the asset's licence, like all DAM author names the
+        if (!hasNoDamCredit(assetRes.authors, assetRes.sources)) {
+          // Under the ext system of the asset's licence, like all DAM credits the
           // widgets write. Falls back to the picker's when the licence does not resolve.
-          const authorsRes = await fetchAuthorListByIds(
+          const extSystem =
+            (await getExtSystemByLicence(assetRes.licence)) ?? assetSelectStore.requireSelectedSelectConfig().extSystem
+          source = await fetchDamCredit(
             damClient,
             endPointAuthor,
-            (await getExtSystemByLicence(assetRes.licence)) ?? assetSelectStore.requireSelectedSelectConfig().extSystem,
-            assetRes.authors
+            extSystem,
+            assetRes.sources,
+            assetRes.authors,
+            creditConfigOf(extSystem, imageWidgetUploadConfig.value?.extSystem)
           )
-          source = authorsRes.map((author) => author.name).join(', ')
-        } else if (assetRes.authors.length === 0) {
-          const configExtSystem = getDamConfigExtSystem(imageWidgetUploadConfig.value!.extSystem)
+        } else {
+          const imageConfig = getDamConfigExtSystem(imageWidgetUploadConfig.value!.extSystem)?.[DamAssetType.Image]
           // Not while the server may still fill metadata from the file: saving
           // authors marks the asset described, and the server then fills nothing.
-          if (configExtSystem?.[DamAssetType.Image]?.authors?.enabled && !assetMetadataMayStillChange(assetRes)) {
+          if (
+            (imageConfig?.authors?.enabled || imageConfig?.sources?.enabled) &&
+            !assetMetadataMayStillChange(assetRes)
+          ) {
             authorsToOffer = assetRes
           }
         }
@@ -761,6 +768,7 @@ const {
 } = coreDamOptions
 
 const { getExtSystemByLicence } = useDamConfigState(damClient, damConfigName)
+const creditConfigOf = useDamCreditConfig(damConfigName)
 
 const onEditAsset = async (assetFileId: DocId) => {
   let extSystem: IntegerId | null = null
@@ -824,11 +832,11 @@ const onMetadataDialogConfirm = async () => {
   try {
     const authorsAsset = damAuthorsAsset.value
     if (authorsAsset) {
-      if (authorsAsset.authors.length > 0) {
-        // The asset was read at pick time and may have gained authors
+      if (!hasNoDamCredit(authorsAsset.authors, authorsAsset.sources)) {
+        // The asset was read at pick time and may have gained sources or authors
         // since. The write would replace them, so it is read again first.
-        // A failed read saves nothing. If it now has authors nothing is written: the pick is dropped,
-        // an empty source takes their names, a persistent message is shown, and the dialog stays.
+        // A failed read saves nothing. If it now has either nothing is written: the pick is dropped,
+        // an empty source takes their credit, a persistent message is shown, and the dialog stays.
         let givenMeanwhile: string | null
         try {
           givenMeanwhile = await authorsGivenMeanwhile(authorsAsset)
@@ -843,22 +851,25 @@ const onMetadataDialogConfirm = async () => {
           showWarningT('common.damImage.image.meta.authorsGivenMeanwhile', -1)
           return
         }
-        // Author names go into the image source only after the DAM accepts the authors, and are held aside until then.
-        // Written earlier, they stayed in the hidden source after a refused
-        // write, and a confirm with the pick cleared saved them with the image.
-        // Looked up under the ext system of the asset's licence, like the read before the write.
-        const authorsRes = await fetchAuthorListByIds(
+        // The credit goes into the image source only after the DAM accepts the sources and authors,
+        // and is held aside until then. Written earlier, it stayed in the hidden source after a refused
+        // write, and a confirm with the pick cleared saved it with the image.
+        // Composed under the ext system of the asset's licence, like the read before the write.
+        const creditExtSystem =
+          (await getExtSystemByLicence(authorsAsset.licence)) ??
+          assetSelectStore.requireSelectedSelectConfig().extSystem
+        const source = await fetchDamCredit(
           damClient,
           endPointAuthor,
-          (await getExtSystemByLicence(authorsAsset.licence)) ??
-            assetSelectStore.requireSelectedSelectConfig().extSystem,
-          authorsAsset.authors
+          creditExtSystem,
+          authorsAsset.sources,
+          authorsAsset.authors,
+          creditConfigOf(creditExtSystem, imageWidgetUploadConfig.value?.extSystem)
         )
         // Silently stops if the dialog was left or the widget is gone or read-only.
         if (authorsSendIsOver()) return
-        const source = authorsRes.map((author) => author.name).join(', ')
         try {
-          await updateAssetAuthors(damClient, endPointAsset, authorsAsset)
+          await updateAssetAuthors(damClient, endPointAsset, authorsAsset, creditExtSystem, damConfigName)
         } catch (e) {
           // Names the authors refused by validation as the forms name them. The image is not saved.
           showMetadataSaveError(e, assetSelectStore.requireSelectedSelectConfig().extSystem, damConfigName)
@@ -1273,6 +1284,7 @@ defineExpose({
       v-model="metadataDialog"
       :show-dam-authors="!!damAuthorsAsset"
       :dam-authors="damAuthorsAsset?.authors"
+      :dam-sources="damAuthorsAsset?.sources"
       :show-source-enabled="showSourceEnabled"
       :source-label="sourceLabel"
       :edit-asset-label="editAssetLabel"
@@ -1282,6 +1294,7 @@ defineExpose({
       :type="DamAssetType.Image"
       @edit-asset="onEditAsset"
       @update:dam-authors="pickDamAuthors"
+      @update:dam-sources="pickDamSources"
       @confirm="onMetadataDialogConfirm"
       @close="onMetadataDialogClose"
     />

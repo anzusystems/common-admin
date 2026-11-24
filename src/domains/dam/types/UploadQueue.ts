@@ -73,6 +73,7 @@ export interface UploadQueueItem {
   canEditMetadata: boolean
   keywords: DocId[]
   authors: DocId[]
+  sources: DocId[]
   customData: any
   authorConflicts: DocId[]
   progress: {

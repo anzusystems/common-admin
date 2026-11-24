@@ -40,7 +40,13 @@ import type { ImageStoreItem } from '@/domains/dam/types/ImageAware'
 import { generateUUIDv1 } from '@/shared/utils/generator'
 import ASortableListEditor from '@/domains/listEditor/components/ASortableListEditor.vue'
 import AImageWidgetSimple from '@/domains/dam/imageWidget/components/AImageWidgetSimple.vue'
-import { fetchAuthorListByIds } from '@/domains/dam/author/api/authorApi'
+import {
+  damCreditFromMap,
+  fetchDamAuthorsMap,
+  fetchDamCredit,
+  damCreditConfigOf,
+  hasNoDamCredit,
+} from '@/domains/dam/author/composables/damCredit'
 import { useI18n } from 'vue-i18n'
 import useVuelidate from '@vuelidate/core'
 import { AImageMetadataValidationScopeSymbol } from '@/domains/dam/composables/uploadValidations'
@@ -219,7 +225,8 @@ const fetchImagesOnLoad = async () => {
           ...imageRes,
           // Each row gets its own copy. Rows of the same asset shared the array.
           damAuthors: found ? [...found.authors] : [],
-          showDamAuthors: found ? found.authors.length === 0 : false,
+          damSources: found ? [...(found.sources ?? [])] : [],
+          showDamAuthors: found ? hasNoDamCredit(found.authors, found.sources) : false,
           assetId: found ? found.id : undefined,
         }
       })
@@ -313,7 +320,7 @@ const afterLimitDialogAdd = () => {
 
 /**
  * Images of picked assets, without position. Each asset is read under
- * its own licence, and its authors under that licence's ext system.
+ * its own licence, and its credit under that licence's ext system.
  * The browsed licence can change after picking, and the DAM silently omits assets of another licence.
  * `readUnder`: the licence of all assets and its ext system, when the caller knows them.
  */
@@ -322,8 +329,9 @@ const assetSelectConfirmMap = async (
   readUnder?: { licence: IntegerId; extSystem: IntegerId }
 ): Promise<ImageStoreItem[]> => {
   const assetSelectStore = useAssetSelectStore()
-  const assetMetadataMap = new Map<DocId, { description: string; authorIds: DocId[] }>()
-  const authorsMap = new Map<DocId, string>()
+  const assetMetadataMap = new Map<DocId, { description: string; authorIds: DocId[]; sourceIds: DocId[] }>()
+  // The image source of each read asset: its credit, or what the custom mapping gives.
+  const creditMap = new Map<DocId, string>()
   const idsByLicence: IdsGroupedByLicences = new Map()
   items.forEach((item) => {
     const licence = readUnder ? readUnder.licence : item.licence
@@ -345,38 +353,42 @@ const assetSelectConfirmMap = async (
           assetMetadataMap.set(assetDetail.id, {
             description: mapped.description,
             authorIds: [],
+            sourceIds: [],
           })
-          authorsMap.set(assetDetail.id, mapped.source)
+          creditMap.set(assetDetail.id, mapped.source)
         })
         continue
       }
-      const authorIdsToFetch = new Set<DocId>()
       assetDetails.forEach((assetDetail) => {
         assetMetadataMap.set(assetDetail.id, {
           description: isString(assetDetail.metadata.customData?.description)
             ? assetDetail.metadata.customData.description.trim()
             : '',
           authorIds: assetDetail.authors,
-        })
-        assetDetail.authors.forEach((authorId) => {
-          authorIdsToFetch.add(authorId)
+          sourceIds: assetDetail.sources ?? [],
         })
       })
-      if (authorIdsToFetch.size > 0) {
+      const credited = assetDetails.filter((assetDetail) => !hasNoDamCredit(assetDetail.authors, assetDetail.sources))
+      if (credited.length > 0) {
         const licenceConfig = assetSelectStore.selectConfig.find((config) => config.licence === licence)
-        // Uses the licence's ext system, as for every DAM author name the widgets
+        // Uses the licence's ext system, as for every DAM credit the widgets
         // write. Falls back to the picker's when the licence does not tell.
-        const authorsRes = await fetchAuthorListByIds(
+        const extSystem = readUnder
+          ? readUnder.extSystem
+          : ((await getExtSystemByLicence(licence)) ??
+            (licenceConfig ?? assetSelectStore.requireSelectedSelectConfig()).extSystem)
+        const namesMap = await fetchDamAuthorsMap(
           damClient,
           endPointAuthor,
-          readUnder
-            ? readUnder.extSystem
-            : ((await getExtSystemByLicence(licence)) ??
-                (licenceConfig ?? assetSelectStore.requireSelectedSelectConfig()).extSystem),
-          [...authorIdsToFetch]
+          extSystem,
+          credited.flatMap((assetDetail) => [...(assetDetail.sources ?? []), ...assetDetail.authors])
         )
-        authorsRes.forEach((author) => {
-          authorsMap.set(author.id, author.name)
+        const creditConfig = creditConfigOf(extSystem)
+        credited.forEach((assetDetail) => {
+          creditMap.set(
+            assetDetail.id,
+            damCreditFromMap(namesMap, assetDetail.sources, assetDetail.authors, creditConfig)
+          )
         })
       }
     } catch (e) {
@@ -388,6 +400,7 @@ const assetSelectConfirmMap = async (
 
   return items.map((asset) => {
     const authorIds = assetMetadataMap.get(asset.id)?.authorIds || []
+    const sourceIds = assetMetadataMap.get(asset.id)?.sourceIds || []
     const description = assetMetadataMap.get(asset.id)?.description ?? ''
 
     if (customAssetSelectMetadataToImageMap) {
@@ -395,34 +408,28 @@ const assetSelectConfirmMap = async (
         key: generateUUIDv1(),
         ...createDamImage(
           { fileId: asset.mainFile!.id, licenceId: asset.licence, internal: asset.mainFileInternal },
-          { description, source: authorsMap.get(asset.id) ?? '' },
+          { description, source: creditMap.get(asset.id) ?? '' },
           { position: 0 }
         ),
         damAuthors: [],
+        damSources: [],
         showDamAuthors: false,
         assetId: asset.id,
       }
     }
 
-    const authorNames: string[] = []
-    assetMetadataMap.get(asset.id)?.authorIds.forEach((authorId) => {
-      const name = authorsMap.get(authorId)
-      if (!isUndefined(name) && name.trim().length > 0) {
-        authorNames.push(name)
-      }
-    })
-
     return {
       key: generateUUIDv1(),
       ...createDamImage(
         { fileId: asset.mainFile!.id, licenceId: asset.licence, internal: asset.mainFileInternal },
-        { description, source: authorNames.join(', ') },
+        { description, source: creditMap.get(asset.id) ?? '' },
         { position: 0 }
       ),
       damAuthors: authorIds,
-      // Only for assets that were read. For an unread asset its authors are unknown, and authors
-      // picked in the row would replace them in the DAM. Its row shows the source instead.
-      showDamAuthors: assetMetadataMap.has(asset.id) && authorIds.length === 0,
+      damSources: sourceIds,
+      // Only for assets that were read. For an unread asset its sources and authors are unknown,
+      // and those picked in the row would replace them in the DAM. Its row shows the source instead.
+      showDamAuthors: assetMetadataMap.has(asset.id) && hasNoDamCredit(authorIds, sourceIds),
       assetId: asset.id,
     }
   })
@@ -559,15 +566,15 @@ const onAssetUploadConfirm = async (items: ImageStoreItem[]) => {
 }
 
 const addUploadedRows = (items: ImageStoreItem[]) => {
-  // A duplicate file becomes the asset of the existing image, and the dialog has just saved its authors. Rows of that
-  // asset offering the pick take them, as after closing the detail. Otherwise their pick would overwrite those authors.
-  // Names go into a row's source only if it has none. Before, they always overwrote it.
-  if (authorEnabled.value) {
+  // A duplicate file becomes the asset of the existing image, and the dialog has just saved its sources and authors.
+  // Rows of that asset offering the pick take them, as after closing the detail. Otherwise their pick would overwrite
+  // them. The credit goes into a row's source only if it has none. Before, it always overwrote it.
+  if (damSelectionEnabled.value) {
     items.forEach((item) => {
-      if (isUndefined(item.assetId) || item.damAuthors.length === 0) return
+      if (isUndefined(item.assetId) || hasNoDamCredit(item.damAuthors, item.damSources)) return
       images.value.forEach((image) => {
         if (image.assetId !== item.assetId || !image.showDamAuthors) return
-        takeAuthorsGiven(image, item.damAuthors, item.texts.source)
+        takeAuthorsGiven(image, item.damAuthors, item.damSources, item.texts.source)
       })
     })
   }
@@ -587,38 +594,42 @@ const authorEnabled = computed(() => {
   return !!getDamConfigExtSystem(cachedExtSystemId.value)?.[DamAssetType.Image]?.authors?.enabled
 })
 
+const sourceEnabled = computed(() => {
+  return !!getDamConfigExtSystem(cachedExtSystemId.value)?.[DamAssetType.Image]?.sources?.enabled
+})
+
+// Rows offer the pick of sources and authors when the configured ext system has either.
+const damSelectionEnabled = computed(() => authorEnabled.value || sourceEnabled.value)
+
+// The credit format of `extSystem` when its configuration is loaded, else that of the configured one.
+const creditConfigOf = (extSystem: IntegerId) =>
+  damCreditConfigOf(getDamConfigExtSystem(extSystem) ?? getDamConfigExtSystem(cachedExtSystemId.value))
+
 /**
- * Author names of an asset, in order, under its licence's ext system.
+ * Credit of an asset under its licence's ext system.
  * Falls back to `pageExtSystem` when the licence does not tell.
  */
 const authorNamesOf = async (asset: AssetDetailItemDto, pageExtSystem: IntegerId) => {
   const extSystem = (await getExtSystemByLicence(asset.licence)) ?? pageExtSystem
-  const authorsRes = await fetchAuthorListByIds(damClient, endPointAuthor, extSystem, asset.authors)
-  const authorNames: string[] = []
-  asset.authors.forEach((authorId) => {
-    const name = authorsRes.find((author) => author.id === authorId)?.name
-    if (!isUndefined(name) && name.trim().length > 0) {
-      authorNames.push(name)
-    }
-  })
-  return authorNames.join(', ')
+  return fetchDamCredit(damClient, endPointAuthor, extSystem, asset.sources, asset.authors, creditConfigOf(extSystem))
 }
 
 /**
- * Once the asset turns out to have authors, a row offering the
- * author pick takes them, drops the pick and shows its source.
- * The source takes their names if empty or if it holds a hidden "fill empty"
+ * Once the asset turns out to have sources or authors, a row offering the
+ * pick takes them, drops the pick and shows its source.
+ * The source takes their credit if empty or if it holds a hidden "fill empty"
  * pick from mass operations. An image's own source stays for the user to check.
  */
-const takeAuthorsGiven = (row: ImageStoreItem, authors: DocId[], names: string) => {
+const takeAuthorsGiven = (row: ImageStoreItem, authors: DocId[], sources: DocId[] | undefined, names: string) => {
   row.damAuthors = [...authors]
+  row.damSources = [...(sources ?? [])]
   if (row.texts.source.trim().length === 0 || imageStore.hasSourceOfPick(row)) row.texts.source = names
   imageStore.forgetSourceOfPick(row)
   row.showDamAuthors = false
 }
 
 /**
- * The detail may have given authors to an asset whose row offers the pick.
+ * The detail may have given sources or authors to an asset whose row offers the pick.
  * Otherwise the widget save overwrote them, or saved the image without a source.
  * So the asset is read again, and its offering rows take its authors with names under the asset
  * licence's ext system (see `takeAuthorsGiven`). Rows showing their source are left alone.
@@ -629,14 +640,14 @@ const takeAuthorsOfDetailAsset = async (assetId: DocId, detailSave: Promise<void
     // Read before the DAM answers that save, the asset would be stale.
     await detailSave
     const asset = await fetchAsset(damClient, endPointAsset, assetId)
-    if (asset.authors.length === 0) return
+    if (hasNoDamCredit(asset.authors, asset.sources)) return
     const source = await authorNamesOf(asset, pageExtSystem)
     if (unmounted || props.readonly) return
     images.value.forEach((image) => {
       // Uses the row's own flag. Whether the page shows the pick depends
       // on an ext system that another asset's detail may have changed.
       if (image.assetId !== asset.id || !image.showDamAuthors) return
-      takeAuthorsGiven(image, asset.authors, source)
+      takeAuthorsGiven(image, asset.authors, asset.sources, source)
     })
   } catch (e) {
     if (!unmounted && !showErrorsDefault(e)) showUnknownError()
@@ -651,7 +662,7 @@ const takeAuthorsOfDetailAsset = async (assetId: DocId, detailSave: Promise<void
 const onAssetDetailClose = (shown: AssetDetailItemDto | null) => {
   const ofRow = detailOfRow
   detailOfRow = false
-  if (!ofRow || isNull(shown) || props.readonly || !authorEnabled.value) return
+  if (!ofRow || isNull(shown) || props.readonly || !damSelectionEnabled.value) return
   const assetId = shown.id
   if (!images.value.some((image) => image.assetId === assetId && image.showDamAuthors)) return
   const detailSave = assetDetailStore.savingOf(assetId, damConfigName)
@@ -685,58 +696,70 @@ const saveImages = async () => {
   try {
     const assetUpdateItems: AssetAuthorsItems = []
     const imagesRaw = toRaw(images.value)
-    // Rows offering the author pick, grouped by asset. An entity may have
+    // Rows offering the pick, grouped by asset. An entity may have
     // an image twice, and a queue duplicate is a second row of its asset.
     // Per row, authors went out once per row and the last won, and a row with no pick was saved without a source.
-    // The asset gets the union of picks in its rows, each author once,
-    // and each row gets the authors and names after the DAM accepts them.
-    const offering = new Map<DocId, { assetId: DocId | undefined; rows: ImageStoreItem[]; authors: DocId[] }>()
-    if (authorEnabled.value) {
+    // The asset gets the union of picks in its rows, each source and author once,
+    // and each row gets them and their credit after the DAM accepts them.
+    type Offering = { assetId: DocId | undefined; rows: ImageStoreItem[]; authors: DocId[]; sources: DocId[] }
+    const offering = new Map<DocId, Offering>()
+    if (damSelectionEnabled.value) {
       images.value.forEach((image) => {
         if (!image.showDamAuthors) return
         // A row offering the pick has an asset. One without would be grouped alone.
         const of = image.assetId ?? image.key
-        const asset = offering.get(of) ?? { assetId: image.assetId, rows: [], authors: [] }
+        const asset = offering.get(of) ?? { assetId: image.assetId, rows: [], authors: [], sources: [] }
         offering.set(of, asset)
         asset.rows.push(image)
         image.damAuthors.forEach((author) => {
           if (!asset.authors.includes(author)) asset.authors.push(author)
         })
+        for (const source of image.damSources ?? []) {
+          if (!asset.sources.includes(source)) asset.sources.push(source)
+        }
       })
     }
-    const named: Array<{ assetId: DocId | undefined; rows: ImageStoreItem[]; authors: DocId[]; source: string }> = []
-    for (const { assetId, rows, authors } of offering.values()) {
-      if (authors.length === 0) continue
-      if (assetId) assetUpdateItems.push({ id: assetId, authors })
+    const named: Array<Offering & { source: string }> = []
+    for (const { assetId, rows, authors, sources } of offering.values()) {
+      if (hasNoDamCredit(authors, sources)) continue
+      if (assetId) assetUpdateItems.push({ id: assetId, authors, sources })
       // Uses the ext system of the rows' asset licence, as the pre-write read does. Falls back to the configured
       // one when the page does not know the licence. It is not fetched, since entity rows can be of any licence.
       const extSystem =
         damConfigStore.damConfigLicenceExtSystem.get(rows[0]!.dam.licenceId)?.extSystem ?? cachedExtSystemId.value
-      const authorsRes = await fetchAuthorListByIds(damClient, endPointAuthor, extSystem, authors)
-      named.push({ assetId, rows, authors, source: authorsRes.map((author) => author.name).join(', ') })
+      const namesMap = await fetchDamAuthorsMap(damClient, endPointAuthor, extSystem, [...sources, ...authors])
+      named.push({
+        assetId,
+        rows,
+        authors,
+        sources,
+        source: damCreditFromMap(namesMap, sources, authors, creditConfigOf(extSystem)),
+      })
     }
     // Unmounted while authors loaded: write nothing. Turned read-only: nothing of the user's is written.
     if (unmounted) return false
     if (props.readonly) return true
-    // Assets may have received authors elsewhere since their rows loaded, and the write would
-    // replace them. So each asset with picked authors is re-read right before the write.
-    // If any asset already has authors, nothing is written. Its offering rows take those
-    // authors (`takeAuthorsGiven`), a message stays until closed, and the user saves again.
-    const picked = [...offering.values()].filter(({ assetId, authors }) => !isUndefined(assetId) && authors.length > 0)
+    // Assets may have received sources or authors elsewhere since their rows loaded, and the write would
+    // replace them. So each asset with a pick is re-read right before the write.
+    // If any asset already has sources or authors, nothing is written. Its offering rows take
+    // them (`takeAuthorsGiven`), a message stays until closed, and the user saves again.
+    const picked = [...offering.values()].filter(
+      ({ assetId, authors, sources }) => !isUndefined(assetId) && !hasNoDamCredit(authors, sources)
+    )
     if (picked.length > 0) {
       const readAgain = await Promise.all(picked.map(({ assetId }) => fetchAsset(damClient, endPointAsset, assetId!)))
       // Unmounted or made read-only while the assets were read: write nothing.
       if (unmounted || props.readonly) return false
       const givenMeanwhile = picked
         .map(({ rows }, index) => ({ rows, asset: readAgain[index]! }))
-        .filter(({ asset }) => asset.authors.length > 0)
+        .filter(({ asset }) => !hasNoDamCredit(asset.authors, asset.sources))
       if (givenMeanwhile.length > 0) {
         const pageExtSystem = cachedExtSystemId.value
         const names = await Promise.all(givenMeanwhile.map(({ asset }) => authorNamesOf(asset, pageExtSystem)))
         if (unmounted || props.readonly) return false
         givenMeanwhile.forEach(({ rows, asset }, index) => {
           rows.forEach((row) => {
-            if (row.showDamAuthors) takeAuthorsGiven(row, asset.authors, names[index]!)
+            if (row.showDamAuthors) takeAuthorsGiven(row, asset.authors, asset.sources, names[index]!)
           })
         })
         showWarningT('common.damImage.image.meta.galleryAuthorsGivenMeanwhile', -1)
@@ -744,7 +767,15 @@ const saveImages = async () => {
       }
     }
     if (assetUpdateItems.length) {
-      await bulkUpdateAssetsAuthors(damClient, endPointAsset, assetUpdateItems)
+      // Sources go out where the configured ext system has them, as the rows offer them.
+      await bulkUpdateAssetsAuthors(
+        damClient,
+        endPointAsset,
+        DamAssetType.Image,
+        cachedExtSystemId.value,
+        assetUpdateItems,
+        damConfigName
+      )
       // Unmounted while the authors were written: save no image. A widget mounted meanwhile
       // for the same images read them before this save, which is noted only once sent.
       if (unmounted) return false
@@ -752,9 +783,10 @@ const saveImages = async () => {
     // The DAM now has these authors even if the images are not saved, so the rows show the source as after a save.
     // If the rows kept offering the pick, the next save would send them as picks,
     // the pre-write read would find these authors, and nothing would be written.
-    named.forEach(({ assetId, rows, authors, source }) => {
+    named.forEach(({ assetId, rows, authors, sources, source }) => {
       rows.forEach((row) => {
         row.damAuthors = [...authors]
+        row.damSources = [...sources]
         row.texts.source = source
         if (isUndefined(assetId)) return
         row.showDamAuthors = false
@@ -785,6 +817,7 @@ const saveImages = async () => {
         key: generateUUIDv1(),
         ...resItem,
         damAuthors: [],
+        damSources: [],
         showDamAuthors: false,
         assetId: undefined,
       }
@@ -805,9 +838,12 @@ const saveImages = async () => {
       return {
         ...item,
         damAuthors: matchedImage ? matchedImage.damAuthors : item.damAuthors,
-        // Only a row that offered DAM authors keeps offering them.
+        damSources: matchedImage ? matchedImage.damSources : item.damSources,
+        // Only a row that offered DAM sources and authors keeps offering them.
         // A row whose asset the DAM did not return has no asset to save them into, so it keeps its source.
-        showDamAuthors: matchedImage ? matchedImage.showDamAuthors && matchedImage.damAuthors.length === 0 : false,
+        showDamAuthors: matchedImage
+          ? matchedImage.showDamAuthors && hasNoDamCredit(matchedImage.damAuthors, matchedImage.damSources)
+          : false,
         assetId: matchedImage ? matchedImage.assetId : item.assetId,
       }
     }
@@ -868,6 +904,7 @@ const createImageStoreItem = (): ImageStoreItem => ({
   key: generateUUIDv1(),
   ...createDamImage({ fileId: '', licenceId: 0 }, {}, { position: 0 }),
   damAuthors: [],
+  damSources: [],
   showDamAuthors: false,
   assetId: undefined,
 })
@@ -990,6 +1027,7 @@ onMounted(() => {
               :source-label="sourceLabel"
               :edit-asset-label="editAssetLabel"
               :author-enabled="authorEnabled"
+              :source-enabled="sourceEnabled"
               :readonly="readonly"
               :config-name="damConfigName"
               @edit-asset="onEditAsset"

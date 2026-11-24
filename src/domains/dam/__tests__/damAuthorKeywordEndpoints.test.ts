@@ -1,3 +1,4 @@
+import { DAM_CREDIT_CONFIG_DEFAULT } from '@/domains/dam/author/composables/damCredit'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount, type VueWrapper } from '@vue/test-utils'
 import { createPinia, type Pinia, setActivePinia } from 'pinia'
@@ -173,6 +174,20 @@ describe.each([
   })
 
   it('the mass operation of the image widget that fills the authors', async () => {
+    // Names are looked up only for rows that take the pick.
+    useImageStore().setImages([
+      {
+        key: 'k1',
+        texts: { description: '', source: '' },
+        flags: { showSource: true, internal: false, overrideInternal: false },
+        dam: { damId: 'file-1', licenceId: 1, regionPosition: 0, internal: false },
+        position: 1,
+        damAuthors: [],
+        damSources: [],
+        showDamAuthors: true,
+        assetId: 'asset-1',
+      },
+    ])
     await useImageMassOperations('default').replaceEmptyAuthors(['author-1'])
 
     expect(asked()).toEqual([`GET ${author}/ext-system/${extSystem}/search`])
@@ -197,7 +212,8 @@ describe.each([
       dam.client,
       extSystem,
       licence,
-      useCommonAdminCoreDamOptions('default').endPointAuthor
+      useCommonAdminCoreDamOptions('default').endPointAuthor,
+      DAM_CREDIT_CONFIG_DEFAULT
     )
 
     expect(asked()).toEqual([`GET ${author}/ext-system/${extSystem}/search`])

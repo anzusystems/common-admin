@@ -2,14 +2,15 @@ import type { AssetMetadataBulkItem } from '@/domains/dam/api/damAssetApi'
 import type { UploadQueueItem } from '@/domains/dam/types/UploadQueue'
 import type { ImageCreateUpdateAware } from '@/domains/dam/types/ImageAware'
 import type { DocId, IntegerId } from '@/shared/types/common'
-import { isNull, isString, isUndefined } from '@/shared/utils/common'
-import { fetchAuthorListByIds } from '@/domains/dam/author/api/authorApi'
+import { isNull, isString } from '@/shared/utils/common'
+import { type DamCreditConfig, damCreditFromMap, fetchDamAuthorsMap } from '@/domains/dam/author/composables/damCredit'
 import type { AxiosInstance } from 'axios'
 import type { AssetDetailItemDto } from '@/domains/dam/types/Asset'
 import { createDamImage } from '@/domains/dam/imageWidget/utils/damImage'
 
 export interface UploadMetadataToImageMapItem extends ImageCreateUpdateAware {
   authorIds: DocId[]
+  sourceIds?: DocId[]
   assetId: DocId | undefined
 }
 
@@ -32,34 +33,31 @@ export async function mapUploadMetadataToImages(
   damClient: () => AxiosInstance,
   extSystem: IntegerId,
   licenceId: IntegerId,
-  endPointAuthor: string
+  endPointAuthor: string,
+  creditConfig: DamCreditConfig
 ): Promise<UploadMetadataToImageMapItem[]> {
-  // Build assetId -> { description, authorIds } map
-  const assetMetadataMap = new Map<DocId, { description: string; authorIds: DocId[]; mainFileInternal: boolean }>()
+  // Build assetId -> { description, authorIds, sourceIds } map
+  const assetMetadataMap = new Map<
+    DocId,
+    { description: string; authorIds: DocId[]; sourceIds: DocId[]; mainFileInternal: boolean }
+  >()
 
   bulkItems.forEach((bulkItem) => {
     assetMetadataMap.set(bulkItem.id, {
       description: isString(bulkItem.customData?.description) ? bulkItem.customData.description.trim() : '',
       authorIds: bulkItem.authors,
+      sourceIds: bulkItem.sources ?? [],
       mainFileInternal: bulkItem.mainFileInternal ?? false,
     })
   })
 
-  // Collect unique author IDs and batch-fetch names only if needed
-  const authorIdsToFetch = new Set<DocId>()
-  assetMetadataMap.forEach((assetMeta) => {
-    assetMeta.authorIds.forEach((authorId) => {
-      authorIdsToFetch.add(authorId)
-    })
-  })
-
-  const authorsMap = new Map<DocId, string>()
-  if (authorIdsToFetch.size > 0) {
-    const authorsRes = await fetchAuthorListByIds(damClient, endPointAuthor, extSystem, [...authorIdsToFetch])
-    authorsRes.forEach((author) => {
-      authorsMap.set(author.id, author.name)
-    })
-  }
+  // Batch-fetch the names of all sources and authors, only if there are any.
+  const authorsMap = await fetchDamAuthorsMap(
+    damClient,
+    endPointAuthor,
+    extSystem,
+    [...assetMetadataMap.values()].flatMap((assetMeta) => [...assetMeta.authorIds, ...assetMeta.sourceIds])
+  )
 
   // Filter valid queue items and map to results
   const validItems = queueItems.filter((queueItem) => !isNull(queueItem.assetId) && !isNull(queueItem.fileId))
@@ -67,15 +65,8 @@ export async function mapUploadMetadataToImages(
   return validItems.map((queueItem) => {
     const description = assetMetadataMap.get(queueItem.assetId!)?.description
     const authorIds = assetMetadataMap.get(queueItem.assetId!)?.authorIds
-    const authorNames: string[] = []
-    if (authorIds) {
-      authorIds.forEach((authorId) => {
-        const name = authorsMap.get(authorId)
-        if (!isUndefined(name) && name.trim().length > 0) {
-          authorNames.push(name)
-        }
-      })
-    }
+    const sourceIds = assetMetadataMap.get(queueItem.assetId!)?.sourceIds
+    const credit = damCreditFromMap(authorsMap, sourceIds, authorIds, creditConfig)
 
     return {
       ...createDamImage(
@@ -85,9 +76,10 @@ export async function mapUploadMetadataToImages(
           // For an asset not in the save answer, use its row value from the asset read.
           internal: (assetMetadataMap.get(queueItem.assetId!) ?? queueItem).mainFileInternal,
         },
-        { description: description ?? '', source: authorNames.join(', ') }
+        { description: description ?? '', source: credit }
       ),
       authorIds: authorIds || [],
+      sourceIds: sourceIds || [],
       assetId: queueItem.assetId || undefined,
     }
   })

@@ -135,6 +135,7 @@ const applyDuplicate = async () => {
     position: 2,
     assetId: 'asset-12',
     damAuthors: ['author-3'],
+    damSources: [],
     showDamAuthors: false,
   }
   widget!.findComponent(UploadDialog).vm.$emit('apply', [duplicate])

@@ -26,6 +26,10 @@ const props = withDefaults(
     extSystem: IntegerId
     initialValue?: string
     disableRedirect?: boolean
+    /** Creates a source: an author flagged as source. */
+    source?: boolean
+    /** Shows "created" after the save. Off where the caller reports it, as the author fields do. */
+    notifyCreated?: boolean
     variant?: 'button' | 'icon' | 'listItem'
     buttonT?: string
     buttonClass?: string
@@ -38,6 +42,8 @@ const props = withDefaults(
   {
     initialValue: '',
     disableRedirect: false,
+    source: undefined,
+    notifyCreated: true,
     variant: 'button',
     buttonT: 'common.button.create',
     buttonClass: 'ml-2',
@@ -72,6 +78,7 @@ const onClick = (textOverride: string | undefined) => {
     throw new Error('AuthorCreateButton: Ext system must be initialised.')
   }
   author.value = createDefault(props.extSystem, true)
+  author.value.flags.source = props.source === true
   textOverride ? (author.value.name = textOverride) : (author.value.name = props.initialValue)
   dialog.value = true
 }
@@ -97,7 +104,7 @@ const onConfirm = async () => {
     }
     const res = await createAuthor(damClient, endPointAuthor, author.value)
     emit('success', res)
-    showRecordWas('created')
+    if (props.notifyCreated) showRecordWas('created')
     dialog.value = false
     if (!isUndefined(res.id) && !props.disableRedirect) {
       // router.push({ name: ROUTE.DAM.AUTHOR.DETAIL, params: { id: res.id } })
@@ -137,7 +144,7 @@ defineExpose({
   </ABtnPrimary>
   <VBtn
     v-else
-    :aria-label="t('common.damImage.author.button.add')"
+    :aria-label="t(source ? 'common.damImage.author.button.addSource' : 'common.damImage.author.button.add')"
     :class="buttonClass"
     :data-cy="dataCy"
     icon
@@ -151,7 +158,7 @@ defineExpose({
       activator="parent"
       location="bottom"
     >
-      {{ t('common.damImage.author.button.add') }}
+      {{ t(source ? 'common.damImage.author.button.addSource' : 'common.damImage.author.button.add') }}
     </VTooltip>
   </VBtn>
   <VDialog v-model="dialog">
@@ -162,7 +169,7 @@ defineExpose({
       data-cy="create-panel"
     >
       <ADialogToolbar @cancel="onCancel">
-        {{ t('common.damImage.author.meta.create') }}
+        {{ t(source ? 'common.damImage.author.meta.createSource' : 'common.damImage.author.meta.create') }}
       </ADialogToolbar>
       <VCardText>
         <ASystemEntityScope

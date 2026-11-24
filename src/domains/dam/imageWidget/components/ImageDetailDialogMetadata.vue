@@ -7,8 +7,10 @@ import { storeToRefs } from 'pinia'
 import type { DocId } from '@/shared/types/common'
 import { AImageMetadataValidationScopeSymbol, useImageValidation } from '@/domains/dam/composables/uploadValidations'
 import { useAlerts } from '@/domains/system/composables/alerts'
-import AuthorRemoteAutocompleteWithCached from '@/domains/dam/author/components/AuthorRemoteAutocompleteWithCached.vue'
-import ASystemEntityScope from '@/domains/form/components/ASystemEntityScope.vue'
+import DamSourcesAuthorsFields from '@/domains/dam/author/components/DamSourcesAuthorsFields.vue'
+import { isDamSourceEnabled } from '@/domains/dam/author/composables/damSourceConfig'
+import { isDamAuthorEnabled } from '@/domains/dam/author/composables/damAuthorConfig'
+import { useDamConfigState } from '@/domains/dam/config/composables/damConfigState'
 import { useAssetDetailStore } from '@/domains/dam/assetDetail/store/assetDetailStore'
 import { useExtSystemIdForCached } from '@/domains/dam/composables/extSystemIdForCached'
 import { computed } from 'vue'
@@ -33,10 +35,15 @@ const props = withDefaults(
     saving: boolean
     loading: boolean
     expand?: boolean
-    /** Offers DAM authors instead of the source. They are the authors of the asset the widget holds for the image. */
+    /**
+     * Offers DAM sources and authors instead of the source, those the ext system has.
+     * They are those of the asset the widget holds for the image.
+     */
     showDamAuthors?: boolean
     /** Authors picked so far, used while `showDamAuthors` is on. */
     damAuthors?: DocId[]
+    /** Sources picked so far, used while `showDamAuthors` is on. */
+    damSources?: DocId[]
     showSourceEnabled?: boolean
     sourceLabel?: string
     editAssetLabel?: string
@@ -47,6 +54,7 @@ const props = withDefaults(
     expand: false,
     showDamAuthors: false,
     damAuthors: () => [],
+    damSources: () => [],
     showSourceEnabled: true,
     sourceLabel: undefined,
     editAssetLabel: undefined,
@@ -57,6 +65,7 @@ const props = withDefaults(
 const emit = defineEmits<{
   (e: 'editAsset', data: DocId): void
   (e: 'update:damAuthors', data: DocId[]): void
+  (e: 'update:damSources', data: DocId[]): void
   (e: 'confirm'): void
   (e: 'close'): void
 }>()
@@ -82,9 +91,16 @@ const detailType = computed<DamAssetTypeType | null>(() => {
 // The detail is empty until loaded, so taking the type from it showed "edit medium" while an image loaded.
 const titleType = computed(() => props.type ?? detailType.value)
 
-const imageSourceRequired = computed(() => {
-  return !props.showDamAuthors
-})
+const sourceEnabled = computed(() => isDamSourceEnabled(DamAssetType.Image, cachedExtSystemId.value, damConfigName))
+const authorEnabled = computed(() => isDamAuthorEnabled(DamAssetType.Image, cachedExtSystemId.value, damConfigName))
+
+const { getDamConfigExtSystem } = useDamConfigState(undefined, damConfigName)
+const imageConfig = computed(() => getDamConfigExtSystem(cachedExtSystemId.value)?.[DamAssetType.Image])
+
+// The fields show only if the ext system has sources or authors. Otherwise the source stays.
+const showDamSelection = computed(() => props.showDamAuthors && (sourceEnabled.value || authorEnabled.value))
+
+const imageSourceRequired = computed(() => !showDamSelection.value)
 
 const imageMedia = computed<ImageCreateUpdateAware | undefined>(() => {
   if (!isMediaAware(detail.value) || isNull(detail.value.damMedia.imageFileId)) return undefined
@@ -123,6 +139,10 @@ const onDamAuthorsUpdate = (authors: DocId | null | DocId[]) => {
   emit('update:damAuthors', isArray(authors) ? authors : [])
 }
 
+const onDamSourcesUpdate = (sources: DocId[]) => {
+  emit('update:damSources', sources)
+}
+
 defineExpose({
   confirm: onConfirm,
 })
@@ -155,26 +175,22 @@ defineExpose({
           />
         </VCol>
       </VRow>
-      <VRow v-if="showDamAuthors">
-        <VCol>
-          <ASystemEntityScope
-            subject="author"
-            system="dam"
-          >
-            <AuthorRemoteAutocompleteWithCached
-              :model-value="damAuthors"
-              :ext-system="cachedExtSystemId"
-              :label="t('common.damImage.asset.model.authors')"
-              :author-conflicts="authorConflicts"
-              data-cy="custom-field-authors"
-              clearable
-              multiple
-              :validation-scope="AImageMetadataValidationScopeSymbol"
-              @update:model-value="onDamAuthorsUpdate"
-            />
-          </ASystemEntityScope>
-        </VCol>
-      </VRow>
+      <DamSourcesAuthorsFields
+        v-if="showDamSelection"
+        :sources="damSources"
+        :authors="damAuthors"
+        :ext-system="cachedExtSystemId"
+        :source-enabled="sourceEnabled"
+        :author-enabled="authorEnabled"
+        :source-required="!!imageConfig?.sources?.required"
+        :author-required="!!imageConfig?.authors?.required"
+        :validation-scope="AImageMetadataValidationScopeSymbol"
+        :author-conflicts="authorConflicts"
+        show-credit
+        :credit-label="sourceLabel"
+        @update:sources="onDamSourcesUpdate"
+        @update:authors="onDamAuthorsUpdate"
+      />
       <VRow v-else>
         <VCol>
           <AFormTextarea
@@ -204,7 +220,7 @@ defineExpose({
   <VDialog
     v-else
     :model-value="modelValue"
-    :max-width="500"
+    :max-width="640"
     :fullscreen="mdAndDown"
     eager
     @update:model-value="onDialogModelUpdate"
@@ -249,26 +265,22 @@ defineExpose({
               />
             </VCol>
           </VRow>
-          <VRow v-if="showDamAuthors">
-            <VCol>
-              <ASystemEntityScope
-                subject="author"
-                system="dam"
-              >
-                <AuthorRemoteAutocompleteWithCached
-                  :model-value="damAuthors"
-                  :ext-system="cachedExtSystemId"
-                  :label="t('common.damImage.asset.model.authors')"
-                  :author-conflicts="authorConflicts"
-                  data-cy="custom-field-authors"
-                  clearable
-                  multiple
-                  :validation-scope="AImageMetadataValidationScopeSymbol"
-                  @update:model-value="onDamAuthorsUpdate"
-                />
-              </ASystemEntityScope>
-            </VCol>
-          </VRow>
+          <DamSourcesAuthorsFields
+            v-if="showDamSelection"
+            :sources="damSources"
+            :authors="damAuthors"
+            :ext-system="cachedExtSystemId"
+            :source-enabled="sourceEnabled"
+            :author-enabled="authorEnabled"
+            :source-required="!!imageConfig?.sources?.required"
+            :author-required="!!imageConfig?.authors?.required"
+            :validation-scope="AImageMetadataValidationScopeSymbol"
+            :author-conflicts="authorConflicts"
+            show-credit
+            :credit-label="sourceLabel"
+            @update:sources="onDamSourcesUpdate"
+            @update:authors="onDamAuthorsUpdate"
+          />
           <VRow v-else>
             <VCol>
               <AFormTextarea

@@ -6,6 +6,8 @@ import type { DamAuthorTypeType } from '@/domains/dam/author/types/DamAuthorType
 export interface Flags {
   reviewed: boolean
   canBeCurrentAuthor: boolean
+  source: boolean
+  hiddenInCredit: boolean
 }
 
 export interface DamAuthorMinimal {
@@ -13,6 +15,8 @@ export interface DamAuthorMinimal {
   name: string
   identifier: string
   reviewed: boolean
+  /** Left out of the credit. Missing reads as shown. */
+  hiddenInCredit?: boolean
 }
 
 export interface DamAuthor

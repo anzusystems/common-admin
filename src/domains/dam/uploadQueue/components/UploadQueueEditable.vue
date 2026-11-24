@@ -160,6 +160,7 @@ onBeforeUnmount(() => {
                 v-model:custom-data="item.customData"
                 v-model:keywords="item.keywords"
                 v-model:authors="item.authors"
+                v-model:sources="item.sources"
                 v-model:main-file-single-use="item.mainFileSingleUse"
                 :main-file-single-use-enabled="queue.mainFileSingleUseEnabled"
                 :ext-system="extSystem"

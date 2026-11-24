@@ -19,6 +19,7 @@ import { useApiCommand, useApiRequest } from '@/domains/api/composables/useApiRe
 import { useApiFetchItems } from '@/domains/api/composables/useApiFetchItems'
 import type { DamMediaFromDam } from '@/domains/dam/types/MediaAware'
 import { commonT } from '@/plugins/i18n'
+import { isDamSourceEnabled } from '@/domains/dam/author/composables/damSourceConfig'
 
 const BULK_METADATA_LIMIT = 10
 export const ENTITY = 'asset'
@@ -28,6 +29,7 @@ export interface AssetMetadataBulkItem {
   id: DocId
   keywords: DocId[]
   authors: DocId[]
+  sources?: DocId[]
   described: boolean
   customData: AssetCustomData
   mainFileSingleUse: boolean | null
@@ -113,17 +115,23 @@ export const fetchAssetByFileId = (client: () => AxiosInstance, endPoint: string
   return execute({ urlParams: { id: assetFileId } })
 }
 
+/**
+ * Saves the metadata of the queue items. Sources are sent only where `extSystem` has them
+ * for the item's asset type in DAM configuration `configName`.
+ */
 export const bulkUpdateAssetsMetadata = async (
   client: () => AxiosInstance,
   endPoint: string,
   items: UploadQueueItem[],
-  mainFileSingleUseOverride: boolean | undefined = undefined
+  mainFileSingleUseOverride: boolean | undefined,
+  extSystem: IntegerId,
+  configName: string
 ) => {
   const sent = items.filter(hasMetadataToSave)
   const { execute } = useMetadataBulkUpdate<AssetMetadataBulkItemBody>(client, endPoint)
   const answers = await saveMetadataInBatches(
     execute,
-    listItemsToMetadataBulkItems(sent, mainFileSingleUseOverride),
+    listItemsToMetadataBulkItems(sent, mainFileSingleUseOverride, extSystem, configName),
     sent.map((item) => item.assetType)
   )
 
@@ -255,9 +263,22 @@ const saveMetadataInBatches = async <B, R>(
 export const hasMetadataToSave = (item: UploadQueueItem): item is UploadQueueItem & { assetId: DocId } =>
   !isNull(item.assetId) && item.canEditMetadata
 
+/** Authors, and the sources where the ext system has them for the asset type. */
+function creditFields(
+  assetType: DamAssetTypeType,
+  extSystem: IntegerId,
+  authors: DocId[],
+  sources: DocId[],
+  configName: string
+): Pick<AssetMetadataBulkItem, 'authors' | 'sources'> {
+  return isDamSourceEnabled(assetType, extSystem, configName) ? { authors, sources } : { authors }
+}
+
 function listItemsToMetadataBulkItems(
   items: UploadQueueItem[],
-  mainFileSingleUseOverride: boolean | undefined = undefined
+  mainFileSingleUseOverride: boolean | undefined,
+  extSystem: IntegerId,
+  configName: string
 ) {
   const dtoItems: AssetMetadataBulkItemBody[] = []
   items.forEach((item) => {
@@ -265,7 +286,7 @@ function listItemsToMetadataBulkItems(
       dtoItems.push({
         id: item.assetId,
         keywords: item.keywords,
-        authors: item.authors,
+        ...creditFields(item.assetType, extSystem, item.authors, item.sources, configName),
         described: true,
         customData: item.customData,
         // Never null. A row whose switch is not known yet is saved as off, which is how the DAM treats null.
@@ -290,6 +311,7 @@ const metadataFieldName = (
   const path = indexed ? indexed[2]! : key
   if (path === 'keywords') return commonT('common.damImage.asset.model.keywords')
   if (path === 'authors') return commonT('common.damImage.asset.model.authors')
+  if (path === 'sources') return commonT('common.damImage.asset.model.sources')
   const property = path.split('.').at(-1)!
   const assetType = indexed ? assetTypes[Number(indexed[1])] : undefined
   if (path.startsWith('customData.') && !isUndefined(assetType)) {
@@ -325,18 +347,20 @@ export const showMetadataSaveError = (error: unknown, extSystem: IntegerId, conf
   if (!showErrorsDefault(error)) showUnknownError()
 }
 
-// Callers name the fields of a refusal through `showMetadataSaveError`, so `extSystem` is not needed here.
+// Callers name the fields of a refusal through `showMetadataSaveError`.
+// Sources are sent only where `extSystem` has them for the asset type in DAM configuration `configName`.
 export const updateAssetMetadata = async (
   client: () => AxiosInstance,
   endPoint: string,
   asset: AssetDetailItemDto,
   extSystem: IntegerId,
-  mainFileSingleUse: boolean | null
+  mainFileSingleUse: boolean | null,
+  configName: string
 ) => {
   const data: AssetMetadataBulkItemBody = {
     id: asset.id,
     keywords: asset.keywords,
-    authors: asset.authors,
+    ...creditFields(asset.attributes.assetType, extSystem, asset.authors, asset.sources, configName),
     described: true,
     customData: asset.metadata.customData,
     mainFileSingleUse: mainFileSingleUse,
@@ -347,10 +371,17 @@ export const updateAssetMetadata = async (
 }
 
 // Callers name the fields of a refusal through `showMetadataSaveError`.
-export const updateAssetAuthors = async (client: () => AxiosInstance, endPoint: string, asset: AssetDetailItemDto) => {
+// Writes the asset's authors, and its sources where `extSystem` has them in DAM configuration `configName`.
+export const updateAssetAuthors = async (
+  client: () => AxiosInstance,
+  endPoint: string,
+  asset: AssetDetailItemDto,
+  extSystem: IntegerId,
+  configName: string
+) => {
   const data: Partial<AssetMetadataBulkItem> = {
     id: asset.id,
-    authors: asset.authors,
+    ...creditFields(asset.attributes.assetType, extSystem, asset.authors, asset.sources, configName),
     described: true,
   }
 
@@ -364,13 +395,25 @@ export type AssetAuthorsItems = AssetAuthorsItem[]
 export interface AssetAuthorsItem {
   id: DocId
   authors: DocId[]
+  sources?: DocId[]
 }
 
+/** Writes authors of assets of `assetType`, and their sources where `extSystem` has them in DAM configuration `configName`. */
 export const bulkUpdateAssetsAuthors = async (
   client: () => AxiosInstance,
   endPoint: string,
-  items: AssetAuthorsItems
+  assetType: DamAssetTypeType,
+  extSystem: IntegerId,
+  items: AssetAuthorsItems,
+  configName: string
 ) => {
-  const { execute } = useMetadataBulkCommand<AssetAuthorsItem>(client, endPoint)
-  await saveMetadataInBatches(execute, items, [])
+  const { execute } = useMetadataBulkCommand<Pick<AssetMetadataBulkItem, 'id' | 'authors' | 'sources'>>(
+    client,
+    endPoint
+  )
+  const dtoItems = items.map((item) => ({
+    id: item.id,
+    ...creditFields(assetType, extSystem, item.authors, item.sources ?? [], configName),
+  }))
+  await saveMetadataInBatches(execute, dtoItems, [])
 }

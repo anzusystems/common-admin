@@ -8,8 +8,9 @@ import { isNull, isUndefined } from '@/shared/utils/common'
 import AActionDeleteButton from '@/domains/ui/buttons/action/components/AActionDeleteButton.vue'
 import { useI18n } from 'vue-i18n'
 import { AImageMetadataValidationScopeSymbol, useImageValidation } from '@/domains/dam/composables/uploadValidations'
-import AuthorRemoteAutocompleteWithCached from '@/domains/dam/author/components/AuthorRemoteAutocompleteWithCached.vue'
-import ASystemEntityScope from '@/domains/form/components/ASystemEntityScope.vue'
+import DamSourcesAuthorsFields from '@/domains/dam/author/components/DamSourcesAuthorsFields.vue'
+import { useDamConfigState } from '@/domains/dam/config/composables/damConfigState'
+import { DamAssetType } from '@/domains/dam/types/Asset'
 import { useExtSystemIdForCached } from '@/domains/dam/composables/extSystemIdForCached'
 import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 
@@ -17,6 +18,7 @@ const props = withDefaults(
   defineProps<{
     index: number
     authorEnabled: boolean
+    sourceEnabled: boolean
     showSourceEnabled?: boolean
     sourceLabel?: string
     editAssetLabel?: string
@@ -47,10 +49,15 @@ const authorConflicts = ref<DocId[]>([])
 // `index` comes from the parent's v-for over these same images.
 const image = computed(() => imageStore.images[props.index]!)
 
-const imageSourceRequired = computed(() => {
-  if (isNull(image.value) || isUndefined(image.value)) return true
-  return !(image.value.showDamAuthors && props.authorEnabled)
+const { getDamConfigExtSystem } = useDamConfigState(undefined, damConfigName)
+const imageConfig = computed(() => getDamConfigExtSystem(cachedExtSystemId.value)?.[DamAssetType.Image])
+
+const showDamSelection = computed(() => {
+  if (isNull(image.value) || isUndefined(image.value)) return false
+  return image.value.showDamAuthors && (props.sourceEnabled || props.authorEnabled)
 })
+
+const imageSourceRequired = computed(() => !showDamSelection.value)
 
 const { v$ } = useImageValidation(image, imageSourceRequired, damConfigName)
 
@@ -113,29 +120,21 @@ const onSourceTyped = () => {
             />
           </VCol>
         </VRow>
-        <VRow
-          v-if="image.showDamAuthors && authorEnabled"
-          density="compact"
-        >
-          <VCol>
-            <ASystemEntityScope
-              subject="author"
-              system="dam"
-            >
-              <AuthorRemoteAutocompleteWithCached
-                v-model="image.damAuthors"
-                :disabled="readonly || undefined"
-                :ext-system="cachedExtSystemId"
-                :label="t('common.damImage.asset.model.authors')"
-                :author-conflicts="authorConflicts"
-                data-cy="custom-field-authors"
-                clearable
-                multiple
-                :validation-scope="AImageMetadataValidationScopeSymbol"
-              />
-            </ASystemEntityScope>
-          </VCol>
-        </VRow>
+        <DamSourcesAuthorsFields
+          v-if="showDamSelection"
+          v-model:sources="image.damSources"
+          v-model:authors="image.damAuthors"
+          :disabled="readonly"
+          :ext-system="cachedExtSystemId"
+          :source-enabled="sourceEnabled"
+          :author-enabled="authorEnabled"
+          :source-required="!!imageConfig?.sources?.required"
+          :author-required="!!imageConfig?.authors?.required"
+          :validation-scope="AImageMetadataValidationScopeSymbol"
+          :author-conflicts="authorConflicts"
+          show-credit
+          :credit-label="sourceLabel"
+        />
         <VRow
           v-else
           density="compact"

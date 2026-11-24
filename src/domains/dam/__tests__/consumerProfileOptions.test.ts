@@ -55,6 +55,7 @@ describe('the plugin options of admin-cms', () => {
       apiTimeout: 30,
       roiUpdateAcl: 'dam_regionOfInterest_update',
       imageRotateAcl: 'dam_image_update',
+      sourceCreateAcl: 'dam_source_create',
       mainFileSingleUseEnabled: true,
       showSourceEnabled: true,
       showFileInfoEnabled: true,
@@ -119,6 +120,7 @@ describe('the plugin options of admin-ugc', () => {
       // Not the default endpoints, so the grants of the admin API are not asked for.
       roiUpdateAcl: null,
       imageRotateAcl: null,
+      sourceCreateAcl: 'dam_source_create',
       mainFileSingleUseEnabled: false,
       showSourceEnabled: false,
       showFileInfoEnabled: false,

@@ -43,6 +43,7 @@ import { getCurrentScope, ref } from 'vue'
 export interface EditableFields {
   keywords: DocId[]
   authors: DocId[]
+  sources: DocId[]
   customData: UploadQueueItem['customData']
   mainFileSingleUse: boolean | null | undefined
 }
@@ -51,6 +52,7 @@ const editableFieldsOf = (item: UploadQueueItem): EditableFields =>
   cloneDeep({
     keywords: item.keywords,
     authors: item.authors,
+    sources: item.sources,
     customData: item.customData,
     mainFileSingleUse: item.mainFileSingleUse,
   })
@@ -73,7 +75,7 @@ export type UploadQueueRowsOf = string | { queueKey: UploadQueueKey }
 
 /** What a write left as the user had changed it: these fields and these custom data keys. */
 interface KeptByWrite {
-  fields: Set<'keywords' | 'authors' | 'mainFileSingleUse'>
+  fields: Set<'keywords' | 'authors' | 'sources' | 'mainFileSingleUse'>
   customKeys: Set<string>
 }
 
@@ -87,13 +89,14 @@ interface KeptByWrite {
  */
 const writeUnchanged = (item: UploadQueueItem, was: EditableFields | undefined, saved: EditableFields) => {
   const kept: KeptByWrite = { fields: new Set(), customKeys: new Set() }
-  const unchanged = (field: 'keywords' | 'authors' | 'mainFileSingleUse') => {
+  const unchanged = (field: 'keywords' | 'authors' | 'sources' | 'mainFileSingleUse') => {
     if (!was || sameValue(item[field], was[field])) return true
     kept.fields.add(field)
     return false
   }
   if (unchanged('keywords')) item.keywords = [...saved.keywords]
   if (unchanged('authors')) item.authors = [...saved.authors]
+  if (unchanged('sources')) item.sources = [...(saved.sources ?? [])]
   const customData = cloneDeep(saved.customData)
   if (was && customData) {
     const now = item.customData ?? {}
@@ -120,6 +123,7 @@ const takeWrite = (note: RowsNote, item: UploadQueueItem, kept: KeptByWrite) => 
   if (!entry) return
   if (!kept.fields.has('keywords')) entry.keywords = [...item.keywords]
   if (!kept.fields.has('authors')) entry.authors = [...item.authors]
+  if (!kept.fields.has('sources')) entry.sources = [...(item.sources ?? [])]
   if (!kept.fields.has('mainFileSingleUse')) entry.mainFileSingleUse = item.mainFileSingleUse
   const written = item.customData ?? {}
   const noted = (entry.customData = { ...entry.customData })
@@ -514,6 +518,7 @@ export const useUploadQueuesStore = defineStore('commonAdminUploadQueuesStore', 
             const kept = writeUnchanged(item, before.get(item), {
               keywords: assetRes.keywords,
               authors: assetRes.authors,
+              sources: assetRes.sources,
               customData: assetRes.metadata.customData,
               mainFileSingleUse: assetRes.mainFileSingleUse,
             })
@@ -523,6 +528,7 @@ export const useUploadQueuesStore = defineStore('commonAdminUploadQueuesStore', 
             item.authorConflicts = getAuthorConflicts(assetRes.metadata.authorSuggestions)
             addToCachedKeywords(item.keywords)
             addToCachedAuthors(item.authors)
+            addToCachedAuthors(item.sources)
             addToCachedAuthors(item.authorConflicts)
           }
         })
@@ -542,12 +548,14 @@ export const useUploadQueuesStore = defineStore('commonAdminUploadQueuesStore', 
             const kept = writeUnchanged(item, before.get(item), {
               keywords: asset.keywords,
               authors: asset.authors,
+              sources: asset.sources,
               customData: asset.metadata.customData,
               mainFileSingleUse: isUndefined(mainFileSingleUse) ? undefined : mainFileSingleUse,
             })
             othersTakeWrite(note, item, kept)
             addToCachedKeywords(item.keywords)
             addToCachedAuthors(item.authors)
+            addToCachedAuthors(item.sources)
           }
         })
       })

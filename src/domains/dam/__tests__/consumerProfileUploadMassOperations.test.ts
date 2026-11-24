@@ -81,7 +81,10 @@ describe.each(consumerProfiles)('the mass operations of an upload queue under th
   }
   const beside = (field: DOMWrapper<Element>, label: string) => onTheLine(field.element.closest('.d-flex')!, label)
   const besideList = (input: VueWrapper, label: string) =>
-    onTheLine(input.element.closest('[style*="min-width"]')!.parentElement!, label)
+    onTheLine(
+      input.element.closest('[style*="min-width"], .a-dam-sources-authors-fields__field')!.parentElement!,
+      label
+    )
   const KEYWORDS = damText('asset.model.keywords')
   const AUTHORS = damText('asset.model.authors')
   const keywords = () => wrapper!.findComponent(KeywordRemoteAutocompleteWithCached)

@@ -47,6 +47,7 @@ describe.each(consumerProfiles)('the mass operations of a gallery under the $nam
     dam: { damId: file, licenceId: licence, regionPosition: 0, internal: false },
     position: 1,
     damAuthors: [],
+    damSources: [],
     showDamAuthors: false,
     assetId: `asset-of-${file}`,
     ...parts,

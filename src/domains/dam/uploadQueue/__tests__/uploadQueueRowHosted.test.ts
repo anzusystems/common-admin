@@ -289,3 +289,34 @@ describe('the refresh a row offers', () => {
     expect(row().emitted('refreshItem')).toEqual([[{ index: 3, assetId: item.assetId }]])
   })
 })
+
+describe('the sources of a row', () => {
+  const sourcesOn = () => {
+    useDamConfigStore().damConfigExtSystem.get(extSystem)![DamAssetType.Image]!.sources = {
+      enabled: true,
+      required: false,
+      creditFormat: '{sources}/{authors}',
+      creditSourcesSeparator: '/',
+      creditAuthorsSeparator: ', ',
+    }
+  }
+  const nameFields = () => wrapper!.findAllComponents(AuthorRemoteAutocompleteWithCached)
+  const sourceFields = () => nameFields().filter((field) => field.props('source') === true)
+  const authorField = () => nameFields().find((field) => field.props('source') !== true)!
+
+  it('shows no sources, and offers every author, when the host does not hand the sources over', async () => {
+    sourcesOn()
+    await mountRow(Uploaded)
+
+    expect(sourceFields()).toHaveLength(0)
+    expect(authorField().props('source')).toBeUndefined()
+  })
+
+  it('shows the sources the host hands over, beside the authors that are not sources', async () => {
+    sourcesOn()
+    await mountRow(Uploaded, {}, { sources: ['source-1'] })
+
+    expect(sourceFields().map((field) => field.props('modelValue'))).toEqual([['source-1']])
+    expect(authorField().props('source')).toBe(false)
+  })
+})

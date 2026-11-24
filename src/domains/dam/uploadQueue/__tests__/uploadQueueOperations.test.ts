@@ -644,7 +644,7 @@ describe('a save in the asset detail', () => {
     expect([here, there].map((item) => item.mainFileSingleUse)).toEqual([singleUse, singleUse])
     expect(other.mainFileSingleUse).toBe(!singleUse)
 
-    await bulkUpdateAssetsMetadata(dam.client, endPoints.asset, store.getQueueItems(QUEUE))
+    await bulkUpdateAssetsMetadata(dam.client, endPoints.asset, store.getQueueItems(QUEUE), undefined, 1, 'default')
     const [sent] = dam.sentTo('PATCH', dam.routes.bulkMetadata)
     expect(dam.body(sent)).toMatchObject([
       { id: 'asset-1', mainFileSingleUse: singleUse },
@@ -753,7 +753,7 @@ describe('a save in the asset detail', () => {
         }
         expect(rowState(other)).toEqual(untouched)
 
-        await bulkUpdateAssetsMetadata(dam.client, endPoints.asset, store.getQueueItems(QUEUE))
+        await bulkUpdateAssetsMetadata(dam.client, endPoints.asset, store.getQueueItems(QUEUE), undefined, 1, 'default')
         const [sent] = dam.sentTo('PATCH', dam.routes.bulkMetadata)
         expect(dam.body(sent)).toMatchObject([
           {

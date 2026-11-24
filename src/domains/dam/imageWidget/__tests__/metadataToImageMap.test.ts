@@ -1,3 +1,4 @@
+import { DAM_CREDIT_CONFIG_DEFAULT } from '@/domains/dam/author/composables/damCredit'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { cmsConfiguration } from '@/domains/dam/__tests__/support/consumerProfiles'
 import { createFakeDam, type FakeDam } from '@/domains/dam/__tests__/support/fakeDam'
@@ -58,7 +59,7 @@ const saved = (name: string, parts: Partial<AssetMetadataBulkItem> = {}): AssetM
   ...parts,
 })
 const map = (rows: UploadQueueItem[], answer: AssetMetadataBulkItem[], forLicence = licence) =>
-  mapUploadMetadataToImages(rows, answer, dam.client, extSystem, forLicence, AUTHORS)
+  mapUploadMetadataToImages(rows, answer, dam.client, extSystem, forLicence, AUTHORS, DAM_CREDIT_CONFIG_DEFAULT)
 
 describe('the map of an upload to images', () => {
   it('makes an image of each row: its file in the licence given, and the texts and authors the save answered', async () => {
@@ -82,6 +83,7 @@ describe('the map of an upload to images', () => {
         flags: { showSource: true, internal: false, overrideInternal: false },
         dam: { damId: 'file-a', regionPosition: 0, licenceId: 555, internal: true },
         authorIds: ['author-1', 'author-2'],
+        sourceIds: [],
         assetId: 'asset-a',
       },
     ])
@@ -205,6 +207,7 @@ describe('the map of an upload to images', () => {
         flags: { showSource: true, internal: false, overrideInternal: false },
         dam: { damId: 'file-skipped', regionPosition: 0, licenceId: licence, internal: false },
         authorIds: [],
+        sourceIds: [],
         assetId: 'asset-skipped',
       })
       expect(images[1]!.texts.source).toBe('Anna Author')

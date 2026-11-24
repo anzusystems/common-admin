@@ -6,6 +6,15 @@ import type { IntegerId } from '@/shared/types/common'
 import { isUndefined } from '@/shared/utils/common'
 
 /**
+ * Whether the asset type of the ext system has authors, from the DAM configuration store of `configName`.
+ * Without a name, uses the inherited one in component setup, else `default`.
+ */
+export const isDamAuthorEnabled = (assetType: DamAssetTypeType, extSystem: IntegerId, configName?: string) => {
+  const { getDamConfigExtSystem } = useDamConfigState(undefined, inheritedDamConfigName(configName))
+  return !!getDamConfigExtSystem(extSystem)?.[assetType]?.authors?.enabled
+}
+
+/**
  * Asset type rules of the ext system from the DAM configuration store of `configName`.
  * Without a name, uses the inherited one in component setup, else `default`.
  */

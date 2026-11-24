@@ -1583,6 +1583,7 @@ export {
   fillAuthors as uploadQueueFillAuthors,
   fillCustomDataValue as uploadQueueFillCustomDataValue,
   fillKeywords as uploadQueueFillKeywords,
+  fillSources as uploadQueueFillSources,
 } from '@/domains/dam/uploadQueue/core/uploadQueueFill'
 export type {
   UploadQueueCore,
@@ -1607,6 +1608,10 @@ export { useImageRoiStore as useDamImageRoiStore } from '@/domains/dam/cropper/s
 export { useExtSystemIdForCached } from '@/domains/dam/composables/extSystemIdForCached'
 export { useDamKeywordAssetTypeConfig } from '@/domains/dam/keyword/composables/damKeywordConfig'
 export { useDamAuthorAssetTypeConfig } from '@/domains/dam/author/composables/damAuthorConfig'
+export { isDamSourceEnabled, useDamSourceAssetTypeConfig } from '@/domains/dam/author/composables/damSourceConfig'
+export { useDamCreditPreview } from '@/domains/dam/author/composables/damCredit'
+export { useDamAuthorFieldRouting } from '@/domains/dam/author/composables/authorFieldRouting'
+export { default as ADamSourcesAuthorsRow } from '@/domains/dam/author/components/DamSourcesAuthorsRow.vue'
 export { useFormatAndSizeCheck } from '@/domains/ui/file/composables/formatAndSizeCheck'
 export { UploadQueueSuggestionsKey } from '@/domains/dam/uploadQueue/components/uploadQueueBindings'
 export type {

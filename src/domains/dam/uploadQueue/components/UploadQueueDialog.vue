@@ -27,9 +27,11 @@ import type { DocId, IntegerId } from '@/shared/types/common'
 import { type UploadQueueItem, UploadQueueItemStatus } from '@/domains/dam/types/UploadQueue'
 import { generateUUIDv1 } from '@/shared/utils/generator'
 import { mapUploadMetadataToImages } from '@/domains/dam/imageWidget/utils/metadataToImageMap'
+import { hasNoDamCredit } from '@/domains/dam/author/composables/damCredit'
 import { storeToRefs } from 'pinia'
 import { useAssetDetailStore } from '@/domains/dam/assetDetail/store/assetDetailStore'
 import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
+import { useDamCreditConfig } from '@/domains/dam/author/composables/damCredit'
 import { isNull } from '@/shared/utils/common'
 
 const props = withDefaults(
@@ -54,6 +56,7 @@ const emit = defineEmits<{
 }>()
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const damConfigName = useDamConfigName(props.configName)
+const creditConfigOf = useDamCreditConfig(damConfigName)
 
 const { uploadQueueDialog, uploadQueueDialogSaving, uploadQueueSidebar, toggleUploadQueueSidebar } =
   useUploadQueueDialog()
@@ -139,7 +142,7 @@ const onSave = async () => {
     return
   }
   try {
-    await bulkUpdateAssetsMetadata(damClient, endPointAsset, itemsRaw)
+    await bulkUpdateAssetsMetadata(damClient, endPointAsset, itemsRaw, undefined, props.extSystem, damConfigName)
     showRecordWas('updated')
   } catch (error) {
     showMetadataSaveError(error, props.extSystem, damConfigName)
@@ -192,7 +195,14 @@ const onSaveAndApply = async () => {
   try {
     let res: AssetMetadataBulkItem[]
     try {
-      res = await bulkUpdateAssetsMetadata(damClient, endPointAsset, itemsRaw)
+      res = await bulkUpdateAssetsMetadata(
+        damClient,
+        endPointAsset,
+        itemsRaw,
+        undefined,
+        props.extSystem,
+        damConfigName
+      )
     } catch (error) {
       showMetadataSaveError(error, props.extSystem, damConfigName)
       return
@@ -200,7 +210,15 @@ const onSaveAndApply = async () => {
     const uploaded = itemsRaw.filter(isUploaded)
     const mappedItems = customUploadMetadataToImageMap
       ? await customUploadMetadataToImageMap(uploaded, res, damClient, props.extSystem, props.licenceId)
-      : await mapUploadMetadataToImages(uploaded, res, damClient, props.extSystem, props.licenceId, endPointAuthor)
+      : await mapUploadMetadataToImages(
+          uploaded,
+          res,
+          damClient,
+          props.extSystem,
+          props.licenceId,
+          endPointAuthor,
+          creditConfigOf(props.extSystem)
+        )
     // The save skips a row whose metadata never came, but its image is still handed over, without authors.
     // Its DAM authors are unknown. They are offered only for assets the save answered
     // for, otherwise the widget's picked authors would replace the asset's own.
@@ -211,7 +229,9 @@ const onSaveAndApply = async () => {
       key: generateUUIDv1(),
       ...item,
       damAuthors: item.authorIds ?? [],
-      showDamAuthors: !!item.assetId && savedAssetIds.has(item.assetId) && (item.authorIds ?? []).length === 0,
+      damSources: item.sourceIds ?? [],
+      showDamAuthors:
+        !!item.assetId && savedAssetIds.has(item.assetId) && hasNoDamCredit(item.authorIds ?? [], item.sourceIds ?? []),
       assetId: item.assetId ?? undefined,
     }))
     emit('apply', storeItems)

@@ -65,6 +65,7 @@ export function useLibraryUploadQueueListBinding(
       items.forEach((item) => {
         addToCachedKeywords(item.keywords)
         addToCachedAuthors(item.authors)
+        addToCachedAuthors(item.sources)
       })
       fetchCachedKeywords()
       fetchCachedAuthors()
@@ -83,6 +84,8 @@ export interface UploadQueueMassOperationsBinding {
   /** The host decides which rows are filled. The library fills every row. */
   fillKeywords(value: DocId[], forceReplace?: boolean): void
   fillAuthors(value: DocId[], forceReplace?: boolean): void
+  /** Sources are offered in the mass operations only when the host binds this. */
+  fillSources?(value: DocId[], forceReplace?: boolean): void
 }
 
 /** Default binding: the asset types of the library store and `useUploadQueueMassOperations`. */
@@ -90,7 +93,7 @@ export function useLibraryUploadQueueMassOperationsBinding(
   queueKey: MaybeRefOrGetter<UploadQueueKey>
 ): UploadQueueMassOperationsBinding {
   const uploadQueuesStore = useUploadQueuesStore()
-  const { replaceEmptyCustomDataValue, replaceEmptyKeywords, replaceEmptyAuthors } =
+  const { replaceEmptyCustomDataValue, replaceEmptyKeywords, replaceEmptyAuthors, replaceEmptySources } =
     useUploadQueueMassOperations(queueKey)
 
   return {
@@ -98,5 +101,6 @@ export function useLibraryUploadQueueMassOperationsBinding(
     fillCustomDataValue: replaceEmptyCustomDataValue,
     fillKeywords: replaceEmptyKeywords,
     fillAuthors: replaceEmptyAuthors,
+    fillSources: replaceEmptySources,
   }
 }

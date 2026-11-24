@@ -8,10 +8,11 @@ import AssetCustomMetadataForm from '@/domains/dam/assetDetail/components/AssetC
 import AssetFileInfoPanel from '@/domains/dam/assetDetail/components/AssetFileInfoPanel.vue'
 import ASystemEntityScope from '@/domains/form/components/ASystemEntityScope.vue'
 import { ADamAssetMetadataValidationScopeSymbol } from '@/domains/dam/composables/uploadValidations'
-import AuthorRemoteAutocompleteWithCached from '@/domains/dam/author/components/AuthorRemoteAutocompleteWithCached.vue'
+import DamSourcesAuthorsFields from '@/domains/dam/author/components/DamSourcesAuthorsFields.vue'
 import KeywordRemoteAutocompleteWithCached from '@/domains/dam/keyword/components/KeywordRemoteAutocompleteWithCached.vue'
 import { useDamKeywordAssetTypeConfig } from '@/domains/dam/keyword/composables/damKeywordConfig'
 import { useDamAuthorAssetTypeConfig } from '@/domains/dam/author/composables/damAuthorConfig'
+import { useDamSourceAssetTypeConfig } from '@/domains/dam/author/composables/damSourceConfig'
 import type { DocId, IntegerId } from '@/shared/types/common'
 import ABooleanValue from '@/domains/ui/components/ABooleanValue.vue'
 import ARow from '@/domains/ui/components/ARow.vue'
@@ -56,6 +57,13 @@ const assetType = computed(() => {
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(
+  // eslint-disable-next-line vue/no-ref-object-reactivity-loss
+  assetType.value,
+  props.extSystem,
+  damConfigName
+)
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { sourceRequired, sourceEnabled } = useDamSourceAssetTypeConfig(
   // eslint-disable-next-line vue/no-ref-object-reactivity-loss
   assetType.value,
   props.extSystem,
@@ -178,32 +186,21 @@ watch(
                 </ASystemEntityScope>
               </VCol>
             </VRow>
-            <VRow
-              v-if="authorEnabled"
-              density="compact"
+            <DamSourcesAuthorsFields
+              v-model:sources="asset.sources"
+              v-model:authors="asset.authors"
+              :ext-system="extSystem"
+              :source-enabled="sourceEnabled"
+              :author-enabled="authorEnabled"
+              :source-required="sourceRequired"
+              :author-required="authorRequired"
+              :disabled="readonly"
+              :validation-scope="ADamAssetMetadataValidationScopeSymbol"
+              :author-conflicts="authorConflicts"
+              show-credit
               class="my-2"
-            >
-              <VCol>
-                <ASystemEntityScope
-                  subject="author"
-                  system="dam"
-                >
-                  <AuthorRemoteAutocompleteWithCached
-                    v-model="asset.authors"
-                    :ext-system="extSystem"
-                    :label="t('common.damImage.asset.model.authors')"
-                    :author-conflicts="authorConflicts"
-                    data-cy="custom-field-authors"
-                    clearable
-                    multiple
-                    :disabled="readonly"
-                    :required="authorRequired"
-                    :validation-scope="ADamAssetMetadataValidationScopeSymbol"
-                    @update:model-value="onAnyMetadataChange"
-                  />
-                </ASystemEntityScope>
-              </VCol>
-            </VRow>
+              @change="onAnyMetadataChange"
+            />
             <VRow
               v-if="mainFileSingleUseEnabled"
               density="compact"

@@ -28,6 +28,7 @@ import { isNull } from '@/shared/utils/common'
 import { mapUploadMetadataToImages } from '@/domains/dam/imageWidget/utils/metadataToImageMap'
 import type { IntegerId } from '@/shared/types/common'
 import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
+import { useDamCreditConfig } from '@/domains/dam/author/composables/damCredit'
 
 const props = withDefaults(
   defineProps<{
@@ -51,6 +52,7 @@ const emit = defineEmits<{
 }>()
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const damConfigName = useDamConfigName(props.configName)
+const creditConfigOf = useDamCreditConfig(damConfigName)
 
 const { showErrorsDefault, showRecordWas } = useAlerts()
 
@@ -133,7 +135,14 @@ const onSave = async () => {
   if (items.value.length === 0 || !isNull(saving.value)) return
   saving.value = 'save'
   try {
-    await bulkUpdateAssetsMetadata(damClient, endPointAsset, items.value, mainFileSingleUse.value)
+    await bulkUpdateAssetsMetadata(
+      damClient,
+      endPointAsset,
+      items.value,
+      mainFileSingleUse.value,
+      props.extSystem,
+      damConfigName
+    )
     showRecordWas('updated')
   } catch (error) {
     showMetadataSaveError(error, props.extSystem, damConfigName)
@@ -148,7 +157,14 @@ const onSaveAndApply = async () => {
   try {
     let assetsMetadataRes: AssetMetadataBulkItem[]
     try {
-      assetsMetadataRes = await bulkUpdateAssetsMetadata(damClient, endPointAsset, items.value, mainFileSingleUse.value)
+      assetsMetadataRes = await bulkUpdateAssetsMetadata(
+        damClient,
+        endPointAsset,
+        items.value,
+        mainFileSingleUse.value,
+        props.extSystem,
+        damConfigName
+      )
       if (!assetsMetadataRes[0]) {
         throw new Error('Fatal error updating asset metadata')
       }
@@ -171,7 +187,8 @@ const onSaveAndApply = async () => {
           damClient,
           props.extSystem,
           props.licenceId,
-          endPointAuthor
+          endPointAuthor,
+          creditConfigOf(props.extSystem)
         )
     emit(
       'apply',

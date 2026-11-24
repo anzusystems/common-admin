@@ -72,7 +72,7 @@ const onSave = async () => {
   // Queue rows as of pressing save. Input typed into them while the save runs must not be overwritten.
   const rowsAtSave = tellsQueue ? uploadQueueStore.noteRowsOfAsset(saved.id, damConfigName) : undefined
   try {
-    const sent = updateAssetMetadata(damClient, endPointAsset, saved, props.extSystem, savedSingleUse)
+    const sent = updateAssetMetadata(damClient, endPointAsset, saved, props.extSystem, savedSingleUse, damConfigName)
     // Registered for the host. If the detail closes before the response, the host waits for this save.
     assetDetailStore.setSaving(saved.id, sent, damConfigName)
     await sent

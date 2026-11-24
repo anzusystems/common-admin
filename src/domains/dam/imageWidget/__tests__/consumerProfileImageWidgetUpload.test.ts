@@ -206,7 +206,13 @@ describe.each(consumerProfiles)('an upload into the image widget under the $name
     position: 1,
   }
   /** The upload map adds `assetId` and the authors to the image handed to the widget. */
-  const handedImage = { ...savedImage, authorIds: isCms ? ['author-1'] : [], assetId: 'asset-1' }
+  // The library mapping hands the sources too. The mapping of admin-ugc has none.
+  const handedImage = {
+    ...savedImage,
+    authorIds: isCms ? ['author-1'] : [],
+    ...(isCms ? { sourceIds: [] } : {}),
+    assetId: 'asset-1',
+  }
   const existing: ImageAware = {
     id: 7,
     texts: { description: 'the image before', source: 'Agency' },
