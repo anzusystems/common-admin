@@ -3,7 +3,8 @@ import type { IntegerId, IntegerIdNullable } from '@/types/common'
 import { onMounted, provide, ref, shallowRef } from 'vue'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
-import type { ImageAware } from '@/types/ImageAware'
+import type { ImageAware, ImageOwner } from '@/types/ImageAware'
+import type { AssetSelectUsageHolder } from '@/types/coreDam/AssetSelect'
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
 import ImageWidgetInner from '@/components/damImage/uploadQueue/components/ImageWidgetInner.vue'
 import { ImageWidgetUploadConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
@@ -41,6 +42,9 @@ const props = withDefaults(
     callDeleteApiOnRemove?: boolean
     damWidth?: undefined | number
     damHeight?: undefined | number
+    owner?: ImageOwner | null
+    singleUseAllowed?: boolean
+    usageHolder?: AssetSelectUsageHolder | null
   }>(),
   {
     listViews: () => [],
@@ -61,6 +65,9 @@ const props = withDefaults(
     callDeleteApiOnRemove: false,
     damWidth: undefined,
     damHeight: undefined,
+    owner: null,
+    singleUseAllowed: true,
+    usageHolder: null,
   },
 )
 

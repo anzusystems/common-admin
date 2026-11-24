@@ -79,7 +79,8 @@ export const filterFieldsList = [
     exclude: true,
     render: { skip: true },
   },
-  { name: 'mainFileSingleUse' as const, default: false },
+  // The picker lists single use photos too; whether one may be picked is decided per tile (`disabledReasons`).
+  { name: 'mainFileSingleUse' as const, default: null },
 ] satisfies readonly MakeFilterOption[]
 
 const listFiltersStore = createFilterStore(filterFieldsList)

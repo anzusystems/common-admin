@@ -1,16 +1,30 @@
 import { ref } from 'vue'
 import type { CommonAdminImageOptions } from '@/AnzuSystemsCommonAdmin'
 import { isUndefined } from '@/utils/common'
+import type { DocId } from '@/types/common'
+import type { AssetSingleUseUsage } from '@/types/coreDam/Asset'
+import type { AssetSelectUsageHolder } from '@/types/coreDam/AssetSelect'
 import {
   bulkUpdateImages as bulkUpdateImagesApi,
   createImage as createImageApi,
   deleteImage as deleteImageApi,
   fetchImage as fetchImageApi,
   fetchImageListByIds as fetchImageListByIdsApi,
+  fetchSingleUseUsage as fetchSingleUseUsageApi,
   updateImage as updateImageApi,
 } from '@/components/damImage/uploadQueue/api/imageApiCms'
 
 const imageOptions = ref<CommonAdminImageOptions>(undefined)
+
+const defaultImageApi = {
+  fetchImage: fetchImageApi,
+  createImage: createImageApi,
+  updateImage: updateImageApi,
+  deleteImage: deleteImageApi,
+  fetchImageListByIds: fetchImageListByIdsApi,
+  bulkUpdateImages: bulkUpdateImagesApi,
+  fetchSingleUseUsage: fetchSingleUseUsageApi,
+}
 
 export function initCommonAdminImageOptions(data: CommonAdminImageOptions) {
   imageOptions.value = data
@@ -31,15 +45,19 @@ export function useCommonAdminImageOptions(configName: string = 'default') {
     previewDomainOriginal: imageOptions.value.configs[configName].previewDomainOriginal,
     imageWidth: imageOptions.value.configs[configName].width,
     imageHeight: imageOptions.value.configs[configName].height,
-    imageApi: imageOptions.value.configs[configName].imageApi
-      ? imageOptions.value.configs[configName].imageApi
-      : {
-          fetchImage: fetchImageApi,
-          createImage: createImageApi,
-          updateImage: updateImageApi,
-          deleteImage: deleteImageApi,
-          fetchImageListByIds: fetchImageListByIdsApi,
-          bulkUpdateImages: bulkUpdateImagesApi,
-        },
+    imageApi: imageOptions.value.configs[configName].imageApi ?? defaultImageApi,
   }
+}
+
+// The picker asks the CMS about single use photos through the image config; an admin without one asks nobody.
+export function useImageSingleUseUsageFetch(configName: string = 'default') {
+  const config = imageOptions.value?.configs?.[configName]
+  if (isUndefined(config)) return undefined
+  const imageApi = config.imageApi ?? defaultImageApi
+
+  return (
+    groupIds: DocId[],
+    usageHolder: AssetSelectUsageHolder | null,
+  ): Promise<Record<DocId, AssetSingleUseUsage>> =>
+    imageApi.fetchSingleUseUsage(config.imageClient, groupIds, usageHolder)
 }

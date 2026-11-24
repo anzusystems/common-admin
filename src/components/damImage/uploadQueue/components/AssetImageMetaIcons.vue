@@ -13,6 +13,7 @@ import {
   ICON_SLOTS,
   LOW_DIMENSION,
 } from '@/components/damImage/uploadQueue/composables/assetImageIconsConfig'
+import { formatSingleUseUsageCount } from '@/components/dam/assetSelect/composables/assetSelectDisabledReason'
 import { useDamConfigStore } from '@/components/damImage/uploadQueue/composables/damConfigStore'
 
 const props = withDefaults(
@@ -21,10 +22,14 @@ const props = withDefaults(
     assetFileProperties: AssetFileProperties
     disableAbsolute?: boolean
     licenceBadge?: string
+    singleUse?: boolean
+    singleUseUsageCount?: number
   }>(),
   {
     disableAbsolute: false,
     licenceBadge: '',
+    singleUse: false,
+    singleUseUsageCount: 0,
   },
 )
 
@@ -73,6 +78,14 @@ const checkDistributions = (icons: string[], titles: string[]) => {
   }
 }
 
+const singleUseTitle = computed(() =>
+  props.singleUseUsageCount > 0
+    ? t('common.damImage.asset.metaIcons.singleUseUsages', {
+        count: formatSingleUseUsageCount(props.singleUseUsageCount),
+      })
+    : t('common.damImage.asset.metaIcons.singleUse'),
+)
+
 const data = computed(() => {
   const icons: string[] = []
   const titles: string[] = []
@@ -94,7 +107,7 @@ const data = computed(() => {
 
 <template>
   <div
-    v-show="data.icons.length > 0 || licenceBadge.length > 0"
+    v-show="data.icons.length > 0 || licenceBadge.length > 0 || singleUse"
     class="asset-image__meta-icons"
     :class="{ 'asset-image__meta-icons-absolute': !disableAbsolute }"
   >
@@ -104,6 +117,23 @@ const data = computed(() => {
       data-cy="asset-licence-badge"
     >
       {{ licenceBadge }}
+    </span>
+    <span
+      v-if="singleUse"
+      class="asset-image__licence-badge"
+      :class="{ 'asset-image__single-use-badge--shared': singleUseUsageCount > 0 }"
+      role="img"
+      :aria-label="singleUseTitle"
+      :title="singleUseTitle"
+      data-cy="asset-single-use-badge"
+    >
+      1×
+      <VIcon
+        v-if="singleUseUsageCount > 0"
+        icon="mdi-alert"
+        size="12"
+        class="ml-1"
+      />
     </span>
     <img
       v-for="(item, index) in data.icons"
@@ -144,6 +174,14 @@ const data = computed(() => {
     font-size: 10px;
     font-weight: 700;
     line-height: 1;
+  }
+
+  .asset-image__single-use-badge--shared {
+    width: auto;
+    padding: 0 6px;
+    border-radius: 13px;
+    background-color: rgb(var(--v-theme-warning));
+    color: rgb(var(--v-theme-on-warning));
   }
 }
 </style>

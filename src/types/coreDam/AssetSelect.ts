@@ -1,4 +1,4 @@
-import type { DocId, IntegerId } from '@/types/common'
+import type { DocId } from '@/types/common'
 import type { AssetSearchListItemDto } from '@/types/coreDam/Asset'
 
 export const AssetSelectReturnType = {
@@ -16,18 +16,23 @@ export type AssetSelectReturnData =
 
 interface AssetSelectReturnMainFileId {
   type: typeof AssetSelectReturnType.MainFileId
-  copyToLicence: undefined | IntegerId
+  forceTakeOver: boolean
   value: Array<DocId>
 }
 
 interface AssetSelectReturnAssetId {
   type: typeof AssetSelectReturnType.AssetId
-  copyToLicence: undefined | IntegerId
+  forceTakeOver: boolean
   value: Array<DocId>
 }
 
 interface AssetSelectReturnAsset {
   type: typeof AssetSelectReturnType.Asset
-  copyToLicence: undefined | IntegerId
+  forceTakeOver: boolean
   value: Array<AssetSearchListItemDto>
+}
+
+export interface AssetSelectUsageHolder {
+  resourceName: string
+  resourceId: string | number
 }

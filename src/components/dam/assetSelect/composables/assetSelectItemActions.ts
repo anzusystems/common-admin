@@ -1,6 +1,7 @@
 import { computed, type Ref } from 'vue'
 import type { AssetSearchListItemDto } from '@/types/coreDam/Asset'
 import type { AssetSelectListItem } from '@/services/stores/coreDam/assetSelectStore'
+import { resolveSingleUseWarningCount } from '@/components/dam/assetSelect/composables/assetSelectDisabledReason'
 import { useDamCachedAssetLicences } from '@/components/damImage/composables/cachedDamAssetLicences'
 
 const IMAGE_HEIGHT = 200
@@ -65,6 +66,12 @@ export function useAssetItemActions(item: Readonly<Ref<AssetSelectListItem>>) {
 
   const licenceBadge = computed(() => getCachedAssetLicence(asset.value.licence)?.badge ?? '')
 
+  const disabledReason = computed(() => item.value.disabledReason)
+
+  const singleUse = computed(() => asset.value.mainFile?.flags.singleUse ?? false)
+
+  const singleUseUsageCount = computed(() => resolveSingleUseWarningCount(asset.value))
+
   return {
     asset,
     assetType,
@@ -72,5 +79,8 @@ export function useAssetItemActions(item: Readonly<Ref<AssetSelectListItem>>) {
     imageProperties,
     tableImageProperties,
     licenceBadge,
+    disabledReason,
+    singleUse,
+    singleUseUsageCount,
   }
 }

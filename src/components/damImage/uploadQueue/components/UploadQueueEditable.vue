@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, onBeforeUnmount } from 'vue'
 import { useUploadQueuesStore } from '@/components/damImage/uploadQueue/composables/uploadQueuesStore'
-import type { UploadQueueItem, UploadQueueKey } from '@/types/coreDam/UploadQueue'
+import { type UploadQueueItem, UploadQueueItemType, type UploadQueueKey } from '@/types/coreDam/UploadQueue'
 import UploadQueueItemEditable from '@/components/damImage/uploadQueue/components/UploadQueueItemEditable.vue'
 import AssetQueueSelectedSidebar from '@/components/damImage/uploadQueue/components/AssetQueueSelectedSidebar.vue'
 import { useDamCachedKeywords } from '@/components/damImage/uploadQueue/keyword/cachedKeywords'
@@ -163,7 +163,7 @@ onBeforeUnmount(() => {
             v-model:authors="item.authors"
             v-model:sources="item.sources"
             v-model:main-file-single-use="item.mainFileSingleUse"
-            :main-file-single-use-enabled="mainFileSingleUseEnabled"
+            :main-file-single-use-enabled="mainFileSingleUseEnabled && item.type !== UploadQueueItemType.Asset"
             :ext-system="extSystem"
             :item="item"
             :index="index"

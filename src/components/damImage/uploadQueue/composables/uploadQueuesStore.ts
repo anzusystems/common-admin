@@ -247,6 +247,7 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
         queue.items.forEach((item) => {
           if (item.assetId === asset.id && asset.mainFile && item.type) {
             clearTimeout(item.notificationFallbackTimer)
+            item.fileId = asset.mainFile.id
             // status + image (from queueItemProcessed)
             item.status = UploadQueueItemStatus.Uploaded
             item.assetStatus = asset.attributes.assetStatus

@@ -6,7 +6,7 @@ import type {
   DamAssetTypeType,
 } from '@/types/coreDam/Asset'
 import { apiFetchOne } from '@/services/api/apiFetchOne'
-import type { UploadQueueItem } from '@/types/coreDam/UploadQueue'
+import { type UploadQueueItem, UploadQueueItemType } from '@/types/coreDam/UploadQueue'
 import { HTTP_STATUS_OK } from '@/composables/statusCodes'
 import { isNull, isUndefined } from '@/utils/common'
 import {
@@ -44,7 +44,7 @@ export interface AssetMetadataBulkItem {
   sources?: DocId[]
   described: boolean
   customData: AssetCustomData
-  mainFileSingleUse: boolean | null
+  mainFileSingleUse?: boolean | null
   mainFileInternal: boolean | null
   mainFileOverrideInternal: boolean | null
 }
@@ -215,6 +215,15 @@ function creditFields(
   return isDamSourceEnabled(assetType, extSystem) ? { authors, sources } : { authors }
 }
 
+// A copy keeps the single use flag of its source.
+function singleUseField(
+  item: UploadQueueItem,
+  override: boolean | undefined,
+): Pick<AssetMetadataBulkItem, 'mainFileSingleUse'> {
+  if (item.type === UploadQueueItemType.Asset) return {}
+  return { mainFileSingleUse: isUndefined(override) ? item.mainFileSingleUse : override }
+}
+
 function listItemsToMetadataBulkItems(
   items: UploadQueueItem[],
   mainFileSingleUseOverride: boolean | undefined,
@@ -229,9 +238,7 @@ function listItemsToMetadataBulkItems(
         ...creditFields(item.assetType, extSystem, item.authors, item.sources),
         described: true,
         customData: item.customData,
-        mainFileSingleUse: isUndefined(mainFileSingleUseOverride)
-          ? item.mainFileSingleUse
-          : mainFileSingleUseOverride,
+        ...singleUseField(item, mainFileSingleUseOverride),
         mainFileInternal: false,
         mainFileOverrideInternal: false,
       })

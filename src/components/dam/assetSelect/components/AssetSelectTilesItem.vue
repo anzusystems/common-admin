@@ -31,7 +31,16 @@ const onItemClick = () => {
 
 const item = toRef(props, 'item')
 
-const { asset, assetType, assetStatus, imageProperties, licenceBadge } = useAssetItemActions(item)
+const {
+  asset,
+  assetType,
+  assetStatus,
+  imageProperties,
+  licenceBadge,
+  disabledReason,
+  singleUse,
+  singleUseUsageCount,
+} = useAssetItemActions(item)
 </script>
 
 <template>
@@ -40,7 +49,9 @@ const { asset, assetType, assetStatus, imageProperties, licenceBadge } = useAsse
     :class="{
       'asset-list-tiles__item--selected': item.selected,
       'asset-list-tiles__item--active': item.active,
+      'asset-list-tiles__item--disabled': disabledReason,
     }"
+    :title="disabledReason ?? undefined"
     @click.stop.exact="onItemClick"
   >
     <div class="asset-list-tiles__item-card">
@@ -67,6 +78,8 @@ const { asset, assetType, assetStatus, imageProperties, licenceBadge } = useAsse
         :asset-file-properties="item.asset.assetFileProperties"
         :show-meta-icons="showMetaIcons"
         :licence-badge="licenceBadge"
+        :single-use="singleUse"
+        :single-use-usage-count="singleUseUsageCount"
       />
       <div class="asset-list-tiles__item-text text-body-small px-2 py-1">
         <div class="d-flex align-center justify-space-between position-relative">

@@ -8,12 +8,14 @@ const mapFullToMinimal = (assetLicence: DamAssetLicence): DamAssetLicenceCached 
   id: assetLicence.id,
   name: assetLicence.name,
   badge: assetLicence.badge,
+  flags: assetLicence.flags ?? { directUseAllowed: true },
 })
 
 const mapIdToMinimal = (id: IntegerId): DamAssetLicenceCached => ({
   id: id,
   name: '',
   badge: '',
+  flags: { directUseAllowed: true },
 })
 
 const { cache, toFetch, fetch, immediateFetch, add, addManual, has, get, isLoaded } = defineCached<

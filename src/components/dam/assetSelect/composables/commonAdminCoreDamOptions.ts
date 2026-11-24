@@ -71,6 +71,8 @@ export function useCommonAdminCoreDamOptions(configName: string = 'default') {
       commonAdminCoreDamOptions.value.configs[configName].assetListEnabledFilters, // defaults to undefined = all filters
     simpleAssetSidebarEnabled:
       commonAdminCoreDamOptions.value.configs[configName].simpleAssetSidebar ?? false,
+    singleUseUsageUrl: commonAdminCoreDamOptions.value.configs[configName].singleUseUsageUrl,
+    singleUsePlaceUrl: commonAdminCoreDamOptions.value.configs[configName].singleUsePlaceUrl,
   }
 }
 

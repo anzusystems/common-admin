@@ -29,6 +29,8 @@ import DamAdminAssetLink from '@/components/dam/DamAdminAssetLink.vue'
 import { isNull } from '@/utils/common'
 import { DamMediaType } from '@/types/MediaAware'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
+import type { SingleUseUsageCheck } from '@/components/dam/assetSelect/composables/assetSelectSingleUseUsage'
+import ImageDetailSingleUseWarning from '@/components/damImage/uploadQueue/components/ImageDetailSingleUseWarning.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -40,6 +42,8 @@ const props = withDefaults(
     showSourceEnabled?: boolean
     sourceLabel?: string
     editAssetLabel?: string
+    singleUseCheck?: SingleUseUsageCheck | null
+    configName?: string
   }>(),
   {
     expand: false,
@@ -47,6 +51,8 @@ const props = withDefaults(
     showSourceEnabled: true,
     sourceLabel: undefined,
     editAssetLabel: undefined,
+    singleUseCheck: null,
+    configName: 'default',
   },
 )
 
@@ -121,9 +127,13 @@ const imageMedia = computed<ImageCreateUpdateAware | undefined>(() => {
 
 const { v$ } = useImageValidation(detail, imageSourceRequired)
 
+const singleUseBlocked = computed(
+  () => (props.singleUseCheck?.failed || props.singleUseCheck?.asset.singleUseUsage?.blocked) ?? false,
+)
+
 const onConfirm = () => {
   v$.value.$touch()
-  if (v$.value.$invalid) {
+  if (singleUseBlocked.value || v$.value.$invalid) {
     showValidationError()
     return
   }
@@ -155,6 +165,11 @@ defineExpose({
       </VCol>
     </VRow>
     <template v-if="isImageCreateUpdateAware(detail)">
+      <ImageDetailSingleUseWarning
+        v-if="singleUseCheck"
+        :single-use-check="singleUseCheck"
+        :config-name="configName"
+      />
       <VRow>
         <VCol>
           <VBtn @click.stop="onEditAsset">
@@ -246,6 +261,11 @@ defineExpose({
               :image="detail"
             />
           </div>
+          <ImageDetailSingleUseWarning
+            v-if="singleUseCheck"
+            :single-use-check="singleUseCheck"
+            :config-name="configName"
+          />
           <VRow>
             <VCol>
               <VBtn @click.stop="onEditAsset">
@@ -361,7 +381,7 @@ defineExpose({
         <VSpacer />
         <ABtnPrimary
           :loading="saving"
-          :disabled="loading"
+          :disabled="loading || singleUseBlocked"
           @click.stop="onConfirm"
         >
           {{ t('common.button.confirm') }}

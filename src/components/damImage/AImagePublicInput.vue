@@ -1,5 +1,10 @@
 <script setup lang="ts">
-import type { ImageAware, ImageCreateUpdateAware } from '@/types/ImageAware'
+import {
+  applyImageOwner,
+  type ImageAware,
+  type ImageCreateUpdateAware,
+  type ImageOwner,
+} from '@/types/ImageAware'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import { fetchAssetByFileId } from '@/components/damImage/uploadQueue/api/damAssetApi'
 import { cloneDeep, isDocId, isNull, isString } from '@/utils/common'
@@ -19,14 +24,17 @@ import { buildFieldRules } from '@/components/damImage/uploadQueue/composables/u
 
 const props = withDefaults(
   defineProps<{
+    uploadLicence: IntegerId
     selectLicences: IntegerId[]
     image?: ImageAware | undefined // optional, if available, no need to fetch image data
+    owner?: ImageOwner | null
     configName?: string
     labelT?: string | undefined
     dataCy?: string | undefined
   }>(),
   {
     image: undefined,
+    owner: null,
     configName: 'default',
     labelT: 'common.damImage.public.idOrUrl',
     dataCy: undefined,
@@ -126,9 +134,11 @@ const submit = async () => {
         licenceId: asset.licence,
         regionPosition: 0,
         internal: asset.mainFileInternal ?? false,
+        uploadLicenceId: props.uploadLicence,
       },
       position: 0,
     }
+    applyImageOwner(data, props.owner)
     if (resImage.value?.id) {
       data.id = resImage.value.id
     }

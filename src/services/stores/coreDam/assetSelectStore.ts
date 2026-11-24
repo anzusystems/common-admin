@@ -1,5 +1,9 @@
 import { acceptHMRUpdate, defineStore } from 'pinia'
-import type { AssetSearchListItemDto, DamAssetTypeType } from '@/types/coreDam/Asset'
+import type {
+  AssetSearchListItemDto,
+  AssetSingleUseUsage,
+  DamAssetTypeType,
+} from '@/types/coreDam/Asset'
 import { DamAssetTypeDefault } from '@/types/coreDam/Asset'
 import type { DocId, IntegerId } from '@/types/common'
 import { computed, ref, toRaw } from 'vue'
@@ -7,6 +11,7 @@ import {
   type AssetSelectReturnData,
   AssetSelectReturnType,
   type AssetSelectReturnTypeType,
+  type AssetSelectUsageHolder,
 } from '@/types/coreDam/AssetSelect'
 import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
 import { isNull } from '@/utils/common'
@@ -15,6 +20,13 @@ export interface AssetSelectListItem {
   asset: AssetSearchListItemDto
   selected: boolean
   active: boolean
+  disabledReason: string | null
+}
+
+export interface AssetSelectabilityOptions {
+  singleUseAllowed: boolean
+  uploadLicence: IntegerId | undefined
+  usageHolder: AssetSelectUsageHolder | null
 }
 
 export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectStore', () => {
@@ -22,6 +34,8 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
   const loader = ref(false)
   const selectedLicenceIds = ref<IntegerId[]>([])
   const selectedPresetKey = ref<string>('')
+  // `null` means a listing given no selectability rules (AAssetListInner), where nothing is dimmed.
+  const selectability = ref<AssetSelectabilityOptions | null>(null)
   const selectConfig = ref<DamConfigLicenceExtSystemReturnType[]>([])
   const assetType = ref<DamAssetTypeType>(DamAssetTypeDefault)
   const inPodcast = ref<boolean | null>(null)
@@ -58,6 +72,10 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
     selectedPresetKey.value = key
   }
 
+  function setSelectability(value: AssetSelectabilityOptions | null) {
+    selectability.value = value
+  }
+
   function setSingleMode(value: boolean) {
     singleMode.value = value
   }
@@ -80,23 +98,51 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
         asset: item,
         selected: false,
         active: false,
+        disabledReason: null,
       }
     })
   }
 
-  function appendList(items: AssetSearchListItemDto[]) {
+  function appendList(items: AssetSearchListItemDto[]): AssetSelectListItem[] {
     const assets = items.map((asset) => {
       return {
         asset: asset,
         selected: false,
         active: false,
+        disabledReason: null,
       }
     })
     assetListItems.value = assetListItems.value.concat(assets)
+    return assets
+  }
+
+  // An item the map does not mention was not part of this computation (an earlier page), so its
+  // reason stays as it was.
+  function setDisabledReasons(reasons: Map<DocId, string | null>) {
+    assetListItems.value.forEach((item) => {
+      const reason = reasons.get(item.asset.id)
+      if (reason === undefined) return
+      item.disabledReason = reason
+    })
+  }
+
+  function setSingleUseUsage(assetId: DocId, usage: AssetSingleUseUsage | null) {
+    assetListItems.value.forEach((item) => {
+      if (item.asset.id === assetId) item.asset.singleUseUsage = usage
+    })
   }
 
   function toggleSelectedByIndex(index: number) {
     if (!assetListItems.value[index]) return
+    // Deselecting stays possible: the reasons arrive after the page is fetched, so an already
+    // selected item can turn out unusable and the user has to be able to drop it.
+    if (assetListItems.value[index].disabledReason && !assetListItems.value[index].selected) {
+      if (singleMode.value) {
+        unselectAllExcept(index)
+        clearSelected()
+      }
+      return
+    }
 
     if (!singleMode.value && isSelectedMax.value && !assetListItems.value[index].selected) {
       return
@@ -179,26 +225,26 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
 
   function getSelectedData(
     type: AssetSelectReturnTypeType,
-    copyToLicence: undefined | IntegerId,
+    forceTakeOver: boolean,
   ): AssetSelectReturnData {
     switch (type) {
       case AssetSelectReturnType.AssetId:
         return {
           type: AssetSelectReturnType.AssetId,
-          copyToLicence,
+          forceTakeOver,
           value: getSelectedAssetIds(),
         }
       case AssetSelectReturnType.Asset:
         return {
           type: AssetSelectReturnType.Asset,
-          copyToLicence,
+          forceTakeOver,
           value: getSelectedAssets(),
         }
       case AssetSelectReturnType.MainFileId:
       default:
         return {
           type: AssetSelectReturnType.MainFileId,
-          copyToLicence,
+          forceTakeOver,
           value: getSelectedMainFileIds(),
         }
     }
@@ -212,6 +258,13 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
     return selectedAssets.value.size
   })
 
+  const selectedHasDisabled = computed(() => {
+    for (const item of selectedAssets.value.values()) {
+      if (item.disabledReason) return true
+    }
+    return false
+  })
+
   function reset(all: boolean) {
     assetListItems.value = []
     loader.value = false
@@ -223,6 +276,7 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
     minCount.value = 0
     maxCount.value = 0
     activeItemIndex.value = null
+    selectability.value = null
     selectedPresetKey.value = ''
     selectedLicenceIds.value = []
   }
@@ -237,6 +291,7 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
   return {
     selectedLicenceIds,
     selectedPresetKey,
+    selectability,
     selectConfig,
     assetType,
     inPodcast,
@@ -244,6 +299,7 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
     minCount,
     maxCount,
     selectedCount,
+    selectedHasDisabled,
     selectedAssets,
     loader,
     assetListItems,
@@ -254,6 +310,7 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
     setSelectedLicenceIds,
     licenceTitle,
     setSelectedPresetKey,
+    setSelectability,
     setSingleMode,
     setMinCount,
     setMaxCount,
@@ -261,6 +318,8 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
     hideLoader,
     setList,
     appendList,
+    setDisabledReasons,
+    setSingleUseUsage,
     toggleSelectedByIndex,
     clearSelected,
     reset,

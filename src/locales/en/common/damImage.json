@@ -24,6 +24,21 @@
       "texts": {
         "description": "If you overwrite the description here, it will not change in the image storage."
       }
+    },
+    "error": {
+      "takeOverRejected": "This image cannot be taken over into our licence. Choose another one.",
+      "takeOverUnavailable": "Taking images over is unavailable right now. Try again in a moment, another image will not help. If it lasts, contact the administrator.",
+      "singleUseViolation": "Image {damId} is single use and already used by another record ({holder}). Choose another image.",
+      "singleUseViolationUnknownHolder": "Image {damId} is single use and already used by another record. Choose another image.",
+      "singleUseViolationUnknownImage": "One of the selected images is single use and already used by another record ({holder}). Choose another image.",
+      "singleUseViolationUnidentified": "One of the selected images is single use and already used by another record. Choose another image.",
+      "restoreConflict": "The article was not restored: single use image {damId} is already used by another record ({holder}).",
+      "restoreConflictUnknownHolder": "The article was not restored: single use image {damId} is already used by another record.",
+      "restoreConflictUnknownImage": "The article was not restored: one of its single use images is already used by another record ({holder}).",
+      "restoreConflictUnidentified": "The article was not restored: one of its single use images is already used by another record.",
+      "sharedGallery": "The gallery contains a single use image, so it can be placed in one place only. Remove it from the other places or remove the single use image from it.",
+      "invalidOwner": "A single use image cannot be placed here, the target record does not support single use images.",
+      "galleryCopy": "The gallery contains a single use image and cannot be copied."
     }
   },
   "media": {
@@ -132,7 +147,9 @@
       "2k": "2K",
       "qhd": "QHD",
       "4k": "4K",
-      "8k": "8K"
+      "8k": "8K",
+      "singleUse": "Single use image",
+      "singleUseUsages": "Single use image, number of usages: {count}"
     },
     "assetFileFailReason": {
       "none": "None",

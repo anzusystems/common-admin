@@ -18,6 +18,7 @@ import {
   type AssetSelectReturnData,
   AssetSelectReturnType,
   type AssetSelectReturnTypeType,
+  type AssetSelectUsageHolder,
 } from '@/types/coreDam/AssetSelect'
 import { filterAllowedImageWidgetSelectConfigs } from '@/components/damImage/composables/damFilterUserAllowedUploadConfigs'
 import { useAlerts } from '@/composables/system/alerts'
@@ -26,11 +27,13 @@ import { useDamConfigState } from '@/components/damImage/uploadQueue/composables
 import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
 import { cloneDeep, isUndefined } from '@/utils/common'
 import AssetMetadata from '@/components/damImage/uploadQueue/components/AssetMetadata.vue'
+import AssetSelectDetailTabs from '@/components/dam/assetSelect/components/AssetSelectDetailTabs.vue'
 import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
 import { storeToRefs } from 'pinia'
 import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
 import { type DatatableOrderingOption } from '@/composables/system/datatableColumns'
 import AssetSelectLicencePresetBar from '@/components/dam/assetSelect/components/AssetSelectLicencePresetBar.vue'
+import { useAssetSelectTakeOver } from '@/components/dam/assetSelect/composables/assetSelectTakeOver'
 
 const props = withDefaults(
   defineProps<{
@@ -40,6 +43,8 @@ const props = withDefaults(
     maxCount: number
     selectLicences: IntegerId[]
     uploadLicence?: IntegerId | undefined
+    singleUseAllowed?: boolean
+    usageHolder?: AssetSelectUsageHolder | null
     returnType?: AssetSelectReturnTypeType
     configName?: string
     skipCurrentUserCheck?: boolean
@@ -49,6 +54,8 @@ const props = withDefaults(
   {
     inPodcast: null,
     uploadLicence: undefined,
+    singleUseAllowed: true,
+    usageHolder: null,
     returnType: AssetSelectReturnType.MainFileId,
     configName: 'default',
     skipCurrentUserCheck: false,
@@ -66,7 +73,6 @@ const sortModel = defineModel<number>('sort', { default: 1, required: false })
 const ready = defineModel<boolean>('ready', { default: false, required: false })
 
 const loading = ref(false)
-const copyToLicence = ref(false)
 
 const { t } = useI18n()
 
@@ -91,7 +97,13 @@ const { getOrLoadDamConfigExtSystemByLicences } = useDamConfigState(damClient)
 const assetDetailStore = useAssetDetailStore()
 const { asset } = storeToRefs(assetDetailStore)
 const assetSelectStore = useAssetSelectStore()
-const { selectedSelectConfig, selectedAssets } = storeToRefs(assetSelectStore)
+const { selectedSelectConfig, selectedHasDisabled } = storeToRefs(assetSelectStore)
+
+const openedItem = computed(() =>
+  assetSelectStore.assetListItems.find((item) => item.asset.id === asset.value?.id),
+)
+
+const openedAssetDisabledReason = computed(() => openedItem.value?.disabledReason ?? null)
 
 const selectConfigs = shallowRef<DamConfigLicenceExtSystemReturnType[]>([])
 
@@ -111,6 +123,7 @@ const onOpen = () => {
   }
 
   reset()
+  takeOverModel.value = false
   initStoreContext(
     selectConfigLocal,
     props.assetType,
@@ -119,6 +132,11 @@ const onOpen = () => {
     props.minCount,
     props.maxCount,
   )
+  assetSelectStore.setSelectability({
+    singleUseAllowed: props.singleUseAllowed,
+    uploadLicence: props.uploadLicence,
+    usageHolder: props.usageHolder,
+  })
   if (mdAndUp.value) openSidebarLeft()
   if (!mdAndUp.value) closeSidebarRight()
   modelValue.value = true
@@ -138,15 +156,8 @@ const onClose = () => {
   reset()
 }
 
-const getCopyToLicenceId = () => {
-  if (copyToLicence.value && showCopyToLicence.value && props.uploadLicence) {
-    return props.uploadLicence
-  }
-  return undefined
-}
-
 const onConfirm = () => {
-  emit('onConfirm', getSelectedData(props.returnType, getCopyToLicenceId()))
+  emit('onConfirm', getSelectedData(props.returnType, getForceTakeOver()))
   onClose()
 }
 
@@ -158,12 +169,9 @@ const autoloadOnIntersect = (isIntersecting: boolean) => {
 
 const { gridView } = useGridView()
 
-const showCopyToLicence = computed(() => {
-  return (
-    props.assetType === DamAssetType.Image &&
-    !isUndefined(props.uploadLicence) &&
-    [...selectedAssets.value.values()].some((item) => item.asset.licence !== props.uploadLicence)
-  )
+const { showTakeOver, takeOverLocked, takeOverModel, getForceTakeOver } = useAssetSelectTakeOver({
+  uploadLicence: () => props.uploadLicence,
+  isImage: () => props.assetType === DamAssetType.Image,
 })
 
 const componentComputed = computed(() => {
@@ -178,7 +186,11 @@ const componentComputed = computed(() => {
 })
 
 const disabledSubmit = computed(() => {
-  return selectedCount.value < props.minCount || selectedCount.value > props.maxCount
+  return (
+    selectedCount.value < props.minCount ||
+    selectedCount.value > props.maxCount ||
+    selectedHasDisabled.value
+  )
 })
 
 const extId = computed(() => {
@@ -334,15 +346,28 @@ defineExpose({
               v-else
               class="w-100"
             >
-              <slot
-                name="sidebar-prepend"
-                :asset="asset"
-              />
-              <AssetMetadata
-                v-if="extId && !customFormConfigLoading"
-                :ext-system="extId"
-                readonly
-              />
+              <div
+                v-if="openedAssetDisabledReason"
+                class="w-100 pa-2 text-body-small"
+              >
+                <VAlert type="warning">
+                  {{ openedAssetDisabledReason }}
+                </VAlert>
+              </div>
+              <AssetSelectDetailTabs
+                :item="openedItem"
+                :config-name="configName"
+              >
+                <slot
+                  name="sidebar-prepend"
+                  :asset="asset"
+                />
+                <AssetMetadata
+                  v-if="extId && !customFormConfigLoading"
+                  :ext-system="extId"
+                  readonly
+                />
+              </AssetSelectDetailTabs>
             </div>
           </div>
         </div>
@@ -365,9 +390,16 @@ defineExpose({
             }}
           </div>
           <VSpacer />
+          <span
+            v-if="takeOverLocked"
+            class="text-body-small text-medium-emphasis mr-2"
+          >
+            {{ t('common.assetSelect.meta.texts.copyToLicenceLocked') }}
+          </span>
           <VSwitch
-            v-if="showCopyToLicence"
-            v-model="copyToLicence"
+            v-if="showTakeOver"
+            v-model="takeOverModel"
+            :disabled="takeOverLocked"
             :label="t('common.assetSelect.meta.texts.copyToLicence')"
             hide-details
             class="mr-2"
