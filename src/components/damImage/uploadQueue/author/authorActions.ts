@@ -35,6 +35,7 @@ export const useAuthorSelectActions = (extSystem: IntegerId) => {
     reviewed: author.flags.reviewed,
     hiddenInCredit: author.flags.hiddenInCredit,
     priority: author.priority,
+    badge: author.badge,
   })
 
   const mapToValueObject = (author: DamAuthor): ValueObjectOption<string> => ({

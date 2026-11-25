@@ -13,6 +13,7 @@ import type { Pagination } from '@/labs/filters/pagination'
 import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
 import { useAssetListFilter } from '@/model/coreDam/filter/AssetFilter'
 import { useDamCachedAuthors } from '@/components/damImage/uploadQueue/author/cachedAuthors'
+import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/composables/extSystemIdForCached'
 
 const { executeFetch, fetchUsage, damGet, showErrorsDefault, debounce } = vi.hoisted(() => ({
   executeFetch: vi.fn(),
@@ -74,6 +75,7 @@ const asset = (id: string) =>
   ({
     id,
     licence: 10,
+    sources: [],
     mainFile: {
       id: `file-${id}`,
       flags: { singleUse: false },
@@ -125,6 +127,7 @@ const mountActions = () => {
     }),
     { global: { plugins: [pinia] } },
   )
+  store.setSelectConfig([{ licence: 10, extSystem: 1 }] as DamConfigLicenceExtSystemReturnType[])
   return { actions, store }
 }
 
@@ -294,7 +297,6 @@ describe('useAssetSelectActions', () => {
 
   it('loads the sources of the clicked asset for the detail, not only its authors', async () => {
     const { actions, store } = mountActions()
-    store.setSelectConfig([{ licence: 10, extSystem: 1 }] as DamConfigLicenceExtSystemReturnType[])
     store.setList([asset('clicked')])
     damGet.mockResolvedValue({
       status: 200,
@@ -306,6 +308,25 @@ describe('useAssetSelectActions', () => {
     const { hasCachedAuthor } = useDamCachedAuthors()
     expect(hasCachedAuthor('author-id')).toBe(true)
     expect(hasCachedAuthor('source-id')).toBe(true)
+  })
+
+  it('loads the sources of every listed page in the ext system of the picker', async () => {
+    const { actions, store } = mountActions()
+    store.setSelectConfig([{ licence: 10, extSystem: 7 }] as DamConfigLicenceExtSystemReturnType[])
+    store.setSelectedLicenceIds([10])
+    executeFetch
+      .mockResolvedValueOnce([{ ...asset('a'), sources: ['first-page-source'] }])
+      .mockResolvedValueOnce([{ ...asset('b'), sources: ['next-page-source'] }])
+
+    await actions.fetchAssetListDebounced()
+    await flushPromises()
+    await actions.fetchNextPage()
+    await flushPromises()
+
+    const { hasCachedAuthor } = useDamCachedAuthors()
+    expect(hasCachedAuthor('first-page-source')).toBe(true)
+    expect(hasCachedAuthor('next-page-source')).toBe(true)
+    expect(useExtSystemIdForCached().cachedExtSystemId.value).toBe(7)
   })
 
   it('asks DAM for no next page without a licence', async () => {

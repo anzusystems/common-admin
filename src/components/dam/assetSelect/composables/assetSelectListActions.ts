@@ -148,6 +148,15 @@ export function useAssetSelectActions(
     )
   }
 
+  const { addToCachedAuthors, fetchCachedAuthors } = useDamCachedAuthors()
+
+  const cacheSources = (items: AssetSelectListItem[]) => {
+    const { cachedExtSystemId } = useExtSystemIdForCached()
+    cachedExtSystemId.value = assetSelectStore.selectedSelectConfig.extSystem
+    addToCachedAuthors(...items.map((item) => item.asset.sources))
+    fetchCachedAuthors()
+  }
+
   const fetchAssetList = async () => {
     if (!prepareListRequest()) return
     const request = ++latestListRequest
@@ -156,6 +165,7 @@ export function useAssetSelectActions(
       const list = await fetchLatestList(request)
       if (isNull(list)) return
       assetSelectStore.setList(list)
+      cacheSources(assetSelectStore.assetListItems)
       await applyDisabledReasons(assetSelectStore.assetListItems)
     } catch (error) {
       if (request === latestListRequest) showErrorsDefault(error)
@@ -172,7 +182,9 @@ export function useAssetSelectActions(
       assetSelectStore.showLoader()
       const list = await fetchLatestList(request)
       if (isNull(list)) return
-      await applyDisabledReasons(assetSelectStore.appendList(list))
+      const items = assetSelectStore.appendList(list)
+      cacheSources(items)
+      await applyDisabledReasons(items)
     } catch (error) {
       if (request === latestListRequest) showErrorsDefault(error)
     } finally {
@@ -180,7 +192,6 @@ export function useAssetSelectActions(
     }
   }
 
-  const { addToCachedAuthors, fetchCachedAuthors } = useDamCachedAuthors()
   const { addToCachedKeywords, fetchCachedKeywords } = useDamCachedKeywords()
   const { addToCachedUsers, fetchCachedUsers } = useDamCachedUsers()
 

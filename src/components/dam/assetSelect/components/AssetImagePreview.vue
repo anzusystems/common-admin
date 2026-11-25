@@ -9,6 +9,7 @@ import {
 } from '@/types/coreDam/Asset'
 import placeholder16x9 from '@/assets/image/placeholder16x9.jpg'
 import { isUndefined } from '@/lib'
+import type { DamSourceBadge } from '@/components/damImage/uploadQueue/composables/damSourceBadge'
 import AssetImageMetaIcons from '@/components/damImage/uploadQueue/components/AssetImageMetaIcons.vue'
 
 const props = withDefaults(
@@ -25,6 +26,7 @@ const props = withDefaults(
     showMetaIcons?: boolean
     assetFileProperties?: AssetFileProperties | undefined
     licenceBadge?: string
+    sourceBadges?: DamSourceBadge[]
     singleUse?: boolean
     singleUseUsageCount?: number
   }>(),
@@ -41,6 +43,7 @@ const props = withDefaults(
     showMetaIcons: false,
     assetFileProperties: undefined,
     licenceBadge: '',
+    sourceBadges: () => [],
     singleUse: false,
     singleUseUsageCount: 0,
   },
@@ -117,6 +120,7 @@ const showIconComputed = computed(() => {
       :asset-file-properties="assetFileProperties"
       :asset-type="assetType"
       :licence-badge="licenceBadge"
+      :source-badges="sourceBadges"
       :single-use="singleUse"
       :single-use-usage-count="singleUseUsageCount"
     />
@@ -149,6 +153,7 @@ const showIconComputed = computed(() => {
       :asset-file-properties="assetFileProperties"
       :asset-type="assetType"
       :licence-badge="licenceBadge"
+      :source-badges="sourceBadges"
       :single-use="singleUse"
       :single-use-usage-count="singleUseUsageCount"
     />

@@ -15,10 +15,11 @@ const mapFullToMinimal = (author: DamAuthor): DamAuthorMinimal => ({
   reviewed: author.flags.reviewed,
   hiddenInCredit: author.flags.hiddenInCredit,
   priority: author.priority,
+  badge: author.badge,
 })
 
 const mapIdToMinimal = (id: DocId): DamAuthorMinimal => {
-  return { id: id, name: '', identifier: '', reviewed: false, hiddenInCredit: false, priority: 0 }
+  return { id: id, name: '', identifier: '', reviewed: false, hiddenInCredit: false, priority: 0, badge: '' }
 }
 
 const { cache, toFetch, fetch, add, addManual, addManualMinimal, has, get, isLoaded } =
