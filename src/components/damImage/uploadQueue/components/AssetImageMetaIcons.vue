@@ -177,10 +177,11 @@ const data = computed(() => {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 26px;
+    min-width: 26px;
     height: 26px;
     margin: 2px;
-    border-radius: 50%;
+    padding: 0 6px;
+    border-radius: 13px;
     background-color: rgb(0 0 0 / 50%);
     color: #fff;
     font-size: 10px;
@@ -189,9 +190,6 @@ const data = computed(() => {
   }
 
   .asset-image__single-use-badge--shared {
-    width: auto;
-    padding: 0 6px;
-    border-radius: 13px;
     background-color: rgb(var(--v-theme-warning));
     color: rgb(var(--v-theme-on-warning));
   }
