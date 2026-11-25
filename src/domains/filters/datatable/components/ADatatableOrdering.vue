@@ -156,7 +156,8 @@ watch(
 </script>
 
 <template>
-  <div class="d-flex align-center justify-center">
+  <!-- On the baseline: centred boxes put the text of the button a pixel below the label. -->
+  <div class="d-flex align-baseline justify-center">
     <div class="text-body-small mr-1">{{ t('common.system.datatable.ordering.title') }}:</div>
     <VBtn
       variant="text"
