@@ -37,6 +37,7 @@ const {
   assetType,
   assetStatus,
   licenceBadge,
+  sourceBadges,
   disabledReason,
   singleUse,
   singleUseUsageCount,
@@ -92,6 +93,7 @@ const onItemClick = () => {
         :asset-file-properties="item.asset.assetFileProperties"
         :asset-type="assetType"
         :licence-badge="licenceBadge"
+        :source-badges="sourceBadges"
         :single-use="singleUse"
         :single-use-usage-count="singleUseUsageCount"
         disable-absolute

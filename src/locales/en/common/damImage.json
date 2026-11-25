@@ -148,6 +148,7 @@
       "qhd": "QHD",
       "4k": "4K",
       "8k": "8K",
+      "source": "Source: {name}",
       "singleUse": "Single use image",
       "singleUseUsages": "Single use image, number of usages: {count}"
     },

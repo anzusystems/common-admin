@@ -17,11 +17,12 @@ export interface DamAuthorMinimal {
   reviewed: boolean
   hiddenInCredit: boolean
   priority: number
+  badge: string
 }
 
 export interface DamAuthor
   extends
-    Pick<DamAuthorMinimal, 'id' | 'name' | 'identifier' | 'priority'>,
+    Pick<DamAuthorMinimal, 'id' | 'name' | 'identifier' | 'priority' | 'badge'>,
     AnzuUserAndTimeTrackingAware,
     ResourceNameSystemAware {
   extSystem: IntegerId
