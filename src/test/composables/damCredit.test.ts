@@ -6,7 +6,8 @@ const config = {
   creditSourcesSeparator: '/',
   creditAuthorsSeparator: ', ',
 }
-const named = (...names: string[]) => names.map((name) => ({ name, hiddenInCredit: false }))
+const named = (...names: string[]) =>
+  names.map((name) => ({ name, hiddenInCredit: false, priority: 0 }))
 
 describe('damCredit', () => {
   it('composes sources and authors by the format', () => {
@@ -21,9 +22,23 @@ describe('damCredit', () => {
   })
 
   it('skips names hidden in credit and returns empty when all are hidden', () => {
-    const hidden = { name: 'Acme', hiddenInCredit: true }
+    const hidden = { name: 'Acme', hiddenInCredit: true, priority: 1000 }
     expect(damCredit([hidden], named('Jane Doe'), config)).toBe('Jane Doe')
-    expect(damCredit([hidden], [{ name: 'Jane Doe', hiddenInCredit: true }], config)).toBe('')
+    expect(damCredit([hidden], [{ ...hidden, name: 'Jane Doe' }], config)).toBe('')
+  })
+
+  it('puts a higher priority first and keeps the order of equal ones', () => {
+    const sources = [
+      { name: 'TASR', hiddenInCredit: false, priority: 0 },
+      { name: 'SITA', hiddenInCredit: false, priority: 0 },
+      { name: 'AP', hiddenInCredit: false, priority: 100 },
+    ]
+    const authors = [
+      { name: 'Claudio Furlan', hiddenInCredit: false, priority: 0 },
+      { name: 'LaPresse', hiddenInCredit: false, priority: 200 },
+    ]
+    expect(damCredit(sources, authors, config)).toBe('AP/TASR/SITA/LaPresse, Claudio Furlan')
+    expect(sources.map((source) => source.name)).toEqual(['TASR', 'SITA', 'AP'])
   })
 
   it('keeps replacement patterns in names literally', () => {
