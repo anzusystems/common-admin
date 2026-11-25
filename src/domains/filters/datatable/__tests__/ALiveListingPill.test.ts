@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils'
-import { describe, expect, it } from 'vitest'
-import { h } from 'vue'
+import { describe, expect, it, vi } from 'vitest'
+import { h, nextTick } from 'vue'
 import { VCard } from 'vuetify/components'
 
 import ALiveListingPill from '@/domains/filters/datatable/components/ALiveListingPill.vue'
@@ -59,6 +59,55 @@ describe('ALiveListingPill', () => {
     expect(wrapper.emitted('click')).toHaveLength(1)
     await wrapper.setProps({ count: 2 })
     expect(wrapper.text()).toBe('2 new records')
+    wrapper.unmount()
+  })
+
+  it('only reloads where it rests, and above the rows also scrolls back to its place', async () => {
+    const clicks: string[] = []
+    const wrapper = mount(
+      {
+        render: () =>
+          h('div', { class: 'scroller', style: 'height: 200px; overflow: auto' }, [
+            h('div', { style: 'height: 50px' }),
+            h(ALiveListingPill, { count: 2, onClick: () => clicks.push('click') }),
+            h('div', { style: 'height: 2000px' }),
+          ]),
+      },
+      { attachTo: document.body }
+    )
+    const scroller = wrapper.find('.scroller').element as HTMLElement
+    const scrollBy = vi.spyOn(scroller, 'scrollBy')
+    await nextTick()
+    expect(wrapper.find('.a-live-listing-pill .v-icon').classes()).toContain('mdi-arrow-up')
+    await wrapper.find('button').trigger('click')
+    expect(clicks).toEqual(['click'])
+    expect(scrollBy).not.toHaveBeenCalled()
+
+    scroller.scrollTop = 300
+    await wrapper.find('button').trigger('click')
+    expect(clicks).toEqual(['click', 'click'])
+    // Scrolled 300 px, 50 px of them before the pill reached the top, where it sticks 0.25rem below the edge.
+    expect(scrollBy).toHaveBeenCalledTimes(1)
+    expect((scrollBy.mock.calls[0]![0] as ScrollToOptions).top).toBeCloseTo(-254, 0)
+    wrapper.unmount()
+  })
+
+  it('is 24px high with 11px text when compact', () => {
+    const wrapper = mount(ALiveListingPill, { props: { count: 2, compact: true }, attachTo: document.body })
+    const button = wrapper.find('button').element
+    expect(button.getBoundingClientRect().height).toBe(24)
+    expect(getComputedStyle(button).fontSize).toBe('11px')
+    wrapper.unmount()
+  })
+
+  it('wraps a message longer than the room instead of reaching past it', () => {
+    const wrapper = mount(
+      { render: () => h('div', { style: 'width: 200px' }, [h(ALiveListingPill, { count: 0, degraded: true })]) },
+      { attachTo: document.body }
+    )
+    const chip = wrapper.find('.v-chip').element.getBoundingClientRect()
+    expect(chip.width).toBeLessThanOrEqual(200)
+    expect(chip.height).toBeGreaterThan(30)
     wrapper.unmount()
   })
 
