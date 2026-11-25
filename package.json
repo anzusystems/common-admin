@@ -20,7 +20,7 @@
     "./eslint": "./src/eslint/plugin.mjs",
     "./*": "./*"
   },
-  "version": "1.53.0",
+  "version": "1.53.0-source-badge-87709.1",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
