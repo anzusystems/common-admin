@@ -150,6 +150,7 @@
       "qhd": "QHD",
       "4k": "4K",
       "8k": "8K",
+      "source": "Zdroj: {name}",
       "singleUse": "Jednorázový obrázek",
       "singleUseUsages": "Jednorázový obrázek, počet použití: {count}"
     },

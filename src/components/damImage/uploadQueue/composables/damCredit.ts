@@ -30,10 +30,15 @@ export const hasNoDamCredit = (authorIds: DocId[], sourceIds: DocId[]) =>
 
 type DamCreditName = Pick<DamAuthorMinimal, 'name' | 'hiddenInCredit' | 'priority'>
 
+export const byPriorityDesc = (
+  a: Pick<DamAuthorMinimal, 'priority'>,
+  b: Pick<DamAuthorMinimal, 'priority'>,
+) => b.priority - a.priority
+
 const joinNames = (items: DamCreditName[], separator: string) =>
   items
     .filter((item) => !item.hiddenInCredit)
-    .sort((a, b) => b.priority - a.priority)
+    .sort(byPriorityDesc)
     .map((item) => item.name.trim())
     .filter((name) => name.length > 0)
     .join(separator)

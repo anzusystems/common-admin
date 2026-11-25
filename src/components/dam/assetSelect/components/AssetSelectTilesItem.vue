@@ -37,6 +37,7 @@ const {
   assetStatus,
   imageProperties,
   licenceBadge,
+  sourceBadges,
   disabledReason,
   singleUse,
   singleUseUsageCount,
@@ -78,6 +79,7 @@ const {
         :asset-file-properties="item.asset.assetFileProperties"
         :show-meta-icons="showMetaIcons"
         :licence-badge="licenceBadge"
+        :source-badges="sourceBadges"
         :single-use="singleUse"
         :single-use-usage-count="singleUseUsageCount"
       />

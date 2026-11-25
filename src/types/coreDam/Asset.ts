@@ -92,6 +92,7 @@ export interface AssetSearchListItemDto
   attributes: Attributes
   flags: Flags
   licence: IntegerId
+  sources: DocId[]
   mainFile: null | AssetFile
   podcasts: DocId[]
   assetFileProperties: AssetFileProperties

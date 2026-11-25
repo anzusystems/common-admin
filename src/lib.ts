@@ -419,6 +419,10 @@ import type {
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import { useDamCreditPreview } from '@/components/damImage/uploadQueue/composables/damCredit'
 import {
+  type DamSourceBadge,
+  resolveSourceBadges,
+} from '@/components/damImage/uploadQueue/composables/damSourceBadge'
+import {
   isDamSourceEnabled,
   useDamSourceAssetTypeConfig,
 } from '@/components/damImage/uploadQueue/source/damSourceConfig'
@@ -812,6 +816,8 @@ export {
   useCustomDataFormElementType,
   useDamConfigState,
   useDamCreditPreview,
+  type DamSourceBadge,
+  resolveSourceBadges,
   isDamSourceEnabled,
   useDamSourceAssetTypeConfig,
   useUploadQueueItemFactory,

@@ -14,6 +14,7 @@ import {
   LOW_DIMENSION,
 } from '@/components/damImage/uploadQueue/composables/assetImageIconsConfig'
 import { formatSingleUseUsageCount } from '@/components/dam/assetSelect/composables/assetSelectDisabledReason'
+import type { DamSourceBadge } from '@/components/damImage/uploadQueue/composables/damSourceBadge'
 import { useDamConfigStore } from '@/components/damImage/uploadQueue/composables/damConfigStore'
 
 const props = withDefaults(
@@ -22,12 +23,14 @@ const props = withDefaults(
     assetFileProperties: AssetFileProperties
     disableAbsolute?: boolean
     licenceBadge?: string
+    sourceBadges?: DamSourceBadge[]
     singleUse?: boolean
     singleUseUsageCount?: number
   }>(),
   {
     disableAbsolute: false,
     licenceBadge: '',
+    sourceBadges: () => [],
     singleUse: false,
     singleUseUsageCount: 0,
   },
@@ -107,7 +110,7 @@ const data = computed(() => {
 
 <template>
   <div
-    v-show="data.icons.length > 0 || licenceBadge.length > 0 || singleUse"
+    v-show="data.icons.length > 0 || licenceBadge.length > 0 || sourceBadges.length > 0 || singleUse"
     class="asset-image__meta-icons"
     :class="{ 'asset-image__meta-icons-absolute': !disableAbsolute }"
   >
@@ -117,6 +120,15 @@ const data = computed(() => {
       data-cy="asset-licence-badge"
     >
       {{ licenceBadge }}
+    </span>
+    <span
+      v-for="source in sourceBadges"
+      :key="source.id"
+      class="asset-image__licence-badge"
+      :title="t('common.damImage.asset.metaIcons.source', { name: source.name })"
+      data-cy="asset-source-badge"
+    >
+      {{ source.badge }}
     </span>
     <span
       v-if="singleUse"
@@ -165,10 +177,11 @@ const data = computed(() => {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 26px;
+    min-width: 26px;
     height: 26px;
     margin: 2px;
-    border-radius: 50%;
+    padding: 0 6px;
+    border-radius: 13px;
     background-color: rgb(0 0 0 / 50%);
     color: #fff;
     font-size: 10px;
@@ -177,9 +190,6 @@ const data = computed(() => {
   }
 
   .asset-image__single-use-badge--shared {
-    width: auto;
-    padding: 0 6px;
-    border-radius: 13px;
     background-color: rgb(var(--v-theme-warning));
     color: rgb(var(--v-theme-on-warning));
   }
