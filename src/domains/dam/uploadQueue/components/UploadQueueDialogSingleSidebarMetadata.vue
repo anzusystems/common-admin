@@ -10,6 +10,7 @@ import { useAlerts } from '@/domains/system/composables/alerts'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
 import type { IntegerId } from '@/shared/types/common'
 import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
+import { UploadQueueItemStatus } from '@/domains/dam/types/UploadQueue'
 
 const props = withDefaults(
   defineProps<{
@@ -48,6 +49,11 @@ const canEditMetadata = computed(() => {
   const items = uploadQueuesStore.getQueueItems(props.queueKey)
   return items[0]?.canEditMetadata ?? false
 })
+// The form opens with the metadata, which the DAM reads off the first chunk, while the file is still sent.
+// The metadata can be saved then, but the image is handed over only once its file is uploaded, as in the multi-file dialog.
+const isUploaded = computed(
+  () => uploadQueuesStore.getQueueItems(props.queueKey)[0]?.status === UploadQueueItemStatus.Uploaded
+)
 
 const v$ = useVuelidate({ $scope: ADamAssetMetadataValidationScopeSymbol })
 
@@ -100,7 +106,7 @@ const onSaveAndApply = async () => {
       class="mx-2"
       data-cy="button-save-and-apply"
       :loading="saving === 'saveAndApply'"
-      :disabled="!canEditMetadata || saving === 'save'"
+      :disabled="!canEditMetadata || !isUploaded || saving === 'save'"
       @click.stop="onSaveAndApply"
     >
       {{ t('common.damImage.upload.saveAndApply') }}

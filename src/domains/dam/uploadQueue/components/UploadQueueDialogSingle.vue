@@ -152,7 +152,8 @@ const onSave = async () => {
 }
 
 const onSaveAndApply = async () => {
-  if (items.value.length === 0 || !isNull(saving.value)) return
+  // A file still sent has no image to hand over yet.
+  if (items.value.length === 0 || !isDone.value || !isNull(saving.value)) return
   saving.value = 'saveAndApply'
   try {
     let assetsMetadataRes: AssetMetadataBulkItem[]

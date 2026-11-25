@@ -24,7 +24,7 @@ import {
 import { useAssetDetailStore } from '@/domains/dam/assetDetail/store/assetDetailStore'
 import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
 import { destroyDamNotifications, initDamNotifications } from '@/domains/dam/composables/damNotifications'
-import { useDamNotificationsEventBus } from '@/domains/dam/composables/damNotificationsEventBus'
+import { DamNotificationName, useDamNotificationsEventBus } from '@/domains/dam/composables/damNotificationsEventBus'
 import { useExtSystemIdForCached } from '@/domains/dam/composables/extSystemIdForCached'
 import { useDamConfigStore } from '@/domains/dam/config/store/damConfigStore'
 import ImageMediaWidgetInner from '@/domains/dam/imageWidget/components/ImageMediaWidgetInner.vue'
@@ -628,6 +628,39 @@ describe.each(consumerProfiles)('an upload into the image widget under the $name
       expect(modelValueOf(widget)).toBe(7)
       expect(widget.findComponent({ name: 'VImg' }).attributes('src')).toBe(pictureOf('file-1'))
     })
+
+    // The DAM reads the metadata off the first chunk, so the form opens while the file is still sent.
+    // "Save and apply" used to be pressable then and handed the widget an image whose file did not exist yet.
+    it.runIf(profile.notifications)(
+      'waits for the file: with the form open while the file is sent, it cannot be pressed and hands over nothing',
+      async () => {
+        const chunks = dam.hold('POST', dam.routes.chunk)
+        const widget = await mountWidget()
+        await pickThroughMenu(widget, [photo()])
+        await vi.waitFor(() => expect(chunks.waiting).toHaveLength(1))
+        dam.fileBecomes('asset-1', AssetFileProcessStatus.Uploading, withAnAuthor)
+        socket.deliver(DamNotificationName.AssetMetadataProcessed, { asset: 'asset-1' })
+        await vi.waitFor(() => expect(item().canEditMetadata).toBe(true), { timeout: 5000 })
+        await flushPromises()
+        const button = (cy: string) => inUploadDialog<HTMLButtonElement>(`[data-cy="${cy}"]`)!
+        expect(item().status).toBe(Uploading)
+
+        button('button-save-and-apply').click()
+        await flushPromises()
+        await waits.elapse()
+        await flushPromises()
+        expect(useImageMediaWidgetStore(pinia).detail).toBeNull()
+        expect(dam.sentTo('PATCH', dam.routes.bulkMetadata)).toEqual([])
+        expect(uploadDialog()).not.toBeNull()
+        expect([button('button-save').disabled, button('button-save-and-apply').disabled]).toEqual([false, true])
+
+        chunks.release()
+        await processed(withAnAuthor)
+        expect(button('button-save-and-apply').disabled).toBe(false)
+        await saveAndApply()
+        expect(useImageMediaWidgetStore(pinia).detail).toEqual(handedImage)
+      }
+    )
 
     it('of a file without an author: the image has no source, which only admin-cms asks the user to fill in', async () => {
       const widget = await mountWidget()
