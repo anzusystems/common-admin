@@ -1,9 +1,13 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import axios, { AxiosError, AxiosHeaders, type InternalAxiosRequestConfig } from 'axios'
 import { createRefreshRequestInterceptor, createRefreshSession } from '@/domains/auth/composables/refreshSession'
 import { AuthUnavailableError } from '@/shared/error/AuthUnavailableError'
 import { SessionExpiredError } from '@/shared/error/SessionExpiredError'
 import { isInCauseChain } from '@/shared/error/isInCauseChain'
+import { resetSessionEnd } from '@/domains/auth/composables/sessionEnd'
+
+// A session that ended stays ended for the page (one sign-out per page): each test starts with a live one.
+beforeEach(() => resetSessionEnd())
 
 const failing = (status?: number) => {
   const error = new AxiosError('request failed')
@@ -23,6 +27,8 @@ const setup = (refresh: () => Promise<unknown>) => {
     refreshSession,
     logout,
     skipUrlPrefix: '/auth',
+    // Covered in sessionEnd.test.ts. Here a focus of the test page would count as a logout.
+    watchSessionEnd: false,
   })
   const request = () => interceptor({ url: '/adm/v1/x', headers: new AxiosHeaders() } as InternalAxiosRequestConfig)
   return { cookies, logout, refreshSpy, refreshSession, request, runWhen: options.runWhen }
@@ -115,6 +121,8 @@ describe('createRefreshRequestInterceptor', () => {
     await expect(expired.request()).rejects.toBeInstanceOf(SessionExpiredError)
     expect(expired.logout).toHaveBeenCalledTimes(1)
 
+    // Another page: this one stays signed out.
+    resetSessionEnd()
     const unavailable = setup(async () => Promise.reject(failing(502)))
     const error = await unavailable.request().catch((e: unknown) => e)
     expect(error).toBeInstanceOf(AuthUnavailableError)
@@ -137,6 +145,7 @@ describe('createRefreshRequestInterceptor', () => {
       }),
       logout: vi.fn(),
       skipUrlPrefix: '/auth',
+      watchSessionEnd: false,
     })
     const controller = new AbortController()
     const waiting = interceptor({
@@ -181,6 +190,7 @@ describe('createRefreshRequestInterceptor', () => {
       logout: vi.fn(),
       skipUrlPrefix: '/auth',
       jwtExpired: () => true,
+      watchSessionEnd: false,
     })
     await interceptor({ url: '/adm/v1/x', headers: new AxiosHeaders() } as InternalAxiosRequestConfig)
     expect(refresh).toHaveBeenCalledTimes(1)

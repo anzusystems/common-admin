@@ -251,6 +251,7 @@
     "offset": "Invalid offset",
     "mimeType": "Invalid file format",
     "chunkValidationFailed": "Upload chunk validation failed. Please contact the administrator.",
+    "emptyFile": "The file is empty (0 B) and cannot be uploaded.",
     "processingTooLong": "Processing is taking too long. Use the item's refresh button, or remove the item and try again later.",
     "readFailed": "Data could not be loaded. Use the item's refresh button, or remove the item and try again."
   },

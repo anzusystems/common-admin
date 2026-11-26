@@ -2,6 +2,7 @@
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useIntervalFn } from '@vueuse/core'
 import ASystemBarNewVersion from '@/domains/system/systemBar/components/ASystemBarNewVersion.vue'
+import ASystemBarSessionEnded from '@/domains/system/systemBar/components/ASystemBarSessionEnded.vue'
 import { isUndefined } from '@/shared/utils/common'
 import { AnzuNewVersionFetchError, isAnzuNewVersionFetchError } from '@/shared/error/AnzuNewVersionFetchError'
 import { useUserActivity } from '@/domains/system/composables/useUserActivity'
@@ -157,6 +158,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
+  <ASystemBarSessionEnded />
   <VAppBar
     v-if="showSystemBar"
     height="48"

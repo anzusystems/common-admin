@@ -179,36 +179,39 @@ describe('the busy flag and the previews of the cropper', () => {
     expect(useImageRoiStore().cropperBusy).toBe(false)
   })
 
-  // Two commits before the cropper is hidden leave two saves in flight.
-  // Previously the end of the older one (failure or the read after it) left
-  // the newer one still waiting, and the cropper was no longer marked busy.
+  // The cropper stays usable during a save, so a gesture can end while one is on its way. Its crop waits for that
+  // save: two saves on their way at once could reach the DAM in either order and leave the older region stored.
+  // Of the crops committed meanwhile only the latest is sent. The cropper is busy till the read after the last save.
   it.each<[string, boolean]>([
-    ['the first save fails', true],
-    ['the read after the first save ends', false],
-  ])('stays busy while a newer save waits, once %s', async (_what, firstFails) => {
-    const saves: Array<{ resolve: () => void; reject: () => void }> = []
+    ['fails', true],
+    ['succeeds', false],
+  ])('sends the latest crop committed during a save once that save %s', async (_what, firstFails) => {
+    const saves: Array<{ pointX: number; resolve: () => void; reject: () => void }> = []
     const pinia = setup()
     vi.mocked(updateRoi).mockImplementation(
-      () =>
+      (_client, _endPoint, _id, region) =>
         new Promise((resolve, reject) =>
-          saves.push({ resolve: () => resolve(undefined as never), reject: () => reject(new Error('500')) })
+          saves.push({
+            pointX: region.pointX,
+            resolve: () => resolve(undefined as never),
+            reject: () => reject(new Error('500')),
+          })
         )
     )
     const cropper = await mountCropper(pinia)
     const store = useImageRoiStore()
-    cropper.findComponent(ACropper).vm.$emit('commit', { x: 0.1, y: 0.1, width: 0.4, height: 0.3 })
-    cropper.findComponent(ACropper).vm.$emit('commit', { x: 0.2, y: 0.2, width: 0.4, height: 0.3 })
+    const shown = cropper.findComponent(ACropper)
+    shown.vm.$emit('commit', { x: 0.1, y: 0.1, width: 0.4, height: 0.3 })
+    shown.vm.$emit('commit', { x: 0.2, y: 0.2, width: 0.4, height: 0.3 })
+    shown.vm.$emit('commit', { x: 0.3, y: 0.2, width: 0.4, height: 0.3 })
     await flushPromises()
-    expect(saves).toHaveLength(2)
+    expect(saves).toHaveLength(1)
+    expect(cropper.findComponent(ACropper).vm.$.uid).toBe(shown.vm.$.uid)
 
     if (firstFails) saves[0]!.reject()
     else saves[0]!.resolve()
     await flushPromises()
-    if (!firstFails) {
-      await pastTheWait()
-      await flushPromises()
-      expect(fetchImageFile).toHaveBeenCalledTimes(1)
-    }
+    expect(saves.map((save) => save.pointX)).toEqual([80, 240])
     expect(store.cropperBusy).toBe(true)
 
     saves[1]!.resolve()
@@ -216,6 +219,27 @@ describe('the busy flag and the previews of the cropper', () => {
     expect(store.cropperBusy).toBe(true)
     await pastTheWait()
     await flushPromises()
+    expect(fetchImageFile).toHaveBeenCalledTimes(1)
     expect(store.cropperBusy).toBe(false)
+  })
+
+  // A rotation during the save turns the picture the waiting crop was drawn on.
+  it('drops a crop committed during a save once a rotation has replaced the picture', async () => {
+    let saved!: () => void
+    const pinia = setup()
+    vi.mocked(updateRoi).mockImplementation(() => new Promise((resolve) => (saved = () => resolve(undefined as never))))
+    const cropper = await mountCropper(pinia)
+    await commit(cropper)
+    await commit(cropper)
+    useImageRoiStore().setImageFile(file('rotated'))
+
+    saved()
+    await flushPromises()
+    await pastTheWait()
+    await flushPromises()
+
+    expect(updateRoi).toHaveBeenCalledTimes(1)
+    expect(fetchImageFile).not.toHaveBeenCalled()
+    expect(useImageRoiStore().cropperBusy).toBe(false)
   })
 })

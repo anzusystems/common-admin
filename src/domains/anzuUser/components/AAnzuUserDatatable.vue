@@ -8,6 +8,7 @@ import ABooleanValue from '@/domains/ui/components/ABooleanValue.vue'
 import ADatatableConfigButton from '@/domains/filters/datatable/components/ADatatableConfigButton.vue'
 import ADatetime from '@/domains/ui/datetime/components/ADatetime.vue'
 import ATableCopyIdButton from '@/domains/ui/buttons/table/components/ATableCopyIdButton.vue'
+import ACachedChip from '@/domains/cached/components/ACachedChip.vue'
 import { SORT_BY_ID } from '@/domains/filters/datatable/utils/datatableColumns'
 import type { AxiosClientFn } from '@/domains/api/utils/client'
 import ADatatableOrdering from '@/domains/filters/datatable/components/ADatatableOrdering.vue'
@@ -261,15 +262,16 @@ defineExpose({
             name="permissionGroups"
             :ids="item.permissionGroups"
           >
-            <VChip
+            <ACachedChip
               v-for="permissionGroupId in item.permissionGroups"
+              :id="permissionGroupId"
               :key="permissionGroupId"
-              class="mr-1 mb-1"
-              size="small"
-              label
-            >
-              {{ getCachedPermissionGroup(permissionGroupId)?.title || permissionGroupId }}
-            </VChip>
+              container-class="d-inline-flex mr-1 mb-1"
+              :get-cached-fn="getCachedPermissionGroup"
+              display-text-path="title"
+              route=""
+              disable-click
+            />
           </slot>
         </template>
         <template #item.permissions="{ item }: { item: DatatableItem }">

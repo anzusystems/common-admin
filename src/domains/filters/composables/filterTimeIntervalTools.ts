@@ -82,7 +82,7 @@ export function useFilterTimeIntervalValidators(
     until: DatetimeUTCNullable
   }>
 ) {
-  // const { t } = useI18n()
+  const { t } = useI18n()
   const { datesCompare, required } = useValidate()
 
   const fromComputed = computed(() => {
@@ -97,11 +97,11 @@ export function useFilterTimeIntervalValidators(
     dialogData: {
       from: {
         required,
-        datesCompare: datesCompare(untilComputed, 'Until', 'onOrBefore'),
+        datesCompare: datesCompare(untilComputed, t('common.filter.timeInterval.until'), 'onOrBefore'),
       },
       until: {
         required,
-        datesCompare: datesCompare(fromComputed, 'From', 'laterThan'),
+        datesCompare: datesCompare(fromComputed, t('common.filter.timeInterval.from'), 'laterThan'),
       },
     },
   }

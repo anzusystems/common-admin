@@ -34,6 +34,8 @@ const title = {
   },
 }
 
+const titleKey = 'common.damCustomFormElement.asset.title'
+
 let pinia: Pinia
 let dam: FakeDam
 let wrapper: VueWrapper | undefined
@@ -83,7 +85,28 @@ describe('the configuration of the custom fields of an ext system', () => {
 
     await expect(load()).resolves.toBe(true)
 
-    expect(loaded()).toEqual({ image: [title], audio: [], video: [], document: [] })
+    expect(loaded()).toEqual({ image: [{ ...title, nameKey: titleKey }], audio: [], video: [], document: [] })
+  })
+
+  // The stored names are in whatever language the DAM was configured in ("Title" next to "Popis").
+  it('gives each field the key of its translated name, by kind of form', async () => {
+    configurationIsRead((type) =>
+      type === 'image' ? { status: 200, data: { data: [title], totalCount: 1 } } : withoutFields
+    )
+    dam.reply((request) =>
+      request.method === 'GET' &&
+      request.url.startsWith('/adm/v1/asset-custom-form/distribution-service/podcast/element?')
+        ? { status: 200, data: { data: [title], totalCount: 1 } }
+        : undefined
+    )
+
+    await load()
+    await useDamConfigState(dam.client).loadDamConfigDistributionCustomFormElements('podcast')
+
+    expect(loaded()?.image[0]?.nameKey).toBe(titleKey)
+    expect(useDamConfigStore(pinia).damConfigDistributionCustomFormElements.get('podcast')?.[0]?.nameKey).toBe(
+      'common.damCustomFormElement.distribution.title'
+    )
   })
 
   // The failed type may be the only one with fields, so the form would be drawn without them.

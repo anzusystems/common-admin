@@ -357,7 +357,7 @@ describe.each(consumerProfiles)('an upload into the image widget under the $name
         await droppedIntoTheDialog(widget, photo('scan.tiff', 'image/tiff'), photo('taken.jpg'))
 
         expect(shownAlerts()).toEqual([
-          ['warning', `${alertText('common.system.upload.incorrectFormatSize')}:scan.tiff`],
+          ['warning', `${alertText('common.system.upload.incorrectFormatSize')}: scan.tiff`],
         ])
         expect(queued()).toEqual(['taken.jpg'])
         expect(useUploadQueueDialog().uploadQueueDialog.value).toBe(QUEUE)
@@ -386,7 +386,7 @@ describe.each(consumerProfiles)('an upload into the image widget under the $name
     ])('of a type the ext system does not take, in %s', (_which, component) => {
       const turnedAway = () => {
         expect(shownAlerts()).toEqual([
-          ['warning', `${alertText('common.system.upload.incorrectFormatSize')}:scan.tiff`],
+          ['warning', `${alertText('common.system.upload.incorrectFormatSize')}: scan.tiff`],
         ])
         expect(queue().getQueueItems(QUEUE)).toEqual([])
         expect(dam.requests).toEqual([])
@@ -435,7 +435,7 @@ describe.each(consumerProfiles)('an upload into the image widget under the $name
         await vi.waitFor(() => expect(chunks.waiting).toHaveLength(1))
 
         expect(shownAlerts()).toEqual([
-          ['warning', `${alertText('common.system.upload.incorrectFormatSize')}:scan.tiff`],
+          ['warning', `${alertText('common.system.upload.incorrectFormatSize')}: scan.tiff`],
         ])
         expect(queue().getQueueItems(QUEUE)).toMatchObject([{ displayTitle: 'taken.jpg' }])
         expect(useUploadQueueDialog().uploadQueueDialog.value).toBe(QUEUE)

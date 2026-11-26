@@ -14,11 +14,16 @@ import { SessionExpiredError } from '@/shared/error/SessionExpiredError'
 import { isInCauseChain } from '@/shared/error/isInCauseChain'
 import { resolveImageSaveErrorMessage } from '@/domains/dam/imageWidget/composables/imageSaveErrors'
 import { extractImageSaveErrorInfo } from '@/domains/dam/imageWidget/composables/imageApiCms'
+import { useSessionEnd } from '@/domains/auth/composables/sessionEnd'
 
 const DEFAULT_DURATION_SECONDS = 3
 // One "sign-in server does not answer" per outage: a page's requests all fail at once.
 const AUTH_UNAVAILABLE_QUIET_MS = 30_000
 let authUnavailableShownAt = -Infinity
+// One for the requests a single action fails at once.
+const SESSION_ENDED_NOT_DONE_QUIET_MS = 3000
+const SESSION_ENDED_NOT_DONE_DURATION_MS = 6000
+let sessionEndedNotDoneShownAt = -Infinity
 
 export const NEW_LINE_MARK = '\n'
 
@@ -129,6 +134,14 @@ export function useAlerts() {
     pushAlert('error', commonT('common.alert.authUnavailable'), duration * 1000)
   }
 
+  // Not until closed: it covers the bar that says the same and offers the sign-in.
+  const showSessionEndedNotDone = () => {
+    const now = Date.now()
+    if (now - sessionEndedNotDoneShownAt < SESSION_ENDED_NOT_DONE_QUIET_MS) return
+    sessionEndedNotDoneShownAt = now
+    pushAlert('error', commonT('common.alert.sessionEndedNotDone'), SESSION_ENDED_NOT_DONE_DURATION_MS)
+  }
+
   const showErrorsDefault = (error: any, duration = -1) => {
     // A cancelled request is not a failure: something newer stopped it, or its view is gone.
     // Returns `true` because callers using `if (!showErrorsDefault(e)) showUnknownError()`
@@ -137,7 +150,11 @@ export function useAlerts() {
     // Stopped by the token refresh. Either the session is gone and
     // logout is loading, or the sign-in server did not answer.
     // The latter is reported once, not for every request stopped at the same time.
-    if (isInCauseChain(error, (cause) => cause instanceof SessionExpiredError)) return true
+    if (isInCauseChain(error, (cause) => cause instanceof SessionExpiredError)) {
+      // The user kept the page for its unsaved changes: what failed must not pass for done.
+      if (useSessionEnd().sessionEnded.value) showSessionEndedNotDone()
+      return true
+    }
     if (isInCauseChain(error, (cause) => cause instanceof AuthUnavailableError)) {
       showAuthUnavailable(duration)
       return true

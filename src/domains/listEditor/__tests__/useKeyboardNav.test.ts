@@ -208,6 +208,67 @@ describe('useKeyboardNav', () => {
       expect(nav.focusedKey.value).toBe(2)
       expect(mocks.onMoveDown).not.toHaveBeenCalled()
     })
+
+    it('a grab reports onGrab; Escape reports onGrabCancel so the row goes back, Enter does not', () => {
+      const onGrab = vi.fn()
+      const onGrabCancel = vi.fn()
+      const { options } = buildOptions({ isReorderMode: ref(true), onGrab, onGrabCancel })
+      const nav = useKeyboardNav(options)
+
+      nav.handleKeydown(2, fireKey('Enter'))
+      expect(onGrab).toHaveBeenCalledWith(2)
+      nav.handleKeydown(2, fireKey('ArrowDown'))
+      nav.handleKeydown(2, fireKey('Enter')) // drop keeps the move
+      expect(onGrabCancel).not.toHaveBeenCalled()
+
+      nav.handleKeydown(2, fireKey(' '))
+      expect(onGrab).toHaveBeenCalledTimes(2)
+      nav.handleKeydown(2, fireKey('Escape'))
+      expect(onGrabCancel).toHaveBeenCalledWith(2)
+      expect(nav.grabbedKey.value).toBeNull()
+    })
+
+    it('leaving reorder mode drops the grab', async () => {
+      const isReorderMode = ref(true)
+      const { options } = buildOptions({ isReorderMode })
+      const nav = useKeyboardNav(options)
+      nav.handleKeydown(2, fireKey('Enter'))
+      isReorderMode.value = false
+      await nextTick()
+      expect(nav.grabbedKey.value).toBeNull()
+    })
+  })
+
+  // A row's move up/down, edit and delete buttons activate on Enter/Space themselves.
+  describe('a row button', () => {
+    it.each(['Enter', ' '])('%s on it in reorder mode is left to the button, no grab', (key) => {
+      const { options } = buildOptions({ isReorderMode: ref(true) })
+      const nav = useKeyboardNav(options)
+      const e = fireKey(key, document.createElement('button'))
+      nav.handleKeydown(1, e)
+      expect(nav.grabbedKey.value).toBeNull()
+      expect(e.defaultPrevented).toBe(false)
+    })
+
+    it('Enter on it in view mode does not toggle the edit form', () => {
+      const { options, mocks } = buildOptions()
+      const nav = useKeyboardNav(options)
+      const link = document.createElement('a')
+      link.href = '#'
+      const e = fireKey('Enter', link)
+      nav.handleKeydown(1, e)
+      expect(mocks.onToggleEdit).not.toHaveBeenCalled()
+      expect(e.defaultPrevented).toBe(false)
+    })
+
+    it('Enter on the row itself still grabs', () => {
+      const { options } = buildOptions({ isReorderMode: ref(true) })
+      const nav = useKeyboardNav(options)
+      const row = document.createElement('div')
+      row.setAttribute('role', 'listitem')
+      nav.handleKeydown(1, fireKey('Enter', row))
+      expect(nav.grabbedKey.value).toBe(1)
+    })
   })
 
   describe('nested-only keys', () => {

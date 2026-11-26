@@ -45,12 +45,16 @@ onUnmounted(() => {
 
 <template>
   <span>
-    <span v-if="parentheses">(</span>
+    <!--
+      Non-breaking spaces: a margin puts no space into the text, a plain trailing space is lost once the
+      formatter breaks the line, and in a flex parent (VBtn) a plain space before the countdown collapses.
+    -->
+    <span v-if="parentheses">&nbsp;(</span>
     <span
       v-if="label"
-      class="font-weight-bold mr-1"
-      >{{ label }}
-    </span>
+      class="font-weight-bold"
+      >{{ label }}&nbsp;</span
+    >
     <span>{{ countdown }}</span>
     <span v-if="parentheses">)</span>
   </span>

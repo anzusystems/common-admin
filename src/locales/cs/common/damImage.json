@@ -251,6 +251,7 @@
     "offset": "Nesprávný offset",
     "mimeType": "Nesprávný formát souboru",
     "chunkValidationFailed": "Kontrola části nahrávaného souboru selhala. Kontaktujte administrátora.",
+    "emptyFile": "Soubor je prázdný (0 B), nelze ho nahrát.",
     "processingTooLong": "Zpracování trvá příliš dlouho. Použijte tlačítko obnovení položky nebo položku odstraňte a zkuste to později.",
     "readFailed": "Údaje se nepodařilo načíst. Použijte tlačítko obnovení položky nebo položku odstraňte a zkuste to znovu."
   },

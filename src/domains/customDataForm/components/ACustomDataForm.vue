@@ -8,6 +8,7 @@ import { useCustomDataForm } from '@/domains/customDataForm/composables/useCusto
 import ACustomFormElement from '@/domains/customDataForm/components/ACustomDataFormElement.vue'
 import ACustomDataFormHiddenPart from '@/domains/customDataForm/components/ACustomDataFormHiddenPart.vue'
 import ARow from '@/domains/ui/components/ARow.vue'
+import { customDataFormElementName } from '@/domains/customDataForm/utils/customDataFormElementName'
 
 const props = withDefaults(
   defineProps<{
@@ -109,7 +110,7 @@ defineExpose({
       <VCol>
         <ARow
           v-if="readonly"
-          :title="element.name"
+          :title="customDataFormElementName(element)"
         >
           {{ modelValue[element.property] }}
         </ARow>
@@ -138,7 +139,7 @@ defineExpose({
       <VCol>
         <ARow
           v-if="readonly"
-          :title="element.name"
+          :title="customDataFormElementName(element)"
         >
           {{ modelValue[element.property] }}
         </ARow>

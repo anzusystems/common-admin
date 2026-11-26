@@ -1,4 +1,5 @@
 <script setup lang="ts" generic="TItem extends Record<string, any>">
+import { useSortable } from '@vueuse/integrations/useSortable'
 import {
   computed,
   customRef,
@@ -12,10 +13,30 @@ import {
   watch,
 } from 'vue'
 import { useI18n } from 'vue-i18n'
+
+import { DRAG_GHOST_CLASS, DRAG_CHOSEN_CLASS, DRAG_CLASS } from '@/domains/listEditor/components/internal/constants'
+import LeChangeParentDialog from '@/domains/listEditor/components/internal/LeChangeParentDialog.vue'
+import LeDeleteDialog from '@/domains/listEditor/components/internal/LeDeleteDialog.vue'
+import LeEmptyState from '@/domains/listEditor/components/internal/LeEmptyState.vue'
+import LeMoveToPositionDialog from '@/domains/listEditor/components/internal/LeMoveToPositionDialog.vue'
+import LeNestedRow from '@/domains/listEditor/components/internal/LeNestedRow.vue'
+import LeStatus from '@/domains/listEditor/components/internal/LeStatus.vue'
 import { useContainerWidth } from '@/domains/listEditor/composables/useContainerWidth'
+import { useDeleteDialog } from '@/domains/listEditor/composables/useDeleteDialog'
+import {
+  computeInstruction,
+  type ExecutableInstruction,
+  type Instruction,
+} from '@/domains/listEditor/composables/useDragInstruction'
+import { useInlineEditing } from '@/domains/listEditor/composables/useInlineEditing'
 import { useIsTouchDevice } from '@/domains/listEditor/composables/useIsTouchDevice'
 import { useKeyboardNav } from '@/domains/listEditor/composables/useKeyboardNav'
-import { useSortable } from '@vueuse/integrations/useSortable'
+import { useListEditorScopeValidity } from '@/domains/listEditor/composables/useListEditorScopeValidity'
+import {
+  provideListEditorStateScope,
+  useNestedListEditorStateEntry,
+  type NestedListEditorStateBindings,
+} from '@/domains/listEditor/composables/useListEditorStateScope'
 import { type NestedViewItem } from '@/domains/listEditor/composables/useNestedListEditor'
 import {
   useNestedListEditorController,
@@ -26,24 +47,7 @@ import {
   type PositionOption,
   type PositionStrategy,
 } from '@/domains/listEditor/composables/useNestedListEditorController'
-import {
-  computeInstruction,
-  type ExecutableInstruction,
-  type Instruction,
-} from '@/domains/listEditor/composables/useDragInstruction'
-import {
-  provideListEditorStateScope,
-  useNestedListEditorStateEntry,
-  type NestedListEditorStateBindings,
-} from '@/domains/listEditor/composables/useListEditorStateScope'
-import { resolveCompactText as resolveCompactTextUtil } from '@/domains/listEditor/utils/resolveCompactText'
-import { useUnsavedSection } from '@/domains/unsavedGuard/composables/useUnsavedSection'
-import { useDeleteDialog } from '@/domains/listEditor/composables/useDeleteDialog'
-import { useInlineEditing } from '@/domains/listEditor/composables/useInlineEditing'
-import { validateAllAndReveal } from '@/domains/listEditor/utils/revealInvalidRows'
-import { useListEditorScopeValidity } from '@/domains/listEditor/composables/useListEditorScopeValidity'
 import { useReorderMode } from '@/domains/listEditor/composables/useReorderMode'
-import { cloneDeep } from '@/shared/utils/common'
 import type {
   ListEditorKey,
   ListEditorValidationScope,
@@ -52,15 +56,12 @@ import type {
   NestedTree,
   NestedTreeNode,
 } from '@/domains/listEditor/types/listEditorTypes'
+import { resolveCompactText as resolveCompactTextUtil } from '@/domains/listEditor/utils/resolveCompactText'
+import { validateAllAndReveal } from '@/domains/listEditor/utils/revealInvalidRows'
 import { useAlerts } from '@/domains/system/composables/alerts'
+import { useUnsavedSection } from '@/domains/unsavedGuard/composables/useUnsavedSection'
+import { cloneDeep } from '@/shared/utils/common'
 import { stringToInt } from '@/shared/utils/string'
-import LeNestedRow from '@/domains/listEditor/components/internal/LeNestedRow.vue'
-import LeDeleteDialog from '@/domains/listEditor/components/internal/LeDeleteDialog.vue'
-import LeMoveToPositionDialog from '@/domains/listEditor/components/internal/LeMoveToPositionDialog.vue'
-import LeChangeParentDialog from '@/domains/listEditor/components/internal/LeChangeParentDialog.vue'
-import LeEmptyState from '@/domains/listEditor/components/internal/LeEmptyState.vue'
-import LeStatus from '@/domains/listEditor/components/internal/LeStatus.vue'
-import { DRAG_GHOST_CLASS, DRAG_CHOSEN_CLASS, DRAG_CLASS } from '@/domains/listEditor/components/internal/constants'
 
 export interface DecoratedNestedViewItem<T> extends NestedViewItem<T> {
   editing: boolean
@@ -848,7 +849,17 @@ const onPointerMove = (e: PointerEvent) => {
   recomputeInstruction(e.clientX, e.clientY)
 }
 
+// A drop into the gap the row already sits in lands it where it was (`moveTo` skips its own slot).
+const isDropInPlace = (inst: ExecutableInstruction, sourceKey: ListEditorKey): boolean => {
+  const { parent } = controller.findNode(sourceKey)
+  if ((parent ? keyOf(parent.data) : null) !== inst.parentKey) return false
+  const siblings = parent?.children ?? modelValue.value.children
+  const index = siblings.findIndex((s) => keyOf(s.data) === sourceKey)
+  return inst.index === index || inst.index === index + 1
+}
+
 const applyInstruction = (inst: ExecutableInstruction, sourceKey: ListEditorKey) => {
+  if (isDropInPlace(inst, sourceKey)) return
   const ok = controller.moveTo(sourceKey, inst.parentKey, inst.index)
   if (!ok) {
     showWarningT('common.sortable.error.maxDeepExceed')
@@ -956,8 +967,9 @@ watch(
   }
 )
 
+// Not in the hook itself: there `useSortable` would wait for an `onMounted` that has already run.
 onMounted(() => {
-  if (dragEnabled.value) initSortables()
+  if (dragEnabled.value) nextTick(() => initSortables())
 })
 onBeforeUnmount(() => {
   destroySortables()
@@ -1175,6 +1187,9 @@ const doIndent = (vi: NestedViewItem<TItem>) => {
     showWarningT('common.sortable.error.maxDeepExceed')
     return
   }
+  // Expand the new parent, or the row vanishes into it (and a keyboard grab with it).
+  const { parent } = controller.findNode(vi.key)
+  if (parent) childrenExpandedKeys.value.add(keyOf(parent.data))
   markMoved(vi.key)
   emit('indent', vi)
 }
@@ -1340,6 +1355,24 @@ const expandableKeySet = computed(() => new Set(expandableKeys.value))
 const findVi = (key: ListEditorKey): DecoratedNestedViewItem<TItem> | undefined =>
   viewItemsDecorated.value.find((v) => v.key === key)
 
+// The tree before a keyboard grab, so Escape puts the grabbed row (and any indent/outdent) back.
+let grabOrigin: { key: ListEditorKey; tree: NestedTree<TItem>; movedKeys: Set<ListEditorKey> } | null = null
+// `order`: depth-first `key@depth` (equal = same tree shape); `keys`: the rows regardless of shape.
+const treeShape = (tree: NestedTree<TItem>): { order: string; keys: string } => {
+  const order: string[] = []
+  const keys: string[] = []
+  const walk = (nodes: NestedTreeNode<TItem>[], depth: number) => {
+    for (const n of nodes) {
+      const key = String(keyOf(n.data))
+      order.push(`${key}@${depth}`)
+      keys.push(key)
+      if (n.children) walk(n.children, depth + 1)
+    }
+  }
+  walk(tree.children, 0)
+  return { order: order.join('|'), keys: keys.sort().join('|') }
+}
+
 const keyboardNav = useKeyboardNav({
   viewItems: computed(() =>
     viewItemsDecorated.value.map((vi) => ({
@@ -1377,6 +1410,24 @@ const keyboardNav = useKeyboardNav({
   onToggleChildren: (key) => {
     const vi = findVi(key)
     if (vi) onChevronClick(vi)
+  },
+  onGrab: (key) => {
+    grabOrigin = {
+      key,
+      tree: cloneDeep(modelValue.value) as NestedTree<TItem>,
+      movedKeys: new Set(movedKeys.value),
+    }
+  },
+  onGrabCancel: (key) => {
+    const origin = grabOrigin
+    grabOrigin = null
+    if (!origin || origin.key !== key) return
+    const before = treeShape(origin.tree)
+    const now = treeShape(modelValue.value)
+    // Nothing moved, or rows were added or removed meanwhile (restoring the tree would undo those too).
+    if (before.order === now.order || before.keys !== now.keys) return
+    modelValue.value = origin.tree
+    movedKeys.value = origin.movedKeys
   },
   onCancelReorder: () => cancelReorderMode(),
 })

@@ -606,12 +606,15 @@ describe.each(consumerProfiles)('the poll of an upload queue, under the $name', 
           fields: { checksum: ['error_field_invalid'] },
         }
         const { store, item } = await finishEndsWith(() => ({ status, data: status === 422 ? invalid : undefined }))
+        // The refused field is named in the row (`uploadRefusalMessage`).
+        const message =
+          status === 422 ? commonT('common.damImage.uploadErrors.systemError') + ': checksum - error_field_invalid' : ''
 
         expect(item).toMatchObject({
           status: Failed,
           assetId: 'asset-1',
           canEditMetadata: false,
-          error: { hasError: true, message: '' },
+          error: { hasError: true, message },
         })
         expect(dam.sentTo('PATCH', dam.routes.finish)).toHaveLength(1)
         expect(store.getQueueProcessedCount(QUEUE)).toBe(store.getQueueTotalCount(QUEUE))

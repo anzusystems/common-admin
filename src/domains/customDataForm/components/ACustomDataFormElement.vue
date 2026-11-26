@@ -8,6 +8,7 @@ import { CustomDataFormElementType } from '@/domains/customDataForm/types/Custom
 import { isEmptyObject } from '@/shared/utils/common'
 import { useValidate } from '@/shared/validators/vuelidate/useValidate'
 import ABooleanSelect from '@/domains/ui/components/ABooleanSelect.vue'
+import { customDataFormElementName } from '@/domains/customDataForm/utils/customDataFormElementName'
 
 const props = withDefaults(
   defineProps<{
@@ -100,6 +101,8 @@ const errorMessageComputed = computed(() => {
   return []
 })
 
+const label = computed(() => customDataFormElementName(props.config))
+
 const counter = ref<number | undefined>(undefined)
 counter.value = props.config.attributes.maxValue ?? undefined
 
@@ -115,7 +118,7 @@ const onBlur = () => {
     :model-value="modelValue"
     auto-grow
     :rows="1"
-    :label="config.name"
+    :label="label"
     :error-messages="errorMessageComputed"
     :counter="counter"
     :readonly="config.attributes.readonly"
@@ -124,7 +127,7 @@ const onBlur = () => {
     @blur="onBlur"
   >
     <template #label>
-      {{ config.name
+      {{ label
       }}<span
         v-if="config.attributes.required"
         class="a-required-mark"
@@ -135,7 +138,7 @@ const onBlur = () => {
     v-else-if="config.attributes.type === CustomDataFormElementType.Integer"
     :model-value="modelValueComputed"
     type="number"
-    :label="config.name"
+    :label="label"
     :error-messages="errorMessageComputed"
     :readonly="config.attributes.readonly"
     :data-cy="'custom-field-' + config.property"
@@ -143,7 +146,7 @@ const onBlur = () => {
     @blur="onBlur"
   >
     <template #label>
-      {{ config.name
+      {{ label
       }}<span
         v-if="config.attributes.required"
         class="a-required-mark"
@@ -156,7 +159,7 @@ const onBlur = () => {
       config.attributes.type === CustomDataFormElementType.StringArrayLegacy
     "
     :model-value="modelValueComputed"
-    :label="config.name"
+    :label="label"
     multiple
     chips
     :readonly="config.attributes.readonly"
@@ -166,7 +169,7 @@ const onBlur = () => {
     @blur="onBlur"
   >
     <template #label>
-      {{ config.name
+      {{ label
       }}<span
         v-if="config.attributes.required"
         class="a-required-mark"
@@ -175,7 +178,7 @@ const onBlur = () => {
   </VCombobox>
   <VSwitch
     v-if="config.attributes.type === CustomDataFormElementType.Boolean && config.attributes.required === true"
-    :label="config.name"
+    :label="label"
     :model-value="modelValueComputed"
     :error-messages="errorMessageComputed"
     :readonly="config.attributes.readonly"
@@ -185,7 +188,7 @@ const onBlur = () => {
   <ABooleanSelect
     v-if="config.attributes.type === CustomDataFormElementType.Boolean && config.attributes.required === false"
     :model-value="modelValueComputed"
-    :label="config.name"
+    :label="label"
     :data-cy="'custom-field-' + config.property"
     :readonly="config.attributes.readonly"
     @update:model-value="updateModelValue"

@@ -6,6 +6,7 @@ import type { CustomDataFormElement } from '@/domains/customDataForm/types/Custo
 import { SYSTEM_CORE_DAM } from '@/domains/dam/api/damConstants'
 import { useApiFetchItems } from '@/domains/api/composables/useApiFetchItems'
 import { DAM_END_POINT_ASSET_CUSTOM_FORM } from '@/domains/dam/api/damEndPoints'
+import { withDamCustomFormElementNameKeys } from '@/domains/customDataForm/utils/customDataFormElementName'
 
 const ENTITY = 'assetCustomForm'
 
@@ -25,7 +26,9 @@ export const fetchAssetCustomFormElements = (
     urlTemplate: endPoint + '/ext-system/:extSystem/type/:assetType/element?order[position]=asc&limit=100',
   })
 
-  return execute({ urlParams: { extSystem, assetType } })
+  return execute({ urlParams: { extSystem, assetType } }).then((elements) =>
+    withDamCustomFormElementNameKeys('asset', elements)
+  )
 }
 
 // todo limit set to 100 for now, add load for pagination?
@@ -41,5 +44,7 @@ export const fetchDistributionCustomFormElements = (
     urlTemplate: endPoint + '/distribution-service/:distributionService/element?order[position]=asc&limit=100',
   })
 
-  return execute({ urlParams: { distributionService } })
+  return execute({ urlParams: { distributionService } }).then((elements) =>
+    withDamCustomFormElementNameKeys('distribution', elements)
+  )
 }

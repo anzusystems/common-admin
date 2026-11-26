@@ -99,7 +99,6 @@ if (
 
 const selected = ref<any>([])
 const search = ref('')
-const isFocused = ref(false)
 const autoFetchTimer: Ref<ReturnType<typeof setTimeout> | undefined> = ref(undefined)
 
 const apiRequestCounter = ref(0)
@@ -108,10 +107,6 @@ const { t } = useI18n()
 
 // The setup above throws unless the field is configured.
 const filterConfigCurrent = computed(() => filterConfig.fields[props.name]!)
-
-const onBlur = () => {
-  isFocused.value = false
-}
 
 const label = computed(() => {
   return filterConfigCurrent.value.titleT ? t(filterConfigCurrent.value.titleT) : undefined
@@ -215,7 +210,6 @@ const autoFetch = async () => {
 }
 
 const onFocus = () => {
-  isFocused.value = true
   if (props.prefetch === false) return
   clearAutoFetchTimer()
   autoFetch()
@@ -235,9 +229,10 @@ const singleItemSelectedTitle = computed(() => {
 })
 
 // Clearing the field first emits a `null` search. Reading its length threw when the field had no focus.
+// The search Vuetify empties when the field loses its focus is taken too: the
+// options fetched for it stayed and a filter of one value opened with them.
 const onSearchUpdate = (query: string | null) => {
   const text = query ?? ''
-  if (!filterConfigCurrent.value.multiple && !isFocused.value && text.length === 0) return // vuetify fix
   if (singleItemSelectedTitle.value === text) return
   search.value = text
 }
@@ -377,11 +372,15 @@ watchDebounced(
   search,
   (newValue: string | null, oldValue: string | null) => {
     const query = newValue ?? ''
-    if (query.length < props.searchMinChars) return
-    if (query !== (oldValue ?? '')) {
-      apiRequestCounter.value++
-      apiSearch(query, apiRequestCounter.value)
+    if (query === (oldValue ?? '')) return
+    if (query.length > 0 && query.length < props.searchMinChars) return
+    apiRequestCounter.value++
+    // An emptied search offers what an unsearched field does, not the options of the search left.
+    if (query.length === 0 && props.prefetch === false) {
+      fetchedItems.value = []
+      return
     }
+    apiSearch(query, apiRequestCounter.value)
   },
   { debounce: 300 }
 )
@@ -403,7 +402,6 @@ watchDebounced(
     autocomplete="off"
     @update:search="onSearchUpdate"
     @update:model-value="onSelectedUpdate"
-    @blur="onBlur"
     @focus="onFocus"
     @mouseenter="onMouseEnter"
     @click:clear="onClickClear"

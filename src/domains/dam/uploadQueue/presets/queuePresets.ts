@@ -6,8 +6,9 @@ import {
   UploadQueueItemType,
   type UploadQueueKey,
 } from '@/domains/dam/types/UploadQueue'
-import { useUpload } from '@/domains/dam/uploadQueue/composables/uploadService'
+import { uploadRefusalMessage, useUpload } from '@/domains/dam/uploadQueue/composables/uploadService'
 import {
+  libraryUploadMessages,
   libraryUploadPreset,
   type UploadProgressCallback,
   type UploadRun,
@@ -54,6 +55,12 @@ export function libraryQueuePreset(store: {
       settlement: store.settlement,
       runnerFor: (_item, queueKey) => (item, onProgress) =>
         useUpload(item, onProgress, libraryUploadPreset(store.configOf(queueKey))),
+      // A DAM refusal with a reason (a licence without manual upload, a file too large) names it in the row,
+      // instead of the generic system error. Any other failure keeps what the run wrote. The row shows it; no alert.
+      onClientFailure: (_queueKey, item, error) => ({
+        message: uploadRefusalMessage(error, libraryUploadMessages) ?? item.error.message,
+        alert: () => {},
+      }),
       refreshable: true,
     },
   }

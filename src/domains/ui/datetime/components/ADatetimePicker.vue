@@ -200,7 +200,8 @@ const onTextFieldBlur = () => {
     return
   }
   // Keeps the seconds from the original model.
-  const seconds = parseModel(props.modelValue, props.type, props.lastMinuteMoment)?.second() ?? 0
+  const seconds =
+    parseModel(props.modelValue, props.type, props.lastMinuteMoment)?.second() ?? (props.lastMinuteMoment ? 59 : 0)
   const reparsed = parseTyped(filtered, props.type, seconds)
   if (!isNull(reparsed)) {
     // A day click blurs this field before the picker emits, so re-assigning an unchanged datetime

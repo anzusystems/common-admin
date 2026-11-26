@@ -1,0 +1,37 @@
+{
+  "asset": {
+    "title": "Titulok",
+    "description": "Popis",
+    "author": "Autor",
+    "authors": "Autori",
+    "keywords": "Kľúčové slová",
+    "location": "Miesto",
+    "sourceKeywords": "Kľúčové slová zo zdroja",
+    "mediaApiIds": "ID v Media API",
+    "mediaApiPaths": "URL v Media API",
+    "focusX": "Ohnisko X (Media API)",
+    "focusY": "Ohnisko Y (Media API)",
+    "providerType": "Typ poskytovateľa",
+    "providerId": "ID u poskytovateľa",
+    "originalUrl": "Pôvodná URL",
+    "isChild": "Podradená položka"
+  },
+  "distribution": {
+    "title": "Titulok",
+    "description": "Popis",
+    "authors": "Autori",
+    "keywords": "Kľúčové slová",
+    "createArticle": "Založiť článok",
+    "rubricId": "ID rubriky v Artemise",
+    "podcastId": "ID podcastu",
+    "episodeId": "ID epizódy",
+    "extRssId": "Externé RSS ID",
+    "bonusEpisode": "Bonusová epizóda",
+    "bonusUrl": "Externá URL epizódy",
+    "freeUrl": "URL free audia",
+    "premiumUrl": "URL premium audia",
+    "duration": "Dĺžka free audia",
+    "premiumDuration": "Dĺžka premium audia",
+    "bonusDuration": "Dĺžka bonusového audia"
+  }
+}

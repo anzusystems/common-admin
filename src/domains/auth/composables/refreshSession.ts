@@ -4,6 +4,7 @@ import { skipUrlPrefixes } from '@/domains/api/composables/defineApiClient'
 import { AuthUnavailableError } from '@/shared/error/AuthUnavailableError'
 import { isInCauseChain } from '@/shared/error/isInCauseChain'
 import { SessionExpiredError } from '@/shared/error/SessionExpiredError'
+import { endSession, sessionLive, watchSessionEnd } from '@/domains/auth/composables/sessionEnd'
 
 const HTTP_BAD_REQUEST = 400
 const HTTP_UNAUTHORIZED = 401
@@ -20,6 +21,11 @@ export interface AuthCookieState {
   refreshTokenExists: unknown
   jwtPayload: string | null | undefined
 }
+
+// `null` without either cookie: no refresh can bring the session back. The JWT payload changes with every token,
+// so a new sign-in after a refused refresh, whose stale cookies stay, is told from the session that ended.
+const sessionKey = ({ refreshTokenExists, jwtPayload }: AuthCookieState): string | null =>
+  !refreshTokenExists && !jwtPayload ? null : `${jwtPayload ?? ''}|${String(refreshTokenExists ?? '')}`
 
 // `undefined` means no response in the chain: a timeout or a network failure.
 const httpStatusInCauseChain = (error: unknown): number | undefined => {
@@ -88,6 +94,8 @@ export function createRefreshSession(options: {
  * Request interceptor that refreshes an expired JWT before a request goes out. Its `runWhen` skips the auth endpoints.
  * Concurrent requests share one refresh (`refreshSession`). A request is rejected with
  * `SessionExpiredError` (after `logout`) or `AuthUnavailableError` (the user stays logged in).
+ * `logout` runs once per ended session (`endSession`): a page the user kept for its unsaved changes is not sent
+ * again, and its requests are rejected until the cookies show a new sign-in.
  */
 export function createRefreshRequestInterceptor(options: {
   cookies: () => AuthCookieState
@@ -97,23 +105,31 @@ export function createRefreshRequestInterceptor(options: {
   skipUrlPrefix: string
   /** Also refresh a JWT that exists but is expired. By default only a missing JWT is refreshed. */
   jwtExpired?: () => boolean
+  /**
+   * Also `logout` when another tab signs out, or when the tab comes back with both cookies gone
+   * (`watchSessionEnd`, started by the first request that finds the user signed in). Default true.
+   */
+  watchSessionEnd?: boolean
 }) {
-  // Requests waiting on one refresh share its result. Log out once per refresh, not once per request.
-  const loggedOut = new WeakSet<RefreshResult>()
+  let watching = false
 
   const interceptor = async (requestConfig: InternalAxiosRequestConfig): Promise<InternalAxiosRequestConfig> => {
-    const { refreshTokenExists, jwtPayload } = options.cookies()
-    if (!refreshTokenExists && !jwtPayload) {
-      options.logout()
+    const cookies = options.cookies()
+    const key = sessionKey(cookies)
+    if (!sessionLive(key)) throw new SessionExpiredError()
+    if (isNull(key)) {
+      endSession(options.logout, key)
       throw new SessionExpiredError()
     }
+    if (!watching && options.watchSessionEnd !== false) {
+      watching = true
+      watchSessionEnd({ sessionKey: () => sessionKey(options.cookies()), logout: options.logout })
+    }
+    const { refreshTokenExists, jwtPayload } = cookies
     if (refreshTokenExists && (!jwtPayload || options.jwtExpired?.())) {
       const result = await options.refreshSession()
       if (result.type === 'session-expired') {
-        if (!loggedOut.has(result)) {
-          loggedOut.add(result)
-          options.logout()
-        }
+        endSession(options.logout, key)
         throw new SessionExpiredError()
       }
       // Aborted while waiting (its page is gone): treat as cancelled, not as a failure to show on the new page.

@@ -19,7 +19,7 @@ import ADialogToolbar from '@/domains/ui/components/ADialogToolbar.vue'
 import AFormDatetimePicker from '@/domains/form/components/AFormDatetimePicker.vue'
 import type { DatetimeUTCNullable } from '@/shared/types/common'
 import ARow from '@/domains/ui/components/ARow.vue'
-import { dateTimeNow, dateTimePretty, isDatetimeUTC } from '@/shared/utils/datetime'
+import { dateTimePretty, dateToUtc, isDatetimeUTC } from '@/shared/utils/datetime'
 import { useAlerts } from '@/domains/system/composables/alerts'
 import type { ValueObjectOption } from '@/shared/types/ValueObject'
 
@@ -81,9 +81,12 @@ const modelValue = computed({
 const { timeIntervalOptions, getTimeIntervalOption } = useTimeIntervalOptions(props.allowed)
 const modelInternal = ref<TimeIntervalToolsValue>(null)
 const dialogCustom = ref(false)
+// The end of the current minute. The picker keeps the seconds when only the date or time changes,
+// and with the current second "until 23:59" became 23:59:17.
+const untilNow = () => dateToUtc(Math.floor(Date.now() / 60_000) * 60_000 + 59_000)
 const dialogData = ref<{ from: DatetimeUTCNullable; until: DatetimeUTCNullable }>({
   from: null,
-  until: dateTimeNow(),
+  until: untilNow(),
 })
 const displayFromTo = ref(false)
 
@@ -165,7 +168,7 @@ const onEditInterval = (clear = false) => {
   v$.value.$reset()
   if (clear) {
     dialogData.value.from = null
-    dialogData.value.until = dateTimeNow()
+    dialogData.value.until = untilNow()
   }
   dialogCustom.value = true
 }
@@ -282,6 +285,7 @@ const onInternalItemChange = (item: ValueObjectOption<TimeIntervalToolsValue>) =
             v-model="dialogData.until"
             :v="v$.dialogData.until"
             :label="t('common.filter.timeInterval.until')"
+            last-minute-moment
             required
           />
         </ARow>

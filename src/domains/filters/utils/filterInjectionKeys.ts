@@ -22,3 +22,8 @@ export const SubjectSelectCloseSidebarKey: InjectionKey<() => void> = Symbol.for
 // Several tables can share one system/subject (cms has seven for
 // `cms/article`). They differ by overriding `storeFiltersLocalStorage`.
 export const DatatablePageStoreKey: InjectionKey<string> = Symbol.for('anzu:DatatablePageStoreKey')
+
+// `useFilterHelpers` provides it so `ADatatablePagination` writes a page change into the list's address and
+// local storage, like a submit writes the filter and sort.
+export const DatatablePageInViewKey: InjectionKey<(pagination: Ref<Pagination>) => void> =
+  Symbol.for('anzu:DatatablePageInViewKey')

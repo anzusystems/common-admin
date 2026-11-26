@@ -44,16 +44,23 @@ export const parseModel = (
   return lastMinuteMoment ? instant.millisecond(999) : instant.millisecond(0)
 }
 
+// Loose parsing rolls an impossible date over: 99.99.2026 became 07.06.2034, 31.02. became 3 March.
+// The parsed day must be the typed one. The time is only range-checked, as a local time skipped by DST moves on.
+const keepsTypedParts = (parsed: dayjs.Dayjs, text: string): boolean => {
+  const [day, month, year, hour = 0, minute = 0] = (text.match(/\d+/g) ?? []).map(Number)
+  return parsed.date() === day && parsed.month() + 1 === month && parsed.year() === year && hour <= 23 && minute <= 59
+}
+
 export const parseTyped = (text: string, type: DatetimePickerType, keepSeconds = 0): dayjs.Dayjs | null => {
   if (type === 'date') {
     // The format must stay a string. With an array, `dayjs.utc(text,
     // [format])` goes through customParseFormat's plain factory and drops UTC.
     // A typed day then shifts by the local offset. `dayjs(text, [format]).utc()` shifts it too.
     const parsed = dayjs.utc(text, DATE_TEXT_FORMAT)
-    return parsed.isValid() ? parsed : null
+    return parsed.isValid() && keepsTypedParts(parsed, text) ? parsed : null
   }
   const parsed = dayjs(text, DATETIME_TEXT_FORMATS)
-  return parsed.isValid() ? parsed.second(keepSeconds) : null
+  return parsed.isValid() && keepsTypedParts(parsed, text) ? parsed.second(keepSeconds) : null
 }
 
 export const serialize = (internal: dayjs.Dayjs, type: DatetimePickerType): DatetimeUTC => {

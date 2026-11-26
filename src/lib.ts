@@ -535,6 +535,13 @@ import {
   createRefreshSession,
   type RefreshResult,
 } from '@/domains/auth/composables/refreshSession'
+import {
+  broadcastSessionEnd,
+  endSession,
+  sessionLive,
+  useSessionEnd,
+  watchSessionEnd,
+} from '@/domains/auth/composables/sessionEnd'
 import { AuthUnavailableError } from '@/shared/error/AuthUnavailableError'
 import { SessionExpiredError } from '@/shared/error/SessionExpiredError'
 import { isInCauseChain } from '@/shared/error/isInCauseChain'
@@ -947,6 +954,11 @@ export {
   isInCauseChain,
   type RefreshResult,
   SessionExpiredError,
+  broadcastSessionEnd,
+  endSession,
+  sessionLive,
+  useSessionEnd,
+  watchSessionEnd,
   defineBreadcrumbs,
   useDamCachedUsers,
   useDamCachedAssetLicences,
@@ -1574,6 +1586,12 @@ export type { CachedPermissionGroupsParams } from '@/domains/permission/group/co
 export type { CachedAnzuUsersParams } from '@/domains/anzuUser/composables/cachedAnzuUsers'
 export { syncUserAndTimeTracking } from '@/shared/utils/userAndTimeTracking'
 export type { UserAndTimeTrackingData, UserAndTimeTrackingUsers } from '@/shared/types/UserAndTimeTracking'
+export {
+  customDataFormElementName,
+  damCustomFormElementNameKey,
+  withDamCustomFormElementNameKeys,
+} from '@/domains/customDataForm/utils/customDataFormElementName'
+export type { DamCustomFormKind } from '@/domains/customDataForm/utils/customDataFormElementName'
 
 // Named without "image": admin-dam sends them to the endpoint of each asset type.
 export {

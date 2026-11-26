@@ -1,8 +1,9 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount, type VueWrapper } from '@vue/test-utils'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent, h, nextTick, ref } from 'vue'
-import { DatatablePaginationKey, FilterConfigKey, FilterDataKey } from '@/domains/filters/utils/filterInjectionKeys'
+
 import type { UserAdminConfig } from '@/domains/filters/bookmarks/types/UserAdminConfig'
+import { DatatablePaginationKey, FilterConfigKey, FilterDataKey } from '@/domains/filters/utils/filterInjectionKeys'
 import { AnzuApiAxiosError } from '@/shared/error/AnzuApiAxiosError'
 
 // The rename, the delete and the saved order each reach a different endpoint.
@@ -1073,5 +1074,103 @@ describe('loading the list editor', () => {
     await openManageTab(second)
     expect(loadListEditor).toHaveBeenCalledTimes(2)
     expect(second.findComponent({ name: 'ASortableListEditor' }).exists()).toBe(true)
+  })
+})
+
+// QA 87744 1.15: a rename confirmed with Enter, or followed by closing the dialog, was never saved.
+// The button read "Save ordering" and the unsaved prompt "Bookmark order", so a rename or delete did not look like it needed it.
+describe('Enter in a name field and the save button', () => {
+  const pressEnter = (input: HTMLInputElement, isComposing = false) => {
+    const event = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true, isComposing })
+    input.dispatchEvent(event)
+    return event
+  }
+  const renameInput = async (wrapper: VueWrapper, name: string) => {
+    // This dialog's own rows: a closed dialog of an earlier case can still be leaving the document.
+    const editor = wrapper.findComponent({ name: 'ASortableListEditor' }).element as HTMLElement
+    const row = [...editor.querySelectorAll<HTMLElement>('.a-le-row')].find((r) => r.textContent?.includes(name))!
+    row.querySelector<HTMLElement>('.a-le-row-header')!.click()
+    await settleEditor()
+    const input = row.querySelector<HTMLInputElement>('input')!
+    input.value = 'Renamed'
+    input.dispatchEvent(new Event('input', { bubbles: true }))
+    await settleEditor()
+    return input
+  }
+
+  it('Enter in a rename field saves the tab and closes the dialog', async () => {
+    const wrapper = await mountDialog()
+    await openManageTab(wrapper)
+    const input = await renameInput(wrapper, 'Second')
+
+    listItems.value = [bookmark(1, 'First'), bookmark(2, 'Renamed'), bookmark(3, 'Third')]
+    expect(pressEnter(input).defaultPrevented).toBe(true)
+    await flushPromises()
+    await nextTick()
+
+    await vi.waitFor(() => expect(updateUserAdminConfig).toHaveBeenCalledTimes(1))
+    expect(updateUserAdminConfig.mock.calls[0][0]).toBe(2)
+    expect(updateUserAdminConfig.mock.calls[0][1].customName).toBe('Renamed')
+    await vi.waitFor(
+      () => expect(wrapper.findComponent({ name: 'FilterBookmarkDialog' }).emitted('close')).toBeTruthy(),
+      { timeout: 5000 }
+    )
+  })
+
+  it('Enter that only picks a character of an input method saves nothing', async () => {
+    const wrapper = await mountDialog()
+    await openManageTab(wrapper)
+    const input = await renameInput(wrapper, 'Second')
+
+    pressEnter(input, true)
+    await flushPromises()
+
+    expect(updateUserAdminConfig).not.toHaveBeenCalled()
+  })
+
+  it('Enter in the name field of a new bookmark adds it, once', async () => {
+    let release!: () => void
+    createUserAdminConfig.mockImplementationOnce(
+      (item: UserAdminConfig) => new Promise((resolve) => (release = () => resolve(item)))
+    )
+    const wrapper = await mountDialog()
+    const input = wrapper.findComponent({ name: 'AFormTextField' }).find('input').element as HTMLInputElement
+    input.value = 'A new bookmark'
+    input.dispatchEvent(new Event('input', { bubbles: true }))
+    await settleEditor()
+
+    pressEnter(input)
+    await flushPromises()
+    pressEnter(input)
+    await flushPromises()
+    release()
+    await flushPromises()
+
+    expect(createUserAdminConfig).toHaveBeenCalledTimes(1)
+    expect(createUserAdminConfig.mock.calls[0][0].customName).toBe('A new bookmark')
+    await vi.waitFor(
+      () => expect(wrapper.findComponent({ name: 'FilterBookmarkDialog' }).emitted('close')).toBeTruthy(),
+      { timeout: 5000 }
+    )
+  })
+
+  it("names the manage tab's button and its unsaved section for everything they cover", async () => {
+    const wrapper = await mountDialog()
+    await openManageTab(wrapper)
+    const confirm = wrapper
+      .findComponent({ name: 'FilterBookmarkDialog' })
+      .findComponent({ name: 'VCardActions' })
+      .element.querySelector('[data-cy="button-confirm"]')
+    expect(confirm?.textContent?.trim()).toBe('Save')
+
+    editorOf(wrapper).updateItem(2, { customName: 'Renamed' })
+    await settleEditor()
+    const vm = wrapper.findComponent({ name: 'FilterBookmarkDialog' }).vm as unknown as {
+      requestClose: () => void
+      guard: { dirtyLabels: { value: string[] } }
+    }
+    vm.requestClose()
+    await flushPromises()
+    expect(vm.guard.dirtyLabels.value).toEqual(['Bookmarks'])
   })
 })

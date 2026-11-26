@@ -1,0 +1,37 @@
+{
+  "asset": {
+    "title": "Title",
+    "description": "Description",
+    "author": "Author",
+    "authors": "Authors",
+    "keywords": "Keywords",
+    "location": "Location",
+    "sourceKeywords": "Source keywords",
+    "mediaApiIds": "Media API IDs",
+    "mediaApiPaths": "Media API URLs",
+    "focusX": "Focus X (Media API)",
+    "focusY": "Focus Y (Media API)",
+    "providerType": "Provider type",
+    "providerId": "Provider ID",
+    "originalUrl": "Original URL",
+    "isChild": "Child item"
+  },
+  "distribution": {
+    "title": "Title",
+    "description": "Description",
+    "authors": "Authors",
+    "keywords": "Keywords",
+    "createArticle": "Create article",
+    "rubricId": "Artemis rubric ID",
+    "podcastId": "Podcast ID",
+    "episodeId": "Episode ID",
+    "extRssId": "External RSS ID",
+    "bonusEpisode": "Bonus episode",
+    "bonusUrl": "External episode URL",
+    "freeUrl": "Free audio URL",
+    "premiumUrl": "Premium audio URL",
+    "duration": "Free audio length",
+    "premiumDuration": "Premium audio length",
+    "bonusDuration": "Bonus audio length"
+  }
+}

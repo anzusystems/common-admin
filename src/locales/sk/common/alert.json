@@ -18,5 +18,6 @@
   },
   "idWasCopied": "ID bolo skopírované do schránky.",
   "textWasCopied": "Text bol skopírovaný do schránky",
-  "authUnavailable": "Prihlasovací server momentálne neodpovedá. Skúste to o chvíľu znova."
+  "authUnavailable": "Prihlasovací server momentálne neodpovedá. Skúste to o chvíľu znova.",
+  "sessionEndedNotDone": "Nevykonané, prihlásenie skončilo. Prihláste sa v novej karte a skúste to znova."
 }

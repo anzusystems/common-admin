@@ -2,6 +2,7 @@ import { getCurrentInstance, onMounted, provide, reactive, type Ref, toRaw } fro
 import { useDebounceFn } from '@vueuse/core'
 import { datatablePageKey, useDatatablePageStore } from '@/domains/system/store/datatablePageStore'
 import {
+  DatatablePageInViewKey,
   DatatablePageStoreKey,
   DatatablePaginationKey,
   FilterConfigKey,
@@ -29,7 +30,19 @@ import type { ValueObjectOption } from '@/shared/types/ValueObject'
 export type FilterStoreIdentifier = { system: string; subject: string }
 
 const SORT_URL_PARAM = '_sort'
+// The page is kept with its rows per page: page 3 at another page size shows other rows.
+const PAGE_URL_PARAM = '_page'
+const ROWS_PER_PAGE_URL_PARAM = '_limit'
+const PAGE_IN_VIEW = new RegExp(`(^|[#&])${PAGE_URL_PARAM}=`)
+// A link cannot ask the API for more rows than a page size a list offers.
+const MAX_ROWS_PER_PAGE = 100
 const END_FILTER_MARKER = '~'
+
+const positiveInteger = (value: string | null, max = Number.MAX_SAFE_INTEGER): number | undefined => {
+  if (isNull(value) || !/^\d+$/.test(value)) return undefined
+  const number = Number(value)
+  return number > 0 && number <= max ? number : undefined
+}
 
 // `URLSearchParams` percent-encodes characters a fragment accepts verbatim,
 // and vue-router runs `encodeURI` over the hash, double-escaping `%`.
@@ -62,7 +75,11 @@ const isSameFilterValue = (a: AllowedFilterValues, b: AllowedFilterValues): bool
   return a === b
 }
 
-const encodeFilterHash = (data: Record<string, AllowedFilterValues>, sortBy?: DatatableSortBy): string => {
+const encodeFilterHash = (
+  data: Record<string, AllowedFilterValues>,
+  sortBy?: DatatableSortBy,
+  page?: Pick<Pagination, 'page' | 'rowsPerPage'>
+): string => {
   const params = new URLSearchParams()
   for (const key in data) {
     const value = data[key]
@@ -74,6 +91,11 @@ const encodeFilterHash = (data: Record<string, AllowedFilterValues>, sortBy?: Da
   }
   if (sortBy) {
     params.set(SORT_URL_PARAM, `${sortBy.key},${sortBy.order}`)
+  }
+  // Left out on the first page, so a list there keeps the address it had.
+  if (page && page.page > 1) {
+    params.set(PAGE_URL_PARAM, String(page.page))
+    params.set(ROWS_PER_PAGE_URL_PARAM, String(page.rowsPerPage))
   }
   if (params.size === 0) return ''
   return relaxHashEncoding(params.toString()) + END_FILTER_MARKER
@@ -321,14 +343,31 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
   // the composable may run outside setup, where Vue would warn.
   if (getCurrentInstance()) {
     provide(DatatablePageStoreKey, pageStoreKey)
+    provide(DatatablePageInViewKey, (pagination) => storePageInView(pagination))
   }
   const { consumeStoredPage, getStoredRowsPerPage, getStoredView, setStoredPage } = useDatatablePageStore()
   // The filter and sort a page is shown in. Stored on load, submit and reset, which every change of them goes through.
   const viewOf = (sortBy: DatatableSortBy) => encodeFilterHash(getFilterDataForStoring(), sortBy)
   // `ADatatablePagination` stores the page only when its watcher sees a change. A list that opens on page 1,
   // or returns to it within the tick that restored another page, would keep the older page for the next Close.
-  const rememberShownPage = (pagination: Ref<Pagination>) =>
+  // The pagination of the list, the one load, submit and reset go through. A pager of another
+  // pagination under the same provide (a dialog's) must not write this list's address.
+  let listPagination: Ref<Pagination> | undefined
+  const rememberShownPage = (pagination: Ref<Pagination>) => {
+    listPagination = pagination
     setStoredPage(pageStoreKey, pagination.value.page, pagination.value.rowsPerPage, viewOf(pagination.value.sortBy))
+  }
+  // A page change goes into the address and local storage with the filter and sort,
+  // so a reload, a link, Back or a return through the menu shows the same page.
+  const storePageInView = (pagination: Ref<Pagination>) => {
+    if (pagination !== listPagination) return
+    // The first page is written only to take a page out. A reset leaves the address empty and goes to page 1,
+    // which would otherwise put the sort back in.
+    if (pagination.value.page === 1 && !hasStoredPage()) return
+    const serialized = serializeFilters(getFilterDataForStoring(), pagination, true, true)
+    updateLocationHash(serialized)
+    storeFilterLocalStorage(serialized)
+  }
   // The page Close kept. A list that keeps neither filter nor sort (no hash, no local storage) comes back with
   // both reset, and its page 3 would show other rows, so its page comes back only into the view it was shown in.
   // Not checked for other lists: they restore their view themselves, and many adjust the sort or a filter
@@ -372,14 +411,24 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
   const serializeFilters = (
     data: Record<string, AllowedFilterValues>,
     pagination: Ref<Pagination>,
-    includeSort: boolean
+    includeSort: boolean,
+    includePage = false
   ): string => {
-    return encodeFilterHash(data, includeSort ? pagination.value.sortBy : undefined)
+    return encodeFilterHash(
+      data,
+      includeSort ? pagination.value.sortBy : undefined,
+      includePage ? pagination.value : undefined
+    )
   }
 
   const deserializeFilters = (
     hash: string
-  ): { filters: Record<string, AllowedFilterValues>; sortBy: DatatableSortBy } | null => {
+  ): {
+    filters: Record<string, AllowedFilterValues>
+    sortBy: DatatableSortBy
+    page?: number
+    rowsPerPage?: number
+  } | null => {
     if (!hash) return null
     if (hash.startsWith('#')) hash = hash.substring(1)
 
@@ -402,6 +451,11 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
       params.delete(SORT_URL_PARAM)
     }
 
+    const page = positiveInteger(params.get(PAGE_URL_PARAM))
+    const rowsPerPage = positiveInteger(params.get(ROWS_PER_PAGE_URL_PARAM), MAX_ROWS_PER_PAGE)
+    params.delete(PAGE_URL_PARAM)
+    params.delete(ROWS_PER_PAGE_URL_PARAM)
+
     for (const [key, value] of params.entries()) {
       const fieldConfig = filterConfig.fields[key as keyof typeof filterConfig.fields]
       if (isUndefined(fieldConfig)) {
@@ -421,10 +475,13 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
       }
     }
 
-    // An empty result would still count as "found", shadowing localStorage.
-    if (isEmptyObject(result) && isNull(sortBy)) return null
+    // A page without its rows per page is left out: it would show other rows at the list's page size.
+    const hasPage = !isUndefined(page) && !isUndefined(rowsPerPage)
 
-    return { filters: result, sortBy }
+    // An empty result would still count as "found", shadowing localStorage.
+    if (isEmptyObject(result) && isNull(sortBy) && !hasPage) return null
+
+    return hasPage ? { filters: result, sortBy, page, rowsPerPage } : { filters: result, sortBy }
   }
 
   // A submit replaces the history entry instead of adding one.
@@ -467,6 +524,10 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
     return deserializeFilters(stored)
   }
 
+  const hasStoredPage = () =>
+    (options.populateUrlParams !== false && PAGE_IN_VIEW.test(window.location.hash)) ||
+    (!isUndefined(storeKey) && !!localStorage && PAGE_IN_VIEW.test(localStorage.getItem(storeKey) ?? ''))
+
   const resetFilter = (pagination: Ref<Pagination>, callback?: AnyFn) => {
     pagination.value = { ...pagination.value, page: 1 }
     rememberShownPage(pagination)
@@ -496,7 +557,10 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
       source = 'localStorage'
       storedFromHash = loadFilterLocalStorage()
     }
-    if (isNull(storedFromHash) || (isEmptyObject(storedFromHash.filters) && isNull(storedFromHash.sortBy))) {
+    if (
+      isNull(storedFromHash) ||
+      (isEmptyObject(storedFromHash.filters) && isNull(storedFromHash.sortBy) && isUndefined(storedFromHash.page))
+    ) {
       const restoredPage = consumeRestoredPage(pagination.value.sortBy)
       if (restoredPage !== null) {
         pagination.value = {
@@ -551,20 +615,23 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
     // Always consumed. The flag means "the next list should restore
     // its page". Leaving it set would pass the page to the next table.
     const restoredPage = consumeRestoredPage(sortBy)
+    const storedPage = restoredPage === null ? storedFromHash.page : undefined
     pagination.value = {
       ...pagination.value,
       sortBy,
-      // A link starts at the first page. A restored page still wins.
+      // A link starts at the page it names, else the first. A restored page still wins.
       // Only the close button sets that flag, meaning the user returns
       // to this list, and that address carries the list's own hash.
-      page: restoredPage ?? (source === 'hash' ? 1 : pagination.value.page),
-      rowsPerPage: rowsPerPageFor(pagination, restoredPage),
+      page: restoredPage ?? storedPage ?? (source === 'hash' ? 1 : pagination.value.page),
+      rowsPerPage: isUndefined(storedPage)
+        ? rowsPerPageFor(pagination, restoredPage)
+        : (storedFromHash.rowsPerPage ?? pagination.value.rowsPerPage),
     }
     rememberShownPage(pagination)
     if (hashDescribesThisView) {
       // Local storage mirrors the last applied state, so a link becomes the view the user returns to.
       // Re-serialized to drop values equal to their default. A sort-only hash does not overwrite it.
-      storeFilterLocalStorage(serializeFilters(getFilterDataForStoring(), pagination, true))
+      storeFilterLocalStorage(serializeFilters(getFilterDataForStoring(), pagination, true, true))
     }
     if (callback) callback()
     return true

@@ -43,6 +43,7 @@ import {
 import type { Fn } from '@vueuse/core'
 import { tryOnBeforeUnmount } from '@vueuse/core'
 import { useCollabStateInternal } from '@/domains/collab/composables/collabState'
+import { useCollabCurrentUserId } from '@/domains/collab/composables/collabCurrentUserId'
 import { isDefined, isUndefined } from '@/shared/utils/common'
 import { useCommonAdminCollabOptions } from '@/domains/collab/composables/commonAdminCollabOptions'
 import type { AddToCachedArgs } from '@/domains/cached/composables/defineCached'
@@ -66,7 +67,9 @@ export function useCollabRoom(
     collabFieldLocksState,
     claimRoomInfoWrite,
     collabConnectionHopeless,
+    collabRoomsLeftByUser,
   } = useCollabStateInternal()
+  const { currentUserId } = useCollabCurrentUserId()
 
   const reconnectEventBus = useCollabReconnectEventBus()
   const unsubscribeCollabReconnectListener = ref<undefined | Fn>()
@@ -268,6 +271,7 @@ export function useCollabRoom(
       if (!collabOptions.value.enabled || isUndefined(collabSocket.value)) return reject(CollabAccessRoomStatus.Failed)
       // Fail now rather than after the acknowledgement timeout: the caller can offer the record read-only.
       if (collabConnectionHopeless()) return reject(CollabAccessRoomStatus.Failed)
+      collabRoomsLeftByUser.delete(room)
       const isNewestWrite = claimRoomInfoWrite(room)
       collabSocket.value
         ?.timeout(ackTimeout)
@@ -403,8 +407,10 @@ export function useCollabRoom(
     collabSocket.value.emit('rejectRequestToTakeModeration', room)
   }
 
+  /** Kicking its own user is how the user leaves the collaboration. The server's kick then brings no "kicked" alert. */
   const kickUserFromRoom = (userId: number) => {
     if (!collabOptions.value.enabled || isUndefined(collabSocket.value)) return
+    if (userId === currentUserId.value) collabRoomsLeftByUser.add(room)
     collabSocket.value.emit('kickUserFromRoom', room, userId)
   }
 

@@ -831,6 +831,15 @@ useListEditorScopeValidity({
   reveal: validateAllSelf,
 })
 
+// Where a keyboard grab started, so Escape puts the row back and drops the moved marks the grab added.
+let grabOrigin: {
+  key: ListEditorKey
+  index: number
+  moved: boolean
+  sessionMoved: boolean
+  controllerMoved: boolean
+} | null = null
+
 const keyboardNav = useKeyboardNav({
   viewItems: computed(() => viewItemsDecorated.value.map((vi) => ({ key: vi.key }))),
   variant: 'sortable',
@@ -860,6 +869,28 @@ const keyboardNav = useKeyboardNav({
   onMoveBottom: (key) => {
     const vi = findVi(key)
     if (vi) moveBottom(vi.index)
+  },
+  onGrab: (key) => {
+    const vi = findVi(key)
+    grabOrigin = vi
+      ? {
+          key,
+          index: vi.index,
+          moved: movedKeys.value.has(key),
+          sessionMoved: sessionMovedKeys.value.has(key),
+          controllerMoved: controller.getChanges().moved.some((it) => keyOf(it) === key),
+        }
+      : null
+  },
+  onGrabCancel: (key) => {
+    const origin = grabOrigin
+    grabOrigin = null
+    const vi = findVi(key)
+    if (!origin || origin.key !== key || !vi) return
+    if (vi.index !== origin.index) controller.moveItem(vi.index, origin.index)
+    if (!origin.moved) movedKeys.value.delete(key)
+    if (!origin.sessionMoved) sessionMovedKeys.value.delete(key)
+    if (!origin.controllerMoved) controller.clearMoved([key])
   },
   onCancelReorder: () => cancelReorderMode(),
 })
@@ -929,6 +960,8 @@ const sortable = useSortable(rowsContainer, modelValue, {
     controller.moveItem(oldIndex, newIndex)
   },
   onEnd: (event) => {
+    // A drop back on the same slot moved nothing (no `onUpdate`), so it is no change.
+    if (event.oldIndex === event.newIndex) return
     // Mark only the dragged row (via its data-id) moved rather than diffing the
     // whole list, so siblings that shifted index stay clean. `event.item` is the
     // `.a-le-row-wrapper` sortable item; the `[data-id]` lives on the inner `.a-le-row`.

@@ -158,8 +158,7 @@ const mountEditor = async (
   }
 
   const settle = async () => {
-    // A finished gesture saves, and saving puts the editor back into its loading state a tick later.
-    // Wait for that to start before waiting for it to finish, or
+    // Lets a reload put its picture in before waiting for the cropper, or
     // this returns on the cropper that is about to be removed.
     await wait(200)
     const deadline = Date.now() + 8000

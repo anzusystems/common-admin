@@ -1,5 +1,11 @@
-import { describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
+import { createI18n } from 'vue-i18n'
 import { useFormatAndSizeCheck } from '@/domains/ui/file/composables/formatAndSizeCheck'
+import sk from '@/locales/sk'
+import { i18n, setCommonAdminI18n } from '@/plugins/i18n'
+
+const alerts = vi.hoisted(() => ({ showWarning: vi.fn() }))
+vi.mock('@/domains/system/composables/alerts', () => ({ useAlerts: () => alerts }))
 
 const file = (name: string, size: number, type = 'image/jpeg') => new File([new Uint8Array(size)], name, { type })
 const accepted = (maxSizes: Record<string, number>, files: File[]) =>
@@ -50,5 +56,20 @@ describe('useFormatAndSizeCheck keys as written', () => {
       'a.jpg',
       'b.png',
     ])
+  })
+})
+
+describe('useFormatAndSizeCheck warning', () => {
+  beforeAll(() => setCommonAdminI18n(createI18n({ legacy: false, locale: 'sk', messages: { sk } }) as never))
+  afterAll(() => setCommonAdminI18n(i18n as never))
+
+  it('names the refused files after a colon and a space', () => {
+    useFormatAndSizeCheck('image/*', undefined).checkFormatsAndSizes([
+      file('doc.pdf', 100, 'application/pdf'),
+      file('a.jpg', 100),
+      file('b.txt', 100, 'text/plain'),
+    ])
+
+    expect(alerts.showWarning).toHaveBeenCalledExactlyOnceWith('Nesprávny formát alebo veľkosť: doc.pdf, b.txt')
   })
 })

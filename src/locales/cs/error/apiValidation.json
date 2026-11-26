@@ -7,6 +7,7 @@
   "error_field_invalid": "Neplatné pole.",
   "error_field_not_unique": "Pole musí být unikátní.",
   "error_field_value_not_found": "Hodnota v poli nebyla nalezena.",
+  "entity_not_exists": "Záznam neexistuje.",
   "error_field_range_min": "Hodnota musí být vyšší.",
   "error_field_range_max": "Hodnota musí být nižší.",
   "error_field_regex": "Nesprávný formát.",

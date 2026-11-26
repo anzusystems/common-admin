@@ -3,6 +3,7 @@ import { computed, inject, watch } from 'vue'
 import { isNull, isUndefined } from '@/shared/utils/common'
 import { useI18n } from 'vue-i18n'
 import {
+  DatatablePageInViewKey,
   DatatablePageStoreKey,
   DatatablePaginationKey,
   FilterConfigKey,
@@ -36,6 +37,7 @@ const { setStoredPage } = useDatatablePageStore()
 // `useFilterHelpers` provides the key, so tables sharing a system/subject stay apart.
 // Both are optional. A datatable providing pagination without them uses the shared bucket.
 const providedPageKey = inject(DatatablePageStoreKey, undefined)
+const storePageInView = inject(DatatablePageInViewKey, undefined)
 const filterConfig = inject(FilterConfigKey, undefined)
 const pageStoreKey = computed(
   () => providedPageKey ?? datatablePageKey(filterConfig?.general.system, filterConfig?.general.subject)
@@ -92,6 +94,7 @@ watch(
       return
     }
     setStoredPage(pageStoreKey.value, page, rowsPerPage)
+    storePageInView?.(pagination)
     emit('change')
   }
 )

@@ -7,6 +7,7 @@ import { useDamNotificationsEventBus } from '@/domains/dam/composables/damNotifi
 import { AssetFileFailReason } from '@/domains/dam/types/AssetFile'
 import { UploadQueueItemStatus } from '@/domains/dam/types/UploadQueue'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
+import { commonT } from '@/plugins/i18n'
 
 const QUEUE = 'failing-queue'
 const { Waiting, Uploading, Failed } = UploadQueueItemStatus
@@ -130,7 +131,12 @@ describe.each(consumerProfiles)('a file the browser cannot send, under the $name
     await vi.waitFor(() => expect(first.status).toBe(Failed))
     await vi.waitFor(() => expect(starts()).toHaveLength(2))
 
-    expect(first).toMatchObject({ ...aFailedRow, assetId: null, fileId: null })
+    expect(first).toMatchObject({
+      ...aFailedRow,
+      error: { ...aFailedRow.error, message: commonT('common.damImage.uploadErrors.emptyFile') },
+      assetId: null,
+      fileId: null,
+    })
     expect(statuses()).toEqual([Failed, Uploading, Uploading, Waiting])
     expect(dam.requests.every((request) => request.url.startsWith(endPoints.image))).toBe(true)
   })

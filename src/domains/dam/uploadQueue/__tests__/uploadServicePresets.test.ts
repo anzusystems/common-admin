@@ -309,14 +309,16 @@ describe('a file of no bytes', () => {
     expect(dam.body(dam.requests[1])).toEqual({ checksum: APP_DIGEST })
   })
 
-  it('is refused under the set of the library before anything is asked', async () => {
+  it('is refused under the set of the library before anything is asked, and its row says why', async () => {
     dam = createFakeDam(ugcConfiguration.endPoints)
     installConsumerProfile(ugcConfiguration, dam.client)
-    const run = useUpload(empty())
+    const item = empty()
+    const run = useUpload(item)
 
     await expect(run.uploadInit()).rejects.toThrow('Empty file')
 
     expect(dam.requests).toEqual([])
+    expect(item.error.message).toBe(commonT('common.damImage.uploadErrors.emptyFile'))
   })
 })
 

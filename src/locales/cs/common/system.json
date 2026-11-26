@@ -2,6 +2,11 @@
   "version": "Verze",
   "newVersionText": "K dispozici je nová verze administrace. Pro správné fungování je třeba provést aktualizaci.",
   "newVersionReload": "Načíst novou verzi.",
+  "sessionEnded": {
+    "text": "Přihlášení skončilo, změny teď nelze uložit. Neuložené změny zůstávají na stránce.",
+    "signInInNewTab": "Přihlásit se v nové kartě",
+    "leave": "Odejít a přihlásit se"
+  },
   "theme": {
     "light": "Světlá",
     "dark": "Tmavá",

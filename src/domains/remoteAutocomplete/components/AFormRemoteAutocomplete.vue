@@ -335,9 +335,10 @@ const singleItemSelectedTitle = computed(() => {
 })
 
 // Clearing the field first emits a `null` search. Reading its length threw when the field had no focus.
+// The search Vuetify empties when the field loses its focus is taken too: the
+// options fetched for it stayed and a field of one value opened with them.
 const onSearchUpdate = (query: string | null) => {
   const text = query ?? ''
-  if (!props.multiple && !isFocused.value && text.length === 0) return // vuetify fix
   if (singleItemSelectedTitle.value === text) return
   search.value = text
 }
@@ -366,11 +367,11 @@ watchDebounced(
     const query = newValue ?? ''
     if (query === (oldValue ?? '')) return
     if (query.length > 0 && query.length < props.minSearchChars) return
+    apiRequestCounter.value++
     if (query.length === 0 && props.prefetch === false) {
       fetchedItems.value = []
       return
     }
-    apiRequestCounter.value++
     apiSearch(query, apiRequestCounter.value)
     emit('searchChangeDebounced', query)
   },
@@ -409,13 +410,18 @@ const noDataText = computed(() => {
   return undefined
 })
 
+let watchRun = 0
 watch(
   modelValue,
   async (newValue, oldValue) => {
     if (newValue === oldValue) return
+    const run = ++watchRun
     if (isFirstLoad.value) {
       isFirstLoad.value = false
       await tryAutoFetch('mounted', newValue)
+      // A parent may set the value on its mount (a remembered one), while this first run waits here.
+      // That value has a run of its own, and resetting the field here would drop its label.
+      if (run !== watchRun) return
     }
     if (collabOptions.value.enabled && isFocused.value) {
       changeFieldData.value(newValue)

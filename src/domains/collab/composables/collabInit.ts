@@ -37,6 +37,7 @@ export function useCollabInit() {
     collabRoomInfoState,
     collabFieldLocksState,
     collabFieldLocksUnanswered,
+    collabRoomsLeftByUser,
   } = useCollabStateInternal()
   const { currentUserId } = useCollabCurrentUserId()
 
@@ -143,7 +144,8 @@ export function useCollabInit() {
         showSuccessT('common.collab.alert.transferredModeration')
       })
       collabSocket.value?.on('kickedFromRoom', (room: CollabRoom) => {
-        showWarningT('common.collab.alert.kickedFromRoom')
+        // The user left by kicking themselves, see `kickUserFromRoom`. The page still leaves the room on the event.
+        if (!collabRoomsLeftByUser.delete(room)) showWarningT('common.collab.alert.kickedFromRoom')
         kickedFromRoomEventBus.emit({ room })
       })
       collabSocket.value?.on('startCollab', async (room, callback: (data: CollabRoomPlainData) => void) => {

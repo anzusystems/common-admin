@@ -4,8 +4,13 @@ import {
   type AnzuApiValidationResponseData,
   axiosErrorResponseHasValidationData,
 } from '@/shared/error/AnzuApiValidationError'
+import {
+  axiosErrorResponseHasForbiddenOperationData,
+  isAnzuApiForbiddenOperationError,
+} from '@/shared/error/AnzuApiForbiddenOperationError'
 import { type UploadQueueItem, UploadQueueItemStatus } from '@/domains/dam/types/UploadQueue'
 import { NEW_LINE_MARK } from '@/domains/system/composables/alerts'
+import { commonT, commonTe } from '@/plugins/i18n'
 import { isUndefined } from '@/shared/utils/common'
 import { useDamUploadChunkSize } from '@/domains/dam/uploadQueue/composables/damUploadChunkSize'
 import { useDamConfigStoreOf } from '@/domains/dam/config/store/damConfigStore'
@@ -47,6 +52,29 @@ export function uploadValidationMessage(error: unknown, messages: UploadMessages
     }
   }
   return errorMessages.length > 0 ? errorMessages.join(NEW_LINE_MARK) : messages.unknownError()
+}
+
+const forbiddenOperationDetail = (error: unknown): string | undefined => {
+  if (isAnzuApiForbiddenOperationError(error)) return error.detail
+  if (!axiosErrorResponseHasForbiddenOperationData(error as Error)) return undefined
+
+  return (error as { response: { data: { detail: string } } }).response.data.detail
+}
+
+/**
+ * Text for an upload the DAM refused with a reason: a forbidden operation by its `detail`
+ * (`licence_manual_upload_disabled`, `asset_size_too_large`, …), a validation error by field.
+ * `undefined` for any other failure.
+ */
+export function uploadRefusalMessage(error: unknown, messages: UploadMessages): string | undefined {
+  const detail = forbiddenOperationDetail(error)
+  if (detail) {
+    const key = 'error.apiForbiddenOperation.' + detail
+    return commonTe(key) ? commonT(key) : commonT('error.apiForbiddenOperation.noTranslation')
+  }
+  if (axiosErrorResponseHasValidationData(error as Error)) return uploadValidationMessage(error, messages)
+
+  return undefined
 }
 
 const readFile = async (offset: number, size: number, file: File): Promise<{ data: ArrayBuffer; offset: number }> => {
@@ -218,6 +246,8 @@ export function useUpload(
         return
       }
       if (!sendable) {
+        // Named in the row. The generic system error suggested that trying again could help.
+        queueItem.error.message = messages.emptyFile?.() ?? queueItem.error.message
         reject(new Error('Empty file'))
         return
       }

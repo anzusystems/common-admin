@@ -1,33 +1,34 @@
 <script lang="ts" setup>
-import ADialogToolbar from '@/domains/ui/components/ADialogToolbar.vue'
-import { useI18n } from 'vue-i18n'
-import { type Component, inject, ref, shallowRef, useTemplateRef, watch } from 'vue'
-import AFormTextField from '@/domains/form/components/AFormTextField.vue'
-import ARow from '@/domains/ui/components/ARow.vue'
-import AFormSwitch from '@/domains/form/components/AFormSwitch.vue'
-import { loadListEditor } from '@/domains/listEditor/utils/listEditorLoader'
-import type { ExposedListEditorHandle } from '@/domains/listEditor/composables/useListEditorController'
+import useVuelidate from '@vuelidate/core'
 import type { AxiosInstance } from 'axios'
-import type { IntegerId } from '@/shared/types/common'
-import { MAX_BOOKMARK_ITEMS, useFilterBookmarkStore } from '@/domains/filters/bookmarks/store/bookmarksStore'
+import { type Component, inject, ref, shallowRef, useTemplateRef, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
+
 import { useUserAdminConfigApi } from '@/domains/filters/bookmarks/api/userAdminConfigApi'
-import { useAlerts } from '@/domains/system/composables/alerts'
 import { useUserAdminConfigFactory } from '@/domains/filters/bookmarks/factory/UserAdminConfigFactory'
+import { MAX_BOOKMARK_ITEMS, useFilterBookmarkStore } from '@/domains/filters/bookmarks/store/bookmarksStore'
 import {
   type UserAdminConfig,
   UserAdminConfigLayoutType,
   UserAdminConfigType,
 } from '@/domains/filters/bookmarks/types/UserAdminConfig'
-import useVuelidate from '@vuelidate/core'
-import { useValidate } from '@/shared/validators/vuelidate/useValidate'
-import { cloneDeep, isUndefined } from '@/shared/utils/common'
-import { DatatablePaginationKey, FilterConfigKey, FilterDataKey } from '@/domains/filters/utils/filterInjectionKeys'
 import { useFilterHelpers } from '@/domains/filters/composables/filterFactory'
+import { DatatablePaginationKey, FilterConfigKey, FilterDataKey } from '@/domains/filters/utils/filterInjectionKeys'
+import AFormSwitch from '@/domains/form/components/AFormSwitch.vue'
+import AFormTextField from '@/domains/form/components/AFormTextField.vue'
+import type { ExposedListEditorHandle } from '@/domains/listEditor/composables/useListEditorController'
+import { loadListEditor } from '@/domains/listEditor/utils/listEditorLoader'
+import { useAlerts } from '@/domains/system/composables/alerts'
+import ADialogToolbar from '@/domains/ui/components/ADialogToolbar.vue'
+import ARow from '@/domains/ui/components/ARow.vue'
 import AUnsavedConfirmDialog from '@/domains/unsavedGuard/components/AUnsavedConfirmDialog.vue'
 import { useUnsavedChangesGuard } from '@/domains/unsavedGuard/composables/useUnsavedChangesGuard'
-import { hasAnzuApiValidationErrorSpecific, isAnzuApiValidationError } from '@/shared/error/AnzuApiValidationError'
 import { isAnzuApiAxiosError } from '@/shared/error/AnzuApiAxiosError'
+import { hasAnzuApiValidationErrorSpecific, isAnzuApiValidationError } from '@/shared/error/AnzuApiValidationError'
 import { HTTP_STATUS_NOT_FOUND } from '@/shared/statusCodes'
+import type { IntegerId } from '@/shared/types/common'
+import { cloneDeep, isUndefined } from '@/shared/utils/common'
+import { useValidate } from '@/shared/validators/vuelidate/useValidate'
 
 const props = withDefaults(
   defineProps<{
@@ -266,7 +267,15 @@ const addBookmark = async () => {
   }
 }
 
+// Enter in a name field submits the tab like its button. Not while an input method is composing a character.
+const onEnter = (event: KeyboardEvent) => {
+  if (event.isComposing) return
+  event.preventDefault()
+  onConfirm()
+}
+
 const onConfirm = () => {
+  if (saveButtonLoading.value) return
   if (activeTab.value === 'add') {
     vCreate$.value.$touch()
     if (vCreate$.value.$invalid) {
@@ -398,6 +407,7 @@ watch(activeTab, async () => {
               required
               :disabled="saveButtonLoading"
               :v="vCreate$.customName"
+              @keydown.enter="onEnter"
             />
           </ARow>
           <ARow>
@@ -478,6 +488,7 @@ watch(activeTab, async () => {
                 :model-value="raw.customName"
                 hide-details="auto"
                 @update:model-value="actions.update({ ...raw, customName: String($event ?? '') })"
+                @keydown.enter="onEnter"
               />
             </template>
           </component>
@@ -503,7 +514,7 @@ watch(activeTab, async () => {
           :loading="saveButtonLoading"
           @click.stop="onConfirm"
         >
-          {{ activeTab === 'add' ? t('common.button.add') : t('common.filter.bookmark.saveBookmarkOrder') }}
+          {{ activeTab === 'add' ? t('common.button.add') : t('common.button.save') }}
         </ABtnPrimary>
       </VCardActions>
     </VCard>

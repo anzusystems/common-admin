@@ -109,6 +109,24 @@ describe('datetimePickerValue', () => {
     it('keeps the seconds of the model in datetime mode', () => {
       expect(parseTyped('05.05.2025 10:00', 'datetime', 29)!.second()).toBe(29)
     })
+
+    // Loose parsing rolled these over: 99.99.2026 became 07.06.2034.
+    it.each(['99.99.2026', '31.02.2026', '00.05.2026', '05.13.2026'])('rejects the impossible day %s', (text) => {
+      expect(parseTyped(text, 'date')).toBeNull()
+      expect(parseTyped(text, 'datetime')).toBeNull()
+      expect(parseTyped(text + ' 10:00', 'datetime')).toBeNull()
+    })
+
+    it.each(['05.05.2026 24:00', '05.05.2026 10:60', '05.05.2026 99:99'])('rejects the impossible time %s', (text) => {
+      expect(parseTyped(text, 'datetime')).toBeNull()
+    })
+
+    it('still reads possible days and times', () => {
+      expect(formatDisplay(parseTyped('05.05.2026 9:05', 'datetime')!, 'datetime')).toBe('05.05.2026 09:05')
+      expect(formatDisplay(parseTyped('29.02.2028', 'date')!, 'date')).toBe('29.02.2028')
+      expect(formatDisplay(parseTyped('31.12.2026 23:59', 'datetime')!, 'datetime')).toBe('31.12.2026 23:59')
+      expect(formatDisplay(parseTyped('31.12.2026', 'datetime')!, 'datetime')).toBe('31.12.2026 00:00')
+    })
   })
 
   describe('serialize', () => {

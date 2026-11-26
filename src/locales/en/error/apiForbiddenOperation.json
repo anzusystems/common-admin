@@ -1,3 +1,16 @@
 {
-  "noTranslation": "An unknown error occurred. Contact the administrator if necessary."
+  "noTranslation": "An unknown error occurred. Contact the administrator if necessary.",
+  "invalid_state_transaction": "An error occurred while changing the state.",
+  "invalid_asset_type": "Invalid digital asset type.",
+  "asset_size_too_large": "The file is too large.",
+  "invalid_asset_slot": "Operation on an invalid asset slot.",
+  "bulk_size_exceeded": "Too many objects sent at once. Contact an administrator if needed.",
+  "custom_form_not_exists": "This form does not exist.",
+  "asset_not_fully_uploaded": "The file has not been fully uploaded.",
+  "not_allowed_download": "Downloading this file is not allowed.",
+  "licence_mismatch": "The action was performed with an incorrect licence ID (ID mismatch). Contact an administrator if needed.",
+  "asset_file_delete_during_reorder": "An error occurred while reordering. Contact an administrator if needed.",
+  "file_upload_too_many_files": "The upload file count limit has been exceeded.",
+  "file_is_used": "The file is in use.",
+  "licence_manual_upload_disabled": "Manual upload is not allowed for this licence."
 }

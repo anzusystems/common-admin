@@ -23,9 +23,26 @@ describe('exports the admins redefined', () => {
     expect(lib.SORT_BY_SCORE_BEST).toBe('score_best')
   })
 
+  // admin-dam names a refused custom field, and admin-ugc builds its DAM form by hand.
+  it('include the translated names of DAM form elements', () => {
+    expect(lib.customDataFormElementName).toBeTypeOf('function')
+    expect(lib.damCustomFormElementNameKey('asset', 'title')).toBe('common.damCustomFormElement.asset.title')
+    expect(lib.withDamCustomFormElementNameKeys).toBeTypeOf('function')
+  })
+
   // An app tearing down its DAM socket needs this export.
   it('include tearing down the DAM notification socket', () => {
     expect(lib.destroyDamNotifications).toBeTypeOf('function')
+  })
+
+  // admin-ugc refreshes its session on its own, without `createRefreshRequestInterceptor`, which starts the watch,
+  // and the 401 handlers of the admins send a page to the sign-out once through `endSession`.
+  it('include following a sign-out in another tab', () => {
+    expect(lib.watchSessionEnd).toBeTypeOf('function')
+    expect(lib.broadcastSessionEnd).toBeTypeOf('function')
+    expect(lib.endSession).toBeTypeOf('function')
+    expect(lib.sessionLive).toBeTypeOf('function')
+    expect(lib.useSessionEnd().sessionEnded.value).toBe(false)
   })
 
   // admin-cms picks the list views of a site group and admin-dam caches their names (#86490).

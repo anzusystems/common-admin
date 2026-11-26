@@ -106,26 +106,25 @@ describe('the read of the file after a region is saved', () => {
     expect(store.imageFile).toMatchObject({ id: 'file-a', manipulatedAt: 'before' })
   })
 
-  // The cropper waits for the read after its save with a loader of its own. Something else
-  // hiding the store loader meanwhile (the region panel does so when it ends its reload) must
-  // not bring the cropper back, and no second save may start while the first read is in flight.
-  // Previously the first read, answering last, could bring back the file as the DAM drew it before the second save.
-  it('stays hidden until the read after its save answers, also when the loader of the store is hidden', async () => {
+  // The read brings the same file with a new `manipulatedAt`, and a region does not change its picture.
+  // The cropper used to hide from the save until the read answered (2.4–3.6 s), lose a drag made
+  // meanwhile and load the 1920 px picture again. Now it stays, with its picture, the same instance.
+  it('keeps the cropper and its picture through the save and the read after it', async () => {
     let answer!: (read: AssetFileImage) => void
     vi.mocked(fetchImageFile).mockImplementation(() => new Promise((resolve) => (answer = resolve)))
     const store = await savedOnA()
+    const cropper = wrapper!.findComponent(ACropper)
+    const src = cropper.props('src')
+    expect(src).toContain('?manipulated=before')
     await vi.waitFor(() => expect(fetchImageFile).toHaveBeenCalledTimes(1), { timeout: 4000 })
-    store.hideLoader()
-    await flushPromises()
+    expect(wrapper!.findComponent(ACropper).vm.$.uid).toBe(cropper.vm.$.uid)
 
-    expect(wrapper!.findComponent(ACropper).exists()).toBe(false)
-    expect(wrapper!.findComponent({ name: 'VProgressCircular' }).exists()).toBe(true)
     answer(file('file-a', 'redrawn'))
     await flushPromises()
 
     expect(store.imageFile).toMatchObject({ id: 'file-a', manipulatedAt: 'redrawn' })
-    expect(wrapper!.findComponent({ name: 'VProgressCircular' }).exists()).toBe(false)
-    expect(wrapper!.findComponent(ACropper).exists()).toBe(true)
+    expect(wrapper!.findComponent(ACropper).vm.$.uid).toBe(cropper.vm.$.uid)
+    expect(wrapper!.findComponent(ACropper).props('src')).toBe(src)
   })
 
   // admin-dam changes the slot so: the region goes and its loader turns
@@ -158,6 +157,7 @@ describe('the read of the file after a region is saved', () => {
     await flushPromises()
 
     expect(store.imageFile).toMatchObject({ id: 'file-a', manipulatedAt: 'rotated' })
+    expect(wrapper!.findComponent(ACropper).props('src')).toContain('?manipulated=rotated')
   })
 
   // Another file is put into the store without showing the loader: the

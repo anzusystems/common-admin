@@ -19,6 +19,7 @@ import { useApiCommand, useApiRequest } from '@/domains/api/composables/useApiRe
 import { useApiFetchItems } from '@/domains/api/composables/useApiFetchItems'
 import type { DamMediaFromDam } from '@/domains/dam/types/MediaAware'
 import { commonT } from '@/plugins/i18n'
+import { customDataFormElementName } from '@/domains/customDataForm/utils/customDataFormElementName'
 import { isDamSourceEnabled } from '@/domains/dam/author/composables/damSourceConfig'
 
 const BULK_METADATA_LIMIT = 10
@@ -332,7 +333,7 @@ const metadataFieldName = (
     const found = getDamConfigAssetCustomFormElements(extSystem)?.[assetType].find(
       (element) => element.property === property
     )
-    if (found) return found.name
+    if (found) return customDataFormElementName(found)
   }
 
   return property

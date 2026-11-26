@@ -163,7 +163,6 @@ describe('DamAssetImageRoiSelect', () => {
 
   it('saves the region once the user finishes dragging the crop box', async () => {
     const view = await mountRoiSelect()
-    // Read before the drag: saving puts the view back into its loading state, which removes the cropper from the DOM.
     const scale =
       (view.host.querySelector('cropper-canvas') as HTMLElement).getBoundingClientRect().width /
       LANDSCAPE_IMAGE.naturalWidth
@@ -208,5 +207,52 @@ describe('DamAssetImageRoiSelect', () => {
     await wait(200)
     expect(updateRoi).not.toHaveBeenCalled()
     view.destroy()
+  })
+
+  // A save used to hide the cropper until the file was read again two seconds later, load the picture anew,
+  // and lose a drag made meanwhile. The cropper stays, and a drag made during a save is saved after it.
+  it('keeps the cropper during a save, and saves a drag made meanwhile after it', async () => {
+    const answers: Array<() => void> = []
+    const sent: number[] = []
+    updateRoi.mockImplementation((_client: unknown, _endPoint: unknown, _id: unknown, region: { pointX: number }) => {
+      sent.push(region.pointX)
+      return new Promise((resolve) => answers.push(() => resolve(region)))
+    })
+    fetchImageFile.mockResolvedValue({ ...(imageFile() as object), manipulatedAt: '2026-01-01T00:00:05.000Z' })
+    try {
+      const view = await mountRoiSelect()
+      const canvas = view.host.querySelector('cropper-canvas')
+      const image = view.host.querySelector('cropper-image') as HTMLElement & { src: string }
+      const src = image.src
+      const face = () => view.host.querySelector('cropper-handle[action="move"]') as HTMLElement
+
+      let from = centerOf(face())
+      await drag(face(), from, { x: from.x - 60, y: from.y + 30 })
+      await nextFrame()
+      expect(sent).toHaveLength(1)
+      expect(view.host.querySelector('cropper-canvas')).toBe(canvas)
+
+      from = centerOf(face())
+      await drag(face(), from, { x: from.x + 40, y: from.y })
+      await nextFrame()
+      expect(sent).toHaveLength(1)
+
+      answers.shift()!()
+      await vi.waitFor(() => expect(sent).toHaveLength(2))
+      expect(sent[1]!).toBeGreaterThan(sent[0]!)
+      answers.shift()!()
+
+      // The read after the save brings a new `manipulatedAt`. The picture already loaded stays.
+      await vi.waitFor(() => expect(fetchImageFile).toHaveBeenCalledTimes(1), { timeout: 4000 })
+      await wait(100)
+      expect(view.roiStore.imageFile?.manipulatedAt).toBe('2026-01-01T00:00:05.000Z')
+      expect(view.host.querySelector('cropper-canvas')).toBe(canvas)
+      expect(view.host.querySelector('cropper-image')).toBe(image)
+      expect(image.src).toBe(src)
+      view.destroy()
+    } finally {
+      updateRoi.mockReset()
+      fetchImageFile.mockReset()
+    }
   })
 })

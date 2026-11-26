@@ -4,7 +4,10 @@ import type { CustomDataFormElementTypeType } from '@/domains/customDataForm/typ
 export interface CustomDataFormElement {
   id: DocId
   property: string
+  /** As stored in the system that owns the form, in one language. Shown only where `nameKey` has no translation. */
   name: string
+  /** Translation key of the name. Set by the library when it reads a DAM form, not sent by any API. */
+  nameKey?: string
   position: number
   attributes: CustomDataFormElementAttributes
 }

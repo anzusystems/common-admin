@@ -97,6 +97,16 @@ describe('AAnzuUserDatatable', () => {
     await vi.waitFor(() => expect(wrapper.text()).toContain('Editori'), { timeout: 6000 })
   })
 
+  it('shows a group loading, not its bare id, until its title arrives', async () => {
+    const { wrapper } = await mountDatatable()
+    const chipTexts = () => wrapper.findAll('tbody .v-chip').map((chip) => chip.text().trim())
+
+    expect(chipTexts()).not.toContain('7')
+    expect(wrapper.find('tbody .v-chip .v-progress-circular').exists()).toBe(true)
+    await vi.waitFor(() => expect(chipTexts()).toContain('Editori'), { timeout: 6000 })
+    expect(wrapper.find('tbody .v-chip .v-progress-circular').exists()).toBe(false)
+  })
+
   it('draws no stray line break where an app has no user cache', async () => {
     const { wrapper } = await mountDatatable()
 

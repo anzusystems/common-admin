@@ -31,6 +31,11 @@ export interface KeyboardNavOptions {
   onOutdent?: (key: ListEditorKey) => void
   onToggleChildren?: (key: ListEditorKey, expand: boolean) => void
 
+  /** A row was picked up with Enter/Space in reorder mode. */
+  onGrab?: (key: ListEditorKey) => void
+  /** Escape dropped the grab: put the row back where `onGrab` found it. */
+  onGrabCancel?: (key: ListEditorKey) => void
+
   onCancelReorder?: () => void
 }
 
@@ -88,6 +93,16 @@ export function useKeyboardNav(options: KeyboardNavOptions): KeyboardNavApi {
     focusRowElement(key)
   }
 
+  // A move can re-create the grabbed row's element (indent/outdent puts it under another parent),
+  // which drops focus to <body> and every further key with it.
+  function refocusIfLost(key: ListEditorKey) {
+    if (typeof document === 'undefined') return
+    void Promise.resolve().then(() => {
+      const active = document.activeElement
+      if (!active || active === document.body) setFocus(key)
+    })
+  }
+
   // When the focused row is removed (e.g. via delete), fall to the row that
   // took its slot, or to the new last row if it was at the end. Without this,
   // focus vanishes to <body> after a delete and the user has to Tab back in.
@@ -123,6 +138,10 @@ export function useKeyboardNav(options: KeyboardNavOptions): KeyboardNavApi {
     }
   })
 
+  watch(options.isReorderMode, (inReorder) => {
+    if (!inReorder) grabbedKey.value = null
+  })
+
   function releaseGrab() {
     grabbedKey.value = null
   }
@@ -130,6 +149,14 @@ export function useKeyboardNav(options: KeyboardNavOptions): KeyboardNavApi {
   function isFormField(target: EventTarget | null): boolean {
     const el = target as HTMLElement | null
     return !!el?.matches?.('input, textarea, select, [contenteditable], [contenteditable="true"]')
+  }
+
+  // A row's own buttons and links (move up/down, edit, delete, menus) activate on Enter/Space themselves.
+  function isOwnControl(target: EventTarget | null): boolean {
+    const el = target as HTMLElement | null
+    return !!el?.matches?.(
+      'button, a[href], summary, [role="button"], [role="link"], [role="menuitem"], [role="checkbox"], [role="switch"], [role="tab"], [role="option"]'
+    )
   }
 
   function handleKeydown(key: ListEditorKey, e: KeyboardEvent) {
@@ -158,6 +185,7 @@ export function useKeyboardNav(options: KeyboardNavOptions): KeyboardNavApi {
         e.preventDefault()
         if (inReorder && isGrabbedNow) {
           options.onMoveUp?.(key)
+          refocusIfLost(key)
         } else if (i > 0) {
           setFocus(ordered[i - 1]!)
         }
@@ -168,6 +196,7 @@ export function useKeyboardNav(options: KeyboardNavOptions): KeyboardNavApi {
         e.preventDefault()
         if (inReorder && isGrabbedNow) {
           options.onMoveDown?.(key)
+          refocusIfLost(key)
         } else if (i < ordered.length - 1) {
           setFocus(ordered[i + 1]!)
         }
@@ -178,6 +207,7 @@ export function useKeyboardNav(options: KeyboardNavOptions): KeyboardNavApi {
         e.preventDefault()
         if (inReorder && isGrabbedNow) {
           options.onMoveTop?.(key)
+          refocusIfLost(key)
         } else if (ordered.length > 0) {
           setFocus(ordered[0]!)
         }
@@ -188,6 +218,7 @@ export function useKeyboardNav(options: KeyboardNavOptions): KeyboardNavApi {
         e.preventDefault()
         if (inReorder && isGrabbedNow) {
           options.onMoveBottom?.(key)
+          refocusIfLost(key)
         } else if (ordered.length > 0) {
           setFocus(ordered[ordered.length - 1]!)
         }
@@ -198,6 +229,7 @@ export function useKeyboardNav(options: KeyboardNavOptions): KeyboardNavApi {
         e.preventDefault()
         if (inReorder && isGrabbedNow && focusedItem.canOutdent) {
           options.onOutdent?.(key)
+          refocusIfLost(key)
         } else if (focusedItem.expanded) {
           options.onToggleChildren?.(key, false)
         }
@@ -208,6 +240,7 @@ export function useKeyboardNav(options: KeyboardNavOptions): KeyboardNavApi {
         e.preventDefault()
         if (inReorder && isGrabbedNow && focusedItem.canIndent) {
           options.onIndent?.(key)
+          refocusIfLost(key)
         } else if (focusedItem.canExpand && !focusedItem.expanded) {
           options.onToggleChildren?.(key, true)
         }
@@ -215,13 +248,14 @@ export function useKeyboardNav(options: KeyboardNavOptions): KeyboardNavApi {
 
       case 'Enter':
       case ' ': // Space
-        if (onFormField) return
+        if (onFormField || isOwnControl(e.target)) return
         e.preventDefault()
         if (inReorder) {
           if (isGrabbedNow) {
             grabbedKey.value = null
           } else {
             grabbedKey.value = key
+            options.onGrab?.(key)
           }
         } else {
           options.onToggleEdit?.(key)
@@ -231,7 +265,10 @@ export function useKeyboardNav(options: KeyboardNavOptions): KeyboardNavApi {
       case 'Escape':
         if (grabbedSomewhere) {
           e.preventDefault()
+          const grabbed = grabbedKey.value!
           grabbedKey.value = null
+          options.onGrabCancel?.(grabbed)
+          refocusIfLost(grabbed)
           return
         }
         if (inReorder) {

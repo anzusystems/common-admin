@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import type { DamAssetTypeType } from '@/domains/dam/types/Asset'
 import { useDamConfigState } from '@/domains/dam/config/composables/damConfigState'
 import ACustomDataFormElement from '@/domains/customDataForm/components/ACustomDataFormElement.vue'
+import { customDataFormElementName } from '@/domains/customDataForm/utils/customDataFormElementName'
 import { isUndefined } from '@/shared/utils/common'
 import type { IntegerId } from '@/shared/types/common'
 import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
@@ -80,7 +81,9 @@ const elements = computed(() => {
             @update:model-value="updateModelValue"
           />
           <VBtn
-            :aria-label="t('common.damImage.asset.massOperations.fillOneEmptyField', { field: element.name })"
+            :aria-label="
+              t('common.damImage.asset.massOperations.fillOneEmptyField', { field: customDataFormElementName(element) })
+            "
             icon
             size="small"
             variant="text"
@@ -96,7 +99,9 @@ const elements = computed(() => {
             </VTooltip>
           </VBtn>
           <VBtn
-            :aria-label="t('common.damImage.asset.massOperations.replaceOneField', { field: element.name })"
+            :aria-label="
+              t('common.damImage.asset.massOperations.replaceOneField', { field: customDataFormElementName(element) })
+            "
             icon
             size="small"
             variant="text"

@@ -12,31 +12,33 @@ const { t } = useI18n()
 </script>
 
 <template>
-  <div
-    class="dam-upload-queue__overlay dam-upload-queue__overlay--error d-flex align-center justify-center flex-column"
-  >
-    <VIcon
-      icon="mdi-alert"
-      class="ma-1"
-      size="x-small"
-      color="error"
-    />
-    <div class="text-error">
-      {{ t('common.damImage.queueItem.error') }}
-    </div>
+  <div class="dam-upload-queue__overlay dam-upload-queue__overlay--error d-flex pa-2">
     <div
-      v-if="error.message.length"
-      class="text-body-small"
-      v-text="error.message"
-    />
-    <div v-else-if="error.assetFileFailReason !== AssetFileFailReason.None">
-      <AssetFileFailReasonChip :reason="error.assetFileFailReason" />
-    </div>
-    <div
-      v-else
-      class="text-body-small"
+      class="dam-upload-queue__error-tile d-flex align-center flex-column ma-auto text-center bg-surface rounded pa-2"
     >
-      {{ t('common.damImage.uploadErrors.unknownError') }}
+      <VIcon
+        icon="mdi-alert"
+        class="ma-1"
+        size="x-small"
+        color="error"
+      />
+      <div class="text-error">
+        {{ t('common.damImage.queueItem.error') }}
+      </div>
+      <div
+        v-if="error.message.length"
+        class="text-body-small"
+        v-text="error.message"
+      />
+      <div v-else-if="error.assetFileFailReason !== AssetFileFailReason.None">
+        <AssetFileFailReasonChip :reason="error.assetFileFailReason" />
+      </div>
+      <div
+        v-else
+        class="text-body-small"
+      >
+        {{ t('common.damImage.uploadErrors.unknownError') }}
+      </div>
     </div>
   </div>
 </template>

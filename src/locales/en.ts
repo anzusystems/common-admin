@@ -21,6 +21,7 @@ import sortable from '@/locales/en/common/sortable.json'
 import damImage from '@/locales/en/common/damImage.json'
 import customFormElement from '@/locales/en/common/customFormElement.json'
 import customForm from '@/locales/en/common/customForm.json'
+import damCustomFormElement from '@/locales/en/common/damCustomFormElement.json'
 import confirmDialog from '@/locales/en/common/confirmDialog.json'
 import linkDto from '@/locales/en/common/linkDto.json'
 import listItemDto from '@/locales/en/common/listItemDto.json'
@@ -50,6 +51,7 @@ export default {
     damImage,
     customFormElement,
     customForm,
+    damCustomFormElement,
     confirmDialog,
     linkDto,
     listItemDto,

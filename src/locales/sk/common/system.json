@@ -2,6 +2,11 @@
   "version": "Verzia",
   "newVersionText": "K dispozícii je nová verzia administrácie. Pre správne fungovanie je potrebné vykonať aktualizáciu.",
   "newVersionReload": "Načítať novú verziu.",
+  "sessionEnded": {
+    "text": "Prihlásenie skončilo, zmeny sa teraz nedajú uložiť. Neuložené zmeny ostávajú na stránke.",
+    "signInInNewTab": "Prihlásiť sa v novej karte",
+    "leave": "Odísť a prihlásiť sa"
+  },
   "theme": {
     "light": "Svetlá",
     "dark": "Tmavá",

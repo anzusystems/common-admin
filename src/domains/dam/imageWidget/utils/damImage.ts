@@ -52,3 +52,14 @@ export function imageSaveFieldsOf(
   fields.dam = { ...fields.dam, uploadLicenceId: uploadLicence }
   return applyImageOwner(fields, owner)
 }
+
+// Every path the DAM serves an image file on: the original, any crop (`w800-h450`, `-c1`, `-q80`) and an animation.
+const DAM_IMAGE_URL_FILE_ID =
+  /\/image\/(?:original|animated|w\d+-h\d+(?:-c\d+)?(?:-q\d+)?)\/([0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12})\.(?:jpg|gif)(?:[?#]|$)/i
+
+/**
+ * File id from a DAM image URL, whatever crop it shows; undefined for any other URL.
+ */
+export function damImageFileIdFromUrl(url: string): DocId | undefined {
+  return url.match(DAM_IMAGE_URL_FILE_ID)?.[1]
+}

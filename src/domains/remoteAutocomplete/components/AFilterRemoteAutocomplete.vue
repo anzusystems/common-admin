@@ -87,15 +87,10 @@ const SEARCH_DEBOUNCE_MS = 300
 
 const selected = ref<any>([])
 const search = ref('')
-const isFocused = ref(false)
 const modelValueAutocomplete = ref<ValueObjectOption<T> | ValueObjectOption<T>[] | null>(null)
 const apiRequestCounter = ref(0)
 
 const { t } = useI18n()
-
-const onBlur = () => {
-  isFocused.value = false
-}
 
 const label = computed(() => {
   return filterConfigCurrent.value.titleT ? t(filterConfigCurrent.value.titleT) : undefined
@@ -204,7 +199,6 @@ const tryAutoFetch = async (mode: 'focus' | 'hover' | 'mounted') => {
 }
 
 const onFocus = async () => {
-  isFocused.value = true
   await tryAutoFetch('focus')
 }
 
@@ -220,9 +214,10 @@ const singleItemSelectedTitle = computed(() => {
 })
 
 // Clearing the field first emits a `null` search. Reading its length threw when the field had no focus.
+// The search Vuetify empties when the field loses its focus is taken too: the
+// options fetched for it stayed and a filter of one value opened with them.
 const onSearchUpdate = (query: string | null) => {
   const text = query ?? ''
-  if (!filterConfigCurrent.value.multiple && !isFocused.value && text.length === 0) return // vuetify fix
   if (singleItemSelectedTitle.value === text) return
   search.value = text
 }
@@ -258,11 +253,11 @@ watchDebounced(
     const query = newValue ?? ''
     if (query === (oldValue ?? '')) return
     if (query.length > 0 && query.length < props.minSearchChars) return
+    apiRequestCounter.value++
     if (query.length === 0 && props.prefetch === false) {
       fetchedItems.value = []
       return
     }
-    apiRequestCounter.value++
     apiSearch(query, apiRequestCounter.value)
   },
   { debounce: SEARCH_DEBOUNCE_MS }
@@ -335,15 +330,20 @@ const updateFilterSelected = (
   filterSelected.value.set(props.name, [{ title: newValue.title, value: newValue.value }])
 }
 
+let watchRun = 0
 watch(
   () => filterData[props.name],
   async (newValueFilterData, oldValueFilterData) => {
     watchedValue = newValueFilterData
     if (newValueFilterData === oldValueFilterData || isBoolean(newValueFilterData)) return
+    const run = ++watchRun
     const newValue = newValueFilterData as ModelValueType
     if (isFirstLoad.value) {
       isFirstLoad.value = false
       await checkFirstLoad()
+      // The list restores its filter (URL hash, local storage) on its mount, while this first run waits here.
+      // The value restored has a run of its own, and resetting the field here would drop its label.
+      if (run !== watchRun) return
     }
     if (isEmpty(newValue)) {
       resetToEmptyState(newValue)
@@ -376,7 +376,6 @@ watch(
     :no-data-text="noDataText"
     @update:search="onSearchUpdate"
     @update:model-value="onSelectedUpdate"
-    @blur="onBlur"
     @focus="onFocus"
     @mouseenter="onMouseEnter"
     @click:clear="onClickClear"

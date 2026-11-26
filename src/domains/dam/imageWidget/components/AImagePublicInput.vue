@@ -21,7 +21,7 @@ import ARow from '@/domains/ui/components/ARow.vue'
 import useVuelidate from '@vuelidate/core'
 import { useValidate } from '@/shared/validators/vuelidate/useValidate'
 import { buildFieldRules } from '@/domains/dam/composables/uploadValidations'
-import { createDamImage } from '@/domains/dam/imageWidget/utils/damImage'
+import { createDamImage, damImageFileIdFromUrl } from '@/domains/dam/imageWidget/utils/damImage'
 import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 
 const props = withDefaults(
@@ -69,13 +69,6 @@ const { widgetImageToDamImageOriginalUrl } = useImageActions(imageOptions)
 const { showErrorsDefault, showValidationError } = useAlerts()
 const { t } = useI18n()
 
-const extractUUID = (url: string): string | undefined => {
-  const regex = /\/image\/original\/([0-9a-fA-F-]+)\.jpg/
-  const match = url.match(regex)
-
-  return match ? match[1] : undefined
-}
-
 const validateAssetData = (asset: AssetDetailItemDto, licences: IntegerId[]) => {
   return licences.some((licence) => licence === asset.licence)
 }
@@ -95,7 +88,7 @@ const validateField = async () => {
   isValid.value = true
   inputField.value = inputField.value.trim()
   if (inputField.value.startsWith('http')) {
-    const extracted = extractUUID(inputField.value)
+    const extracted = damImageFileIdFromUrl(inputField.value)
     if (isString(extracted)) inputField.value = extracted
   }
   if (!isDocId(inputField.value)) {
@@ -249,6 +242,7 @@ defineExpose({
       v-if="resolvedSrc.length > 0"
       :src="resolvedSrc"
       alt=""
+      style="max-width: 100%"
     />
   </ARow>
 </template>

@@ -31,6 +31,9 @@ const collabFieldDataBufferState = reactive(new Map<CollabRoom, Map<CollabFieldN
 // Kept until a release is confirmed. A later request can be
 // refused while the slow one still holds the field, then granted.
 const collabFieldLocksUnanswered = new Map<CollabRoom, Set<CollabFieldName>>()
+// Plain, not reactive: rooms this client left by kicking its own user, until the server's kick arrives.
+// Kept until the next join of the room if the kick never comes, so a later kick by the moderator is told again.
+const collabRoomsLeftByUser = new Set<CollabRoom>()
 
 /**
  * Everything the collaboration modules share, the socket included. Internal: an admin reads
@@ -104,6 +107,7 @@ export function useCollabStateInternal() {
     collabFieldLocksState,
     collabFieldDataBufferState,
     collabFieldLocksUnanswered,
+    collabRoomsLeftByUser,
     setFieldLockUnanswered,
     fieldLockMaybeHeld,
     gatherBufferData,

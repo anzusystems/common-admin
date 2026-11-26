@@ -38,6 +38,8 @@ export interface UploadMessages {
   systemError(): string
   /** HTTP 400 on the last try of a chunk. */
   chunkValidationFailed(): string
+  /** An empty file refused before any request. Only a side that refuses it (`emptyFile: 'reject'`) needs it. */
+  emptyFile?(): string
 }
 
 export interface UploadHash {
@@ -77,6 +79,17 @@ export interface UploadRun<S extends UploadSide = UploadSide> {
   finishAttempted(): boolean
 }
 
+/** The library's texts of a run. Not exported from `src/lib.ts`. */
+export const libraryUploadMessages: UploadMessages = {
+  unknownError: () => commonT('common.damImage.uploadErrors.unknownError'),
+  size: () => commonT('common.damImage.uploadErrors.size'),
+  offset: () => commonT('common.damImage.uploadErrors.offset'),
+  mimeType: () => commonT('common.damImage.uploadErrors.mimeType'),
+  systemError: () => commonT('common.damImage.uploadErrors.systemError'),
+  chunkValidationFailed: () => commonT('common.damImage.uploadErrors.chunkValidationFailed'),
+  emptyFile: () => commonT('common.damImage.uploadErrors.emptyFile'),
+}
+
 /**
  * Not exported from `src/lib.ts`. Default of `useUpload` (under `default`).
  * The library's API, texts and choices under DAM configuration `configName`.
@@ -95,14 +108,7 @@ export function libraryUploadPreset(configName: string): UploadPreset<'library'>
           damUploadChunk(damClient, endPointImage, item, fileId, chunk, size, offset, onUploadProgress),
         finish: (item, sha) => damUploadFinish(damClient, endPointImage, item, sha),
       },
-      messages: {
-        unknownError: () => commonT('common.damImage.uploadErrors.unknownError'),
-        size: () => commonT('common.damImage.uploadErrors.size'),
-        offset: () => commonT('common.damImage.uploadErrors.offset'),
-        mimeType: () => commonT('common.damImage.uploadErrors.mimeType'),
-        systemError: () => commonT('common.damImage.uploadErrors.systemError'),
-        chunkValidationFailed: () => commonT('common.damImage.uploadErrors.chunkValidationFailed'),
-      },
+      messages: libraryUploadMessages,
       apiTimeout,
       // rusha loads when a file starts uploading, not on every page with the upload queue.
       // It loads before the asset is created, so a load failure fails the item without leaving an empty asset.

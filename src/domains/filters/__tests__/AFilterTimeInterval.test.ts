@@ -1,7 +1,11 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { mount, flushPromises, type VueWrapper } from '@vue/test-utils'
-import { reactive, ref } from 'vue'
+import { defineComponent, reactive, ref } from 'vue'
+import { createI18n } from 'vue-i18n'
+import dayjs from 'dayjs'
+import sk from '@/locales/sk'
 import AFilterTimeInterval from '@/domains/filters/components/AFilterTimeInterval.vue'
+import { useFilterTimeIntervalValidators } from '@/domains/filters/composables/filterTimeIntervalTools'
 import {
   FilterConfigKey,
   FilterDataKey,
@@ -109,5 +113,73 @@ describe('AFilterTimeInterval', () => {
     await flushPromises()
 
     expect(filterSelected.value.has('from')).toBe(true)
+  })
+})
+
+// "Vlastné" took the current second as the seconds of "until" (23:59 became 23:59:17)
+// and named the other field "From"/"Until" in English in every language.
+describe('AFilterTimeInterval custom range', () => {
+  type DialogVm = {
+    onEditInterval: (clear?: boolean) => void
+    dialogData: { from: string | null; until: string | null }
+  }
+  const openDialog = async () => {
+    mountFilter(null, null)
+    await flushPromises()
+    const vm = mounted!.vm as unknown as DialogVm
+    vm.onEditInterval(true)
+    await flushPromises()
+    return vm
+  }
+  const typeInto = async (index: number, text: string) => {
+    const input = document.querySelectorAll<HTMLInputElement>('.v-overlay--active .a-datetime-picker input')[index]!
+    input.value = text
+    input.dispatchEvent(new Event('input'))
+    await flushPromises()
+    input.dispatchEvent(new Event('blur'))
+    await flushPromises()
+  }
+
+  it('starts "until" at the end of the current minute', async () => {
+    const vm = await openDialog()
+
+    expect(vm.dialogData.until).toMatch(/:59\.000000Z$/)
+  })
+
+  it('keeps a typed "until" at the end of its minute', async () => {
+    const vm = await openDialog()
+
+    await typeInto(1, '25.11.2026 23:59')
+    expect(dayjs(vm.dialogData.until).format('DD.MM.YYYY HH:mm:ss')).toBe('25.11.2026 23:59:59')
+
+    vm.dialogData.until = null
+    await flushPromises()
+    await typeInto(1, '26.11.2026 10:15')
+    expect(dayjs(vm.dialogData.until).format('DD.MM.YYYY HH:mm:ss')).toBe('26.11.2026 10:15:59')
+  })
+
+  it('starts a typed "from" at the start of its minute', async () => {
+    const vm = await openDialog()
+
+    await typeInto(0, '25.11.2026 08:30')
+    expect(dayjs(vm.dialogData.from).format('DD.MM.YYYY HH:mm:ss')).toBe('25.11.2026 08:30:00')
+  })
+
+  it('names the other field in the current language', () => {
+    const i18n = createI18n({ legacy: false, locale: 'sk', messages: { sk } })
+    let v$: ReturnType<typeof useFilterTimeIntervalValidators>['v$'] | undefined
+    mounted = mount(
+      defineComponent({
+        setup() {
+          v$ = useFilterTimeIntervalValidators(ref({ from: UNTIL, until: FROM })).v$
+          return () => null
+        },
+      }),
+      { global: { plugins: [i18n] } }
+    )
+    v$!.value.$touch()
+
+    expect(v$!.value.dialogData.from.$errors[0]?.$params).toMatchObject({ otherDateName: 'Do' })
+    expect(v$!.value.dialogData.until.$errors[0]?.$params).toMatchObject({ otherDateName: 'Od' })
   })
 })

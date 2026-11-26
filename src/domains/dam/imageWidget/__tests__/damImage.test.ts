@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { createDamImage, imageFieldsOf } from '@/domains/dam/imageWidget/utils/damImage'
+import { createDamImage, damImageFileIdFromUrl, imageFieldsOf } from '@/domains/dam/imageWidget/utils/damImage'
 
 const FILE = '0f6b8f6a-5d2c-4c1e-9a7b-3e2d1c0b9a81'
 
@@ -76,5 +76,23 @@ describe('what the image API is sent of an image', () => {
       'flags',
       'dam',
     ])
+  })
+})
+
+describe('the file of a DAM image URL', () => {
+  it('is read from the original, from any crop and from an animation', () => {
+    // Only the original was read, so a crop URL copied from the DAM was refused as a wrong URL.
+    expect(damImageFileIdFromUrl(`http://image1.smedata.local/image/original/${FILE}.jpg`)).toBe(FILE)
+    expect(damImageFileIdFromUrl(`http://admin-image1.smedata.local/image/w500-h281-c0/${FILE}.jpg`)).toBe(FILE)
+    expect(damImageFileIdFromUrl(`https://img.example.sk/image/w1200-h675/${FILE}.jpg`)).toBe(FILE)
+    expect(damImageFileIdFromUrl(`https://img.example.sk/image/w1200-h675-c2-q80/${FILE}.jpg?timestamp=1`)).toBe(FILE)
+    expect(damImageFileIdFromUrl(`https://img.example.sk/image/animated/${FILE}.gif`)).toBe(FILE)
+  })
+
+  it('is not read from other URLs', () => {
+    expect(damImageFileIdFromUrl(`https://img.example.sk/image/w1200/${FILE}.jpg`)).toBeUndefined()
+    expect(damImageFileIdFromUrl(`https://img.example.sk/image/original/${FILE}.jpg.html`)).toBeUndefined()
+    expect(damImageFileIdFromUrl(`https://www.example.sk/clanok/${FILE}.jpg`)).toBeUndefined()
+    expect(damImageFileIdFromUrl('https://img.example.sk/image/original/not-a-uuid.jpg')).toBeUndefined()
   })
 })

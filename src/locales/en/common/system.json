@@ -2,6 +2,11 @@
   "version": "Version",
   "newVersionText": "New version of admin is available. For proper functioning, latest version is required.",
   "newVersionReload": "Reload new version",
+  "sessionEnded": {
+    "text": "Your sign-in has ended, so changes cannot be saved now. Unsaved changes stay on this page.",
+    "signInInNewTab": "Sign in in a new tab",
+    "leave": "Leave and sign in"
+  },
   "theme": {
     "light": "Light",
     "dark": "Dark",

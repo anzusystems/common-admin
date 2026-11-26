@@ -38,7 +38,7 @@ describe('AFileInput once a pick is handled', () => {
   const jpeg = (name: string) => new File([new Uint8Array(100)], name, { type: 'image/jpeg' })
   const tiff = (name: string) => new File([new Uint8Array(100)], name, { type: 'image/tiff' })
   const alerts = () => useAlertsQueue().value.map((alert) => [alert.color, alert.text])
-  const refused = (name: string) => ['warning', `${commonT('common.system.upload.incorrectFormatSize')}:${name}`]
+  const refused = (name: string) => ['warning', `${commonT('common.system.upload.incorrectFormatSize')}: ${name}`]
   const handedOver = (wrapper: VueWrapper) =>
     (wrapper.emitted('filesInput') ?? []).map(([files]) => (files as File[]).map((file) => file.name))
   const inputOf = (wrapper: VueWrapper) => wrapper.find('input[type="file"]').element as HTMLInputElement
@@ -123,7 +123,7 @@ describe('AFileInput with its dropzone', () => {
   // instance makes of the key.
   const refused = (...names: string[]) => [
     'warning',
-    `${commonT('common.system.upload.incorrectFormatSize')}:${names.join(', ')}`,
+    `${commonT('common.system.upload.incorrectFormatSize')}: ${names.join(', ')}`,
   ]
   const onlyOne = ['warning', commonT('common.system.upload.onlyOneFile')]
   const alerts = () => useAlertsQueue().value.map((alert) => [alert.color, alert.text])

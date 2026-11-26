@@ -18,5 +18,6 @@
   },
   "idWasCopied": "ID was copied to clipboard",
   "textWasCopied": "Text was copied to clipboard",
-  "authUnavailable": "The sign-in server is not responding. Try again in a moment."
+  "authUnavailable": "The sign-in server is not responding. Try again in a moment.",
+  "sessionEndedNotDone": "Not done, your sign-in has ended. Sign in in a new tab and try again."
 }

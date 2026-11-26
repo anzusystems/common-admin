@@ -196,4 +196,38 @@ describe('ALayoutSwitch', () => {
     expect(error.mock.calls.some(([message]) => String(message).includes("Unknown layout 'Nope'"))).toBe(true)
     error.mockRestore()
   })
+
+  it('shows a progress bar while a navigation waits for its page longer than the delay, until it ends', async () => {
+    let resolvePage: (page: typeof Empty) => void = () => undefined
+    router.addRoute({ path: '/slow', component: () => new Promise((resolve) => (resolvePage = resolve)) })
+    router.addRoute({ path: '/failing', component: () => Promise.reject(new Error('chunk')) })
+    const wrapper = mounted(
+      defineComponent(
+        () => () => h(ALayoutSwitch, { layouts, navigationProgressDelay: 20 }, { default: () => h('main', 'page') })
+      )
+    )
+    const bar = () => wrapper.find('.a-layout-switch__navigation').exists()
+    const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
+    await router.push('/articles')
+    await wait(40)
+    expect(bar()).toBe(false)
+
+    const slow = router.push('/slow')
+    await flushPromises()
+    expect(bar()).toBe(false)
+    await wait(40)
+    expect(bar()).toBe(true)
+    resolvePage(Empty)
+    await slow
+    await flushPromises()
+    expect(bar()).toBe(false)
+
+    const failing = router.push('/failing').catch(() => undefined)
+    await wait(40)
+    await failing
+    await flushPromises()
+    expect(bar()).toBe(false)
+    expect(router.currentRoute.value.path).toBe('/slow')
+  })
 })

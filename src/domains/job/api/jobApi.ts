@@ -27,17 +27,25 @@ export function useJobApi<JobType extends JobBase = JobBase>(client: () => Axios
   }
 
   const createJob = (data: JobType) => {
-    const type = stringToKebabCase(data._resourceName).slice(4).replace('-kind-', '-kind/') // strip the "job-" prefix
+    // `jobKeywordKindRemoveFromRelated` posts to `keyword-kind/remove-from-related`. The slash separates two path
+    // segments, so each segment is its own url parameter: one parameter would encode the slash as `%2F`.
+    const segments = stringToKebabCase(data._resourceName)
+      .slice(4) // strip the "job-" prefix
+      .replace('-kind-', '-kind/')
+      .split('/')
 
     const { execute } = useApiRequest<JobType, JobType>({
       client,
       method: 'POST',
       system,
       entity: ENTITY,
-      urlTemplate: END_POINT + '/:type',
+      urlTemplate: END_POINT + segments.map((_, index) => `/:type${index}`).join(''),
     })
 
-    return execute({ urlParams: { type }, body: data })
+    return execute({
+      urlParams: Object.fromEntries(segments.map((segment, index) => [`type${index}`, segment])),
+      body: data,
+    })
   }
 
   const deleteJob = (id: number) => {

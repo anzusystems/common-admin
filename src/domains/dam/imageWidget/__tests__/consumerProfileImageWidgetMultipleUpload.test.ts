@@ -335,7 +335,9 @@ describe.each(consumerProfiles)('the widget of several images under the $name', 
       input.dispatchEvent(new Event('change', { bubbles: true }))
       await flushPromises()
 
-      expect(shownAlerts()).toEqual([['warning', `${alertText('common.system.upload.incorrectFormatSize')}:scan.tiff`]])
+      expect(shownAlerts()).toEqual([
+        ['warning', `${alertText('common.system.upload.incorrectFormatSize')}: scan.tiff`],
+      ])
       nothingIsQueued()
     })
 
@@ -352,7 +354,9 @@ describe.each(consumerProfiles)('the widget of several images under the $name', 
       input.dispatchEvent(new Event('change', { bubbles: true }))
       await vi.waitFor(() => expect(chunks.waiting).toHaveLength(2))
 
-      expect(shownAlerts()).toEqual([['warning', `${alertText('common.system.upload.incorrectFormatSize')}:scan.tiff`]])
+      expect(shownAlerts()).toEqual([
+        ['warning', `${alertText('common.system.upload.incorrectFormatSize')}: scan.tiff`],
+      ])
       expect(queue().getQueueItems(QUEUE)).toMatchObject([{ displayTitle: 'a.jpg' }, { displayTitle: 'b.jpg' }])
       expect(useUploadQueueDialog().uploadQueueDialog.value).toBe(QUEUE)
     })

@@ -57,11 +57,10 @@ const { fetchList, listItems, datatableHiddenColumns, cancel } = useLogListActio
   loading,
 })
 
-// No url hash and no local storage. The `logFilter` registry keeps the filter per view in memory.
-// Nothing about a log listing is worth persisting across a reload.
+// In the url hash and local storage, as any other list, so a reload, a shared link or Back shows the same logs.
+// Keyed by system like the `logFilter` registry. One `common/log` key would carry one system's filter to another.
 const { resetFilter, submitFilter, loadStoredFilters } = useFilterHelpers(filterData, filterConfig, {
-  storeFiltersLocalStorage: false,
-  populateUrlParams: false,
+  storeFiltersLocalStorage: 'tableFilter_common_log_' + props.system,
 })
 
 const { pagination } = usePagination(SORT_BY_ID)
@@ -99,8 +98,7 @@ const onRowClick = (_event: unknown, { item }: { item: DatatableItem }) => {
 }
 
 onMounted(() => {
-  // Both persistences are off, so it reads nothing back.
-  // It still restores the page a user was on after closing a detail,
+  // Also restores the page a user was on after closing a detail,
   // which `AActionCloseButtonHistory` flags for the next list.
   loadStoredFilters(pagination, getList)
 })
