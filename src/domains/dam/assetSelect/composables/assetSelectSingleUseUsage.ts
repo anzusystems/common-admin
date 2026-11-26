@@ -109,7 +109,7 @@ export interface SingleUseUsageCheck {
  * The image dialog warns by it and refuses the confirm of a blocked photo or of a failed read.
  */
 export function useSingleUseUsageCheck(configName?: string) {
-  const { fetchSingleUseUsage, canAsk } = useSingleUseUsageFetch(configName)
+  const { fetchSingleUseUsage, canAsk } = useSingleUseUsageFetch(inheritedDamConfigName(configName))
   const { showErrorsDefault, showUnknownError } = useAlerts()
   const singleUseCheck = ref<SingleUseUsageCheck | null>(null)
   let latestCheck = 0

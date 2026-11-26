@@ -6,6 +6,9 @@ import * as assetSelectListActions from '@/domains/dam/assetSelect/composables/a
 import * as podcastFilterAndActions from '@/domains/dam/assetSelect/composables/podcastFilterAndActions'
 import * as assetSelectPresets from '@/domains/dam/assetSelect/composables/assetSelectPresets'
 import * as assetSelectPresetControl from '@/domains/dam/assetSelect/composables/assetSelectPresetControl'
+import * as assetSelectTakeOver from '@/domains/dam/assetSelect/composables/assetSelectTakeOver'
+import * as assetSelectSingleUseUsage from '@/domains/dam/assetSelect/composables/assetSelectSingleUseUsage'
+import * as imageSingleUseUsageFetch from '@/domains/dam/imageWidget/composables/imageSingleUseUsageFetch'
 import { useAssetDetailStore } from '@/domains/dam/assetDetail/store/assetDetailStore'
 import * as authorActions from '@/domains/dam/author/composables/authorActions'
 import * as cachedAuthors from '@/domains/dam/author/composables/cachedAuthors'
@@ -43,6 +46,9 @@ const modules: Record<string, unknown>[] = [
   podcastFilterAndActions,
   assetSelectPresets,
   assetSelectPresetControl,
+  assetSelectTakeOver,
+  assetSelectSingleUseUsage,
+  imageSingleUseUsageFetch,
   authorActions,
   cachedAuthors,
   cachedUsers,

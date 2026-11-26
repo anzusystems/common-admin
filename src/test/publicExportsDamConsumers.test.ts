@@ -75,6 +75,23 @@ describe('what the two applications import for their DAM images', () => {
   })
 })
 
+// admin-cms and admin-dam develop (1.116.0) take these from main 1.53.0: single use photos (#87269) and the badges of
+// sources (#87709). The types are checked by `lint:tsc:test`.
+describe('what admin-cms and admin-dam develop import of the single use photos and the source badges', () => {
+  it('reaches the helpers and the usage statuses from the public entry', () => {
+    const owner: lib.ImageOwner = { resourceName: 'gallery', resourceId: 7 }
+    const holder: lib.AssetSelectUsageHolder = { resourceName: 'gallery', resourceId: 7 }
+    const image: Pick<lib.ImageCreateUpdateAware, 'ownerResourceName' | 'ownerResourceId'> = {}
+    const author = { id: 's1', name: 'TASR', identifier: '', reviewed: true, priority: 0, badge: 'T' }
+    const badges: lib.DamSourceBadge[] = lib.resolveSourceBadges(['s1'], () => author)
+
+    expect(lib.applyImageOwner(image, owner)).toEqual({ ownerResourceName: 'gallery', ownerResourceId: 7 })
+    expect(holder.resourceId).toBe(7)
+    expect(badges).toEqual([{ id: 's1', name: 'TASR', badge: 'T' }])
+    expect(lib.AssetSingleUseUsageStatus).toMatchObject({ Free: 'free', Conflict: 'conflict' })
+  })
+})
+
 // admin-ugc loads no configuration through the library: before it mounts an inner widget it writes the
 // configuration of its blog straight into the store. A member renamed here breaks its three wrappers at run time,
 // with no type error on the side of the library.

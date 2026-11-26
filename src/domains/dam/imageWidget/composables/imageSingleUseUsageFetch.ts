@@ -12,7 +12,7 @@ import { fetchSingleUseUsage as fetchSingleUseUsageApi } from '@/domains/dam/ima
  * daily tools of admin-inhouse too, have no usage check), no image configuration of that name (the DAM admin), or
  * an own `imageApi` without `fetchSingleUseUsage`.
  */
-export function useImageSingleUseUsageFetch(configName: string = 'default') {
+export function useImageSingleUseUsageFetch(configName: string) {
   const damConfigs = coreDamOptions.value?.configs
   const damConfig = damConfigs && Object.hasOwn(damConfigs, configName) ? damConfigs[configName] : undefined
   if (damConfig?.singleUseUsageEnabled !== true) return undefined
