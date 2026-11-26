@@ -162,8 +162,8 @@
       "8k": "8K",
       "autoDeleteAt": "Auto delete {date}",
       "source": "Source: {name}",
-      "singleUse": "Single use image",
-      "singleUseUsages": "Single use image, number of usages: {count}"
+      "singleUse": "Single use",
+      "singleUseUsages": "Single use, number of usages: {count}"
     },
     "assetFileFailReason": {
       "none": "None",

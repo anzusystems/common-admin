@@ -162,8 +162,8 @@
       "8k": "8K",
       "autoDeleteAt": "Automatické zmazanie {date}",
       "source": "Zdroj: {name}",
-      "singleUse": "Jednorazový obrázok",
-      "singleUseUsages": "Jednorazový obrázok, počet použití: {count}"
+      "singleUse": "Jednorazové použitie",
+      "singleUseUsages": "Jednorazové použitie, počet použití: {count}"
     },
     "assetFileFailReason": {
       "none": "Žiadny",
