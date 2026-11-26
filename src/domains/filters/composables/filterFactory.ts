@@ -177,6 +177,7 @@ export function createFilter<F extends readonly MakeFilterOption<string>[]>(
           advanced: resolveValue(filter.advanced, false),
           related: resolveValue(filter.related, undefined),
           exclude: resolveValue(filter.exclude, false),
+          persist: resolveValue(filter.persist, true),
           default: defaultValue,
           render: { ...defaultRenderOptions, ...resolveValue(filter.render, {}) },
         },
@@ -364,9 +365,9 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
     // The first page is written only to take a page out. A reset leaves the address empty and goes to page 1,
     // which would otherwise put the sort back in.
     if (pagination.value.page === 1 && !hasStoredPage()) return
-    const serialized = serializeFilters(getFilterDataForStoring(), pagination, true, true)
-    updateLocationHash(serialized)
-    storeFilterLocalStorage(serialized)
+    const data = getFilterDataForStoring()
+    updateLocationHash(serializeFilters(data, pagination, true, true))
+    storeFilterLocalStorage(serializeFilters(withoutAddressOnly(data), pagination, true, true))
   }
   // The page Close kept. A list that keeps neither filter nor sort (no hash, no local storage) comes back with
   // both reset, and its page 3 would show other rows, so its page comes back only into the view it was shown in.
@@ -406,6 +407,30 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
       }
     }
     return data
+  }
+
+  // Fields whose value lives in the address only (`persist: false`). Local storage never holds them.
+  const addressOnlyFields = (): string[] =>
+    (Object.values(filterConfig.fields) as FilterField[])
+      .filter((field) => field.persist === false)
+      .map((field) => field.name)
+
+  const withoutAddressOnly = (data: Record<string, AllowedFilterValues>): Record<string, AllowedFilterValues> => {
+    const fields = addressOnlyFields()
+    if (fields.length === 0) return data
+    const kept = { ...data }
+    for (const name of fields) delete kept[name]
+    return kept
+  }
+
+  // A field kept in the address takes its value from the hash, else its default. The filter store may still hold
+  // the value a link gave it on an earlier visit, and a list opened from the menu would silently show it.
+  const resetAddressOnlyFields = (fromHash: Record<string, AllowedFilterValues> | undefined) => {
+    for (const name of addressOnlyFields()) {
+      if (fromHash && !isUndefined(fromHash[name])) continue
+      const key = name as keyof FilterData<F>
+      filterData[key] = cloneDeep(filterConfig.fields[key].default)
+    }
   }
 
   const serializeFilters = (
@@ -517,10 +542,23 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
     localStorage.setItem(storeKey, serialized)
   }
 
-  const loadFilterLocalStorage = () => {
+  // The saved view without the fields kept in the address, also when it was saved before they were.
+  const readStoredView = (): string | null => {
     if (!storeKey || !localStorage) return null
     const stored = localStorage.getItem(storeKey)
     if (!stored || !isString(stored)) return null
+    const fields = addressOnlyFields()
+    const markerIndex = stored.indexOf(END_FILTER_MARKER)
+    if (fields.length === 0 || markerIndex === -1) return stored
+    const params = new URLSearchParams(stored.slice(0, markerIndex))
+    if (!fields.some((name) => params.has(name))) return stored
+    for (const name of fields) params.delete(name)
+    return params.size === 0 ? '' : relaxHashEncoding(params.toString()) + END_FILTER_MARKER
+  }
+
+  const loadFilterLocalStorage = () => {
+    const stored = readStoredView()
+    if (!stored) return null
     return deserializeFilters(stored)
   }
 
@@ -541,9 +579,8 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
 
   const submitFilter = (pagination: Ref<Pagination>, callback?: AnyFn) => {
     const data = getFilterDataForStoring()
-    const serialized = serializeFilters(data, pagination, true)
-    updateLocationHash(serialized)
-    storeFilterLocalStorage(serialized)
+    updateLocationHash(serializeFilters(data, pagination, true))
+    storeFilterLocalStorage(serializeFilters(withoutAddressOnly(data), pagination, true))
     pagination.value = { ...pagination.value, page: 1 }
     rememberShownPage(pagination)
     filterConfig.touched = false
@@ -557,6 +594,7 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
       source = 'localStorage'
       storedFromHash = loadFilterLocalStorage()
     }
+    resetAddressOnlyFields(source === 'hash' && storedFromHash ? storedFromHash.filters : undefined)
     if (
       isNull(storedFromHash) ||
       (isEmptyObject(storedFromHash.filters) && isNull(storedFromHash.sortBy) && isUndefined(storedFromHash.page))
@@ -603,8 +641,8 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
       }
       filterData[key] = value
     }
-    if (source === 'localStorage' && storeKey && localStorage) {
-      const stored = localStorage.getItem(storeKey)
+    if (source === 'localStorage') {
+      const stored = readStoredView()
       if (stored) {
         updateLocationHash(stored)
       }
@@ -631,7 +669,7 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
     if (hashDescribesThisView) {
       // Local storage mirrors the last applied state, so a link becomes the view the user returns to.
       // Re-serialized to drop values equal to their default. A sort-only hash does not overwrite it.
-      storeFilterLocalStorage(serializeFilters(getFilterDataForStoring(), pagination, true, true))
+      storeFilterLocalStorage(serializeFilters(withoutAddressOnly(getFilterDataForStoring()), pagination, true, true))
     }
     if (callback) callback()
     return true
@@ -736,6 +774,14 @@ export interface MakeFilterOption<TName extends string = string> {
   mandatory?: boolean
   advanced?: boolean
   exclude?: boolean
+  /**
+   * `false` keeps the field's value in the address only, for a field a link sets (a hidden id of a group, of a
+   * record): it applies from the URL hash and goes into the hash and the API query as any other, but is never written
+   * to local storage (`storeFiltersLocalStorage`) and never read back from it, also from a value saved before. A list
+   * loaded without it in the hash shows it at its default, also when the filter store still holds it from an earlier
+   * visit. A bookmark keeps it, as the user saves it on purpose. Default `true`.
+   */
+  persist?: boolean
   related?: string | undefined
   render?: Partial<FilerRenderOptions>
 }
@@ -752,6 +798,8 @@ export interface FilterField {
   multiple: boolean
   advanced: boolean
   exclude: boolean
+  /** See `MakeFilterOption.persist`. Optional for a field built by hand; missing reads as `true`. */
+  persist?: boolean
   related: string | undefined
   render: FilerRenderOptions
 }
