@@ -193,11 +193,12 @@ const listed = (asset: DocId, file: DocId, of = licence) => ({
   attributes: { assetType: DamAssetType.Image },
   podcasts: [],
 })
-const confirmPick = (picked: ReturnType<typeof listed>[], copyTo?: number) =>
+// `takeOver`: the take over switch of the picker on, so assets of another licence are copied into the upload licence.
+const confirmPick = (picked: ReturnType<typeof listed>[], takeOver = false) =>
   widget!.findComponent(Picker).vm.$emit('confirm', {
     type: 'asset',
     value: picked,
-    ...(copyTo ? { copyToLicence: copyTo } : {}),
+    forceTakeOver: takeOver,
   })
 const copiesAnswer = () =>
   dam.reply((request) => {
@@ -307,7 +308,7 @@ describe('a pick in the library of the widget of several images', () => {
     inTheDam('asset-20', 'file-20')
     copiesAnswer()
     const copies = dam.hold('PATCH', COPY)
-    confirmPick([listed('asset-20', 'file-20'), listed('asset-30', 'file-30', OTHER_LICENCE)], licence)
+    confirmPick([listed('asset-20', 'file-20'), listed('asset-30', 'file-30', OTHER_LICENCE)], true)
     await vi.waitFor(() => expect(copies.waiting).toHaveLength(1))
 
     await mounted.setProps({ readonly: true })
@@ -325,7 +326,7 @@ describe('a pick in the library of the widget of several images', () => {
     inTheDam('asset-20', 'file-20')
     copiesAnswer()
     const reads = dam.hold('GET', dam.routes.byIds)
-    confirmPick([listed('asset-30', 'file-30', OTHER_LICENCE), listed('asset-20', 'file-20')], licence)
+    confirmPick([listed('asset-30', 'file-30', OTHER_LICENCE), listed('asset-20', 'file-20')], true)
     await vi.waitFor(() => expect(reads.waiting).toHaveLength(1))
     await vi.waitFor(() => expect(dam.sentTo('PATCH', COPY)).toHaveLength(1))
     await waits.settle()

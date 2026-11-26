@@ -14,8 +14,13 @@ import { useAssetDetailStore } from '@/domains/dam/assetDetail/store/assetDetail
 import { useDamCachedAuthors } from '@/domains/dam/author/composables/cachedAuthors'
 import { useDamCachedKeywords } from '@/domains/dam/keyword/composables/cachedKeywords'
 import { useExtSystemIdForCached } from '@/domains/dam/composables/extSystemIdForCached'
-import { isNull } from '@/shared/utils/common'
+import { isNull, isUndefined } from '@/shared/utils/common'
 import { useDamCachedUsers } from '@/domains/dam/author/composables/cachedUsers'
+import type { AssetSelectUsageHolder } from '@/domains/dam/types/AssetSelect'
+import { getSingleUseGroupId } from '@/domains/dam/assetSelect/composables/assetSelectSingleUseUsage'
+import { useImageSingleUseUsageFetch } from '@/domains/dam/imageWidget/composables/imageSingleUseUsageFetch'
+import { useDamCachedAssetLicences } from '@/domains/dam/user/composables/cachedAssetLicences'
+import { resolveDisabledReasons } from '@/domains/dam/assetSelect/composables/assetSelectDisabledReason'
 import { useSidebar } from '@/domains/dam/assetSelect/composables/assetSelectFilterSidebar'
 import { SORT_BY_SCORE_DATE } from '@/domains/filters/datatable/utils/datatableColumns'
 import { useFilterClearHelpers } from '@/domains/filters/composables/filterFactory'
@@ -48,7 +53,9 @@ const scrolledTo = (button: Element | undefined) => {
 }
 
 export function useAssetSelectActions(configName: string) {
-  const { damClient, endPointAsset, showFileInfoEnabled } = useCommonAdminCoreDamOptions(configName)
+  const { damClient, endPointAsset, showFileInfoEnabled, singleUseUsageEnabled } =
+    useCommonAdminCoreDamOptions(configName)
+  const fetchSingleUseUsage = useImageSingleUseUsageFetch(configName)
   // A further page of this list failed (list `failedInListTurn`). The
   // button then does not request it again just by coming into view.
   // A press does, or coming into view again after the list was scrolled while the button was hidden.
@@ -57,13 +64,16 @@ export function useAssetSelectActions(configName: string) {
   let scrolledAtLeave: number | null = null
 
   const assetSelectStore = useAssetSelectStore()
-  const { selectedCount, selectedAssets, assetListItems, loader } = storeToRefs(assetSelectStore)
+  const { selectedCount, selectedHasDisabled, selectedAssets, assetListItems, loader } = storeToRefs(assetSelectStore)
   const assetDetailStore = useAssetDetailStore()
   const { openSidebarRight } = useSidebar()
   const { mdAndDown } = useDisplay()
 
-  const { showErrorsDefault } = useAlerts()
+  const { showErrorsDefault, showUnknownError } = useAlerts()
   const { filterData, filterConfig } = useAssetListFilter()
+  const { getCachedAssetLicence, addToCachedAssetLicences, fetchCachedAssetLicencesImmediate } =
+    useDamCachedAssetLicences(configName)
+  const { addToCachedAuthors, fetchCachedAuthors } = useDamCachedAuthors(configName)
 
   const resolveTypeFilter = (assetType: DamAssetTypeType, inPodcast: boolean | null) => {
     if (inPodcast === true) {
@@ -118,12 +128,96 @@ export function useAssetSelectActions(configName: string) {
     const licenceIds = assetSelectStore.selectedLicenceIds
     if (licenceIds.length === 0) return undefined
     resolveTypeFilter(assetSelectStore.assetType, assetSelectStore.inPodcast)
+    // Single use photos are listed only where they are checked: in an admin whose CMS checks them
+    // (`singleUseUsageEnabled`), for a record type that may use one, and as photos, the only ones with a usage
+    // check. Elsewhere none is listed, as before: a listing without selectability rules (AAssetListInner) too.
+    const selectability = assetSelectStore.selectability
+    filterData.mainFileSingleUse =
+      singleUseUsageEnabled &&
+      !isNull(selectability) &&
+      selectability.singleUseAllowed &&
+      assetSelectStore.assetType === DamAssetType.Image
+        ? null
+        : false
     if (licenceIds.length === 1) {
       filterData.licences = []
       return useFetchAssetList(damClient, endPointAsset, licenceIds[0]!).execute
     }
     filterData.licences = [...licenceIds]
     return useFetchAssetListByLicences(damClient, endPointAsset).execute
+  }
+
+  /**
+   * Asks the host where the single use photos of `items` are used, one request per page, by their photo groups.
+   * A failed lookup leaves the photos selectable: the save in core-cms checks the photo again.
+   */
+  const applySingleUseUsage = async (
+    items: AssetSelectListItem[],
+    usageHolder: AssetSelectUsageHolder | null,
+    isCurrent: () => boolean
+  ) => {
+    if (isUndefined(fetchSingleUseUsage)) return
+    const groupIds = new Map<DocId, DocId[]>()
+    items.forEach((item) => {
+      const groupId = getSingleUseGroupId(item.asset)
+      if (
+        isNull(groupId) ||
+        !item.asset.mainFile?.flags?.singleUse ||
+        item.asset.attributes.assetType !== DamAssetType.Image
+      ) {
+        return
+      }
+      groupIds.set(groupId, [...(groupIds.get(groupId) ?? []), item.asset.id])
+    })
+    if (groupIds.size === 0) return
+    try {
+      const usages = await fetchSingleUseUsage([...groupIds.keys()], usageHolder)
+      if (!isCurrent()) return
+      groupIds.forEach((assetIds, groupId) => {
+        const usage = usages[groupId]
+        if (isUndefined(usage)) return
+        assetIds.forEach((assetId) => assetSelectStore.setSingleUseUsage(assetId, usage))
+      })
+    } catch (error) {
+      if (isCurrent() && !showErrorsDefault(error)) showUnknownError()
+    }
+  }
+
+  /**
+   * Why each of `items` cannot be picked (`resolveDisabledReasons`), written into the list.
+   * The selectability lives in the store, not in this instance: the initial listing, the filter and
+   * the picker's licence watcher all fetch through different instances.
+   * `isCurrent`: false once the list was read anew or reset. A stale answer then writes nothing.
+   */
+  const applyDisabledReasons = async (items: AssetSelectListItem[], isCurrent: () => boolean) => {
+    const selectability = assetSelectStore.selectability
+    if (isNull(selectability)) return
+    await applySingleUseUsage(items, selectability.usageHolder, isCurrent)
+    if (!isCurrent()) return
+    // An uncached licence answers from a placeholder that allows direct use, so the licences of the page are loaded
+    // before the reasons are resolved. Only those other than the upload licence: whether a licence allows direct use
+    // matters only for an asset that would be taken over, and a picker of its upload licence alone asks for none.
+    // A failed load leaves the placeholders, reported to the api error logger only: a DAM user may lack the right to
+    // read licences, and the image save in core-cms decides the take over by the licence anyway.
+    const otherLicences = items
+      .map((item) => item.asset.licence)
+      .filter((licence) => licence !== selectability.uploadLicence)
+    if (otherLicences.length > 0) {
+      addToCachedAssetLicences(otherLicences)
+      await fetchCachedAssetLicencesImmediate().catch(() => undefined)
+    }
+    if (!isCurrent()) return
+    assetSelectStore.setDisabledReasons(resolveDisabledReasons(items, getCachedAssetLicence, selectability))
+  }
+
+  /** The sources of listed assets, for their badges, under the ext system of the browsed licences. */
+  const cacheSources = (items: AssetSelectListItem[]) => {
+    const extSystem = assetSelectStore.selectedSelectConfig?.extSystem
+    if (isUndefined(extSystem)) return
+    const { cachedExtSystemId } = useExtSystemIdForCached(configName)
+    cachedExtSystemId.value = extSystem
+    addToCachedAuthors(...items.map((item) => item.asset.sources ?? []))
+    fetchCachedAuthors()
   }
 
   const fetchAssetList = async () => {
@@ -142,6 +236,8 @@ export function useAssetSelectActions(configName: string) {
       if (controller.signal.aborted) return
       assetSelectStore.setList(items)
       forgetAssetNotShown()
+      cacheSources(assetSelectStore.assetListItems)
+      await applyDisabledReasons(assetSelectStore.assetListItems, () => !controller.signal.aborted)
     } catch (error) {
       if (!controller.signal.aborted) showErrorsDefault(error)
     } finally {
@@ -164,7 +260,9 @@ export function useAssetSelectActions(configName: string) {
       assetSelectStore.showLoader()
       const items = await execute(pagination, filterData, filterConfig, { signal: controller.signal })
       if (controller.signal.aborted) return
-      assetSelectStore.appendList(items)
+      const added = assetSelectStore.appendList(items)
+      cacheSources(added)
+      await applyDisabledReasons(added, () => !controller.signal.aborted)
     } catch (error) {
       if (controller.signal.aborted) return
       // Not when something has put the page back meanwhile: rolling back would overwrite that.
@@ -199,7 +297,6 @@ export function useAssetSelectActions(configName: string) {
     fetchNextPage()
   }
 
-  const { addToCachedAuthors, fetchCachedAuthors } = useDamCachedAuthors(configName)
   const { addToCachedKeywords, fetchCachedKeywords } = useDamCachedKeywords(configName)
   const { addToCachedUsers, fetchCachedUsers } = useDamCachedUsers(configName)
 
@@ -329,6 +426,7 @@ export function useAssetSelectActions(configName: string) {
     filterData,
     filterConfig,
     selectedCount,
+    selectedHasDisabled,
     selectedAssets,
     pagination,
     loader,

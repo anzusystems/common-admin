@@ -4,7 +4,7 @@ import { computed, inject, onBeforeUnmount, onMounted, ref, type ShallowRef, toR
 import { isNull, isString, isUndefined } from '@/shared/utils/common'
 import type { UploadQueueKey } from '@/domains/dam/types/UploadQueue'
 import type { DamConfigLicenceExtSystemReturnType } from '@/domains/dam/types/DamConfig'
-import { useImageStore } from '@/domains/dam/imageWidget/store/imageStore'
+import { keepSentDamCredit, useImageStore } from '@/domains/dam/imageWidget/store/imageStore'
 import ImageWidgetMultipleItem from '@/domains/dam/imageWidget/components/ImageWidgetMultipleItem.vue'
 import { storeToRefs } from 'pinia'
 import { useCommonAdminImageOptions } from '@/domains/dam/imageWidget/composables/commonAdminImageOptions'
@@ -20,7 +20,7 @@ import AFileInput from '@/domains/ui/file/components/AFileInput.vue'
 import AImageDropzone from '@/domains/ui/file/components/AFileDropzone.vue'
 import { useDamAcceptTypeAndSizeHelper } from '@/domains/dam/config/composables/acceptTypeAndSizeHelper'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
-import type { AssetSelectReturnData } from '@/domains/dam/types/AssetSelect'
+import type { AssetSelectReturnData, AssetSelectUsageHolder } from '@/domains/dam/types/AssetSelect'
 import UploadQueueDialog from '@/domains/dam/uploadQueue/components/UploadQueueDialog.vue'
 import { useUploadQueueDialog } from '@/domains/dam/uploadQueue/composables/useUploadQueueDialog'
 import AssetDetailDialog from '@/domains/dam/assetDetail/components/AssetDetailDialog.vue'
@@ -36,7 +36,7 @@ import {
 import { useAssetDetailStore } from '@/domains/dam/assetDetail/store/assetDetailStore'
 import { loadAssetDetailExtSystem } from '@/domains/dam/assetDetail/composables/assetDetailExtSystem'
 import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
-import type { ImageStoreItem } from '@/domains/dam/types/ImageAware'
+import type { ImageAware, ImageOwner, ImageStoreItem } from '@/domains/dam/types/ImageAware'
 import { generateUUIDv1 } from '@/shared/utils/generator'
 import ASortableListEditor from '@/domains/listEditor/components/ASortableListEditor.vue'
 import AImageWidgetSimple from '@/domains/dam/imageWidget/components/AImageWidgetSimple.vue'
@@ -56,7 +56,7 @@ import ImageWidgetMultipleLimitDialog from '@/domains/dam/imageWidget/components
 import { ImageWidgetUploadConfigKey } from '@/domains/dam/imageWidget/utils/imageWidgetInkectionKeys'
 import { fetchAssetListByFileIdsMultipleLicences } from '@/domains/dam/api/damfetchAssetListByFileIdsMultipleLicences'
 import { copyToLicence } from '@/domains/dam/api/damImageApi'
-import { createDamImage, imageFieldsOf } from '@/domains/dam/imageWidget/utils/damImage'
+import { createDamImage, imageSaveFieldsOf } from '@/domains/dam/imageWidget/utils/damImage'
 import { useDamConfigState } from '@/domains/dam/config/composables/damConfigState'
 import { useDamConfigStoreOf } from '@/domains/dam/config/store/damConfigStore'
 import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
@@ -85,6 +85,15 @@ const props = withDefaults(
     widgetIdentifierId?: string | undefined
     callDeleteApiOnRemove?: boolean
     skipCurrentUserCheck?: boolean
+    /**
+     * The record the image belongs to, sent with the image save (`ownerResourceName`, `ownerResourceId`). Left out,
+     * the stored owner stays. core-cms checks a single use photo against it.
+     */
+    owner?: ImageOwner | null
+    /** The record may use a single use photo: the picker lists them. `false` lists none. */
+    singleUseAllowed?: boolean
+    /** The record the picker asks the single use usage for (`AssetSelectUsageHolder`). */
+    usageHolder?: AssetSelectUsageHolder | null
   }>(),
   {
     configName: undefined,
@@ -97,6 +106,9 @@ const props = withDefaults(
     widgetIdentifierId: undefined,
     callDeleteApiOnRemove: false,
     skipCurrentUserCheck: false,
+    owner: null,
+    singleUseAllowed: true,
+    usageHolder: null,
   }
 )
 
@@ -445,11 +457,12 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
   if (props.readonly) return
   if (data.type !== 'asset' || data.value.length === 0) return
   const picked = data.value.filter((asset) => !isNull(asset.mainFile))
-  // Picked assets from a licence other than the upload licence are copied. Assets
-  // already in it are used at once. Copies are added when the queue dialog is used.
+  // With the take over switch on, picked assets from a licence other than the upload licence are copied into it here,
+  // not by the image save. Assets already in it are used at once. Copies are added when the queue dialog is used.
+  const targetLicence = data.forceTakeOver ? props.uploadLicence : undefined
   const toCopy =
-    copyToLicenceEnabled !== false && !isUndefined(data.copyToLicence)
-      ? picked.filter((asset) => asset.licence !== data.copyToLicence)
+    copyToLicenceEnabled !== false && !isUndefined(targetLicence)
+      ? picked.filter((asset) => asset.licence !== targetLicence)
       : []
   // A widget that unmounted or became read-only adds nothing. The image store belongs to the next widget by then.
   const addingIsOver = () => unmounted || props.readonly
@@ -462,7 +475,7 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
   const copying = copyToLicence(
     damClient,
     endPointImage,
-    toCopy.map((asset) => ({ asset: asset.id, targetAssetLicence: data.copyToLicence! }))
+    toCopy.map((asset) => ({ asset: asset.id, targetAssetLicence: targetLicence! }))
   )
   // Read during the copy under their own licence (the upload's) and its ext system, not the browsed one.
   // Added before the queue dialog opens. Otherwise using the dialog first put the copies before them.
@@ -471,15 +484,12 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
   const imagesAsTheyAre =
     asTheyAre.length === 0
       ? Promise.resolve([])
-      : assetSelectConfirmMap(
-          asTheyAre,
-          config ? { licence: data.copyToLicence!, extSystem: config.extSystem } : undefined
-        )
+      : assetSelectConfirmMap(asTheyAre, config ? { licence: targetLicence!, extSystem: config.extSystem } : undefined)
   let copyRes: DamImageCopyToLicenceResponse | null = null
   try {
     copyRes = await copying
   } catch (e) {
-    showErrorsDefault(e)
+    if (!showErrorsDefault(e)) showUnknownError()
   }
   const images = await imagesAsTheyAre
   await imagesLoaded
@@ -676,6 +686,66 @@ const onAssetDetailClose = (shown: AssetDetailItemDto | null) => {
   })
 }
 
+/**
+ * The returned image of each sent row. By position when the save returns one image per sent row, as the image API
+ * does: a photo taken over into the upload licence comes back with another file. Otherwise by file, rows of the same
+ * file one by one in send order. Matching by file alone gave every row of a file the values of the first one.
+ */
+const pairSavedRows = (sentRows: ImageStoreItem[], resItems: ImageAware[]) => {
+  // By row key: the rows come as they are in the store and as sent, which are not the same objects.
+  const pairs = new Map<string, ImageAware>()
+  // A position pairs a row with its image when both have the file, or the row's photo was of another licence and the
+  // image is in the upload licence: taken over. Otherwise the answer is in another order and is paired by file.
+  const byPosition =
+    resItems.length === sentRows.length &&
+    sentRows.every((row, index) => {
+      const saved = resItems[index]!
+      return (
+        saved.dam.damId === row.dam.damId ||
+        (row.dam.licenceId !== props.uploadLicence && saved.dam.licenceId === props.uploadLicence)
+      )
+    })
+  if (byPosition) {
+    sentRows.forEach((row, index) => pairs.set(row.key, resItems[index]!))
+  } else {
+    const left = [...sentRows]
+    resItems.forEach((resItem) => {
+      const index = left.findIndex((row) => row.dam.damId === resItem.dam.damId)
+      if (index >= 0) pairs.set(left.splice(index, 1)[0]!.key, resItem)
+    })
+  }
+  return (row: ImageStoreItem) => pairs.get(row.key)
+}
+
+/**
+ * Writes picked sources and authors into the assets of the saved files, after the save: the save may have taken a
+ * photo of another licence over into a copy in the upload licence. Each asset under the ext system of its licence
+ * where the page knows it, else of the rows; no licence is read, as for the writes before the save.
+ * A failed write is shown; the images stay saved.
+ */
+const writeCreditsToSavedAssets = async (
+  credits: Array<{ damId: DocId; authors: DocId[]; sources: DocId[]; extSystem: IntegerId }>
+) => {
+  if (credits.length === 0) return
+  let extSystemShown = cachedExtSystemId.value
+  try {
+    const itemsByExtSystem = new Map<IntegerId, AssetAuthorsItems>()
+    for (const credit of credits) {
+      const savedAsset = await fetchAssetByFileId(damClient, endPointAsset, credit.damId)
+      const extSystem = damConfigStore.damConfigLicenceExtSystem.get(savedAsset.licence)?.extSystem ?? credit.extSystem
+      const items = itemsByExtSystem.get(extSystem) ?? []
+      items.push({ id: savedAsset.id, authors: credit.authors, sources: credit.sources })
+      itemsByExtSystem.set(extSystem, items)
+    }
+    for (const [extSystem, items] of itemsByExtSystem) {
+      extSystemShown = extSystem
+      await bulkUpdateAssetsAuthors(damClient, endPointAsset, DamAssetType.Image, extSystem, items, damConfigName)
+    }
+  } catch (e) {
+    showMetadataSaveError(e, extSystemShown, damConfigName)
+  }
+}
+
 const saveImages = async () => {
   // Nothing of the user's to write. The images stay as loaded.
   if (props.readonly) return true
@@ -695,6 +765,16 @@ const saveImages = async () => {
   }
   try {
     const assetUpdateItems: AssetAuthorsItems = []
+    // Picks of rows whose photo is of another licence than the upload licence. The save may take such a photo over
+    // into a copy in the upload licence, so its credit is written after the save into the asset of the saved file.
+    const creditsAfterSave: Array<{
+      rows: ImageStoreItem[]
+      authors: DocId[]
+      sources: DocId[]
+      extSystem: IntegerId
+    }> = []
+    // The credit of the rows of the picks above by row key, put into the rows once their pick is written.
+    const sourceAfterSave = new Map<string, string>()
     const imagesRaw = toRaw(images.value)
     // Rows offering the pick, grouped by asset. An entity may have
     // an image twice, and a queue duplicate is a second row of its asset.
@@ -722,11 +802,15 @@ const saveImages = async () => {
     const named: Array<Offering & { source: string }> = []
     for (const { assetId, rows, authors, sources } of offering.values()) {
       if (hasNoDamCredit(authors, sources)) continue
-      if (assetId) assetUpdateItems.push({ id: assetId, authors, sources })
       // Uses the ext system of the rows' asset licence, as the pre-write read does. Falls back to the configured
       // one when the page does not know the licence. It is not fetched, since entity rows can be of any licence.
       const extSystem =
         damConfigStore.damConfigLicenceExtSystem.get(rows[0]!.dam.licenceId)?.extSystem ?? cachedExtSystemId.value
+      if (rows[0]!.dam.licenceId !== props.uploadLicence) {
+        creditsAfterSave.push({ rows, authors, sources, extSystem })
+      } else if (assetId) {
+        assetUpdateItems.push({ id: assetId, authors, sources })
+      }
       const namesMap = await fetchDamAuthorsMap(damClient, endPointAuthor, extSystem, [...sources, ...authors])
       named.push({
         assetId,
@@ -783,7 +867,8 @@ const saveImages = async () => {
     // The DAM now has these authors even if the images are not saved, so the rows show the source as after a save.
     // If the rows kept offering the pick, the next save would send them as picks,
     // the pre-write read would find these authors, and nothing would be written.
-    named.forEach(({ assetId, rows, authors, sources, source }) => {
+    // Rows whose pick is written after the save (`creditsAfterSave`) send their credit and take it once saved.
+    const takeNamed = ({ assetId, rows, authors, sources, source }: Offering & { source: string }) => {
       rows.forEach((row) => {
         row.damAuthors = [...authors]
         row.damSources = [...sources]
@@ -792,18 +877,45 @@ const saveImages = async () => {
         row.showDamAuthors = false
         imageStore.forgetSourceOfPick(row)
       })
+    }
+    const afterSave = new Set(creditsAfterSave.flatMap(({ rows }) => rows.map((row) => row.key)))
+    named.forEach((entry) => {
+      if (entry.rows.some((row) => afterSave.has(row.key))) {
+        entry.rows.forEach((row) => sourceAfterSave.set(row.key, entry.source))
+        return
+      }
+      takeNamed(entry)
     })
     const sentRows = [...imagesRaw]
     // Note the saved images for the page's other widgets, one by one.
     // This runs even if this widget unmounted before the response.
+    // Each image goes with the record it belongs to and the upload licence a photo of another licence is taken over into.
     const resItems = await noteImagesSave(
       damConfigName,
       sentRows.map((row) => row.id).filter((id) => !isUndefined(id)),
       ownImageSaves,
-      imageApi.bulkUpdateImages(imageClient, sentRows.map(imageFieldsOf))
+      imageApi.bulkUpdateImages(
+        imageClient,
+        sentRows.map((row) => {
+          const fields = imageSaveFieldsOf(row, props.owner, props.uploadLicence)
+          const source = sourceAfterSave.get(row.key)
+          return isUndefined(source) ? fields : { ...fields, texts: { ...fields.texts, source } }
+        })
+      )
+    )
+    const savedOf = pairSavedRows(sentRows, resItems)
+    // Written also for a widget gone meanwhile: the images are saved with this credit.
+    const creditWrite = writeCreditsToSavedAssets(
+      creditsAfterSave.flatMap(({ rows, authors, sources, extSystem }) => {
+        const damIds = new Set(rows.map((row) => savedOf(row)?.dam.damId).filter((damId) => !isUndefined(damId)))
+        return [...damIds].map((damId) => ({ damId, authors, sources, extSystem }))
+      })
     )
     // If unmounted before the response, write nothing to the image store. By then it belongs to the next widget.
     if (unmounted) return true
+    named.forEach((entry) => {
+      if (entry.rows.some((row) => sourceAfterSave.has(row.key))) takeNamed(entry)
+    })
     holdImages(
       damConfigName,
       thisWidget,
@@ -826,34 +938,27 @@ const saveImages = async () => {
       listEditor.value?.commit([])
       // Emptying is a change too. Without this emit the parent keeps its old ids.
       emit('update:modelValue', ids)
+      await creditWrite
       return true
     }
 
-    // Match each returned image to its own sent row. Rows of the same file are matched one by one in send order.
-    // Matching by file alone gave every row of a file the values of the first one.
-    const getUpdatedItem = (item: ImageStoreItem): ImageStoreItem => {
-      const index = sentRows.findIndex((row) => row.dam.damId === item.dam.damId)
-      const matchedImage = index < 0 ? undefined : sentRows.splice(index, 1)[0]
-
-      return {
-        ...item,
-        damAuthors: matchedImage ? matchedImage.damAuthors : item.damAuthors,
-        damSources: matchedImage ? matchedImage.damSources : item.damSources,
-        // Only a row that offered DAM sources and authors keeps offering them.
-        // A row whose asset the DAM did not return has no asset to save them into, so it keeps its source.
-        showDamAuthors: matchedImage
-          ? matchedImage.showDamAuthors && hasNoDamCredit(matchedImage.damAuthors, matchedImage.damSources)
-          : false,
-        assetId: matchedImage ? matchedImage.assetId : item.assetId,
-      }
-    }
-
-    const updatedItems = items.map(getUpdatedItem)
+    // Each returned image with its own sent row (`pairSavedRows`). A returned image no sent row
+    // matches keeps what it came with: no pick, no asset, its source.
+    const sentOf = new Map<ImageAware, ImageStoreItem>()
+    sentRows.forEach((row) => {
+      const saved = savedOf(row)
+      if (saved) sentOf.set(saved, row)
+    })
+    const updatedItems = items.map((item, index) => {
+      const sent = sentOf.get(resItems[index]!)
+      return sent ? keepSentDamCredit(item, sent) : item
+    })
     imageStore.setImages(updatedItems)
     // Pass the rows explicitly. `setImages` just replaced their keys,
     // so a bare `commit()` would read the not-yet-rerendered prop.
     listEditor.value?.commit(updatedItems)
     emit('update:modelValue', ids)
+    await creditWrite
     return true
   } catch (e) {
     // Authors refused by validation are named as the forms name them. Other errors are shown as before.
@@ -975,6 +1080,8 @@ onMounted(() => {
       :max-count="50"
       :asset-type="DamAssetType.Image"
       :skip-current-user-check="skipCurrentUserCheck"
+      :single-use-allowed="singleUseAllowed"
+      :usage-holder="usageHolder"
       :config-name="damConfigName"
       return-type="asset"
       @confirm="onAssetSelectConfirm"

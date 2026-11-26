@@ -48,15 +48,9 @@ import ImageWidgetInner from '@/domains/dam/imageWidget/components/ImageWidgetIn
 import { useImageMediaWidgetStore } from '@/domains/dam/imageWidget/store/imageMediaWidgetStore'
 import { ImageWidgetUploadConfigKey } from '@/domains/dam/imageWidget/utils/imageWidgetInkectionKeys'
 import type { AssetSelectMetadataToImageMapFn } from '@/domains/dam/imageWidget/utils/metadataToImageMap'
-import {
-  DamAssetStatus,
-  DamAssetType,
-  type DamAssetTypeType,
-  type DamImageCopyToLicenceResponseItem,
-} from '@/domains/dam/types/Asset'
+import { DamAssetStatus, DamAssetType, type DamAssetTypeType } from '@/domains/dam/types/Asset'
 import { AssetFileProcessStatus } from '@/domains/dam/types/AssetFile'
 import type { ImageAware } from '@/domains/dam/types/ImageAware'
-import { UploadQueueItemStatus, UploadQueueItemType } from '@/domains/dam/types/UploadQueue'
 import { useUploadQueueDialog } from '@/domains/dam/uploadQueue/composables/useUploadQueueDialog'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
 import type { DocId, IntegerId } from '@/shared/types/common'
@@ -363,8 +357,8 @@ describe.each(consumerProfiles)('the image widget and the library of the DAM und
       confirmButton().click()
       await flushPromises()
     }
-    const copyAsked = (mounted: VueWrapper) =>
-      mounted.emitted('confirm')!.map(([data]) => (data as { copyToLicence: IntegerId | undefined }).copyToLicence)
+    const takeOverAsked = (mounted: VueWrapper) =>
+      mounted.emitted('confirm')!.map(([data]) => (data as { forceTakeOver: boolean }).forceTakeOver)
     const pickers: Array<[string, Component, Record<string, unknown>]> = [
       ['the picker of the image widget', AAssetSelect, { assetType: DamAssetType.Image }],
       ['the picker of the image and media widget', AAssetSelectMedia, {}],
@@ -405,7 +399,7 @@ describe.each(consumerProfiles)('the image widget and the library of the DAM und
           expect(copySwitch()).toBeDefined()
           await confirm()
 
-          expect(copyAsked(mounted)).toEqual([licence + 1])
+          expect(takeOverAsked(mounted)).toEqual([true])
         }
       )
 
@@ -422,7 +416,7 @@ describe.each(consumerProfiles)('the image widget and the library of the DAM und
           expect(copySwitch()).toBeUndefined()
           await confirm()
 
-          expect(copyAsked(mounted)).toEqual([undefined])
+          expect(takeOverAsked(mounted)).toEqual([false])
         }
       )
 
@@ -436,7 +430,7 @@ describe.each(consumerProfiles)('the image widget and the library of the DAM und
           await switchCopyOn()
           await confirm()
 
-          expect(copyAsked(mounted)).toEqual([licence + 1])
+          expect(takeOverAsked(mounted)).toEqual([true])
           expect(
             (mounted.emitted('confirm')![0]![0] as { value: Array<{ id: string }> }).value.map((asset) => asset.id)
           ).toEqual(['asset-9', 'asset-10'])
@@ -637,6 +631,8 @@ describe.each(consumerProfiles)('the image widget and the library of the DAM und
       dam: { damId: 'file-of-asset-9', regionPosition: 0, licenceId: 300003, internal: true },
       position: 1,
     }
+    // As the image save sends it: with the licence the save takes a photo of another licence over into.
+    const savedOfPicked = { ...imageOfPicked, dam: { ...imageOfPicked.dam, uploadLicenceId: licence } }
     const existing: ImageAware = {
       id: 7,
       texts: { description: 'the image before', source: 'Agency' },
@@ -671,7 +667,7 @@ describe.each(consumerProfiles)('the image widget and the library of the DAM und
 
       confirmImage()
       await vi.waitFor(() => expect(mounted.emitted('afterMetadataSaveSuccess')).toHaveLength(1))
-      expect(imageApi.calls[0]).toEqual(['createImage', imageOfPicked])
+      expect(imageApi.calls[0]).toEqual(['createImage', savedOfPicked])
       expect(modelValueOf(mounted)).toBe(501)
 
       mounted.unmount()
@@ -681,43 +677,55 @@ describe.each(consumerProfiles)('the image widget and the library of the DAM und
       expect(useImageMediaWidgetStore(pinia).detail).toEqual({ ...imageOfPicked, id: 7 })
       confirmImage()
       await vi.waitFor(() => expect(withImage.emitted('afterMetadataSaveSuccess')).toHaveLength(1))
-      expect(imageApi.calls).toEqual([['updateImage', 7, { ...imageOfPicked, id: 7 }]])
+      expect(imageApi.calls).toEqual([['updateImage', 7, { ...savedOfPicked, id: 7 }]])
     })
 
     if (isCms) {
-      it('without an author: the dialog offers the authors of the DAM in place of the source, and saves them into the asset', async () => {
-        inTheDam('asset-9', [])
-        const mounted = await mountWithStandIn()
+      it.each<[string, IntegerId | undefined]>([
+        ['of another licence, after the image is saved, into the asset of its file', undefined],
+        ['of the licence of the upload, before the image is saved', licence],
+      ])(
+        'without an author: the dialog offers the authors of the DAM in place of the source, and saves them into the asset %s',
+        async (_when, of) => {
+          inTheDam('asset-9', [])
+          if (of) dam.assets.get('asset-9')!.licence = of
+          const mounted = await mountWithStandIn()
 
-        await confirmInPicker(picked('asset-9'))
-        expect(useImageMediaWidgetStore(pinia).detail).toMatchObject({
-          texts: { description: 'a picked image', source: '' },
-        })
-        expect(textsIn(imageDialog()!).map((field) => field.value)).toEqual(['a picked image'])
-        const authors = mounted.findComponent(AuthorRemoteAutocompleteWithCached)
-        expect(authors.exists()).toBe(true)
-        // The widget holds its own asset.
-        // Nothing is put into the detail store, which belongs to the page.
-        expect(useAssetDetailStore(pinia).asset).toBeNull()
+          await confirmInPicker(picked('asset-9', of ? { licence: of } : {}))
+          expect(useImageMediaWidgetStore(pinia).detail).toMatchObject({
+            texts: { description: 'a picked image', source: '' },
+          })
+          expect(textsIn(imageDialog()!).map((field) => field.value)).toEqual(['a picked image'])
+          const authors = mounted.findComponent(AuthorRemoteAutocompleteWithCached)
+          expect(authors.exists()).toBe(true)
+          // The widget holds its own asset.
+          // Nothing is put into the detail store, which belongs to the page.
+          expect(useAssetDetailStore(pinia).asset).toBeNull()
 
-        authors.vm.$emit('update:modelValue', ['author-5'])
-        await flushPromises()
-        let imageWrittenFirst: boolean | undefined
-        dam.reply((request) => {
-          if (request.method === 'PATCH' && dam.routes.bulkMetadata.test(request.url)) {
-            imageWrittenFirst = imageApi.calls.length > 0
-          }
-          return undefined
-        })
-        confirmImage()
-        await vi.waitFor(() => expect(mounted.emitted('afterMetadataSaveSuccess')).toHaveLength(1))
+          authors.vm.$emit('update:modelValue', ['author-5'])
+          await flushPromises()
+          let imageWrittenFirst: boolean | undefined
+          dam.reply((request) => {
+            if (request.method === 'PATCH' && dam.routes.bulkMetadata.test(request.url)) {
+              imageWrittenFirst = imageApi.calls.length > 0
+            }
+            return undefined
+          })
+          confirmImage()
+          await vi.waitFor(() => expect(mounted.emitted('afterMetadataSaveSuccess')).toHaveLength(1))
 
-        const writes = dam.sentTo('PATCH', dam.routes.bulkMetadata)
-        expect(writes.map((request) => request.url)).toEqual(['/adm/v1/asset/metadata-bulk-update'])
-        expect(dam.body(writes[0])).toEqual([{ id: 'asset-9', authors: ['author-5'], described: true }])
-        expect(imageWrittenFirst).toBe(false)
-        expect(imageApi.calls[0]).toMatchObject(['createImage', { texts: { source: 'Name of author-5' } }])
-      })
+          await vi.waitFor(() => expect(dam.sentTo('PATCH', dam.routes.bulkMetadata)).toHaveLength(1))
+          const writes = dam.sentTo('PATCH', dam.routes.bulkMetadata)
+          expect(writes.map((request) => request.url)).toEqual(['/adm/v1/asset/metadata-bulk-update'])
+          expect(dam.body(writes[0])).toEqual([{ id: 'asset-9', authors: ['author-5'], described: true }])
+          expect(imageWrittenFirst).toBe(!of)
+          expect(imageApi.calls[0]).toMatchObject(['createImage', { texts: { source: 'Name of author-5' } }])
+          // The asset the saved image ended with is read by its file: a taken over photo is another asset.
+          expect(dam.originReads().map((request) => request.url)).toEqual(
+            of ? [] : ['/adm/v1/asset/asset-file/file-of-asset-9']
+          )
+        }
+      )
 
       it('without an author, and none picked: the image is saved without a source, and nothing is written into the DAM', async () => {
         inTheDam('asset-9', [])
@@ -803,36 +811,22 @@ describe.each(consumerProfiles)('the image widget and the library of the DAM und
     })
   })
 
-  // The picker offers the copy when the user browses another licence than the upload one, which only admin-cms has.
-  // Where the copy request goes is not tested here.
+  // The picker offers the take over when the user browses another licence than the upload one, which only admin-cms
+  // has. The image widget copies nothing at the pick (1.52.0): the image save takes the photo over (core-cms).
   if (isCms) {
-    describe('an asset picked to be copied into the licence of the widget', () => {
+    describe('an asset picked to be taken over into the licence of the widget', () => {
       const COPY = /\/copy-to-licence$/
-      const copyAnswers = (result: DamImageCopyToLicenceResponseItem['result']) =>
-        dam.reply((request) =>
-          request.method === 'PATCH' && COPY.test(request.url)
-            ? {
-                status: 200,
-                data: [
-                  {
-                    asset: 'asset-9',
-                    targetAsset: 'asset-copy',
-                    targetMainFile: 'file-copy',
-                    targetAssetLicence: licence,
-                    result,
-                    assetConflicts: [],
-                  },
-                ],
-              }
-            : undefined
-        )
-      const pickToCopy = async () => {
+      const pickToTakeOver = async () => {
         signInToDam(extSystem)
-        await mountInner({}, 'stand-in')
+        dam.assets.set(
+          'asset-9',
+          damAssetWithFile('asset-9', 'file-of-asset-9', AssetFileProcessStatus.Processed, { licence: 300003 })
+        )
+        const mounted = await mountInner({}, 'stand-in')
         useAssetSelectStore(pinia).setSelectConfig([uploadConfig()])
         wrapper!.findComponent(PickerStandIn).vm.$emit('confirm', {
           type: 'asset',
-          copyToLicence: licence,
+          forceTakeOver: true,
           value: [
             {
               id: 'asset-9',
@@ -845,86 +839,33 @@ describe.each(consumerProfiles)('the image widget and the library of the DAM und
         })
         await flushPromises()
         await flushPromises()
-        return useUploadQueuesStore(pinia).getQueueItems(QUEUE)
+        return mounted
       }
 
-      it('that the DAM copies: its copy is a row of the queue that waits for the server, under the upload dialog', async () => {
-        copyAnswers('copy')
-
-        const rows = await pickToCopy()
-
-        expect(dam.sentTo('PATCH', COPY).map((request) => dam.body(request))).toEqual([
-          [{ asset: 'asset-9', targetAssetLicence: licence }],
-        ])
-        expect(rows).toMatchObject([
-          {
-            type: UploadQueueItemType.Asset,
-            status: UploadQueueItemStatus.Processing,
-            assetId: 'asset-copy',
-            licenceId: licence,
-            isDuplicate: false,
-            canEditMetadata: false,
-          },
-        ])
-        expect(useUploadQueueDialog().uploadQueueDialog.value).toBe(QUEUE)
-        expect(useImageMediaWidgetStore(pinia).detail).toBeNull()
-        expect(shownAlerts()).toEqual([])
-      })
-
-      it('that the licence already has: the row is that asset, settled at once as a duplicate, with its form', async () => {
-        copyAnswers('exists')
-        dam.assets.set(
-          'asset-copy',
-          damAssetWithFile('asset-copy', 'file-copy', AssetFileProcessStatus.Processed, {
-            licence,
-            metadata: { customData: { description: 'of the copy' }, authorSuggestions: {}, keywordSuggestions: {} },
-          })
-        )
-
-        const rows = await pickToCopy()
-        await vi.waitFor(() => expect(rows[0]?.status).toBe(UploadQueueItemStatus.Uploaded))
-
-        expect(rows).toMatchObject([
-          {
-            type: UploadQueueItemType.Asset,
-            assetId: 'asset-copy',
-            fileId: 'file-copy',
-            isDuplicate: true,
-            canEditMetadata: true,
-            customData: { description: 'of the copy' },
-            error: { hasError: false },
-          },
-        ])
-        expect(dam.originReads().map((request) => request.url)).toEqual(['/adm/v1/asset/asset-file/file-copy'])
-        expect(useUploadQueueDialog().uploadQueueDialog.value).toBe(QUEUE)
-      })
-
-      it('that the DAM does not let the user copy: says so, queues nothing and opens no dialog', async () => {
-        copyAnswers('notAllowed')
-
-        const rows = await pickToCopy()
-
-        expect(shownAlerts()).toEqual([['error', alertText('common.damImage.queueItem.errorUnableToCopyToLicence')]])
-        expect(rows).toEqual([])
-        expect(useUploadQueueDialog().uploadQueueDialog.value).toBeNull()
-        expect(useImageMediaWidgetStore(pinia).detail).toBeNull()
-      })
-
-      it('where the application turns the copy off: none is asked for, and the asset is picked as it is', async () => {
-        copyAnswers('copy')
-        copyOff()
-        dam.assets.set(
-          'asset-9',
-          damAssetWithFile('asset-9', 'file-of-asset-9', AssetFileProcessStatus.Processed, { licence: 300003 })
-        )
-
-        const rows = await pickToCopy()
+      it('asks the DAM for no copy and queues nothing: the image dialog offers the photo, to be taken over', async () => {
+        await pickToTakeOver()
 
         expect(dam.sentTo('PATCH', COPY)).toEqual([])
-        expect(rows).toEqual([])
+        expect(useUploadQueuesStore(pinia).getQueueItems(QUEUE)).toEqual([])
+        expect(useUploadQueueDialog().uploadQueueDialog.value).toBeNull()
         await vi.waitFor(() =>
-          expect(useImageMediaWidgetStore(pinia).detail).toMatchObject({ dam: { damId: 'file-of-asset-9' } })
+          expect(useImageMediaWidgetStore(pinia).detail).toMatchObject({
+            dam: { damId: 'file-of-asset-9', licenceId: 300003, forceTakeOver: true },
+          })
         )
+      })
+
+      it('sends the photo to be taken over, and the licence of the widget to take it into, with the image save', async () => {
+        const mounted = await pickToTakeOver()
+        await vi.waitFor(() => expect(useImageMediaWidgetStore(pinia).detail).not.toBeNull())
+
+        await (mounted.vm as unknown as { metadataConfirm: () => void }).metadataConfirm()
+        await vi.waitFor(() => expect(mounted.emitted('afterMetadataSaveSuccess')).toHaveLength(1))
+
+        expect(imageApi.calls[0]).toMatchObject([
+          'createImage',
+          { dam: { damId: 'file-of-asset-9', licenceId: 300003, forceTakeOver: true, uploadLicenceId: licence } },
+        ])
       })
     })
   }
@@ -1357,7 +1298,15 @@ describe.each(consumerProfiles)('the authors of the DAM in the dialog of an imag
           await confirmImage(widget)
 
           expect(imagesWritten()).toEqual([
-            ['updateImage', 7, { ...stored(7), texts: { description: 'image 7', source: 'typed by hand' } }],
+            [
+              'updateImage',
+              7,
+              {
+                ...stored(7),
+                dam: { ...stored(7).dam, uploadLicenceId: licence },
+                texts: { description: 'image 7', source: 'typed by hand' },
+              },
+            ],
           ])
           expect(authorsWritten()).toEqual([])
         })

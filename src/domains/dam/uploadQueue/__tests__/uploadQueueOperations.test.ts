@@ -629,8 +629,9 @@ describe('a save in the asset detail', () => {
     expect(dam.assetReads().every((read) => read.url.startsWith('/adm/v1/asset/'))).toBe(true)
   })
 
-  // The detail also has the single-use switch and saves it with the rest.
-  // A row left with its old value would send it with the next queue save, over what the user just saved.
+  // The detail also has the single-use switch and saves it with the rest, and the rows show it.
+  // A copy keeps the switch of the asset it was copied from (1.52.0): the queue save sends none for it, so it never
+  // overwrites what the user just saved.
   it.each([true, false])('gives them the single-use switch now in the DAM (%s) as well', async (singleUse) => {
     const { store, here, other, there } = await copiesInTwoQueues()
     for (const item of [here, other, there]) item.mainFileSingleUse = !singleUse
@@ -646,10 +647,9 @@ describe('a save in the asset detail', () => {
 
     await bulkUpdateAssetsMetadata(dam.client, endPoints.asset, store.getQueueItems(QUEUE), undefined, 1, 'default')
     const [sent] = dam.sentTo('PATCH', dam.routes.bulkMetadata)
-    expect(dam.body(sent)).toMatchObject([
-      { id: 'asset-1', mainFileSingleUse: singleUse },
-      { id: 'asset-2', mainFileSingleUse: !singleUse },
-    ])
+    const body = dam.body(sent) as Array<Record<string, unknown>>
+    expect(body.map((item) => item.id)).toEqual(['asset-1', 'asset-2'])
+    body.forEach((item) => expect(item).not.toHaveProperty('mainFileSingleUse'))
   })
 
   it('takes what the DAM answers for that asset, not what the detail hands over', async () => {
@@ -761,10 +761,13 @@ describe('a save in the asset detail', () => {
             keywords: ['keyword-saved'],
             authors: ['author-saved'],
             customData: { title: 'saved in the detail' },
-            mainFileSingleUse: singleUse,
           },
-          { id: 'asset-2', customData: { title: 'typed in the row' }, mainFileSingleUse: !singleUse },
+          { id: 'asset-2', customData: { title: 'typed in the row' } },
         ])
+        // Copies keep the switch of the asset they were copied from: the queue save sends none.
+        ;(dam.body(sent) as Array<Record<string, unknown>>).forEach((item) =>
+          expect(item).not.toHaveProperty('mainFileSingleUse')
+        )
       }
     )
 

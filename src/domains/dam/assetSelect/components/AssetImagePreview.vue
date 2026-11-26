@@ -9,6 +9,7 @@ import {
 } from '@/domains/dam/types/Asset'
 import placeholder16x9 from '@/assets/image/placeholder16x9.svg'
 import { isUndefined } from '@/shared/utils/common'
+import type { DamSourceBadge } from '@/domains/dam/author/composables/damSourceBadge'
 import AssetImageMetaIcons from '@/domains/dam/assetDetail/components/AssetImageMetaIcons.vue'
 
 const props = withDefaults(
@@ -26,6 +27,9 @@ const props = withDefaults(
     assetFileProperties?: AssetFileProperties | undefined
     /** Passed to the meta icons: the badge of the asset's licence. */
     licenceBadge?: string
+    sourceBadges?: DamSourceBadge[]
+    singleUse?: boolean
+    singleUseUsageCount?: number
   }>(),
   {
     assetType: DamAssetType.Image,
@@ -40,6 +44,9 @@ const props = withDefaults(
     showMetaIcons: false,
     assetFileProperties: undefined,
     licenceBadge: '',
+    sourceBadges: () => [],
+    singleUse: false,
+    singleUseUsageCount: 0,
   }
 )
 const emit = defineEmits<{
@@ -114,6 +121,9 @@ const showIconComputed = computed(() => {
       :asset-file-properties="assetFileProperties"
       :asset-type="assetType"
       :licence-badge="licenceBadge"
+      :source-badges="sourceBadges"
+      :single-use="singleUse"
+      :single-use-usage-count="singleUseUsageCount"
     />
   </div>
   <div
@@ -144,6 +154,9 @@ const showIconComputed = computed(() => {
       :asset-file-properties="assetFileProperties"
       :asset-type="assetType"
       :licence-badge="licenceBadge"
+      :source-badges="sourceBadges"
+      :single-use="singleUse"
+      :single-use-usage-count="singleUseUsageCount"
     />
   </div>
 </template>

@@ -12,10 +12,13 @@ const mapFullToMinimal = (author: DamAuthor): DamAuthorMinimal => ({
   identifier: author.identifier,
   reviewed: author.flags.reviewed,
   hiddenInCredit: author.flags.hiddenInCredit,
+  // A DAM before author priorities and badges sends neither.
+  priority: author.priority ?? 0,
+  badge: author.badge ?? '',
 })
 
 const mapIdToMinimal = (id: DocId): DamAuthorMinimal => {
-  return { id: id, name: '', identifier: '', reviewed: false, hiddenInCredit: false }
+  return { id: id, name: '', identifier: '', reviewed: false, hiddenInCredit: false, priority: 0, badge: '' }
 }
 
 // Author name cache per DAM configuration. It uses that configuration's

@@ -22,10 +22,11 @@ import { useUploadQueueDialog } from '@/domains/dam/uploadQueue/composables/useU
 import { useAlertsQueue } from '@/domains/system/composables/alertsQueue'
 import { DamAssetType } from '@/domains/dam/types/Asset'
 
-// A failed copy of picked assets to the widget's licence: each
-// of the three copying widgets reports it once and adds nothing.
+// A failed copy of picked assets to the widget's licence: the gallery, the widget that copies
+// at the pick, reports it once and adds nothing.
 // A stopped copy reports nothing. The request and the alert are real, against a DAM that answers as told.
 // A failed copy used to reach the alert as a bare axios error, which it let pass silently.
+// The single image widgets copy nothing at the pick since 1.52.0: the image save takes the photo over (core-cms).
 
 const connection = vi.hoisted(() => ({
   client: null as null | (() => unknown),
@@ -72,9 +73,11 @@ beforeEach(() => {
 
 const Picker = defineComponent({ emits: ['confirm'], setup: () => () => h('div') })
 
-const widgets: Array<[string, Component, Record<string, unknown>]> = [
+const singleWidgets: Array<[string, Component, Record<string, unknown>]> = [
   ['the image widget', ImageWidgetInner, { modelValue: null }],
   ['the image and media widget', ImageMediaWidgetInner, { image: null, media: null }],
+]
+const copyingWidgets: Array<[string, Component, Record<string, unknown>]> = [
   ['the widget of several images', ImageWidgetMultipleInner, { modelValue: [] }],
 ]
 
@@ -136,7 +139,7 @@ const pickWithCopy = async (
   })
   const store = useUploadQueuesStore()
   const added = vi.spyOn(store, 'addByCopyToLicence')
-  wrapper.findComponent(Picker).vm.$emit('confirm', { type: 'asset', copyToLicence: 2, value: picked })
+  wrapper.findComponent(Picker).vm.$emit('confirm', { type: 'asset', forceTakeOver: true, value: picked })
   await flushPromises()
   await flushPromises()
 
@@ -152,7 +155,29 @@ const pickWithCopy = async (
   return outcome
 }
 
-describe.each(widgets)('a copy to the licence asked by %s', (_, widget, props) => {
+describe.each(singleWidgets)('a pick of a photo of another licence, the take over on, by %s', (_, widget, props) => {
+  it('asks for no copy: the image dialog gets the photo to be taken over by the save', async () => {
+    dam.assets.set(
+      'picked',
+      damAssetWithFile('picked', 'file-of-picked', AssetFileProcessStatus.Processed, {
+        licence: 1,
+        authors: ['author-of-picked'],
+        metadata: { customData: { description: 'of picked' }, authorSuggestions: {}, keywordSuggestions: {} },
+      })
+    )
+    answerDamNames(dam)
+    const outcome = await pickWithCopy(widget, props, () => ({ status: 500 }))
+
+    expect(outcome).toMatchObject({ copies: 0, added: 0, rows: 0, dialog: null })
+    await vi.waitFor(() =>
+      expect(useImageMediaWidgetStore().detail).toMatchObject({
+        dam: { damId: 'file-of-picked', licenceId: 1, forceTakeOver: true },
+      })
+    )
+  })
+})
+
+describe.each(copyingWidgets)('a copy to the licence asked by %s', (_, widget, props) => {
   it.each(failures)('that %s: one error is shown and nothing is added', async (_, copyAnswers) => {
     expect(await pickWithCopy(widget, props, copyAnswers)).toEqual({
       copies: 1,
@@ -308,7 +333,7 @@ describe('an asset picked to be copied that is already in the licence of the upl
       useAssetSelectStore().setSelectedLicenceIds([1])
       wrapper.findComponent(Picker).vm.$emit('confirm', {
         type: 'asset',
-        copyToLicence: 2,
+        forceTakeOver: true,
         value: [pickedOf('a', 1), pickedOf('already', 2), pickedOf('c', 1)],
       })
       await flushPromises()

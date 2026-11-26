@@ -33,7 +33,8 @@
       "noItemsFound": "Žádné nalezené assety",
       "pickExactCount": "Vyberte assety: {count}. Zvoleno: {selected}.",
       "pickRangeCount": "Vyberte od {minCount} do {maxCount} assetů. Zvolených: {selected}.",
-      "copyToLicence": "Kopírovat do licence"
+      "copyToLicence": "Kopírovat do licence",
+      "copyToLicenceLocked": "Licence obrázku nedovoluje přímé použití, kopíruje se vždy."
     }
   },
   "filter": {
@@ -66,5 +67,48 @@
     "label": "Hledat v",
     "groupListViews": "Výběry",
     "groupLicences": "Licence"
+  },
+  "usage": {
+    "tab": "Použití",
+    "usedBy": "Používají ho ({count})",
+    "holder": "Držitel",
+    "andMore": "a další ({count})",
+    "pickedAt": "vybráno {date}",
+    "openList": "Zobrazit všechna použití",
+    "usedElsewhere": "Obrázek je jednorázový a používá ho i jiný záznam ({count}×).",
+    "usedBySeveral": "Obrázek je jednorázový a používá ho více záznamů ({count}×).",
+    "status": {
+      "notAllowed": "Tento záznam nemůže použít jednorázový obrázek.",
+      "placement": "Tento záznam obrázek jen umisťuje, nedrží ho.",
+      "free": "Obrázek zatím nikdo nepoužívá.",
+      "own": "Obrázek používá pouze tento záznam.",
+      "ownShared": "Obrázek používá tento záznam, ale i jiné záznamy.",
+      "conflict": "Obrázek už používá jiný záznam."
+    },
+    "checkFailed": "Nepodařilo se ověřit, kde se jednorázový obrázek používá. Vyberte ho znovu."
+  },
+  "holder": {
+    "articleKindStandard": "článek",
+    "gallery": "galerie",
+    "person": "osoba",
+    "organization": "organizace",
+    "minutePost": "minutový příspěvek",
+    "liveBlogPost": "příspěvek live blogu",
+    "postSuggestion": "návrh příspěvku",
+    "liveBlogFeed": "live blog",
+    "boxItem": "box item",
+    "boxItemHistory": "historie box itemu",
+    "notification": "notifikace",
+    "externalBoxItemArticle": "box item článku",
+    "page": "stránka",
+    "crossBox": "cross box",
+    "relatedItemKindLink": "související odkaz"
+  },
+  "holderOther": "jiný záznam",
+  "disabledReason": {
+    "singleUseBlocked": "Obrázek je jednorázový a už ho používá jiný záznam ({count}×).",
+    "singleUseNotAllowed": "Obrázek je jednorázový a tento záznam ho nemůže použít.",
+    "directUseDisabledNotImage": "Tuto licenci lze použít jen pro obrázky.",
+    "directUseDisabledNoUploadLicence": "Chybí cílová licence pro převzetí obrázku."
   }
 }

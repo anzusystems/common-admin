@@ -1,7 +1,7 @@
 import axios, { type AxiosError, type AxiosInstance } from 'axios'
 import type { DocId, IntegerId } from '@/shared/types/common'
 import type { AssetDetailItemDto, AssetSearchListItemDto, DamAssetTypeType } from '@/domains/dam/types/Asset'
-import type { UploadQueueItem } from '@/domains/dam/types/UploadQueue'
+import { type UploadQueueItem, UploadQueueItemType } from '@/domains/dam/types/UploadQueue'
 import { HTTP_STATUS_OK } from '@/shared/statusCodes'
 import { isNull, isUndefined } from '@/shared/utils/common'
 import {
@@ -32,7 +32,8 @@ export interface AssetMetadataBulkItem {
   sources?: DocId[]
   described: boolean
   customData: AssetCustomData
-  mainFileSingleUse: boolean | null
+  // Left out for a copy, which keeps the flag of the asset it was copied from.
+  mainFileSingleUse?: boolean | null
   mainFileInternal: boolean | null
   mainFileOverrideInternal: boolean | null
 }
@@ -274,6 +275,19 @@ function creditFields(
   return isDamSourceEnabled(assetType, extSystem, configName) ? { authors, sources } : { authors }
 }
 
+/**
+ * The single use flag a row saves. A copy into the upload licence (a row of an asset) keeps the flag of the asset it
+ * was copied from, so it sends none, also under a mass override; its switch is not offered.
+ */
+function singleUseField(
+  item: UploadQueueItem,
+  override: boolean | undefined
+): Pick<AssetMetadataBulkItem, 'mainFileSingleUse'> {
+  if (item.type === UploadQueueItemType.Asset) return {}
+  // Never null. A row whose switch is not known yet is saved as off, which is how the DAM treats null.
+  return { mainFileSingleUse: override ?? item.mainFileSingleUse ?? false }
+}
+
 function listItemsToMetadataBulkItems(
   items: UploadQueueItem[],
   mainFileSingleUseOverride: boolean | undefined,
@@ -289,8 +303,7 @@ function listItemsToMetadataBulkItems(
         ...creditFields(item.assetType, extSystem, item.authors, item.sources, configName),
         described: true,
         customData: item.customData,
-        // Never null. A row whose switch is not known yet is saved as off, which is how the DAM treats null.
-        mainFileSingleUse: mainFileSingleUseOverride ?? item.mainFileSingleUse ?? false,
+        ...singleUseField(item, mainFileSingleUseOverride),
       })
     }
   })

@@ -10,8 +10,6 @@ import { seedDamConfigOf } from '@/domains/dam/__tests__/support/namedDamConfig'
 import { initCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
 import { useDamNotificationsEventBus } from '@/domains/dam/composables/damNotificationsEventBus'
 import { useExtSystemIdForCached } from '@/domains/dam/composables/extSystemIdForCached'
-import ImageMediaWidgetInner from '@/domains/dam/imageWidget/components/ImageMediaWidgetInner.vue'
-import ImageWidgetInner from '@/domains/dam/imageWidget/components/ImageWidgetInner.vue'
 import ImageWidgetMultipleInner from '@/domains/dam/imageWidget/components/ImageWidgetMultipleInner.vue'
 import { initCommonAdminImageOptions } from '@/domains/dam/imageWidget/composables/commonAdminImageOptions'
 import { ImageWidgetUploadConfigKey } from '@/domains/dam/imageWidget/utils/imageWidgetInkectionKeys'
@@ -80,9 +78,8 @@ const rowOfDefault = async () => {
 }
 
 describe('a widget under a named DAM configuration whose copy into the licence is there already', () => {
+  // Only the gallery copies at the pick since 1.52.0; the single image widgets leave the take over to the image save.
   const widgets: Array<[string, Component, Record<string, unknown>]> = [
-    ['the image widget', ImageWidgetInner, { modelValue: null }],
-    ['the image and media widget', ImageMediaWidgetInner, { image: null, media: null }],
     ['the widget of several images', ImageWidgetMultipleInner, { modelValue: [] }],
   ]
 

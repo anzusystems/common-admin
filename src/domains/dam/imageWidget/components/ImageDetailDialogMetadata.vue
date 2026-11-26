@@ -28,6 +28,8 @@ import { isArray, isNull } from '@/shared/utils/common'
 import { DamMediaType } from '@/domains/dam/types/MediaAware'
 import { createDamImage } from '@/domains/dam/imageWidget/utils/damImage'
 import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
+import type { SingleUseUsageCheck } from '@/domains/dam/assetSelect/composables/assetSelectSingleUseUsage'
+import ImageDetailSingleUseWarning from '@/domains/dam/imageWidget/components/ImageDetailSingleUseWarning.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -49,6 +51,11 @@ const props = withDefaults(
     editAssetLabel?: string
     /** Asset type the dialog is opened for, known before loading. Used for the title. */
     type?: DamAssetTypeType
+    /**
+     * The usage of the single use photo the image was picked from (`useSingleUseUsageCheck`): a warning, and no
+     * confirm while the photo is blocked for the record or its usage could not be read.
+     */
+    singleUseCheck?: SingleUseUsageCheck | null
   }>(),
   {
     expand: false,
@@ -59,6 +66,7 @@ const props = withDefaults(
     sourceLabel: undefined,
     editAssetLabel: undefined,
     type: undefined,
+    singleUseCheck: null,
   }
 )
 
@@ -116,9 +124,14 @@ const { v$ } = useImageValidation(detail, imageSourceRequired, damConfigName)
 
 const { showValidationError } = useAlerts()
 
+// A blocked photo, or one whose usage could not be read, is not confirmed: core-cms would refuse the save.
+const singleUseBlocked = computed(
+  () => (props.singleUseCheck?.failed || props.singleUseCheck?.asset.singleUseUsage?.blocked) ?? false
+)
+
 const onConfirm = () => {
   v$.value.$touch()
-  if (v$.value.$invalid) {
+  if (singleUseBlocked.value || v$.value.$invalid) {
     showValidationError()
     return
   }
@@ -158,6 +171,11 @@ defineExpose({
       </VCol>
     </VRow>
     <template v-if="isImageCreateUpdateAware(detail)">
+      <ImageDetailSingleUseWarning
+        v-if="singleUseCheck"
+        :single-use-check="singleUseCheck"
+        :config-name="damConfigName"
+      />
       <VRow>
         <VCol>
           <VBtn @click.stop="onEditAsset">
@@ -248,6 +266,11 @@ defineExpose({
               :image="detail"
             />
           </div>
+          <ImageDetailSingleUseWarning
+            v-if="singleUseCheck"
+            :single-use-check="singleUseCheck"
+            :config-name="damConfigName"
+          />
           <VRow>
             <VCol>
               <VBtn @click.stop="onEditAsset">
@@ -361,7 +384,7 @@ defineExpose({
         <VSpacer />
         <ABtnPrimary
           :loading="saving"
-          :disabled="loading"
+          :disabled="loading || singleUseBlocked"
           @click.stop="onConfirm"
         >
           {{ t('common.button.confirm') }}

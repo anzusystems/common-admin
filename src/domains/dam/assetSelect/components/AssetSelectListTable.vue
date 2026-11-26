@@ -65,3 +65,10 @@ const { onItemClick, assetListItems, loader } = useAssetSelectActions(useDamConf
     </tbody>
   </VTable>
 </template>
+
+<style lang="scss">
+// Dimmed, not blocked: the row stays clickable so the detail panel can explain why it cannot be used.
+.a-datatable__row--disabled {
+  opacity: 0.5;
+}
+</style>

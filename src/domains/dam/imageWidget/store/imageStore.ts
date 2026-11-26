@@ -1,6 +1,24 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import type { ImageStoreItem } from '@/domains/dam/types/ImageAware'
+import { hasNoDamCredit } from '@/domains/dam/author/composables/damCredit'
+
+/**
+ * A saved gallery row with the DAM sources and authors of the row it was sent as. The rows are paired by position:
+ * a row taken over into the upload licence comes back with another file. Its asset is then another one, unknown here,
+ * so the row keeps no asset and does not offer the pick; its credit was written into the saved asset.
+ * Only a row that offered the pick keeps offering it.
+ */
+export const keepSentDamCredit = (saved: ImageStoreItem, sent: ImageStoreItem): ImageStoreItem => {
+  const takenOver = saved.dam.damId !== sent.dam.damId
+  return {
+    ...saved,
+    damAuthors: sent.damAuthors,
+    damSources: sent.damSources,
+    showDamAuthors: !takenOver && sent.showDamAuthors && hasNoDamCredit(sent.damAuthors, sent.damSources),
+    assetId: takenOver ? undefined : sent.assetId,
+  }
+}
 
 export const useImageStore = defineStore('commonAdminImageStore', () => {
   const images = ref<ImageStoreItem[]>([])

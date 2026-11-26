@@ -12,6 +12,8 @@ import { isAnzuApiCancelledError } from '@/shared/error/AnzuApiCancelledError'
 import { AuthUnavailableError } from '@/shared/error/AuthUnavailableError'
 import { SessionExpiredError } from '@/shared/error/SessionExpiredError'
 import { isInCauseChain } from '@/shared/error/isInCauseChain'
+import { resolveImageSaveErrorMessage } from '@/domains/dam/imageWidget/composables/imageSaveErrors'
+import { extractImageSaveErrorInfo } from '@/domains/dam/imageWidget/composables/imageApiCms'
 
 const DEFAULT_DURATION_SECONDS = 3
 // One "sign-in server does not answer" per outage: a page's requests all fail at once.
@@ -158,6 +160,13 @@ export function useAlerts() {
     }
     if (isAnzuApiTimeoutError(error)) {
       showErrorT('error.apiTimedOut.message', duration)
+      return true
+    }
+    // Any save that writes image rows (an article, a gallery, a person) can be refused by the single use rule.
+    // Also a bare axios error: `bulkUpdateImages` rejects with one.
+    const imageSaveErrorMessage = resolveImageSaveErrorMessage(extractImageSaveErrorInfo(error), commonT)
+    if (imageSaveErrorMessage) {
+      showError(imageSaveErrorMessage, duration)
       return true
     }
     if (isAnzuApiAxiosError(error)) {

@@ -35,6 +35,7 @@ import { useDamConfigStore, useDamConfigStoreOf } from '@/domains/dam/config/sto
 import { seedDamConfigOf } from '@/domains/dam/__tests__/support/namedDamConfig'
 import { useExtSystemIdForCached } from '@/domains/dam/composables/extSystemIdForCached'
 import { useImageStore } from '@/domains/dam/imageWidget/store/imageStore'
+import { useImageMediaWidgetStore } from '@/domains/dam/imageWidget/store/imageMediaWidgetStore'
 import ImageMediaWidgetInner from '@/domains/dam/imageWidget/components/ImageMediaWidgetInner.vue'
 import ImageWidgetInner from '@/domains/dam/imageWidget/components/ImageWidgetInner.vue'
 import ImageWidgetMultipleInner from '@/domains/dam/imageWidget/components/ImageWidgetMultipleInner.vue'
@@ -517,6 +518,7 @@ describe.each<[string, Component, Record<string, unknown>]>([
   ['the asset and media select', AAssetSelectMedia, { preselectAssetType: DamAssetType.Image }],
 ])('%s, given the name of a DAM configuration and opened', (_name, select, props) => {
   const LICENCE = `/adm/v1/asset-licence/${licence}`
+  const LICENCES = '/adm/v1/asset-licence'
   const isListRequest = (request: FakeDamRequest) =>
     request.method === 'GET' && request.url.startsWith(`${OWN.asset}/licence/${licence}/search?`)
 
@@ -525,6 +527,11 @@ describe.each<[string, Component, Record<string, unknown>]>([
     own.reply((request) => {
       if (request.method === 'GET' && request.url === LICENCE) {
         return { status: 200, data: { id: licence, name: 'own', extSystem } }
+      }
+      // The licences of the listed page, whether they allow direct use (1.52.0): the select has no upload licence.
+      if (request.method === 'GET' && request.url.startsWith(`${LICENCES}?`)) {
+        const found = [{ id: licence, name: 'own', badge: '', flags: { directUseAllowed: true } }]
+        return { status: 200, data: { data: found, totalCount: found.length } }
       }
       return isListRequest(request)
         ? { status: 200, data: { data: [damAsset('own-asset-7', { licence })], totalCount: 1 } }
@@ -573,11 +580,13 @@ describe.each<[string, Component, Record<string, unknown>]>([
     rows[0]!.vm.$emit('itemClick', { assetId: 'own-asset-7', index: 0 })
     await vi.waitFor(() => expect(useAssetDetailStore().asset?.id).toBe('own-asset-7'))
 
-    expect(asked(own)).toEqual([
+    // The licences of the page are cached per configuration: the select of a later case finds them read already.
+    expect(asked(own).filter((request) => request !== `GET ${LICENCES}`)).toEqual([
       `GET ${LICENCE}`,
       `GET ${OWN.asset}/licence/${licence}/search`,
       `GET ${OWN.asset}/own-asset-7`,
     ])
+    expect(asked(own).filter((request) => request === `GET ${LICENCES}`).length).toBeLessThanOrEqual(1)
     expect(own.unanswered).toEqual([])
     expect(asked(dam)).toEqual([])
   })
@@ -677,60 +686,107 @@ describe('an upload, under a named DAM configuration', () => {
     expect(asked(dam)).toEqual([])
   })
 
-  it.each(widgets)('%s has a picked asset copied, and asks about the copy, there', async (_name, widget, props) => {
-    own.reply((request) =>
-      request.method === 'PATCH' && request.url === `${OWN.image}/copy-to-licence`
-        ? {
-            status: 200,
-            data: [
-              {
-                asset: 'picked',
-                targetAsset: 'own-asset-copy',
-                targetMainFile: 'own-file-copy',
-                targetAssetLicence: licence,
-                result: 'copy',
-                assetConflicts: [],
-              },
-            ],
-          }
-        : undefined
-    )
-    own.assets.set(
-      'own-asset-copy',
-      damAssetWithFile('own-asset-copy', 'own-file-copy', AssetFileProcessStatus.Processed, { licence })
-    )
-    own.reply((request) =>
-      request.method === 'GET' && request.url.startsWith(ABOUT_PICKED) ? { status: 200, data: {} } : undefined
-    )
-    mountWidget(widget, { ...props, selectLicences: [1, licence] })
-    await flushPromises()
-    const before = asked(own).length
+  // The single image widgets copy nothing at the pick (1.52.0): the image save takes the photo over.
+  it.each(widgets.slice(0, 2))(
+    '%s reads a picked asset of another licence there, and leaves its take over to the image save',
+    async (_name, widget, props) => {
+      own.assets.set(
+        'picked',
+        damAssetWithFile('picked', 'file-of-picked', AssetFileProcessStatus.Processed, { licence: 1 })
+      )
+      own.reply((request) =>
+        request.method === 'GET' && request.url.startsWith(ABOUT_PICKED) ? { status: 200, data: {} } : undefined
+      )
+      mountWidget(widget, { ...props, selectLicences: [1, licence] })
+      await flushPromises()
+      const before = asked(own).length
 
-    wrapper!.findComponent(Picker).vm.$emit('confirm', {
-      type: 'asset',
-      copyToLicence: licence,
-      value: [
-        {
-          id: 'picked',
-          licence: 1,
-          mainFile: { id: 'file-of-picked' },
-          attributes: { assetType: DamAssetType.Image },
-          podcasts: [],
-        },
-      ],
-    })
-    const store = useUploadQueuesStore()
-    await vi.waitFor(() => expect(store.getQueueItems(QUEUE)).toHaveLength(1))
-    await waits.elapse()
-    await vi.waitFor(() => expect(store.getQueueItems(QUEUE)[0]!.status).toBe(Uploaded))
+      wrapper!.findComponent(Picker).vm.$emit('confirm', {
+        type: 'asset',
+        forceTakeOver: true,
+        value: [
+          {
+            id: 'picked',
+            licence: 1,
+            mainFile: { id: 'file-of-picked' },
+            attributes: { assetType: DamAssetType.Image },
+            podcasts: [],
+          },
+        ],
+      })
+      await vi.waitFor(() =>
+        expect(useImageMediaWidgetStore().detail).toMatchObject({
+          dam: { damId: 'file-of-picked', licenceId: 1, forceTakeOver: true },
+        })
+      )
 
-    expect(
-      asked(own)
-        .slice(before)
-        .filter((request) => !request.includes(ABOUT_PICKED))
-    ).toEqual([`PATCH ${OWN.image}/copy-to-licence`, `GET ${OWN.asset}/own-asset-copy`])
-    expect(asked(dam)).toEqual([])
-  })
+      expect(
+        asked(own)
+          .slice(before)
+          .filter((request) => !request.includes(ABOUT_PICKED))
+      ).toEqual([`GET ${OWN.asset}/picked`])
+      expect(useUploadQueuesStore().getQueueItems(QUEUE)).toEqual([])
+      expect(asked(dam)).toEqual([])
+    }
+  )
+
+  it.each(widgets.slice(2))(
+    '%s has a picked asset copied, and asks about the copy, there',
+    async (_name, widget, props) => {
+      own.reply((request) =>
+        request.method === 'PATCH' && request.url === `${OWN.image}/copy-to-licence`
+          ? {
+              status: 200,
+              data: [
+                {
+                  asset: 'picked',
+                  targetAsset: 'own-asset-copy',
+                  targetMainFile: 'own-file-copy',
+                  targetAssetLicence: licence,
+                  result: 'copy',
+                  assetConflicts: [],
+                },
+              ],
+            }
+          : undefined
+      )
+      own.assets.set(
+        'own-asset-copy',
+        damAssetWithFile('own-asset-copy', 'own-file-copy', AssetFileProcessStatus.Processed, { licence })
+      )
+      own.reply((request) =>
+        request.method === 'GET' && request.url.startsWith(ABOUT_PICKED) ? { status: 200, data: {} } : undefined
+      )
+      mountWidget(widget, { ...props, selectLicences: [1, licence] })
+      await flushPromises()
+      const before = asked(own).length
+
+      wrapper!.findComponent(Picker).vm.$emit('confirm', {
+        type: 'asset',
+        forceTakeOver: true,
+        value: [
+          {
+            id: 'picked',
+            licence: 1,
+            mainFile: { id: 'file-of-picked' },
+            attributes: { assetType: DamAssetType.Image },
+            podcasts: [],
+          },
+        ],
+      })
+      const store = useUploadQueuesStore()
+      await vi.waitFor(() => expect(store.getQueueItems(QUEUE)).toHaveLength(1))
+      await waits.elapse()
+      await vi.waitFor(() => expect(store.getQueueItems(QUEUE)[0]!.status).toBe(Uploaded))
+
+      expect(
+        asked(own)
+          .slice(before)
+          .filter((request) => !request.includes(ABOUT_PICKED))
+      ).toEqual([`PATCH ${OWN.image}/copy-to-licence`, `GET ${OWN.asset}/own-asset-copy`])
+      expect(asked(dam)).toEqual([])
+    }
+  )
 
   describe.each(ways)('the dialogs of an upload, %s', (way) => {
     const dialogProps = {

@@ -998,7 +998,7 @@ describe.each(consumerProfiles)('the widget of several images under the $name', 
 
         mounted.findComponent(Picker).vm.$emit('confirm', {
           type: 'asset',
-          copyToLicence: licence,
+          forceTakeOver: true,
           value: ['there', 'new', 'refused'].map((id) => ({ id, licence: 300003, mainFile: { id: `file-of-${id}` } })),
         })
         await vi.waitFor(() => expect(statuses()).toEqual([Uploaded, Processing]))

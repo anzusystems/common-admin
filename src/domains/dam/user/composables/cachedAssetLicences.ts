@@ -10,12 +10,15 @@ const mapFullToMinimal = (assetLicence: DamAssetLicenceExtended): DamAssetLicenc
   name: assetLicence.name,
   // A DAM without licence badges sends none.
   badge: assetLicence.badge ?? '',
+  // A DAM without licence flags sends none: direct use allowed, as before them.
+  flags: { directUseAllowed: assetLicence.flags?.directUseAllowed ?? true },
 })
 
 const mapIdToMinimal = (id: IntegerId): DamAssetLicenceCached => ({
   id: id,
   name: '',
   badge: '',
+  flags: { directUseAllowed: true },
 })
 
 // Licence cache per DAM configuration. It uses that configuration's client and `endPointAssetLicence`.
@@ -52,11 +55,13 @@ export const useDamCachedAssetLicences = (configName?: string) => {
     named = defineCachedAssetLicences(name)
     caches.set(name, named)
   }
-  const { cache, fetch, add, addManual, has, get, isLoaded } = named
+  const { cache, fetch, immediateFetch, add, addManual, has, get, isLoaded } = named
   return {
     addManualToCachedAssetLicences: addManual,
     addToCachedAssetLicences: add,
     fetchCachedAssetLicences: fetch,
+    /** Requests the added licences now and resolves once they are cached, for a decision that needs their flags. */
+    fetchCachedAssetLicencesImmediate: immediateFetch,
     cachedAssetLicences: cache,
     hasCachedAssetLicence: has,
     getCachedAssetLicence: get,

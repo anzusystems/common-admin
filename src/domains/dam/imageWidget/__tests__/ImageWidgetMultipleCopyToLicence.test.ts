@@ -72,7 +72,7 @@ const confirmCopy = async (answer: DamImageCopyToLicenceResponseItem[]) => {
   vi.spyOn(store, 'queueItemDuplicate').mockResolvedValue(undefined as never)
   wrapper.findComponent(AssetSelect).vm.$emit('confirm', {
     type: 'asset',
-    copyToLicence: 2,
+    forceTakeOver: true,
     value: answer.map((item) => ({ id: item.asset, licence: 1, mainFile: { id: `main-${item.asset}` } })),
   })
   await flushPromises()

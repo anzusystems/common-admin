@@ -131,6 +131,9 @@ export function useCommonAdminCoreDamOptions(configName: string) {
     // undefined means all filters
     assetListEnabledFilters: commonAdminCoreDamOptions.value.configs[configName].assetListEnabledFilters,
     simpleAssetSidebarEnabled: commonAdminCoreDamOptions.value.configs[configName].simpleAssetSidebar ?? false,
+    singleUseUsageEnabled: commonAdminCoreDamOptions.value.configs[configName].singleUseUsageEnabled === true,
+    singleUseUsageUrl: commonAdminCoreDamOptions.value.configs[configName].singleUseUsageUrl,
+    singleUsePlaceUrl: commonAdminCoreDamOptions.value.configs[configName].singleUsePlaceUrl,
   }
 }
 

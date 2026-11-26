@@ -5,6 +5,9 @@ import { isNull } from '@/shared/utils/common'
 import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
 import { inheritedDamConfigName } from '@/domains/dam/composables/damConfigName'
 import { useDamCachedAssetLicences } from '@/domains/dam/user/composables/cachedAssetLicences'
+import { useDamCachedAuthors } from '@/domains/dam/author/composables/cachedAuthors'
+import { resolveSourceBadges } from '@/domains/dam/author/composables/damSourceBadge'
+import { resolveSingleUseWarningCount } from '@/domains/dam/assetSelect/composables/assetSelectDisabledReason'
 
 const IMAGE_HEIGHT = 200
 const IMAGE_BG_COLOR_DEFAULT = '#ccc'
@@ -79,6 +82,16 @@ export function useAssetItemActions(item: Readonly<Ref<AssetSelectListItem>>) {
     showLicenceBadge.value ? (getCachedAssetLicence(asset.value.licence)?.badge ?? '') : ''
   )
 
+  // The list caches the sources of its pages (`useAssetSelectActions`), so a badge shows once its source is read.
+  const { getCachedAuthor } = useDamCachedAuthors(configName)
+  const sourceBadges = computed(() => resolveSourceBadges(asset.value.sources, getCachedAuthor))
+
+  const disabledReason = computed(() => item.value.disabledReason)
+
+  const singleUse = computed(() => asset.value.mainFile?.flags?.singleUse ?? false)
+
+  const singleUseUsageCount = computed(() => resolveSingleUseWarningCount(asset.value))
+
   return {
     asset,
     assetType,
@@ -86,5 +99,9 @@ export function useAssetItemActions(item: Readonly<Ref<AssetSelectListItem>>) {
     imageProperties,
     tableImageProperties,
     licenceBadge,
+    sourceBadges,
+    disabledReason,
+    singleUse,
+    singleUseUsageCount,
   }
 }

@@ -205,6 +205,8 @@ describe.each(consumerProfiles)('an upload into the image widget under the $name
     flags: { showSource: true, internal: false, overrideInternal: false },
     position: 1,
   }
+  /** As the image save sends it (1.52.0): with the licence a picked photo of another licence is taken over into. */
+  const sentImage = { ...savedImage, dam: { ...savedImage.dam, uploadLicenceId: licence } }
   /** The upload map adds `assetId` and the authors to the image handed to the widget. */
   // The library mapping hands the sources too. The mapping of admin-ugc has none.
   const handedImage = {
@@ -488,7 +490,7 @@ describe.each(consumerProfiles)('an upload into the image widget under the $name
 
       // Finding 36: only the image fields are sent, and the widget shows the image from the create answer.
       // It used to read the just-created image again.
-      expect(imageApi.calls).toEqual([['createImage', savedImage]])
+      expect(imageApi.calls).toEqual([['createImage', sentImage]])
       expect(Object.keys(imageApi.calls[0]![1] as object).sort()).toEqual(['dam', 'flags', 'position', 'texts'])
       // admin-cms leaves the save to the library, which calls the CMS backend. admin-ugc saves with its own function.
       expect(imageApi.requests.map((request) => `${request.method} ${request.url}`)).toEqual(
@@ -514,7 +516,7 @@ describe.each(consumerProfiles)('an upload into the image widget under the $name
       await vi.waitFor(() => expect(widget.emitted('afterMetadataSaveSuccess')).toHaveLength(1))
       await flushPromises()
 
-      expect(imageApi.calls).toEqual([['createImage', savedImage]])
+      expect(imageApi.calls).toEqual([['createImage', sentImage]])
       expect(Object.keys(imageApi.calls[0]![1] as object).sort()).toEqual(['dam', 'flags', 'position', 'texts'])
       expect(imageApi.requests.map((request) => `${request.method} ${request.url}`)).toEqual(
         isCms ? ['POST /adm/v1/image'] : []
@@ -555,7 +557,7 @@ describe.each(consumerProfiles)('an upload into the image widget under the $name
         confirmImage()
         await vi.waitFor(() => expect(widget.emitted('afterMetadataSaveSuccess')).toHaveLength(1))
         await flushPromises()
-        expect(imageApi.calls).toEqual([['createImage', savedImage]])
+        expect(imageApi.calls).toEqual([['createImage', sentImage]])
         return widget
       }
       const video = {
@@ -621,7 +623,7 @@ describe.each(consumerProfiles)('an upload into the image widget under the $name
       await vi.waitFor(() => expect(widget.emitted('afterMetadataSaveSuccess')).toHaveLength(1))
       await flushPromises()
 
-      expect(imageApi.calls).toEqual([['updateImage', 7, { ...savedImage, id: 7 }]])
+      expect(imageApi.calls).toEqual([['updateImage', 7, { ...sentImage, id: 7 }]])
       expect(imageApi.requests.map((request) => `${request.method} ${request.url}`)).toEqual(
         isCms ? ['PUT /adm/v1/image/7'] : []
       )
@@ -735,7 +737,7 @@ describe.each(consumerProfiles)('an upload into the image widget under the $name
       await vi.waitFor(() => expect(widget.emitted('afterMetadataSaveSuccess')).toHaveLength(1))
       await flushPromises()
 
-      expect(imageApi.calls[0]).toEqual(['createImage', savedImage])
+      expect(imageApi.calls[0]).toEqual(['createImage', sentImage])
       expect(modelValueOf(widget)).toBe(501)
       expect(widget.emitted('afterMetadataSaveSuccess')).toHaveLength(1)
       expect(buttonsOf(widget).map((button) => button.text())).toContain(
@@ -753,7 +755,7 @@ describe.each(consumerProfiles)('an upload into the image widget under the $name
       ;(widget.vm as unknown as { metadataConfirm: () => void }).metadataConfirm()
       await vi.waitFor(() => expect(widget.emitted('afterMetadataSaveSuccess')).toHaveLength(1))
 
-      expect(imageApi.calls).toEqual([['updateImage', 7, { ...savedImage, id: 7 }]])
+      expect(imageApi.calls).toEqual([['updateImage', 7, { ...sentImage, id: 7 }]])
       expect(modelValueOf(widget)).toBe(7)
     })
   })

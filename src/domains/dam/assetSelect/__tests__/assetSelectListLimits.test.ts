@@ -151,7 +151,7 @@ describe('an asset a list has twice', () => {
     store.toggleSelectedByIndex(2)
 
     expect(checked()).toEqual([true, false, true])
-    expect(store.getSelectedData(AssetSelectReturnType.AssetId, undefined).value).toEqual(['A'])
+    expect(store.getSelectedData(AssetSelectReturnType.AssetId, false).value).toEqual(['A'])
   })
 })
 

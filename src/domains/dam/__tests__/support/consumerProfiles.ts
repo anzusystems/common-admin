@@ -100,6 +100,8 @@ export const cmsConfiguration: ConsumerProfile = {
       configs: {
         default: {
           damClient: damClient,
+          // As admin-cms sets it: core-cms checks single use photos.
+          singleUseUsageEnabled: true,
         },
       },
       apiTimeout: 30,

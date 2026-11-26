@@ -1,19 +1,19 @@
 <script lang="ts" setup>
 import AImageDropzone from '@/domains/ui/file/components/AFileDropzone.vue'
 import type { DocId, IntegerId, IntegerIdNullable } from '@/shared/types/common'
-import type { ImageAware, ImageCreateUpdateAware } from '@/domains/dam/types/ImageAware'
+import type { ImageAware, ImageCreateUpdateAware, ImageOwner } from '@/domains/dam/types/ImageAware'
 import imagePlaceholderPath from '@/assets/image/placeholder16x9.svg'
 import { useCommonAdminImageOptions } from '@/domains/dam/imageWidget/composables/commonAdminImageOptions'
 import { useImageActions } from '@/domains/dam/imageWidget/composables/imageActions'
 import { cloneDeep, isDefined, isNull, isNumber, isString, isUndefined } from '@/shared/utils/common'
 import { useDamConfigState } from '@/domains/dam/config/composables/damConfigState'
 import { useAlerts } from '@/domains/system/composables/alerts'
-import { type AssetDetailItemDto, DamAssetType, type DamImageCopyToLicenceResponse } from '@/domains/dam/types/Asset'
+import { type AssetDetailItemDto, DamAssetType } from '@/domains/dam/types/Asset'
 import { useDamAcceptTypeAndSizeHelper } from '@/domains/dam/config/composables/acceptTypeAndSizeHelper'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
 import type { UploadQueueKey } from '@/domains/dam/types/UploadQueue'
 import AAssetSelect from '@/domains/dam/assetSelect/components/AAssetSelect.vue'
-import type { AssetSelectReturnData } from '@/domains/dam/types/AssetSelect'
+import type { AssetSelectReturnData, AssetSelectUsageHolder } from '@/domains/dam/types/AssetSelect'
 import type { DamConfigLicenceExtSystemReturnType } from '@/domains/dam/types/DamConfig'
 import ImageDetailDialogMetadata from '@/domains/dam/imageWidget/components/ImageDetailDialogMetadata.vue'
 import { computed, inject, onBeforeUnmount, ref, type ShallowRef, toRaw, watch } from 'vue'
@@ -56,8 +56,8 @@ import {
   isImageCreateUpdateAware,
   useImageMediaWidgetStore,
 } from '@/domains/dam/imageWidget/store/imageMediaWidgetStore'
-import { copyToLicence } from '@/domains/dam/api/damImageApi'
-import { createDamImage, imageFieldsOf } from '@/domains/dam/imageWidget/utils/damImage'
+import { useSingleUseUsageCheck } from '@/domains/dam/assetSelect/composables/assetSelectSingleUseUsage'
+import { createDamImage, imageSaveFieldsOf } from '@/domains/dam/imageWidget/utils/damImage'
 import { assetMetadataMayStillChange } from '@/domains/dam/assetDetail/utils/assetMetadataMayStillChange'
 import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 import {
@@ -99,6 +99,15 @@ const props = withDefaults(
     damWidth?: undefined | number
     damHeight?: undefined | number
     skipCurrentUserCheck?: boolean
+    /**
+     * The record the image belongs to, sent with the image save (`ownerResourceName`, `ownerResourceId`). Left out,
+     * the stored owner stays. core-cms checks a single use photo against it.
+     */
+    owner?: ImageOwner | null
+    /** The record may use a single use photo: the picker lists them. `false` lists none. */
+    singleUseAllowed?: boolean
+    /** The record the picker asks the single use usage for (`AssetSelectUsageHolder`). */
+    usageHolder?: AssetSelectUsageHolder | null
   }>(),
   {
     configName: undefined,
@@ -120,6 +129,9 @@ const props = withDefaults(
     damWidth: undefined,
     damHeight: undefined,
     skipCurrentUserCheck: false,
+    owner: null,
+    singleUseAllowed: true,
+    usageHolder: null,
   }
 )
 
@@ -266,6 +278,7 @@ const {
   takeHeldAnew,
   letGoOnceSavedWithSource,
   authorsGivenMeanwhile,
+  writeCreditToSavedAsset,
   confirmWaits,
 } = useImageDialogDamAuthors(
   damConfigName,
@@ -273,6 +286,10 @@ const {
     (metadataDialog.value || props.expandMetadata) && isImageCreateUpdateAware(detail.value) ? detail.value : null,
   () => props.readonly
 )
+
+// The usage of a picked single use photo for the widget's record: the dialog warns by it and refuses a blocked photo.
+const { singleUseCheck, checkSingleUseUsage, singleUseCheckTurn, clearSingleUseUsage } =
+  useSingleUseUsageCheck(damConfigName)
 
 // Marks the store as shown by this widget while its dialog or inline form is open, so no other widget empties it.
 watch(
@@ -322,6 +339,8 @@ const ownImageSaves = new Set<symbol>()
 // Cancels the "edit metadata" wait for another widget's save. Called when the dialog closes.
 let cancelSaveWait: (() => void) | null = null
 const actionEditMeta = async () => {
+  // The widget's own image: no pick, so no usage of a picked photo.
+  clearSingleUseUsage()
   const heldId = () => resImage.value?.id
   // Another widget is saving the image, for example the one this
   // widget replaced. The dialog shows loading until that save ends.
@@ -523,36 +542,6 @@ const onDrop = async (files: File[]) => {
   }
 }
 
-const onCopyToLicence = (data: DamImageCopyToLicenceResponse) => {
-  if (props.readonly) return
-  if (!data[0]) return
-  const config = imageWidgetUploadConfig.value!
-  cachedExtSystemId.value = config.extSystem
-  stopQueueLeftBehind(props.queueKey)
-  if (data[0].result === 'copy') {
-    uploadQueuesStore.addByCopyToLicence(
-      props.queueKey,
-      config.extSystem,
-      config.licence,
-      [data[0].targetAsset],
-      damConfigName
-    )
-  } else if (data[0].result === 'exists') {
-    uploadQueuesStore.addByCopyToLicence(
-      props.queueKey,
-      config.extSystem,
-      config.licence,
-      [data[0].targetAsset],
-      damConfigName
-    )
-    uploadQueuesStore.queueItemDuplicate(data[0].targetAsset, data[0].targetMainFile, DamAssetType.Image, damConfigName)
-  } else {
-    showErrorT('common.damImage.queueItem.errorUnableToCopyToLicence')
-    return
-  }
-  uploadQueueDialog.value = props.queueKey
-}
-
 const onFileInput = (files: File[]) => {
   if (props.readonly) return
   // The input rejected every file and reported it. A dialog over a queue without a row would only show loading.
@@ -656,36 +645,17 @@ const pickAsset = async (data: AssetSelectReturnData, thisPick: symbol) => {
   metadataDialogLoading.value = true
   imageMediaWidgetStore.setDetail(null)
   offerNoDamAuthors()
+  clearSingleUseUsage()
   let description = ''
   let source = ''
   if (data.type === 'asset') {
     if (!data.value[0] || !data.value[0].mainFile) return
-    // The dialog shows loading while the asset is read or copied
-    // to the upload licence, and nothing else can open meanwhile.
-    // Without this, the upload dialog of a copy covered a dialog opened since and "Save and apply" replaced its form.
+    // The dialog shows loading while the asset and its single use usage are read, and nothing else can open meanwhile.
+    // A photo of another licence is not copied here: the image save takes it over into the upload licence
+    // (`dam.uploadLicenceId`), also where its licence allows direct use if the picker said so (`dam.forceTakeOver`).
     metadataDialog.value = true
-    if (
-      copyToLicenceEnabled !== false &&
-      !isUndefined(data.copyToLicence) &&
-      data.value[0].licence !== data.copyToLicence
-    ) {
-      let copyRes: DamImageCopyToLicenceResponse | null = null
-      try {
-        copyRes = await copyToLicence(damClient, endPointImage, [
-          { asset: data.value[0].id, targetAssetLicence: data.copyToLicence },
-        ])
-      } catch (e) {
-        showErrorsDefault(e)
-      }
-      // A gone widget, or a dialog no longer loading for this pick, opens no upload dialog.
-      // Otherwise the copy continued in the replacing widget's upload dialog, which requested the field lock only then.
-      if (!answerTakenFor(thisPick)) return
-      // The upload dialog shows the copy and replaces the image dialog.
-      metadataDialogLoading.value = false
-      metadataDialog.value = false
-      if (copyRes) onCopyToLicence(copyRes)
-      return
-    }
+    const usageCheck = checkSingleUseUsage(data.value[0], props.usageHolder)
+    const usageCheckTurn = singleUseCheckTurn()
     // Authors are offered only if the pick still owns the dialog. Otherwise
     // a left pick's read offered its authors in a later pick's dialog.
     let authorsToOffer: AssetDetailItemDto | null = null
@@ -727,9 +697,12 @@ const pickAsset = async (data: AssetSelectReturnData, thisPick: symbol) => {
     } catch (e) {
       showErrorsDefault(e)
     }
+    // Never rejects. The dialog shows its warning with the image.
+    await usageCheck
     // If the widget is gone or the dialog no longer loads for this
     // pick, the image is not put into the page-shared dialog store.
-    if (!answerTakenFor(thisPick)) return
+    // Its check goes only if no pick has started its own since: a later pick keeps its warning and its answer.
+    if (!answerTakenFor(thisPick)) return void clearSingleUseUsage(usageCheckTurn)
     if (authorsToOffer) offerDamAuthorsOf(authorsToOffer, data.value[0].mainFile.id)
     const image = createDamImage(
       {
@@ -740,6 +713,7 @@ const pickAsset = async (data: AssetSelectReturnData, thisPick: symbol) => {
       { description, source },
       { position: 1, id: isNull(modelValue.value) ? undefined : modelValue.value }
     )
+    if (data.forceTakeOver) image.dam.forceTakeOver = true
     imageMediaWidgetStore.setDetail(image)
     pickInDialog = detail.value
     metadataDialogLoading.value = false
@@ -756,9 +730,7 @@ const coreDamOptions = useCommonAdminCoreDamOptions(damConfigName)
 const {
   damClient,
   endPointAsset,
-  endPointImage,
   endPointAuthor,
-  copyToLicenceEnabled,
   showSourceEnabled,
   sourceLabel,
   editAssetLabel,
@@ -797,6 +769,7 @@ const onEditAsset = async (assetFileId: DocId) => {
 }
 
 const onMetadataDialogClose = () => {
+  clearSingleUseUsage()
   imageMediaWidgetStore.setDetail(null)
   metadataDialog.value = false
   // Nothing is applied once the dialog is closed. Otherwise a pending
@@ -829,6 +802,8 @@ const onMetadataDialogConfirm = async () => {
   // The dialog shows the source from the held asset, not the pick (its read
   // failed). Once saved, the image has its own source and the asset is released.
   const letGoHeld = letGoOnceSavedWithSource(pressedOn)
+  // Picked sources and authors of a photo the save may take over, written after the save into the saved file's asset.
+  let creditAfterSave: { source: string; authors: DocId[]; sources: DocId[]; extSystem: IntegerId } | null = null
   try {
     const authorsAsset = damAuthorsAsset.value
     if (authorsAsset) {
@@ -868,29 +843,56 @@ const onMetadataDialogConfirm = async () => {
         )
         // Silently stops if the dialog was left or the widget is gone or read-only.
         if (authorsSendIsOver()) return
-        try {
-          await updateAssetAuthors(damClient, endPointAsset, authorsAsset, creditExtSystem, damConfigName)
-        } catch (e) {
-          // Names the authors refused by validation as the forms name them. The image is not saved.
-          showMetadataSaveError(e, assetSelectStore.requireSelectedSelectConfig().extSystem, damConfigName)
-          return
+        if (authorsAsset.licence !== props.uploadLicence) {
+          // A photo of another licence than the upload licence may be taken over by the save into a copy in the
+          // upload licence. The credit belongs to the asset the image ends with, so it is written after the save
+          // (`writeCreditToSavedAsset`). Until the save succeeds the pick stays and the source is sent only.
+          creditAfterSave = {
+            source,
+            authors: [...authorsAsset.authors],
+            sources: [...authorsAsset.sources],
+            extSystem: creditExtSystem,
+          }
+        } else {
+          try {
+            await updateAssetAuthors(damClient, endPointAsset, authorsAsset, creditExtSystem, damConfigName)
+          } catch (e) {
+            // Names the authors refused by validation as the forms name them. The image is not saved.
+            showMetadataSaveError(e, assetSelectStore.requireSelectedSelectConfig().extSystem, damConfigName)
+            return
+          }
+          // The DAM already has the authors. The image is not saved.
+          if (confirmIsOver()) return
+          pressedOn.texts.source = source
+          offerNoDamAuthors()
         }
-        // The DAM already has the authors. The image is not saved.
-        if (confirmIsOver()) return
-        pressedOn.texts.source = source
-        offerNoDamAuthors()
       }
     }
-    const image = imageFieldsOf(pressedOn)
+    // With the record it belongs to and the upload licence a picked photo of another licence is taken over into.
+    const image = imageSaveFieldsOf(pressedOn, props.owner, props.uploadLicence)
+    if (creditAfterSave) image.texts = { ...image.texts, source: creditAfterSave.source }
     // The save is noted for the other widgets of the page, even if this widget is gone by the time it answers.
     const res = image.id
       ? await noteImageSave(damConfigName, image.id, ownImageSaves, imageApi.updateImage(imageClient, image.id, image))
       : await imageApi.createImage(imageClient, image)
+    // Written also for a widget gone meanwhile: the image is saved with this credit.
+    const creditWrite = creditAfterSave
+      ? writeCreditToSavedAsset(
+          res.dam.damId,
+          creditAfterSave.authors,
+          creditAfterSave.sources,
+          creditAfterSave.extSystem
+        )
+      : null
     // The widget is gone, so nothing of the answer is written.
     // The dialog store is shared by the page and may already belong to the
     // next widget. Writing here emptied its form and then showed this image.
     if (disposed) return
     letGoHeld()
+    if (creditAfterSave && detail.value === pressedOn) {
+      pressedOn.texts.source = creditAfterSave.source
+      offerNoDamAuthors()
+    }
     // This confirm closes the dialog if it shows the pressed image or nothing, or if "edit
     // metadata" reopened it. That copy is stale and its confirm would overwrite this save.
     // A dialog of another pick or upload stays open and keeps the field lock. A dialog still
@@ -903,7 +905,10 @@ const onMetadataDialogConfirm = async () => {
       !props.expandMetadata &&
       ownDialogOpen &&
       (isNull(shown) ? !isNull(loadingInDialog) : shown !== pressedOn && shown !== ownImageInDialog)
-    if (!dialogOfAnotherPick) metadataDialog.value = false
+    if (!dialogOfAnotherPick) {
+      metadataDialog.value = false
+      clearSingleUseUsage()
+    }
     if (!image.id) createdImageId = res.id
     modelValue.value = res.id
     if (!dialogOfAnotherPick && (ownDialogOpen || props.expandMetadata)) imageMediaWidgetStore.setDetail(null)
@@ -926,6 +931,7 @@ const onMetadataDialogConfirm = async () => {
     }
     await reload(res, res.id, true)
     emit('afterMetadataSaveSuccess')
+    await creditWrite
   } catch (e) {
     showErrorsDefault(e)
   } finally {
@@ -982,6 +988,7 @@ const onAssetUploadConfirm = (items: ImageCreateUpdateAware[]) => {
   }
   // An upload brings its own source, so authors of a previously picked asset are not offered.
   offerNoDamAuthors()
+  clearSingleUseUsage()
   imageMediaWidgetStore.setDetail(items[0])
   pickInDialog = detail.value
   metadataDialog.value = true
@@ -1292,6 +1299,7 @@ defineExpose({
       :saving="metadataDialogSaving || confirmWaits"
       :loading="metadataDialogLoading"
       :type="DamAssetType.Image"
+      :single-use-check="singleUseCheck"
       @edit-asset="onEditAsset"
       @update:dam-authors="pickDamAuthors"
       @update:dam-sources="pickDamSources"
@@ -1308,6 +1316,8 @@ defineExpose({
     :max-count="1"
     :asset-type="DamAssetType.Image"
     :skip-current-user-check="skipCurrentUserCheck"
+    :single-use-allowed="singleUseAllowed"
+    :usage-holder="usageHolder"
     :config-name="damConfigName"
     return-type="asset"
     @confirm="onAssetSelectConfirm"

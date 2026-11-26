@@ -1,5 +1,10 @@
 import type { DocId, IntegerId } from '@/shared/types/common'
 
+export interface ImageOwner {
+  resourceName: string
+  resourceId: IntegerId
+}
+
 export interface ImageAware {
   id: IntegerId
   texts: {
@@ -11,6 +16,10 @@ export interface ImageAware {
     licenceId: IntegerId
     regionPosition: number
     internal: boolean
+    // Request-only, required when an image is picked: licence the server takes it over into when needed.
+    uploadLicenceId?: IntegerId
+    // Request-only: take over an asset of another licence even when it could be used directly.
+    forceTakeOver?: boolean
   }
   flags: {
     showSource: boolean
@@ -22,10 +31,24 @@ export interface ImageAware {
 
 export interface ImageCreateUpdateAware extends Omit<ImageAware, 'id'> {
   id?: IntegerId
+  // Request-only: the entity the image belongs to; an omitted pair keeps the stored owner.
+  ownerResourceName?: string
+  ownerResourceId?: IntegerId
 }
 
 export interface ImageCreateUpdateAwareKeyed extends ImageCreateUpdateAware {
   key: string
+}
+
+export function applyImageOwner<T extends Pick<ImageCreateUpdateAware, 'ownerResourceName' | 'ownerResourceId'>>(
+  target: T,
+  owner: ImageOwner | null | undefined
+): T {
+  if (owner) {
+    target.ownerResourceName = owner.resourceName
+    target.ownerResourceId = owner.resourceId
+  }
+  return target
 }
 
 export interface ImageStoreItem extends ImageCreateUpdateAwareKeyed {

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, onBeforeUnmount } from 'vue'
-import type { UploadQueueItem, UploadQueueKey } from '@/domains/dam/types/UploadQueue'
+import { type UploadQueueItem, UploadQueueItemType, type UploadQueueKey } from '@/domains/dam/types/UploadQueue'
 import UploadQueueItemEditable from '@/domains/dam/uploadQueue/components/UploadQueueItemEditable.vue'
 import AssetQueueSelectedSidebar from '@/domains/dam/uploadQueue/components/AssetQueueSelectedSidebar.vue'
 import type { DocId, IntegerId } from '@/shared/types/common'
@@ -162,7 +162,9 @@ onBeforeUnmount(() => {
                 v-model:authors="item.authors"
                 v-model:sources="item.sources"
                 v-model:main-file-single-use="item.mainFileSingleUse"
-                :main-file-single-use-enabled="queue.mainFileSingleUseEnabled"
+                :main-file-single-use-enabled="
+                  queue.mainFileSingleUseEnabled && item.type !== UploadQueueItemType.Asset
+                "
                 :ext-system="extSystem"
                 :item="item"
                 :index="index"

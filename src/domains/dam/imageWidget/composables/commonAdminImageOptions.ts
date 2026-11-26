@@ -6,10 +6,21 @@ import {
   deleteImage as deleteImageApi,
   fetchImage as fetchImageApi,
   fetchImageListByIds as fetchImageListByIdsApi,
+  fetchSingleUseUsage as fetchSingleUseUsageApi,
   updateImage as updateImageApi,
 } from '@/domains/dam/imageWidget/composables/imageApiCms'
 
 export { initCommonAdminImageOptions } from '@/plugins/pluginOptions'
+
+const defaultImageApi = {
+  fetchImage: fetchImageApi,
+  createImage: createImageApi,
+  updateImage: updateImageApi,
+  deleteImage: deleteImageApi,
+  fetchImageListByIds: fetchImageListByIdsApi,
+  bulkUpdateImages: bulkUpdateImagesApi,
+  fetchSingleUseUsage: fetchSingleUseUsageApi,
+}
 
 export function useCommonAdminImageOptions(configName: string = 'default') {
   if (
@@ -28,15 +39,6 @@ export function useCommonAdminImageOptions(configName: string = 'default') {
     previewDomainOriginal: imageOptions.value.configs[configName].previewDomainOriginal,
     imageWidth: imageOptions.value.configs[configName].width,
     imageHeight: imageOptions.value.configs[configName].height,
-    imageApi: imageOptions.value.configs[configName].imageApi
-      ? imageOptions.value.configs[configName].imageApi
-      : {
-          fetchImage: fetchImageApi,
-          createImage: createImageApi,
-          updateImage: updateImageApi,
-          deleteImage: deleteImageApi,
-          fetchImageListByIds: fetchImageListByIdsApi,
-          bulkUpdateImages: bulkUpdateImagesApi,
-        },
+    imageApi: imageOptions.value.configs[configName].imageApi ?? defaultImageApi,
   }
 }

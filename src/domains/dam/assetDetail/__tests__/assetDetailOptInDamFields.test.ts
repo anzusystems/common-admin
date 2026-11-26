@@ -137,6 +137,7 @@ describe.each([
           asset: { ...damAsset('asset-1', { licence }), autoDeleteAt: null } as never,
           selected: false,
           active: false,
+          disabledReason: null,
         },
         showMetaIcons: true,
       },

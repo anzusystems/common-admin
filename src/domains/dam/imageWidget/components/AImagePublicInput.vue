@@ -1,5 +1,10 @@
 <script setup lang="ts">
-import type { ImageAware, ImageCreateUpdateAware } from '@/domains/dam/types/ImageAware'
+import {
+  applyImageOwner,
+  type ImageAware,
+  type ImageCreateUpdateAware,
+  type ImageOwner,
+} from '@/domains/dam/types/ImageAware'
 import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
 import { fetchAssetByFileId } from '@/domains/dam/api/damAssetApi'
 import { cloneDeep, isDocId, isNull, isString } from '@/shared/utils/common'
@@ -21,14 +26,19 @@ import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 
 const props = withDefaults(
   defineProps<{
+    /** Sent with the image save (`dam.uploadLicenceId`): core-cms takes a photo of another licence over into it. */
+    uploadLicence: IntegerId
     selectLicences: IntegerId[]
     image?: ImageAware | undefined // optional, if available, no need to fetch image data
+    /** The record the image belongs to, sent with the image save, as on the image widgets. */
+    owner?: ImageOwner | null
     configName?: string
     labelT?: string | undefined
     dataCy?: string | undefined
   }>(),
   {
     image: undefined,
+    owner: null,
     configName: undefined,
     labelT: 'common.damImage.public.idOrUrl',
     dataCy: undefined,
@@ -123,6 +133,9 @@ const submit = async () => {
       { description: meta.value.description.trim(), source: meta.value.source.trim() },
       { position: 0, id: resImage.value?.id || undefined }
     )
+    // The licence core-cms takes the photo over into when its licence does not allow direct use.
+    data.dam.uploadLicenceId = props.uploadLicence
+    applyImageOwner(data, props.owner)
     const imageRes = resImage.value?.id
       ? await imageApi.updateImage(imageClient, resImage.value.id, data)
       : await imageApi.createImage(imageClient, data)

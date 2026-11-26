@@ -47,11 +47,16 @@ export function useDamCreditConfig(configName?: string) {
 export const hasNoDamCredit = (authorIds: DocId[] | undefined, sourceIds: DocId[] | undefined) =>
   (authorIds?.length ?? 0) === 0 && (sourceIds?.length ?? 0) === 0
 
-type DamCreditName = Pick<DamAuthorMinimal, 'name' | 'hiddenInCredit'>
+type DamCreditName = Pick<DamAuthorMinimal, 'name' | 'hiddenInCredit' | 'priority'>
+
+/** Higher priority first; `sort` is stable, so names of equal priority keep their order. A missing priority is 0. */
+export const byPriorityDesc = (a: Pick<DamAuthorMinimal, 'priority'>, b: Pick<DamAuthorMinimal, 'priority'>) =>
+  (b.priority ?? 0) - (a.priority ?? 0)
 
 const joinNames = (items: DamCreditName[], separator: string) =>
   items
     .filter((item) => !item.hiddenInCredit)
+    .sort(byPriorityDesc)
     .map((item) => item.name.trim())
     .filter((name) => name.length > 0)
     .join(separator)
@@ -76,7 +81,7 @@ export function damCreditFromMap(
     (ids ?? [])
       .map((id) => authorsMap.get(id))
       .filter((item): item is DamAuthor => !isUndefined(item))
-      .map((item) => ({ name: item.name, hiddenInCredit: !!item.flags?.hiddenInCredit }))
+      .map((item) => ({ name: item.name, hiddenInCredit: !!item.flags?.hiddenInCredit, priority: item.priority ?? 0 }))
   return damCredit(pick(sourceIds), pick(authorIds), config)
 }
 

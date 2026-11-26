@@ -316,6 +316,10 @@ import {
   type AssetMetadataDto,
   type AssetMetadataSuggestions,
   type AssetSearchListItemDto,
+  type AssetSingleUseUsage,
+  type AssetSingleUseUsageEntry,
+  type AssetSingleUseUsageStatusType,
+  AssetSingleUseUsageStatus,
   DamAssetStatus,
   DamAssetStatusDefault,
   type DamAssetStatusType,
@@ -368,6 +372,7 @@ import {
   type AssetSelectReturnData,
   AssetSelectReturnType,
   type AssetSelectReturnTypeType,
+  type AssetSelectUsageHolder,
 } from '@/domains/dam/types/AssetSelect'
 import type { SortableItemDataAware } from '@/shared/types/sortableUtils'
 import { useDamConfigState } from '@/domains/dam/config/composables/damConfigState'
@@ -425,7 +430,12 @@ import {
 } from '@/domains/dam/uploadQueue/settlement/uploadSettlementTypes'
 import { useDropzoneGlobalDragState } from '@/domains/ui/file/composables/dropzone'
 import { DamNotificationName, type DamNotificationNameType } from '@/domains/dam/composables/damNotificationsEventBus'
-import type { ImageAware, ImageCreateUpdateAware } from '@/domains/dam/types/ImageAware'
+import {
+  applyImageOwner,
+  type ImageAware,
+  type ImageCreateUpdateAware,
+  type ImageOwner,
+} from '@/domains/dam/types/ImageAware'
 import type { ImageCreateUpdateAwareKeyed } from '@/domains/dam/types/ImageAware'
 import type { DamAuthor, DamAuthorMinimal } from '@/domains/dam/author/types/DamAuthor'
 import type { DamKeyword, DamKeywordMinimal } from '@/domains/dam/keyword/types/DamKeyword'
@@ -438,6 +448,7 @@ import type {
   DamAssetLicence,
   DamAssetLicenceCached,
   DamAssetLicenceExtended,
+  DamAssetLicenceFlags,
   DamAssetLicenceMinimal,
   DamAssetLicenceSelectFields,
 } from '@/domains/dam/types/AssetLicence'
@@ -1017,9 +1028,13 @@ export {
   type AssetSelectReturnData,
   AssetSelectReturnType,
   type AssetSelectReturnTypeType,
+  type AssetSelectUsageHolder,
   type SortableItemDataAware,
   type AssetFileProperties,
   type AssetSearchListItemDto,
+  type AssetSingleUseUsage,
+  type AssetSingleUseUsageEntry,
+  type AssetSingleUseUsageStatusType,
   type AssetDetailItemDto,
   type AssetMetadataDto,
   type AssetCustomData,
@@ -1063,6 +1078,7 @@ export {
   DamAssetType,
   DamAssetTypeDefault,
   type DamAssetTypeType,
+  AssetSingleUseUsageStatus,
   DamAssetStatus,
   DamAssetStatusDefault,
   type DamAssetStatusType,
@@ -1102,6 +1118,8 @@ export {
   type UploadSettlementScheduler,
   type UploadSettlementVisibility,
   type ImageAware,
+  type ImageOwner,
+  applyImageOwner,
   type ImageCreateUpdateAware,
   type ImageCreateUpdateAwareKeyed,
   type UploadMetadataToImageMapFn,
@@ -1127,6 +1145,7 @@ export {
   type DamAssetLicence,
   type DamAssetLicenceCached,
   type DamAssetLicenceExtended,
+  type DamAssetLicenceFlags,
   type DamAssetLicenceMinimal,
   type DamAssetLicenceSelectFields,
   type DamAssetListViewMinimal,
@@ -1610,6 +1629,7 @@ export { useDamKeywordAssetTypeConfig } from '@/domains/dam/keyword/composables/
 export { useDamAuthorAssetTypeConfig } from '@/domains/dam/author/composables/damAuthorConfig'
 export { isDamSourceEnabled, useDamSourceAssetTypeConfig } from '@/domains/dam/author/composables/damSourceConfig'
 export { useDamCreditPreview } from '@/domains/dam/author/composables/damCredit'
+export { type DamSourceBadge, resolveSourceBadges } from '@/domains/dam/author/composables/damSourceBadge'
 export { useDamAuthorFieldRouting } from '@/domains/dam/author/composables/authorFieldRouting'
 export { default as ADamSourcesAuthorsRow } from '@/domains/dam/author/components/DamSourcesAuthorsRow.vue'
 export { useFormatAndSizeCheck } from '@/domains/ui/file/composables/formatAndSizeCheck'

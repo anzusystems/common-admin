@@ -17,6 +17,8 @@ export function useDamAuthorFactory() {
         source: false,
         hiddenInCredit: false,
       },
+      priority: 0,
+      badge: '',
       currentAuthors: [],
       childAuthors: [],
       type: DamAuthorTypeDefault,

@@ -1,4 +1,4 @@
-import type { ImageCreateUpdateAware } from '@/domains/dam/types/ImageAware'
+import { applyImageOwner, type ImageCreateUpdateAware, type ImageOwner } from '@/domains/dam/types/ImageAware'
 import type { DocId, IntegerId } from '@/shared/types/common'
 import { isUndefined } from '@/shared/utils/common'
 
@@ -37,4 +37,18 @@ export function imageFieldsOf(image: ImageCreateUpdateAware): ImageCreateUpdateA
   if (!isUndefined(image.position)) fields.position = image.position
   if (!isUndefined(image.id)) fields.id = image.id
   return fields
+}
+
+/**
+ * What an image save of a widget sends (`imageFieldsOf`), with the record the image belongs to (`owner`, left out when
+ * none) and the upload licence core-cms takes a picked photo of another licence over into. The image is not changed.
+ */
+export function imageSaveFieldsOf(
+  image: ImageCreateUpdateAware,
+  owner: ImageOwner | null | undefined,
+  uploadLicence: IntegerId
+): ImageCreateUpdateAware {
+  const fields = imageFieldsOf(image)
+  fields.dam = { ...fields.dam, uploadLicenceId: uploadLicence }
+  return applyImageOwner(fields, owner)
 }

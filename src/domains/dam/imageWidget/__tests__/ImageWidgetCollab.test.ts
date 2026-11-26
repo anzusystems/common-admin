@@ -217,8 +217,9 @@ describe('ImageWidgetInner in a collab room', () => {
     wrapper.unmount()
   })
 
-  // The picker closes itself as it answers, and the upload of the copy opens only once the copy is made.
-  it('keeps the lock while a picked asset is copied into the licence', async () => {
+  // The picker closes itself as it answers. A photo of another licence is not copied at the pick (1.52.0): the image
+  // dialog opens with it, holding the lock, and the image save takes it over. The lock goes back once it closes.
+  it('keeps the lock while a picked photo of another licence goes to the image dialog, and copies nothing', async () => {
     const { wrapper } = mountWidget('listing-pick')
     await openMenu(wrapper)
     const picker = wrapper.findComponent({ name: 'AAssetSelect' })
@@ -227,14 +228,16 @@ describe('ImageWidgetInner in a collab room', () => {
     picker.vm.$emit('confirm', {
       type: 'asset',
       value: [{ id: 'a1', licence: 2, mainFile: { id: 'f1' } }],
-      copyToLicence: 1,
+      forceTakeOver: true,
     })
     picker.vm.$emit('update:modelValue', false)
     await flushPromises()
-    expect(released).not.toHaveBeenCalled()
-
-    copied.resolve!([])
     await flushPromises()
+    expect(copied.resolve).toBeNull()
+    expect(released).not.toHaveBeenCalled()
+    expect(useImageMediaWidgetStore().detail).toMatchObject({ dam: { damId: 'f1', licenceId: 2, forceTakeOver: true } })
+
+    wrapper.findComponent({ name: 'ImageDetailDialogMetadata' }).vm.$emit('close')
     await flushPromises()
     expect(released).toHaveBeenCalledTimes(1)
     wrapper.unmount()

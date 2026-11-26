@@ -3,7 +3,8 @@ import type { IntegerId, IntegerIdNullable } from '@/shared/types/common'
 import { onMounted, provide, ref, shallowRef } from 'vue'
 import { useDamConfigState } from '@/domains/dam/config/composables/damConfigState'
 import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
-import type { ImageAware, ImageCreateUpdateAware } from '@/domains/dam/types/ImageAware'
+import type { ImageAware, ImageCreateUpdateAware, ImageOwner } from '@/domains/dam/types/ImageAware'
+import type { AssetSelectUsageHolder } from '@/domains/dam/types/AssetSelect'
 import type { UploadQueueKey } from '@/domains/dam/types/UploadQueue'
 import ImageWidgetInner from '@/domains/dam/imageWidget/components/ImageWidgetInner.vue'
 import { ImageWidgetUploadConfigKey } from '@/domains/dam/imageWidget/utils/imageWidgetInkectionKeys'
@@ -45,6 +46,15 @@ const props = withDefaults(
     callDeleteApiOnRemove?: boolean
     damWidth?: undefined | number
     damHeight?: undefined | number
+    /**
+     * The record the image belongs to, sent with the image save (`ownerResourceName`, `ownerResourceId`). Left out,
+     * the stored owner stays. core-cms checks a single use photo against it.
+     */
+    owner?: ImageOwner | null
+    /** The record may use a single use photo: the picker lists them. `false` lists none. */
+    singleUseAllowed?: boolean
+    /** The record the picker asks the single use usage for (`AssetSelectUsageHolder`). */
+    usageHolder?: AssetSelectUsageHolder | null
   }>(),
   {
     configName: undefined,
@@ -65,6 +75,9 @@ const props = withDefaults(
     callDeleteApiOnRemove: false,
     damWidth: undefined,
     damHeight: undefined,
+    owner: null,
+    singleUseAllowed: true,
+    usageHolder: null,
   }
 )
 

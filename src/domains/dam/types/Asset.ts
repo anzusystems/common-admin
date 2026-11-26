@@ -1,4 +1,4 @@
-import type { DatetimeUTCNullable, DocId, DocIdNullable, IntegerId } from '@/shared/types/common'
+import type { DatetimeUTC, DatetimeUTCNullable, DocId, DocIdNullable, IntegerId } from '@/shared/types/common'
 import type { AnzuUserAndTimeTrackingAware } from '@/shared/types/AnzuUserAndTimeTrackingAware'
 import type { ResourceNameSystemAware } from '@/shared/types/ResourceNameSystemAware'
 import type { AssetFile } from '@/domains/dam/types/AssetFile'
@@ -56,12 +56,42 @@ interface Metadata {
   customData: any
 }
 
+/**
+ * Where a photo stands for the record picking it, as core-cms answers it (`/adm/v1/image/single-use-usage`).
+ * `notAllowed`: the record may not use a single use photo. `placement`: the record only places it, holding nothing.
+ * `free`: nobody uses it. `own`: only this record. `ownShared`: this record and others. `conflict`: another record.
+ */
+export const AssetSingleUseUsageStatus = {
+  NotAllowed: 'notAllowed',
+  Placement: 'placement',
+  Free: 'free',
+  Own: 'own',
+  OwnShared: 'ownShared',
+  Conflict: 'conflict',
+} as const
+export type AssetSingleUseUsageStatusType = (typeof AssetSingleUseUsageStatus)[keyof typeof AssetSingleUseUsageStatus]
+
+export interface AssetSingleUseUsageEntry {
+  resourceName: string
+  resourceId: IntegerId
+  pickedAt: DatetimeUTC
+}
+
+export interface AssetSingleUseUsage {
+  holder: AssetSingleUseUsageEntry | null
+  status: AssetSingleUseUsageStatusType
+  blocked: boolean
+  usageCount: number
+  usages: AssetSingleUseUsageEntry[]
+}
+
 export interface AssetSearchListItemDto extends AnzuUserAndTimeTrackingAware, ResourceNameSystemAware {
   id: DocId
   texts: Texts
   attributes: Attributes
   flags: Flags
   licence: IntegerId
+  sources: DocId[]
   mainFile: null | AssetFile
   podcasts: DocId[]
   assetFileProperties: AssetFileProperties
@@ -69,6 +99,9 @@ export interface AssetSearchListItemDto extends AnzuUserAndTimeTrackingAware, Re
   mainFileInternal: Readonly<boolean | null>
   mainFileOverrideInternal: Readonly<boolean | null>
   autoDeleteAt: Readonly<DatetimeUTCNullable>
+  // Filled by the asset picker from the CMS (`imageApi.fetchSingleUseUsage`): for a single use image with the list,
+  // for any other image when its usage tab opens.
+  singleUseUsage?: Readonly<AssetSingleUseUsage | null>
 }
 
 export interface AssetDetailItemDto extends AnzuUserAndTimeTrackingAware, ResourceNameSystemAware {

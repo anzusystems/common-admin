@@ -26,6 +26,21 @@
       "texts": {
         "description": "Pokud popis přepíšete zde, nezměníte ho v úložišti obrázků."
       }
+    },
+    "error": {
+      "takeOverRejected": "Tento obrázek nelze převzít do naší licence. Vyberte jiný.",
+      "takeOverUnavailable": "Přebírání obrázků je momentálně nedostupné. Zkuste to za chvíli, jiný obrázek teď nepomůže. Pokud to trvá, kontaktujte správce.",
+      "singleUseViolation": "Obrázek {damId} je jednorázový a už ho používá jiný záznam ({holder}). Vyberte jiný obrázek.",
+      "singleUseViolationUnknownHolder": "Obrázek {damId} je jednorázový a už ho používá jiný záznam. Vyberte jiný obrázek.",
+      "singleUseViolationUnknownImage": "Jeden z vybraných obrázků je jednorázový a už ho používá jiný záznam ({holder}). Vyberte jiný obrázek.",
+      "singleUseViolationUnidentified": "Jeden z vybraných obrázků je jednorázový a už ho používá jiný záznam. Vyberte jiný obrázek.",
+      "restoreConflict": "Článek se neobnovil: jednorázový obrázek {damId} už používá jiný záznam ({holder}).",
+      "restoreConflictUnknownHolder": "Článek se neobnovil: jednorázový obrázek {damId} už používá jiný záznam.",
+      "restoreConflictUnknownImage": "Článek se neobnovil: jeden z jeho jednorázových obrázků už používá jiný záznam ({holder}).",
+      "restoreConflictUnidentified": "Článek se neobnovil: jeden z jeho jednorázových obrázků už používá jiný záznam.",
+      "sharedGallery": "Galerie obsahuje jednorázový obrázek, takže může být vložena jen na jednom místě. Odeberte ji z ostatních míst nebo z ní jednorázový obrázek odeberte.",
+      "invalidOwner": "Jednorázový obrázek sem vložit nelze, cílový záznam jednorázové obrázky nepodporuje.",
+      "galleryCopy": "Galerie obsahuje jednorázový obrázek a nelze ji kopírovat."
     }
   },
   "media": {
@@ -145,7 +160,10 @@
       "qhd": "QHD",
       "4k": "4K",
       "8k": "8K",
-      "autoDeleteAt": "Automatické smazání {date}"
+      "autoDeleteAt": "Automatické smazání {date}",
+      "source": "Zdroj: {name}",
+      "singleUse": "Jednorázový obrázek",
+      "singleUseUsages": "Jednorázový obrázek, počet použití: {count}"
     },
     "assetFileFailReason": {
       "none": "Žádný",

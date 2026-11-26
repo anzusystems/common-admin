@@ -317,7 +317,8 @@ describe.each<[string, Component, Record<string, unknown>]>([
   const withoutAuthors = (status: AssetFileProcessStatusType, described = false) =>
     dam.assets.set(
       'a',
-      damAssetWithFile('a', 'file-in-the-dam-a', status, {
+      // Its file as the list names it: the asset of the saved image is read by it after the save.
+      damAssetWithFile('a', 'file-as-picked-a', status, {
         licence: ASSET_LICENCE,
         authors: [],
         flags: { described, visible: true },
@@ -364,6 +365,10 @@ describe.each<[string, Component, Record<string, unknown>]>([
     await flushPromises()
     expect(imageDialog().props('damAuthors')).toEqual(['author-5'])
     await confirmImage()
-    expect(writesIntoTheAsset()).toEqual([[{ id: 'a', authors: ['author-5'], described: true }]])
+    // A photo of another licence than the upload one: written after the image save, into the asset of its file.
+    await vi.waitFor(() =>
+      expect(writesIntoTheAsset()).toEqual([[{ id: 'a', authors: ['author-5'], described: true }]])
+    )
+    expect(dam.originReads().map((request) => request.url)).toEqual(['/adm/v1/asset/asset-file/file-as-picked-a'])
   })
 })

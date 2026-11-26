@@ -1,5 +1,10 @@
 import { computed, onBeforeUnmount, ref, shallowRef, watch } from 'vue'
-import { fetchAsset } from '@/domains/dam/api/damAssetApi'
+import {
+  fetchAsset,
+  fetchAssetByFileId,
+  showMetadataSaveError,
+  updateAssetAuthors,
+} from '@/domains/dam/api/damAssetApi'
 import { useAssetDetailStore } from '@/domains/dam/assetDetail/store/assetDetailStore'
 import { fetchDamCredit, hasNoDamCredit, useDamCreditConfig } from '@/domains/dam/author/composables/damCredit'
 import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
@@ -293,6 +298,28 @@ export function useImageDialogDamAuthors(
   }
 
   /**
+   * Writes picked sources and authors into the asset of the saved image's file `damId`, once the image is saved.
+   * For a photo of another licence than the upload licence: the save may take it over into a copy in the upload
+   * licence, and the credit belongs to that copy, not to the picked asset.
+   * Under the ext system of the saved asset's licence, else `pageExtSystem`. A failed write is shown; the image stays.
+   */
+  const writeCreditToSavedAsset = async (
+    damId: DocId,
+    authors: DocId[],
+    sources: DocId[],
+    pageExtSystem: IntegerId
+  ) => {
+    let extSystem = pageExtSystem
+    try {
+      const saved = await fetchAssetByFileId(damClient, endPointAsset, damId)
+      extSystem = (await getExtSystemByLicence(saved.licence)) ?? pageExtSystem
+      await updateAssetAuthors(damClient, endPointAsset, { ...saved, authors, sources }, extSystem, configName)
+    } catch (e) {
+      showMetadataSaveError(e, extSystem, configName)
+    }
+  }
+
+  /**
    * Read right before picked sources and authors are written into `asset`. Returns the credit of those
    * given elsewhere meanwhile, or `null` if none. Throws if they cannot be read.
    * Not atomic: one added between this read and the write is still overwritten.
@@ -315,6 +342,7 @@ export function useImageDialogDamAuthors(
     takeHeldAnew,
     letGoOnceSavedWithSource,
     authorsGivenMeanwhile,
+    writeCreditToSavedAsset,
     /** A confirm waits for the read of a just-closed detail's asset. Its button spins. */
     confirmWaits,
   }

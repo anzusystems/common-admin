@@ -13,6 +13,7 @@ import type { DatetimeUTCNullable } from '@/shared/types/common'
 import { isUndefined } from '@/shared/utils/common'
 import { useRemainingTime } from '@/domains/ui/datetime/composables/remainingTime'
 import AssetImageMetaIcons from '@/domains/dam/assetDetail/components/AssetImageMetaIcons.vue'
+import type { DamSourceBadge } from '@/domains/dam/author/composables/damSourceBadge'
 
 const props = withDefaults(
   defineProps<{
@@ -45,6 +46,12 @@ const props = withDefaults(
     autoDeleteAt?: DatetimeUTCNullable
     /** Passed to the meta icons: the badge of the asset's licence. */
     licenceBadge?: string
+    /** Passed to the meta icons: the badges of the asset's sources (`resolveSourceBadges`). */
+    sourceBadges?: DamSourceBadge[]
+    /** Passed to the meta icons: the single use badge. */
+    singleUse?: boolean
+    /** Passed to the meta icons: the records using the single use photo, when that is a warning. */
+    singleUseUsageCount?: number
   }>(),
   {
     assetType: DamAssetType.Image,
@@ -73,6 +80,9 @@ const props = withDefaults(
     showTts: false,
     autoDeleteAt: null,
     licenceBadge: '',
+    sourceBadges: () => [],
+    singleUse: false,
+    singleUseUsageCount: 0,
   }
 )
 const emit = defineEmits<{
@@ -252,6 +262,9 @@ const { remainingTimeShort } = useRemainingTime()
         :show-tts="showTts"
         :auto-delete-at="autoDeleteAt"
         :licence-badge="licenceBadge"
+        :source-badges="sourceBadges"
+        :single-use="singleUse"
+        :single-use-usage-count="singleUseUsageCount"
       />
     </template>
   </VImg>
@@ -291,6 +304,9 @@ const { remainingTimeShort } = useRemainingTime()
       :show-tts="showTts"
       :auto-delete-at="autoDeleteAt"
       :licence-badge="licenceBadge"
+      :source-badges="sourceBadges"
+      :single-use="singleUse"
+      :single-use-usage-count="singleUseUsageCount"
     />
   </div>
   <div
@@ -339,6 +355,9 @@ const { remainingTimeShort } = useRemainingTime()
       :show-tts="showTts"
       :auto-delete-at="autoDeleteAt"
       :licence-badge="licenceBadge"
+      :source-badges="sourceBadges"
+      :single-use="singleUse"
+      :single-use-usage-count="singleUseUsageCount"
     />
   </div>
 </template>

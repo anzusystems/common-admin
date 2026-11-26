@@ -59,6 +59,7 @@ export const damImageFile = (
     originFileName: 'photo.jpg',
     originUrl: '',
     failReason: AssetFileFailReason.None,
+    takenOverFromId: '',
   },
   imageAttributes: {
     ratioWidth: 16,

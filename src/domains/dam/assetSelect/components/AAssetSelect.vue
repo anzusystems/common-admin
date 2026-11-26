@@ -15,6 +15,7 @@ import {
   type AssetSelectReturnData,
   AssetSelectReturnType,
   type AssetSelectReturnTypeType,
+  type AssetSelectUsageHolder,
 } from '@/domains/dam/types/AssetSelect'
 import { filterAllowedImageWidgetSelectConfigs } from '@/domains/dam/config/utils/damFilterUserAllowedUploadConfigs'
 import { useAlerts } from '@/domains/system/composables/alerts'
@@ -23,6 +24,7 @@ import { useDamConfigState } from '@/domains/dam/config/composables/damConfigSta
 import type { DamConfigLicenceExtSystemReturnType } from '@/domains/dam/types/DamConfig'
 import { cloneDeep, isUndefined } from '@/shared/utils/common'
 import AssetMetadata from '@/domains/dam/assetDetail/components/AssetMetadata.vue'
+import AssetSelectDetailTabs from '@/domains/dam/assetSelect/components/AssetSelectDetailTabs.vue'
 import { useAssetSelectStore } from '@/domains/dam/assetSelect/store/assetSelectStore'
 import { storeToRefs } from 'pinia'
 import { useAssetDetailStore } from '@/domains/dam/assetDetail/store/assetDetailStore'
@@ -31,6 +33,7 @@ import { DatatablePaginationKey } from '@/domains/filters/utils/filterInjectionK
 import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
 import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
 import AssetSelectLicencePresetBar from '@/domains/dam/assetSelect/components/AssetSelectLicencePresetBar.vue'
+import { useAssetSelectTakeOver } from '@/domains/dam/assetSelect/composables/assetSelectTakeOver'
 
 const props = withDefaults(
   defineProps<{
@@ -40,6 +43,8 @@ const props = withDefaults(
     maxCount: number
     selectLicences: IntegerId[]
     uploadLicence?: IntegerId | undefined
+    singleUseAllowed?: boolean
+    usageHolder?: AssetSelectUsageHolder | null
     returnType?: AssetSelectReturnTypeType
     configName?: string
     skipCurrentUserCheck?: boolean
@@ -49,6 +54,8 @@ const props = withDefaults(
   {
     inPodcast: null,
     uploadLicence: undefined,
+    singleUseAllowed: true,
+    usageHolder: null,
     returnType: AssetSelectReturnType.MainFileId,
     configName: undefined,
     skipCurrentUserCheck: false,
@@ -67,7 +74,6 @@ const ready = defineModel<boolean>('ready', { default: false, required: false })
 const damConfigName = useDamConfigName(props.configName)
 
 const loading = ref(false)
-const copyToLicence = ref(false)
 
 const { t } = useI18n()
 
@@ -96,8 +102,24 @@ const { getOrLoadDamConfigExtSystemByLicences } = useDamConfigState(damClient, d
 const assetDetailStore = useAssetDetailStore()
 const { asset } = storeToRefs(assetDetailStore)
 const assetSelectStore = useAssetSelectStore()
-const { selectedSelectConfig, selectedAssets } = storeToRefs(assetSelectStore)
+const { selectedSelectConfig, selectedHasDisabled } = storeToRefs(assetSelectStore)
 const { copyToLicenceEnabled } = useCommonAdminCoreDamOptions(damConfigName)
+
+// The listed item of the asset the side panel shows: its reason and its usage.
+const openedItem = computed(() => assetSelectStore.assetListItems.find((item) => item.asset.id === asset.value?.id))
+
+const openedAssetDisabledReason = computed(() => openedItem.value?.disabledReason ?? null)
+
+// The take over switch: offered once a picked photo is of another licence than the upload licence (the picker may
+// browse several licences), locked on for a licence without direct use. Off with `copyToLicenceEnabled: false`.
+const { showTakeOver, takeOverLocked, takeOverModel, getForceTakeOver } = useAssetSelectTakeOver(
+  {
+    uploadLicence: () => props.uploadLicence,
+    isImage: () => props.assetType === DamAssetType.Image,
+    enabled: () => copyToLicenceEnabled !== false,
+  },
+  damConfigName
+)
 
 const selectConfigs = shallowRef<DamConfigLicenceExtSystemReturnType[]>([])
 
@@ -119,6 +141,7 @@ const onOpen = () => {
   }
 
   reset()
+  takeOverModel.value = false
   initStoreContext(
     selectConfigLocal,
     props.assetType,
@@ -127,6 +150,11 @@ const onOpen = () => {
     props.minCount,
     props.maxCount
   )
+  assetSelectStore.setSelectability({
+    singleUseAllowed: props.singleUseAllowed,
+    uploadLicence: props.uploadLicence,
+    usageHolder: props.usageHolder,
+  })
   if (mdAndUp.value) openSidebarLeft()
   if (!mdAndUp.value) closeSidebarRight()
   modelValue.value = true
@@ -146,38 +174,12 @@ const onClose = () => {
   reset()
 }
 
-// The copy switch as the user left it, for picked assets of another licence than the upload licence.
-// Picks survive a change of the browsed licence, so each asset's own licence decides.
-// Assets already in the upload licence are not copied. The widget takes them as they are.
-const getCopyToLicenceId = () => {
-  if (
-    copyToLicenceEnabled !== false &&
-    props.assetType === DamAssetType.Image &&
-    copyToLicence.value &&
-    props.uploadLicence &&
-    [...assetSelectStore.selectedAssets.values()].some(({ asset }) => asset.licence !== props.uploadLicence)
-  ) {
-    return props.uploadLicence
-  }
-  return undefined
-}
-
 const onConfirm = () => {
-  emit('confirm', getSelectedData(props.returnType, getCopyToLicenceId()))
+  emit('confirm', getSelectedData(props.returnType, getForceTakeOver()))
   onClose()
 }
 
 const { gridView } = useGridView()
-
-// Offered once a picked asset is of another licence than the upload licence: the picker may browse several licences.
-const showCopyToLicence = computed(() => {
-  return (
-    copyToLicenceEnabled !== false &&
-    props.assetType === DamAssetType.Image &&
-    !isUndefined(props.uploadLicence) &&
-    [...selectedAssets.value.values()].some((item) => item.asset.licence !== props.uploadLicence)
-  )
-})
 
 const componentComputed = computed(() => {
   switch (gridView.value) {
@@ -191,7 +193,7 @@ const componentComputed = computed(() => {
 })
 
 const disabledSubmit = computed(() => {
-  return selectedCount.value < props.minCount || selectedCount.value > props.maxCount
+  return selectedCount.value < props.minCount || selectedCount.value > props.maxCount || selectedHasDisabled.value
 })
 
 // The ext system of the browsed licences, while this picker is open: the store is shared by every picker of the page.
@@ -368,15 +370,28 @@ defineExpose({
               v-else
               class="w-100"
             >
-              <slot
-                name="sidebar-prepend"
-                :asset="asset"
-              />
-              <AssetMetadata
-                v-if="extId && !customFormConfigLoading"
-                :ext-system="extId"
-                readonly
-              />
+              <div
+                v-if="openedAssetDisabledReason"
+                class="w-100 pa-2 text-body-small"
+              >
+                <VAlert type="warning">
+                  {{ openedAssetDisabledReason }}
+                </VAlert>
+              </div>
+              <AssetSelectDetailTabs
+                :item="openedItem"
+                :config-name="damConfigName"
+              >
+                <slot
+                  name="sidebar-prepend"
+                  :asset="asset"
+                />
+                <AssetMetadata
+                  v-if="extId && !customFormConfigLoading"
+                  :ext-system="extId"
+                  readonly
+                />
+              </AssetSelectDetailTabs>
             </div>
           </div>
         </div>
@@ -399,9 +414,16 @@ defineExpose({
             }}
           </div>
           <VSpacer />
+          <span
+            v-if="takeOverLocked"
+            class="text-body-small text-medium-emphasis mr-2"
+          >
+            {{ t('common.assetSelect.meta.texts.copyToLicenceLocked') }}
+          </span>
           <VSwitch
-            v-if="showCopyToLicence"
-            v-model="copyToLicence"
+            v-if="showTakeOver"
+            v-model="takeOverModel"
+            :disabled="takeOverLocked"
             :label="t('common.assetSelect.meta.texts.copyToLicence')"
             hide-details
             class="mr-2"

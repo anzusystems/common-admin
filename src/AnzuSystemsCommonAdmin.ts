@@ -12,9 +12,11 @@ import {
   initCommonAdminCoreDamOptions,
   initCommonAdminImageOptions,
 } from '@/plugins/pluginOptions'
-import type { IntegerId } from '@/shared/types/common'
+import type { DocId, IntegerId } from '@/shared/types/common'
 import type { AclValue } from '@/domains/auth/types/Permission'
 import type { ImageAware, ImageCreateUpdateAware } from '@/domains/dam/types/ImageAware'
+import type { AssetSingleUseUsage } from '@/domains/dam/types/Asset'
+import type { AssetSelectUsageHolder } from '@/domains/dam/types/AssetSelect'
 import type {
   UploadMetadataToImageMapFn,
   AssetSelectMetadataToImageMapFn,
@@ -46,6 +48,17 @@ export interface CommonAdminImageConfig {
     deleteImage: (client: () => AxiosInstance, id: IntegerId) => Promise<void>
     fetchImageListByIds: (client: () => AxiosInstance, ids: IntegerId[]) => Promise<ImageAware[]>
     bulkUpdateImages: (client: () => AxiosInstance, items: ImageCreateUpdateAware[]) => Promise<ImageAware[]>
+    /**
+     * Where each photo group (the root file of a photo and the files taken over from it) is used, for the
+     * record `usageHolder` that picks: the asset picker dims a blocked single use photo and lists its usages.
+     * Answers by group id. Left out, nobody is asked: no usage is shown, and only the image save checks the photo.
+     * The default calls core-cms (`/adm/v1/image/single-use-usage`).
+     */
+    fetchSingleUseUsage?: (
+      client: () => AxiosInstance,
+      groupIds: DocId[],
+      usageHolder: AssetSelectUsageHolder | null
+    ) => Promise<Record<DocId, AssetSingleUseUsage>>
   }
 }
 
@@ -168,6 +181,18 @@ export interface CommonAdminCoreDamConfig {
     enabled?: boolean | string
     webSocketUrl?: string
   }
+  /**
+   * The CMS checks single use photos (core-cms since 1.116.0, #87269): the asset selects of this configuration list
+   * them for a record that may use one (`singleUseAllowed`), ask the image API of the image configuration of the same
+   * name where each is used (`imageApi.fetchSingleUseUsage`, core-cms when it has no `imageApi`), dim one the record
+   * cannot use and show its usage, and the image dialog checks a picked one. Off unless `true`: the asset selects list
+   * no single use photo and ask nobody, as before. Only admin-cms turns it on: the other backends have no usage check.
+   */
+  singleUseUsageEnabled?: boolean
+  /** Url of the image list of the CMS admin filtered by the photo group. Without it the picker shows no link. */
+  singleUseUsageUrl?: (groupId: DocId) => string
+  /** Url of a record that uses a photo. Without it, or answering `undefined`, the record is shown without a link. */
+  singleUsePlaceUrl?: (resourceName: string, resourceId: string | number) => string | undefined
 }
 
 export type CommonAdminCoreDamOptions =

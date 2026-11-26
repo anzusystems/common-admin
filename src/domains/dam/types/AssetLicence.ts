@@ -12,14 +12,24 @@ export interface DamAssetLicenceSelectFields {
   badge: string
 }
 
+export interface DamAssetLicenceFlags {
+  /** The licence's assets may be used as they are. Without it, a picked image is taken over into the upload licence. */
+  directUseAllowed: boolean
+}
+
 // `badge` is on the licence itself, as in 1.50.0. A DAM before the badge sends none, so readers fall back to ''.
+// `flags` came with 1.52.0. A DAM before them sends none, so readers take direct use as allowed.
 export interface DamAssetLicence
   extends DamAssetLicenceMinimal, AnzuUserAndTimeTrackingAware, ResourceNameSystemAware, DamAssetLicenceSelectFields {
   extSystem: IntegerIdNullable
   extId: string
+  flags: DamAssetLicenceFlags
 }
 
-export type DamAssetLicenceCached = DamAssetLicenceMinimal & DamAssetLicenceSelectFields
+// `flags` optional: a cache an admin fills itself (admin-dam) may leave it out, which reads as direct use allowed.
+export type DamAssetLicenceCached = DamAssetLicenceMinimal &
+  DamAssetLicenceSelectFields &
+  Partial<Pick<DamAssetLicence, 'flags'>>
 
 /** The same as `DamAssetLicence`, which carries `badge` since 1.50.0. Kept for the admins that use the name. */
 export type DamAssetLicenceExtended = DamAssetLicence

@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import type { ImageOwner } from '@/domains/dam/types/ImageAware'
+import type { AssetSelectUsageHolder } from '@/domains/dam/types/AssetSelect'
 import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
 import { isImageWidgetUploadConfigAllowed } from '@/domains/dam/config/utils/damFilterUserAllowedUploadConfigs'
 import { ImageWidgetUploadConfigKey } from '@/domains/dam/imageWidget/utils/imageWidgetInkectionKeys'
@@ -30,6 +32,15 @@ const props = withDefaults(
     dataCy?: string | undefined
     width?: number | undefined
     callDeleteApiOnRemove?: boolean
+    /**
+     * The record the image belongs to, sent with the image save (`ownerResourceName`, `ownerResourceId`). Left out,
+     * the stored owner stays. core-cms checks a single use photo against it.
+     */
+    owner?: ImageOwner | null
+    /** The record may use a single use photo: the picker lists them. `false` lists none. */
+    singleUseAllowed?: boolean
+    /** The record the picker asks the single use usage for (`AssetSelectUsageHolder`). */
+    usageHolder?: AssetSelectUsageHolder | null
   }>(),
   {
     configName: undefined,
@@ -39,6 +50,9 @@ const props = withDefaults(
     dataCy: undefined,
     width: undefined,
     callDeleteApiOnRemove: false,
+    owner: null,
+    singleUseAllowed: true,
+    usageHolder: null,
   }
 )
 

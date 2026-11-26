@@ -57,6 +57,8 @@ describe('the plugin options of admin-cms', () => {
       imageRotateAcl: 'dam_image_update',
       sourceCreateAcl: 'dam_source_create',
       mainFileSingleUseEnabled: true,
+      // admin-cms says its CMS checks single use photos.
+      singleUseUsageEnabled: true,
       showSourceEnabled: true,
       showFileInfoEnabled: true,
       showAutoDeleteEnabled: true,
@@ -97,6 +99,7 @@ describe('the plugin options of admin-cms', () => {
       deleteImage: imageApiCms.deleteImage,
       fetchImageListByIds: imageApiCms.fetchImageListByIds,
       bulkUpdateImages: imageApiCms.bulkUpdateImages,
+      fetchSingleUseUsage: imageApiCms.fetchSingleUseUsage,
     })
   })
 })
@@ -122,6 +125,8 @@ describe('the plugin options of admin-ugc', () => {
       imageRotateAcl: null,
       sourceCreateAcl: 'dam_source_create',
       mainFileSingleUseEnabled: false,
+      // No usage check behind its image API: single use photos are not listed.
+      singleUseUsageEnabled: false,
       showSourceEnabled: false,
       showFileInfoEnabled: false,
       showAutoDeleteEnabled: true,

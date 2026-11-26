@@ -24,6 +24,8 @@ export const useAuthorSelectActions = (extSystem: IntegerId, configName: string)
     identifier: author.identifier,
     reviewed: author.flags.reviewed,
     hiddenInCredit: author.flags.hiddenInCredit,
+    priority: author.priority ?? 0,
+    badge: author.badge ?? '',
   })
 
   const mapToValueObject = (author: DamAuthor): ValueObjectOption<string> => ({

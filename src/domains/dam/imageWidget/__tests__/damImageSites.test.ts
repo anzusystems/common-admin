@@ -62,6 +62,7 @@ describe.each(consumerProfiles)('the image of the CMS outside the widgets under 
             model = value
             return wrapper!.setProps({ modelValue: value })
           },
+          uploadLicence: licence,
           selectLicences: [licence, otherLicence],
         },
         global: { plugins: [pinia] },
@@ -100,7 +101,8 @@ describe.each(consumerProfiles)('the image of the CMS outside the widgets under 
           {
             texts: { description: 'Harbour at dawn', source: 'Jana' },
             flags: { showSource: true, internal: false, overrideInternal: false },
-            dam: { damId: FILE, licenceId: licence, regionPosition: 0, internal: true },
+            // The licence the input uploads into, for core-cms to take a photo of another licence over into.
+            dam: { damId: FILE, licenceId: licence, regionPosition: 0, internal: true, uploadLicenceId: licence },
             position: 0,
           },
         ],
@@ -169,7 +171,7 @@ describe.each(consumerProfiles)('the image of the CMS outside the widgets under 
           {
             texts: { description: 'New description', source: 'Peter' },
             flags: { showSource: true, internal: false, overrideInternal: false },
-            dam: { damId: FILE, licenceId: licence, regionPosition: 0, internal: false },
+            dam: { damId: FILE, licenceId: licence, regionPosition: 0, internal: false, uploadLicenceId: licence },
             position: 0,
             id: saved.id,
           },
@@ -202,7 +204,7 @@ describe.each(consumerProfiles)('the image of the CMS outside the widgets under 
           {
             texts: { description: 'Old description', source: 'Peter' },
             flags: { showSource: true, internal: false, overrideInternal: false },
-            dam: { damId: FILE, licenceId: otherLicence, regionPosition: 0, internal: false },
+            dam: { damId: FILE, licenceId: otherLicence, regionPosition: 0, internal: false, uploadLicenceId: licence },
             position: 0,
             id: saved.id,
           },

@@ -7,6 +7,7 @@ import { useImageMediaWidgetStore } from '@/domains/dam/imageWidget/store/imageM
 import { ImageWidgetUploadConfigKey } from '@/domains/dam/imageWidget/utils/imageWidgetInkectionKeys'
 import { useUploadQueueDialog } from '@/domains/dam/uploadQueue/composables/useUploadQueueDialog'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
+import { initCommonAdminCoreDamOptions, initCommonAdminImageOptions } from '@/plugins/pluginOptions'
 
 // A widget reads the picked asset before its dialog shows the
 // image. The editor could open another widget's dialog meanwhile.
@@ -151,10 +152,10 @@ const mountOf = async (component: Component, field: string) => {
 }
 type Widget = Awaited<ReturnType<typeof mountOf>>
 
-const pick = async (widget: Widget, asset: object) => {
+const pick = async (widget: Widget, asset: object, forceTakeOver = false) => {
   widget.picker().vm.$emit('update:modelValue', true)
   await flushPromises()
-  widget.picker().vm.$emit('confirm', { type: 'asset', value: [asset], copyToLicence: 1 })
+  widget.picker().vm.$emit('confirm', { type: 'asset', value: [asset], forceTakeOver })
   widget.picker().vm.$emit('update:modelValue', false)
   await flushPromises()
 }
@@ -261,61 +262,21 @@ describe.each<[string, Component]>([
     }
   )
 
-  // An image of another licence is copied into the licence of the upload, and the upload dialog shows the copy.
-  // The dialog loads until then so that nothing else opens. Before, the upload dialog covered
-  // a dialog of another widget opened since, and its "Save and apply" replaced that form.
-  describe('copied into the licence of the upload', () => {
-    const queueKey = 'listingImage'
-    const copyOnItsWay = async () => {
-      const queued = vi.spyOn(useUploadQueuesStore(), 'addByCopyToLicence').mockResolvedValue(undefined as never)
-      const widget = await mountOf(component, queueKey)
-      await pick(widget, listed('asset-9', 'image', { licence: 2 }))
-      if (component === ImageMediaWidgetInner) await answerReads()
-      expect(held.copies).toHaveLength(1)
-      return { widget, queued }
-    }
-    const copyAnswers = async () => {
-      held.copies.shift()!()
-      await flushPromises()
-      await flushPromises()
-    }
-    const uploadDialog = () => useUploadQueueDialog().uploadQueueDialog.value
+  // An image of another licence is not copied at the pick (1.52.0): it is read as any other, and the image save takes it
+  // over into the licence of the upload. No upload dialog takes the place of the dialog, also when the switch is on.
+  it('of another licence, the take over on: loads while it is read, then shows it to be taken over, and copies nothing', async () => {
+    const queued = vi.spyOn(useUploadQueuesStore(), 'addByCopyToLicence')
+    const widget = await mountOf(component, 'listingImage')
+    await pick(widget, listed('asset-9', 'image', { licence: 2 }), true)
+    expect([isOpen(widget), loads(widget)]).toEqual([true, true])
 
-    it('loads till the asset is copied, and the upload dialog then takes the place of the dialog', async () => {
-      const { widget, queued } = await copyOnItsWay()
-      expect([isOpen(widget), loads(widget), uploadDialog()]).toEqual([true, true, null])
+    await answerReads()
 
-      await copyAnswers()
-
-      expect([isOpen(widget), loads(widget), uploadDialog()]).toEqual([false, false, queueKey])
-      expect(queued).toHaveBeenCalledTimes(1)
-      queued.mockRestore()
-    })
-
-    it.each<[string, (widget: Widget, another: Widget) => Promise<void>]>([
-      [
-        'closed by the editor',
-        async (widget) => {
-          widget.dialog().vm.$emit('close')
-          await flushPromises()
-        },
-      ],
-      ['with the dialog of another widget opened over it', async (_widget, another) => openAndType(another)],
-    ])(
-      '%s while it loads: the copy opens no upload dialog, and leaves the form of another dialog',
-      async (_how, meanwhile) => {
-        const { widget, queued } = await copyOnItsWay()
-        const another = await mountOf(ImageWidgetInner, 'socialImage')
-        await meanwhile(widget, another)
-        const inTheStore = shown()
-
-        await copyAnswers()
-
-        expect([isOpen(widget), loads(widget), uploadDialog(), queued.mock.calls]).toEqual([false, false, null, []])
-        expect(shown()).toEqual(inTheStore)
-        queued.mockRestore()
-      }
-    )
+    expect([isOpen(widget), loads(widget), useUploadQueueDialog().uploadQueueDialog.value]).toEqual([true, false, null])
+    expect(shown()).toMatchObject({ dam: { damId: 'file-of-asset-9', licenceId: 2, forceTakeOver: true } })
+    expect(held.copies).toEqual([])
+    expect(queued).not.toHaveBeenCalled()
+    queued.mockRestore()
   })
 })
 
@@ -332,5 +293,132 @@ describe('a pick in ImageMediaWidgetInner that ends without a dialog', () => {
 
     expect([isOpen(widget), loads(widget), shown()]).toEqual([false, false, null])
     expect(released.mock.calls).toEqual([['leadImage', { image: 7, media: null }]])
+  })
+})
+
+// Single use photos are checked only where the CMS checks them (`singleUseUsageEnabled`, admin-cms). The check of a
+// pick belongs to that pick: one given up late (Esc and pick again, or a slow read) must not wipe the next one's.
+describe.each<[string, Component]>([
+  ['ImageWidgetInner', ImageWidgetInner],
+  ['ImageMediaWidgetInner', ImageMediaWidgetInner],
+])('the single use check of a pick in %s', (_name, component) => {
+  const isImageWidget = component === ImageWidgetInner
+  const usageAsked = vi.fn()
+  const blocked = (groupId: string) => ({
+    groupId,
+    holder: null,
+    status: 'conflict',
+    blocked: true,
+    usageCount: 1,
+    usages: [],
+  })
+  // The image backend of the admin: core-cms answers the usage of every group, blocked; daily tools has no route.
+  const imageClient = (answers: boolean) => () =>
+    ({
+      defaults: {},
+      getUri: (config: { url?: string }) => config.url ?? '',
+      request: (config: { url: string; params: { groupIds: string } }) => {
+        usageAsked(config.url)
+        return answers
+          ? Promise.resolve({
+              status: 200,
+              config,
+              data: { data: config.params.groupIds.split(',').map(blocked), totalCount: 0 },
+            })
+          : Promise.reject(Object.assign(new Error('Not Found'), { isAxiosError: true, response: { status: 404 } }))
+      },
+    }) as never
+  const install = (checked: boolean) => {
+    initCommonAdminCoreDamOptions({
+      configs: { default: { damClient: () => ({}) as never, ...(checked ? { singleUseUsageEnabled: true } : {}) } },
+      apiTimeout: 30,
+      adminDomain: '',
+    })
+    initCommonAdminImageOptions({
+      configs: {
+        default: {
+          imageClient: imageClient(checked),
+          previewDomain: '',
+          previewDomainOriginal: '',
+          width: 1,
+          height: 1,
+        },
+      },
+    })
+  }
+  afterEach(() => {
+    initCommonAdminCoreDamOptions(undefined)
+    initCommonAdminImageOptions(undefined)
+    usageAsked.mockReset()
+  })
+  const singleUse = (id: string) =>
+    listed(id, 'image', {
+      mainFile: { id: `file-of-${id}`, flags: { singleUse: true }, fileAttributes: { takenOverFromId: '' } },
+    })
+  const checkShown = (widget: Widget) => widget.dialog().props('singleUseCheck')
+  /** The pick's reads up to the asset read, which is held: the image and media widget reads the medium first. */
+  const pickHeldAtItsAssetRead = async (widget: Widget, asset: object) => {
+    await pick(widget, asset)
+    if (!isImageWidget) {
+      held.reads.shift()!.answer()
+      await flushPromises()
+    }
+    return held.reads.splice(0)
+  }
+
+  // admin-inhouse uses the CMS image API on daily tools, which has no usage route: rc.26 listed no single use photo
+  // and checked none. Asking it failed, kept a persistent error up and the confirm off for good.
+  it('asks nobody about a picked single use photo where the CMS does not check them, and lets the image be confirmed', async () => {
+    install(false)
+    const widget = await mountOf(component, 'listingImage')
+    await pick(widget, singleUse('asset-9'))
+    await answerReads()
+
+    expect(usageAsked).not.toHaveBeenCalled()
+    expect(shown()).toMatchObject({ dam: { damId: 'file-of-asset-9' } })
+    expect(checkShown(widget)).toBeNull()
+  })
+
+  it('asks the CMS that checks them, and the dialog holds the answer of the pick', async () => {
+    install(true)
+    const widget = await mountOf(component, 'listingImage')
+    await pick(widget, singleUse('asset-9'))
+    await answerReads()
+
+    expect(usageAsked).toHaveBeenCalledWith('/adm/v1/image/single-use-usage')
+    expect(checkShown(widget)).toMatchObject({
+      failed: false,
+      asset: { id: 'asset-9', singleUseUsage: { blocked: true } },
+    })
+  })
+
+  it.each<[string, 'before' | 'after', boolean]>([
+    ['closed and picked again, answering before the new pick is read', 'before', true],
+    ['closed and picked again, answering after the new pick is read', 'after', true],
+    ['picked again over its loading dialog, answering after the new pick is read', 'after', false],
+  ])('keeps the check of the next pick when a pick given up answers late: %s', async (_how, when, closed) => {
+    install(true)
+    const widget = await mountOf(component, 'listingImage')
+    const first = await pickHeldAtItsAssetRead(widget, singleUse('asset-9'))
+    if (closed) {
+      widget.dialog().vm.$emit('close')
+      await flushPromises()
+    }
+    await pick(widget, singleUse('asset-10'))
+    const firstAnswers = async () => {
+      first.forEach((one) => one.answer())
+      await flushPromises()
+      await flushPromises()
+    }
+
+    if (when === 'before') await firstAnswers()
+    await answerReads()
+    if (when === 'after') await firstAnswers()
+
+    expect(shown()).toMatchObject({ dam: { damId: 'file-of-asset-10' } })
+    expect(checkShown(widget)).toMatchObject({
+      failed: false,
+      asset: { id: 'asset-10', singleUseUsage: { blocked: true } },
+    })
   })
 })

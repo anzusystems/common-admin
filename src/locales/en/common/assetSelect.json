@@ -33,7 +33,8 @@
       "noItemsFound": "No matching assets found",
       "pickExactCount": "Select assets: {count}. Selected: {selected}.",
       "pickRangeCount": "Select from {minCount} to {maxCount} assets. Selected: {selected}.",
-      "copyToLicence": "Copy to licence"
+      "copyToLicence": "Copy to licence",
+      "copyToLicenceLocked": "The image licence does not allow direct use, it is always copied."
     }
   },
   "filter": {
@@ -66,5 +67,48 @@
     "label": "Search in",
     "groupListViews": "Selections",
     "groupLicences": "Licences"
+  },
+  "usage": {
+    "tab": "Usage",
+    "usedBy": "Used by ({count})",
+    "holder": "Holder",
+    "andMore": "and {count} more",
+    "pickedAt": "picked {date}",
+    "openList": "Show all usages",
+    "usedElsewhere": "The image is single use and another record uses it too ({count}×).",
+    "usedBySeveral": "The image is single use and several records use it ({count}×).",
+    "status": {
+      "notAllowed": "This record cannot use a single use image.",
+      "placement": "This record only places the image, it does not hold it.",
+      "free": "Nobody uses the image yet.",
+      "own": "Only this record uses the image.",
+      "ownShared": "This record uses the image, and other records use it too.",
+      "conflict": "Another record already uses the image."
+    },
+    "checkFailed": "The usage of the single use image could not be checked. Pick it again."
+  },
+  "holder": {
+    "articleKindStandard": "article",
+    "gallery": "gallery",
+    "person": "person",
+    "organization": "organization",
+    "minutePost": "minute post",
+    "liveBlogPost": "live blog post",
+    "postSuggestion": "post suggestion",
+    "liveBlogFeed": "live blog",
+    "boxItem": "box item",
+    "boxItemHistory": "box item history",
+    "notification": "notification",
+    "externalBoxItemArticle": "article box item",
+    "page": "page",
+    "crossBox": "cross box",
+    "relatedItemKindLink": "related link"
+  },
+  "holderOther": "other record",
+  "disabledReason": {
+    "singleUseBlocked": "The image is single use and already used by another record ({count}×).",
+    "singleUseNotAllowed": "The image is single use and this record cannot use it.",
+    "directUseDisabledNotImage": "This licence can be used for images only.",
+    "directUseDisabledNoUploadLicence": "The target licence for taking the image over is missing."
   }
 }

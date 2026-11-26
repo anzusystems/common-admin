@@ -1,5 +1,5 @@
 import { acceptHMRUpdate, defineStore } from 'pinia'
-import type { AssetSearchListItemDto, DamAssetTypeType } from '@/domains/dam/types/Asset'
+import type { AssetSearchListItemDto, AssetSingleUseUsage, DamAssetTypeType } from '@/domains/dam/types/Asset'
 import { DamAssetTypeDefault } from '@/domains/dam/types/Asset'
 import type { DocId, IntegerId } from '@/shared/types/common'
 import { computed, ref, toRaw } from 'vue'
@@ -7,6 +7,7 @@ import {
   type AssetSelectReturnData,
   AssetSelectReturnType,
   type AssetSelectReturnTypeType,
+  type AssetSelectUsageHolder,
 } from '@/domains/dam/types/AssetSelect'
 import type { DamConfigLicenceExtSystemReturnType } from '@/domains/dam/types/DamConfig'
 import { isNull, isUndefined } from '@/shared/utils/common'
@@ -15,6 +16,15 @@ export interface AssetSelectListItem {
   asset: AssetSearchListItemDto
   selected: boolean
   active: boolean
+  /** Why the asset cannot be picked here, shown on its item and in the side panel. `null` when it can. */
+  disabledReason: string | null
+}
+
+/** What decides whether a listed asset may be picked: the picker's props (`AAssetSelect`, `AAssetSelectMedia`). */
+export interface AssetSelectabilityOptions {
+  singleUseAllowed: boolean
+  uploadLicence: IntegerId | undefined
+  usageHolder: AssetSelectUsageHolder | null
 }
 
 export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectStore', () => {
@@ -23,6 +33,8 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
   // The licences the list is read from: one, or those of a list view. The preset control chooses them.
   const selectedLicenceIds = ref<IntegerId[]>([])
   const selectedPresetKey = ref<string>('')
+  // `null` means a listing given no selectability rules (AAssetListInner), where nothing is dimmed.
+  const selectability = ref<AssetSelectabilityOptions | null>(null)
   const selectConfig = ref<DamConfigLicenceExtSystemReturnType[]>([])
   const assetType = ref<DamAssetTypeType>(DamAssetTypeDefault)
   const inPodcast = ref<boolean | null>(null)
@@ -63,6 +75,10 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
     selectedPresetKey.value = key
   }
 
+  function setSelectability(value: AssetSelectabilityOptions | null) {
+    selectability.value = value
+  }
+
   function setSingleMode(value: boolean) {
     singleMode.value = value
   }
@@ -82,6 +98,7 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
   // The selection outlives the list it was made in. A list read anew or a further page may bring a selected asset.
   // Its item must show it as selected. Otherwise a click only
   // re-marks it, and at the full count no click can deselect it.
+  // A selected asset keeps its reason until the reasons of the new items arrive, so it is not undimmed meanwhile.
   function setList(items: AssetSearchListItemDto[]) {
     const activeIndex = items.findIndex((item) => item.id === activeAssetId.value)
     assetListItems.value = items.map((item, index) => {
@@ -89,12 +106,14 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
         asset: item,
         selected: selectedAssets.value.has(item.id),
         active: index === activeIndex,
+        disabledReason: selectedAssets.value.get(item.id)?.disabledReason ?? null,
       }
     })
     activeItemIndex.value = activeIndex < 0 ? null : activeIndex
   }
 
-  function appendList(items: AssetSearchListItemDto[]) {
+  /** Returns the items it added, whose single use usage and reasons the caller resolves. */
+  function appendList(items: AssetSearchListItemDto[]): AssetSelectListItem[] {
     // The active asset may arrive only with a later page of a re-read list.
     const activeIndex = isNull(activeItemIndex.value) ? items.findIndex((item) => item.id === activeAssetId.value) : -1
     const assets = items.map((asset, index) => {
@@ -102,10 +121,38 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
         asset: asset,
         selected: selectedAssets.value.has(asset.id),
         active: index === activeIndex,
+        disabledReason: selectedAssets.value.get(asset.id)?.disabledReason ?? null,
       }
     })
     if (activeIndex >= 0) activeItemIndex.value = assetListItems.value.length + activeIndex
     assetListItems.value = assetListItems.value.concat(assets)
+    // The added items as the list holds them, reactive, for the reasons written into them later.
+    return assetListItems.value.slice(assetListItems.value.length - assets.length)
+  }
+
+  /** Every item of an asset: its listed items (one per page that returned it) and the item of its selection. */
+  const itemsOfAsset = (assetId: DocId) => {
+    const items = assetListItems.value.filter((item) => item.asset.id === assetId)
+    const selected = selectedAssets.value.get(assetId)
+    if (selected && !items.includes(selected)) items.push(selected)
+    return items
+  }
+
+  // An asset the map does not mention was not part of this computation (an earlier page), so its reason stays.
+  // The selection keeps the item it was made in, which a re-read list replaced, so that item gets the reason too:
+  // the confirm is blocked by a selected asset that turned out unusable.
+  function setDisabledReasons(reasons: Map<DocId, string | null>) {
+    reasons.forEach((reason, assetId) => {
+      itemsOfAsset(assetId).forEach((item) => {
+        item.disabledReason = reason
+      })
+    })
+  }
+
+  function setSingleUseUsage(assetId: DocId, usage: AssetSingleUseUsage | null) {
+    itemsOfAsset(assetId).forEach((item) => {
+      item.asset.singleUseUsage = usage
+    })
   }
 
   // An asset listed twice (two pages returned it) is one asset. A click toggles it and every item of it reflects that.
@@ -113,6 +160,16 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
   function toggleSelectedByIndex(index: number) {
     const item = assetListItems.value[index]
     if (!item) return
+    // Deselecting stays possible: the reasons arrive after the page is fetched, so an already
+    // selected item can turn out unusable and the user has to be able to drop it.
+    // In single mode a click picks instead of the earlier pick, so a disabled one drops the earlier pick.
+    if (item.disabledReason && !item.selected) {
+      if (singleMode.value) {
+        unselectAllExcept(item.asset.id)
+        clearSelected()
+      }
+      return
+    }
 
     if (!singleMode.value && isSelectedMax.value && !item.selected) {
       return
@@ -223,28 +280,25 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
     return assets
   }
 
-  function getSelectedData(
-    type: AssetSelectReturnTypeType,
-    copyToLicence: undefined | IntegerId
-  ): AssetSelectReturnData {
+  function getSelectedData(type: AssetSelectReturnTypeType, forceTakeOver: boolean): AssetSelectReturnData {
     switch (type) {
       case AssetSelectReturnType.AssetId:
         return {
           type: AssetSelectReturnType.AssetId,
-          copyToLicence,
+          forceTakeOver,
           value: getSelectedAssetIds(),
         }
       case AssetSelectReturnType.Asset:
         return {
           type: AssetSelectReturnType.Asset,
-          copyToLicence,
+          forceTakeOver,
           value: getSelectedAssets(),
         }
       case AssetSelectReturnType.MainFileId:
       default:
         return {
           type: AssetSelectReturnType.MainFileId,
-          copyToLicence,
+          forceTakeOver,
           value: getSelectedMainFileIds(),
         }
     }
@@ -256,6 +310,13 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
 
   const selectedCount = computed(() => {
     return selectedAssets.value.size
+  })
+
+  const selectedHasDisabled = computed(() => {
+    for (const item of selectedAssets.value.values()) {
+      if (item.disabledReason) return true
+    }
+    return false
   })
 
   function reset(all: boolean) {
@@ -270,6 +331,7 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
     singleMode.value = false
     minCount.value = 0
     maxCount.value = 0
+    selectability.value = null
     selectedPresetKey.value = ''
     selectedLicenceIds.value = []
   }
@@ -297,6 +359,7 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
   return {
     selectedLicenceIds,
     selectedPresetKey,
+    selectability,
     selectConfig,
     assetType,
     inPodcast,
@@ -304,6 +367,7 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
     minCount,
     maxCount,
     selectedCount,
+    selectedHasDisabled,
     selectedAssets,
     loader,
     assetListItems,
@@ -317,6 +381,7 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
     setSelectedLicenceIds,
     licenceTitle,
     setSelectedPresetKey,
+    setSelectability,
     setSingleMode,
     setMinCount,
     setMaxCount,
@@ -324,6 +389,8 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
     hideLoader,
     setList,
     appendList,
+    setDisabledReasons,
+    setSingleUseUsage,
     toggleSelectedByIndex,
     clearSelected,
     reset,
