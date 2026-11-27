@@ -220,4 +220,76 @@ describe('AFormRemoteAutocomplete by-id load', () => {
     const shown = wrapper.findComponent({ name: 'VAutocomplete' }).props('modelValue') as any[]
     expect(shown.map((i) => i.value)).toEqual(['1', '2'])
   })
+
+  // A user's permission groups: the form shows its chips only once the by-ids answer is back.
+  // A group picked before that replaced the user's other groups (#87746).
+  const mountMultiple = (fetchItemsByIds: (ids: any[]) => Promise<any[]>) => {
+    let mounted: VueWrapper<any> | null = null
+    mounted = mount(AFormRemoteAutocomplete, {
+      props: {
+        modelValue: ['1', '2'],
+        multiple: true,
+        filterByField: 'name',
+        fetchItems: vi.fn().mockResolvedValue([{ value: '3', title: 'three' }]),
+        fetchItemsByIds,
+        'onUpdate:modelValue': (value: any) => mounted?.setProps({ modelValue: value }),
+      },
+      global: { provide: provideAll() },
+    })
+    wrapper = mounted
+    return mounted
+  }
+  const chipsOf = (mounted: VueWrapper<any>) =>
+    ((mounted.findComponent({ name: 'VAutocomplete' }).props('modelValue') as any[] | null) ?? []).map((i) => i.value)
+  const pick = (mounted: VueWrapper<any>, value: string, title: string) => {
+    const autocomplete = mounted.findComponent({ name: 'VAutocomplete' })
+    const shown = (autocomplete.props('modelValue') as any[] | null) ?? []
+    autocomplete.vm.$emit('update:modelValue', [...shown, { value, title }])
+  }
+
+  it('keeps the values whose chips are not shown yet when one is picked meanwhile', async () => {
+    const calls: ReturnType<typeof deferred<any[]>>[] = []
+    const mounted = mountMultiple(vi.fn(() => (calls.push(deferred<any[]>()), calls.at(-1)!.promise)))
+    await flushPromises()
+    expect(chipsOf(mounted)).toEqual([])
+
+    pick(mounted, '3', 'three')
+    await flushPromises()
+    expect(mounted.emitted('update:modelValue')?.at(-1)).toEqual([['1', '2', '3']])
+
+    calls[0].resolve([
+      { value: '1', title: 'one' },
+      { value: '2', title: 'two' },
+    ])
+    await flushPromises()
+    calls.at(-1)!.resolve([
+      { value: '1', title: 'one' },
+      { value: '2', title: 'two' },
+      { value: '3', title: 'three' },
+    ])
+    await flushPromises()
+    expect(chipsOf(mounted)).toEqual(['1', '2', '3'])
+  })
+
+  it('shows the values as chips when their labels cannot be read, and a pick or a removal keeps the rest', async () => {
+    const mounted = mountMultiple(vi.fn().mockRejectedValue(new Error('500')))
+    await flushPromises()
+
+    expect(chipsOf(mounted)).toEqual(['1', '2'])
+
+    pick(mounted, '3', 'three')
+    await flushPromises()
+    expect(mounted.emitted('update:modelValue')?.at(-1)).toEqual([['1', '2', '3']])
+
+    // The read fails again, so the chips show the ids. Taking one away leaves the others.
+    const autocomplete = mounted.findComponent({ name: 'VAutocomplete' })
+    const shown = autocomplete.props('modelValue') as any[]
+    expect(shown.map((i) => i.value)).toEqual(['1', '2', '3'])
+    autocomplete.vm.$emit(
+      'update:modelValue',
+      shown.filter((i) => i.value !== '1')
+    )
+    await flushPromises()
+    expect(mounted.emitted('update:modelValue')?.at(-1)).toEqual([['2', '3']])
+  })
 })

@@ -172,9 +172,8 @@ describe.each(consumerProfiles)('the upload dialog under the $name', (profile) =
 
     const saves = dam.sentTo('PATCH', dam.routes.bulkMetadata)
     expect(saves.map((request) => request.url)).toEqual([`${endPoints.asset}/metadata-bulk-update`])
-    expect(dam.body(saves[0])).toMatchObject([
-      { id: 'asset-1', customData: { description: ' described ', author: ' A. Author ' } },
-    ])
+    // Nothing was changed in the row, so the save only marks the asset described. The image comes from the answer.
+    expect(dam.body(saves[0])).toEqual([{ id: 'asset-1', described: true }])
     expect(wrapper!.emitted('apply')![0]).toMatchObject([
       [
         {

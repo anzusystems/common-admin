@@ -515,6 +515,13 @@ describe('the single-file upload dialog', () => {
     wrapper!.findComponent(UploadQueueDialogSingleSidebar).vm.$emit(event)
     await vi.waitFor(() => expect(bulkUpdateAssetsMetadata).toHaveBeenCalled())
 
-    expect(bulkUpdateAssetsMetadata.mock.calls[0]![3]).toBe(true)
+    // The switch goes on the row, not as an override, so the save sends it only when it differs from the DAM's.
+    const [, , rows, override] = bulkUpdateAssetsMetadata.mock.calls[0]! as [
+      unknown,
+      unknown,
+      Array<{ mainFileSingleUse: boolean | null }>,
+      unknown,
+    ]
+    expect([rows.map((row) => row.mainFileSingleUse), override]).toEqual([[true], undefined])
   })
 })

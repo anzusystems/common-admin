@@ -83,8 +83,37 @@ describe('FiltersSelected', () => {
     expect(closeButtons()).toHaveLength(1)
   })
 
-  it('offers one on an array at its default, where closing removes a single option', async () => {
+  // admin-dam's asset list opens on `status: [with_file]`. Closing that chip searched assets without a file (#87746).
+  it('offers no close button on an array that holds exactly its default', async () => {
     mountChips(['a'], ['a'])
+    await flushPromises()
+
+    expect(closeButtons()).toHaveLength(0)
+  })
+
+  it('takes an array default in any order', async () => {
+    mountChips(['b', 'a'], ['a', 'b'])
+    await flushPromises()
+
+    expect(closeButtons()).toHaveLength(0)
+  })
+
+  it('offers one on an array that holds more than its default, where closing removes a single option', async () => {
+    mountChips(['a', 'b'], ['a'])
+    await flushPromises()
+
+    expect(closeButtons()).toHaveLength(1)
+  })
+
+  it('offers one on an array that holds another option than its default', async () => {
+    mountChips(['b'], ['a'])
+    await flushPromises()
+
+    expect(closeButtons()).toHaveLength(1)
+  })
+
+  it('offers one on an array whose default is no option', async () => {
+    mountChips(['a'], [])
     await flushPromises()
 
     expect(closeButtons()).toHaveLength(1)

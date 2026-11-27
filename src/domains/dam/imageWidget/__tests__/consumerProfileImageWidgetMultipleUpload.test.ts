@@ -673,7 +673,12 @@ describe.each(consumerProfiles)('the widget of several images under the $name', 
       const { a, b } = await twoUploaded()
       dam.reply((request) =>
         request.method === 'PATCH' && dam.routes.bulkMetadata.test(request.url)
-          ? { status: 200, data: (dam.body(request) as Array<{ id: DocId }>).filter((sent) => sent.id !== b.assetId) }
+          ? {
+              status: 200,
+              data: (dam.answerAsTheDam(request)!.data as Array<{ id: DocId }>).filter(
+                (saved) => saved.id !== b.assetId
+              ),
+            }
           : undefined
       )
 

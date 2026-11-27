@@ -2,6 +2,7 @@ import { requestedUrl } from '@/domains/api/composables/request'
 import { apiErrorIsReported, apiErrorStatus, mapApiError, report } from '@/domains/api/utils/apiErrors'
 import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
 import { ENTITY, fetchAsset, fetchAssetByFileId, fetchAssetListByIds } from '@/domains/dam/api/damAssetApi'
+import { metadataOfAsset, metadataOnServer, setMetadataOnServer } from '@/domains/dam/api/damMetadataOnServer'
 import { SYSTEM_CORE_DAM } from '@/domains/dam/api/damConstants'
 import { useDamCachedAuthors } from '@/domains/dam/author/composables/cachedAuthors'
 import { useUploadQueueItemFactory } from '@/domains/dam/uploadQueue/factory/UploadQueueItemFactory'
@@ -522,6 +523,8 @@ export const useUploadQueuesStore = defineStore('commonAdminUploadQueuesStore', 
               customData: assetRes.metadata.customData,
               mainFileSingleUse: assetRes.mainFileSingleUse,
             })
+            // What the DAM has now. A field the row kept as the user changed it differs and goes with its save.
+            setMetadataOnServer(item, metadataOfAsset(assetRes))
             othersTakeWrite(note, item, kept)
             updateNewNames(assetRes.metadata.authorSuggestions, queue.suggestions.newAuthorNames)
             updateNewNames(assetRes.metadata.keywordSuggestions, queue.suggestions.newKeywordNames)
@@ -552,6 +555,14 @@ export const useUploadQueuesStore = defineStore('commonAdminUploadQueuesStore', 
               customData: asset.metadata.customData,
               mainFileSingleUse: isUndefined(mainFileSingleUse) ? undefined : mainFileSingleUse,
             })
+            // The row took the detail's values as the DAM's, so its save does not send them back.
+            const known = metadataOnServer(item)
+            if (known) {
+              setMetadataOnServer(item, {
+                ...metadataOfAsset(asset),
+                mainFileSingleUse: isUndefined(mainFileSingleUse) ? known.mainFileSingleUse : mainFileSingleUse,
+              })
+            }
             othersTakeWrite(note, item, kept)
             addToCachedKeywords(item.keywords)
             addToCachedAuthors(item.authors)

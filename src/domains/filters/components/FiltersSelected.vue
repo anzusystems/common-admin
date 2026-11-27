@@ -35,10 +35,19 @@ const selectedArray = computed(() => {
 
 const { clearOneFilterSelected, isClearable } = useFilterClearHelpers()
 
+// In any order. An empty default has no chip to keep.
+const isArrayDefault = (value: unknown[], defaultValue: unknown) =>
+  isArray(defaultValue) &&
+  defaultValue.length > 0 &&
+  value.length === defaultValue.length &&
+  value.every((item) => defaultValue.includes(item))
+
 /**
  * Clearing restores the default. On a field already at its non-null default, the close
  * button would drop the chip, write the same value, and the chip would come back.
- * Arrays differ: closing one chip removes one option.
+ * Arrays differ: closing one chip removes one option. An array holding exactly its default shows the default view and
+ * has no close button either: closing removed a default option, as `status: [with_file]` of admin-dam's asset list
+ * (#87746). Once it holds another option, every chip can be closed again.
  */
 const canClear = (name: string) => {
   if (!isClearable(name, filterConfig)) return false
@@ -52,7 +61,7 @@ const canClear = (name: string) => {
     if (filterData[config.related] !== related.default) return true
   }
   const value = filterData[name]
-  if (isArray(value)) return true
+  if (isArray(value)) return !isArrayDefault(value, config.default)
   return value !== config.default
 }
 

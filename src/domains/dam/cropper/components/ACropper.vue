@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue'
-import { useResizeObserver } from '@vueuse/core'
+import { useEventListener, useResizeObserver } from '@vueuse/core'
 import {
   CropperCanvas,
   CropperCrosshair,
@@ -26,7 +26,7 @@ import type { CropRect } from '@/domains/dam/cropper/utils/cropperTypes'
  * Image cropper built on cropper.js v2 custom elements. Replaces the v1-based `ACropperjs`.
  * Not exported. Its only user is `DamAssetImageRoiSelect`, and it is shaped to that one need.
  * The crop is bound via `v-model` as fractions of the image.
- * `commit` signals that a gesture ended. There is no imperative API.
+ * `commit` signals that a gesture ended with a changed crop. There is no imperative API.
  * Elements are built in script, not the template. Consumers do not configure `isCustomElement`,
  * and setting properties avoids attribute coercion issues (`NaN`, booleans, fractions).
  */
@@ -53,7 +53,7 @@ const props = withDefaults(
 
 const emit = defineEmits<{
   (event: 'update:modelValue', crop: CropRect): void
-  /** The user finished a gesture. The crop is worth saving. */
+  /** The user finished a gesture that changed the crop. The crop is worth saving. */
   (event: 'commit', crop: CropRect): void
   (event: 'ready'): void
 }>()
@@ -80,6 +80,8 @@ for (const element of [
 const AUTO_CROP_AREA = 0.8
 const MIN_CONTAINER_WIDTH = 200
 const MIN_CONTAINER_HEIGHT = 100
+/** A box drawn anew that stays under this many screen pixels on its longer side is a slip of the mouse, not a crop. */
+const MIN_DRAWN_BOX = 20
 
 // Matches cropper.js v1's stylesheet so both components look the same.
 const SELECTION_COLOR = 'rgba(51, 153, 255, 0.75)'
@@ -122,6 +124,10 @@ let laidOut: Size = { width: 0, height: 0 }
 let lastEmitted: CropRect | null = null
 /** Watches ancestors that clip the host. Their height limits the available room. */
 let ancestorObserver: ResizeObserver | null = null
+/** The crop when the running gesture began. Null between gestures. */
+let cropAtStart: CropRect | null = null
+/** The crop box before the running gesture began to draw a new one. */
+let boxBeforeDrawing: Rect | null = null
 
 const create = <T extends HTMLElement>(name: string): T => document.createElement(name) as T
 
@@ -233,6 +239,11 @@ const onSelectionChange = (event: Event) => {
 
 const onActionStart = (event: Event) => {
   currentAction = (event as CustomEvent<{ action?: string }>).detail?.action ?? null
+  // A second finger joins the gesture already running and turns it into a pinch. The gesture keeps the crop and box it
+  // began with: the first finger may have slipped before the second one landed, and cropper.js drew a box of that size.
+  if (cropAtStart) return
+  cropAtStart = currentCrop()
+  boxBeforeDrawing = currentAction === 'select' ? selectionRect() : null
 }
 
 const onAction = (event: Event) => {
@@ -242,8 +253,49 @@ const onAction = (event: Event) => {
   if (action) currentAction = action
 }
 
-const onActionEnd = () => {
+const isSlip = (box: Rect): boolean => {
+  const bounds = constraintBounds()
+  // A tiny picture still lets a box of a quarter of its shorter side through.
+  const minimum = Math.min(MIN_DRAWN_BOX, Math.min(bounds.width, bounds.height) / 4)
+  return Math.max(box.width, box.height) < minimum
+}
+
+/**
+ * Whether a pointer stays down after the one of this `actionend` lifts, so the gesture goes on.
+ * cropper.js ends its action for every pointer lifted, also one finger of a pinch or a palm that touched outside the
+ * canvas during a resize, but stops acting only when no pointer is left. It still holds the lifted one at this point.
+ * Without its pointers to read, every end ends the gesture.
+ */
+const gestureGoesOn = (event: Event): boolean => {
+  const pointers = (parts?.canvas as unknown as { $pointers?: unknown } | undefined)?.$pointers
+  const lifted = (event as CustomEvent<{ relatedEvent?: Event }>).detail?.relatedEvent
+  if (!(pointers instanceof Map) || !lifted) return false
+  // cropper.js keys a touch by its identifier and a pointer by its id, a mouse without one as 0.
+  const ids: unknown[] =
+    'changedTouches' in lifted
+      ? Array.from((lifted as TouchEvent).changedTouches, (touch) => touch.identifier)
+      : [(lifted as Partial<PointerEvent>).pointerId ?? 0]
+  return [...pointers.keys()].some((id) => !ids.includes(id))
+}
+
+/**
+ * Commits only a gesture that changed the crop, when its last pointer lifts, so with the crop it ends with. A click,
+ * or a slip off the crop box that drew a box of a few pixels (put back as it was), sends nothing. The DAM saved
+ * either, and the slip replaced the region with a point.
+ */
+const onActionEnd = (event: Event) => {
+  if (gestureGoesOn(event)) return
   currentAction = null
+  const before = cropAtStart
+  const drawnOver = boxBeforeDrawing
+  cropAtStart = null
+  boxBeforeDrawing = null
+  if (!before) return
+  // Where it was on the screen, as after any pinch, which may have zoomed the picture out from under it.
+  if (drawnOver && isSlip(selectionRect())) {
+    applyRect(clampRectInside(drawnOver, constraintBounds(), props.aspectRatio))
+  }
+  if (cropsAreClose(currentCrop(), before)) return
   emitCrop(true)
 }
 
@@ -287,6 +339,8 @@ const teardown = () => {
   natural = { width: 0, height: 0 }
   laidOut = { width: 0, height: 0 }
   currentAction = null
+  cropAtStart = null
+  boxBeforeDrawing = null
 }
 
 /**
@@ -306,8 +360,8 @@ const clippingAncestorsOf = (host: HTMLElement): HTMLElement[] => {
   return found
 }
 
-const visibleHeightOf = (host: HTMLElement): number => {
-  let available = host.clientHeight
+const clippedHeightOf = (host: HTMLElement, height: number): number => {
+  let available = height
   const hostTop = host.getBoundingClientRect().top
 
   clippingAncestorsOf(host).forEach((ancestor) => {
@@ -320,6 +374,14 @@ const visibleHeightOf = (host: HTMLElement): number => {
   })
 
   return available
+}
+
+const visibleHeightOf = (host: HTMLElement): number => clippedHeightOf(host, host.clientHeight)
+
+/** The host's own `max-height` in pixels. Infinity without one, or with one not resolved to pixels (a percentage). */
+const maxHeightOf = (host: HTMLElement): number => {
+  const maxHeight = window.getComputedStyle(host).maxHeight
+  return maxHeight.endsWith('px') ? parseFloat(maxHeight) : Infinity
 }
 
 /**
@@ -519,8 +581,17 @@ const emitCrop = (alsoCommit = false) => {
   if (alsoCommit) emit('commit', crop)
 }
 
-/** The host's room: its width and the height that is actually shown. */
-const hostBox = (host: HTMLElement): Size => ({ width: host.clientWidth, height: visibleHeightOf(host) })
+/**
+ * The host's room: its width and the height the canvas may take there.
+ * Measured without the canvas. The host is as tall as the canvas, so its own height only shows the room of the last
+ * layout: a frame that grew again (a taller window, a panel ending its open transition) went unnoticed, and the
+ * cropper stayed small. Capped at the height the picture wants, so growing past it does not lay it out again.
+ */
+const hostBox = (host: HTMLElement): Size => {
+  const width = host.clientWidth
+  const wanted = canvasSizeFor(natural, width, MIN_CONTAINER_WIDTH, MIN_CONTAINER_HEIGHT).height
+  return { width, height: Math.min(wanted, clippedHeightOf(host, maxHeightOf(host))) }
+}
 
 /** Re-fits the image to the new container and keeps the user's crop. */
 const relayout = () => {
@@ -560,6 +631,8 @@ const onHostBoxChanged = () => {
 // Height matters as much as width. The DAM sizes the cropper with `calc(100vh
 // - 160px)`, so a shorter window shrinks the frame without changing its width.
 useResizeObserver(hostEl, onHostBoxChanged)
+// A taller window raises such a limit, and nothing the observers watch has to change size with it.
+useEventListener(window, 'resize', onHostBoxChanged, { passive: true })
 
 /** A clipping ancestor can change how much it shows without the host box changing. */
 const observeAncestors = (host: HTMLElement) => {

@@ -327,19 +327,45 @@ describe('DAM region editor — what gets applied', () => {
     editor.destroy()
   })
 
-  // Both cropper versions end a gesture on pointer-up whether or not anything
-  // moved. A click therefore saves the region that was already there.
-  it('saves the unchanged region when the crop box is merely clicked', async () => {
+  // cropper.js ends a gesture on pointer-up whether or not anything moved. A click
+  // saved the region that was already there, with a toast (#87746).
+  it('saves nothing when the crop box is merely clicked', async () => {
     const editor = await mountEditor()
     const face = editor.find(FACE)
     const point = centerOf(face)
     await drag(face, point, point, 1)
     await editor.settle()
 
+    expect(savedRegions.length).toBe(0)
+    editor.destroy()
+  })
+
+  // A press just off the zone that slips a few pixels drew a zone of that size and saved it (#87746).
+  it('keeps the zone, and saves nothing, when a press off it slips a few pixels', async () => {
+    const editor = await mountEditor()
+    const before = editor.crop()
+    const surface = editor.find('cropper-handle[action="select"]')
+    const rect = surface.getBoundingClientRect()
+    const from = { x: rect.right - 30, y: rect.bottom - 30 }
+    await drag(surface, from, { x: from.x + 5, y: from.y + 3 })
+    await editor.settle()
+
+    expect(editor.crop()).toEqual(before)
+    expect(savedRegions.length).toBe(0)
+    editor.destroy()
+  })
+
+  it('saves a zone drawn anew off the old one', async () => {
+    const editor = await mountEditor()
+    const surface = editor.find('cropper-handle[action="select"]')
+    const rect = surface.getBoundingClientRect()
+    const from = { x: rect.right - 200, y: rect.bottom - 150 }
+    await drag(surface, from, { x: from.x + 160, y: from.y + 90 }, 6)
+    await editor.settle()
+
     expect(savedRegions.length).toBe(1)
-    expect(savedRegions[0]?.pointX).toBe(0)
-    expect(savedRegions[0]?.pointY).toBe(0)
-    expect(savedRegions[0]?.percentageWidth).toBeCloseTo(0.8, 2)
+    expect(savedRegions[0]!.pointX).toBeGreaterThan(0)
+    expect(editor.cropInsideImage()).toBe(true)
     editor.destroy()
   })
 

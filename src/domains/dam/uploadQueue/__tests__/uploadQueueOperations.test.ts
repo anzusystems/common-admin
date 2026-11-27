@@ -755,15 +755,12 @@ describe('a save in the asset detail', () => {
 
         await bulkUpdateAssetsMetadata(dam.client, endPoints.asset, store.getQueueItems(QUEUE), undefined, 1, 'default')
         const [sent] = dam.sentTo('PATCH', dam.routes.bulkMetadata)
+        // The row holds what the detail saved, which the DAM has: none of it is sent again, old or new.
         expect(dam.body(sent)).toMatchObject([
-          {
-            id: 'asset-1',
-            keywords: ['keyword-saved'],
-            authors: ['author-saved'],
-            customData: { title: 'saved in the detail' },
-          },
+          { id: 'asset-1', described: true },
           { id: 'asset-2', customData: { title: 'typed in the row' } },
         ])
+        expect((dam.body(sent) as Array<Record<string, unknown>>)[0]).toEqual({ id: 'asset-1', described: true })
         // Copies keep the switch of the asset they were copied from: the queue save sends none.
         ;(dam.body(sent) as Array<Record<string, unknown>>).forEach((item) =>
           expect(item).not.toHaveProperty('mainFileSingleUse')

@@ -4,6 +4,7 @@ import type { AssetDetailItemDto } from '@/domains/dam/types/Asset'
 import type { DocId } from '@/shared/types/common'
 import type { UploadQueueKey } from '@/domains/dam/types/UploadQueue'
 import { isNull } from '@/shared/utils/common'
+import { metadataOfAsset, setMetadataOnServer } from '@/domains/dam/api/damMetadataOnServer'
 
 export const AssetDetailTabImageWithRoi = {
   Info: 'meta',
@@ -31,6 +32,8 @@ export const useAssetDetailStore = defineStore('commonAdminAssetDetailStore', ()
   let turn = 0
 
   function setAsset(data: AssetDetailItemDto | null) {
+    // What the DAM has of the asset: a save of the form sends only what differs from it.
+    if (data) setMetadataOnServer(data, metadataOfAsset(data))
     asset.value = data
     mainFileSingleUse.value = data?.mainFileSingleUse || false
   }

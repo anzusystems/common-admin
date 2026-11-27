@@ -246,6 +246,9 @@ const loadListItems = async (ids: T[] | T) => {
   } catch (e) {
     // Mirror tryLoadModelValue: don't let a failed by-ids resolve become a generic global toast (QA 85050).
     showErrorsDefault(e)
+    // The value stays, so its chips stay too, with the labels known or the ids. An empty field holding values
+    // looked unset, and a pick then replaced them (#87746).
+    if (requestId === byIdsCounter) modelValueAutocomplete.value = updateSelected(ids)
     return undefined
   } finally {
     requestsRunning.value--
@@ -384,15 +387,36 @@ watch(search, (newValue, oldValue) => {
   }
 })
 
+/**
+ * The chips follow the value only once its labels are read, so a pick can come while they show less than the value
+ * (a form opened a moment ago, a pick right after another one). The pick then only adds or removes what changed
+ * against the chips, and values without a chip yet stay. Taken whole, it dropped them (#87746).
+ */
+const pickedValues = (picked: ValueObjectOption<T>[]): T[] => {
+  const chips = modelValueAutocomplete.value as ValueObjectOption<T> | ValueObjectOption<T>[] | null
+  const shown = isArray(chips) ? chips.map((item) => item.value) : []
+  const pickedIds = picked.map((item) => item.value)
+  const removed = shown.filter((value) => !pickedIds.includes(value))
+  const values = (isArray(modelValue.value) ? modelValue.value : []).filter((value) => !removed.includes(value))
+  pickedIds.forEach((value) => {
+    if (!values.includes(value)) values.push(value)
+  })
+  return values
+}
+
 const onAutocompleteModelUpdate = (newValue: ValueObjectOption<T> | readonly ValueObjectOption<T>[] | null) => {
   const cloned = cloneDeep(newValue) as ValueObjectOption<T> | ValueObjectOption<T>[] | null
+  if (isArray(cloned)) {
+    const values = pickedValues(cloned)
+    modelValueSelected.value = values.map(
+      (value) => cloned.find((item) => item.value === value) ?? (updateSelected(value) as ValueObjectOption<T>)
+    )
+    modelValue.value = values
+    return
+  }
   modelValueSelected.value = cloned
   if (isNull(cloned) || isUndefined(cloned)) {
     modelValue.value = null
-    return
-  }
-  if (isArray(cloned)) {
-    modelValue.value = cloned.map((item) => item.value)
     return
   }
   modelValue.value = cloned.value

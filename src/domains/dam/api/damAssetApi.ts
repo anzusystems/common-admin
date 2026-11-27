@@ -3,7 +3,16 @@ import type { DocId, IntegerId } from '@/shared/types/common'
 import type { AssetDetailItemDto, AssetSearchListItemDto, DamAssetTypeType } from '@/domains/dam/types/Asset'
 import { type UploadQueueItem, UploadQueueItemType } from '@/domains/dam/types/UploadQueue'
 import { HTTP_STATUS_OK } from '@/shared/statusCodes'
-import { isNull, isUndefined } from '@/shared/utils/common'
+import { cloneDeep, isNull, isUndefined } from '@/shared/utils/common'
+import {
+  customDataOf,
+  type DamMetadataOnServer,
+  metadataOfAsset,
+  metadataOnServer,
+  rebaseCustomData,
+  sameMetadataValue,
+  setMetadataOnServer,
+} from '@/domains/dam/api/damMetadataOnServer'
 import {
   AnzuApiValidationError,
   type AnzuApiValidationResponseData,
@@ -41,7 +50,9 @@ export interface AssetMetadataBulkItem {
 
 // What a save sends. Whether the main file is internal is set in the DAM itself.
 // A save from here leaves those two fields unchanged and reads them from the answer.
-type AssetMetadataBulkItemBody = Omit<AssetMetadataBulkItem, 'mainFileInternal' | 'mainFileOverrideInternal'>
+// A field left out is one the save does not change: the DAM keeps it as it is.
+type AssetMetadataBulkItemBody = Pick<AssetMetadataBulkItem, 'id' | 'described'> &
+  Partial<Pick<AssetMetadataBulkItem, 'keywords' | 'authors' | 'sources' | 'customData' | 'mainFileSingleUse'>>
 
 export declare type AssetCustomData = Record<string, any>
 
@@ -120,6 +131,9 @@ export const fetchAssetByFileId = (client: () => AxiosInstance, endPoint: string
 /**
  * Saves the metadata of the queue items. Sources are sent only where `extSystem` has them
  * for the item's asset type in DAM configuration `configName`.
+ * Every item is sent, so the answer holds each asset. Of an item whose metadata the DAM sent before,
+ * only the fields changed since go, and changed custom data rebased onto the assets read right before
+ * (`damMetadataOnServer`). Ten items per request. A failed request stops the later ones.
  */
 export const bulkUpdateAssetsMetadata = async (
   client: () => AxiosInstance,
@@ -129,15 +143,31 @@ export const bulkUpdateAssetsMetadata = async (
   extSystem: IntegerId,
   configName: string
 ) => {
-  const sent = items.filter(hasMetadataToSave)
-  const { execute } = useMetadataBulkUpdate<AssetMetadataBulkItemBody>(client, endPoint)
-  const answers = await saveMetadataInBatches(
-    execute,
-    listItemsToMetadataBulkItems(sent, mainFileSingleUseOverride, extSystem, configName),
-    sent.map((item) => item.assetType)
+  const saves = listItemsToMetadataBulkItems(
+    items.filter(hasMetadataToSave),
+    mainFileSingleUseOverride,
+    extSystem,
+    configName
   )
+  const { execute } = useMetadataBulkUpdate<AssetMetadataBulkItemBody>(client, endPoint)
+  const answers: AssetMetadataBulkItem[] = []
+  for (let offset = 0; offset < saves.length; offset += BULK_METADATA_LIMIT) {
+    const batch = saves.slice(offset, offset + BULK_METADATA_LIMIT)
+    await rebaseOntoFreshRead(client, endPoint, batch)
+    const [answer] = await saveMetadataInBatches(
+      execute,
+      batch.map(({ body }) => body),
+      batch.map(({ item }) => item.assetType)
+    )
+    // Onto what the row knows now, not when the save began: a save in the asset detail may have
+    // written its read into the row meanwhile, and going back to the older state sent its values again.
+    batch.forEach(({ item, body, typed }) =>
+      setMetadataOnServer(item, metadataAfterSave(metadataOnServer(item) ?? typed, typed, body))
+    )
+    answers.push(...(answer ?? []))
+  }
 
-  return answers.flat()
+  return answers
 }
 
 async function fetchAssetListByIdsSequence(
@@ -289,27 +319,126 @@ function singleUseField(
   return { mainFileSingleUse: override ?? item.mainFileSingleUse ?? false }
 }
 
+// The DAM treats a single use flag that is not set as off.
+const sameSingleUse = (one: boolean | null | undefined, other: boolean | null | undefined) =>
+  (one ?? false) === (other ?? false)
+
+/**
+ * The body of one asset's save: all of `typed` without `known`, otherwise the fields that differ from it.
+ * `base`: the custom data the changes were made against, for rebasing them onto a fresh read before sending.
+ */
+function metadataBody(
+  id: DocId,
+  assetType: DamAssetTypeType,
+  typed: DamMetadataOnServer,
+  known: DamMetadataOnServer | undefined,
+  singleUse: Pick<AssetMetadataBulkItem, 'mainFileSingleUse'>,
+  singleUseForced: boolean,
+  extSystem: IntegerId,
+  configName: string
+) {
+  const credit = creditFields(assetType, extSystem, typed.authors, typed.sources, configName)
+  if (!known) {
+    const body: AssetMetadataBulkItemBody = {
+      id,
+      keywords: typed.keywords,
+      ...credit,
+      described: true,
+      customData: typed.customData,
+      ...singleUse,
+    }
+    return { body, base: undefined }
+  }
+  const body: AssetMetadataBulkItemBody = { id, described: true }
+  if (!sameMetadataValue(typed.keywords, known.keywords)) body.keywords = typed.keywords
+  if (!sameMetadataValue(typed.authors, known.authors)) body.authors = typed.authors
+  if ('sources' in credit && !sameMetadataValue(typed.sources, known.sources)) body.sources = typed.sources
+  if (
+    'mainFileSingleUse' in singleUse &&
+    (singleUseForced || !sameSingleUse(singleUse.mainFileSingleUse, known.mainFileSingleUse))
+  ) {
+    body.mainFileSingleUse = singleUse.mainFileSingleUse
+  }
+  if (sameMetadataValue(typed.customData, known.customData)) return { body, base: undefined }
+  body.customData = typed.customData
+
+  return { body, base: known.customData }
+}
+
+/**
+ * What the DAM has after a save that sent `body`, as far as the form or row knows: `before` with the sent fields.
+ * Custom data are what the form or row held, which is what its next changes are made against.
+ * The DAM also has the other editors' keys the save took, and the next rebase takes them again.
+ */
+const metadataAfterSave = (
+  before: DamMetadataOnServer,
+  typed: DamMetadataOnServer,
+  body: AssetMetadataBulkItemBody
+): DamMetadataOnServer => ({
+  keywords: body.keywords ?? before.keywords,
+  authors: body.authors ?? before.authors,
+  sources: body.sources ?? before.sources,
+  customData: isUndefined(body.customData) ? before.customData : typed.customData,
+  mainFileSingleUse: isUndefined(body.mainFileSingleUse) ? before.mainFileSingleUse : body.mainFileSingleUse,
+})
+
+const typedOfRow = (item: UploadQueueItem): DamMetadataOnServer =>
+  cloneDeep({
+    keywords: item.keywords ?? [],
+    authors: item.authors ?? [],
+    sources: item.sources ?? [],
+    customData: customDataOf(item.customData),
+    mainFileSingleUse: item.mainFileSingleUse,
+  })
+
 function listItemsToMetadataBulkItems(
-  items: UploadQueueItem[],
+  items: Array<UploadQueueItem & { assetId: DocId }>,
   mainFileSingleUseOverride: boolean | undefined,
   extSystem: IntegerId,
   configName: string
 ) {
-  const dtoItems: AssetMetadataBulkItemBody[] = []
-  items.forEach((item) => {
-    if (hasMetadataToSave(item)) {
-      dtoItems.push({
-        id: item.assetId,
-        keywords: item.keywords,
-        ...creditFields(item.assetType, extSystem, item.authors, item.sources, configName),
-        described: true,
-        customData: item.customData,
-        ...singleUseField(item, mainFileSingleUseOverride),
-      })
-    }
-  })
+  return items.map((item) => {
+    // Copied when the save starts: the row can be edited while its request waits for earlier ones.
+    const typed = typedOfRow(item)
+    const known = metadataOnServer(item)
+    const singleUse = singleUseField(item, mainFileSingleUseOverride)
+    const { body, base } = metadataBody(
+      item.assetId,
+      item.assetType,
+      typed,
+      known,
+      singleUse,
+      !isUndefined(mainFileSingleUseOverride),
+      extSystem,
+      configName
+    )
 
-  return dtoItems
+    return { item, body, typed, base }
+  })
+}
+
+/*
+ * Rebases the changed custom data of a request onto the assets read right before it, one read per licence.
+ * An asset the read does not find is sent as it is, and the DAM answers for it.
+ */
+const rebaseOntoFreshRead = async (
+  client: () => AxiosInstance,
+  endPoint: string,
+  batch: ReturnType<typeof listItemsToMetadataBulkItems>
+) => {
+  const rebased = batch.filter(({ base }) => !isUndefined(base))
+  if (rebased.length === 0) return
+  const byLicence = new Map<IntegerId, DocId[]>()
+  rebased.forEach(({ item }) => byLicence.set(item.licenceId, [...(byLicence.get(item.licenceId) ?? []), item.assetId]))
+  const fresh = new Map<DocId, AssetDetailItemDto>()
+  for (const [licenceId, ids] of byLicence) {
+    for (const asset of await fetchAssetListByIds(client, endPoint, ids, licenceId)) fresh.set(asset.id, asset)
+  }
+  rebased.forEach(({ item, body, typed, base }) => {
+    const asset = fresh.get(item.assetId)
+    if (!asset || isUndefined(base)) return
+    body.customData = rebaseCustomData(typed.customData, base, customDataOf(asset.metadata.customData))
+  })
 }
 
 const { showErrorsDefault, showUnknownError, showApiValidationError } = useAlerts()
@@ -361,27 +490,42 @@ export const showMetadataSaveError = (error: unknown, extSystem: IntegerId, conf
   if (!showErrorsDefault(error)) showUnknownError()
 }
 
-// Callers name the fields of a refusal through `showMetadataSaveError`.
-// Sources are sent only where `extSystem` has them for the asset type in DAM configuration `configName`.
+/**
+ * Saves the asset detail form `asset`. Callers name the fields of a refusal through `showMetadataSaveError`.
+ * Sources are sent only where `extSystem` has them for the asset type in DAM configuration `configName`.
+ * With `known`, what the DAM had when the form was read or last saved, only the fields changed against it go,
+ * and changed custom data rebased onto the asset read right before. Without it the form is sent whole.
+ * Resolves to what the DAM has after the save as far as the form knows, the form's next `known`.
+ */
 export const updateAssetMetadata = async (
   client: () => AxiosInstance,
   endPoint: string,
   asset: AssetDetailItemDto,
   extSystem: IntegerId,
   mainFileSingleUse: boolean | null,
-  configName: string
+  configName: string,
+  known?: DamMetadataOnServer
 ) => {
-  const data: AssetMetadataBulkItemBody = {
-    id: asset.id,
-    keywords: asset.keywords,
-    ...creditFields(asset.attributes.assetType, extSystem, asset.authors, asset.sources, configName),
-    described: true,
-    customData: asset.metadata.customData,
-    mainFileSingleUse: mainFileSingleUse,
+  const typed = cloneDeep({ ...metadataOfAsset(asset), mainFileSingleUse })
+  const { body, base } = metadataBody(
+    asset.id,
+    asset.attributes.assetType,
+    typed,
+    known,
+    { mainFileSingleUse },
+    false,
+    extSystem,
+    configName
+  )
+  if (!isUndefined(base)) {
+    const fresh = await fetchAsset(client, endPoint, asset.id)
+    body.customData = rebaseCustomData(typed.customData, base, customDataOf(fresh.metadata.customData))
   }
 
   const { execute } = useMetadataBulkCommand<AssetMetadataBulkItemBody>(client, endPoint)
-  await saveMetadataInBatches(execute, [data], [asset.attributes.assetType])
+  await saveMetadataInBatches(execute, [body], [asset.attributes.assetType])
+
+  return metadataAfterSave(known ?? typed, typed, body)
 }
 
 // Callers name the fields of a refusal through `showMetadataSaveError`.

@@ -201,8 +201,16 @@ export function useAlerts() {
     return false
   }
 
+  /**
+   * `exportData[2].exportType`: the list's label, the index and the label of the item's field. Admins keep that label
+   * under the list name without its final "s" (admin-cms: `items` → `item.name`), under the list name itself, or in an
+   * entity of its own named after the parent and the list (admin-dam: `podcast` + `exportData` →
+   * `podcastExportData.model.exportType`). A name nothing translates is shown bare, as for a field outside a list.
+   * Cutting the last letter of any list name turned `exportData` into `exportDat`, and the alert showed the raw key.
+   */
   const resolveListErrors = (error: string) => {
     const t = commonT
+    const te = commonTe
     // Only called for a field that contains `[`, so the split has a second part.
     const parsedField = error.split('[')
     const firstField = parsedField[0]!.trim()
@@ -210,7 +218,19 @@ export function useAlerts() {
     const indexNumber = parsedSecond[0]
     const secondField: string = parsedSecond[1] ?? ''
 
-    return t(firstField) + '[' + indexNumber + ']: ' + t(firstField.slice(0, -1) + secondField)
+    const listText = (te(firstField) ? t(firstField) : firstField.split('.').at(-1)) + '[' + indexNumber + ']'
+    if (secondField.length === 0) return listText
+
+    const itemKeys = [firstField + secondField]
+    // A body that is a list itself names `model.[0].title`: the item's label is the entity's own, `model.title`.
+    if (firstField.endsWith('s') || firstField.endsWith('.')) itemKeys.unshift(firstField.slice(0, -1) + secondField)
+    const [owner, list] = firstField.split('.model.')
+    if (owner && list && !list.includes('.')) {
+      itemKeys.push(owner + list.charAt(0).toUpperCase() + list.slice(1) + '.model' + secondField)
+    }
+    const itemKey = itemKeys.find((key) => te(key))
+
+    return listText + ': ' + (itemKey ? t(itemKey) : secondField.split('.').at(-1))
   }
 
   return {

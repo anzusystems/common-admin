@@ -10,6 +10,7 @@ import { useAssetDetailStore } from '@/domains/dam/assetDetail/store/assetDetail
 import { storeToRefs } from 'pinia'
 import AssetMetadata from '@/domains/dam/assetDetail/components/AssetMetadata.vue'
 import { showMetadataSaveError, updateAssetMetadata } from '@/domains/dam/api/damAssetApi'
+import { metadataOnServer, setMetadataOnServer } from '@/domains/dam/api/damMetadataOnServer'
 import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
 import { ADamAssetMetadataValidationScopeSymbol } from '@/domains/dam/composables/uploadValidations'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
@@ -66,16 +67,26 @@ const onSave = async () => {
   // The form is not locked during the save, and the detail can
   // be closed or switched to another asset before the response.
   // Reading the live state then gave the queue rows unsaved input, or nothing.
-  const saved = cloneDeep(asset.value)
+  const form = asset.value
+  const saved = cloneDeep(form)
   const savedSingleUse = mainFileSingleUse.value
   const tellsQueue = updateUploadStore.value
   // Queue rows as of pressing save. Input typed into them while the save runs must not be overwritten.
   const rowsAtSave = tellsQueue ? uploadQueueStore.noteRowsOfAsset(saved.id, damConfigName) : undefined
   try {
-    const sent = updateAssetMetadata(damClient, endPointAsset, saved, props.extSystem, savedSingleUse, damConfigName)
+    // Only what was changed against what the DAM had goes, so another editor's changes to the rest stay.
+    const sent = updateAssetMetadata(
+      damClient,
+      endPointAsset,
+      saved,
+      props.extSystem,
+      savedSingleUse,
+      damConfigName,
+      metadataOnServer(form)
+    )
     // Registered for the host. If the detail closes before the response, the host waits for this save.
     assetDetailStore.setSaving(saved.id, sent, damConfigName)
-    await sent
+    setMetadataOnServer(form, await sent)
     if (tellsQueue) {
       await uploadQueueStore.updateFromDetail(saved, damConfigName, savedSingleUse, rowsAtSave)
     }

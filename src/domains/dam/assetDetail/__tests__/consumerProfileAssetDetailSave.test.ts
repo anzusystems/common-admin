@@ -101,9 +101,8 @@ describe.each(consumerProfiles)('the save of the detail of an asset under the $n
     await saved()
 
     expect(saves().map((request) => request.url)).toEqual([`${endPoints.asset}/metadata-bulk-update`])
-    expect(dam.body(saves()[0])).toMatchObject([
-      { id: 'asset-1', described: true, customData: { description: 'from the server' } },
-    ])
+    // Nothing differs from what the DAM has, so the save only marks the asset described.
+    expect(dam.body(saves()[0])).toEqual([{ id: 'asset-1', described: true }])
     expect(shownAlerts()).toEqual([['success', alertText('common.alert.recordWas.updated')]])
   })
 
@@ -240,9 +239,8 @@ describe.each(consumerProfiles)('the save of the detail of an asset under the $n
 
       await saved()
 
-      expect(dam.body(saves()[0])).toMatchObject([
-        { id: 'asset-1', customData: { description: 'from the server' }, mainFileSingleUse: true },
-      ])
+      // Only the switch was changed, so only it is sent.
+      expect(dam.body(saves()[0])).toEqual([{ id: 'asset-1', described: true, mainFileSingleUse: true }])
       expect(assetReads()).toEqual([`${endPoints.asset}/asset-1`])
       expect(shownAlerts()).toEqual([updated])
       expect(row).toMatchObject({ customData: { description: 'from the server' }, mainFileSingleUse: true })
@@ -267,7 +265,8 @@ describe.each(consumerProfiles)('the save of the detail of an asset under the $n
 
       expect(assetReads()).toEqual([`${endPoints.asset}/asset-1`])
       expect(shownAlerts()).toEqual([updated])
-      expect(row).toMatchObject({ customData: { description: 'as the DAM has it now' }, mainFileSingleUse: false })
+      // The switch the save sent is what the DAM has by then, with the rest of the asset as it had it.
+      expect(row).toMatchObject({ customData: { description: 'as the DAM has it now' }, mainFileSingleUse: true })
     })
 
     // The queue dialog turns the telling on when it opens a row's detail, and nothing turns it off.
@@ -311,8 +310,9 @@ describe.each(consumerProfiles)('the save of the detail of an asset under the $n
       held.release()
       await vi.waitFor(() => expect(shownAlerts()).toEqual([updated]))
 
+      // The switch was changed before the save, the rest is as the DAM had it.
+      expect(dam.body(saves()[0])).toEqual([{ id: 'asset-1', described: true, mainFileSingleUse: true }])
       const sent = { keywords: [], authors: [], customData: { description: 'from the server' } }
-      expect(dam.body(saves()[0])).toMatchObject([{ id: 'asset-1', ...sent, mainFileSingleUse: true }])
       expect(row).toMatchObject({ ...sent, mainFileSingleUse: true })
       expect(detail.asset!.metadata.customData).toEqual({ description: 'typed while the save runs' })
       expect(detail.mainFileSingleUse).toBe(false)

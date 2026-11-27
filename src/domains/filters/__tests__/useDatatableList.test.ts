@@ -138,4 +138,54 @@ describe('useDatatableList', () => {
     await call
     expect(done).toBe(true)
   })
+
+  // "Zrušiť filter" cleared the sort from the address and local storage but left it on the screen and in the
+  // request, so a reload, Close or the menu showed another order than the one just shown (#87746).
+  describe('reset', () => {
+    const ascending = { key: 'id', order: 'asc' } as const
+    const listDefault = { key: 'id', order: 'desc' } as const
+
+    it('puts the sort back to the default of the list, as the address and the storage have it', async () => {
+      const { list, own } = mountList()
+      await debounced()
+      own.pagination.value = { ...own.pagination.value, sortBy: { ...ascending } }
+      list.sortByChange()
+      await debounced()
+      expect(window.location.hash).toContain('_sort=id,asc')
+      expect(localStorage.getItem('tableFilter_sys_list')).toContain('_sort=id,asc')
+
+      list.resetFilterAction()
+      await debounced()
+
+      expect(own.pagination.value.sortBy).toEqual(listDefault)
+      expect(window.location.hash).toBe('')
+      expect(localStorage.getItem('tableFilter_sys_list')).toBeNull()
+    })
+
+    it('takes the default the list was set up with, not the sort a link opened it with', async () => {
+      window.location.hash = '#_sort=id,asc~'
+      const { list, own } = mountList()
+      await debounced()
+      expect(own.pagination.value.sortBy).toEqual(ascending)
+
+      list.resetFilterAction()
+      await debounced()
+
+      expect(own.pagination.value.sortBy).toEqual(listDefault)
+    })
+
+    // Nothing is kept there, so the screen and a reload cannot disagree.
+    it('leaves the sort of a list that keeps no view alone', async () => {
+      const { list, own } = mountList({ populateUrlParams: false, storeFiltersLocalStorage: false })
+      await debounced()
+      own.pagination.value = { ...own.pagination.value, sortBy: { ...ascending } }
+      list.sortByChange()
+      await debounced()
+
+      list.resetFilterAction()
+      await debounced()
+
+      expect(own.pagination.value.sortBy).toEqual(ascending)
+    })
+  })
 })

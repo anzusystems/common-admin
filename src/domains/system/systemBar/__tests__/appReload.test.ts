@@ -48,6 +48,30 @@ describe('reload when a new version is deployed', () => {
     expect(reload).not.toHaveBeenCalled()
   })
 
+  // DAM's running upload died with the reload (#87746). The admin opts in, and the others reload as before.
+  it('postpones the reload while the admin says it is busy, and reloads at the first check after', () => {
+    newVersion.value = true
+    let busy = true
+    const options = { postponeWhile: () => busy }
+
+    expect(checkForNewVersion(options)).toBe(false)
+    expect(checkForNewVersion(options)).toBe(false)
+    expect(reload).not.toHaveBeenCalled()
+    // The system bar keeps offering the new version meanwhile.
+    expect(newVersion.value).toBe(true)
+
+    busy = false
+    expect(checkForNewVersion(options)).toBe(true)
+    expect(reload).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not ask an admin that is busy while the running version is current', () => {
+    const postponeWhile = vi.fn(() => true)
+
+    expect(checkForNewVersion({ postponeWhile })).toBe(false)
+    expect(postponeWhile).not.toHaveBeenCalled()
+  })
+
   it('answers true, without a second reload, while one is already under way', () => {
     const onReload = vi.fn()
 

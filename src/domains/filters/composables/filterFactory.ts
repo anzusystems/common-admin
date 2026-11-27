@@ -301,6 +301,13 @@ export function useFilterClearHelpers<
   }
 }
 
+/**
+ * The sort a list had when it first restored its view, before the address or the storage changed it: the list's own
+ * default, also one its setup put in after `usePagination`. Kept per pagination, so a pagination a module holds keeps
+ * the default of its first visit, not a sort picked before the list was opened again.
+ */
+const listDefaultSort = new WeakMap<Ref<Pagination>, DatatableSortBy>()
+
 export interface FilterHelpersMoreOptions {
   storeFiltersLocalStorage: string | boolean // false to disable, string to override store key
   populateUrlParams: boolean
@@ -591,8 +598,14 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
     return filterFieldsOf(stored) === filterFieldsOf(encodeFilterHash(data))
   }
 
+  // A list that keeps its view goes back to its default sort too. The reset empties the address and the storage, and a
+  // reload, Close or the menu then opened the default sort while the screen kept the one picked before (#87746).
   const resetFilter = (pagination: Ref<Pagination>, callback?: AnyFn) => {
-    pagination.value = { ...pagination.value, page: 1 }
+    const sortBy =
+      keepsItsView && listDefaultSort.has(pagination)
+        ? cloneDeep(listDefaultSort.get(pagination) as DatatableSortBy)
+        : pagination.value.sortBy
+    pagination.value = { ...pagination.value, sortBy, page: 1 }
     rememberShownPage(pagination)
     if (storeKey && localStorage) {
       localStorage.removeItem(storeKey)
@@ -613,6 +626,7 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
   }
 
   const loadStoredFilters = (pagination: Ref<Pagination>, callback?: AnyFn) => {
+    if (!listDefaultSort.has(pagination)) listDefaultSort.set(pagination, cloneDeep(pagination.value.sortBy))
     let source: 'hash' | 'localStorage' = 'hash'
     let storedFromHash = parseLocationHash()
     if (isNull(storedFromHash)) {

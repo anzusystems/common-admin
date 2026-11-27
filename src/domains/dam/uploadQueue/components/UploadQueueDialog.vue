@@ -129,6 +129,12 @@ const onStopConfirm = async () => {
   uploadQueueDialog.value = null
 }
 
+// A save in the asset detail of a row's asset can still run after the detail closed. The queue save waits for it, as
+// the image widgets do, so it reads the asset after it. Rebased onto a read before it, the row's custom data put back
+// what the detail changed (#87746).
+const detailSavesOf = (rows: UploadQueueItem[]) =>
+  Promise.all(rows.map((row) => (row.assetId ? assetDetailStore.savingOf(row.assetId, damConfigName) : null)))
+
 const onSave = async () => {
   // The loading button still reacts to Enter and Space. This prevents sending a running save again.
   if (saveButtonLoading.value || saveAndCloseButtonLoading.value) return
@@ -142,6 +148,7 @@ const onSave = async () => {
     return
   }
   try {
+    await detailSavesOf(itemsRaw)
     await bulkUpdateAssetsMetadata(damClient, endPointAsset, itemsRaw, undefined, props.extSystem, damConfigName)
     showRecordWas('updated')
   } catch (error) {
@@ -195,6 +202,7 @@ const onSaveAndApply = async () => {
   try {
     let res: AssetMetadataBulkItem[]
     try {
+      await detailSavesOf(itemsRaw)
       res = await bulkUpdateAssetsMetadata(
         damClient,
         endPointAsset,

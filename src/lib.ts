@@ -627,7 +627,12 @@ import {
   skipUrlPrefixes,
 } from '@/domains/api/composables/defineApiClient'
 import { startWithEnvConfig } from '@/shared/utils/envConfig'
-import { checkForNewVersion, RELOAD_VETO_GRACE, requestAppReload } from '@/domains/system/systemBar/utils/appReload'
+import {
+  checkForNewVersion,
+  type CheckForNewVersionOptions,
+  RELOAD_VETO_GRACE,
+  requestAppReload,
+} from '@/domains/system/systemBar/utils/appReload'
 import type {
   ExecuteRequestParams,
   UseApiRequestParams,
@@ -1446,6 +1451,7 @@ export {
   defineApiClient,
   startWithEnvConfig,
   checkForNewVersion,
+  type CheckForNewVersionOptions,
   requestAppReload,
   RELOAD_VETO_GRACE,
   skipUrlPrefixes,

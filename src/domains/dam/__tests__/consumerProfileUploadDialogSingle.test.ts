@@ -575,8 +575,8 @@ describe.each(consumerProfiles)('the dialog of one uploaded file under the $name
         request.method === 'PATCH' && dam.routes.bulkMetadata.test(request.url)
           ? {
               status: 200,
-              data: (dam.body(request) as Array<Record<string, unknown>>).map((sent) => ({
-                ...sent,
+              data: (dam.answerAsTheDam(request)!.data as Array<Record<string, unknown>>).map((saved) => ({
+                ...saved,
                 mainFileInternal: true,
               })),
             }
@@ -592,13 +592,11 @@ describe.each(consumerProfiles)('the dialog of one uploaded file under the $name
       expect(saves().map((request) => request.url)).toEqual([bulkSave])
       const sent = dam.body(saves()[0]) as Array<Record<string, unknown>>
       expect(sent).toHaveLength(1)
-      expect(sent[0]).toMatchObject({
+      // What the user changed. The authors and the switch, as the DAM has them, are not sent back.
+      expect(sent[0]).toEqual({
         id: 'asset-1',
-        keywords: [],
-        authors: isCms ? ['author-1', 'author-2'] : [],
         described: true,
         customData: { description: ' typed by the user ', author: ' A. Author ' },
-        mainFileSingleUse: false,
       })
       expect(wrapper!.emitted('apply')![0]).toMatchObject([
         [
@@ -714,6 +712,74 @@ describe.each(consumerProfiles)('the dialog of one uploaded file under the $name
       expect(wrapper!.emitted('apply')).toBeUndefined()
       expect(item().status).toBe(Uploaded)
       expect(useUploadQueueDialog().uploadQueueDialog.value).toBe(QUEUE)
+    })
+
+    // The DAM spreads single use to the take-over group of a copy switched on elsewhere (#87746). A switch the
+    // user left as it was loaded must not turn it off again.
+    it('leaves single use the DAM gave the file meanwhile, when the user did not touch the switch', async () => {
+      await uploaded()
+      dam.assets.get('asset-1')!.mainFileSingleUse = true
+      await type(
+        fields().find((field) => field.value === 'from the server')!,
+        'typed by the user'
+      )
+
+      button('button-save').click()
+      await vi.waitFor(() => expect(shownAlerts()).toEqual([updated]))
+
+      expect(dam.body(saves()[0])).toEqual([
+        { id: 'asset-1', described: true, customData: { description: 'typed by the user' } },
+      ])
+      expect(dam.assets.get('asset-1')!.mainFileSingleUse).toBe(true)
+    })
+
+    // The widget that opened this dialog also opens the asset detail, whose save can still run after the detail
+    // closed. A file that is a duplicate of that asset makes it the asset of the row (#87746). A save that read the
+    // asset before the detail's save, but was written after it, put back the custom fields the detail changed.
+    it.each(['button-save', 'button-save-and-apply'] as const)(
+      'waits on %s for a save of the asset detail still on its way, and keeps what that save changed',
+      async (pressed) => {
+        const detailField = isCms ? 'title' : 'author'
+        await uploaded()
+        let detailSaveLands = () => {}
+        const detailSave = new Promise<void>((resolve) => {
+          detailSaveLands = () => {
+            const asset = dam.assets.get('asset-1')!
+            const { customData } = asset.metadata
+            asset.metadata = { ...asset.metadata, customData: { ...customData, [detailField]: 'saved in the detail' } }
+            resolve()
+          }
+        })
+        useAssetDetailStore(pinia).setSaving('asset-1', detailSave, 'default')
+        const patches = dam.hold('PATCH', dam.routes.bulkMetadata)
+        await type(
+          fields().find((field) => field.value === 'from the server')!,
+          'typed by the user'
+        )
+
+        button(pressed).click()
+        await flushPromises()
+        detailSaveLands()
+        await vi.waitFor(() => expect(patches.waiting).toHaveLength(1))
+        patches.release()
+        await vi.waitFor(() => expect(shownAlerts()).toEqual([updated]))
+
+        expect(dam.assets.get('asset-1')!.metadata.customData).toEqual({
+          description: 'typed by the user',
+          [detailField]: 'saved in the detail',
+        })
+      }
+    )
+
+    it.runIf(isCms)('sends the switch when the user turned it', async () => {
+      await uploaded()
+
+      inDialog<HTMLInputElement>('.v-switch input')!.click()
+      await flushPromises()
+      button('button-save').click()
+      await vi.waitFor(() => expect(shownAlerts()).toEqual([updated]))
+
+      expect(dam.body(saves()[0])).toEqual([{ id: 'asset-1', described: true, mainFileSingleUse: true }])
     })
 
     it('keeps the dialog and says the save failed when the DAM refuses it', async () => {

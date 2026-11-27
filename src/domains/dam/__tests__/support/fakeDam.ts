@@ -208,7 +208,33 @@ export function createFakeDam(endPoints: FakeDamEndPoints) {
       return { status: 200, data: finished?.mainFile ?? {} }
     }
     if (method === 'PATCH' && routes.bulkMetadata.test(url)) {
-      return { status: 200, data: JSON.parse(request.data as string) }
+      // As the DAM: a field left out stays, the custom data sent replace the old ones, and the answer is the asset's
+      // metadata as saved. An asset the fake does not hold is answered as it was sent.
+      const items = JSON.parse(request.data as string) as Array<Record<string, unknown> & { id: DocId }>
+      return {
+        status: 200,
+        data: items.map((item) => {
+          const stored = assets.get(item.id)
+          if (!stored) return item
+          if (item.keywords) stored.keywords = item.keywords as DocId[]
+          if (item.authors) stored.authors = item.authors as DocId[]
+          if (item.sources) stored.sources = item.sources as DocId[]
+          if (item.customData) stored.metadata = { ...stored.metadata, customData: item.customData }
+          if (typeof item.mainFileSingleUse === 'boolean') stored.mainFileSingleUse = item.mainFileSingleUse
+          if (item.described === true) stored.flags = { ...stored.flags, described: true }
+          return {
+            id: stored.id,
+            keywords: stored.keywords,
+            authors: stored.authors,
+            sources: stored.sources,
+            described: stored.flags.described,
+            customData: stored.metadata.customData,
+            mainFileSingleUse: !!stored.mainFileSingleUse,
+            mainFileInternal: !!stored.mainFileInternal,
+            mainFileOverrideInternal: !!stored.mainFileOverrideInternal,
+          }
+        }),
+      }
     }
     if (method !== 'GET') return undefined
     if ((match = url.match(routes.byFile))) {
@@ -295,6 +321,8 @@ export function createFakeDam(endPoints: FakeDamEndPoints) {
     requests,
     unanswered,
     assets,
+    /** The DAM's own answer, for a rule that changes it. A save is written into the assets held. */
+    answerAsTheDam: (request: FakeDamRequest) => own(request),
     reply: (rule: FakeDamRule) => {
       rules.unshift(rule)
       return () => {

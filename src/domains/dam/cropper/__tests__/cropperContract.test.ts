@@ -7,6 +7,9 @@ import {
   nextFrame,
   pinch,
   scaleOf,
+  touchDown,
+  touchMove,
+  touchUp,
   wait,
   type CropperAdapter,
 } from '@/domains/dam/cropper/__tests__/support/cropperHarness'
@@ -16,6 +19,7 @@ import {
   SMALL_IMAGE,
   WIDE_IMAGE,
 } from '@/domains/dam/cropper/__tests__/support/cropperImages'
+import type { CropRect } from '@/domains/dam/cropper/utils/cropperTypes'
 
 /**
  * The behavioural contract both cropper components must satisfy,
@@ -26,6 +30,12 @@ import {
  */
 
 const AR_16_9 = 16 / 9
+
+/** The crop box on the canvas, in screen pixels. */
+const boxOf = (cropper: { find: (selector: string) => HTMLElement }) => {
+  const { x, y, width, height } = cropper.find('cropper-selection') as unknown as CropRect
+  return { x, y, width, height }
+}
 
 const expectedInitialCrop = (naturalWidth: number, naturalHeight: number, aspectRatio: number, coverage = 0.8) => {
   let width = naturalWidth
@@ -260,6 +270,16 @@ const describeAdapter = (adapter: CropperAdapter) => {
         cropper.destroy()
       })
 
+      // The DAM saves the region on every reported end, and a click sent the same region again with a toast (#87746).
+      it('is not reported for a click that changes nothing', async () => {
+        const cropper = await mountCropper({ adapter })
+        const face = cropper.find(adapter.face)
+        const point = centerOf(face)
+        await drag(face, point, point, 1)
+        expect(cropper.cropendCalls()).toBe(0)
+        cropper.destroy()
+      })
+
       it('sees the finished crop when it reads getData()', async () => {
         const seen = { x: -1, width: -1 }
         const live: { api: null | (() => { x: number; width: number }) } = { api: null }
@@ -476,6 +496,24 @@ const describeAdapter = (adapter: CropperAdapter) => {
         expect(after.width).toBeGreaterThan(10)
         expect(after.width).toBeLessThan(before.width - 10)
         expect(after.width / after.height).toBeCloseTo(AR_16_9, 1)
+        expect(cropper.cropendCalls()).toBe(1)
+        cropper.destroy()
+      })
+
+      // A press just off the crop box that slips a few pixels drew a box of that size, and the DAM saved it (#87746).
+      it('throws a box of a few pixels away and keeps the crop it had, unreported', async () => {
+        const cropper = await mountCropper({ adapter })
+        const before = cropper.api.getData()
+        const surface = cropper.find(adapter.drawSurface)
+        const rect = surface.getBoundingClientRect()
+        const from = { x: rect.left + 10, y: rect.top + 10 }
+        await drag(surface, from, { x: from.x + 5, y: from.y + 3 })
+        const after = cropper.api.getData()
+        expect(after.x).toBeCloseTo(before.x, 3)
+        expect(after.y).toBeCloseTo(before.y, 3)
+        expect(after.width).toBeCloseTo(before.width, 3)
+        expect(after.height).toBeCloseTo(before.height, 3)
+        expect(cropper.cropendCalls()).toBe(0)
         cropper.destroy()
       })
 
@@ -535,6 +573,85 @@ const describeAdapter = (adapter: CropperAdapter) => {
         expect(data.y).toBeGreaterThanOrEqual(-1)
         expect(data.x + data.width).toBeLessThanOrEqual(LANDSCAPE_IMAGE.naturalWidth + 1)
         expect(data.y + data.height).toBeLessThanOrEqual(LANDSCAPE_IMAGE.naturalHeight + 1)
+        cropper.destroy()
+      })
+
+      // A finger that lands off the crop box slips a few pixels before the second finger of a pinch lands. cropper.js
+      // has drawn a box of that size by then, and the DAM saved it as the region (#87746).
+      it('throws away a box a slipping finger drew before a second one turned the gesture into a pinch', async () => {
+        const commits: CropRect[] = []
+        const cropper = await mountCropper({ adapter, props: { cropend: (crop: CropRect) => commits.push(crop) } })
+        const boxBefore = boxOf(cropper)
+        const surface = cropper.find(adapter.drawSurface)
+        const rect = surface.getBoundingClientRect()
+        const first = { x: rect.left + 10, y: rect.top + 10 }
+        const second = { x: rect.left + 90, y: rect.top + 10 }
+
+        touchDown(surface, first, 1)
+        touchMove(surface, { x: first.x + 3, y: first.y + 2 }, 1)
+        touchDown(surface, second, 2)
+        for (let step = 1; step <= 6; step++) {
+          touchMove(surface, { x: first.x - step * 10, y: first.y }, 1)
+          touchMove(surface, { x: second.x + step * 10, y: second.y }, 2)
+          await nextFrame()
+        }
+        touchUp(surface, { x: first.x - 60, y: first.y }, 1)
+        touchUp(surface, { x: second.x + 60, y: second.y }, 2)
+        await wait(200)
+
+        expect(cropper.api.displaySize().width).toBeGreaterThan(rect.width + 1)
+        // As big as before and where it was on the screen, as after any pinch, but on the picture. Where the zoomed
+        // picture ends is cropper.js's to decide: in some full runs it no longer covered the old place (#87746).
+        const canvas = cropper.find('cropper-canvas').getBoundingClientRect()
+        const picture = cropper.find(adapter.imageBox).getBoundingClientRect()
+        const onPicture = {
+          left: Math.max(picture.left - canvas.left, 0),
+          top: Math.max(picture.top - canvas.top, 0),
+          right: Math.min(picture.right - canvas.left, canvas.width),
+          bottom: Math.min(picture.bottom - canvas.top, canvas.height),
+        }
+        const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max)
+        const box = boxOf(cropper)
+        expect([box.x, box.y, box.width, box.height]).toEqual([
+          expect.closeTo(clamp(boxBefore.x, onPicture.left, onPicture.right - boxBefore.width), 0),
+          expect.closeTo(clamp(boxBefore.y, onPicture.top, onPicture.bottom - boxBefore.height), 0),
+          expect.closeTo(boxBefore.width, 0),
+          expect.closeTo(boxBefore.height, 0),
+        ])
+        // Saved once, when the last finger lifted, with the crop the gesture ended with.
+        const final = cropper.api.getCrop()
+        expect(commits).toHaveLength(1)
+        expect([commits[0]!.width, commits[0]!.height]).toEqual([
+          expect.closeTo(final.width, 3),
+          expect.closeTo(final.height, 3),
+        ])
+        cropper.destroy()
+      })
+
+      // cropper.js ends the running action on any pointer lifted, also on a palm that touched outside the picture.
+      // The crop of that moment was saved, and the rest of the resize never was (#87746).
+      it('reports the crop a resize ends with when another finger touches and lifts during it', async () => {
+        const commits: CropRect[] = []
+        const cropper = await mountCropper({ adapter, props: { cropend: (crop: CropRect) => commits.push(crop) } })
+        await cropper.api.setData({ x: 100, y: 100, width: 320, height: 180 })
+        const grip = cropper.find(adapter.seHandle)
+        const from = centerOf(grip)
+        const palm = { x: 5, y: 5 }
+
+        touchDown(grip, from, 1)
+        touchMove(document, { x: from.x + 20, y: from.y + 20 }, 1)
+        touchDown(document.body, palm, 2)
+        touchUp(document.body, palm, 2)
+        touchMove(document, { x: from.x + 40, y: from.y + 40 }, 1)
+        touchMove(document, { x: from.x + 60, y: from.y + 60 }, 1)
+        touchUp(document, { x: from.x + 60, y: from.y + 60 }, 1)
+        await nextFrame()
+
+        const final = cropper.api.getCrop()
+        expect(commits).toHaveLength(1)
+        expect(commits[0]!.width).toBeCloseTo(final.width, 3)
+        expect(commits[0]!.height).toBeCloseTo(final.height, 3)
+        expect(cropper.wrapper.emitted('update:modelValue')!.at(-1)).toEqual([commits[0]])
         cropper.destroy()
       })
     })

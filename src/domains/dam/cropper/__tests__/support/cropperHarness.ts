@@ -98,9 +98,9 @@ export const mountCropper = async (options: MountOptions): Promise<MountedCroppe
     resolveReady?.()
     ;(props.ready as (() => void) | undefined)?.()
   }
-  const onCommit = () => {
+  const onCommit = (crop: unknown) => {
     cropendCalls += 1
-    ;(props.cropend as (() => void) | undefined)?.()
+    ;(props.cropend as ((crop: unknown) => void) | undefined)?.(crop)
   }
 
   const passThrough = { ...props }
@@ -269,6 +269,19 @@ export const pinch = async (element: HTMLElement, spread: number, steps = 6) => 
   )
   await wait(200)
 }
+
+/**
+ * One finger of a gesture, for gestures `drag` and `pinch` do not make: a finger that moves before another lands,
+ * or one that lifts while another goes on. `id` tells the fingers apart.
+ */
+export const touchDown = (target: EventTarget, point: Point, id: number) =>
+  target.dispatchEvent(new PointerEvent('pointerdown', { ...pointerInit(point, 'touch'), pointerId: id }))
+
+export const touchMove = (target: EventTarget, point: Point, id: number) =>
+  target.dispatchEvent(new PointerEvent('pointermove', { ...pointerInit(point, 'touch'), pointerId: id }))
+
+export const touchUp = (target: EventTarget, point: Point, id: number) =>
+  target.dispatchEvent(new PointerEvent('pointerup', { ...pointerInit(point, 'touch'), buttons: 0, pointerId: id }))
 
 export const centerOf = (element: HTMLElement): Point => {
   const rect = element.getBoundingClientRect()

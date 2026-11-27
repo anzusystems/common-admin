@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { page } from 'vitest/browser'
 import { defineComponent, h } from 'vue'
 import { mount } from '@vue/test-utils'
 import ACropper from '@/domains/dam/cropper/components/ACropper.vue'
@@ -92,6 +93,77 @@ describe('ACropper layout', () => {
     expect(cropper.api.displaySize().height).toBeLessThanOrEqual(241)
     cropper.destroy()
     frame.remove()
+  })
+
+  // The host is as tall as its canvas, so its own box cannot show that the frame grew back.
+  it('grows back when a clipping ancestor gets taller again', async () => {
+    const frame = document.createElement('div')
+    frame.style.cssText = 'width: 520px; height: 500px; overflow: hidden;'
+    document.body.appendChild(frame)
+
+    const cropper = await mountCropper({
+      adapter: V2_ADAPTER,
+      fixture: PORTRAIT_IMAGE,
+      hostWidth: 520,
+      parent: frame,
+    })
+    frame.style.height = '240px'
+    await wait(SETTLE)
+    expect(cropper.api.displaySize().height).toBeLessThanOrEqual(241)
+
+    frame.style.height = '500px'
+    await wait(SETTLE)
+
+    expect(cropper.api.displaySize().height).toBeGreaterThan(490)
+    cropper.destroy()
+    frame.remove()
+  })
+
+  // The asset detail's picture panel animates its height when a wider window takes it past a breakpoint (#87746).
+  // The width changes at once, and the cropper was laid out for the panel's first, short frame.
+  it('ends at the full size when its frame grows in a transition after the width changed', async () => {
+    const frame = document.createElement('div')
+    frame.style.cssText = 'width: 520px; height: 240px; overflow: hidden; transition: height 0.2s;'
+    document.body.appendChild(frame)
+
+    const cropper = await mountCropper({
+      adapter: V2_ADAPTER,
+      fixture: PORTRAIT_IMAGE,
+      hostWidth: 400,
+      parent: frame,
+    })
+    expect(cropper.api.displaySize().height).toBeLessThanOrEqual(241)
+
+    cropper.host.style.width = '520px'
+    frame.style.height = '500px'
+    await wait(600)
+
+    expect(cropper.api.displaySize().height).toBeGreaterThan(490)
+    cropper.destroy()
+    frame.remove()
+  })
+
+  // The DAM's limit `calc(100vh - 160px)` rises with a taller window, and nothing the cropper observes changes size.
+  it('grows back when a taller window raises its own height limit', async () => {
+    await page.viewport(414, 500)
+    try {
+      const cropper = await mountCropper({
+        adapter: V2_ADAPTER,
+        fixture: PORTRAIT_IMAGE,
+        hostWidth: 380,
+        props: { aspectRatio: 1, containerStyle: { overflow: 'hidden', maxHeight: 'calc(100vh - 160px)' } },
+      })
+      expect(cropper.api.displaySize().height).toBeLessThanOrEqual(341)
+
+      await page.viewport(414, 896)
+      await wait(SETTLE)
+
+      // 380 px wide, so the picture wants 507 px of the 736 px allowed.
+      expect(cropper.api.displaySize().height).toBeGreaterThan(500)
+      cropper.destroy()
+    } finally {
+      await page.viewport(414, 896)
+    }
   })
 
   it('counts the part of itself hidden above a clipping ancestor', async () => {

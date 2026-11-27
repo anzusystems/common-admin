@@ -23,6 +23,7 @@ import {
   type UploadSettlementTarget,
 } from '@/domains/dam/uploadQueue/settlement/uploadSettlementTypes'
 import { isArray, isNull, isObject, isUndefined } from '@/shared/utils/common'
+import { metadataOfAsset, setMetadataOnServer } from '@/domains/dam/api/damMetadataOnServer'
 
 export interface UploadTrackState {
   queueKey: UploadQueueKey
@@ -159,6 +160,8 @@ export function mergeLoadedMetadata(
   // Not mass-operation fields. These come from the server.
   row.mainFileSingleUse = asset.mainFileSingleUse
   row.mainFileInternal = asset.mainFileInternal
+  // What the DAM has. The save sends only what differs, such as the values a mass operation filled in.
+  setMetadataOnServer(row, metadataOfAsset(asset))
   const authorSuggestions = asset.metadata.authorSuggestions ?? {}
   updateNewNames(authorSuggestions, queue.suggestions.newAuthorNames)
   updateNewNames(asset.metadata.keywordSuggestions ?? {}, queue.suggestions.newKeywordNames)
@@ -604,6 +607,8 @@ export function createUploadSettle(
       row.assetId = original.id
       row.mainFileSingleUse = original.mainFileSingleUse
       row.mainFileInternal = original.mainFileInternal
+      // The row shows the original as the DAM has it. Its save sends only what is changed in it.
+      setMetadataOnServer(row, metadataOfAsset(original))
       memory.metadataLoaded.add(toRaw(row))
       row.canEditMetadata = true
       dropNotice(row)

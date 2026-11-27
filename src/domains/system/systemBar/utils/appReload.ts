@@ -31,13 +31,23 @@ export function requestAppReload(onReload?: () => void): boolean {
   return true
 }
 
+export interface CheckForNewVersionOptions {
+  /**
+   * For an admin whose page holds work a reload would lose (DAM's running uploads). While it returns `true`, a new
+   * version does not reload: the navigation goes on and the system bar keeps its link to load the new version.
+   * The first navigation after it returns `false` reloads. Without it, the reload is never postponed.
+   */
+  postponeWhile?: () => boolean
+}
+
 /**
  * Reloads when `ASystemBar` has seen a new `appVersion` in `config.json`.
  * For a route guard: returns whether a reload is under way, and
  * the guard then holds the navigation for `RELOAD_VETO_GRACE`.
  */
-export function checkForNewVersion(): boolean {
+export function checkForNewVersion(options: CheckForNewVersionOptions = {}): boolean {
   const { newVersion } = useSystemBar()
   if (!newVersion.value) return false
+  if (options.postponeWhile?.()) return false
   return requestAppReload()
 }

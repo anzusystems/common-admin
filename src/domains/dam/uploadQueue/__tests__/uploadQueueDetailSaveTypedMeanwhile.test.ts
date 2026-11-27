@@ -9,6 +9,7 @@ import {
   type FakeDamAnswer,
 } from '@/domains/dam/__tests__/support/fakeDam'
 import { holdLongWaits, type LongWaits } from '@/domains/dam/__tests__/support/longWaits'
+import { bulkUpdateAssetsMetadata } from '@/domains/dam/api/damAssetApi'
 import {
   type DamNotification,
   DamNotificationName,
@@ -260,5 +261,43 @@ describe('two saves in the asset detail of a row of the queue, one after the oth
     )
 
     expect(row).toMatchObject({ keywords: ['keyword-of-second'], customData: { title: 'second' } })
+  })
+})
+
+// A save of the queue is on its way while a save in the asset detail of the row's asset writes into the row what the
+// read after it found (#87746). The queue save ended last and put back what the DAM had when it started, so the next
+// save of the row sent the detail's values as typed in the row, over what another editor saved since.
+describe('a save of the queue that ends after a save in the asset detail wrote into its row', () => {
+  it('sends nothing of what the detail saved with the next save of the row, so a later change by another editor stays', async () => {
+    const row = await rowOfTheAsset()
+    const store = useUploadQueuesStore()
+    const saveRow = () => bulkUpdateAssetsMetadata(dam.client, endPoints.asset, [row], undefined, extSystem, 'default')
+    const note = store.noteRowsOfAsset('asset-1', 'default')
+    row.keywords = ['keyword-typed']
+    const patches = dam.hold('PATCH', dam.routes.bulkMetadata)
+    const queueSave = saveRow()
+    await vi.waitFor(() => expect(patches.waiting).toHaveLength(1))
+
+    const saving = dam.assets.get('asset-1')!
+    saving.authors = ['author-saved']
+    saving.metadata = {
+      ...saving.metadata,
+      customData: { title: 'saved in the detail', description: 'description before' },
+    }
+    await store.updateFromDetail(structuredClone(saving), 'default', undefined, note)
+    patches.release()
+    await queueSave
+    patches.stop()
+    const saved = dam.assets.get('asset-1')!
+    saved.metadata = { ...saved.metadata, customData: { ...saved.metadata.customData, title: 'theirs' } }
+
+    await saveRow()
+
+    expect(dam.body(dam.sentTo('PATCH', dam.routes.bulkMetadata)[1]!)).toEqual([{ id: 'asset-1', described: true }])
+    expect(dam.assets.get('asset-1')).toMatchObject({
+      keywords: ['keyword-typed'],
+      authors: ['author-saved'],
+      metadata: { customData: { title: 'theirs', description: 'description before' } },
+    })
   })
 })

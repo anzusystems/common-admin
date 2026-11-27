@@ -111,12 +111,6 @@ const isUploading = computed(() => {
   return queueTotalCount.value > queueProcessedCount.value
 })
 
-// The item's own switch. The store loads it with the item's metadata,
-// then the user owns it. A duplicate takes the original's value.
-// Not the asset detail's value: that is reset from the server when the
-// item turns uploaded, overwriting the user's choice made during upload.
-const mainFileSingleUse = computed(() => item.value?.mainFileSingleUse ?? false)
-
 // Whether the duplicate's original is single use, as found. The notice is about that
 // asset and does not follow the switch, which is the item's value from then on.
 const originalIsSingleUse = ref(false)
@@ -131,18 +125,22 @@ watch(
 // Which button is saving. The other one waits, so no second request is sent.
 const saving = ref<'save' | 'saveAndApply' | null>(null)
 
+// No override of the single use switch. The switch is the item's own: the store loads it with the item's metadata,
+// then the user owns it, and the save sends it only when it differs from what the DAM had. Sent unchanged, it turned
+// off single use the DAM gave the file meanwhile (#87746). Not the asset detail's value: that is reset from the server
+// when the item turns uploaded, overwriting the user's choice made during upload.
+// A save in the asset detail of the item's asset can still run after the detail closed: the widget that opened this
+// dialog opens the detail too, and a duplicate file makes that asset the item's. The save waits for it, as the queue
+// dialog does, so it reads the asset after it. Otherwise its custom data put back what the detail changed (#87746).
+const detailSavesOf = (rows: UploadQueueItem[]) =>
+  Promise.all(rows.map((row) => (row.assetId ? assetDetailStore.savingOf(row.assetId, damConfigName) : null)))
+
 const onSave = async () => {
   if (items.value.length === 0 || !isNull(saving.value)) return
   saving.value = 'save'
   try {
-    await bulkUpdateAssetsMetadata(
-      damClient,
-      endPointAsset,
-      items.value,
-      mainFileSingleUse.value,
-      props.extSystem,
-      damConfigName
-    )
+    await detailSavesOf(items.value)
+    await bulkUpdateAssetsMetadata(damClient, endPointAsset, items.value, undefined, props.extSystem, damConfigName)
     showRecordWas('updated')
   } catch (error) {
     showMetadataSaveError(error, props.extSystem, damConfigName)
@@ -158,11 +156,12 @@ const onSaveAndApply = async () => {
   try {
     let assetsMetadataRes: AssetMetadataBulkItem[]
     try {
+      await detailSavesOf(items.value)
       assetsMetadataRes = await bulkUpdateAssetsMetadata(
         damClient,
         endPointAsset,
         items.value,
-        mainFileSingleUse.value,
+        undefined,
         props.extSystem,
         damConfigName
       )

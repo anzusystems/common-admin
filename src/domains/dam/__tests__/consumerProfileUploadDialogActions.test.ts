@@ -217,18 +217,54 @@ describe.each(consumerProfiles)('the buttons of the upload dialog under the $nam
       expect(saves().map((request) => request.url)).toEqual([bulkSave])
       const sent = dam.body(saves()[0]) as Array<Record<string, unknown>>
       expect(sent).toHaveLength(1)
-      expect(sent[0]).toMatchObject({
+      // Only what the user changed goes, so another editor's changes to the rest stay: what the DAM said is not sent.
+      expect(sent[0]).toEqual({
         id: a.assetId,
-        keywords: [],
-        authors: [],
         described: true,
         customData: { description: 'typed by the user' },
-        mainFileSingleUse: !isCms,
+        ...(isCms ? { mainFileSingleUse: false } : {}),
       })
       expect(wrapper!.emitted('apply')).toBeUndefined()
       expect(statuses()).toEqual([Uploaded, Failed, Processing])
       expect(useUploadQueueDialog().uploadQueueDialog.value).toBe(QUEUE)
       expect(save().disabled).toBe(false)
+    })
+
+    // A save in the asset detail of a row's asset is still on its way after the detail closed (#87746). A queue save
+    // that read the asset before it, but was written after it, put back the custom fields the detail changed.
+    it('waits for a save of the asset detail of a row still on its way, and keeps what that save changed', async () => {
+      const detailField = isCms ? 'title' : 'author'
+      const [a] = await pick('a.jpg')
+      await vi.waitFor(() => expect(statuses()).toEqual([Processing]))
+      dam.fileBecomes(a.assetId!, AssetFileProcessStatus.Processed, metadata({ description: 'from the server' }))
+      await asked([Uploaded])
+      let detailSaveLands = () => {}
+      const detailSave = new Promise<void>((resolve) => {
+        detailSaveLands = () => {
+          const asset = dam.assets.get(a.assetId!)!
+          const { customData } = asset.metadata
+          asset.metadata = { ...asset.metadata, customData: { ...customData, [detailField]: 'saved in the detail' } }
+          resolve()
+        }
+      })
+      useAssetDetailStore(pinia).setSaving(a.assetId!, detailSave, 'default')
+      const patches = dam.hold('PATCH', dam.routes.bulkMetadata)
+      await type(
+        fieldsOf(rows()[0]).find((field) => field.value === 'from the server')!,
+        'typed by the user'
+      )
+
+      save().click()
+      await flushPromises()
+      detailSaveLands()
+      await vi.waitFor(() => expect(patches.waiting).toHaveLength(1))
+      patches.release()
+      await vi.waitFor(() => expect(shownAlerts()).toEqual([updated]))
+
+      expect(dam.assets.get(a.assetId!)!.metadata.customData).toEqual({
+        description: 'typed by the user',
+        [detailField]: 'saved in the detail',
+      })
     })
 
     it('sends nothing, and says what to fix, while a field the application requires is empty', async () => {
@@ -423,7 +459,12 @@ describe.each(consumerProfiles)('the buttons of the upload dialog under the $nam
       const { a, b } = await twoUploadedOneFailed()
       dam.reply((request) =>
         request.method === 'PATCH' && dam.routes.bulkMetadata.test(request.url)
-          ? { status: 200, data: (dam.body(request) as Array<{ id: string }>).filter((sent) => sent.id !== b.assetId) }
+          ? {
+              status: 200,
+              data: (dam.answerAsTheDam(request)!.data as Array<{ id: string }>).filter(
+                (saved) => saved.id !== b.assetId
+              ),
+            }
           : undefined
       )
 
