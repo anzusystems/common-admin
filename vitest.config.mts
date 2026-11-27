@@ -64,6 +64,7 @@ export default defineConfig({
       'vuetify/components/VBtnToggle',
       'vuetify/components/VImg',
       'vuetify/components/VProgressCircular',
+      'vuetify/components/VProgressLinear',
       'dayjs',
       'dayjs/plugin/utc',
       'dayjs/plugin/customParseFormat',
