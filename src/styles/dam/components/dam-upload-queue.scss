@@ -123,6 +123,17 @@ $duplicate-bg-color-dark: rgb(0 0 0 / 70%);
     position: absolute;
     inset: 0;
   }
+
+  // The message wraps inside its own tile, centred by its auto margin, so a tile taller than the card scrolls from
+  // its top. Over the large placeholder of the single-upload dialog the bare text ran across the placeholder's icon.
+  &__overlay--error {
+    overflow-y: auto;
+  }
+
+  &__error-tile {
+    max-width: min(100%, 40ch);
+    overflow-wrap: anywhere;
+  }
 }
 
 @keyframes animate-upload-done {

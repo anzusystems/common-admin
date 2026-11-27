@@ -1,0 +1,3 @@
+1. **Low — changelog contradicts c1-4.** [3.0.0.md:176](/home/volar/projects/anzusystems/admin-dam/doc/changelog/3.0.0.md:176) says a quiet read under typed metadata takes “only the main file,” while [assetDetailStore.ts:198](/home/volar/projects/anzusystems/admin-dam/src/domains/coreDam/asset/store/assetDetailStore.ts:198) also takes the asset status. Steps: create an empty asset, type metadata, upload and process its first image. The detail now draws the large image because it takes `with_file`; the changelog’s description of that path is outdated.
+
+No reachable code defect or vacuous new test found within c1-1–c1-4. Read-only review; tests and builds were not run.

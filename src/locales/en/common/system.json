@@ -1,7 +1,12 @@
 {
-  "version": "version",
+  "version": "Version",
   "newVersionText": "New version of admin is available. For proper functioning, latest version is required.",
   "newVersionReload": "Reload new version",
+  "sessionEnded": {
+    "text": "Your sign-in has ended, so changes cannot be saved now. Unsaved changes stay on this page.",
+    "signInInNewTab": "Sign in in a new tab",
+    "leave": "Leave and sign in"
+  },
   "theme": {
     "light": "Light",
     "dark": "Dark",
@@ -18,6 +23,12 @@
       "mostRelevant": "Most relevant",
       "mostRecent": "Most recent",
       "oldest": "Oldest"
+    },
+    "liveListing": {
+      "newRecords": "{count} new record | {count} new records",
+      "failed": "The list could not be refreshed. Trying again.",
+      "changes": "Load changes",
+      "degraded": "Instant updates are down; the list is checked every few seconds."
     }
   },
   "modal": {
@@ -41,13 +52,14 @@
     "create": "Create"
   },
   "login": {
-    "text": "Prosím, prihláste sa",
-    "button": "Prihlásiť sa"
+    "text": "Please sign in",
+    "button": "Sign in"
   },
   "notFound": {
     "title": "Oops, 404",
     "text": "This page doesn't exist",
-    "backButton": "Return to homepage"
+    "backButton": "Return to homepage",
+    "previousButton": "Back"
   },
   "unauthorized": {
     "title": "Oops, 401",
@@ -58,5 +70,10 @@
     "dropPossibility": "Upload or move files",
     "dropHere": "Upload files"
   },
-  "inputSuggestedMax": "{current} / max {max}"
+  "upload": {
+    "incorrectFormatSize": "Invalid format or size",
+    "onlyOneFile": "Only one file can be uploaded here; the first one is used."
+  },
+  "inputSuggestedMax": "{current} / max {max}",
+  "notSet": "Not set"
 }

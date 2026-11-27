@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
-import { useAlerts } from '@/composables/system/alerts'
+import { useAlerts } from '@/domains/system/composables/alerts'
 
 const { showError } = useAlerts()
 const alert = () => {
@@ -16,9 +16,7 @@ const alert = () => {
     <VCardText>
       <VRow>
         <VCol>
-          <VBtn @click.stop="alert">
-            Test
-          </VBtn>
+          <VBtn @click.stop="alert">Test</VBtn>
         </VCol>
       </VRow>
     </VCardText>

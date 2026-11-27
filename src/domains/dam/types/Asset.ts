@@ -1,0 +1,154 @@
+import type { DatetimeUTC, DatetimeUTCNullable, DocId, DocIdNullable, IntegerId } from '@/shared/types/common'
+import type { AnzuUserAndTimeTrackingAware } from '@/shared/types/AnzuUserAndTimeTrackingAware'
+import type { ResourceNameSystemAware } from '@/shared/types/ResourceNameSystemAware'
+import type { AssetFile } from '@/domains/dam/types/AssetFile'
+
+interface Texts {
+  displayTitle: string
+}
+
+export type DamDistributionServiceName = string
+
+export const DamAssetStatus = {
+  Draft: 'draft',
+  WithFile: 'with_file',
+  Deleting: 'deleting',
+} as const
+export type DamAssetStatusType = (typeof DamAssetStatus)[keyof typeof DamAssetStatus]
+export const DamAssetStatusDefault = DamAssetStatus.Draft
+
+export const DamAssetType = {
+  Image: 'image',
+  Audio: 'audio',
+  Video: 'video',
+  Document: 'document',
+} as const
+export type DamAssetTypeType = (typeof DamAssetType)[keyof typeof DamAssetType]
+export const DamAssetTypeDefault = DamAssetType.Image
+
+interface Attributes {
+  assetType: DamAssetTypeType
+  assetStatus: DamAssetStatusType
+}
+
+export interface AssetFileProperties {
+  distributesInServices: DamDistributionServiceName[]
+  slotNames: string[]
+  fromRss: boolean
+  width: number
+  height: number
+  /** A synthesized (TTS) audio. Not every backend sends it. */
+  ttsAudio?: boolean
+}
+
+interface Flags {
+  described: boolean
+  visible: boolean
+}
+
+export interface AssetMetadataSuggestions extends Record<string, Array<string>> {}
+
+export type AssetCustomData = Record<string, any>
+
+interface Metadata {
+  authorSuggestions: AssetMetadataSuggestions
+  keywordSuggestions: AssetMetadataSuggestions
+  customData: any
+}
+
+/**
+ * Where a photo stands for the record picking it, as core-cms answers it (`/adm/v1/image/single-use-usage`).
+ * `notAllowed`: the record may not use a single use photo. `placement`: the record only places it, holding nothing.
+ * `free`: nobody uses it. `own`: only this record. `ownShared`: this record and others. `conflict`: another record.
+ */
+export const AssetSingleUseUsageStatus = {
+  NotAllowed: 'notAllowed',
+  Placement: 'placement',
+  Free: 'free',
+  Own: 'own',
+  OwnShared: 'ownShared',
+  Conflict: 'conflict',
+} as const
+export type AssetSingleUseUsageStatusType = (typeof AssetSingleUseUsageStatus)[keyof typeof AssetSingleUseUsageStatus]
+
+export interface AssetSingleUseUsageEntry {
+  resourceName: string
+  resourceId: IntegerId
+  pickedAt: DatetimeUTC
+}
+
+export interface AssetSingleUseUsage {
+  holder: AssetSingleUseUsageEntry | null
+  status: AssetSingleUseUsageStatusType
+  blocked: boolean
+  usageCount: number
+  usages: AssetSingleUseUsageEntry[]
+}
+
+export interface AssetSearchListItemDto extends AnzuUserAndTimeTrackingAware, ResourceNameSystemAware {
+  id: DocId
+  texts: Texts
+  attributes: Attributes
+  flags: Flags
+  licence: IntegerId
+  sources: DocId[]
+  mainFile: null | AssetFile
+  podcasts: DocId[]
+  assetFileProperties: AssetFileProperties
+  mainFileSingleUse: Readonly<boolean | null>
+  mainFileInternal: Readonly<boolean | null>
+  mainFileOverrideInternal: Readonly<boolean | null>
+  autoDeleteAt: Readonly<DatetimeUTCNullable>
+  // Filled by the asset picker from the CMS (`imageApi.fetchSingleUseUsage`): for a single use image with the list,
+  // for any other image when its usage tab opens.
+  singleUseUsage?: Readonly<AssetSingleUseUsage | null>
+}
+
+export interface AssetDetailItemDto extends AnzuUserAndTimeTrackingAware, ResourceNameSystemAware {
+  id: DocId
+  texts: Texts
+  attributes: Attributes
+  flags: Flags
+  licence: IntegerId
+  mainFile: null | AssetFile
+  keywords: DocId[]
+  authors: DocId[]
+  sources: DocId[]
+  podcasts: DocId[]
+  metadata: Metadata
+  siblingToAsset: DocIdNullable
+  distributionCategory: DocIdNullable
+  assetFileProperties: AssetFileProperties
+  mainFileSingleUse: Readonly<boolean | null>
+  mainFileInternal: Readonly<boolean | null>
+  mainFileOverrideInternal: Readonly<boolean | null>
+  autoDeleteAt: Readonly<DatetimeUTCNullable>
+}
+
+export interface AssetMetadataDto extends AnzuUserAndTimeTrackingAware, ResourceNameSystemAware, Metadata {
+  id: DocId
+  customData: AssetCustomData
+}
+
+export type AssetExternalProviderId = string | number
+export type AssetExternalProviderIdNullable = AssetExternalProviderId | null
+
+export type AssetExternalProviderMetadata = Record<string, string | number | number[] | string[] | boolean>
+
+export interface DamImageCopyToLicenceRequestItem {
+  asset: DocId
+  targetAssetLicence: IntegerId
+}
+
+export type DamImageCopyToLicenceRequest = Array<DamImageCopyToLicenceRequestItem>
+
+export interface DamImageCopyToLicenceResponseItem {
+  asset: DocId
+  targetAsset: DocId
+  targetMainFile: DocId
+  targetAssetLicence: IntegerId
+  result: 'exists' | 'copy' | 'notAllowed' | 'unassigned'
+  assetConflicts: DocId[]
+}
+
+export type DamImageCopyToLicenceResponse = Array<DamImageCopyToLicenceResponseItem>

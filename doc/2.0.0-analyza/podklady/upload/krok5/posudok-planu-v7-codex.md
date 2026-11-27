@@ -1,0 +1,7 @@
+- **BLOCKER** — [Plan line 1683](/home/volar/projects/anzusystems/common-admin/doc/2.0.0-analyza/podklady/upload/krok5/plan-implementacie.md:1683): the final `lib-u` check compares file contents but not type or mode. A file present at S0 can gain an executable bit after S0 and still pass the list and `cmp` checks. `worktree remove --force` would discard that change, despite the “any difference” rule at line 736.
+
+- **BLOCKER** — [Plan line 1380](/home/volar/projects/anzusystems/common-admin/doc/2.0.0-analyza/podklady/upload/krok5/plan-implementacie.md:1380): `tezky.sh` does not check whether writing `bezi` succeeded before executing the command. If that write fails, `copy.sh` can run and change DAM while [kopia.sh line 1825](/home/volar/projects/anzusystems/common-admin/doc/2.0.0-analyza/podklady/upload/krok5/plan-implementacie.md:1825) treats the empty marker as “not started” and leaves the previous green installed state intact.
+
+- **WRONG** — [Plan line 1379](/home/volar/projects/anzusystems/common-admin/doc/2.0.0-analyza/podklady/upload/krok5/plan-implementacie.md:1379): the `-ge` deadline check occurs **before** `brana.sh`; there is no check after it. If the gate finishes after the deadline, the command still starts, contrary to the guarantee in section 3.6. The exact deadline-second case from v6 is fixed, but the stated deadline guarantee is not.
+
+Checked both v6 reviews, the requested plan sections, and the changed scripts and callers. No files were changed; no scripts, tests, builds, linters, `yarn`, or network calls ran.

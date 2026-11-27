@@ -12,10 +12,7 @@
     }
   }
 
-  .v-overlay__content.v-autocomplete__content
-    .v-list-item
-    .v-list-item__prepend
-    input[type='checkbox'] {
+  .v-overlay__content.v-autocomplete__content .v-list-item .v-list-item__prepend input[type='checkbox'] {
     pointer-events: none; // fix for autocomplete checkboxes
   }
 
@@ -58,15 +55,6 @@
     }
   }
 
-  .v-toolbar.v-toolbar--custom-tiny {
-    height: 32px;
-    padding: 1px;
-
-    .v-toolbar__content {
-      height: 30px !important;
-    }
-  }
-
   .v-dialog--fullscreen.overlay--sidebar .v-overlay__content {
     overflow: hidden !important;
   }
@@ -76,9 +64,14 @@
   }
 }
 
-/* one or more available input mechanism(s) cannot hover or there are no pointing input mechanisms */
-@media (any-hover: none) {
-  .v-overlay.v-tooltip {
-    display: none !important;
-  }
-}
+/*
+ * TODO(2.0.0): delete once tested on touch devices. This hid every tooltip where no input can hover, because
+ * tooltips got stuck open on touch screens (tapped once, never left). The VTooltip defaults in
+ * useCommonVuetifyConfig now keep a tooltip from opening on hover or focus on such devices instead.
+ *
+ * @media (any-hover: none) {
+ *   .v-overlay.v-tooltip {
+ *     display: none !important;
+ *   }
+ * }
+ */

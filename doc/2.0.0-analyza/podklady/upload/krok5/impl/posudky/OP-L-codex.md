@@ -1,0 +1,14 @@
+**OP-L1–L3 review**
+
+1. **High — FE-1:** [AssetDetailSidebarMetadata.vue](/home/volar/projects/anzusystems/common-admin/src/domains/dam/assetDetail/components/AssetDetailSidebarMetadata.vue:66) passes the live detail object after the PATCH. If the user edits it before the reread fails, [the fallback](/home/volar/projects/anzusystems/common-admin/src/domains/dam/uploadQueue/store/uploadQueuesStore.ts:325) puts unsaved values into every matching queue row; the next queue save sends them to DAM. Closing and reopening another asset during the wait can also make the callback use that other asset.
+2. **Medium — FE-2:** [ImageWidgetMultipleInner.vue](/home/volar/projects/anzusystems/common-admin/src/domains/dam/imageWidget/components/ImageWidgetMultipleInner.vue:285) stops the entire licence loop on one failed asset or author read. Assets in later licence groups are still added, but with empty descriptions and sources, even if their reads would succeed. The error is shown.
+3. **Low — scope change:** [uploadQueuesStore.ts](/home/volar/projects/anzusystems/common-admin/src/domains/dam/uploadQueue/store/uploadQueuesStore.ts:319) now writes fallback values even when the named DAM configuration is unknown and no reread was attempted. The changed test explicitly expects this; the documented UI path appears to exclude it.
+4. **Low — scope change:** [damAssetApi.ts](/home/volar/projects/anzusystems/common-admin/src/domains/dam/api/damAssetApi.ts:326) makes FE-3 show a system error for a non-200 2xx response and a timeout-specific message. Both are visible changes beyond the agreed 422 repair; the PATCH method, URL, and body remain the same.
+5. **Info — FE-6:** [AFileInput.vue](/home/volar/projects/anzusystems/common-admin/src/domains/ui/file/components/AFileInput.vue:81) warns only when multiple files pass validation. I consider the deviation reasonable: for an invalid file followed by a valid one, “the first is used” would be false.
+
+**Outside these changes**
+
+6. **Medium:** [UploadQueueDialog.vue](/home/volar/projects/anzusystems/common-admin/src/domains/dam/uploadQueue/components/UploadQueueDialog.vue:136) can finish “Save and apply” after Close has emptied the queue and unmounted the dialog, then emit its old images into the widget. The FE-11 guards cover two buttons on one mounted dialog, not this close and reopen race.
+7. **Low:** [UploadQueueDialogSingle.vue](/home/volar/projects/anzusystems/common-admin/src/domains/dam/uploadQueue/components/UploadQueueDialogSingle.vue:195) still shows a reread error after its dialog has closed.
+
+No further finding on public exports or admin callers, image order, normal picker licence and author routing, changed tests, locale keys, or the notes and changelog apart from the FE-1 claim above. Tests were not run, as requested.

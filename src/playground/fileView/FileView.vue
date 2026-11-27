@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
-import AFileInput from '@/components/file/AFileInput.vue'
+import AFileInput from '@/domains/ui/file/components/AFileInput.vue'
 
 const onInput = (files: File[]) => {
   console.log(files)

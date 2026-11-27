@@ -7,6 +7,7 @@
   "error_field_invalid": "Invalid field.",
   "error_field_not_unique": "Field must be unique.",
   "error_field_value_not_found": "Value in field not found.",
+  "entity_not_exists": "The record does not exist.",
   "error_field_range_min": "Value must be greater.",
   "error_field_range_max": "Value must be lower.",
   "error_field_regex": "Incorrect format.",

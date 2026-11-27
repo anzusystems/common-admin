@@ -2,6 +2,11 @@
   "system": "Systém",
   "notSelected": "Nevybráno",
   "all": "Všechno",
+  "link": "Odkaz",
+  "text": "Text",
+  "url": "URL",
+  "external": "Externí odkaz",
+  "nofollow": "Nofollow",
   "boolean": {
     "true": "ano",
     "false": "ne"
@@ -10,8 +15,10 @@
     "createdAt": "Vytvořeno",
     "modifiedAt": "Upraveno",
     "created": "Vytvořeno",
-    "modified": "Upraveno"
+    "modified": "Upraveno",
+    "userUnavailable": "Uživatele se nepodařilo načíst"
   },
+  "cachedUnavailable": "Záznam se nepodařilo načíst",
   "filterPlaceholder": {
     "eq": "Přesný výraz",
     "contains": "Kdekoli ve výrazu",

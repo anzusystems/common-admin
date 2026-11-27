@@ -1,0 +1,3 @@
+- **Low severity, in the patch:** The text assertion can fail for an empty or incorrect message, but it does not prove the tooltip opens. Vuetify renders the teleported content while hidden (`eager: true`), so [the wait for its existence](/home/volar/projects/anzusystems/krok5-praca/wt/lib-u/src/domains/dam/__tests__/damNameChipsUnresolved.test.ts:93) can succeed even if `mouseenter` stops opening it. Assert the active or visible state as well.
+- N-U1-1’s configured ACL qualifier and both triggers match the code. N-U1-2 matches both chip implementations; **before U3** is the correct decision point. The two cycle 2 documentation gaps are resolved.
+- **Outside the change:** No new finding. Review was read only; tests were not run.

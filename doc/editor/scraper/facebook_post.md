@@ -1,0 +1,51 @@
+# facebook_post: Facebook Post
+
+Shared types (`Screenshot`, `Image`, `DatetimeUTC`): see [README](README.md#shared-types).
+
+## Supported codes
+
+### URL
+
+```
+https://www.facebook.com/sme.sk/posts/pfbid0nHq4ynTLtKgghMAKzBmCpM3Zweqoycnnff8qw12e3RgRsstrXMg4dLKEBVwsGnQ2l
+https://www.facebook.com/permalink.php?story_fbid=pfbid0KK3AacqAX2BvbAK9J91Kk4wEf8RR7C67jQiSkz9CG4RuvThBVuShrPzKWTfY5ybHl&id=100091773573563
+```
+
+### Embed
+
+```html
+<iframe src="https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fsme.sk%2Fposts%2Fpfbid0nHq4ynTLtKgghMAKzBmCpM3Zweqoycnnff8qw12e3RgRsstrXMg4dLKEBVwsGnQ2l&show_text=true&width=500" width="500" height="516" style="border:none;overflow:hidden" scrolling="no" frameborder="0" allowfullscreen="true" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"></iframe>
+```
+
+## Params
+
+```ts
+interface Params {
+  id: string
+  username?: string // absent for permalink.php URLs
+  width?: number
+  height?: number
+}
+```
+
+## Data
+
+```ts
+type Author = {
+  username?: string
+  name?: string
+  image: Image
+  url?: string
+}
+
+interface Data {
+  id?: number
+  screenshots: Screenshot[]
+  scrapedAt: DatetimeUTC
+  url?: string
+  text?: string
+  author: Author
+  publishedAt: DatetimeUTC // 0001-01-01T00:00:00Z (or 1970-01-01T00:00:00Z) when not scraped
+  images?: Image[]
+}
+```

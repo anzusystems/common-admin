@@ -1,0 +1,2 @@
+No findings (bez nálezu). The guard in [assetListActions.ts:95](/home/volar/projects/anzusystems/admin-dam/src/domains/coreDam/asset/components/list/composables/assetListActions.ts:95) closes the X → Edit A → save → X sequence; a quick repeat click on the asset still in the store skips the read, while a click on another asset reads it.
+The five cases in [overlaySave.test.ts:753](/home/volar/projects/anzusystems/admin-dam/src/test/queue/overlaySave.test.ts:753) each appear able to fail for their intended change. This was a read-only review; I did not run tests.

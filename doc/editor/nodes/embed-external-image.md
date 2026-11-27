@@ -1,0 +1,44 @@
+# embedExternalImage
+
+## Features
+- only for migration or used as readonly in anzutap
+- should be replaced by `embedImage` after media migration
+
+## Requirements
+- skip on render
+
+## Node schema
+
+```jsonc
+{
+  "name": "embedExternalImage",
+  "groups": [
+    "embed"
+  ],
+  "attrs": {
+    "id": {
+      "default": null // string | null (uuid of embed)
+    },
+    "changeId": {
+      "default": "" // string
+    }
+  }
+}
+```
+
+## Node JSON example
+
+```json
+{
+  "type": "doc",
+  "content": [
+    {
+      "type": "embedExternalImage",
+      "attrs": {
+        "id": "6dec11fb-34b2-42ec-8bc4-0bba216158a8",
+        "changeId": "dc62ffef-ccb8-4ac4-8046-406d03c5ee5d"
+      }
+    }
+  ]
+}
+```

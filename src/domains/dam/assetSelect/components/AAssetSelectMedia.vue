@@ -1,0 +1,447 @@
+<script lang="ts" setup>
+import { computed, onMounted, onUnmounted, provide, ref, shallowRef, watch, withModifiers } from 'vue'
+import ADialogToolbar from '@/domains/ui/components/ADialogToolbar.vue'
+import { useI18n } from 'vue-i18n'
+import { DamAssetType, type DamAssetTypeType } from '@/domains/dam/types/Asset'
+import { useAssetSelectActions } from '@/domains/dam/assetSelect/composables/assetSelectListActions'
+import AssetSelectListTable from '@/domains/dam/assetSelect/components/AssetSelectListTable.vue'
+import AssetSelectListBar from '@/domains/dam/assetSelect/components/AssetSelectListBar.vue'
+import { AssetSelectGridView, useGridView } from '@/domains/dam/assetSelect/composables/assetSelectGridView'
+import AssetSelectListTiles from '@/domains/dam/assetSelect/components/AssetSelectListTiles.vue'
+import { useSidebar } from '@/domains/dam/assetSelect/composables/assetSelectFilterSidebar'
+import AssetSelectFilter from '@/domains/dam/assetSelect/components/AssetSelectFilter.vue'
+import {
+  type AssetSelectReturnData,
+  AssetSelectReturnType,
+  type AssetSelectReturnTypeType,
+  type AssetSelectUsageHolder,
+} from '@/domains/dam/types/AssetSelect'
+import { filterAllowedImageWidgetSelectConfigs } from '@/domains/dam/config/utils/damFilterUserAllowedUploadConfigs'
+import { useAlerts } from '@/domains/system/composables/alerts'
+import type { IntegerId } from '@/shared/types/common'
+import { useDamConfigState } from '@/domains/dam/config/composables/damConfigState'
+import type { DamConfigLicenceExtSystemReturnType } from '@/domains/dam/types/DamConfig'
+import { cloneDeep, isUndefined } from '@/shared/utils/common'
+import AssetMetadata from '@/domains/dam/assetDetail/components/AssetMetadata.vue'
+import AssetSelectDetailTabs from '@/domains/dam/assetSelect/components/AssetSelectDetailTabs.vue'
+import { useAssetSelectStore } from '@/domains/dam/assetSelect/store/assetSelectStore'
+import { storeToRefs } from 'pinia'
+import { useAssetDetailStore } from '@/domains/dam/assetDetail/store/assetDetailStore'
+import { type DatatableOrderingOption } from '@/domains/filters/datatable/utils/datatableColumns'
+import { DatatablePaginationKey } from '@/domains/filters/utils/filterInjectionKeys'
+import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
+import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
+import AssetSelectLicencePresetBar from '@/domains/dam/assetSelect/components/AssetSelectLicencePresetBar.vue'
+import { useAssetSelectTakeOver } from '@/domains/dam/assetSelect/composables/assetSelectTakeOver'
+
+const props = withDefaults(
+  defineProps<{
+    minCount: number
+    maxCount: number
+    selectLicences: IntegerId[]
+    uploadLicence?: IntegerId | undefined
+    singleUseAllowed?: boolean
+    usageHolder?: AssetSelectUsageHolder | null
+    returnType?: AssetSelectReturnTypeType
+    configName?: string
+    skipCurrentUserCheck?: boolean
+    preselectAssetType?: DamAssetTypeType | undefined
+    preselectInPodcast?: boolean | null | undefined
+    /** List views of the host offered as "Search in" choices, those the DAM user has. */
+    listViews?: IntegerId[]
+  }>(),
+  {
+    uploadLicence: undefined,
+    singleUseAllowed: true,
+    usageHolder: null,
+    returnType: AssetSelectReturnType.MainFileId,
+    configName: undefined,
+    skipCurrentUserCheck: false,
+    preselectAssetType: undefined,
+    preselectInPodcast: undefined,
+    listViews: () => [],
+  }
+)
+
+const emit = defineEmits<{
+  (e: 'confirm', data: AssetSelectReturnData): void
+}>()
+
+const modelValue = defineModel<boolean>({ default: false, required: false })
+const sortModel = defineModel<number>('sort', { default: 1, required: false })
+const ready = defineModel<boolean>('ready', { default: false, required: false })
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const damConfigName = useDamConfigName(props.configName)
+
+const loading = ref(false)
+
+const { t } = useI18n()
+
+const {
+  damClient,
+  selectedCount,
+  loader,
+  pagination,
+  fetchNextPage,
+  fetchNextPageInView,
+  fetchAssetListDebounced,
+  getSelectedData,
+  initStoreContext,
+  detailLoading,
+  giveUpDetailRead,
+  reset,
+} = useAssetSelectActions(damConfigName)
+// The list bar ordering reads this. Without it the dialog would use the host page's pagination.
+provide(DatatablePaginationKey, pagination)
+
+const { loadDamConfigAssetCustomFormElements, getDamConfigAssetCustomFormElements } = useDamConfigState(
+  damClient,
+  damConfigName
+)
+const { getOrLoadDamConfigExtSystemByLicences } = useDamConfigState(damClient, damConfigName)
+const assetDetailStore = useAssetDetailStore()
+const { asset } = storeToRefs(assetDetailStore)
+const assetSelectStore = useAssetSelectStore()
+const { selectedSelectConfig, selectedHasDisabled, assetType } = storeToRefs(assetSelectStore)
+const { copyToLicenceEnabled } = useCommonAdminCoreDamOptions(damConfigName)
+
+// The listed item of the asset the side panel shows: its reason and its usage.
+const openedItem = computed(() => assetSelectStore.assetListItems.find((item) => item.asset.id === asset.value?.id))
+
+const openedAssetDisabledReason = computed(() => openedItem.value?.disabledReason ?? null)
+
+// The take over switch: offered once a picked photo is of another licence than the upload licence (the picker may
+// browse several licences), locked on for a licence without direct use. Off with `copyToLicenceEnabled: false`.
+const { showTakeOver, takeOverLocked, takeOverModel, getForceTakeOver } = useAssetSelectTakeOver(
+  {
+    uploadLicence: () => props.uploadLicence,
+    isImage: () => assetType.value === DamAssetType.Image,
+    enabled: () => copyToLicenceEnabled !== false,
+  },
+  damConfigName
+)
+
+const selectConfigs = shallowRef<DamConfigLicenceExtSystemReturnType[]>([])
+
+const { openSidebarLeft, sidebarLeft, sidebarRight } = useSidebar()
+const { showErrorT } = useAlerts()
+
+const onOpen = () => {
+  if (!ready.value) return
+  let selectConfigLocal = cloneDeep(selectConfigs.value)
+  if (!props.skipCurrentUserCheck) {
+    selectConfigLocal = filterAllowedImageWidgetSelectConfigs(selectConfigs.value, damConfigName)
+  }
+  if (selectConfigLocal.length === 0) {
+    showErrorT('common.assetSelect.error.unallowedLicence')
+    // Not opened without a licence: it would list nothing, and the next press would not say why.
+    modelValue.value = false
+    return
+  }
+
+  reset()
+  takeOverModel.value = false
+  initStoreContext(
+    selectConfigLocal,
+    assetType.value,
+    assetType.value === DamAssetType.Audio ? true : null,
+    1 === props.minCount && props.minCount === props.maxCount,
+    props.minCount,
+    props.maxCount
+  )
+  assetSelectStore.setSelectability({
+    singleUseAllowed: props.singleUseAllowed,
+    uploadLicence: props.uploadLicence,
+    usageHolder: props.usageHolder,
+  })
+  openSidebarLeft()
+  modelValue.value = true
+}
+
+watch(
+  modelValue,
+  async (newValue, oldValue) => {
+    if (newValue === oldValue || !newValue) return
+    onOpen()
+  },
+  { immediate: true }
+)
+
+const onClose = () => {
+  modelValue.value = false
+  reset()
+}
+
+const onConfirm = () => {
+  emit('confirm', getSelectedData(props.returnType, getForceTakeOver()))
+  onClose()
+}
+
+const { gridView } = useGridView()
+
+const componentComputed = computed(() => {
+  switch (gridView.value) {
+    case AssetSelectGridView.Table:
+      return AssetSelectListTable
+    default:
+    case AssetSelectGridView.Masonry:
+    case AssetSelectGridView.Thumbnail:
+      return AssetSelectListTiles
+  }
+})
+
+const disabledSubmit = computed(() => {
+  return selectedCount.value < props.minCount || selectedCount.value > props.maxCount || selectedHasDisabled.value
+})
+
+// The ext system of the browsed licences, while this picker is open: the store is shared by every picker of the page.
+const extId = computed(() => {
+  if (!modelValue.value || selectConfigs.value.length === 0) return undefined
+  return selectedSelectConfig.value?.extSystem
+})
+
+const loadingSidebarRight = computed(() => {
+  return customFormConfigLoading.value || detailLoading.value
+})
+
+const { showErrorsDefault } = useAlerts()
+const customFormConfigLoading = ref(true)
+// The custom fields config could not be read. The side panel shows
+// a notice instead of the asset form, which needs that config.
+const customFormConfigFailed = ref(false)
+
+const typeChange = () => {
+  assetSelectStore.reset(false)
+  // Drop the pending read of a list click. Its answer would show that asset beside a list of another type.
+  giveUpDetailRead()
+  assetDetailStore.reset()
+  fetchAssetListDebounced()
+}
+
+const sortByChange = (option: DatatableOrderingOption) => {
+  pagination.value.sortBy = null
+  if (option.sortBy) {
+    pagination.value.sortBy = { key: option.sortBy.key, order: option.sortBy.order }
+  }
+  fetchAssetListDebounced()
+}
+
+// Also runs when the listed type changes, since that type's custom fields may not be loaded.
+watch(
+  [extId, assetType],
+  async ([newValue, type]) => {
+    if (isUndefined(newValue)) return
+    customFormConfigLoading.value = true
+    customFormConfigFailed.value = false
+    // Custom fields of the listed type: all types of the ext system if
+    // none are loaded, else only this type if its read failed before.
+    // Loaded types are not read again.
+    if (isUndefined(getDamConfigAssetCustomFormElements(newValue, type))) {
+      try {
+        await loadDamConfigAssetCustomFormElements(
+          newValue,
+          getDamConfigAssetCustomFormElements(newValue) ? [type] : undefined
+        )
+      } catch (e) {
+        showErrorsDefault(e)
+      }
+      // Ignore an answer for an ext system or type the list has since left.
+      if (extId.value !== newValue || assetType.value !== type) return
+      customFormConfigFailed.value = isUndefined(getDamConfigAssetCustomFormElements(newValue, type))
+    }
+    customFormConfigLoading.value = false
+  },
+  { immediate: true }
+)
+
+let loadSeq = 0
+const loadSelectConfigs = async () => {
+  const seq = ++loadSeq
+  // An open picker belongs to the licences it was opened with.
+  if (modelValue.value) onClose()
+  ready.value = false
+  loading.value = true
+  const configs = await getOrLoadDamConfigExtSystemByLicences(props.selectLicences)
+  if (seq !== loadSeq) return
+  selectConfigs.value = configs
+  loading.value = false
+  ready.value = true
+}
+
+// Hosts often mount the picker before their entity has loaded, and they pass inline arrays like `[licence]`,
+// which are a new reference on every render, so the joined ids are watched.
+watch(
+  () => props.selectLicences.join(','),
+  () => loadSelectConfigs()
+)
+
+onMounted(loadSelectConfigs)
+
+onUnmounted(() => {
+  selectConfigs.value = []
+})
+
+defineExpose({
+  open: onOpen,
+})
+</script>
+
+<template>
+  <div
+    v-if="loading"
+    class="w-100 d-flex align-center justify-center"
+  >
+    <VProgressCircular indeterminate />
+  </div>
+  <template v-else-if="selectConfigs.length > 0">
+    <slot
+      name="activator"
+      :props="{ onClick: withModifiers(() => onOpen(), ['stop']) }"
+    />
+    <VDialog
+      v-model="modelValue"
+      fullscreen
+      class="subject-select"
+    >
+      <VCard
+        v-if="modelValue"
+        class="subject-select__card"
+      >
+        <ADialogToolbar
+          class="subject-select__toolbar border-b"
+          @cancel="onClose"
+        >
+          <slot name="title">
+            {{ t('common.assetSelect.meta.texts.title') }}
+          </slot>
+        </ADialogToolbar>
+        <AssetSelectListBar
+          v-model:sort="sortModel"
+          show-types
+          :preselect-asset-type="preselectAssetType"
+          :preselect-in-podcast="preselectInPodcast"
+          @type-change="typeChange"
+          @sort-by-change="sortByChange"
+        />
+        <AssetSelectLicencePresetBar />
+        <div
+          class="subject-select__main"
+          :class="{
+            'subject-select__main--sidebar-active': sidebarLeft,
+            'subject-select__main--sidebar-right-active': sidebarRight,
+          }"
+        >
+          <div class="subject-select__sidebar border-e">
+            <AssetSelectFilter
+              :config-name="damConfigName"
+              :list-views="listViews"
+            />
+          </div>
+          <div class="subject-select__content">
+            <component
+              :is="componentComputed"
+              v-if="extId"
+              :ext-system="extId"
+            />
+            <div class="d-flex w-100 align-center justify-center pa-4">
+              <ABtnSecondary
+                v-show="pagination.hasNextPage || loader"
+                v-intersect="fetchNextPageInView"
+                :loading="loader"
+                size="small"
+                @click="fetchNextPage"
+              >
+                <slot name="button-confirm-title">
+                  {{ t('common.button.loadMore') }}
+                </slot>
+              </ABtnSecondary>
+            </div>
+          </div>
+          <div class="subject-select__sidebar-right border-s">
+            <div
+              v-if="customFormConfigFailed"
+              class="d-flex w-100 align-center justify-center text-body-large"
+            >
+              {{ t('common.damImage.error.loadingConfig') }}
+            </div>
+            <div
+              v-else-if="loadingSidebarRight"
+              class="d-flex w-100 align-center justify-center"
+            >
+              <VProgressCircular indeterminate />
+            </div>
+            <div
+              v-else-if="!asset"
+              class="d-flex w-100 align-center justify-center text-body-large"
+            >
+              {{ t('common.assetSelect.meta.info.noAssetSelected') }}
+            </div>
+            <div v-else>
+              <div
+                v-if="openedAssetDisabledReason"
+                class="w-100 pa-2 text-body-small"
+              >
+                <VAlert type="warning">
+                  {{ openedAssetDisabledReason }}
+                </VAlert>
+              </div>
+              <AssetSelectDetailTabs
+                :item="openedItem"
+                :config-name="damConfigName"
+              >
+                <AssetMetadata
+                  v-if="extId && !customFormConfigLoading"
+                  :ext-system="extId"
+                  readonly
+                />
+              </AssetSelectDetailTabs>
+            </div>
+          </div>
+        </div>
+        <div class="subject-select__actions border-t">
+          <div v-if="props.minCount === props.maxCount">
+            {{
+              t('common.assetSelect.meta.texts.pickExactCount', {
+                count: props.minCount,
+                selected: selectedCount,
+              })
+            }}
+          </div>
+          <div v-else>
+            {{
+              t('common.assetSelect.meta.texts.pickRangeCount', {
+                minCount: props.minCount,
+                maxCount: props.maxCount,
+                selected: selectedCount,
+              })
+            }}
+          </div>
+          <VSpacer />
+          <span
+            v-if="takeOverLocked"
+            class="text-body-small text-medium-emphasis mr-2"
+          >
+            {{ t('common.assetSelect.meta.texts.copyToLicenceLocked') }}
+          </span>
+          <VSwitch
+            v-if="showTakeOver"
+            v-model="takeOverModel"
+            :disabled="takeOverLocked"
+            :label="t('common.assetSelect.meta.texts.copyToLicence')"
+            hide-details
+            class="mr-2"
+          />
+          <ABtnPrimary
+            :disabled="disabledSubmit"
+            @click.stop="onConfirm"
+          >
+            <slot name="button-confirm-title">
+              {{ t('common.button.confirm') }}
+            </slot>
+          </ABtnPrimary>
+        </div>
+      </VCard>
+    </VDialog>
+  </template>
+  <div v-else>{{ t('common.assetSelect.error.noSelectLicence') }}</div>
+</template>

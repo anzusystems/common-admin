@@ -1,3 +1,16 @@
 {
-  "noTranslation": "Nastala neznáma chyba. V prípade potreby kontaktujte administrátora."
+  "noTranslation": "Nastala neznáma chyba. V prípade potreby kontaktujte administrátora.",
+  "invalid_state_transaction": "Nastala chyba pri zmene stavu.",
+  "invalid_asset_type": "Neplatný typ digitálneho média.",
+  "asset_size_too_large": "Súbor je príliš veľký.",
+  "invalid_asset_slot": "Operácia s neplatným slotom média.",
+  "bulk_size_exceeded": "Príliš veľa posielaných objektov súčasne. V prípade potreby kontaktujte administrátora.",
+  "custom_form_not_exists": "Daný formulár neexistuje.",
+  "asset_not_fully_uploaded": "Súbor nebol kompletne nahraný.",
+  "not_allowed_download": "Stiahnutie súboru nie je povolené.",
+  "licence_mismatch": "Akcia bola vykonaná s nesprávnym ID licencie (nezhoda ID). V prípade potreby kontaktujte administrátora.",
+  "asset_file_delete_during_reorder": "Nastala chyba počas zmeny poradia. V prípade potreby kontaktujte administrátora.",
+  "file_upload_too_many_files": "Prekročený limit počtu nahrávaných súborov.",
+  "file_is_used": "Súbor sa používa.",
+  "licence_manual_upload_disabled": "Do tejto licencie sa nedá nahrávať ručne."
 }

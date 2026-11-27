@@ -2,15 +2,24 @@
   "extends": "@tsconfig/node22/tsconfig.json",
   "include": [
     "vite.config.*",
+    "scripts/vite/*.mts",
     "vitest.config.*",
     "cypress.config.*",
     "nightwatch.conf.*",
-    "playwright.config.*"
+    "playwright.config.*",
+    // The route walk is JavaScript, shipped as it is; checked by its JSDoc.
+    "src/e2e/*.mjs"
   ],
   "compilerOptions": {
     "noEmit": true,
+    "allowJs": true,
+    "checkJs": true,
+    // @tsconfig/node22's, and the DOM: the route walk runs code in the page.
+    "lib": ["es2024", "ESNext.Array", "ESNext.Collection", "ESNext.Iterator", "DOM", "DOM.Iterable"],
+    // vite.config.lib.mts imports the dev-copy plugin by its `.mts` name, which Vite's config loader resolves
+    "allowImportingTsExtensions": true,
     "incremental": true,
-    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo",
+    "tsBuildInfoFile": "./node_modules/.cache/tsc/tsconfig.node.tsbuildinfo",
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "types": ["node"]

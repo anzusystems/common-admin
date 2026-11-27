@@ -1,0 +1,23 @@
+## Findings
+
+**High:** None verified.
+
+**Medium — The manual path can publish a package that release-tools would reject.** [manual-build](/home/volar/projects/anzusystems/common-admin/.github/workflows/release-package.yml:136) builds and packs, but never performs the tool’s [package checks](/home/volar/projects/anzusystems/release-tools/publish/build.mjs:78), including the configured comparison of packed `dist/` with built `dist/` ([configuration](/home/volar/projects/anzusystems/common-admin/release.config.json:22)). If a future commit builds `dist/` but changes `package.json`’s `files` field to omit it, CI can pass and the manual path can publish a package missing the library. The tool would reject that tarball.
+
+**Medium — A moved tag is not rechecked before manual publication.** The manual path takes the version and commit from the release event, then [publishes the artifact](/home/volar/projects/anzusystems/common-admin/.github/workflows/release-package.yml:149) without checking the tag again. Release-tools [checks the current tag before npm publication](/home/volar/projects/anzusystems/release-tools/publish/publish.mjs:84). If someone moves the tag after the release event, the manual run can publish the event commit while the GitHub Release tag points elsewhere.
+
+**Low — A tool-published draft without the footer produces a failed manual run.** The skip tests for `<!-- release-tools` in the [Release body](/home/volar/projects/anzusystems/common-admin/.github/workflows/release-package.yml:53). The CLI can [publish an existing draft](/home/volar/projects/anzusystems/release-tools/lib/commands/final.mjs:730) without adding a footer. If that draft lacks one and is a final release, `manual-check` starts and rejects it as a manual final. No second npm publication follows.
+
+**Low — A failed `sort -V` can be masked.** The [latest-line pipeline](/home/volar/projects/anzusystems/common-admin/.github/workflows/release-package.yml:90) ends in `tail`; under `bash -e` without `pipefail`, a failed `sort` leaves `latest` empty and the script continues. I reproduced that shell behavior. For an older-line prerelease, this can select `rc` instead of `rc-X.Y` if the current `rc` tag does not force the fallback. The [checksum pipeline](/home/volar/projects/anzusystems/common-admin/.github/workflows/release-package.yml:141) also masks a `sha512sum` failure, but the publish job’s checksum check then prevents publication.
+
+## Prior findings and requested checks
+
+M1 is fixed for Releases created with the tool’s footer, subject to the draft case above. M2 and M3 are fixed: dependency installation has no OIDC permission, and the manual path checks CI for the event SHA. M4 is fixed for the stated npm data and ordinary `alpha`/`beta`/`rc` versions. M5 is explicitly left as a [documentation warning](/home/volar/projects/anzusystems/common-admin/doc/RELEASING.md:61); old branches still have the old workflow.
+
+L1–L4 are fixed by the checkout, version validation, released-final check, and tarball publication. L5 is fixed in the README, releasing guide, and workflow header. L6 has the intended build → `yarn pack` shape; equality with a later tool-built final was **not verified**.
+
+The manual publish job has the same workflow filename and npm environment, Node 24, a downloaded tarball, and `id-token: write`. Release-tools itself uses [download-artifact@v4 without `actions: read`](/home/volar/projects/anzusystems/release-tools/publish/action.yml:117), supporting that permission choice. An actual publish with this exact `id-token`-only job, npm trusted-publisher configuration, and provenance is **not verified**. The Context7 documentation lookup failed with `fetch failed`, and no network check was available.
+
+The tag logic follows [npmTagFor](/home/volar/projects/anzusystems/release-tools/lib/versions.mjs:119) for the tested inputs. `sort -V` is not a general semver comparator—for example, it puts `2.0.0` before `2.0.0-rc.1`—but the released-final check excludes that same-core case here. No material ordering difference for the allowed prerelease inputs was verified.
+
+The tool’s push jobs remain named `build` and `publish`; the tool [queries push runs](/home/volar/projects/anzusystems/release-tools/lib/github.mjs:895) and reads those [job names](/home/volar/projects/anzusystems/release-tools/lib/project.mjs:212). The shared concurrency group can delay a tool run, but the manual jobs do not change its push-run interpretation.

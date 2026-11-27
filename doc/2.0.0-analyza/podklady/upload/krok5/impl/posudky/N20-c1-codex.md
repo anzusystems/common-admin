@@ -1,0 +1,2 @@
+bez nálezu — The guards in [AAssetSelect.vue](/home/volar/projects/anzusystems/common-admin/src/domains/dam/assetSelect/components/AAssetSelect.vue:145) and [AAssetSelectMedia.vue](/home/volar/projects/anzusystems/common-admin/src/domains/dam/assetSelect/components/AAssetSelectMedia.vue:145) preserve copying when the switch is shown and omit it when hidden.
+The new assertions cover both confirmation outcomes and the added queue row. I found no apparent determinism issue. Tests were not run, as requested.

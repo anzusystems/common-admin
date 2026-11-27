@@ -1,0 +1,73 @@
+<script lang="ts" setup>
+import { computed, onMounted, ref } from 'vue'
+import AFilterValueObjectOptionsSelect from '@/domains/filters/components/AFilterValueObjectOptionsSelect.vue'
+import { useDamConfigStoreOf } from '@/domains/dam/config/store/damConfigStore'
+import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
+import { useDamConfigState } from '@/domains/dam/config/composables/damConfigState'
+import { useI18n } from 'vue-i18n'
+import { useDamConfigName } from '@/domains/dam/composables/damConfigName'
+
+const props = withDefaults(
+  defineProps<{
+    name: string
+    configName?: string
+  }>(),
+  {
+    configName: undefined,
+  }
+)
+const emit = defineEmits<{
+  (e: 'change'): void
+}>()
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const damConfigName = useDamConfigName(props.configName)
+
+const status = ref<'loading' | 'ready' | 'error'>('loading')
+
+// Resolve the options first: an unknown configuration throws here and gets no store.
+const { damClient } = useCommonAdminCoreDamOptions(damConfigName)
+const damConfigStore = useDamConfigStoreOf(damConfigName)
+const { loadDamPrvConfig } = useDamConfigState(damClient, damConfigName)
+
+const items = computed(() => {
+  return Object.entries(damConfigStore.damPrvConfig.distributionServices).map(([key, value]) => {
+    return {
+      title: value.title,
+      value: key,
+    }
+  })
+})
+
+onMounted(async () => {
+  const promises: Promise<any>[] = []
+  if (!damConfigStore.initialized.damPrvConfig) {
+    promises.push(loadDamPrvConfig())
+  }
+  try {
+    await Promise.all(promises)
+  } catch (e) {
+    status.value = 'error'
+  }
+  if (status.value !== 'error') status.value = 'ready'
+})
+
+const { t } = useI18n()
+</script>
+
+<template>
+  <div
+    v-if="status === 'loading'"
+    class="d-flex w-100 align-center justify-center"
+  >
+    <VProgressCircular indeterminate />
+  </div>
+  <div v-else-if="status === 'error'">
+    {{ t('common.assetSelect.error.loadingDistributionServices') }}
+  </div>
+  <AFilterValueObjectOptionsSelect
+    v-else
+    :name="name"
+    :items="items"
+    @change="emit('change')"
+  />
+</template>

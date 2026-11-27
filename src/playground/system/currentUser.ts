@@ -1,7 +1,7 @@
-import type { AnzuUser } from '@/types/AnzuUser'
-import { Grant } from '@/model/valueObject/Grant'
+import type { AnzuUser } from '@/shared/types/AnzuUser'
+import { Grant } from '@/domains/auth/valueObject/Grant'
 import { readonly, ref } from 'vue'
-import { ROLE_SUPER_ADMIN } from '@/composables/auth/defineAuth'
+import { ROLE_SUPER_ADMIN } from '@/domains/auth/composables/defineAuth'
 
 const currentUserObject: AnzuUser = {
   id: 1,

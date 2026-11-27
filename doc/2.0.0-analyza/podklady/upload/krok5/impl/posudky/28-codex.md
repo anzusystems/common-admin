@@ -1,0 +1,5 @@
+In scope: **No findings.** [uploadQueueItemRefresh.ts](/home/volar/projects/anzusystems/common-admin/src/domains/dam/uploadQueue/composables/uploadQueueItemRefresh.ts:52) applies the existing before/after status and queue removal check to the pending warning. The change adds no server request or row mutation; calls without a row keep their previous warning behavior.
+
+The new [tests](/home/volar/projects/anzusystems/common-admin/src/domains/dam/uploadQueue/__tests__/uploadQueueItemRefresh.test.ts:262) hold the read until the notification arrives and would catch removal of the guard. The cases at `:125` and [consumerProfileUploadQueueRows.test.ts](/home/volar/projects/anzusystems/common-admin/src/domains/dam/__tests__/consumerProfileUploadQueueRows.test.ts:235) are unchanged. The [register](/home/volar/projects/anzusystems/common-admin/doc/2.0.0-analyza/podklady/upload/krok5/navrh-komponenty.md:1457) records deviation 1 and the affected applications.
+
+Outside the change: **No findings.** Tests were not run, as requested.

@@ -1,10 +1,10 @@
 <script lang="ts" setup>
 import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
 import { ref } from 'vue'
-import type { IntegerId } from '@/types/common'
-import AImageWidgetMultiple from '@/components/damImage/AImageWidgetMultiple.vue'
-import AImageWidgetMultipleSimple from '@/components/damImage/AImageWidgetMultipleSimple.vue'
-import ImageMassOperations from '@/components/damImage/uploadQueue/components/ImageMassOperations.vue'
+import type { IntegerId } from '@/shared/types/common'
+import AImageWidgetMultiple from '@/domains/dam/imageWidget/components/AImageWidgetMultiple.vue'
+import AImageWidgetMultipleSimple from '@/domains/dam/imageWidget/components/AImageWidgetMultipleSimple.vue'
+import ImageMassOperations from '@/domains/dam/imageWidget/components/ImageMassOperations.vue'
 
 const imageIds = ref<IntegerId[]>([])
 
@@ -28,7 +28,7 @@ const save = () => {
       </VRow>
       <VRow>
         <VCol>
-          Simple:<br>
+          Simple:<br />
           <AImageWidgetMultipleSimple
             v-model="imageIds"
             show-description
@@ -38,10 +38,8 @@ const save = () => {
       </VRow>
       <VRow>
         <VCol>
-          Editable<br>
-          <VBtn @click.stop="save">
-            Save editable
-          </VBtn>
+          Editable<br />
+          <VBtn @click.stop="save">Save editable</VBtn>
         </VCol>
       </VRow>
       <VRow>
