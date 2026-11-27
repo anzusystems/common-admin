@@ -170,16 +170,28 @@ export function useAssetSelectActions(configName: string) {
       groupIds.set(groupId, [...(groupIds.get(groupId) ?? []), item.asset.id])
     })
     if (groupIds.size === 0) return
+    // In one order with the reads of the usage tab, per asset: the answer of the read started last applies.
+    const turns = new Map<DocId, number>()
+    groupIds.forEach((assetIds) => {
+      assetIds.forEach((assetId) => turns.set(assetId, assetSelectStore.startUsageRead(assetId)))
+    })
     try {
       const usages = await fetchSingleUseUsage([...groupIds.keys()], usageHolder)
       if (!isCurrent()) return
       groupIds.forEach((assetIds, groupId) => {
         const usage = usages[groupId]
         if (isUndefined(usage)) return
-        assetIds.forEach((assetId) => assetSelectStore.setSingleUseUsage(assetId, usage))
+        assetIds.forEach((assetId) => {
+          // Overtaken by a read of the tab, it still gives a photo that has no usage yet the one it read:
+          // the tab's answer replaces it, and if the tab fails, the photo is not left selectable for want of one.
+          const hasNone = items.some((item) => item.asset.id === assetId && isUndefined(item.asset.singleUseUsage))
+          if (assetSelectStore.isLatestUsageRead(assetId, turns.get(assetId)!) || hasNone) {
+            assetSelectStore.setSingleUseUsage(assetId, usage)
+          }
+        })
       })
     } catch (error) {
-      if (isCurrent() && !showErrorsDefault(error)) showUnknownError()
+      if (isCurrent() && assetSelectStore.claimUsageFailureAlert() && !showErrorsDefault(error)) showUnknownError()
     }
   }
 

@@ -367,7 +367,7 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
     if (pagination.value.page === 1 && !hasStoredPage()) return
     const data = getFilterDataForStoring()
     updateLocationHash(serializeFilters(data, pagination, true, true))
-    storeFilterLocalStorage(serializeFilters(withoutAddressOnly(data), pagination, true, true))
+    if (pageFitsStoredView(data)) storeFilterLocalStorage(serializeFilters(data, pagination, true, true))
   }
   // The page Close kept. A list that keeps neither filter nor sort (no hash, no local storage) comes back with
   // both reset, and its page 3 would show other rows, so its page comes back only into the view it was shown in.
@@ -566,6 +566,31 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
     (options.populateUrlParams !== false && PAGE_IN_VIEW.test(window.location.hash)) ||
     (!isUndefined(storeKey) && !!localStorage && PAGE_IN_VIEW.test(localStorage.getItem(storeKey) ?? ''))
 
+  const hasAddressOnlyValue = (data: Record<string, AllowedFilterValues>) =>
+    addressOnlyFields().some((name) => !isUndefined(data[name]))
+
+  // The filter fields of a serialized view, without its sort and page, in one order.
+  const filterFieldsOf = (serialized: string): string => {
+    const markerIndex = serialized.indexOf(END_FILTER_MARKER)
+    const params = new URLSearchParams(markerIndex === -1 ? serialized : serialized.slice(0, markerIndex))
+    params.delete(SORT_URL_PARAM)
+    params.delete(PAGE_URL_PARAM)
+    params.delete(ROWS_PER_PAGE_URL_PARAM)
+    params.sort()
+    return params.toString()
+  }
+
+  // Local storage takes a page only with the view it restores. A view it cannot restore (a field kept in the address)
+  // or another view than the one it holds (a link naming a page but no field) leaves it as it is: the menu would
+  // open the saved view, or the whole list, on the page of another one. The sort is not compared, as lists switch it
+  // in `getList` after a submit (a text search sorted by score), and their page would never be kept.
+  const pageFitsStoredView = (data: Record<string, AllowedFilterValues>): boolean => {
+    if (hasAddressOnlyValue(data)) return false
+    const stored = readStoredView()
+    if (!stored || !stored.includes(END_FILTER_MARKER)) return true
+    return filterFieldsOf(stored) === filterFieldsOf(encodeFilterHash(data))
+  }
+
   const resetFilter = (pagination: Ref<Pagination>, callback?: AnyFn) => {
     pagination.value = { ...pagination.value, page: 1 }
     rememberShownPage(pagination)
@@ -669,7 +694,9 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
     if (hashDescribesThisView) {
       // Local storage mirrors the last applied state, so a link becomes the view the user returns to.
       // Re-serialized to drop values equal to their default. A sort-only hash does not overwrite it.
-      storeFilterLocalStorage(serializeFilters(withoutAddressOnly(getFilterDataForStoring()), pagination, true, true))
+      // Without the page when a field kept in the address is left out: the page is of the view with that field.
+      const data = getFilterDataForStoring()
+      storeFilterLocalStorage(serializeFilters(withoutAddressOnly(data), pagination, true, !hasAddressOnlyValue(data)))
     }
     if (callback) callback()
     return true

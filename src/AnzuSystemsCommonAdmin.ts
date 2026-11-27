@@ -182,7 +182,7 @@ export interface CommonAdminCoreDamConfig {
     webSocketUrl?: string
   }
   /**
-   * The CMS checks single use photos (core-cms since 1.116.0, #87269): the asset selects of this configuration list
+   * The CMS checks single use photos (core-cms since 1.128.0, #87269): the asset selects of this configuration list
    * them for a record that may use one (`singleUseAllowed`), ask the image API of the image configuration of the same
    * name where each is used (`imageApi.fetchSingleUseUsage`, core-cms when it has no `imageApi`), dim one the record
    * cannot use and show its usage, and the image dialog checks a picked one. Off unless `true`: the asset selects list

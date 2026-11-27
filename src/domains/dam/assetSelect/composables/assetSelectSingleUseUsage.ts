@@ -55,7 +55,9 @@ export function useSingleUseUsageFetch(configName?: string) {
 
 /**
  * Reads the usage of a listed asset anew for its usage tab, for the record the picker picks for, and writes it into
- * the list with its reason. Only the latest read is applied and ends the loading.
+ * the list with its reason. Only the latest read of this tab ends its loading, and it applies only while it is also the
+ * latest read of its asset in the picker as opened, the reads of the list's pages included (`startUsageRead` of the
+ * store), which the tab mounted anew for another item or a reopened picker does not know of.
  */
 export function useAssetSelectUsageRefresh(configName?: string) {
   const name = inheritedDamConfigName(configName)
@@ -68,10 +70,12 @@ export function useAssetSelectUsageRefresh(configName?: string) {
 
   const refreshUsage = async (asset: AssetSearchListItemDto) => {
     const request = ++latestRefresh
+    const turn = assetSelectStore.startUsageRead(asset.id)
+    const isLatest = () => assetSelectStore.isLatestUsageRead(asset.id, turn)
     usageLoading.value = true
     try {
       const usage = await fetchSingleUseUsage(asset, assetSelectStore.selectability?.usageHolder ?? null)
-      if (request !== latestRefresh) return
+      if (request !== latestRefresh || !isLatest()) return
       assetSelectStore.setSingleUseUsage(asset.id, usage)
       const selectability = assetSelectStore.selectability
       if (!isNull(selectability)) {
@@ -85,7 +89,7 @@ export function useAssetSelectUsageRefresh(configName?: string) {
       }
     } catch (error) {
       // An answer without the group is no api error, so it is reported as unknown.
-      if (request === latestRefresh && !showErrorsDefault(error)) showUnknownError()
+      if (request === latestRefresh && isLatest() && !showErrorsDefault(error)) showUnknownError()
     } finally {
       if (request === latestRefresh) usageLoading.value = false
     }

@@ -90,7 +90,8 @@ export interface LogFilter {
 /**
  * Keyed by system, so `/weather/logs` and `/brick/logs` do not overwrite each other.
  * Not keyed by type, so shared fields (context id, level, time
- * range, user, message) survive a switch between app and audit.
+ * range, user, message) survive a switch between app and audit: the switch saves them as the view of the other type
+ * (`carryViewTo` of `ALogDatatable`), which restores its view on mount.
  * Module level, so values outlive the component. `createFilterStore` is
  * only a factory, and one created in `setup()` would die with the instance.
  */
@@ -138,6 +139,13 @@ export const applyLogTypeVisibility = (filter: LogFilter, type: LogTypeType): vo
     field.render.selected = !hide
   })
 }
+
+/**
+ * Local storage key of the view of a log list (`ALogDatatable`). By system, like the registry, and by type: each type
+ * keeps its own page. The type switch carries the filter over (`carryViewTo` of the datatable).
+ */
+export const logFilterStorageKey = (system: string, type: LogTypeType): string =>
+  `tableFilter_common_log_${system}_${type}`
 
 /** For tests and for anything that needs a clean slate; nothing in the views calls it. */
 export const resetLogFilterRegistry = (): void => {

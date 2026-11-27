@@ -155,6 +155,59 @@ describe('single use usage of one asset', () => {
     expect(refresh.usageLoading.value).toBe(false)
   })
 
+  // The usage tab is mounted anew for every item the side panel shows: X, then Y, then X again. The read of the first
+  // tab of X answered last with the older "free" and undimmed the photo the second one found blocked.
+  it('does not let a slower read of a tab mounted before overwrite the read of the tab mounted again', async () => {
+    const first = mountComposables()
+    const { refresh, store } = mountComposables()
+    store.setList([asset('a', true, usage())])
+    store.setSelectability({ singleUseAllowed: true, uploadLicence: undefined, usageHolder: holder })
+    const older = deferred<Record<string, AssetSingleUseUsage>>()
+    const blocked = usage({ blocked: true })
+    fetchUsage.mockReturnValueOnce(older.promise).mockResolvedValueOnce({ 'file-a': blocked })
+    const olderRefresh = first.refresh.refreshUsage(store.assetListItems[0].asset)
+
+    await refresh.refreshUsage(store.assetListItems[0].asset)
+    expect(store.assetListItems[0].asset.singleUseUsage).toEqual(blocked)
+    const reason = store.assetListItems[0].disabledReason
+    expect(reason).not.toBeNull()
+
+    older.resolve({ 'file-a': usage({ status: 'free', holder: null, usageCount: 0, usages: [] }) })
+    await olderRefresh
+    expect(store.assetListItems[0].asset.singleUseUsage).toEqual(blocked)
+    expect(store.assetListItems[0].disabledReason).toBe(reason)
+  })
+
+  it('drops a read of the picker as opened before, also its failure', async () => {
+    const { refresh, store } = mountComposables()
+    store.setList([asset('a', true, usage())])
+    store.setSelectability({ singleUseAllowed: true, uploadLicence: undefined, usageHolder: holder })
+    const answered = deferred<Record<string, AssetSingleUseUsage>>()
+    fetchUsage.mockReturnValueOnce(answered.promise)
+    const answeredRefresh = refresh.refreshUsage(store.assetListItems[0].asset)
+
+    // Closed and opened for another record, which lists the same photo.
+    store.reset(true)
+    const listed = usage({ status: 'free', holder: null, usageCount: 0, usages: [] })
+    store.setList([asset('a', true, listed)])
+    store.setSelectability({
+      singleUseAllowed: true,
+      uploadLicence: undefined,
+      usageHolder: { ...holder, resourceId: 43 },
+    })
+    answered.resolve({ 'file-a': usage({ blocked: true }) })
+    await answeredRefresh
+    expect(store.assetListItems[0].asset.singleUseUsage).toEqual(listed)
+    expect(store.assetListItems[0].disabledReason).toBeNull()
+
+    const other = mountComposables()
+    fetchUsage.mockRejectedValueOnce(new Error('timeout'))
+    const failedRefresh = other.refresh.refreshUsage(store.assetListItems[0].asset)
+    store.reset(true)
+    await failedRefresh
+    expect(showErrorsDefault).not.toHaveBeenCalled()
+  })
+
   it('does not ask the host about a picked photo that is not single use', async () => {
     const { check } = mountComposables()
 

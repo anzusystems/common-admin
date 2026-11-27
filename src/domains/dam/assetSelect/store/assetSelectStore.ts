@@ -155,6 +155,33 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
     })
   }
 
+  // The latest usage read of each asset (`startUsageRead`), of the usage tab and of the pages of the list alike. Kept
+  // here: the tab is mounted anew for every item shown and the pages are read by several instances, so a slow read
+  // started before applied its older usage over a newer one.
+  const usageReads = new Map<DocId, number>()
+  let usageReadTurn = 0
+
+  /** Starts a usage read of an asset. Its answer applies while `isLatestUsageRead`: no newer read, no reset. */
+  function startUsageRead(assetId: DocId): number {
+    usageReadTurn++
+    usageReads.set(assetId, usageReadTurn)
+    return usageReadTurn
+  }
+
+  function isLatestUsageRead(assetId: DocId, turn: number): boolean {
+    return usageReads.get(assetId) === turn
+  }
+
+  // Every page of a list asks for its usages. An outage of that endpoint would show an alert per page.
+  let usageFailureShown = false
+
+  /** Whether a failed usage lookup of the list may show its alert: once per opened picker. */
+  function claimUsageFailureAlert(): boolean {
+    if (usageFailureShown) return false
+    usageFailureShown = true
+    return true
+  }
+
   // An asset listed twice (two pages returned it) is one asset. A click toggles it and every item of it reflects that.
   // Otherwise deselecting one item left the check on the other.
   function toggleSelectedByIndex(index: number) {
@@ -325,7 +352,10 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
     activeAssetId.value = null
     loader.value = false
     clearSelected()
+    // A read still on its way is of the list or the picker left: its usage holder may be another record.
+    usageReads.clear()
     if (!all) return
+    usageFailureShown = false
     assetType.value = DamAssetTypeDefault
     inPodcast.value = null
     singleMode.value = false
@@ -391,6 +421,9 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
     appendList,
     setDisabledReasons,
     setSingleUseUsage,
+    startUsageRead,
+    isLatestUsageRead,
+    claimUsageFailureAlert,
     toggleSelectedByIndex,
     clearSelected,
     reset,

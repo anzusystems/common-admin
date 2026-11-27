@@ -53,6 +53,9 @@ const onRowClick = (log: Log) => {
 
 const onChangeType = (type: LogTypeType) => {
   if (type === props.type) return
+  // The other type opens with the filter shown here, on its first page, and puts it into the address: through
+  // its saved view, as the route itself takes no hash (a value with `%` would not survive the push).
+  datatable.value?.carryViewTo(type)
   router.replace(props.typeRoute(type))
 }
 </script>

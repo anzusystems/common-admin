@@ -184,4 +184,39 @@ describe('the clear of AFilterRemoteAutocompleteWithMinimal', () => {
     await flushPromises()
     expect(autocomplete.props('loading')).toBe(false)
   })
+
+  // The two siblings stop a watcher run a newer value overtook. This one put the label read for an older value,
+  // answered last, over the newer value or over a clear.
+  it('keeps the label of the latest value when the read of an older one answers last', async () => {
+    const mounted = await mountFilter('group', 3)
+    mounted.holdByIds()
+    mounted.filterData.group = 7
+    await vi.waitFor(() => expect(mounted.byIdAnswers).toHaveLength(1))
+    mounted.filterData.group = 9
+    await vi.waitFor(() => expect(mounted.byIdAnswers).toHaveLength(2))
+
+    mounted.byIdAnswers[1]!()
+    await flushPromises()
+    mounted.byIdAnswers[0]!()
+    await flushPromises()
+    expect(mounted.selected.get('group')).toEqual([{ title: 'Group 9', value: 9 }])
+    expect(wrapper!.findComponent({ name: 'VAutocomplete' }).props('modelValue')).toEqual({
+      title: 'Group 9',
+      value: 9,
+    })
+  })
+
+  it('stays empty when the read of a value emptied meanwhile answers', async () => {
+    const mounted = await mountFilter('groups', [3])
+    mounted.holdByIds()
+    mounted.filterData.groups = [7]
+    await vi.waitFor(() => expect(mounted.byIdAnswers).toHaveLength(1))
+    mounted.filterData.groups = []
+    await flushPromises()
+
+    mounted.byIdAnswers[0]!()
+    await flushPromises()
+    expect(mounted.selected.has('groups')).toBe(false)
+    expect(wrapper!.findComponent({ name: 'VAutocomplete' }).props('modelValue')).toEqual([])
+  })
 })

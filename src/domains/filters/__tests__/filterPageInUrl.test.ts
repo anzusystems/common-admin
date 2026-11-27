@@ -219,4 +219,50 @@ describe('a page change in the pager', () => {
     await flushPromises()
     expect(window.location.hash).not.toContain('_page')
   })
+
+  it('goes into local storage with the saved view it pages, and back out on page 1', async () => {
+    localStorage.setItem(STORAGE_KEY, 'name=abc&_sort=id,desc~')
+    const { pagination } = mountList()
+    await flushPromises()
+
+    pagination.value.page = 3
+    await flushPromises()
+    expect(localStorage.getItem(STORAGE_KEY)).toBe('name=abc&_sort=id,desc&_page=3&_limit=25~')
+
+    pagination.value.page = 1
+    await flushPromises()
+    expect(localStorage.getItem(STORAGE_KEY)).toBe('name=abc&_sort=id,desc~')
+  })
+
+  // A list may switch the sort in `getList` after a submit stored the view (a text search sorted by score).
+  it('goes into local storage also when the list sorts the saved view otherwise', async () => {
+    localStorage.setItem(STORAGE_KEY, 'name=abc&_sort=id,desc~')
+    const { pagination } = mountList()
+    await flushPromises()
+
+    pagination.value.sortBy = { key: '_score', order: 'desc' }
+    pagination.value.page = 2
+    await flushPromises()
+    expect(localStorage.getItem(STORAGE_KEY)).toBe('name=abc&_sort=_score,desc&_page=2&_limit=25~')
+  })
+
+  // `/articles#_sort=id,desc&_page=3&_limit=25~` sent by a colleague: the page of a list without a filter. The pager
+  // wrote it over the filter the recipient had saved, and the menu then opened the list without it.
+  it('of a link naming a page but no field leaves the filter saved in local storage', async () => {
+    localStorage.setItem(STORAGE_KEY, 'name=TASR&_sort=id,desc&_page=5&_limit=25~')
+    window.location.hash = '#_sort=id,desc&_page=3&_limit=25~'
+    const { pagination } = mountList()
+    await flushPromises()
+    expect(pagination.value.page).toBe(3)
+
+    pagination.value.page = 4
+    await flushPromises()
+    expect(window.location.hash).toBe('#_sort=id,desc&_page=4&_limit=25~')
+    expect(localStorage.getItem(STORAGE_KEY)).toBe('name=TASR&_sort=id,desc&_page=5&_limit=25~')
+
+    pagination.value.page = 1
+    await flushPromises()
+    expect(window.location.hash).toBe('#_sort=id,desc~')
+    expect(localStorage.getItem(STORAGE_KEY)).toBe('name=TASR&_sort=id,desc&_page=5&_limit=25~')
+  })
 })

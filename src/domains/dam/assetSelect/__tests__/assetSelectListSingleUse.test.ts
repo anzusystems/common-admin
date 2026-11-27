@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import { defineComponent, h } from 'vue'
 import { useAssetSelectActions } from '@/domains/dam/assetSelect/composables/assetSelectListActions'
+import { useAssetSelectUsageRefresh } from '@/domains/dam/assetSelect/composables/assetSelectSingleUseUsage'
 import { useAssetSelectStore } from '@/domains/dam/assetSelect/store/assetSelectStore'
 import { useAssetListFilter } from '@/domains/dam/assetSelect/filter/AssetFilter'
 import { type AssetSearchListItemDto, type AssetSingleUseUsage, DamAssetType } from '@/domains/dam/types/Asset'
@@ -229,6 +230,110 @@ describe('the single use photos of an asset select', () => {
     expect(store.assetListItems.map((item) => item.asset.id)).toEqual(['a'])
     expect(store.assetListItems[0]!.disabledReason).toBeNull()
     expect(store.loader).toBe(false)
+  })
+
+  // Every page asks the host, "Load more" by itself too: an outage of the usage endpoint showed an alert per page.
+  it('show a failure of the host once per opened picker', async () => {
+    const { actions, store } = setup()
+    store.setSelectability({ singleUseAllowed: true, uploadLicence: undefined, usageHolder })
+    fetchUsage.mockRejectedValue(new Error('host down'))
+
+    await readList(actions, [singleUseAsset('a', 'group-1')])
+    await readNextPage(actions, [singleUseAsset('b', 'group-2')])
+    await readNextPage(actions, [singleUseAsset('c', 'group-3')])
+    await readList(actions, [singleUseAsset('d', 'group-4')])
+    expect(fetchUsage).toHaveBeenCalledTimes(4)
+    expect(showErrorsDefault).toHaveBeenCalledTimes(1)
+
+    const reopened = setup()
+    reopened.store.setSelectability({ singleUseAllowed: true, uploadLicence: undefined, usageHolder })
+    await readList(reopened.actions, [singleUseAsset('e', 'group-5')])
+    expect(showErrorsDefault).toHaveBeenCalledTimes(2)
+  })
+
+  // A page of the list and the usage tab read the usage of a photo apart. The answer of the read started last applies,
+  // whichever comes last: a page asked 5 s for its usages and its "free" undimmed the photo the tab had found blocked.
+  describe('and the usage tab', () => {
+    const mountUsageTab = () => {
+      let tab!: ReturnType<typeof useAssetSelectUsageRefresh>
+      mount(defineComponent({ setup: () => ((tab = useAssetSelectUsageRefresh('default')), () => h('div')) }))
+      return tab
+    }
+
+    it('take no usage of a page that answers after a newer read of the tab', async () => {
+      const { actions, store } = setup()
+      store.setSelectability({ singleUseAllowed: true, uploadLicence: undefined, usageHolder })
+      const tab = mountUsageTab()
+      let answerPage!: (usages: Record<string, AssetSingleUseUsage>) => void
+      fetchUsage.mockReturnValueOnce(new Promise((resolve) => (answerPage = resolve)))
+      fetchUsage.mockResolvedValueOnce({ 'group-1': usage(true) })
+
+      const read = actions.fetchAssetListDebounced()
+      await vi.waitFor(() => expect(list).toHaveLength(1))
+      list[0]!.resolve([singleUseAsset('a', 'group-1')])
+      await vi.waitFor(() => expect(fetchUsage).toHaveBeenCalledTimes(1))
+      await tab.refreshUsage(store.assetListItems[0]!.asset)
+      answerPage({ 'group-1': usage(false) })
+      await read
+      await flushPromises()
+
+      expect(store.assetListItems[0]!.asset.singleUseUsage).toEqual(usage(true))
+      expect(store.assetListItems[0]!.disabledReason).toBeTruthy()
+    })
+
+    // A page overtaken by the tab still gives a photo without a usage its own, so a failed tab does not leave the
+    // photo undimmed; an answer of the tab replaces it.
+    it.each<[string, boolean]>([
+      ['fails', false],
+      ['answers after it', true],
+    ])('take the usage of a page overtaken by a read of the tab that %s', async (_what, tabAnswers) => {
+      const { actions, store } = setup()
+      store.setSelectability({ singleUseAllowed: true, uploadLicence: undefined, usageHolder })
+      const tab = mountUsageTab()
+      let answerPage!: (usages: Record<string, AssetSingleUseUsage>) => void
+      let answerTab!: (usages: Record<string, AssetSingleUseUsage>) => void
+      fetchUsage.mockReturnValueOnce(new Promise((resolve) => (answerPage = resolve)))
+      if (tabAnswers) fetchUsage.mockReturnValueOnce(new Promise((resolve) => (answerTab = resolve)))
+      else fetchUsage.mockRejectedValueOnce(new Error('timeout'))
+
+      const read = actions.fetchAssetListDebounced()
+      await vi.waitFor(() => expect(list).toHaveLength(1))
+      list[0]!.resolve([singleUseAsset('a', 'group-1')])
+      await vi.waitFor(() => expect(fetchUsage).toHaveBeenCalledTimes(1))
+      const refresh = tab.refreshUsage(store.assetListItems[0]!.asset)
+      if (!tabAnswers) await refresh
+      answerPage({ 'group-1': usage(true) })
+      await read
+      await flushPromises()
+      expect(store.assetListItems[0]!.asset.singleUseUsage).toEqual(usage(true))
+      expect(store.assetListItems[0]!.disabledReason).toBeTruthy()
+
+      if (!tabAnswers) return
+      answerTab({ 'group-1': usage(false) })
+      await refresh
+      expect(store.assetListItems[0]!.asset.singleUseUsage).toEqual(usage(false))
+      expect(store.assetListItems[0]!.disabledReason).toBeNull()
+    })
+
+    it('take no usage of the tab that answers after a newer read of a page', async () => {
+      const { actions, store } = setup()
+      store.setSelectability({ singleUseAllowed: true, uploadLicence: undefined, usageHolder })
+      await readList(actions, [singleUseAsset('a', 'group-1')])
+      const tab = mountUsageTab()
+      let answerTab!: (usages: Record<string, AssetSingleUseUsage>) => void
+      fetchUsage.mockReturnValueOnce(new Promise((resolve) => (answerTab = resolve)))
+      fetchUsage.mockResolvedValueOnce({ 'group-1': usage(false) })
+
+      const refresh = tab.refreshUsage(store.assetListItems[0]!.asset)
+      await readList(actions, [singleUseAsset('a', 'group-1')])
+      answerTab({ 'group-1': usage(true) })
+      await refresh
+      await flushPromises()
+
+      expect(store.assetListItems[0]!.asset.singleUseUsage).toEqual(usage(false))
+      expect(store.assetListItems[0]!.disabledReason).toBeNull()
+      expect(tab.usageLoading.value).toBe(false)
+    })
   })
 
   // The usage of a list given up is not written into the list read since, which may hold the same photo.

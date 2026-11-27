@@ -147,8 +147,7 @@ describe('a filter field kept in the address only (persist: false)', () => {
     expect(list.deserializeFilters(bookmark)?.filters).toEqual({ groupId: GROUP, source: 'AP' })
   })
 
-  it('stays out of local storage on a page change in the pager, and in the address', async () => {
-    window.location.hash = `#groupId=${GROUP}&source=AP&_sort=id,desc~`
+  const mountList = () => {
     let pagination: ReturnType<typeof usePagination>['pagination'] | undefined
     wrapper = mount(
       defineComponent(() => {
@@ -159,12 +158,36 @@ describe('a filter field kept in the address only (persist: false)', () => {
         return () => h(ADatatablePagination)
       })
     )
+    return pagination!
+  }
+
+  // The page belongs to the view with the field. Saved beside the view without it, the menu opened the whole
+  // list (or the saved filter) on the page the picker's link was left at.
+  it('keeps its page out of local storage too, which holds the view without it, and in the address', async () => {
+    window.location.hash = `#groupId=${GROUP}&source=AP&_sort=id,desc~`
+    const pagination = mountList()
     await flushPromises()
 
-    pagination!.value.page = 3
+    pagination.value.page = 3
     await flushPromises()
     expect(window.location.hash).toBe(`#groupId=${GROUP}&source=AP&_sort=id,desc&_page=3&_limit=25~`)
-    expect(localStorage.getItem(STORAGE_KEY)).toBe('source=AP&_sort=id,desc&_page=3&_limit=25~')
+    expect(localStorage.getItem(STORAGE_KEY)).toBe('source=AP&_sort=id,desc~')
+
+    wrapper!.unmount()
+    window.location.hash = ''
+    const again = mountList()
+    await flushPromises()
+    expect(again.value.page).toBe(1)
+    expect(window.location.hash).toBe('#source=AP&_sort=id,desc~')
+  })
+
+  it('keeps the page of a reloaded link with it out of the view it saves', () => {
+    window.location.hash = `#groupId=${GROUP}&source=AP&_sort=id,desc&_page=2&_limit=25~`
+    const list = visit()
+
+    list.loadStoredFilters(list.pagination)
+    expect(list.pagination.value.page).toBe(2)
+    expect(localStorage.getItem(STORAGE_KEY)).toBe('source=AP&_sort=id,desc~')
   })
 })
 

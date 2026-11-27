@@ -257,7 +257,9 @@ const onClickClear = () => {
   clearAutoFetchTimer()
   autoFetched.value = true
   const value = filterData[props.name]
-  if (!isEmptyValue(value) && value === watchedValue) showValue(value as string | number | Array<string | number>)
+  if (!isEmptyValue(value) && value === watchedValue) {
+    showValue(value as string | number | Array<string | number>, ++watchRun)
+  }
   apiRequestCounter.value++
   apiSearch('', apiRequestCounter.value)
 }
@@ -300,9 +302,14 @@ const isEmptyValue = (value: unknown) => isNull(value) || isUndefined(value) || 
 /** The value of the filter its watcher (below) saw last. */
 let watchedValue: unknown
 
+// A value put into the field (`showValue`) applies only while it is the latest one. Otherwise the slower read
+// by ids of an older value (a restored filter, then another) put back its label over the newer one, or over a clear.
+let watchRun = 0
+
 /** Puts a value of the filter into the field and the chips: from the items it has, or read by their ids. */
-const showValue = async (newValue: string | number | Array<string | number>) => {
+const showValue = async (newValue: string | number | Array<string | number>, run: number) => {
   const found = await tryToLoadFromLocalData(newValue)
+  if (run !== watchRun) return
   if (found) {
     selected.value = selectedItemsCache.value.map((item) => ({
       title: item.title,
@@ -314,7 +321,9 @@ const showValue = async (newValue: string | number | Array<string | number>) => 
   if (isArray(newValue)) {
     requestsRunning.value++
     try {
-      selectedItemsCache.value = await props.fetchItemsMinimalByIds(newValue as Array<IntegerId & DocId>)
+      const items = await props.fetchItemsMinimalByIds(newValue as Array<IntegerId & DocId>)
+      if (run !== watchRun) return
+      selectedItemsCache.value = items
       selected.value = selectedItemsCache.value.map((item) => ({
         title: item.title,
         value: item.value,
@@ -329,7 +338,9 @@ const showValue = async (newValue: string | number | Array<string | number>) => 
   }
   requestsRunning.value++
   try {
-    selectedItemsCache.value = await props.fetchItemsMinimalByIds([newValue as DocId & IntegerId])
+    const items = await props.fetchItemsMinimalByIds([newValue as DocId & IntegerId])
+    if (run !== watchRun) return
+    selectedItemsCache.value = items
     selected.value = selectedItemsCache.value.map((item) => ({
       title: item.title,
       value: item.value,
@@ -347,6 +358,7 @@ watch(
   async (newValue, oldValue) => {
     watchedValue = newValue
     if (newValue === oldValue || isBoolean(newValue)) return
+    const run = ++watchRun
     if (isEmptyValue(newValue)) {
       selectedItemsCache.value = []
       if (filterConfigCurrent.value.multiple) {
@@ -363,7 +375,7 @@ watch(
       }, 3000)
       return
     }
-    await showValue(newValue as string | number | Array<string | number>)
+    await showValue(newValue as string | number | Array<string | number>, run)
   },
   { immediate: true }
 )

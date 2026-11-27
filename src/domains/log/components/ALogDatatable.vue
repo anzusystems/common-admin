@@ -10,12 +10,14 @@ import type { AxiosClientFn } from '@/domains/api/utils/client'
 import ADatatablePagination from '@/domains/filters/datatable/components/ADatatablePagination.vue'
 import { createDatatableColumnsConfig } from '@/domains/filters/datatable/composables/createDatatableColumnsConfig'
 import { DatatablePaginationKey, FilterConfigKey, FilterDataKey } from '@/domains/filters/utils/filterInjectionKeys'
-import { useFilterHelpers } from '@/domains/filters/composables/filterFactory'
+import { buildFilterHash, useFilterClearHelpers, useFilterHelpers } from '@/domains/filters/composables/filterFactory'
 import { usePagination } from '@/domains/api/composables/pagination'
+import { SortOrder } from '@/domains/api/types/SortOrder'
 import { SORT_BY_ID } from '@/domains/filters/datatable/utils/datatableColumns'
 import { useLogListActions } from '@/domains/log/composables/logActions'
 import { LOG_ENTITY } from '@/domains/log/api/logApi'
 import { LogType, type LogPaths, type LogTypeType } from '@/domains/log/composables/logType'
+import { logFilterStorageKey } from '@/domains/log/filter/logFilter'
 import type { Log } from '@/domains/log/types/Log'
 import { isNull, isUndefined } from '@/shared/utils/common'
 import { isDevelopment } from '@/shared/utils/development'
@@ -58,10 +60,11 @@ const { fetchList, listItems, datatableHiddenColumns, cancel } = useLogListActio
 })
 
 // In the url hash and local storage, as any other list, so a reload, a shared link or Back shows the same logs.
-// Keyed by system like the `logFilter` registry. One `common/log` key would carry one system's filter to another.
+// Keyed by system like the `logFilter` registry, and by type, so neither opens on the page of the other.
 const { resetFilter, submitFilter, loadStoredFilters } = useFilterHelpers(filterData, filterConfig, {
-  storeFiltersLocalStorage: 'tableFilter_common_log_' + props.system,
+  storeFiltersLocalStorage: logFilterStorageKey(props.system, props.type),
 })
+const { clearAll } = useFilterClearHelpers()
 
 const { pagination } = usePagination(SORT_BY_ID)
 provide(DatatablePaginationKey, pagination)
@@ -98,10 +101,28 @@ const onRowClick = (_event: unknown, { item }: { item: DatatableItem }) => {
 }
 
 onMounted(() => {
+  // The list shows exactly the view of the address, else the one its type saved. The registry may still hold the
+  // filter of the other type, which neither a saved view (it leaves out fields at their default) nor a hash naming
+  // no field would reset.
+  clearAll(filterData, filterConfig)
   // Also restores the page a user was on after closing a detail,
   // which `AActionCloseButtonHistory` flags for the next list.
   loadStoredFilters(pagination, getList)
 })
+
+/** Saves the filter and sort shown, without the page, as the view of `type`, which the type switch opens next. */
+const carryViewTo = (type: LogTypeType) => {
+  if (!localStorage) return
+  const key = logFilterStorageKey(props.system, type)
+  const { sortBy } = pagination.value
+  // Nothing but the default sort: the other type opens as unfiltered, without a hash, as the switch always did.
+  const defaultSort = !sortBy || (sortBy.key === SORT_BY_ID && sortBy.order === SortOrder.Desc)
+  if (defaultSort && buildFilterHash(filterConfig, filterData) === '') {
+    localStorage.removeItem(key)
+    return
+  }
+  localStorage.setItem(key, buildFilterHash(filterConfig, filterData, sortBy).slice(1))
+}
 
 // The code above reads props once, which is only correct while the page remounts this view via `:key`.
 // Otherwise the table would silently keep querying the old endpoint with the old columns.
@@ -129,6 +150,7 @@ defineExpose({
   refresh: getList,
   resetFilter: () => resetFilter(pagination, getList),
   submitFilter: () => submitFilter(pagination, getList),
+  carryViewTo,
 })
 </script>
 

@@ -6,7 +6,6 @@ import ImageWidgetInner from '@/domains/dam/imageWidget/components/ImageWidgetIn
 import { useImageMediaWidgetStore } from '@/domains/dam/imageWidget/store/imageMediaWidgetStore'
 import { ImageWidgetUploadConfigKey } from '@/domains/dam/imageWidget/utils/imageWidgetInkectionKeys'
 import { useUploadQueueDialog } from '@/domains/dam/uploadQueue/composables/useUploadQueueDialog'
-import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
 
 // Covers the field lock of a widget in an article open by two editors, when the widget
 // goes away (for example the pin of a sidebar widget in admin-cms draws a copy elsewhere).
@@ -18,8 +17,8 @@ import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueu
 // Not while its save or delete is running (the end of that gives it
 // back), and not once the copy drawn in its place has taken the lock.
 // A pick of a gone widget opens nothing in the copy.
-// The image dialog and the collaboration are stand-ins; the save, the delete, the read
-// of a picked asset and its copy into the licence answer when the case lets them.
+// The image dialog and the collaboration are stand-ins; the save, the delete and the read
+// of a picked asset answer when the case lets them.
 
 const released = vi.fn()
 const acquired = vi.fn()
@@ -66,13 +65,6 @@ vi.mock('@/domains/dam/api/damAssetApi', async (importOriginal) => ({
       )
     ),
   fetchAssetAsCmsMedia: () => new Promise((resolve) => held.reads.push(() => resolve({}))),
-}))
-vi.mock('@/domains/dam/api/damImageApi', async (importOriginal) => ({
-  ...(await importOriginal<object>()),
-  copyToLicence: () =>
-    new Promise((resolve) =>
-      held.reads.push(() => resolve([{ result: 'copy', targetAsset: 'asset-copied', targetMainFile: 'file-copied' }]))
-    ),
 }))
 vi.mock('@/domains/dam/composables/commonAdminCoreDamOptions', async (importOriginal) => ({
   ...(await importOriginal<object>()),
@@ -278,14 +270,13 @@ describe.each<[string, Component]>([
     expect(givenBack()).toEqual([[FIELD, valueOf(7)]])
   })
 
-  // No widget continues the pick. The copy drawn in place of the
-  // widget showed its upload dialog and asked for the lock only then.
-  it('is given back once by a widget that goes while the asset of its pick is copied, whose answer opens nothing', async () => {
-    const queued = vi.spyOn(useUploadQueuesStore(), 'addByCopyToLicence').mockResolvedValue(undefined as never)
+  // A photo of another licence picked to be taken over (`forceTakeOver`) is not copied by the widget, the image save
+  // takes it over. No widget continues the pick: its image is not put into the dialog of the copy drawn in its place.
+  it('is given back once by a widget that goes while the asset of its take over pick is read, whose answer opens nothing', async () => {
     const wrapper = await mountWidget()
     pickerOf(wrapper).vm.$emit('update:modelValue', true)
     await flushPromises()
-    pickerOf(wrapper).vm.$emit('confirm', { type: 'asset', value: [{ ...listed, licence: 2 }], copyToLicence: 1 })
+    pickerOf(wrapper).vm.$emit('confirm', { type: 'asset', value: [{ ...listed, licence: 2 }], forceTakeOver: true })
     pickerOf(wrapper).vm.$emit('update:modelValue', false)
     await flushPromises()
     await answerAll(isImageWidget ? [] : held.reads.splice(0, 1))
@@ -295,9 +286,8 @@ describe.each<[string, Component]>([
     expect(givenBack()).toEqual([[FIELD, valueOf(7)]])
 
     await answerAll(held.reads)
-    expect([useUploadQueueDialog().uploadQueueDialog.value, queued.mock.calls]).toEqual([null, []])
+    expect([useImageMediaWidgetStore().detail, useUploadQueueDialog().uploadQueueDialog.value]).toEqual([null, null])
     expect([acquired.mock.calls, givenBack()]).toEqual([[[FIELD]], [[FIELD, valueOf(7)]]])
-    queued.mockRestore()
   })
 
   const removed = async (wrapper: VueWrapper) => {
